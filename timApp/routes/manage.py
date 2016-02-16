@@ -30,7 +30,7 @@ def manage(path):
     if not timdb.users.has_manage_access(getCurrentUserId(), block_id):
         abort(403)
 
-    possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
+    possible_groups = timdb.users.get_usergroups_printable(getCurrentUserId())
     grouprights = timdb.users.get_rights_holders(block_id)
     access_types = timdb.users.get_access_types()
 
@@ -55,7 +55,7 @@ def manage(path):
         for ver in doc_data['versions']:
             ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
 
-    doc_data['owner'] = timdb.users.getOwnerGroup(block_id)
+    doc_data['owner'] = timdb.users.get_owner_group(block_id)
     return render_template('manage_folder.html' if isFolder else 'manage_document.html',
                            route='manage',
                            translations=timdb.documents.get_translations(block_id) if not isFolder else None,
@@ -72,7 +72,7 @@ def changeOwner(doc_id, new_owner):
     if not timdb.documents.exists(doc_id) and not timdb.folders.exists(doc_id):
         abort(404)
     verify_ownership(doc_id)
-    possible_groups = timdb.users.getUserGroups(getCurrentUserId())
+    possible_groups = timdb.users.get_user_groups(getCurrentUserId())
     if new_owner not in [group['id'] for group in possible_groups]:
         abort(403, "You must belong to the new usergroup.")
     timdb.documents.setOwner(doc_id, new_owner)
@@ -87,7 +87,7 @@ def addPermission(doc_id, group_name, perm_type):
     if not timdb.users.has_manage_access(getCurrentUserId(), doc_id):
         abort(403, "You don't have permission to add permissions to this document.")
 
-    groups = timdb.users.getUserGroupsByName(group_name)
+    groups = timdb.users.get_usergroups_by_name(group_name)
     if len(groups) == 0:
         abort(404, 'No user group with this name was found.')
 
@@ -191,7 +191,7 @@ def remove_alias(doc_id, alias):
     if doc_id2 != doc_id:
         return jsonResponse({'message': 'The document name does not match the id!'}, 404)
 
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+    if not timdb.users.user_is_owner(getCurrentUserId(), doc_id):
         return jsonResponse({'message': "You don't have permission to delete this object."}, 403)
 
     if len(timdb.documents.get_document_names(doc_id, include_nonpublic=True)) < 2:
@@ -264,7 +264,7 @@ def deleteDocument(doc_id):
     timdb = getTimDb()
     if not timdb.documents.exists(doc_id):
         return jsonResponse({'message': 'Document does not exist.'}, 404)
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+    if not timdb.users.user_is_owner(getCurrentUserId(), doc_id):
         return jsonResponse({'message': "You don't have permission to delete this document."}, 403)
     timdb.documents.delete(doc_id)
     return okJsonResponse()
@@ -275,7 +275,7 @@ def deleteFolder(doc_id):
     timdb = getTimDb()
     if not timdb.folders.exists(doc_id):
         return jsonResponse({'message': 'Folder does not exist.'}, 404)
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+    if not timdb.users.user_is_owner(getCurrentUserId(), doc_id):
         return jsonResponse({'message': "You don't have permission to delete this folder."}, 403)
     if not timdb.folders.is_empty(doc_id):
         return jsonResponse({'message': "The folder is not empty. Only empty folders can be deleted."}, 403)

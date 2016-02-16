@@ -26,7 +26,7 @@ def safe_redirect(url, **values):
 
 
 def get_current_user():
-    return getTimDb().users.getUser(getCurrentUserId())
+    return getTimDb().users.get_user(getCurrentUserId())
 
 
 def getCurrentUserId():
@@ -41,7 +41,7 @@ def getCurrentUserName():
 
 def getCurrentUserGroup():
     timdb = getTimDb()
-    return timdb.users.getPersonalUserGroup(get_current_user())
+    return timdb.users.get_personal_usergroup(get_current_user())
 
 
 def getTimDb():
@@ -149,12 +149,12 @@ def verifyLoggedIn():
 
 def has_ownership(block_id):
     timdb = getTimDb()
-    return timdb.users.userIsOwner(getCurrentUserId(), block_id)
+    return timdb.users.user_is_owner(getCurrentUserId(), block_id)
 
 
 def verify_ownership(block_id):
     timdb = getTimDb()
-    if not timdb.users.userIsOwner(getCurrentUserId(), block_id):
+    if not timdb.users.user_is_owner(getCurrentUserId(), block_id):
         abort(403, "Sorry, you don't have permission to view this resource.")
 
 
@@ -281,7 +281,7 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
         p['status'] = ''
         p['notes'] = []
 
-    group = timdb.users.getPersonalUserGroup(user) if user is not None else timdb.users.get_anon_group_id()
+    group = timdb.users.get_personal_usergroup(user) if user is not None else timdb.users.get_anon_group_id()
     if user is not None:
         readings = timdb.readings.getReadings(group, doc)
         for r in readings:
@@ -297,7 +297,7 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
         key = (n['par_id'], n['doc_id'])
         pars = pars_dict.get(key)
         if pars:
-            n['editable'] = n['UserGroup_id'] == group or timdb.users.userIsOwner(getCurrentUserId(), doc.doc_id)
+            n['editable'] = n['UserGroup_id'] == group or timdb.users.user_is_owner(getCurrentUserId(), doc.doc_id)
             n.pop('UserGroup_id', None)
             n['private'] = n['access'] == 'justme'
             for p in pars:

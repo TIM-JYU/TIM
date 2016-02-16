@@ -29,7 +29,7 @@ class Users(TimDbBase):
     access_type_map = {}
 
     @contract
-    def createAnonymousAndLoggedInUserGroups(self) -> 'int':
+    def create_special_usergroups(self) -> 'int':
         """Creates an anonymous user and a usergroup for it.
         The user id and its associated usergroup id is 0.
         """
@@ -58,8 +58,8 @@ class Users(TimDbBase):
         return 0
 
     @contract
-    def createUser(self, name: 'str', real_name: 'str', email: 'str', password: 'str' = '',
-                   commit: 'bool' = True) -> 'int':
+    def create_user(self, name: 'str', real_name: 'str', email: 'str', password: 'str' = '',
+                    commit: 'bool' = True) -> 'int':
         """Creates a new user with the specified name.
         
         :param email: The email address of the user.
@@ -69,7 +69,7 @@ class Users(TimDbBase):
         :returns: The id of the newly created user.
         """
         cursor = self.db.cursor()
-        hash = self.hashPassword(password) if password != '' else ''
+        hash = self.hash_password(password) if password != '' else ''
         cursor.execute('INSERT INTO User (name, real_name, email, pass) VALUES (?, ?, ?, ?)',
                        [name, real_name, email, hash])
         if commit:
@@ -77,26 +77,25 @@ class Users(TimDbBase):
         user_id = cursor.lastrowid
         return user_id
 
-    def createAnonymousUser(self, name: 'str', real_name: 'str', commit: 'bool' = True) -> 'int':
+    def create_anonymous_user(self, name: 'str', real_name: 'str', commit: 'bool' = True) -> 'int':
         """Creates a new user anonymous user.
-        :param id: id of anonymous user
         :param name: The name of the user to be created.
         :param real_name: The real name of the user.
         :returns: The id of the newly created user.
         """
 
-        next_id = self.getNextAnonymousUserId()
+        next_id = self.get_next_anonymous_user_id()
 
         cursor = self.db.cursor()
         cursor.execute('INSERT INTO User (id, name, real_name) VALUES (?, ?, ?)', [next_id, name, real_name])
         if commit:
             self.db.commit()
         user_id = cursor.lastrowid
-        self.addUserToGroup(2, user_id)
+        self.add_user_to_group(2, user_id)
         return user_id
 
     @contract
-    def getNextAnonymousUserId(self) -> 'int':
+    def get_next_anonymous_user_id(self) -> 'int':
         """
         :returns: Tnext unused negative id.
         """
@@ -105,8 +104,8 @@ class Users(TimDbBase):
         user_id = min(self.resultAsDictionary(cursor)[0]['next_id'], 0)
         return user_id - 1
 
-    def updateUser(self, user_id: 'int', name: 'str', real_name: 'str', email: 'str', password: 'str' = '',
-                   commit: 'bool' = True):
+    def update_user(self, user_id: 'int', name: 'str', real_name: 'str', email: 'str', password: 'str' = '',
+                    commit: 'bool' = True):
         """Updates user information.
 
         :param user_id: The id of the user to be updated.
@@ -117,14 +116,14 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        pass_hash = self.hashPassword(password) if password != '' else ''
+        pass_hash = self.hash_password(password) if password != '' else ''
         cursor.execute('UPDATE User SET name = ?, real_name = ?, email = ?, pass = ? WHERE id = ?',
                        [name, real_name, email, pass_hash, user_id])
         if commit:
             self.db.commit()
 
     @contract
-    def createUserGroup(self, name: 'str', commit: 'bool' = True) -> 'int':
+    def create_usergroup(self, name: 'str', commit: 'bool' = True) -> 'int':
         """Creates a new user group.
         
         :param name: The name of the user group.
@@ -139,7 +138,7 @@ class Users(TimDbBase):
         return group_id
 
     @contract
-    def addUserToGroup(self, group_id: 'int', user_id: 'int', commit: 'bool' = True):
+    def add_user_to_group(self, group_id: 'int', user_id: 'int', commit: 'bool' = True):
         """Adds a user to a usergroup.
         
         :param group_id: The id of the group.
@@ -151,36 +150,36 @@ class Users(TimDbBase):
             self.db.commit()
 
     @contract
-    def addUserToNamedGroup(self, group_name: 'str', user_id: 'int', commit: 'bool' = True):
-        group_id = self.getUserGroupByName(group_name)
+    def add_user_to_named_group(self, group_name: 'str', user_id: 'int', commit: 'bool' = True):
+        group_id = self.get_usergroup_by_name(group_name)
         if group_id is not None:
-            self.addUserToGroup(group_id, user_id, commit)
+            self.add_user_to_group(group_id, user_id, commit)
         else:
             print("Could not add user {} to group {}".format(user_id, group_name))
 
     @contract
-    def addUserToKorppiGroup(self, user_id: 'int', commit: 'bool' = True):
-        self.addUserToNamedGroup(KORPPI_GROUPNAME, user_id, commit)
+    def add_user_to_korppi_group(self, user_id: 'int', commit: 'bool' = True):
+        self.add_user_to_named_group(KORPPI_GROUPNAME, user_id, commit)
 
     @contract
     def addUserToAdmins(self, user_id: 'int', commit: 'bool' = True):
-        self.addUserToNamedGroup(ADMIN_GROUPNAME, user_id, commit)
+        self.add_user_to_named_group(ADMIN_GROUPNAME, user_id, commit)
 
     @contract
-    def createPotentialUser(self, email: 'str', password: 'str', commit: 'bool' = True):
+    def create_potential_user(self, email: 'str', password: 'str', commit: 'bool' = True):
         """Creates a potential user with the specified email and password.
         
         :param email: The email address of the user.
         :param password: The password of the user.
         """
         cursor = self.db.cursor()
-        hash = self.hashPassword(password)
+        hash = self.hash_password(password)
         cursor.execute('REPLACE INTO NewUser (email, pass) VALUES (?, ?)', [email, hash])
         if commit:
             self.db.commit()
 
     @contract
-    def deletePotentialUser(self, email: 'str', commit: 'bool' = True):
+    def delete_potential_user(self, email: 'str', commit: 'bool' = True):
         """Deletes a potential user.
         
         :param email: The email address of the user.
@@ -191,7 +190,7 @@ class Users(TimDbBase):
             self.db.commit()
 
     @contract
-    def testPotentialUser(self, email: 'str', password: 'str') -> 'bool':
+    def test_potential_user(self, email: 'str', password: 'str') -> 'bool':
         """Tests if a potential user matches to email and password.
         
         :param email: Email address.
@@ -200,12 +199,12 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        hash = self.hashPassword(password)
+        hash = self.hash_password(password)
         cursor.execute('SELECT email FROM NewUser WHERE email=? AND pass=?', [email, hash])
         return cursor.fetchone() is not None
 
     @contract
-    def testUser(self, email: 'str', password: 'str') -> 'bool':
+    def test_user(self, email: 'str', password: 'str') -> 'bool':
         """Tests if a potential user matches to email and password.
         
         :param email: Email address.
@@ -214,17 +213,13 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        hash = self.hashPassword(password)
+        hash = self.hash_password(password)
         cursor.execute('SELECT email FROM User WHERE email=? AND pass=?', [email, hash])
         return cursor.fetchone() is not None
 
     @contract
-    def hashPassword(self, password: 'str') -> 'str':
+    def hash_password(self, password: 'str') -> 'str':
         return hashlib.sha256(password.encode()).hexdigest()
-
-    @contract
-    def testPassword(self, hash: 'str', password: 'str'):
-        return self.hashPassword(password) == hash
 
     @contract
     def get_rights_holders(self, block_id: 'int'):
@@ -236,35 +231,7 @@ class Users(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def getEditors(self, block_id: 'int'):
-        """Gets the users that are allowed to edit the speficied block.
-        
-        :param block_id: The id of the block.
-        :returns: The list of users who can edit the block.
-        """
-
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT b.UserGroup_id, b.accessible_from, b.accessible_to, u.name FROM BlockAccess b
-                          JOIN UserGroup u ON b.UserGroup_id = u.id
-                               WHERE Block_id = ? AND type = ?""", [block_id, self.get_edit_access_id()])
-        return self.resultAsDictionary(cursor)
-
-    @contract
-    def getViewers(self, block_id: 'int'):
-        """Gets the users that are allowed to view the speficied block.
-        
-        :param block_id: The id of the block.
-        :returns: The list of users who can view the block.
-        """
-
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT b.UserGroup_id, b.accessible_from, b.accessible_to, u.name FROM BlockAccess b
-                          JOIN UserGroup u ON b.UserGroup_id = u.id
-                               WHERE Block_id = ? AND type = ?""", [block_id, self.get_view_access_id()])
-        return self.resultAsDictionary(cursor)
-
-    @contract
-    def getOwnerGroup(self, block_id: 'int'):
+    def get_owner_group(self, block_id: 'int'):
         """Returns the owner group of the specified block.
         
         :param block_id: The id of the block.
@@ -276,18 +243,7 @@ class Users(TimDbBase):
         return self.resultAsDictionary(cursor)[0]
 
     @contract
-    def userExists(self, user_id: 'int') -> 'bool':
-        """Checks if the user with the specified id. exists
-
-        :returns: Boolean.
-        """
-
-        cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM User WHERE id = ?', [user_id])
-        return cursor.fetchone() is not None
-
-    @contract
-    def getUser(self, user_id: 'int') -> 'dict|None':
+    def get_user(self, user_id: 'int') -> 'dict|None':
         """Gets the user with the specified id.
         
         :param user_id:
@@ -300,7 +256,7 @@ class Users(TimDbBase):
         return result[0] if len(result) > 0 else None
 
     @contract
-    def getUserByName(self, name: 'str') -> 'int|None':
+    def get_user_by_name(self, name: 'str') -> 'int|None':
         """Gets the id of the specified username.
         
         :param name: The name of the user.
@@ -313,7 +269,7 @@ class Users(TimDbBase):
         return result[0] if result is not None else None
 
     @contract
-    def getUserByEmail(self, email: 'str') -> 'dict|None':
+    def get_user_by_email(self, email: 'str') -> 'dict|None':
         """Gets the data of the specified user email address.
         
         :param name: Email address.
@@ -349,7 +305,7 @@ class Users(TimDbBase):
         return result[0] if result is not None else None
 
     @contract
-    def getUserGroupsByName(self, name: 'str'):
+    def get_usergroups_by_name(self, name: 'str'):
         """Gets the usergroups that have the specified name.
         
         :param name: The name of the usergroup to be retrieved.
@@ -360,7 +316,7 @@ class Users(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def getUserGroupByName(self, name: 'str') -> 'int|None':
+    def get_usergroup_by_name(self, name: 'str') -> 'int|None':
         cursor = self.db.cursor()
         cursor.execute('SELECT id FROM UserGroup WHERE name = ?', [name])
         groups = cursor.fetchall()
@@ -375,25 +331,25 @@ class Users(TimDbBase):
         return groups[0][0]
 
     @contract
-    def getPersonalUserGroup(self, user: 'dict') -> 'int':
+    def get_personal_usergroup(self, user: 'dict') -> 'int':
         """Gets the personal user group for the user.
         """
         if user is None:
             raise TimDbException("No such user")
 
         userName = user['name']
-        groups = self.getUserGroupsByName(userName)
+        groups = self.get_usergroups_by_name(userName)
         if len(groups) > 0:
             return groups[0]['id']
 
-        groups = self.getUserGroupsByName('group of user ' + userName)
+        groups = self.get_usergroups_by_name('group of user ' + userName)
         if len(groups) > 0:
             return groups[0]['id']
 
         raise TimDbException('Personal usergroup for user {} was not found!'.format(userName))
 
     @contract
-    def getUserGroups(self, user_id: 'int') -> 'list(dict)':
+    def get_user_groups(self, user_id: 'int') -> 'list(dict)':
         """Gets the user groups of a user.
         
         :param user_id: The id of the user.
@@ -412,13 +368,13 @@ class Users(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def getUserGroupsPrintable(self, user_id: 'int', max_group_len: 'int' = 32) -> 'list(dict)':
+    def get_usergroups_printable(self, user_id: 'int', max_group_len: 'int' = 32) -> 'list(dict)':
         """Gets the user groups of a user, truncating the group names.
 
         :param user_id: The id of the user.
         :returns: The user groups that the user belongs to.
         """
-        groups = self.getUserGroups(user_id)
+        groups = self.get_user_groups(user_id)
         for group in groups:
             if len(group['name']) > max_group_len:
                 group['name'] = group['name'][:max_group_len]
@@ -435,7 +391,7 @@ class Users(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def getGroupUsers(self, group_id: 'int') -> 'list(dict)':
+    def get_group_users(self, group_id: 'int') -> 'list(dict)':
         cursor = self.db.cursor()
         cursor.execute("""SELECT User_id as id, User_name FROM UserGroupMember WHERE
                           User_name = (SELECT name FROM User WHERE id = ?) AND
@@ -445,7 +401,7 @@ class Users(TimDbBase):
         return len(cursor.fetchall()) > 0
 
     @contract
-    def isUserIdInGroup(self, user_id: 'int', usergroup_name: 'str') -> 'bool':
+    def is_user_id_in_group(self, user_id: 'int', usergroup_name: 'str') -> 'bool':
         cursor = self.db.cursor()
         cursor.execute("""SELECT User_id FROM UserGroupMember WHERE
                           User_id      = ? AND
@@ -470,7 +426,7 @@ class Users(TimDbBase):
         self.db.commit()
 
     @contract
-    def grantViewAccess(self, group_id: 'int', block_id: 'int'):
+    def grant_view_access(self, group_id: 'int', block_id: 'int'):
         """Grants view access to a group for a block.
         
         :param group_id: The group id to which to grant view access.
@@ -480,7 +436,7 @@ class Users(TimDbBase):
         self.grant_access(group_id, block_id, 'view')
 
     @contract
-    def grantEditAccess(self, group_id: 'int', block_id: 'int'):
+    def grant_edit_access(self, group_id: 'int', block_id: 'int'):
         """Grants edit access to a group for a block.
         
         :param group_id: The group id to which to grant view access.
@@ -488,19 +444,6 @@ class Users(TimDbBase):
         """
 
         self.grant_access(group_id, block_id, 'edit')
-
-    @contract
-    def removeViewAccess(self, group_id: 'int', block_id: 'int'):
-        """Removes view access from a user for a block.
-        
-        :param group_id: The id of the group from which to remove view access.
-        :param block_id: The block id.
-        """
-
-        cursor = self.db.cursor()
-        cursor.execute("DELETE FROM BlockAccess WHERE UserGroup_id = ? AND Block_id = ? AND type = ?",
-                       [group_id, block_id, self.get_view_access_id()])
-        self.db.commit()
 
     @contract
     def get_view_access_id(self) -> 'int':
@@ -511,19 +454,6 @@ class Users(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("DELETE FROM BlockAccess WHERE UserGroup_id = ? AND Block_id = ? AND type = ?",
                        [group_id, block_id, self.get_access_type_id(access_type)])
-        self.db.commit()
-
-    @contract
-    def removeEditAccess(self, group_id: 'int', block_id: 'int'):
-        """Removes edit access from a user for a block.
-        
-        :param group_id: The id of the group from which to remove edit access.
-        :param block_id: The block id.
-        """
-
-        cursor = self.db.cursor()
-        cursor.execute("DELETE FROM BlockAccess WHERE UserGroup_id = ? AND Block_id = ? AND type = ?",
-                       [group_id, block_id, self.get_edit_access_id()])
         self.db.commit()
 
     @contract
@@ -544,7 +474,7 @@ class Users(TimDbBase):
 
     @contract
     def has_admin_access(self, user_id: 'int') -> 'bool':
-        return self.isUserIdInGroup(user_id, 'Administrators')
+        return self.is_user_id_in_group(user_id, 'Administrators')
 
     @contract
     def has_view_access(self, user_id: 'int', block_id: 'int') -> 'bool':
@@ -661,18 +591,8 @@ WHERE User_id IN ({}))
                                self.get_manage_access_id(),
                                self.get_teacher_access_id())
 
-    def checkUserGroupAccess(self, block_id: 'int', usergroup_id: 'int|None', access_id: 'int') -> 'bool':
-        if usergroup_id is None:
-            return False
-
-        result = self.db.execute("""SELECT UserGroup_id FROM BlockAccess
-                                    WHERE Block_id = ?
-                                     AND UserGroup_id = ?
-                                     AND type = ?""", [block_id, usergroup_id, access_id]).fetchall()
-        return len(result) > 0
-
     @contract
-    def userIsOwner(self, user_id: 'int', block_id: 'int') -> 'bool':
+    def user_is_owner(self, user_id: 'int', block_id: 'int') -> 'bool':
         """Returns whether the user belongs to the owners of the specified block.
         
         :param user_id:
@@ -693,25 +613,7 @@ WHERE User_id IN ({}))
         assert len(result) <= 1, 'rowcount should be 1 at most'
         return len(result) == 1
 
-    @contract
-    def userGroupHasViewAccess(self, user_group_id: 'int', block_id: 'int') -> 'bool':
-        """
-
-        :param user_group_id:
-        :param block_id:
-        :return:
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT id FROM UserGroup WHERE id == ?
-                          AND id IN
-                             (SELECT UserGroup_id
-                              FROM BlockAccess
-                              WHERE Block_id = ?)""", [user_group_id, block_id])
-        result = cursor.fetchall()
-        assert len(result) <= 1, 'rowcount should be 1 at most'
-        return len(result) == 1
-
-    def getPrefs(self, user_id: 'int') -> 'str':
+    def get_preferences(self, user_id: 'int') -> 'str':
         """Gets the preferences of a user.
 
         :param user_id: The id of the user.
@@ -722,7 +624,7 @@ WHERE User_id IN ({}))
         result = self.resultAsDictionary(cursor)
         return result[0]['prefs']
 
-    def setPrefs(self, user_id: 'int', prefs: 'str'):
+    def set_preferences(self, user_id: 'int', prefs: 'str'):
         """Sets the preferences for a user.
 
         :param user_id: The id of the user.
@@ -770,23 +672,23 @@ WHERE User_id IN ({}))
                                email: 'str|None'=None,
                                password: 'str|None'=None,
                                is_admin: 'bool'=False):
-        user_id = self.createUser(name, real_name or name, email or name + '@example.com', password=password or '')
-        user_group = self.createUserGroup(name)
-        self.addUserToGroup(user_group, user_id)
+        user_id = self.create_user(name, real_name or name, email or name + '@example.com', password=password or '')
+        user_group = self.create_usergroup(name)
+        self.add_user_to_group(user_group, user_id)
         if is_admin:
             self.addUserToAdmins(user_id)
         return user_id, user_group
 
     @contract
     def get_personal_usergroup_by_id(self, user_id: int) -> 'int|None':
-        return self.getPersonalUserGroup(self.getUser(user_id))
+        return self.get_personal_usergroup(self.get_user(user_id))
 
     @contract
     def get_anon_user_id(self) -> int:
         global ANON_USER_ID
         if ANON_USER_ID is not None:
             return ANON_USER_ID
-        ANON_USER_ID = self.getUserByName(ANONYMOUS_USERNAME)
+        ANON_USER_ID = self.get_user_by_name(ANONYMOUS_USERNAME)
         return ANON_USER_ID
 
     @contract
@@ -794,7 +696,7 @@ WHERE User_id IN ({}))
         global LOGGED_USER_ID
         if LOGGED_USER_ID is not None:
             return LOGGED_USER_ID
-        LOGGED_USER_ID = self.getUserByName(LOGGED_IN_USERNAME)
+        LOGGED_USER_ID = self.get_user_by_name(LOGGED_IN_USERNAME)
         return LOGGED_USER_ID
 
     @contract
@@ -802,7 +704,7 @@ WHERE User_id IN ({}))
         global ANON_GROUP_ID
         if ANON_GROUP_ID is not None:
             return ANON_GROUP_ID
-        ANON_GROUP_ID = self.getUserGroupByName(ANONYMOUS_GROUPNAME)
+        ANON_GROUP_ID = self.get_usergroup_by_name(ANONYMOUS_GROUPNAME)
         return ANON_GROUP_ID
 
     @contract
@@ -810,7 +712,7 @@ WHERE User_id IN ({}))
         global LOGGED_GROUP_ID
         if LOGGED_GROUP_ID is not None:
             return LOGGED_GROUP_ID
-        LOGGED_GROUP_ID = self.getUserGroupByName(LOGGED_IN_GROUPNAME)
+        LOGGED_GROUP_ID = self.get_usergroup_by_name(LOGGED_IN_GROUPNAME)
         return LOGGED_GROUP_ID
 
     def set_usergroup_name(self, group_id: int, user_name: str):

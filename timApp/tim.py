@@ -159,8 +159,8 @@ def get_documents():
         doc['name'] = docname
         doc['fullname'] = fullname
         doc['canEdit'] = timdb.users.has_edit_access(uid, doc['id'])
-        doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id']) or timdb.users.has_admin_access(uid)
-        doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
+        doc['isOwner'] = timdb.users.user_is_owner(getCurrentUserId(), doc['id']) or timdb.users.has_admin_access(uid)
+        doc['owner'] = timdb.users.get_owner_group(doc['id'])
         final_docs.append(doc)
 
     final_docs.sort(key=lambda d: d['name'].lower())
@@ -177,8 +177,8 @@ def get_folders():
     uid = getCurrentUserId()
     is_admin = timdb.users.has_admin_access(uid)
     for f in allowed_folders:
-        f['isOwner'] = is_admin or timdb.users.userIsOwner(uid, f['id'])
-        f['owner'] = timdb.users.getOwnerGroup(f['id'])
+        f['isOwner'] = is_admin or timdb.users.user_is_owner(uid, f['id'])
+        f['owner'] = timdb.users.get_owner_group(f['id'])
 
     allowed_folders.sort(key=lambda folder: folder['name'].lower())
     return jsonResponse(allowed_folders)
@@ -390,7 +390,7 @@ def index_page():
     timdb = getTimDb()
     current_user = getCurrentUserId()
     in_lecture = user_in_lecture()
-    possible_groups = timdb.users.getUserGroupsPrintable(current_user)
+    possible_groups = timdb.users.get_usergroups_printable(current_user)
     settings = get_user_settings()
     return render_template('index.html',
                            userName=getCurrentUserName(),

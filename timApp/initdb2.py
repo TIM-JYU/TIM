@@ -42,7 +42,7 @@ def initialize_database(db_path='tim_files/tim.db', files_root_path='tim_files',
         print('initializing the database in {}...'.format(files_root_path), end='')
     timdb = TimDb(db_path=db_path, files_root_path=files_root_path)
     timdb.initialize_tables()
-    timdb.users.createAnonymousAndLoggedInUserGroups()
+    timdb.users.create_special_usergroups()
     anon_group = timdb.users.get_anon_group_id()
     timdb.users.create_user_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
     timdb.users.create_user_with_group('tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi', is_admin=True)
@@ -103,11 +103,11 @@ def update_database():
 
 
 def add_logged_in_user(timdb):
-    lu = timdb.users.getUserByName(LOGGED_IN_USERNAME)
+    lu = timdb.users.get_user_by_name(LOGGED_IN_USERNAME)
     if lu is not None:
         return False
-    uid = timdb.users.createUser(LOGGED_IN_USERNAME, LOGGED_IN_USERNAME, '')
-    timdb.users.addUserToGroup(timdb.users.get_logged_group_id(), uid)
+    uid = timdb.users.create_user(LOGGED_IN_USERNAME, LOGGED_IN_USERNAME, '')
+    timdb.users.add_user_to_group(timdb.users.get_logged_group_id(), uid)
     return True
 
 

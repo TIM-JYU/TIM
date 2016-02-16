@@ -11,6 +11,7 @@ import string
 import random
 import re
 import requests
+import requests.exceptions
 import socket
 
 
@@ -68,7 +69,7 @@ def login():
         flash('You are already logged in.')
         return safe_redirect(session.get('came_from', '/'))
     if request.args.get('korppiLogin'):
-        return loginWithKorppi()
+        return login_with_korppi()
     elif request.args.get('emailLogin'):
         return loginWithEmail()
     elif request.args.get('emailSignup'):
@@ -78,14 +79,15 @@ def login():
                                hide_require_text=True,
                                anchor=request.args.get('anchor'))
 
+
 @login_page.route("/korppiLogin")
-def loginWithKorppi():
+def login_with_korppi():
     urlfile = request.url_root + "korppiLogin"
     save_came_from()
 
     if not session.get('appcookie'):
-        randomHex = codecs.encode(os.urandom(24), 'hex').decode('utf-8')
-        session['appcookie'] = randomHex
+        random_hex = codecs.encode(os.urandom(24), 'hex').decode('utf-8')
+        session['appcookie'] = random_hex
     url = "https://korppi.jyu.fi/kotka/interface/allowRemoteLogin.jsp"
     try:
         r = requests.get(url, params={'request': session['appcookie']}, verify=True)
@@ -96,42 +98,41 @@ def loginWithKorppi():
     if r.status_code != 200:
         return render_template('503.html', message='Korppi seems to be down, so login is currently not possible. '
                                                    'Try again later.'), 503
-    korppiResponse = r.text.strip()
-    #print("korppiresponse is: '{}'".format(korppiResponse))
-    if not korppiResponse:
+    korppi_response = r.text.strip()
+    if not korppi_response:
         return redirect(url+"?authorize=" + session['appcookie'] + "&returnTo=" + urlfile, code=303)
-    pieces = (korppiResponse + "\n\n").split('\n')
-    userName = pieces[0]
-    realName = pieces[1]
+    pieces = (korppi_response + "\n\n").split('\n')
+    user_name = pieces[0]
+    real_name = pieces[1]
     email = pieces[2]
 
     timdb = getTimDb()
-    userId = timdb.users.getUserByName(userName)
+    user_id = timdb.users.get_user_by_name(user_name)
     
-    if userId is None:
+    if user_id is None:
         # Try email
-        user = timdb.users.getUserByEmail(email)
+        user = timdb.users.get_user_by_email(email)
         if user is not None:
             # An email user signs in using Korppi for the first time. We update the user's username and personal
             # usergroup.
-            userId = user['id']
-            group_id = timdb.users.getPersonalUserGroup(user)
-            timdb.users.updateUser(userId, userName, realName, email)
-            timdb.users.addUserToKorppiGroup(userId)
-            timdb.users.set_usergroup_name(group_id, userName)
+            user_id = user['id']
+            group_id = timdb.users.get_personal_usergroup(user)
+            timdb.users.update_user(user_id, user_name, real_name, email)
+            timdb.users.add_user_to_korppi_group(user_id)
+            timdb.users.set_usergroup_name(group_id, user_name)
         else:
-            uid = timdb.users.createUser(userName, realName, email)
-            gid = timdb.users.createUserGroup(userName)
-            timdb.users.addUserToGroup(gid, uid)
-            timdb.users.addUserToKorppiGroup(uid)
-            userId = uid
+            uid = timdb.users.create_user(user_name, real_name, email)
+            gid = timdb.users.create_usergroup(user_name)
+            timdb.users.add_user_to_group(gid, uid)
+            timdb.users.add_user_to_korppi_group(uid)
+            user_id = uid
     else:
-        if realName:
-            timdb.users.updateUser(userId, userName, realName, email)
+        if real_name:
+            timdb.users.update_user(user_id, user_name, real_name, email)
 
-    session['user_id'] = userId
-    session['user_name'] = userName
-    session['real_name'] = realName
+    session['user_id'] = user_id
+    session['user_name'] = user_name
+    session['real_name'] = real_name
     session['email'] = email
 
     return finishLogin()
@@ -165,7 +166,7 @@ def altSignup():
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     
     timdb = getTimDb()
-    timdb.users.createPotentialUser(email, password)
+    timdb.users.create_potential_user(email, password)
     
     #print("Signup: email {}, password {}".format(email, password))
     session.pop('altlogin', None)
@@ -196,14 +197,14 @@ def altSignupAfter():
     save_came_from()
     timdb = getTimDb()
 
-    if not timdb.users.testPotentialUser(email, oldpass):
+    if not timdb.users.test_potential_user(email, oldpass):
         return jsonResponse({'message': 'Authentication failure'}, 403)
 
-    if timdb.users.getUserByEmail(email) is not None:
+    if timdb.users.get_user_by_email(email) is not None:
         # User with this email already exists
-        user_data = timdb.users.getUserByEmail(email)
+        user_data = timdb.users.get_user_by_email(email)
         userId = user_data['id']
-        nameId = timdb.users.getUserByName(userName)
+        nameId = timdb.users.get_user_by_name(userName)
 
         if nameId is not None and nameId != userId:
             flash('User name already exists. Please try another one.', 'loginmsg')
@@ -212,7 +213,7 @@ def altSignupAfter():
         # Use the existing user name; don't replace it with email
         userName = user_data['name']
     else:
-        if timdb.users.getUserByName(userName) is not None:
+        if timdb.users.get_user_by_name(userName) is not None:
             flash('User name already exists. Please try another one.', 'loginmsg')
             return finishLogin(ready=False)
     
@@ -225,13 +226,13 @@ def altSignupAfter():
         return finishLogin(ready=False)
     
     if userId == 0:
-        userId = timdb.users.createUser(userName, realName, email, password=password)
-        gid = timdb.users.createUserGroup(userName)
-        timdb.users.addUserToGroup(gid, userId)
+        userId = timdb.users.create_user(userName, realName, email, password=password)
+        gid = timdb.users.create_usergroup(userName)
+        timdb.users.add_user_to_group(gid, userId)
     else:
-        timdb.users.updateUser(userId, userName, realName, email, password=password)
+        timdb.users.update_user(userId, userName, realName, email, password=password)
     
-    timdb.users.deletePotentialUser(email)
+    timdb.users.delete_potential_user(email)
     
     session.pop('altlogin', None)
     session['user_id'] = userId
@@ -246,9 +247,9 @@ def altLogin():
     password = request.form['password']
     timdb = getTimDb()
 
-    if timdb.users.testUser(email, password):
+    if timdb.users.test_user(email, password):
         # Registered user
-        user = timdb.users.getUserByEmail(email)
+        user = timdb.users.get_user_by_email(email)
         session.pop('altlogin', None)
         session['user_id'] = user['id']
         session['user_name'] = user['name']
@@ -256,13 +257,13 @@ def altLogin():
         session['email'] = user['email']
 
         # Check if the users' group exists
-        if (len(timdb.users.getUserGroupsByName(user['name'])) == 0):
-            gid = timdb.users.createUserGroup(user['name'])
-            timdb.users.addUserToGroup(gid, user['id'])
+        if (len(timdb.users.get_usergroups_by_name(user['name'])) == 0):
+            gid = timdb.users.create_usergroup(user['name'])
+            timdb.users.add_user_to_group(gid, user['id'])
 
         return finishLogin()
 
-    elif timdb.users.testPotentialUser(email, password):
+    elif timdb.users.test_potential_user(email, password):
         # New user
         session['user_id'] = 0
         session['user_name'] = email
@@ -309,10 +310,10 @@ def quickLogin(username):
     timdb = getTimDb()
     if not timdb.users.has_admin_access(getCurrentUserId()):
         abort(403)
-    user = timdb.users.getUserByName(username)
+    user = timdb.users.get_user_by_name(username)
     if user is None:
         abort(404, 'User not found.')
-    user = timdb.users.getUser(user)
+    user = timdb.users.get_user(user)
     session['user_id'] = user['id']
     session['user_name'] = user['name']
     session['real_name'] = user['real_name']

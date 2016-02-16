@@ -40,7 +40,7 @@ def get_lecture_info():
 
     added_users = []
     for singleDict in answer_dicts:
-        singleDict['user_name'] = timdb.users.getUser(singleDict['user_id']).get("name")
+        singleDict['user_name'] = timdb.users.get_user(singleDict['user_id']).get("name")
         if singleDict['question_id'] not in question_ids:
             question_ids.append(singleDict['question_id'])
         if singleDict['user_id'] not in added_users:
@@ -51,7 +51,7 @@ def get_lecture_info():
 
     return jsonResponse(
         {"messages": messages, "answerers": answerers, "answers": answer_dicts, "questions": lecture_questions,
-         "isLecturer": is_lecturer, "user": {'user_name': timdb.users.getUser(current_user)['name'],
+         "isLecturer": is_lecturer, "user": {'user_name': timdb.users.get_user(current_user)['name'],
                                              'user_id': current_user}})
 
 
@@ -77,7 +77,7 @@ def get_all_messages(param_lecture_id=-1):
     if len(messages) > 0:
         list_of_new_messages = []
         for message in messages:
-            user = timdb.users.getUser(message.get('user_id'))
+            user = timdb.users.get_user(message.get('user_id'))
             time_as_time = datetime.datetime.fromtimestamp(
                 mktime(time.strptime(message.get("timestamp"), "%Y-%m-%d %H:%M:%S.%f")))
             list_of_new_messages.append(
@@ -173,7 +173,7 @@ def get_updates():
                     messages.reverse()
 
                     for message in messages:
-                        user = timdb.users.getUser(message.get('user_id'))
+                        user = timdb.users.get_user(message.get('user_id'))
                         time_as_time = datetime.datetime.fromtimestamp(
                             mktime(time.strptime(message.get("timestamp"), "%Y-%m-%d %H:%M:%S.%f")))
                         list_of_new_messages.append(
@@ -560,11 +560,11 @@ def get_lecture_users(timdb, tempdb, lecture_id):
         user_id = user.user_id
         active = user.active
         if lecture[0].get("lecturer") == user_id:
-            lecturer = {"name": timdb.users.getUser(user_id).get("name"),
+            lecturer = {"name": timdb.users.get_user(user_id).get("name"),
                         "active": active}
             lecturers.append(lecturer)
         else:
-            student = {"name": timdb.users.getUser(user_id).get("name"),
+            student = {"name": timdb.users.get_user(user_id).get("name"),
                        "active": active, "user_id": user_id}
             students.append(student)
 
@@ -741,7 +741,7 @@ def join_lecture():
     if current_user == 0:
         user_name = 'Anonymous'
         user_real_name = 'Guest'
-        user_id = timdb.users.createAnonymousUser(user_name, user_real_name)
+        user_id = timdb.users.create_anonymous_user(user_name, user_real_name)
         session['user_id'] = user_id
         session['user_name'] = user_name
         session['real_name'] = user_real_name

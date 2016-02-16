@@ -96,7 +96,7 @@ def par_info(doc_id, par_id):
     doc_name = timdb.documents.get_first_document_name(doc_id)
     info['doc_name'] = just_name(doc_name) if doc_name is not None else 'Document #{}'.format(doc_id)
 
-    group = timdb.users.getOwnerGroup(doc_id)
+    group = timdb.users.get_owner_group(doc_id)
     users = timdb.users.get_users_in_group(group['id'], limit=2)
     if len(users) == 1:
         info['doc_author'] = '{} ({})'.format(users[0]['name'], group['name'])
@@ -130,7 +130,7 @@ def try_return_folder(doc_name):
     if is_in_lecture:
         is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
 
-    possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
+    possible_groups = timdb.users.get_usergroups_printable(getCurrentUserId())
     settings = get_user_settings()
     return render_template('index.html',
                            doc=doc,
@@ -198,7 +198,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
             user = users[0]['id']
     else:
         users = []
-    current_user = timdb.users.getUser(user)
+    current_user = timdb.users.get_user(user)
 
     clear_cache = get_option(request, "nocache", False)
     hide_answers = get_option(request, 'noanswers', False)
@@ -224,17 +224,17 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     if hide_names_in_teacher(doc_id):
         pass
-        if not timdb.users.userIsOwner(current_user['id'], doc_id)\
+        if not timdb.users.user_is_owner(current_user['id'], doc_id)\
            and current_user['id'] != getCurrentUserId():
             current_user['name'] = '-'
             current_user['real_name'] = 'Undisclosed student'
         for user in users:
-            if not timdb.users.userIsOwner(user['id'], doc_id)\
+            if not timdb.users.user_is_owner(user['id'], doc_id)\
                and user['id'] != getCurrentUserId():
                 user['name'] = '-'
                 user['real_name'] = 'Undisclosed student %d' % user['id']
 
-    prefs = timdb.users.getPrefs(getCurrentUserId())
+    prefs = timdb.users.get_preferences(getCurrentUserId())
     custom_css_files = json.loads(prefs).get('css_files', {}) if prefs is not None else {}
     if custom_css_files:
         custom_css_files = {key: value for key, value in custom_css_files.items() if value}
