@@ -138,14 +138,14 @@ class MailerTest(unittest.TestCase):
         os.symlink(f1_rel, self.mailer.get_first_filename())
         os.symlink(f1_rel, self.mailer.get_last_filename())
 
-        f1_readdata = self.mailer.dequeue()
+        readdata = self.mailer.dequeue()
 
         files = os.listdir(self.maildir)
         self.assertEqual(len(files), 0)
-        self.assertEqual(len(f1_readdata), 3, 'Read message: ' + str(f1_readdata))
-        self.assertEqual(f1_readdata['From'], f1_data[1])
-        self.assertEqual(f1_readdata['To'], f1_data[2])
-        self.assertEqual(f1_readdata['Msg'], f1_data[3])
+        self.assertEqual(len(readdata), 3, 'Read message: ' + str(readdata))
+        self.assertEqual(readdata['From'], f1_data[1])
+        self.assertEqual(readdata['To'], f1_data[2])
+        self.assertEqual(readdata['Msg'], f1_data[3])
 
         # Multiple elements
         f_abs, f_rel = zip(*[self.mailer.get_random_filenames() for _ in range(3)])
@@ -158,17 +158,37 @@ class MailerTest(unittest.TestCase):
         os.symlink(f_rel[0], self.mailer.get_first_filename())
         os.symlink(f_rel[2], self.mailer.get_last_filename())
 
-        f1_readdata = self.mailer.dequeue()
+        # 3 -> 2 messages in the queue
+        readdata = self.mailer.dequeue()
         files = os.listdir(self.maildir)
         self.assertEqual(len(files), 4, 'Files: ' + str(files))
-        self.assertEqual(len(f1_readdata), 3, 'Read message: ' + str(f1_readdata))
-        self.assertEqual(f1_readdata['From'], f_data[0][1])
-        self.assertEqual(f1_readdata['To'], f_data[0][2])
-        self.assertEqual(f1_readdata['Msg'], f_data[0][3])
+        self.assertEqual(len(readdata), 3, 'Read message: ' + str(readdata))
+        self.assertEqual(readdata['From'], f_data[0][1])
+        self.assertEqual(readdata['To'], f_data[0][2])
+        self.assertEqual(readdata['Msg'], f_data[0][3])
 
-        # todo: test cases for message 2
-        # todo: test cases for message 3
-        # todo: test cases for empty queue again
+        # 2 -> 1 messages in the queue
+        readdata = self.mailer.dequeue()
+        files = os.listdir(self.maildir)
+        self.assertEqual(len(files), 3, 'Files: ' + str(files))
+        self.assertEqual(len(readdata), 3, 'Read message: ' + str(readdata))
+        self.assertEqual(readdata['From'], f_data[1][1])
+        self.assertEqual(readdata['To'], f_data[1][2])
+        self.assertEqual(readdata['Msg'], f_data[1][3])
+
+        # 1 -> 0 messages in the queue
+        readdata = self.mailer.dequeue()
+        files = os.listdir(self.maildir)
+        self.assertEqual(len(files), 0, 'Files: ' + str(files))
+        self.assertEqual(len(readdata), 3, 'Read message: ' + str(readdata))
+        self.assertEqual(readdata['From'], f_data[2][1])
+        self.assertEqual(readdata['To'], f_data[2][2])
+        self.assertEqual(readdata['Msg'], f_data[2][3])
+
+        # Empty dequeue
+        self.assertEqual(self.mailer.dequeue(), None)
+        files = os.listdir(self.maildir)
+        self.assertEqual(len(files), 0)
 
     #def testUpdate(self):
     #    self.fail()
