@@ -27,7 +27,7 @@
     {% endif %}
 {% endblock %}
 {% block content %}
-    <div ng-app="timApp" ng-controller="IndexCtrl">
+    <div ng-controller="IndexCtrl">
         {% if in_lecture %}
             {% include 'lecture.html' %}
         {% elif session.user_id %}
