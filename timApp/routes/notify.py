@@ -24,7 +24,7 @@ def send_email(rcpt, msg):
             data = response.read()
             print(data.decode())
 
-    except (ConnectionError, socket.error) as e:
+    except (ConnectionError, socket.error, http.client.error) as e:
         print("Couldn't connect to funnel: " + str(e))
 
     finally:
