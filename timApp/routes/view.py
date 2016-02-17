@@ -123,8 +123,8 @@ def try_return_folder(doc_name):
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
     if is_in_lecture:
         is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
-    possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
-    settings = tim.get_user_settings()
+    possible_groups = timdb.users.get_usergroups_printable(getCurrentUserId())
+    settings = get_user_settings()
 
     item_name = doc_name.rstrip('/')
     block_id = timdb.folders.get_folder_id(item_name)
@@ -232,7 +232,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
             user = users[0]['id']
     else:
         users = []
-    current_user = timdb.users.getUser(user)
+    current_user = timdb.users.get_user(user)
 
     clear_cache = get_option(request, "nocache", False)
     hide_answers = get_option(request, 'noanswers', False)
@@ -268,7 +268,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                 user['name'] = '-'
                 user['real_name'] = 'Undisclosed student %d' % user['id']
 
-    prefs = timdb.users.getPrefs(getCurrentUserId())
+    prefs = timdb.users.get_preferences(getCurrentUserId())
     custom_css_files = json.loads(prefs).get('css_files', {}) if prefs is not None else {}
     if custom_css_files:
         custom_css_files = {key: value for key, value in custom_css_files.items() if value}
