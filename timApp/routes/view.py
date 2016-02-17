@@ -96,7 +96,7 @@ def par_info(doc_id, par_id):
     doc_name = timdb.documents.get_first_document_name(doc_id)
     info['doc_name'] = just_name(doc_name) if doc_name is not None else 'Document #{}'.format(doc_id)
 
-    group = timdb.users.getOwnerGroup(doc_id)
+    group = timdb.users.get_owner_group(doc_id)
     users = timdb.users.get_users_in_group(group['id'], limit=2)
     if len(users) == 1:
         info['doc_author'] = '{} ({})'.format(users[0]['name'], group['name'])
@@ -122,7 +122,8 @@ def try_return_folder(doc_name):
     user = getCurrentUserId()
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
     if is_in_lecture:
-        is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
+        is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
+
     possible_groups = timdb.users.get_usergroups_printable(getCurrentUserId())
     settings = get_user_settings()
 
@@ -258,12 +259,12 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     if hide_names_in_teacher(doc_id):
         pass
-        if not timdb.users.userIsOwner(current_user['id'], doc_id)\
+        if not timdb.users.user_is_owner(current_user['id'], doc_id)\
            and current_user['id'] != getCurrentUserId():
             current_user['name'] = '-'
             current_user['real_name'] = 'Undisclosed student'
         for user in users:
-            if not timdb.users.userIsOwner(user['id'], doc_id)\
+            if not timdb.users.user_is_owner(user['id'], doc_id)\
                and user['id'] != getCurrentUserId():
                 user['name'] = '-'
                 user['real_name'] = 'Undisclosed student %d' % user['id']
