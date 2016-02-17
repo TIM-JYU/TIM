@@ -12,10 +12,8 @@ MAIL_HOST = "smtp.jyu.fi"
 MAIL_DIR = "/service/mail"
 
 
-#CLIENT_RATE        = 20  # Max messages per client rate window
-#CLIENT_RATE_WINDOW = 60  # In seconds
-CLIENT_RATE        =  3  # Max messages per client rate window
-CLIENT_RATE_WINDOW = 10  # In seconds
+CLIENT_RATE        = 20  # Max messages per client rate window
+CLIENT_RATE_WINDOW = 60  # In seconds
 
 
 class Mailer:
