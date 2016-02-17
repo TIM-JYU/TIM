@@ -10,7 +10,11 @@ FUNNEL_PORT = 80
 def send_email(rcpt, msg):
     conn = None
     try:
-        headers = {"Host": "tim", "Encoding": "text/plain", "Rcpt-To": rcpt, "Msg-Data": msg}
+        headers = {
+            "Host": "tim",
+            "Accept-Encoding": "text/plain",
+            "Encoding": "text/plain",
+            "Rcpt-To": rcpt, "Msg-Data": msg}
         conn = http.client.HTTPConnection(FUNNEL_HOST, port=FUNNEL_PORT)
         conn.request("POST", "/mail", headers=headers)
 
