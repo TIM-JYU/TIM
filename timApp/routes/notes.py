@@ -51,8 +51,14 @@ def post_note():
         par = get_referenced_pars_from_req(par)[0]
 
     timdb.notes.addNote(group_id, Document(par.get_doc_id()), par, note_text, access, tags)
-    notify_doc_owner(doc_id, '{} has posted a note on your document "{}":\n\n{}'.format(
-        getCurrentUserName(), timdb.documents.get_first_document_name(doc_id), note_text))
+
+    user_name = getCurrentUserName()
+    doc_name = timdb.documents.get_first_document_name(doc_id)
+    notify_doc_owner(doc_id,
+                     '{} has posted a note on your document {}'.format(user_name, doc_name),
+                     '{} has posted the following note on your document "{}":\n\n{}'.format(
+                         user_name, doc_name, note_text))
+
 
     return par_response([doc.get_paragraph(par_id)],
                         doc)
@@ -77,9 +83,19 @@ def edit_note():
     timdb = getTimDb()
     if not (timdb.notes.hasEditAccess(group_id, note_id) or timdb.users.user_is_owner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to edit this note.")
+    prev_note_text = timdb.notes.get_note(note_id)['content']
     timdb.notes.modifyNote(note_id, note_text, access, tags)
-    notify_doc_owner(doc_id, '{} has edited a note on your document "{}":\n\n{}'.format(
-        getCurrentUserName(), timdb.documents.get_first_document_name(doc_id), note_text))
+
+    user_name = getCurrentUserName()
+    doc_name = timdb.documents.get_first_document_name(doc_id)
+    notify_doc_owner(doc_id,'{} has edited a note on your document {}'.format(user_name, doc_name),
+"""{} has edited the following note on your document "{}":\n
+=== ORIGINAL ===\n
+{}\n\n
+=== MODIFIED ===\n
+{}\n
+""".format(
+    user_name, doc_name, prev_note_text, note_text))
 
     doc = Document(doc_id)
     return par_response([doc.get_paragraph(par_id)],

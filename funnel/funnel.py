@@ -50,6 +50,7 @@ class MyServer(BaseHTTPRequestHandler):
         if self.path == "/mail":
             mfrom = self.headers.get('From', 'no-reply@tim.jyu.fi')
             mto = self.headers.get('Rcpt-To', None)
+            msubj = self.headers.get('Subject', 'TIM Notification')
             content_len = int(self.headers.get('content-length', 0))
             mdata = str(self.rfile.read(content_len)).replace('<br>', '\n')
 
@@ -60,7 +61,7 @@ class MyServer(BaseHTTPRequestHandler):
                 self.send_str_response(400, 'Missing message data', self.headers.items())
                 return
 
-            Funnel.get_mailer().enqueue(mfrom, mto, mdata)
+            Funnel.get_mailer().enqueue(mfrom, mto, msubj, mdata)
             self.send_str_response(200, 'Message queued')
         else:
             self.send_str_response(400, 'Unknown route ' + self.path)

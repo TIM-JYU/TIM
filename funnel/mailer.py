@@ -61,10 +61,10 @@ class Mailer:
         with open(filename, 'w') as f_dest:
             f_dest.write('\n'.join(lines))
 
-    def enqueue(self, sender: str, rcpt: str, msg: str) -> str:
+    def enqueue(self, sender: str, rcpt: str, subject:str, msg: str) -> str:
         this_absfile, this_relfile = self.get_random_filenames()
         with open(this_absfile, 'w') as f:
-            f.write('\n'.join(['', sender, rcpt, msg]))
+            f.write('\n'.join(['', sender, rcpt, subject, msg]))
 
         first_file = self.get_first_filename()
         last_file = self.get_last_filename()
@@ -105,7 +105,7 @@ class Mailer:
         else:
             os.symlink(lines[0], first_file)
 
-        return {'From': lines[1], 'To': lines[2], 'Msg': '\n'.join(lines[3:])}
+        return {'From': lines[1], 'To': lines[2], 'Subject': lines[3], 'Msg': '\n'.join(lines[4:])}
 
     def send_message(self, msg: dict):
         logging.getLogger().info("Mail to {}: {}".format(msg['To'], msg['Msg']))
@@ -114,7 +114,7 @@ class Mailer:
             return
 
         mime_msg = MIMEText(msg['Msg'])
-        mime_msg['Subject'] = 'TIM Notification'
+        mime_msg['Subject'] = msg['Subject']
         mime_msg['From'] = msg['From']
         mime_msg['To'] = msg['To']
 
