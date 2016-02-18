@@ -87,7 +87,7 @@ if param profile ; then
 fi
 
 if param funnel; then
-docker run --net=timnet -d --name funnel \
+docker run --net=timnet -dti --name funnel \
     -v /opt/funnel:/service \
     funnel /service/run.sh
 fi

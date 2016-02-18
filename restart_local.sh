@@ -56,7 +56,7 @@ fi
 wait
 
 if param funnel; then
-    docker run --net=timnet -d --name funnel \
+    docker run --net=timnet -dti --name funnel \
     -v /opt/funnel:/service \
     funnel /service/run_local.sh
 fi
