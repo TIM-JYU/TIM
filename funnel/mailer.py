@@ -107,7 +107,11 @@ class Mailer:
 
         return {'From': lines[1], 'To': lines[2], 'Subject': lines[3], 'Msg': '\n'.join(lines[4:])}
 
-    def send_message(self, msg: dict):
+    def send_message(self, msg: Union[dict, None]):
+        if msg is None:
+            logging.getLogger().warn("Null argument to send_message")
+            return
+
         logging.getLogger().info("Mail to {}: {}".format(msg['To'], msg['Msg']))
         if self.dry_run:
             logging.getLogger().info("Dry run mode specified, not sending")
