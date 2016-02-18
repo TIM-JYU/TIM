@@ -67,12 +67,8 @@ def update_document(doc_id):
         ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
 
     # todo: include diffs in the message
-    user_name = getCurrentUserName()
-    doc_name = timdb.documents.get_first_document_name(doc_id)
-    notify_doc_owner(doc_id,
-                     '{} has edited your document {}'.format(user_name, doc_name),
-                     '{} has edited your document "{}" as whole\n'.format(user_name, doc_name))
-
+    notify_doc_owner(doc_id, '[user_name] has edited your document [doc_name]',
+                     '[user_name] has edited your document as whole: [doc_url]')
 
     return jsonResponse({'versions': chg, 'fulltext': d.export_markdown()})
 
@@ -152,16 +148,14 @@ def modify_paragraph():
 
     mark_pars_as_read_if_chosen(pars, doc)
 
-    user_name = getCurrentUserName()
-    doc_name = timdb.documents.get_first_document_name(doc_id)
     notify_doc_owner(doc_id,
-                     '{} has edited your document {}'.format(user_name, doc_name),
-"""{} has changed a paragraph in your document "{}":\n
+                     '[user_name] has edited your document [doc_name]',
+                     """[user_name] has changed a paragraph in your document [doc_url]:\n
 == ORIGINAL ==\n
 {}\n\n
 ==MODIFIED==\n
 {}\n
-""".format(user_name, doc_name, original_md, updated_md))
+""".format(original_md, updated_md))
 
     return par_response(pars,
                         doc,
@@ -299,11 +293,9 @@ def add_paragraph():
         pars.append(par)
     mark_pars_as_read_if_chosen(pars, doc)
 
-    user_name = getCurrentUserName()
-    doc_name = timdb.documents.get_first_document_name(doc_id)
     notify_doc_owner(doc_id,
-                     '{} has edited your document {}'.format(user_name, doc_name),
-                     '{} has added a new paragraph on your document "{}":\n\n{}'.format(user_name, doc_name, md))
+                     '[user_name] has edited your document [doc_name]',
+                     '[user_name] has added a new paragraph on your document [doc_url]:\n\n{}'.format(md))
 
     return par_response(pars, doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'])
 
@@ -329,11 +321,9 @@ def delete_paragraph(doc_id):
 
     user_name = getCurrentUserName()
     doc_name = timdb.documents.get_first_document_name(doc_id)
-    notify_doc_owner(doc_id,
-                     '{} has edited your document {}'.format(user_name, doc_name),
-                     '{} has deleted the following paragraph(s) from your document "{}":\n\n{}'.format(
-                         user_name, doc_name, text))
-
+    notify_doc_owner(doc_id, '[user_name] has edited your document [doc_name]',
+                     '[user_name] has deleted the following paragraph(s) from your document [doc_url]:\n\n{}'.format(
+                         text))
 
     return par_response([], doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'])
 
