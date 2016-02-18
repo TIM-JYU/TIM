@@ -13,10 +13,11 @@ def send_email(rcpt, msg):
         headers = {
             "Host": "tim",
             "Accept-Encoding": "text/plain",
-            "Encoding": "text/plain",
-            "Rcpt-To": rcpt, "Msg-Data": msg}
+            "Encoding": "text/html",
+            "Connection": "close",
+            "Rcpt-To": rcpt}
         conn = http.client.HTTPConnection(FUNNEL_HOST, port=FUNNEL_PORT)
-        conn.request("POST", "/mail", headers=headers)
+        conn.request("POST", "/mail", body=msg.replace('\n', '<br>'), headers=headers)
 
         response = conn.getresponse()
         if response.status != 200:

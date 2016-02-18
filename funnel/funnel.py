@@ -42,22 +42,24 @@ class Funnel:
             self.server.handle_request()
             self.mailer.update()
 
+
 class MyServer(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path == "/mail":
             mfrom = self.headers.get('From', 'no-reply@tim.jyu.fi')
             mto = self.headers.get('Rcpt-To', None)
-            mdata = self.headers.get('Msg-Data', None)
+            content_len = int(self.headers.get('content-length', 0))
+            mdata = str(self.rfile.read(content_len)).replace('<br>', '\n')
 
             if mto is None:
                 self.send_str_response(400, 'Missing message recipient', self.headers.items())
                 return
-            if mdata is None:
+            if mdata == '':
                 self.send_str_response(400, 'Missing message data', self.headers.items())
                 return
 
             Funnel.get_mailer().enqueue(mfrom, mto, mdata)
-            self.send_str_response(200, 'Message queued')
+            self.send_str_response(200, 'Message queued: ' + mdata)
         else:
             self.send_str_response(400, 'Unknown route ' + self.path)
 
