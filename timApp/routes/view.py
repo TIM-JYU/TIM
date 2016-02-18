@@ -119,12 +119,6 @@ def parse_range(start_index: 'int|str|None', end_index: 'int|str|None') -> 'rang
 
 def try_return_folder(doc_name):
     timdb = getTimDb()
-    folder_name = doc_name.rstrip('/')
-    block_id = timdb.folders.get_folder_id(folder_name)
-
-    if block_id is None:
-        abort(404)
-    doc = timdb.folders.get(block_id)
     user = getCurrentUserId()
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
     if is_in_lecture:
@@ -132,6 +126,35 @@ def try_return_folder(doc_name):
 
     possible_groups = timdb.users.get_usergroups_printable(getCurrentUserId())
     settings = get_user_settings()
+
+    item_name = doc_name.rstrip('/')
+    block_id = timdb.folders.get_folder_id(item_name)
+
+    if block_id is None:
+        while (block_id is None):
+            item_name, _ = timdb.folders.split_location(item_name)
+            block_id = timdb.folders.get_folder_id(item_name)
+            if block_id is None:
+                block_id = timdb.documents.get_document_id(item_name)
+
+        foundItem = None
+        if verify_view_access(block_id, require=False):
+            foundItem = item_name
+
+        rights = can_write_to_folder(item_name) and timdb.folders.get_folder_id(item_name) is not None
+
+        return render_template('create_new.html',
+                           userName=getCurrentUserName(),
+                           userId=user,
+                           userGroups=possible_groups,
+                           rights=rights,
+                           in_lecture=is_in_lecture,
+                           settings=settings,
+                           newItem=doc_name,
+                           foundItem=foundItem,
+                           doc={'id': -1, 'fullname': ''})
+
+    doc = timdb.folders.get(block_id)
     return render_template('index.html',
                            doc=doc,
                            userGroups=possible_groups,
@@ -154,6 +177,12 @@ def show_time(s):
 def view(doc_path, template_name, usergroup=None, route="view"):
 
     session['last_doc'] = request.path
+    try:
+        message = session['message']
+        session['message'] = None
+    except KeyError:
+        message = None
+
     timdb = getTimDb()
     doc_info = timdb.documents.resolve_doc_id_name(doc_path)
 
@@ -161,11 +190,17 @@ def view(doc_path, template_name, usergroup=None, route="view"):
         return try_return_folder(doc_path)
 
     doc_id = doc_info['id']
-    if route == "teacher":
-        verify_teacher_access(doc_id)
+    if route == 'teacher':
+        if verify_teacher_access(doc_id, False) is False:
+            if verify_view_access(doc_id):
+                session['message'] = "Did someone give you a wrong link? Showing normal view instead of teacher view."
+                return redirect('/view/' + doc_path)
 
     if route == 'answers':
-        verify_seeanswers_access(doc_id)
+        if verify_seeanswers_access(doc_id, False) is False:
+            if verify_view_access(doc_id):
+                session['message'] = "Did someone give you a wrong link? Showing normal view instead of answers view."
+                return redirect('/view/' + doc_path)
 
     if not has_view_access(doc_id):
         if not logged_in():
@@ -267,5 +302,6 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                              translations=timdb.documents.get_translations(doc_id),
                              reqs=pluginControl.get_all_reqs(),
                              settings=settings,
-                             no_browser=hide_answers)
+                             no_browser=hide_answers,
+                             message=message)
     return result
