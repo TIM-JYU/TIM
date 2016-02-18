@@ -1,8 +1,10 @@
 #! /usr/bin/python3
+import logging
 import time
 import sys
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from logging.config import fileConfig
 from mailer import Mailer
 from typing import Union
 
@@ -24,10 +26,10 @@ class Funnel:
 
     def start(self):
         if self.server is not None:
-            print("Server already started!")
+            logging.getLogger().warn('Server already started!')
             return
         self.server = HTTPServer((HOST_NAME, HOST_PORT), MyServer)
-        print(time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, HOST_PORT))
+        logging.getLogger().info('Server starts')
 
     def stop(self):
         if self.server is None:
@@ -35,7 +37,7 @@ class Funnel:
             return
         self.server.server_close()
         self.server = None
-        print(time.asctime(), "Server Stops - %s:%s" % (HOST_NAME, HOST_PORT))
+        logging.getLogger().info('Server stops')
 
     def update(self):
         if self.server:
@@ -59,7 +61,7 @@ class MyServer(BaseHTTPRequestHandler):
                 return
 
             Funnel.get_mailer().enqueue(mfrom, mto, mdata)
-            self.send_str_response(200, 'Message queued: ' + mdata)
+            self.send_str_response(200, 'Message queued')
         else:
             self.send_str_response(400, 'Unknown route ' + self.path)
 
@@ -72,6 +74,7 @@ class MyServer(BaseHTTPRequestHandler):
         self.wfile.write(bytes(fullmsg, 'utf-8'))
 
 if __name__ == '__main__':
+    fileConfig('logging.ini')
     funnel = Funnel()
     funnel.start()
 

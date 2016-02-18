@@ -1,7 +1,7 @@
+import logging
 import os
 import random
 import smtplib
-import socket
 import string
 import time
 
@@ -54,7 +54,7 @@ class Mailer:
             lines = f_src.read().split('\n')
 
         if len(lines) < 4:
-            print('Syntax error in file ' + filename)
+            logging.getLogger().error('Syntax error in file ' + filename)
             return
 
         lines[0] = next_filename
@@ -72,7 +72,6 @@ class Mailer:
         if not os.path.islink(first_file):
             files = os.listdir(self.mail_dir)
             if len(files) > 1:
-                print("! Files = " + str(files))
                 os.symlink(files[0], first_file)
             else:
                 os.symlink(this_relfile, first_file)
@@ -96,7 +95,7 @@ class Mailer:
             lines = f_src.read().split('\n')
 
         if len(lines) < 4:
-            print('Syntax error in file ' + first_file)
+            logging.getLogger().error('Syntax error in file ' + first_file)
             return None
 
         os.unlink(os.path.join(self.mail_dir, os.readlink(first_file)))
@@ -109,8 +108,9 @@ class Mailer:
         return {'From': lines[1], 'To': lines[2], 'Msg': '\n'.join(lines[3:])}
 
     def send_message(self, msg: dict):
+        logging.getLogger().info("Mail to {}: {}".format(msg['To'], msg['Msg']))
         if self.dry_run:
-            print("Mail to {}: {}".format(msg['To'], msg['Msg']))
+            logging.getLogger().info("Dry run mode specified, not sending")
             return
 
         mime_msg = MIMEText(msg['Msg'])
@@ -127,7 +127,6 @@ class Mailer:
             window_age = time.time() - self.first_message_time
             if window_age > self.client_rate_window:
                 # New window
-                #print('A new window is opened')
                 self.first_message_time = None
                 self.messages_remaining = self.client_rate
 
