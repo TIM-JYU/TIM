@@ -52,7 +52,7 @@ class MyServer(BaseHTTPRequestHandler):
             mto = self.headers.get('Rcpt-To', None)
             msubj = self.headers.get('Subject', 'TIM Notification')
             content_len = int(self.headers.get('content-length', 0))
-            mdata = str(self.rfile.read(content_len)).replace('<br>', '\n')
+            mdata = bytes.decode(self.rfile.read(content_len), 'utf-8').replace('<br>', '\n')
 
             if mto is None:
                 self.send_str_response(400, 'Missing message recipient', self.headers.items())

@@ -18,7 +18,7 @@ def send_email(rcpt, subject, msg):
             "Subject": subject,
             "Rcpt-To": rcpt}
         conn = http.client.HTTPConnection(FUNNEL_HOST, port=FUNNEL_PORT)
-        conn.request("POST", "/mail", body=msg.replace('\n', '<br>'), headers=headers)
+        conn.request("POST", "/mail", body=msg.replace('\n', '<br>').encode('utf-8'), headers=headers)
 
         response = conn.getresponse()
         if response.status != 200:
