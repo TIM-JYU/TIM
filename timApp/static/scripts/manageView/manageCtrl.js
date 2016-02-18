@@ -453,6 +453,23 @@ text = '\n'.join(a)
                 });
         };
 
+        sc.createCopy = function() {
+            $http.post('/createDocument', {
+                'doc_name': sc.documentName
+            }).success(function (data, status, headers, config) {
+                forwardName = data.name;
+                $http.post('/update/' + data.id, {
+                    'template_name': $window.doc.fullname
+                }).success(function (data, status, headers, config) {
+                    location.href = "/view/" + forwardName;
+                }).error(function (data, status, headers, config) {
+                    $window.alert(data);
+                });
+            }).error(function (data, status, headers, config) {
+                $window.alert('Could not create a copy. Error message is: ' + data);
+            });
+        };
+
         sc.grouprights = grouprights;
         sc.userGroups = groups;
         sc.accessTypes = accessTypes;
