@@ -28,7 +28,6 @@
     <Content Include="cs.css" />
     <Content Include="doc\protocolExample.txt" />
     <Content Include="end.html" />
-    <Content Include="html\edit.html" />
     <Content Include="iframeTemplate.html" />
     <Content Include="images\index.html" />
     <Content Include="images\ohj1\view_html-1.html" />
