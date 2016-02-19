@@ -112,28 +112,12 @@ def get_image(image_id, image_filename):
     return send_file(f, mimetype='image/' + imgtype)
 
 
-@app.route('/files/<int:file_id>/<file_filename>')
-def get_file(file_id, file_filename):
-    timdb = getTimDb()
-    if not timdb.files.fileExists(file_id, file_filename):
-        abort(404)
-    verify_view_access(file_id)
-    img_data = timdb.files.getFile(file_id, file_filename)
-    f = io.BytesIO(img_data)
-    return send_file(f)
-
-
 @app.route('/images')
 def get_all_images():
     timdb = getTimDb()
     images = timdb.images.getImages()
     allowedImages = [image for image in images if timdb.users.has_view_access(getCurrentUserId(), image['id'])]
     return jsonResponse(allowedImages)
-
-
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
 @app.route("/getDocuments")
