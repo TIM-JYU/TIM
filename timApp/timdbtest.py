@@ -27,7 +27,6 @@ class TimDbTest(unittest.TestCase):
             del_content(cls.test_files_path, onerror=change_permission_and_retry)
         else:
             os.mkdir(cls.test_files_path)
-        os.system('mount -t tmpfs -o size=2m tmpfs ' + os.path.abspath(cls.test_files_path))
         Document.default_files_root = cls.test_files_path
         DocParagraph.default_files_root = cls.test_files_path
         initdb2.initialize_database(cls.db_path, cls.test_files_path, create_docs=False, print_progress=False)
@@ -36,7 +35,6 @@ class TimDbTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.dumbo.kill()
-        os.system('umount ' + os.path.abspath(cls.test_files_path))
 
     def setUp(self):
         pass
