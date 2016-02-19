@@ -87,9 +87,10 @@
     <div id="uploadButtons" class="extraButtonArea hidden" ng-if="options.showImageUpload">
         <span>
             Upload image/file: <input type="file" ngf-select="onFileSelect($file)">
-            <span ng-show="file.progress >= 0"
+            <span ng-show="file.progress >= 0 && !file.error"
                   ng-bind="file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!'"></span>
         </span>
+        <div class="error" ng-show="file.error" ng-bind="file.error"></div>
     </div>
     <div id="helpButtons" class="extraButtonArea hidden">
         <a onclick="window.open('https://tim.it.jyu.fi/view/tim/TIM-ohjeet','_blank')">Help</a>

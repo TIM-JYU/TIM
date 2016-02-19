@@ -80,6 +80,12 @@ def forbidden(error):
     return error_generic(error, 403)
 
 
+@app.errorhandler(413)
+def entity_too_large(error):
+    error.description = 'Your file is too large to be uploaded.'
+    return error_generic(error, 413)
+
+
 @app.errorhandler(404)
 def notFound(error):
     return error_generic(error, 404)

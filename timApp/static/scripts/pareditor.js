@@ -1154,6 +1154,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
 
                     if (file) {
                         $scope.file.progress = 0;
+                        $scope.file.error = null;
                         file.upload = Upload.upload({
                             url: '/upload/',
                             data: {
@@ -1173,7 +1174,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                             });
                         }, function (response) {
                             if (response.status > 0)
-                                $scope.file.progress = 'Error occurred: ' + response.data.error;
+                                $scope.file.error = response.data.error;
                         }, function (evt) {
                                 $scope.file.progress = Math.min(100, parseInt(100.0 *
                                 evt.loaded / evt.total));
