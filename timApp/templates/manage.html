@@ -41,10 +41,10 @@
     </style>
     <script>
         var isFolder = {{is_folder|tojson}};
-        var doc = {{doc|tojson|safe}};
-        var grouprights = {{grouprights|tojson|safe}};
+        var doc = {{doc|tojson}};
+        var grouprights = {{grouprights|tojson}};
         var accessTypes = {{access_types|tojson}};
-        var groups = {{user_groups|tojson|safe}};
+        var groups = {{user_groups|tojson}};
     </script>
 {% endblock %}
 {% block content %}

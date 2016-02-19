@@ -56,11 +56,11 @@
     <script>
         var noBrowser = {{ no_browser|tojson }};
         var showIndex = {{(headers|length > 0)|tojson}};
-        var version = {{version|tojson|safe}};
+        var version = {{version|tojson}};
         var translations = {{translations|tojson}};
         var reqs = {{reqs|tojson}};
         var startIndex = {{start_index|tojson}};
-        var refererPath = {{request.path|tojson|safe}};
+        var refererPath = {{request.path|tojson}};
         var teacherMode = {{teacher_mode|tojson}};
         var group = {{group|tojson}};
         var lectureMode = {{lecture_mode|tojson}};
