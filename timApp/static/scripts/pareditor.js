@@ -105,7 +105,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                             var height = $('pareditor').height();
                             var $preview = $('.previewcontent');
                             var offset = $preview.position().top;
-                            $preview.css('max-height', (height - offset) + 'px');
+                            $preview.css('max-height', (height - offset) + 1 + 'px');
                             $preview.scrollTop($scope.scrollPos);
                         }, 50
                     );
