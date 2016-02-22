@@ -49,14 +49,23 @@ class Funnel:
 
 class MyServer(BaseHTTPRequestHandler):
     def do_POST(self):
+        def decode(obj) -> str:
+            if isinstance(obj, str):
+                return obj
+            if isinstance(obj, bytes):
+                return bytes.decode(obj, 'utf-8')
+            logging.getLogger().error('decode() received something unexpected: ' + str(obj))
+            return str(obj)
+
         logging.getLogger().debug('Received a HTTP {} request from {}'.format(self.path, self.client_address))
+        logging.getLogger().debug('Headers: {}'.format(self.headers.items()))
         if self.path == "/mail":
-            mfrom = self.headers.get('From', 'no-reply@tim.jyu.fi')
-            mto = self.headers.get('Rcpt-To', None)
-            msubj = self.headers.get('Subject', 'TIM Notification')
+            mfrom = decode(self.headers.get('From', 'no-reply@tim.jyu.fi'))
+            mto = decode(self.headers.get('Rcpt-To', None))
+            msubj = decode(self.headers.get('Subject', 'TIM Notification'))
             content_len = int(self.headers.get('content-length', 0))
-            mdata = bytes.decode(self.rfile.read(content_len), 'utf-8').replace('<br>', '\n')
-            logging.getLogger().debug('Mail from {}, to {}, subject {}, content-length {}'.format(
+            mdata = decode(self.rfile.read(content_len)).replace('<br>', '\n')
+            logging.getLogger().debug('Mail from {0}, to {1}, subject {2}, content-length {3}'.format(
                 mfrom, mto, msubj, content_len))
 
             if mto is None:
