@@ -2,13 +2,14 @@ import http.client
 import socket
 import os
 from routes.common import *
+from routes.logger import log_message
 
 
 FUNNEL_HOST = "funnel"
 FUNNEL_PORT = 80
 
 
-def send_email(rcpt, subject, msg):
+def send_email(rcpt: str, subject: str, msg: str):
     conn = None
     try:
         headers = {
@@ -20,15 +21,14 @@ def send_email(rcpt, subject, msg):
             "Rcpt-To": rcpt}
         conn = http.client.HTTPConnection(FUNNEL_HOST, port=FUNNEL_PORT)
         conn.request("POST", "/mail", body=msg.replace('\n', '<br>').encode('utf-8'), headers=headers)
+        log_message("Sending email to " + rcpt, 'INFO')
 
         response = conn.getresponse()
         if response.status != 200:
-            print(response.status, response.reason)
-            data = response.read()
-            print(data.decode())
+            log_message('Response from funnel: {} {}'.format(response.status, response.reason), 'ERROR')
 
     except (ConnectionError, socket.error, http.client.error) as e:
-        print("Couldn't connect to funnel: " + str(e))
+        log_message("Couldn't connect to funnel: " + str(e))
 
     finally:
         if conn is not None:
@@ -56,6 +56,7 @@ def notify_doc_owner(doc_id, subject, msg):
     macro_msg = replace_macros(msg, doc_id)
 
     for user in timdb.users.get_users_in_group(owner_group):
-        if user['id'] != my_userid:
+        log_message('User: ' + str(user), 'INFO')
+        if user['id'] != my_userid and user['email']:
             send_email(user['email'], macro_subject, macro_msg)
 
