@@ -82,7 +82,8 @@ def forbidden(error):
 
 @app.errorhandler(413)
 def entity_too_large(error):
-    error.description = 'Your file is too large to be uploaded.'
+    error.description = 'Your file is too large to be uploaded. Maximum size is {} MB.'\
+        .format(app.config['MAX_CONTENT_LENGTH'] / 1024 / 1024)
     return error_generic(error, 413)
 
 
