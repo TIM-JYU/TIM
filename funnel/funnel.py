@@ -15,14 +15,16 @@ MAIL_DIR = "/service/mail"
 
 
 class Funnel:
-    mailer = Mailer(dry_run='--dry-run' in sys.argv)
+    instance = None
 
-    def __init__(self):
+    def __init__(self, dry_run: bool):
+        self.mailer = Mailer(dry_run=dry_run)
         self.server = None
+        Funnel.instance = self
 
     @classmethod
     def get_mailer(cls):
-        return cls.mailer
+        return None if cls.instance is None else cls.instance.mailer
 
     def start(self):
         if self.server is not None:
@@ -47,12 +49,15 @@ class Funnel:
 
 class MyServer(BaseHTTPRequestHandler):
     def do_POST(self):
+        logging.getLogger().debug('Received a HTTP {} request from {}'.format(self.path, self.client_address))
         if self.path == "/mail":
             mfrom = self.headers.get('From', 'no-reply@tim.jyu.fi')
             mto = self.headers.get('Rcpt-To', None)
             msubj = self.headers.get('Subject', 'TIM Notification')
             content_len = int(self.headers.get('content-length', 0))
             mdata = bytes.decode(self.rfile.read(content_len), 'utf-8').replace('<br>', '\n')
+            logging.getLogger().debug('Mail from {}, to {}, subject {}, content-length {}'.format(
+                mfrom, mto, msubj, content_len))
 
             if mto is None:
                 self.send_str_response(400, 'Missing message recipient', self.headers.items())
@@ -73,10 +78,11 @@ class MyServer(BaseHTTPRequestHandler):
 
         fullmsg = '{}\n\nHeaders: {}\n'.format(msg, headers) if headers else msg + '\n'
         self.wfile.write(bytes(fullmsg, 'utf-8'))
+        logging.getLogger().debug('Sent a response to {}: {}'.format(self.client_address, fullmsg))
 
 if __name__ == '__main__':
     fileConfig('logging.ini')
-    funnel = Funnel()
+    funnel = Funnel(dry_run='--dry-run' in sys.argv)
     funnel.start()
 
     try:

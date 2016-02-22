@@ -24,6 +24,8 @@ class Mailer:
                  client_rate_window: int = CLIENT_RATE_WINDOW,
                  dry_run: bool = False):
 
+        logging.getLogger('mailer').info('Mailer plugin started, host is {}'.format(mail_host))
+        logging.getLogger('mailer').info('Dry run mode is {}'.format(dry_run))
         self.mail_host = mail_host
         self.mail_dir = mail_dir
         if not os.path.exists(mail_dir):
@@ -54,7 +56,7 @@ class Mailer:
             lines = f_src.read().split('\n')
 
         if len(lines) < 4:
-            logging.getLogger().error('Syntax error in file ' + filename)
+            logging.getLogger('mailer').error('Syntax error in file ' + filename)
             return
 
         lines[0] = next_filename
@@ -62,6 +64,7 @@ class Mailer:
             f_dest.write('\n'.join(lines))
 
     def enqueue(self, sender: str, rcpt: str, subject:str, msg: str) -> str:
+        logging.getLogger('mailer').debug('Enqueuing message: {} -> {}, subject {}'.format(sender, rcpt, subject))
         this_absfile, this_relfile = self.get_random_filenames()
         with open(this_absfile, 'w') as f:
             f.write('\n'.join(['', sender, rcpt, subject, msg]))
@@ -81,12 +84,14 @@ class Mailer:
             os.unlink(last_file)
 
         os.symlink(this_relfile, last_file)
+        logging.getLogger('mailer').debug('Enqueuing succeeded')
         return this_relfile
 
     def has_messages(self):
         return os.path.islink(self.get_first_filename())
 
     def dequeue(self) -> Union[list, None]:
+        logging.getLogger('mailer').debug('Dequeuing message')
         first_file = self.get_first_filename()
         if not os.path.isfile(first_file):
             return None
@@ -105,16 +110,18 @@ class Mailer:
         else:
             os.symlink(lines[0], first_file)
 
+        logging.getLogger('mailer').debug('Dequeuing succeeded: {} -> {}, subject {}'.format(
+            lines[1], lines[2], lines[3]))
         return {'From': lines[1], 'To': lines[2], 'Subject': lines[3], 'Msg': '\n'.join(lines[4:])}
 
     def send_message(self, msg: Union[dict, None]):
         if msg is None:
-            logging.getLogger().warn("Null argument to send_message")
+            logging.getLogger('mailer').warn("Null argument to send_message")
             return
 
-        logging.getLogger().info("Mail to {}: {}".format(msg['To'], msg['Msg']))
+        logging.getLogger('mailer').info("Mail to {}: {}".format(msg['To'], msg['Msg']))
         if self.dry_run:
-            logging.getLogger().info("Dry run mode specified, not sending")
+            logging.getLogger('mailer').info("Dry run mode specified, not sending")
             return
 
         mime_msg = MIMEText(msg['Msg'])
@@ -125,6 +132,7 @@ class Mailer:
         s = smtplib.SMTP(self.mail_host)
         s.sendmail(msg['From'], [msg['To']], mime_msg.as_string())
         s.quit()
+        logging.getLogger('mailer').info("Message sent")
 
     def update(self):
         if self.first_message_time is not None:
@@ -133,11 +141,18 @@ class Mailer:
                 # New window
                 self.first_message_time = None
                 self.messages_remaining = self.client_rate
+                logging.getLogger('mailer').info("A new message window is opened")
 
-        if not self.has_messages() or self.messages_remaining < 1:
+        if not self.has_messages():
+            return
+
+        if self.messages_remaining < 1:
+            logging.getLogger('mailer').info("{} messages in queue, waiting for a new send window".format(
+                self.messages_remaining))
             return
 
         self.send_message(self.dequeue())
         self.messages_remaining -= 1
         if self.first_message_time is None:
             self.first_message_time = time.time()
+
