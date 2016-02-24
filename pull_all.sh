@@ -26,3 +26,12 @@ docker tag timimages/local_nginx local_nginx
 
 # Remove leftover untagged images
 docker rmi $(docker images | grep "^<none>" | awk '{print $3}')
+
+# Haskell plugin binaries are not included directly in the images, so we need to build them
+(cd timApp/modules/Haskell && ./launch_sandbox_build.sh $@)
+
+# Same with Dumbo
+(cd Ephemeral/Dumbo && ./build_dumbo.sh $@)
+
+# Initialize PostgreSQL database
+(cd postgre && ./init_postgre.sh $@)
