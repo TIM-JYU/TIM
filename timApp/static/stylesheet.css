@@ -1935,3 +1935,10 @@ p.docsettings {
 .shortedit {
     max-width: 4.5em;
 }
+
+.taskSummary {
+    margin-bottom: 2em;
+    border: 2px solid black;
+    border-radius: 10px;
+    padding: 1em;
+}

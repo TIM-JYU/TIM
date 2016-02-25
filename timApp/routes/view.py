@@ -223,8 +223,11 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     user = getCurrentUserId()
 
     teacher_or_see_answers = route in ('teacher', 'answers')
+    task_ids = pluginControl.find_task_ids(xs, doc_id)
+    total_tasks = len(task_ids)
+    total_points = None
+    tasks_done = None
     if teacher_or_see_answers:
-        task_ids = pluginControl.find_task_ids(xs, doc_id)
         user_list = None
         if usergroup is not None:
             user_list = [user['id'] for user in timdb.users.get_users_for_group(usergroup)]
@@ -233,6 +236,10 @@ def view(doc_path, template_name, usergroup=None, route="view"):
             user = users[0]['id']
     else:
         users = []
+        info = timdb.answers.getUsersForTasks(task_ids, [user])
+        if info:
+            total_points = info[0]['total_points']
+            tasks_done = info[0]['task_count']
     current_user = timdb.users.get_user(user)
 
     clear_cache = get_option(request, "nocache", False)
@@ -303,5 +310,8 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                              reqs=pluginControl.get_all_reqs(),
                              settings=settings,
                              no_browser=hide_answers,
-                             message=message)
+                             message=message,
+                             task_info={'total_points': total_points,
+                                        'tasks_done': tasks_done,
+                                        'total_tasks': total_tasks})
     return result
