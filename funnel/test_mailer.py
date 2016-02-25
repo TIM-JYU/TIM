@@ -1,9 +1,19 @@
+import json
+import logging
 import os
 import time
 import unittest
 from shutil import rmtree
 
 from mailer import Mailer
+
+
+class NoWarnings:
+    def __enter__(self):
+        logging.getLogger().setLevel("ERROR")
+
+    def __exit__(self, type, value, traceback):
+        logging.getLogger().setLevel("WARNING")
 
 
 class MailerTest(unittest.TestCase):
@@ -17,6 +27,12 @@ class MailerTest(unittest.TestCase):
     def tearDown(self):
         if os.path.exists(self.maildir):
             rmtree(self.maildir)
+
+    def mkheader(self, sender: str, rcpt: str, subj: str) -> dict:
+        return {"From": sender, "Rcpt-To": rcpt, "Subject": subj}
+
+    def mkmsg(self, next_msg: str, sender: str, rcpt: str, subj: str, msg: str):
+        return {"From": sender, "Rcpt-To": rcpt, "Subject": subj, "Body": msg, "Next-Msg": next_msg}
 
     def testInit(self):
         self.assertTrue(os.path.exists(self.maildir))
@@ -39,25 +55,24 @@ class MailerTest(unittest.TestCase):
         f1_abs, f1_rel = self.mailer.get_random_filenames()
         f2_abs, f2_rel = self.mailer.get_random_filenames()
 
-        f1_data = ['next_file', 'sender', 'recipient', 'message']
+        f1_data = {'From': 'from-addr', 'Rcpt-To': 'to-addr', 'Subject': 'subj', 'Next-Msg': f1_rel}
         with open(f1_abs, 'w') as f1:
-            f1.write('\n'.join(f1_data))
+            f1.write(json.dumps(f1_data))
 
         self.mailer.set_next(f1_abs, f2_rel)
 
         with open(f1_abs, 'r') as f1:
-            f1_newdata = f1.read().split('\n')
+            f1_newdata = json.loads(f1.read())
 
-        self.assertEqual(len(f1_newdata), 4)
-        self.assertEqual(f1_newdata[0], f2_rel)
-        self.assertEqual(f1_newdata[1], f1_data[1])
-        self.assertEqual(f1_newdata[2], f1_data[2])
-        self.assertEqual(f1_newdata[3], f1_data[3])
+        self.assertEqual(len(f1_newdata), len(f1_data))
+        for key in f1_data:
+            self.assertEqual(f1_newdata[key], f1_newdata[key], 'f1_newdata[{0}] == {1} != {2} == f1_data[{0}]'.format(
+                key, f1_newdata[key], f1_data[key]))
 
     def testEnqueue(self):
         # First enqueue
-        f1_data = ['', 'sender', 'recipient', 'subject', 'message']
-        f1_file = self.mailer.enqueue(f1_data[1], f1_data[2], f1_data[3], f1_data[4])
+        f1_data = self.mkmsg('', 'sender', 'recipient', 'subject', 'message')
+        f1_file = self.mailer.enqueue(f1_data, f1_data['Body'])
         self.assertTrue(self.mailer.has_messages())
 
         files = os.listdir(self.maildir)
@@ -69,17 +84,16 @@ class MailerTest(unittest.TestCase):
         self.assertEqual(os.readlink(self.mailer.get_last_filename()), f1_file)
 
         with open(os.path.join(self.maildir, f1_file)) as f1:
-            f1_readdata = f1.read().split('\n')
+            f1_readdata = json.loads(f1.read())
 
-        self.assertEqual(len(f1_readdata), 5, 'Read lines: ' + str(f1_readdata))
-        for i in range(5):
-            self.assertEqual(f1_readdata[i],
-                             f1_data[i],
-                             'Line {} mismatches! Set "{}", read "{}"'.format(i, f1_data[i], f1_readdata[i]))
+        self.assertEqual(f1_readdata['From'], f1_data['From'])
+        self.assertEqual(f1_readdata['Rcpt-To'], f1_data['Rcpt-To'])
+        self.assertEqual(f1_readdata['Subject'], f1_data['Subject'])
+        self.assertEqual(f1_readdata['Body'], f1_data['Body'])
 
         # Second enqueue
-        f2_data = ['', 'daemon@example.org', 'human@example2.com', 'Notification', 'first line\nsecond line']
-        f2_file = self.mailer.enqueue(f2_data[1], f2_data[2], f2_data[3], f2_data[4])
+        f2_data = self.mkmsg('', 'daemon@example.org', 'human@example2.com', 'Notification', 'first line\nsecond line')
+        f2_file = self.mailer.enqueue(f2_data, f2_data['Body'])
         self.assertTrue(self.mailer.has_messages())
 
         files = os.listdir(self.maildir)
@@ -92,17 +106,15 @@ class MailerTest(unittest.TestCase):
         self.assertEqual(os.readlink(self.mailer.get_last_filename()), f2_file)
 
         with open(os.path.join(self.maildir, f2_file)) as f2:
-            f2_readdata = f2.read().split('\n')
+            f2_readdata = json.loads(f2.read())
 
-        self.assertEqual(len(f2_readdata), 6, 'Read lines: ' + str(f2_readdata))
-        f2_readdata = f2_readdata[:4] + ['\n'.join(f2_readdata[4:])]
-        for i in range(5):
-            self.assertEqual(f2_readdata[i],
-                             f2_data[i],
-                             'Line {} mismatches! Set "{}", read "{}"'.format(i, f2_data[i], f2_readdata[i]))
+        self.assertEqual(f2_readdata['From'], f2_data['From'])
+        self.assertEqual(f2_readdata['Rcpt-To'], f2_data['Rcpt-To'])
+        self.assertEqual(f2_readdata['Subject'], f2_data['Subject'])
+        self.assertEqual(f2_readdata['Body'], f2_data['Body'])
 
         # Third / nth enqueue
-        f3_file = self.mailer.enqueue(f1_data[1], f1_data[2], f1_data[3], f1_data[4])
+        f3_file = self.mailer.enqueue(f1_data, f1_data['Body'])
         self.assertTrue(self.mailer.has_messages())
 
         files = os.listdir(self.maildir)
@@ -116,26 +128,26 @@ class MailerTest(unittest.TestCase):
         self.assertEqual(os.readlink(self.mailer.get_last_filename()), f3_file)
 
         with open(os.path.join(self.maildir, f3_file)) as f3:
-            f3_readdata = f3.read().split('\n')
+            f3_readdata = json.loads(f3.read())
 
-        self.assertEqual(len(f3_readdata), 5, 'Read lines: ' + str(f3_readdata))
-        for i in range(5):
-            self.assertEqual(f3_readdata[i],
-                             f1_data[i],
-                             'Line {} mismatches! Set "{}", read "{}"'.format(i, f1_data[i], f3_readdata[i]))
+        self.assertEqual(f3_readdata['From'], f1_data['From'])
+        self.assertEqual(f3_readdata['Rcpt-To'], f1_data['Rcpt-To'])
+        self.assertEqual(f3_readdata['Subject'], f1_data['Subject'])
+        self.assertEqual(f3_readdata['Body'], f1_data['Body'])
 
     def testDequeue(self):
         # Empty dequeue
-        self.assertEqual(self.mailer.dequeue(), None)
+        with NoWarnings():
+            self.assertEqual(self.mailer.dequeue(), None)
         files = os.listdir(self.maildir)
         self.assertEqual(len(files), 0)
 
         # Single element
 
-        f1_data = ['', 'sender', 'recipient', 'subject', 'message']
+        f1_data = self.mkmsg('', 'sender', 'recipient', 'subject', 'message')
         f1_abs, f1_rel = self.mailer.get_random_filenames()
         with open(f1_abs, 'w') as f1:
-            f1.write('\n'.join(f1_data))
+            f1.write(json.dumps(f1_data))
         os.symlink(f1_rel, self.mailer.get_first_filename())
         os.symlink(f1_rel, self.mailer.get_last_filename())
 
@@ -144,19 +156,19 @@ class MailerTest(unittest.TestCase):
         files = os.listdir(self.maildir)
         self.assertEqual(len(files), 0)
         self.assertEqual(len(readdata), 4, 'Read message: ' + str(readdata))
-        self.assertEqual(readdata['From'], f1_data[1])
-        self.assertEqual(readdata['To'], f1_data[2])
-        self.assertEqual(readdata['Subject'], f1_data[3])
-        self.assertEqual(readdata['Msg'], f1_data[4])
+        self.assertEqual(readdata['From'], f1_data['From'])
+        self.assertEqual(readdata['Rcpt-To'], f1_data['Rcpt-To'])
+        self.assertEqual(readdata['Subject'], f1_data['Subject'])
+        self.assertEqual(readdata['Body'], f1_data['Body'])
 
         # Multiple elements
         f_abs, f_rel = zip(*[self.mailer.get_random_filenames() for _ in range(3)])
-        f_data = [[f_rel[1], f1_data[1], f1_data[2], f1_data[3], f1_data[4]],
-                  [f_rel[2], 'daemon@example.org', 'human@example2.com', 'Notification', 'first line\nsecond line'],
-                  ['', 'third@sender.com', 'third@recipient.net', 'test subject', 'message number three']]
+        f_data = [self.mkmsg(f_rel[1], f1_data["From"], f1_data["Rcpt-To"], f1_data["Subject"], f1_data["Body"]),
+                  self.mkmsg(f_rel[2], 'daemon@example.org', 'human@example2.com', 'Notification', 'first line\nsecond line'),
+                  self.mkmsg('', 'third@sender.com', 'third@recipient.net', 'test subject', 'message number three')]
         for i in range(3):
             with open(f_abs[i], 'w') as f:
-                f.write('\n'.join(f_data[i]))
+                f.write(json.dumps(f_data[i]))
         os.symlink(f_rel[0], self.mailer.get_first_filename())
         os.symlink(f_rel[2], self.mailer.get_last_filename())
 
@@ -165,33 +177,34 @@ class MailerTest(unittest.TestCase):
         files = os.listdir(self.maildir)
         self.assertEqual(len(files), 4, 'Files: ' + str(files))
         self.assertEqual(len(readdata), 4, 'Read message: ' + str(readdata))
-        self.assertEqual(readdata['From'], f_data[0][1])
-        self.assertEqual(readdata['To'], f_data[0][2])
-        self.assertEqual(readdata['Subject'], f_data[0][3])
-        self.assertEqual(readdata['Msg'], f_data[0][4])
+        self.assertEqual(readdata['From'], f_data[0]["From"])
+        self.assertEqual(readdata['Rcpt-To'], f_data[0]["Rcpt-To"])
+        self.assertEqual(readdata['Subject'], f_data[0]["Subject"])
+        self.assertEqual(readdata['Body'], f_data[0]["Body"])
 
         # 2 -> 1 messages in the queue
         readdata = self.mailer.dequeue()
         files = os.listdir(self.maildir)
         self.assertEqual(len(files), 3, 'Files: ' + str(files))
         self.assertEqual(len(readdata), 4, 'Read message: ' + str(readdata))
-        self.assertEqual(readdata['From'], f_data[1][1])
-        self.assertEqual(readdata['To'], f_data[1][2])
-        self.assertEqual(readdata['Subject'], f_data[1][3])
-        self.assertEqual(readdata['Msg'], f_data[1][4])
+        self.assertEqual(readdata['From'], f_data[1]["From"])
+        self.assertEqual(readdata['Rcpt-To'], f_data[1]["Rcpt-To"])
+        self.assertEqual(readdata['Subject'], f_data[1]["Subject"])
+        self.assertEqual(readdata['Body'], f_data[1]["Body"])
 
         # 1 -> 0 messages in the queue
         readdata = self.mailer.dequeue()
         files = os.listdir(self.maildir)
         self.assertEqual(len(files), 0, 'Files: ' + str(files))
         self.assertEqual(len(readdata), 4, 'Read message: ' + str(readdata))
-        self.assertEqual(readdata['From'], f_data[2][1])
-        self.assertEqual(readdata['To'], f_data[2][2])
-        self.assertEqual(readdata['Subject'], f_data[2][3])
-        self.assertEqual(readdata['Msg'], f_data[2][4])
+        self.assertEqual(readdata['From'], f_data[2]["From"])
+        self.assertEqual(readdata['Rcpt-To'], f_data[2]["Rcpt-To"])
+        self.assertEqual(readdata['Subject'], f_data[2]["Subject"])
+        self.assertEqual(readdata['Body'], f_data[2]["Body"])
 
         # Empty dequeue
-        self.assertEqual(self.mailer.dequeue(), None)
+        with NoWarnings():
+            self.assertEqual(self.mailer.dequeue(), None)
         files = os.listdir(self.maildir)
         self.assertEqual(len(files), 0)
 
@@ -204,10 +217,10 @@ class MailerTest(unittest.TestCase):
         self.mailer = Mailer(mail_dir=self.maildir, client_rate=2, client_rate_window=1, dry_run=True)
         self.mailer.update()
 
-        self.mailer.enqueue("s1", "r1", "subj1", "m1")
-        self.mailer.enqueue("s2", "r2", "subj2", "m2")
-        self.mailer.enqueue("s3", "r3", "subj3", "m3")
-        self.mailer.enqueue("s4", "r4", "subj4", "m4")
+        self.mailer.enqueue(self.mkheader("s1", "r1", "subj1"), "m1")
+        self.mailer.enqueue(self.mkheader("s2", "r2", "subj2"), "m2")
+        self.mailer.enqueue(self.mkheader("s3", "r3", "subj3"), "m3")
+        self.mailer.enqueue(self.mkheader("s4", "r4", "subj4"), "m4")
         self.wait_and_update(0.5)    # window 1: 0.5
 
         files = os.listdir(self.maildir)
@@ -217,7 +230,7 @@ class MailerTest(unittest.TestCase):
         self.mailer.update()
         self.assertEqual(len(os.listdir(self.maildir)), 4)
 
-        self.mailer.enqueue("s5", "r5", "subj5", "m5")
+        self.mailer.enqueue(self.mkheader("s5", "r5", "subj5"), "m5")
 
         self.wait_and_update(0.7)    # window 1: 1.2
         self.assertEqual(len(os.listdir(self.maildir)), 3)
@@ -228,10 +241,10 @@ class MailerTest(unittest.TestCase):
         self.assertEqual(len(os.listdir(self.maildir)), 0)
 
     def testNewInstance(self):
-        self.mailer.enqueue("s1", "r1", "subj1", "m1")
-        self.mailer.enqueue("s2", "r2", "subj2", "m2")
-        self.mailer.enqueue("s3", "r3", "subj3", "m3")
-        self.mailer.enqueue("s4", "r4", "subj4", "m4")
+        self.mailer.enqueue(self.mkheader("s1", "r1", "subj1"), "m1")
+        self.mailer.enqueue(self.mkheader("s2", "r2", "subj2"), "m2")
+        self.mailer.enqueue(self.mkheader("s3", "r3", "subj3"), "m3")
+        self.mailer.enqueue(self.mkheader("s4", "r4", "subj4"), "m4")
 
         self.mailer = Mailer(mail_dir=self.maildir, client_rate=2, client_rate_window=1, dry_run=True)
         self.mailer.update()
@@ -245,7 +258,7 @@ class MailerTest(unittest.TestCase):
         self.mailer.update()
         self.assertEqual(len(os.listdir(self.maildir)), 4)
 
-        self.mailer.enqueue("s5", "r5", "subj5", "m5")
+        self.mailer.enqueue(self.mkheader("s5", "r5", "subj5"), "m5")
 
         self.wait_and_update(0.7)    # window 1: 1.2
         self.assertEqual(len(os.listdir(self.maildir)), 3)

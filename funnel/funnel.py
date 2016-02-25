@@ -12,7 +12,10 @@ HOST_NAME = "0.0.0.0"
 HOST_PORT = 80
 
 MAIL_DIR = "/service/mail"
-
+EMAIL_HEADERS = {'From': 'no-reply@tim.jyu.fi',
+                 'Rcpt-To': None,
+                 'Reply-To': None,
+                 'Subject': 'TIM Notification'}
 
 class Funnel:
     instance = None
@@ -50,6 +53,8 @@ class Funnel:
 class MyServer(BaseHTTPRequestHandler):
     def do_POST(self):
         def decode(obj) -> str:
+            if obj is None:
+                return ''
             if isinstance(obj, str):
                 return obj
             if isinstance(obj, bytes):
@@ -60,22 +65,20 @@ class MyServer(BaseHTTPRequestHandler):
         logging.getLogger().debug('Received a HTTP {} request from {}'.format(self.path, self.client_address))
         logging.getLogger().debug('Headers: {}'.format(self.headers.items()))
         if self.path == "/mail":
-            mfrom = decode(self.headers.get('From', 'no-reply@tim.jyu.fi'))
-            mto = decode(self.headers.get('Rcpt-To', None))
-            msubj = decode(self.headers.get('Subject', 'TIM Notification'))
+            msg_headers = {header: decode(self.headers.get(header, EMAIL_HEADERS[header])) for header in EMAIL_HEADERS}
             content_len = int(self.headers.get('content-length', 0))
-            mdata = decode(self.rfile.read(content_len)).replace('<br>', '\n')
+            msg_data = decode(self.rfile.read(content_len)).replace('<br>', '\n')
             logging.getLogger().debug('Mail from {0}, to {1}, subject {2}, content-length {3}'.format(
-                mfrom, mto, msubj, content_len))
+                msg_headers['From'], msg_headers['Rcpt-To'], msg_headers['Subject'], content_len))
 
-            if mto is None:
+            if msg_headers['Rcpt-To'] is None:
                 self.send_str_response(400, 'Missing message recipient', self.headers.items())
                 return
-            if mdata == '':
+            if msg_data == '':
                 self.send_str_response(400, 'Missing message data', self.headers.items())
                 return
 
-            Funnel.get_mailer().enqueue(mfrom, mto, msubj, mdata)
+            Funnel.get_mailer().enqueue(msg_headers, msg_data)
             self.send_str_response(200, 'Message queued')
         else:
             self.send_str_response(400, 'Unknown route ' + self.path)

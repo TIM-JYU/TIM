@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import random
@@ -52,22 +53,30 @@ class Mailer:
                 return with_path, without_path
 
     def set_next(self, filename: str, next_filename: str):
-        with open(filename, 'r') as f_src:
-            lines = f_src.read().split('\n')
-
-        if len(lines) < 4:
-            logging.getLogger('mailer').error('Syntax error in file ' + filename)
+        try:
+            with open(filename, 'r') as f_src:
+                msg = json.loads(f_src.read())
+        except Exception as e:
+            logging.getLogger('mailer').error('Error reading {}: {}'.format(filename, e))
             return
 
-        lines[0] = next_filename
-        with open(filename, 'w') as f_dest:
-            f_dest.write('\n'.join(lines))
+        msg['Next-Msg'] = next_filename
 
-    def enqueue(self, sender: str, rcpt: str, subject:str, msg: str) -> str:
-        logging.getLogger('mailer').debug('Enqueuing message: {} -> {}, subject {}'.format(sender, rcpt, subject))
+        try:
+            with open(filename, 'w') as f_dest:
+                f_dest.write(json.dumps(msg))
+        except Exception as e:
+            logging.getLogger('mailer').error('Error writing {}: {}'.format(filename, e))
+            return
+
+    def enqueue(self, headers: dict, msg: str) -> str:
+        logging.getLogger('mailer').debug('Enqueuing message: {}'.format(headers))
         this_absfile, this_relfile = self.get_random_filenames()
         with open(this_absfile, 'w') as f:
-            f.write('\n'.join(['', sender, rcpt, subject, msg]))
+            fullmsg = headers.copy()
+            fullmsg['Body'] = msg
+            fullmsg['Next-Msg'] = ''
+            f.write(json.dumps(fullmsg))
 
         first_file = self.get_first_filename()
         last_file = self.get_last_filename()
@@ -90,47 +99,48 @@ class Mailer:
     def has_messages(self):
         return os.path.islink(self.get_first_filename())
 
-    def dequeue(self) -> Union[list, None]:
+    def dequeue(self) -> Union[dict, None]:
         logging.getLogger('mailer').debug('Dequeuing message')
         first_file = self.get_first_filename()
         if not os.path.isfile(first_file):
+            logging.getLogger().warning('Called dequeue with no messages in the queue')
             return None
 
-        with open(first_file, 'r') as f_src:
-            lines = f_src.read().split('\n')
-
-        if len(lines) < 4:
-            logging.getLogger().error('Syntax error in file ' + first_file)
+        try:
+            with open(first_file, 'r') as f_src:
+                msg = json.loads(f_src.read())
+        except Exception as e:
+            logging.getLogger().error('Error parsing file {}: {}'.format(first_file, str(e)))
+            # TODO: proper error handling... move the file to an error directory
             return None
 
         os.unlink(os.path.join(self.mail_dir, os.readlink(first_file)))
         os.unlink(first_file)
-        if lines[0] == '':
+        if msg['Next-Msg'] == '':
             os.unlink(self.get_last_filename())
         else:
-            os.symlink(lines[0], first_file)
+            os.symlink(msg['Next-Msg'], first_file)
 
-        logging.getLogger('mailer').debug('Dequeuing succeeded: {} -> {}, subject {}'.format(
-            lines[1], lines[2], lines[3]))
-        return {'From': lines[1], 'To': lines[2], 'Subject': lines[3], 'Msg': '\n'.join(lines[4:])}
+        logging.getLogger('mailer').debug('Dequeuing succeeded: {}'.format(msg))
+        return {'From': msg['From'], 'Rcpt-To': msg['Rcpt-To'], 'Subject': msg['Subject'], 'Body': msg['Body']}
 
     def send_message(self, msg: Union[dict, None]):
         if msg is None:
-            logging.getLogger('mailer').warn("Null argument to send_message")
+            logging.getLogger('mailer').warning("Null argument to send_message")
             return
 
-        logging.getLogger('mailer').info("Mail to {}: {}".format(msg['To'], msg['Msg']))
+        logging.getLogger('mailer').info("Mail to {}: {}".format(msg['Rcpt-To'], msg['Body']))
         if self.dry_run:
             logging.getLogger('mailer').info("Dry run mode specified, not sending")
             return
 
-        mime_msg = MIMEText(msg['Msg'])
+        mime_msg = MIMEText(msg['Body'])
         mime_msg['Subject'] = msg['Subject']
         mime_msg['From'] = msg['From']
-        mime_msg['To'] = msg['To']
+        mime_msg['To'] = msg['Rcpt-To']
 
         s = smtplib.SMTP(self.mail_host)
-        s.sendmail(msg['From'], [msg['To']], mime_msg.as_string())
+        s.sendmail(msg['From'], [msg['Rcpt-To']], mime_msg.as_string())
         s.quit()
         logging.getLogger('mailer').info("Message sent")
 
