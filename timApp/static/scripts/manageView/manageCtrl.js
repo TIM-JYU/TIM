@@ -453,6 +453,33 @@ text = '\n'.join(a)
                 });
         };
 
+        sc.getNotifySettings = function() {
+            sc.emailDocModify = false;
+            sc.emailCommentAdd = false;
+            sc.emailCommentModify = false;
+
+            $http.get('/notify/' + sc.doc.id)
+                .success(function (data, status, headers, config) {
+                    sc.emailDocModify = data.email_doc_modify;
+                    sc.emailCommentAdd = data.email_comment_add;
+                    sc.emailCommentModify = data.email_comment_modify;
+                }).error(function (data, status, headers, config) {
+                    $window.alert('Could not get notification settings. Error message is: ' + data.error);
+                }).finally(function (data, status, headers, config) {
+                });
+        };
+
+        sc.notifyChanged = function() {
+            $http.post('/notify/' + sc.doc.id, {
+                'email_doc_modify': sc.emailDocModify,
+                'email_comment_add': sc.emailCommentAdd,
+                'email_comment_modify': sc.emailCommentModify
+            }).success(function (data, status, headers, config) {
+            }).error(function (data, status, headers, config) {
+                $window.alert('Could not change notification settings. Error message is: ' + data.error);
+            });
+        };
+
         sc.grouprights = grouprights;
         sc.userGroups = groups;
         sc.accessTypes = accessTypes;
@@ -469,6 +496,7 @@ text = '\n'.join(a)
         sc.aliases = sc.getAliases();
         sc.translations = sc.getTranslations();
         sc.showCreateDiv = "";
+        sc.getNotifySettings();
 
         if (isFolder) {
             sc.newName = doc.name;

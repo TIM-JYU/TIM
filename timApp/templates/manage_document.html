@@ -89,6 +89,16 @@
         <button ng-click="createCitation()">Create cited copy</button>
     </div>
 
+    <div>
+        <p>Notifications</p>
+        <fieldset>
+            <p>Send me email on</p>
+            <input type="checkbox" ng-model="emailDocModify" ng-click="notifyChanged()"/>Document modifications<br>
+            <input type="checkbox" ng-model="emailCommentAdd" ng-click="notifyChanged()"/>New comments<br>
+            <input type="checkbox" ng-model="emailCommentModify" ng-click="notifyChanged()"/>Edited comments<br>
+        </fieldset>
+    </div>
+
     <span ng-show="readUpdating">Loading...</span>
     <form class="uploadForm margin">
         Upload a new version for this document

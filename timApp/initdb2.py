@@ -84,7 +84,8 @@ def update_database():
                    2: update_rights,
                    3: add_seeanswers_right,
                    4: add_translation_table,
-                   5: add_logged_in_user}
+                   5: add_logged_in_user,
+                   6: add_notifications}
     while ver in update_dict:
         # TODO: Take automatic backup of the db (tim_files) before updating
         print('Starting update {}'.format(update_dict[ver].__name__))
@@ -100,6 +101,33 @@ def update_database():
     else:
         print('Database was updated from version {} to {}.'.format(ver_old, ver))
     timdb.close()
+
+
+def add_notifications(timdb):
+    if timdb.table_exists('Notification'):
+        return False
+
+    timdb.execute_sql("""
+CREATE TABLE Notification (
+  user_id   INTEGER NOT NULL,
+  doc_id    INTEGER NOT NULL,
+
+  email_doc_modify      BOOLEAN NOT NULL DEFAULT FALSE,
+  email_comment_add     BOOLEAN NOT NULL DEFAULT FALSE,
+  email_comment_modify  BOOLEAN NOT NULL DEFAULT FALSE,
+
+  CONSTRAINT Notification_PK
+  PRIMARY KEY (user_id, doc_id),
+
+  CONSTRAINT Notification_docid
+  FOREIGN KEY (doc_id)
+  REFERENCES Block (id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+""")
+
+    return True
 
 
 def add_logged_in_user(timdb):

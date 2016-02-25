@@ -25,6 +25,7 @@ from routes.logger import logger_bp
 from routes.login import login_page
 from routes.manage import manage_page
 from routes.notes import notes
+from routes.notify import notify
 from routes.readings import readings
 from routes.search import search_routes
 from routes.settings import settings_page
@@ -52,6 +53,7 @@ app.register_blueprint(upload)
 app.register_blueprint(notes)
 app.register_blueprint(readings)
 app.register_blueprint(lecture_routes)
+app.register_blueprint(notify)
 app.register_blueprint(Blueprint('bower',
                                  __name__,
                                  static_folder='static/scripts/bower_components',

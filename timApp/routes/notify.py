@@ -2,6 +2,7 @@ import http.client
 import socket
 import os
 
+from flask import Blueprint, abort, request
 from decorators import async
 from routes.common import *
 from routes.logger import log_message
@@ -10,6 +11,27 @@ from tim_app import app
 
 FUNNEL_HOST = "funnel"
 FUNNEL_PORT = 80
+
+notify = Blueprint('notify',
+                   __name__,
+                   url_prefix='')
+
+
+@notify.route('/notify/<int:doc_id>', methods=['GET'])
+def get_notify_settings(doc_id):
+    verifyLoggedIn()
+    timdb = getTimDb()
+    settings = timdb.documents.get_notify_settings(getCurrentUserId(), doc_id)
+    return jsonResponse(settings)
+
+
+@notify.route('/notify/<int:doc_id>', methods=['POST'])
+def set_notify_settings(doc_id):
+    verifyLoggedIn()
+    jsondata = request.get_json()
+    timdb = getTimDb()
+    timdb.documents.set_notify_settings(getCurrentUserId(), doc_id, jsondata)
+    return okJsonResponse()
 
 
 @async
@@ -54,7 +76,7 @@ def replace_macros(msg: str, doc_id: int) -> str:
     return new_msg
 
 
-def notify_doc_owner(doc_id, subject, msg):
+def notify_doc_owner(doc_id, subject, msg, setting=None):
     timdb = getTimDb()
     me = get_current_user()
     owner_group = timdb.documents.get_owner(doc_id)
@@ -62,7 +84,11 @@ def notify_doc_owner(doc_id, subject, msg):
     macro_msg = replace_macros(msg, doc_id)
 
     for user in timdb.users.get_users_in_group(owner_group):
-        log_message('User: ' + str(user), 'INFO')
         if user['id'] != me['id'] and user['email']:
+            if setting is not None:
+                settings = timdb.documents.get_notify_settings(user['id'], doc_id)
+                if not settings['email_' + setting]:
+                    continue
+
             send_email(user['email'], macro_subject, macro_msg, me['email'])
 

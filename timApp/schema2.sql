@@ -44,6 +44,8 @@ DROP TABLE IF EXISTS LectureAnswer;
 
 DROP TABLE IF EXISTS Message;
 
+DROP TABLE IF EXISTS Notification;
+
 DROP TABLE IF EXISTS Version;
 
 CREATE TABLE Answer (
@@ -353,6 +355,24 @@ CREATE TABLE `Message` (
   FOREIGN KEY (user_id)
   REFERENCES User (user_id)
   ON DELETE CASCADE
+);
+
+CREATE TABLE Notification (
+  user_id   INTEGER NOT NULL,
+  doc_id    INTEGER NOT NULL,
+
+  email_doc_modify      BOOLEAN NOT NULL DEFAULT FALSE,
+  email_comment_add     BOOLEAN NOT NULL DEFAULT FALSE,
+  email_comment_modify  BOOLEAN NOT NULL DEFAULT FALSE,
+
+  CONSTRAINT Notification_PK
+  PRIMARY KEY (user_id, doc_id),
+
+  CONSTRAINT Notification_docid
+  FOREIGN KEY (doc_id)
+  REFERENCES Block (id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
 );
 
 CREATE TABLE LectureAnswer (
