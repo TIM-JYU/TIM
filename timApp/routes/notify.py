@@ -3,9 +3,9 @@ import socket
 import os
 
 from decorators import async
-from timApp import tim_app
 from routes.common import *
 from routes.logger import log_message
+from tim_app import app
 
 
 FUNNEL_HOST = "funnel"
@@ -14,7 +14,7 @@ FUNNEL_PORT = 80
 
 @async
 def send_email(rcpt: str, subject: str, msg: str, reply_to: str):
-    with tim_app.app.app_context():
+    with app.app_context():
         conn = None
         try:
             headers = {
