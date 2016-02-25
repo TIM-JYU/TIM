@@ -49,14 +49,18 @@
 {% endblock %}
 {% block content %}
     <div ng-controller="PermCtrl">
-        <div class="margin">
-            {{ obj_name|capitalize }} owner: <select ng-model="doc.owner"
-                                          ng-options="group.name for group in userGroups | orderBy:'name' track by group.id"
-                                          ng-change="changeOwner()">
+        {% if rights['owner'] %}
+            <div class="margin">
+                {{ obj_name|capitalize }} owner: <select ng-model="doc.owner"
+                                    ng-options="group.name for group in userGroups | orderBy:'name' track by group.id"
+                                    ng-change="changeOwner()">
 
-        </select>
-            <span ng-show="ownerUpdating">Updating...</span>
-        </div>
+            </select>
+                <span ng-show="ownerUpdating">Updating...</span>
+            </div>
+        {% else %}
+            {{ obj_name|capitalize }} owner: {{ doc.owner.name }}
+        {% endif %}
 
         <div class="margin rights-list" ng-repeat="type in accessTypes">
             <a ng-click="showAddRightFn(type)">{{ '{{ type.name }}' }} right</a>:

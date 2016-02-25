@@ -89,6 +89,7 @@
         <button ng-click="createCitation()">Create cited copy</button>
     </div>
 
+    {% if rights['owner'] %}
     <div>
         <p>Notifications</p>
         <fieldset>
@@ -98,6 +99,7 @@
             <input type="checkbox" ng-model="emailCommentModify" ng-click="notifyChanged()"/>Edited comments<br>
         </fieldset>
     </div>
+    {% endif %}
 
     <span ng-show="readUpdating">Loading...</span>
     <form class="uploadForm margin">

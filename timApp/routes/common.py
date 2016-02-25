@@ -138,7 +138,8 @@ def get_rights(doc_id):
             'browse_own_answers': logged_in(),
             'teacher': has_teacher_access(doc_id),
             'see_answers': has_seeanswers_access(doc_id),
-            'manage': has_manage_access(doc_id)
+            'manage': has_manage_access(doc_id),
+            'owner': has_ownership(doc_id)
             }
 
 
