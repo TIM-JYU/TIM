@@ -70,7 +70,7 @@ def replace_macros(msg: str, doc_id: int) -> str:
         new_msg = new_msg.replace('[user_name]', getCurrentUserName())
     if '[doc_name]' in msg or '[doc_url]' in msg:
         doc_name = timdb.documents.get_first_document_name(doc_id)
-        doc_url = 'http://{}/view/{}'.format(os.environ.get("TIM_HOST", "tim.jyu.fi"), doc_name)
+        doc_url = 'http://{}/view/{}'.format(os.environ.get("TIM_HOST", "tim.jyu.fi"), doc_name.replace(' ', '%20'))
         new_msg = new_msg.replace('[doc_name]', doc_name).replace('[doc_url]', doc_url)
 
     return new_msg

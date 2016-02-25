@@ -176,8 +176,7 @@ def altSignup():
     session["email"] = email
 
     try:
-        #__sendMail(email, 'Your new TIM password', 'Your password is {}'.format(password))
-        print(password)
+        __sendMail(email, 'Your new TIM password', 'Your password is {}'.format(password))
         flash("A password has been sent to you. Please check your email.")
     except Exception as e:
         log_message('Could not send login email (user: {}, password: {}, exception: {})'.format(email, password, str(e)), 'ERROR')
