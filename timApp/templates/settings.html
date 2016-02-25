@@ -3,7 +3,7 @@
 {% block head %}
     {{ super() }}
     <script>
-        var settings = {{ settings|tojson|safe }};
+        var settings = {{ settings|tojson }};
     </script>
     <script src="{{ url_for('static', filename='scripts/settingsView/settingsCtrl.js') }}"></script>
 {% endblock %}

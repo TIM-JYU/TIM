@@ -82,6 +82,13 @@ def forbidden(error):
     return error_generic(error, 403)
 
 
+@app.errorhandler(413)
+def entity_too_large(error):
+    error.description = 'Your file is too large to be uploaded. Maximum size is {} MB.'\
+        .format(app.config['MAX_CONTENT_LENGTH'] / 1024 / 1024)
+    return error_generic(error, 413)
+
+
 @app.errorhandler(404)
 def notFound(error):
     return error_generic(error, 404)
@@ -108,28 +115,12 @@ def get_image(image_id, image_filename):
     return send_file(f, mimetype='image/' + imgtype)
 
 
-@app.route('/files/<int:file_id>/<file_filename>')
-def get_file(file_id, file_filename):
-    timdb = getTimDb()
-    if not timdb.files.fileExists(file_id, file_filename):
-        abort(404)
-    verify_view_access(file_id)
-    img_data = timdb.files.getFile(file_id, file_filename)
-    f = io.BytesIO(img_data)
-    return send_file(f)
-
-
 @app.route('/images')
 def get_all_images():
     timdb = getTimDb()
     images = timdb.images.getImages()
     allowedImages = [image for image in images if timdb.users.has_view_access(getCurrentUserId(), image['id'])]
     return jsonResponse(allowedImages)
-
-
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
 @app.route("/getDocuments")

@@ -83,12 +83,12 @@ class TimTest(TimRouteTest):
         viewable_docs = doc_ids - not_viewable_docs
         for view_id in viewable_docs:
             self.assertResponseStatus(a.get('/view/' + str(view_id)))
-            self.assertResponseStatus(a.get('/teacher/' + doc_name), 403)
+            self.assertResponseStatus(a.get('/teacher/' + str(view_id)), 302)
 
         for view_id in not_viewable_docs:
             self.assertResponseStatus(a.get('/view/' + str(view_id)), 403)
-            self.assertResponseStatus(a.get('/teacher/' + doc_name), 403)
-        self.assertResponseStatus(a.get('/view/1'), 404)
+            self.assertResponseStatus(a.get('/teacher/' + str(view_id)), 403)
+        self.assertResponseStatus(a.get('/view/not_exist'), 404)
 
         comment_of_test2 = 'g8t54h954hy95hg54h'
         self.assertInResponse(comment_of_test2,
@@ -129,7 +129,7 @@ class TimTest(TimRouteTest):
         self.login_test2()
         for view_id in viewable_docs - teacher_right_docs:
             self.assertResponseStatus(a.get('/view/' + str(view_id)))
-            self.assertResponseStatus(a.get('/teacher/' + str(view_id)), 403)
+            self.assertResponseStatus(a.get('/teacher/' + str(view_id)), 302)
             self.assertResponseStatus(self.json_put('/addPermission/{}/{}/{}'.format(view_id, 'testuser2', 'teacher')),
                                       403)
         for view_id in teacher_right_docs:

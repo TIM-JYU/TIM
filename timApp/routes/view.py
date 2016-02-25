@@ -152,7 +152,7 @@ def try_return_folder(doc_name):
                            settings=settings,
                            newItem=doc_name,
                            foundItem=foundItem,
-                           doc={'id': -1, 'fullname': ''})
+                           doc={'id': -1, 'fullname': ''}), 404
 
     doc = timdb.folders.get(block_id)
     return render_template('index.html',

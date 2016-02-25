@@ -48,8 +48,9 @@ run apt-get install -y libffi-dev
 env LD_LIBRARY_PATH /usr/local/lib
 run pip3 install cffi
 
-run pip3 install git+https://github.com/benoitc/gunicorn.git gevent==1.1rc3 eventlet tornado aiohttp
+run pip3 install git+https://github.com/benoitc/gunicorn.git gevent==1.1rc4 eventlet tornado aiohttp
 run pip3 install typing
+run pip3 install python-magic
 
 # Need to update the package "six"; otherwise there will be a strange error with Flask's reloader
 # run pip3 install -U six
