@@ -122,7 +122,7 @@ class Mailer:
             os.symlink(msg['Next-Msg'], first_file)
 
         logging.getLogger('mailer').debug('Dequeuing succeeded: {}'.format(msg))
-        return {'From': msg['From'], 'Rcpt-To': msg['Rcpt-To'], 'Subject': msg['Subject'], 'Body': msg['Body']}
+        return msg
 
     def send_message(self, msg: Union[dict, None]):
         if msg is None:
@@ -138,6 +138,9 @@ class Mailer:
         mime_msg['Subject'] = msg['Subject']
         mime_msg['From'] = msg['From']
         mime_msg['To'] = msg['Rcpt-To']
+
+        if msg.get('Reply-To', None):
+            mime_msg.add_header('Reply-To', msg['Reply-To'])
 
         s = smtplib.SMTP(self.mail_host)
         s.sendmail(msg['From'], [msg['Rcpt-To']], mime_msg.as_string())
