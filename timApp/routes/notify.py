@@ -1,6 +1,9 @@
 import http.client
 import socket
 import os
+
+from decorators import async
+from timApp import tim_app
 from routes.common import *
 from routes.logger import log_message
 
@@ -9,31 +12,33 @@ FUNNEL_HOST = "funnel"
 FUNNEL_PORT = 80
 
 
+@async
 def send_email(rcpt: str, subject: str, msg: str, reply_to: str):
-    conn = None
-    try:
-        headers = {
-            "Host": "tim",
-            "Accept-Encoding": "text/plain",
-            "Encoding": "text/html",
-            "Connection": "close",
-            "Subject": subject,
-            "Reply-To": reply_to,
-            "Rcpt-To": rcpt}
-        conn = http.client.HTTPConnection(FUNNEL_HOST, port=FUNNEL_PORT)
-        conn.request("POST", "/mail", body=msg.replace('\n', '<br>').encode('utf-8'), headers=headers)
-        log_message("Sending email to " + rcpt, 'INFO')
+    with tim_app.app.app_context():
+        conn = None
+        try:
+            headers = {
+                "Host": "tim",
+                "Accept-Encoding": "text/plain",
+                "Encoding": "text/html",
+                "Connection": "close",
+                "Subject": subject,
+                "Reply-To": reply_to,
+                "Rcpt-To": rcpt}
+            conn = http.client.HTTPConnection(FUNNEL_HOST, port=FUNNEL_PORT)
+            conn.request("POST", "/mail", body=msg.replace('\n', '<br>').encode('utf-8'), headers=headers)
+            log_message("Sending email to " + rcpt, 'INFO')
 
-        response = conn.getresponse()
-        if response.status != 200:
-            log_message('Response from funnel: {} {}'.format(response.status, response.reason), 'ERROR')
+            response = conn.getresponse()
+            if response.status != 200:
+                log_message('Response from funnel: {} {}'.format(response.status, response.reason), 'ERROR')
 
-    except (ConnectionError, socket.error, http.client.error) as e:
-        log_message("Couldn't connect to funnel: " + str(e), 'ERROR')
+        except (ConnectionError, socket.error, http.client.error) as e:
+            log_message("Couldn't connect to funnel: " + str(e), 'ERROR')
 
-    finally:
-        if conn is not None:
-            conn.close()
+        finally:
+            if conn is not None:
+                conn.close()
 
 
 def replace_macros(msg: str, doc_id: int) -> str:
