@@ -21,6 +21,7 @@ body {
     padding: 0.5em;
 }
 
+
 .mcq table p {
     margin-left: 0;
     text-align: left;
@@ -151,6 +152,10 @@ body {
     line-height: 0.8;
     width: 5em;
     height: 3em;
+}
+
+.smallNote {
+    font-size: x-small;
 }
 
 .redbutton {
@@ -1921,7 +1926,7 @@ p.docsettings {
     font-size: smaller;
     margin-left: 2em;
     margin-right: -5em;
-    text-align: left;
+    text-align: left; 
 }
 
 .userlist .active {

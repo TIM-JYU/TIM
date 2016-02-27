@@ -23,8 +23,12 @@
     <span ng-show="!$parent.teacherMode && points !== null && !giveCustomPoints">Points: {{ points }}</span>
     <span ng-show="taskInfo.maxPoints && points !== null">/ {{ taskInfo.maxPoints }}</span>
     <span ng-show="!selectedAnswer.valid && points !== null">(invalid)</span>
-    <label ng-show="!$parent.teacherMode && allowCustomPoints()">
-        <input type="checkbox" ng-model="giveCustomPoints">Set custom points
+    <span ng-show="!$parent.teacherMode && allowCustomPoints()">
+        <label><input type="checkbox" ng-model="giveCustomPoints">Set custom points</input></label>
+        <span ng-show="giveCustomPoints" class="smallNote">(press Run or Save button to set points)</span> 
+    </span>    
+    <label ng-show="$parent.teacherMode && allowCustomPoints()">
+        <input type="checkbox" ng-model="giveCustomPoints">cp</input>
     </label>
     <label ng-show="showTeacher()">
         <input type="checkbox" ng-model="saveTeacher">Save teacher's fix
