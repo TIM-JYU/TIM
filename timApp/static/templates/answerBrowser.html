@@ -14,7 +14,7 @@
     </span>
     <span ng-show="taskInfo.answerLimit">Tries left: {{ getTriesLeft() }}</span>
     <span ng-show="answers.length > 0">
-    <label ng-show="anyInvalid"><input type="checkbox" ng-model="onlyValid">Show valid only</label>
+    <label ng-show="anyInvalid"><input type="checkbox" ng-model="onlyValid">Show valid only</label> 
     <span ng-show="showTeacher()" > | <a href="{{getLink()}}" ng-mousedown="getAllAnswers()" >All answers</a></span>
     <br> 
     <label ng-show="showTeacher() || giveCustomPoints">
@@ -24,11 +24,11 @@
     <span ng-show="taskInfo.maxPoints && points !== null">/ {{ taskInfo.maxPoints }}</span>
     <span ng-show="!selectedAnswer.valid && points !== null">(invalid)</span>
     <span ng-show="!$parent.teacherMode && allowCustomPoints()">
-        <label><input type="checkbox" ng-model="giveCustomPoints">Set custom points</input></label>
+        <label><input type="checkbox" ng-model="giveCustomPoints">Set custom points</label>
         <span ng-show="giveCustomPoints" class="smallNote">(press Run or Save button to set points)</span> 
     </span>    
     <label ng-show="$parent.teacherMode && allowCustomPoints()">
-        <input type="checkbox" ng-model="giveCustomPoints">cp</input>
+        <input type="checkbox" ng-model="giveCustomPoints">cp
     </label>
     <label ng-show="showTeacher()">
         <input type="checkbox" ng-model="saveTeacher">Save teacher's fix
