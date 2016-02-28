@@ -25,6 +25,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                     var editor = $('pareditor');
                     editor.css('min-height', editor.height(), 'overflow', 'visible');
                     $scope.minSizeSet = true;
+                    $scope.previewReleased = false;
                 };
 
                 $scope.deleteAttribute = function(key) {
@@ -118,7 +119,9 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                         //$preview.css('height', (height - offset+1));
                         if (height < editorMaxHeight) {
                             var newHeight = $scope.calculateEditorSize();
-                            $preview.css('max-height', newHeight/3);
+                            if (!$scope.previewReleased) {
+                                $preview.css('max-height', newHeight/3);
+                            }
                             $editor.css('height', newHeight);
                         }
                         $preview.scrollTop($scope.scrollPos);
@@ -128,13 +131,22 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
 
                 // Calculates what the size of the editor should be
                 $scope.calculateEditorSize = function() {
-                    return ($('.draghandle').cssUnit('min-height')[0] +
+                    if($scope.previewReleased === false) {
+                        return ($('.draghandle').cssUnit('min-height')[0] +
                             $('.tabsarea').height() +
                             $('.extraButtonArea').height() +
                             $('.editorContainer').height() +
                             $('.editButtonArea').height() +
                             $('.preview').height() + 33
-                    );
+                        );
+                    }
+                    if($scope.previewReleased === true) {
+                        return ($('.draghandle').cssUnit('min-height')[0] +
+                            $('.tabsarea').height() +
+                            $('.extraButtonArea').height() +
+                            $('.editorContainer').height() +
+                            $('.editButtonArea').height() + 20);
+                    }
                 };
 
                 $scope.createAce = function (editor, text) {
@@ -533,6 +545,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                     var div = $("#previewDiv");
                     var content = $('.previewcontent');
                     var editor = $('.editorArea');
+                    $scope.previewReleased = !($scope.previewReleased);
 
                     if (div.css("position") == "absolute") {
                         div.css("position", "static");
