@@ -98,10 +98,14 @@
         {% endraw %}
         {% if task_info and task_info.total_points %}
             <div class="taskSummary">
-                <h2>Task Summary</h2>
-                <p>Total points: {{ task_info.total_points }}</p>
-                <p>Total tasks: {{ task_info.tasks_done }} / {{ task_info.total_tasks }}</p>
+                <span> 
+                <strong>Task Summary</strong> 
+                Total points: {{ task_info.total_points }},
+                total tasks: {{ task_info.tasks_done }} / {{ task_info.total_tasks }}
+                </span>
+                <span class="smallNote">Refresh (F5) to recount</span>
             </div>
+            <div class="taskSmallSummary"><p>{{ task_info.total_points }} p</p></div>
         {% endif %}
 
         {% if lecture_mode or in_lecture %}

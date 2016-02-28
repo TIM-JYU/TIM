@@ -1947,3 +1947,12 @@ p.docsettings {
     border-radius: 10px;
     padding: 1em;
 }
+
+.taskSmallSummary {
+    position: fixed;
+    left: 5px;
+    top: 35px;
+    z-index: 200;
+    font-size: 9px;
+}
+
