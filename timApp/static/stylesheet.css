@@ -377,6 +377,7 @@ ul ul ul, ol ol ol {
     padding-top: 0.0em;
     margin-top: 5px;
     background-color: #f8f8f8;
+    min-height: 1px;
 }
 
 .timButton, .editorButton {
@@ -1736,6 +1737,7 @@ p.plgfooter {
     }
 
     .previewcontent {
+        min-height: 5em;
         max-height: 15em;
     }
 
