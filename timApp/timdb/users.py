@@ -91,13 +91,13 @@ class Users(TimDbBase):
         if commit:
             self.db.commit()
         user_id = cursor.lastrowid
-        self.add_user_to_group(2, user_id)
+        self.add_user_to_group(self.get_anon_group_id(), user_id)
         return user_id
 
     @contract
     def get_next_anonymous_user_id(self) -> 'int':
         """
-        :returns: Tnext unused negative id.
+        :returns: The next unused negative id.
         """
         cursor = self.db.cursor()
         cursor.execute('SELECT MIN(id) AS next_id FROM User')
@@ -333,9 +333,15 @@ class Users(TimDbBase):
     @contract
     def get_personal_usergroup(self, user: 'dict') -> 'int':
         """Gets the personal user group for the user.
+
+        :param user: The user object.
         """
         if user is None:
             raise TimDbException("No such user")
+
+        # For anonymous users, we return the group of anonymous users
+        if user['id'] < 0:
+            return self.get_anon_group_id()
 
         userName = user['name']
         groups = self.get_usergroups_by_name(userName)

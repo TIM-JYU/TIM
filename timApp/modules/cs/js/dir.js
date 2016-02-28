@@ -1550,7 +1550,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 	$scope.showJS = function() {
         var wantsConsole = false;
         if ( $scope.type.indexOf("/c") >= 0 ) wantsConsole = true;
-        if ( !$scope.usercode && !$scope.userargs && !$scope.userinput ) return;
+        if ( !$scope.attrs.runeverytime && !$scope.usercode && !$scope.userargs && !$scope.userinput ) return;
         if ( !$scope.canvas ) { // cerate a canvas on first time
             if ( $scope.iframe ) {
                 var v = $scope.getVid();
@@ -1574,7 +1574,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
             $scope.canvas = $scope.canvas[0];
         }
         var text = $scope.usercode.replace($scope.cursor,"");
-        if ( text == $scope.lastJS && $scope.userargs == $scope.lastUserargs && $scope.userinput == $scope.lastUserinput ) return;
+        // if ( text == $scope.lastJS && $scope.userargs == $scope.lastUserargs && $scope.userinput == $scope.lastUserinput ) return;
+        if ( !$scope.attrs.runeverytime && text == $scope.lastJS && $scope.userargs == $scope.lastUserargs && $scope.userinput == $scope.lastUserinput ) return;
         $scope.lastJS = text;
         $scope.lastUserargs = $scope.userargs;
         $scope.lastUserinput = $scope.userinput;
