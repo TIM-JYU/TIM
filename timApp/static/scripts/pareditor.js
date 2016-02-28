@@ -21,6 +21,13 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                 initialTextUrl: '@'
             },
             controller: function ($scope) {
+                $scope.setEditorMinSize = function() {
+                    var editor = $('pareditor');
+                    editor.css('min-height', editor.height(), 'overflow', 'visible');
+                    $scope.minSizeSet = true;
+                    $scope.previewReleased = false;
+                };
+
                 $scope.deleteAttribute = function(key) {
                     delete $scope.extraData.attrs[key];
                 };
@@ -102,13 +109,44 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
 
                 $scope.adjustPreview = function () {
                     window.setTimeout(function () {
-                            var height = $('pareditor').height();
-                            var $preview = $('.previewcontent');
-                            var offset = $preview.position().top;
-                            $preview.css('max-height', (height - offset) + 1 + 'px');
-                            $preview.scrollTop($scope.scrollPos);
-                        }, 50
-                    );
+                        var $editor = $('.editorArea');
+                        var height = $editor.height();
+                        var editorMaxHeight = $editor.cssUnit('max-height')[0];
+
+                        var $preview = $('.previewcontent');
+                        var offset = $preview.position().top;
+                        var prevHeight = $preview.css('height');
+                        //$preview.css('height', (height - offset+1));
+                        if (height < editorMaxHeight) {
+                            var newHeight = $scope.calculateEditorSize();
+                            if (!$scope.previewReleased) {
+                                $preview.css('max-height', newHeight/3);
+                            }
+                            $editor.css('height', newHeight);
+                        }
+                        $preview.scrollTop($scope.scrollPos);
+                    }, 50);
+
+                };
+
+                // Calculates what the size of the editor should be
+                $scope.calculateEditorSize = function() {
+                    if($scope.previewReleased === false) {
+                        return ($('.draghandle').cssUnit('min-height')[0] +
+                            $('.tabsarea').height() +
+                            $('.extraButtonArea').height() +
+                            $('.editorContainer').height() +
+                            $('.editButtonArea').height() +
+                            $('.preview').height() + 33
+                        );
+                    }
+                    if($scope.previewReleased === true) {
+                        return ($('.draghandle').cssUnit('min-height')[0] +
+                            $('.tabsarea').height() +
+                            $('.extraButtonArea').height() +
+                            $('.editorContainer').height() +
+                            $('.editButtonArea').height() + 20);
+                    }
                 };
 
                 $scope.createAce = function (editor, text) {
@@ -177,8 +215,8 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                     editor.commands.addCommand({
                         name: 'codeBlock',
                         bindKey: {
-                            win: 'Ctrl-9',
-                            mac: 'Command-9',
+                            win: 'Ctrl-Alt-O',
+                            mac: 'Command-Alt-O',
                             sender: 'editor|cli'
                         },
                         exec: function (env, args, request) {
@@ -283,11 +321,13 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                             } else if (e.keyCode === 73) {
                                 $scope.surroundClicked('*', '*', surroundedByItalic);
                                 e.preventDefault();
+                            } else if (e.altKey) {
+                                if (e.keyCode === 79) {
+                                    $scope.codeBlockClicked();
+                                    e.preventDefault();
+                                }
                             } else if (e.keyCode === 79) {
                                 $scope.surroundClicked('`', '`');
-                                e.preventDefault();
-                            } else if (e.keyCode === 57) {
-                                $scope.codeBlockClicked();
                                 e.preventDefault();
                             } else if (e.keyCode === 49) {
                                 $scope.headerClicked('#');
@@ -359,6 +399,10 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                             $scope.outofdate = false;
                             $scope.parCount = len;
                             $('.editorContainer').resize();
+                            if (!$scope.minSizeSet) {
+                                $scope.setEditorMinSize();
+                            }
+
                         }).error(function (data, status, headers, config) {
                             $window.alert("Failed to show preview: " + data.error);
                         });
@@ -501,6 +545,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                     var div = $("#previewDiv");
                     var content = $('.previewcontent');
                     var editor = $('.editorArea');
+                    $scope.previewReleased = !($scope.previewReleased);
 
                     if (div.css("position") == "absolute") {
                         div.css("position", "static");
@@ -1380,4 +1425,5 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                 }
             }
         };
+
     }]);
