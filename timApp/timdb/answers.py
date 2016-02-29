@@ -171,13 +171,12 @@ order by u.id,a.task_id;
                 SELECT User.id, name, real_name, COUNT(DISTINCT task_id) AS task_count, ROUND(SUM(points),2) as total_points
                 FROM User
                 JOIN UserAnswer ON User.id = UserAnswer.user_id
-                JOIN Answer ON Answer.id = UserAnswer.answer_id
-                JOIN (SELECT Answer.id, UserAnswer.user_id, MAX(answered_on)
+                JOIN (SELECT Answer.id, task_id, points, UserAnswer.user_id, MAX(Answer.id)
                       FROM Answer
                       JOIN UserAnswer ON UserAnswer.answer_id = Answer.id
                       WHERE Answer.valid = 1
                       GROUP BY UserAnswer.user_id, Answer.task_id
-                      )tmp ON tmp.id = Answer.id AND User.id = tmp.user_id
+                      )tmp ON tmp.id = UserAnswer.answer_id AND User.id = tmp.user_id
                 WHERE task_id IN (%s)
                 %s
                 GROUP BY User.id
