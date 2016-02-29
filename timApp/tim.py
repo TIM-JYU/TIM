@@ -3,6 +3,7 @@
 import imghdr
 import io
 import time
+import http.client
 
 from flask import Blueprint
 from flask import render_template
@@ -65,7 +66,10 @@ print('Profiling: {}'.format(app.config['PROFILE']))
 
 def error_generic(error, code):
     if 'text/html' in request.headers.get("Accept", ""):
-        return render_template(str(code) + '.html', message=error.description), code
+        return render_template('error.html',
+                               message=error.description,
+                               code=code,
+                               status=http.client.responses[code]), code
     else:
         return jsonResponse({'error': error.description}, code)
 
@@ -78,6 +82,12 @@ def bad_request(error):
 @app.errorhandler(403)
 def forbidden(error):
     return error_generic(error, 403)
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    error.description = "Something went wrong with the server, sorry. We'll fix this as soon as possible."
+    return error_generic(error, 500)
 
 
 @app.errorhandler(413)
