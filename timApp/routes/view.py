@@ -223,13 +223,17 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     user = getCurrentUserId()
 
     teacher_or_see_answers = route in ('teacher', 'answers')
-
+    doc_settings = doc.get_settings()
     # We need to deference paragraphs at this point already to get the correct task ids
     xs = dereference_pars(xs, edit_window=False, source_doc=doc.get_original_document())
-    task_ids = pluginControl.find_task_ids(xs)
-    total_tasks = len(task_ids)
+    total_tasks = None
     total_points = None
     tasks_done = None
+    task_ids = None
+    users = []
+    if teacher_or_see_answers or (doc_settings.show_task_summary() and logged_in()):
+        task_ids = pluginControl.find_task_ids(xs)
+        total_tasks = len(task_ids)
     if teacher_or_see_answers:
         user_list = None
         if usergroup is not None:
@@ -237,8 +241,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
         users = timdb.answers.getUsersForTasks(task_ids, user_list)
         if len(users) > 0:
             user = users[0]['id']
-    else:
-        users = []
+    elif doc_settings.show_task_summary() and logged_in():
         info = timdb.answers.getUsersForTasks(task_ids, [user])
         if info:
             total_points = info[0]['total_points']
@@ -247,7 +250,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     clear_cache = get_option(request, "nocache", False)
     hide_answers = get_option(request, 'noanswers', False)
-    doc_settings = doc.get_settings()
+
     raw_css = doc_settings.css() if doc_settings else None
     doc_css = sanitize_html('<style type="text/css">' + raw_css + '</style>') if raw_css else None
     DocParagraph.preload_htmls(xs, doc_settings, clear_cache)

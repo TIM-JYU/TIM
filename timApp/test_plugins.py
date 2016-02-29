@@ -124,6 +124,13 @@ class PluginTest(TimRouteTest):
         self.assertEqual(1, len(plugs))
         self.assertIsNone(json.loads(plugs[0].find('mmcq').get('data-content')).get('state'))
 
+        summary = tree.findall('.//div[@class="taskSummary"]')
+        self.assertEqual(0, len(summary))
+        doc.add_setting('show_task_summary', True)
+        tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True, query_string={'lazy': False})
+        summary = tree.findall('.//div[@class="taskSummary"]')
+        self.assertEqual(1, len(summary))
+
         self.logout()
         resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, False, False])
         self.check_ok_answer(resp)
@@ -151,8 +158,9 @@ class PluginTest(TimRouteTest):
                                                              'doc_id': doc.doc_id}), expect_status=403)
         tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True, query_string={'lazy': False})
         plugs = tree.findall(mmcq_xpath)
+        summary = tree.findall('.//div[@class="taskSummary"]')
         self.assertEqual(1, len(plugs))
-
+        self.assertEqual(0, len(summary))
         # Anonymous users can't see their answers
         self.assertIsNone(json.loads(plugs[0].find('mmcq').get('data-content'))['state'])
         timdb.close()
