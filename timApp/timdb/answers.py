@@ -174,10 +174,9 @@ order by u.id,a.task_id;
                 JOIN (SELECT Answer.id, task_id, points, UserAnswer.user_id, MAX(Answer.id)
                       FROM Answer
                       JOIN UserAnswer ON UserAnswer.answer_id = Answer.id
-                      WHERE Answer.valid = 1
+                      WHERE task_id IN (%s) AND Answer.valid = 1
                       GROUP BY UserAnswer.user_id, Answer.task_id
                       )tmp ON tmp.id = UserAnswer.answer_id AND User.id = tmp.user_id
-                WHERE task_id IN (%s)
                 %s
                 GROUP BY User.id
                 ORDER BY real_name ASC
