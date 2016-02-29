@@ -28,7 +28,7 @@ def get_error_html_plugin(plugin_name, message):
     return get_error_html('Plugin {} error: {}'.format(plugin_name, message))
 
 
-def find_task_ids(blocks, doc_id):
+def find_task_ids(blocks):
     """
 
     :rtype: list[str]
@@ -39,7 +39,7 @@ def find_task_ids(blocks, doc_id):
     for block in blocks:
         task_id = block.get_attr('taskId')
         if task_id:
-            task_ids.append("{}.{}".format(doc_id, task_id))
+            task_ids.append("{}.{}".format(block.doc.doc_id, task_id))
     return task_ids
 
 

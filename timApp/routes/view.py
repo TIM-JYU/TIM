@@ -3,7 +3,7 @@
 from contracts import contract, new_contract
 
 import routes.lecture
-from documentmodel.document import DocParagraph, get_index_from_html_list
+from documentmodel.document import DocParagraph, get_index_from_html_list, dereference_pars
 from htmlSanitize import sanitize_html
 
 new_contract('range', 'tuple(int, int)')
@@ -223,7 +223,10 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     user = getCurrentUserId()
 
     teacher_or_see_answers = route in ('teacher', 'answers')
-    task_ids = pluginControl.find_task_ids(xs, doc_id)
+
+    # We need to deference paragraphs at this point already to get the correct task ids
+    xs = dereference_pars(xs, edit_window=False, source_doc=doc.get_original_document())
+    task_ids = pluginControl.find_task_ids(xs)
     total_tasks = len(task_ids)
     total_points = None
     tasks_done = None
