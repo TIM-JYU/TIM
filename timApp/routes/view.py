@@ -204,13 +204,12 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     if not has_view_access(doc_id):
         if not logged_in():
-            session['came_from'] = request.url
-            session['anchor'] = request.args.get('anchor', '')
-            return render_template('loginpage.html',
-                                   came_from=request.url,
-                                   anchor=session['anchor']), 403
+            return redirect_to_login()
         else:
             abort(403)
+
+    if get_option(request, 'login', False) and not logged_in():
+        return redirect_to_login()
 
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
@@ -321,3 +320,11 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                                         'tasks_done': tasks_done,
                                         'total_tasks': total_tasks})
     return result
+
+
+def redirect_to_login():
+    session['came_from'] = request.url
+    session['anchor'] = request.args.get('anchor', '')
+    return render_template('loginpage.html',
+                           came_from=request.url,
+                           anchor=session['anchor']), 403
