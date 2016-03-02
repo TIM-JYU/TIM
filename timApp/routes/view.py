@@ -3,7 +3,7 @@
 from contracts import contract, new_contract
 
 import routes.lecture
-from documentmodel.document import DocParagraph, get_index_from_html_list
+from documentmodel.document import DocParagraph, get_index_from_html_list, dereference_pars
 from htmlSanitize import sanitize_html
 
 new_contract('range', 'tuple(int, int)')
@@ -204,13 +204,12 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     if not has_view_access(doc_id):
         if not logged_in():
-            session['came_from'] = request.url
-            session['anchor'] = request.args.get('anchor', '')
-            return render_template('loginpage.html',
-                                   came_from=request.url,
-                                   anchor=session['anchor']), 403
+            return redirect_to_login()
         else:
             abort(403)
+
+    if get_option(request, 'login', False) and not logged_in():
+        return redirect_to_login()
 
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
@@ -223,21 +222,34 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     user = getCurrentUserId()
 
     teacher_or_see_answers = route in ('teacher', 'answers')
+    doc_settings = doc.get_settings()
+    # We need to deference paragraphs at this point already to get the correct task ids
+    xs = dereference_pars(xs, edit_window=False, source_doc=doc.get_original_document())
+    total_tasks = None
+    total_points = None
+    tasks_done = None
+    task_ids = None
+    users = []
+    if teacher_or_see_answers or (doc_settings.show_task_summary() and logged_in()):
+        task_ids = pluginControl.find_task_ids(xs)
+        total_tasks = len(task_ids)
     if teacher_or_see_answers:
-        task_ids = pluginControl.find_task_ids(xs, doc_id)
         user_list = None
         if usergroup is not None:
             user_list = [user['id'] for user in timdb.users.get_users_for_group(usergroup)]
         users = timdb.answers.getUsersForTasks(task_ids, user_list)
         if len(users) > 0:
             user = users[0]['id']
-    else:
-        users = []
+    elif doc_settings.show_task_summary() and logged_in():
+        info = timdb.answers.getUsersForTasks(task_ids, [user])
+        if info:
+            total_points = info[0]['total_points']
+            tasks_done = info[0]['task_count']
     current_user = timdb.users.get_user(user)
 
     clear_cache = get_option(request, "nocache", False)
     hide_answers = get_option(request, 'noanswers', False)
-    doc_settings = doc.get_settings()
+
     raw_css = doc_settings.css() if doc_settings else None
     doc_css = sanitize_html('<style type="text/css">' + raw_css + '</style>') if raw_css else None
     DocParagraph.preload_htmls(xs, doc_settings, clear_cache)
@@ -303,5 +315,16 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                              reqs=pluginControl.get_all_reqs(),
                              settings=settings,
                              no_browser=hide_answers,
-                             message=message)
+                             message=message,
+                             task_info={'total_points': total_points,
+                                        'tasks_done': tasks_done,
+                                        'total_tasks': total_tasks})
     return result
+
+
+def redirect_to_login():
+    session['came_from'] = request.url
+    session['anchor'] = request.args.get('anchor', '')
+    return render_template('loginpage.html',
+                           came_from=request.url,
+                           anchor=session['anchor']), 403

@@ -132,6 +132,11 @@ class Document:
             pass
         return pars
 
+    def add_setting(self, key: str, value) -> None:
+        current_settings = self.get_settings().get_dict()
+        current_settings[key] = value
+        self.set_settings(current_settings)
+
     @contract
     def set_settings(self, settings: 'dict'):
         first_par = None

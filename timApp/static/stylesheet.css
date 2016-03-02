@@ -21,6 +21,7 @@ body {
     padding: 0.5em;
 }
 
+
 .mcq table p {
     margin-left: 0;
     text-align: left;
@@ -151,6 +152,10 @@ body {
     line-height: 0.8;
     width: 5em;
     height: 3em;
+}
+
+.smallNote {
+    font-size: x-small;
 }
 
 .redbutton {
@@ -377,6 +382,7 @@ ul ul ul, ol ol ol {
     padding-top: 0.0em;
     margin-top: 5px;
     background-color: #f8f8f8;
+    min-height: 1px;
 }
 
 .timButton, .editorButton {
@@ -1736,6 +1742,7 @@ p.plgfooter {
     }
 
     .previewcontent {
+        min-height: 5em;
         max-height: 15em;
     }
 
@@ -1921,7 +1928,7 @@ p.docsettings {
     font-size: smaller;
     margin-left: 2em;
     margin-right: -5em;
-    text-align: left;
+    text-align: left; 
 }
 
 .userlist .active {
@@ -1935,3 +1942,19 @@ p.docsettings {
 .shortedit {
     max-width: 4.5em;
 }
+
+.taskSummary {
+    margin-bottom: 2em;
+    border: 2px solid black;
+    border-radius: 10px;
+    padding: 1em;
+}
+
+.taskSmallSummary {
+    position: fixed;
+    left: 5px;
+    top: 35px;
+    z-index: 200;
+    font-size: 9px;
+}
+

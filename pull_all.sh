@@ -35,3 +35,5 @@ docker rmi $(docker images | grep "^<none>" | awk '{print $3}')
 
 # Initialize PostgreSQL database
 (cd postgre && ./init_postgre.sh $@)
+
+./create_network.sh

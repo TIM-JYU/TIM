@@ -1,4 +1,4 @@
-var videoApp = angular.module('videoApp', ['ngSanitize']);
+﻿var videoApp = angular.module('videoApp', ['ngSanitize']);
 videoApp.directive('videoRunner',['$sanitize', function ($sanitize) {	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('video'); }]);
 videoApp.directive('smallVideoRunner',['$sanitize', function ($sanitize) {	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('smallvideo'); }]);
 videoApp.directive('listVideoRunner',['$sanitize', function ($sanitize) {
@@ -138,6 +138,7 @@ videoApp.directiveFunction = function(t) {
             if ( scope.startt ) scope.startt = ", " + scope.startt;
 			if ( attrs.stem ) scope.stem = attrs.stem;
 			if ( attrs.iframe ) scope.iframe = true;
+            if ( scope.file.indexOf("youtube") >= 0 )  scope.iframe = true; // youtube must be in iframe
 			scope.videoHtml = element[0].childNodes[2]
 			head = videoApp.getHeading(attrs,"header",scope,"h4");
 			element[0].childNodes[0].outerHTML = head;
@@ -199,11 +200,17 @@ videoApp.Controller = function($scope,$http,$transclude) {
 		if ( $scope.start )
 		    if ( moniviestin ) t = "#position="+$scope.start;
 		    else t = "?start="+$scope.start+"&end="+$scope.end;
-		if ( $scope.iframe )
-			$scope.videoHtml.innerHTML = '<iframe id="'+vid+'" class="showVideo" src="' + $scope.file + t +  '" ' + w + h + 'autoplay="true"  frameborder="0" allowfullscreen></iframe>';
+		if ( $scope.iframe ) {
+            var file = $scope.file;
+            if ( file.indexOf("youtube") >= 0 && file.indexOf("embed") < 0 ) {
+                var parts = file.split("=");
+                if ( parts.length > 1 )
+                    file = "//www.youtube.com/embed/" + parts[1];
+            }
+			$scope.videoHtml.innerHTML = '<iframe id="'+vid+'" class="showVideo" src="' + file + t +  '" ' + w + h + 'autoplay="true"  frameborder="0" allowfullscreen></iframe>';
 			// '&rel=0'+
 			// youtube: <iframe width="480" height="385" src="//www.youtube.com/embed/RwmU0O7hXts" frameborder="0" allowfullscreen></iframe>
-		else  { 
+		} else  { 
             t = ""
             if ( $scope.start ) {
                 t = "#t="+$scope.start; // iPad ei tottele 'loadedmetadata'

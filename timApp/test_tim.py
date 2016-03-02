@@ -73,6 +73,7 @@ class TimTest(TimRouteTest):
         for d in doc_ids - {3}:
             self.assertResponseStatus(a.get('/view/' + str(d)), 403)
         self.assertResponseStatus(a.get('/view/' + str(3)))
+        self.assertResponseStatus(a.get('/view/' + str(3), query_string={'login': True}), 403)
 
         # Login as another user
         self.login_test2()
