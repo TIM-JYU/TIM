@@ -6,7 +6,7 @@ set -e
 params=${*/all/tim nginx postgre plugins funnel}
 
 if [ "$params" = "" ] ; then
-    echo "Usage: restart [tim [sshd]|nginx|plugins]..."
+    echo "Usage: restart [tim [sshd]|nginx|plugins|funnel]..."
     echo "Example: restart tim plugins"
     exit
 fi
