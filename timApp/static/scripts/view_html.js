@@ -495,6 +495,60 @@ timApp.controller("ViewCtrl", [
             sc.toggleParEditor($par, {showDelete: true, area: false});
         };
 
+        sc.editSettingsPars = function () {
+            var pars = [];
+            $(".par").each(function () {
+                if ($(this).attr("attrs").indexOf("settings") >= 0)
+                {
+                    pars.push(this);
+                }
+            });
+            if (pars.length == 0)
+            {
+                var par_next = sc.getParId($(".par:first"));
+                if (par_next == "null")
+                {
+                    par_next = null;
+                }
+                http.post('/newParagraph/', {
+                    "text" : '``` {settings=""}\nexample:\n```',
+                    "docId" : sc.docId,
+                    "par_next" : par_next
+                }).success(function(data, status, headers, config) {
+                    $window.location.reload();
+                }).error(function(data, status, headers, config) {
+                    $window.alert(data.error);
+                });
+            }
+            else if (pars.length == 1)
+            {
+                sc.toggleParEditor($(pars[0]), {showDelete: true, area: false});
+            }
+            else
+            {
+                var start = pars[0];
+                var end = pars[pars.length - 1];
+                sc.selection.start = sc.getParId($(start));
+                sc.selection.end = sc.getParId($(end));
+                sc.selection.reversed = false;
+                $(pars).addClass('selected');
+                sc.toggleParEditor($(pars), {showDelete: true, area: true});
+                $(pars).removeClass('selected');
+                sc.cancelArea();
+            }
+        };
+
+        /*
+        // We need some code to hide document settings but this will not do.
+        $(function() {
+            $(".par").each(function () {
+                if ($(this).attr("attrs").indexOf("settings") >= 0)
+                {
+                    //$(this).hide();
+                }
+            });
+        });*/
+
         sc.beginAreaEditing = function (e, $par) {
             $(".par.new").remove();
             sc.toggleParEditor($par, {showDelete: true, area: true});
@@ -642,7 +696,7 @@ timApp.controller("ViewCtrl", [
                 data = sc.getRefAttrs($par);
             }
             if ( !sc.selectedUser ) return true;
-            if ( sc.selectedUser.name.indexOf("Anonymous") == 0 ) return true;  
+            if ( sc.selectedUser.name.indexOf("Anonymous") == 0 ) return true;
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now(), data)
                 .success(function (data, status, headers, config) {
                     sc.markPageDirty();
@@ -823,7 +877,7 @@ timApp.controller("ViewCtrl", [
 
         sc.getQuestionHtml = function (questions) {
             var questionImage = '/static/images/show-question-icon.png';
-            var $questionsDiv = $("<div>", {class: 'questions'}); 
+            var $questionsDiv = $("<div>", {class: 'questions'});
 
             // TODO: Think better way to get the ID of question.
             for (var i = 0; i < questions.length; i++) {

@@ -27,25 +27,16 @@
     <div class="par"
          id="null"
          t=""
-         attrs="{}"
-         ng-non-bindable>
-
+         attrs="{}">
         <div class="parContent">
             <p>Click left side to edit. You can get help with editing from editor's Help tab.</p>
             <p>This is an automatically added help paragraph. It will disappear when you add content.</p>
         </div>
-        {{ editline|safe }}
-    </div>
-    <div ng-controller="IndexCtrl">
-        <div class="par"
-                id="null"
-                t=""
-                attrs="{}">
+        <div ng-controller="IndexCtrl">
             <div ng-if="templateList.length">
                 <div class="parContent">
                     <p>You may also choose to use one of the templates below.</p>
                 </div>
-                {{ editline|safe }}
                 <br>
                 <table>
                     <thead>
@@ -67,6 +58,7 @@
                 </table>
             </div>
         </div>
+        {{ editline | safe }}
     </div>
 {% endif %}
 
