@@ -6,7 +6,7 @@
 set -e
 #trap 'echo ABORTED on line \"$BASH_COMMAND\"' 0
 
-params="$*"
+params=${*/all/tim postgre plugins funnel}
 
 if [ "$params" = "" ] ; then
     echo "Usage: restart [tim|timbeta|timdev|plugins|postgre|funnel]..."
