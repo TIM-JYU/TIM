@@ -7,6 +7,7 @@ from decorators import async
 from routes.common import *
 from routes.logger import log_message
 from tim_app import app
+from typing import Union
 
 
 FUNNEL_HOST = "funnel"
@@ -63,25 +64,27 @@ def send_email(rcpt: str, subject: str, msg: str, reply_to: str):
                 conn.close()
 
 
-def replace_macros(msg: str, doc_id: int) -> str:
+def replace_macros(msg: str, doc_id: int, par_id: Union[str, None]) -> str:
     timdb = getTimDb()
     new_msg = msg
     if '[user_name]' in msg:
         new_msg = new_msg.replace('[user_name]', getCurrentUserName())
     if '[doc_name]' in msg or '[doc_url]' in msg:
         doc_name = timdb.documents.get_first_document_name(doc_id)
-        doc_url = 'http://{}/view/{}'.format(os.environ.get("TIM_HOST", "tim.jyu.fi"), doc_name.replace(' ', '%20'))
+        par_part = '' if par_id is None else '#' + par_id
+        doc_url = 'http://{}/view/{}{}'.format(os.environ.get("TIM_HOST", "localhost"), doc_name.replace(' ', '%20'),
+                                               par_part)
         new_msg = new_msg.replace('[doc_name]', doc_name).replace('[doc_url]', doc_url)
 
     return new_msg
 
 
-def notify_doc_owner(doc_id, subject, msg, setting=None):
+def notify_doc_owner(doc_id, subject, msg, setting=None, par_id=None):
     timdb = getTimDb()
     me = get_current_user()
     owner_group = timdb.documents.get_owner(doc_id)
-    macro_subject = replace_macros(subject, doc_id)
-    macro_msg = replace_macros(msg, doc_id)
+    macro_subject = replace_macros(subject, doc_id, par_id)
+    macro_msg = replace_macros(msg, doc_id, par_id)
 
     for user in timdb.users.get_users_in_group(owner_group):
         if user['id'] != me['id'] and user['email']:

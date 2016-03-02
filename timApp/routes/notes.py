@@ -53,8 +53,8 @@ def post_note():
     timdb.notes.addNote(group_id, Document(par.get_doc_id()), par, note_text, access, tags)
 
     notify_doc_owner(doc_id, '[user_name] has posted a note on your document [doc_name]',
-                     '[user_name] has posted the following note on your document [doc_url]:\n\n{}'.format(note_text),
-                     setting="comment_add")
+                     '[user_name] has posted the following note on your document [doc_url]\n\n{}'.format(note_text),
+                     setting="comment_add", par_id=par_id)
 
     return par_response([doc.get_paragraph(par_id)],
                         doc)
@@ -83,12 +83,12 @@ def edit_note():
     timdb.notes.modifyNote(note_id, note_text, access, tags)
 
     notify_doc_owner(doc_id, '[user_name] has edited a note on your document [doc_name]',
-                     """[user_name] has edited the following note on your document [doc_url]:\n
+                     """[user_name] has edited the following note on your document [doc_url]\n
 === ORIGINAL ===\n
 {}\n\n
 === MODIFIED ===\n
 {}\n
-""".format(prev_note_text, note_text), setting="comment_modify")
+""".format(prev_note_text, note_text), setting="comment_modify", par_id=par_id)
 
     doc = Document(doc_id)
     return par_response([doc.get_paragraph(par_id)],
