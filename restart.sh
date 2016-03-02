@@ -9,7 +9,7 @@ set -e
 params="$*"
 
 if [ "$params" = "" ] ; then
-    echo "Usage: restart [tim|timbeta|timdev|plugins|funnel]..."
+    echo "Usage: restart [tim|timbeta|timdev|plugins|postgre|funnel]..."
     echo "Example: restart tim timdev"
     exit
 fi
