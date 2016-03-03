@@ -32,8 +32,8 @@ def set_read_paragraph(doc_id, specifier):
     if par is None:
         return abort(400, 'Non-existent paragraph')
 
-    for par in get_referenced_pars_from_req(par):
-        timdb.readings.setAsRead(group_id, Document(par.get_doc_id()), par)
+    for p in get_referenced_pars_from_req(par):
+        timdb.readings.setAsRead(group_id, Document(p.get_doc_id()), p)
 
     return okJsonResponse()
 
