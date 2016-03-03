@@ -92,7 +92,7 @@ def add_member(usernames, groupname):
 def remove_member(usernames, groupname):
     verify_admin()
     if groupname in SPECIAL_GROUPS:
-        abort(400, 'Cannot add members to special groups.')
+        abort(400, 'Cannot remove members from special groups.')
     timdb = getTimDb()
     usernames = get_usernames(usernames)
     gid, uids = get_uid_gid(groupname, usernames)
