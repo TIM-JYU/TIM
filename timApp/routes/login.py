@@ -1,18 +1,16 @@
 """Routes for login view."""
 from .common import *
 from .logger import log_message
-from email.mime.text import MIMEText
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+from routes.notify import send_email
 
 import codecs
 import os
-import smtplib
 import string
 import random
 import re
 import requests
 import requests.exceptions
-import socket
 
 
 login_page = Blueprint('login_page',
@@ -26,25 +24,10 @@ def __getRealName(email):
     parts = email[0:atindex].split('.')
     parts2 = [part.capitalize() if len(part) > 1 else part.capitalize() + '.' for part in parts]
     return ' '.join(parts2)
-    
-def __isValidEmail(email):
+
+
+def is_valid_email(email):
     return re.match('^[\w\.-]+@([\w-]+\.)+[\w-]+$', email) is not None
-
-def __sendMail(email, subject, text, sender='no-reply@tim.it.jyu.fi'):
-    # Check connectivity first
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(3)
-    sock.connect(('smtp.jyu.fi', 25))
-    sock.close()
-
-    msg = MIMEText(text)
-    msg['Subject'] = subject
-    msg['From'] = sender
-    msg['To'] = email
-
-    s = smtplib.SMTP('smtp.jyu.fi')
-    s.sendmail(sender, [email], msg.as_string())
-    s.quit()
 
 
 @login_page.route("/logout", methods=['POST'])
@@ -159,7 +142,7 @@ def signupWithEmail():
 def altSignup():
     # Before password verification
     email = request.form['email']
-    if not email or not __isValidEmail(email):
+    if not email or not is_valid_email(email):
         flash("You must supply a valid email address!")
         return finishLogin(ready=False)
         
@@ -176,7 +159,7 @@ def altSignup():
     session["email"] = email
 
     try:
-        __sendMail(email, 'Your new TIM password', 'Your password is {}'.format(password))
+        send_email(email, 'Your new TIM password', 'Your password is {}'.format(password))
         flash("A password has been sent to you. Please check your email.")
     except Exception as e:
         log_message('Could not send login email (user: {}, password: {}, exception: {})'.format(email, password, str(e)), 'ERROR')

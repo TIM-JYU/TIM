@@ -36,7 +36,7 @@ def set_notify_settings(doc_id):
 
 
 @async
-def send_email(rcpt: str, subject: str, msg: str, reply_to: str):
+def send_email(rcpt: str, subject: str, msg: str, reply_to: Union[str, None] = None):
     with app.app_context():
         conn = None
         try:
@@ -46,8 +46,11 @@ def send_email(rcpt: str, subject: str, msg: str, reply_to: str):
                 "Encoding": "text/html",
                 "Connection": "close",
                 "Subject": subject,
-                "Reply-To": reply_to,
                 "Rcpt-To": rcpt}
+
+            if reply_to:
+                headers['Reply-To'] = reply_to
+
             conn = http.client.HTTPConnection(FUNNEL_HOST, port=FUNNEL_PORT)
             conn.request("POST", "/mail", body=msg.replace('\n', '<br>').encode('utf-8'), headers=headers)
             log_message("Sending email to " + rcpt, 'INFO')
