@@ -8,9 +8,9 @@ from timroutetest import TimRouteTest
 
 
 class PluginTest(TimRouteTest):
-    def post_answer(self, plugin_type, doc_id, task_name, user_input,
+    def post_answer(self, plugin_type, task_id, user_input,
                     save_teacher=False, teacher=False, user_id=None, answer_id=None):
-        return self.json_put('/{}/{}.{}/answer/'.format(plugin_type, doc_id, task_name),
+        return self.json_put('/{}/{}/answer/'.format(plugin_type, task_id),
                              {"input": user_input,
                               "abData": {"saveTeacher": save_teacher,
                                          "teacher": teacher,
@@ -23,8 +23,7 @@ class PluginTest(TimRouteTest):
         doc = self.create_doc(from_file='example_docs/mmcq_example.md')
         resp = self.app.get('/view/{}'.format(doc.doc_id))
         self.assertResponseStatus(resp)
-        ht = resp.get_data(as_text=True)
-        tree = html.fromstring(ht)
+        tree = html.fromstring(resp.get_data(as_text=True))
         mmcq_xpath = r'.//div[@class="par mmcq"]/div[@class="parContent"]/div[@id="{}.mmcqexample"]'.format(
             doc.doc_id)
         plugs = tree.findall(mmcq_xpath)
@@ -32,62 +31,70 @@ class PluginTest(TimRouteTest):
         task_name = 'mmcqexample'
         plugin_type = 'mmcq'
         task_id = '{}.{}'.format(doc.doc_id, task_name)
+        par_id = doc.get_paragraph_by_task(task_name).get_id()
+        task_id_ext = task_id + '.' + par_id
+        task_id_ext_wrong = task_id + '.' + par_id + 'x'
 
-        resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, False, False])
+        resp = self.post_answer(plugin_type, task_id, [True, False, False])
         self.check_ok_answer(resp)
 
-        resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, False, False])
+        resp = self.post_answer(plugin_type, task_id, [True, False, False])
         self.check_failed_answer(resp)
+        resp = self.post_answer(plugin_type, task_id_ext, [True, False, False])
+        self.check_failed_answer(resp)
+        resp = self.post_answer(plugin_type, task_id_ext_wrong, [True, False, False])
+        self.assertDictResponse({'error': 'Document {}: Paragraph not found: {}'
+                                .format(doc.doc_id, par_id + 'x')}, resp, expect_status=400)
 
         wrongname = 'mmcqexamplez'
-        resp = self.post_answer(plugin_type, doc.doc_id, wrongname, [True, False, False])
+        resp = self.post_answer(plugin_type, str(doc.doc_id) + '.' + wrongname, [True, False, False])
         self.assertInResponse('Task not found in the document: {}'.format(wrongname), resp, 400, json_key='error')
 
         doc.set_settings({'global_plugin_attrs': {'all': {'answerLimit': 2}}})
-        resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, True, False])
+        resp = self.post_answer(plugin_type, task_id, [True, True, False])
         self.check_ok_answer(resp)
 
-        resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, False, False])
+        resp = self.post_answer(plugin_type, task_id, [True, False, False])
         self.check_failed_answer(resp, is_new=True)
 
         doc.set_settings({'global_plugin_attrs': {'mmcq': {'answerLimit': None}}})
-        resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, True, True])
+        resp = self.post_answer(plugin_type, task_id, [True, True, True])
         self.check_ok_answer(resp)
-        resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, True, True])
+        resp = self.post_answer(plugin_type, task_id, [True, True, True])
         self.check_ok_answer(resp, is_new=False)
 
         doc.set_settings({'global_plugin_attrs': {'mmcq': {'answerLimit': None, 'pointsRule': {'multiplier': 0}}}})
-        resp = self.post_answer(plugin_type, doc.doc_id, task_name, [False, False, True])
+        resp = self.post_answer(plugin_type, task_id, [False, False, True])
         self.check_ok_answer(resp)
 
         doc.set_settings({'global_plugin_attrs': {'mmcq': {'answerLimit': None, 'pointsRule': {'multiplier': 3}}}})
-        resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, False, True])
+        resp = self.post_answer(plugin_type, task_id, [True, False, True])
         self.check_ok_answer(resp)
 
         resp = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']))
         answer_list = self.assertResponseStatus(resp, expect_status=200, return_json=True)  # type: list(dict)
         self.assertListEqual(
             [{'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, true]',
-              'id': 6, 'points': '9', 'task_id': '3.mmcqexample', 'valid': 1},
+              'id': 6, 'points': '9', 'task_id': task_id, 'valid': 1},
              {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[false, false, true]',
-              'id': 5, 'points': None, 'task_id': '3.mmcqexample', 'valid': 1},
+              'id': 5, 'points': None, 'task_id': task_id, 'valid': 1},
              {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, true, true]',
-              'id': 4, 'points': '2', 'task_id': '3.mmcqexample', 'valid': 1},
+              'id': 4, 'points': '2', 'task_id': task_id, 'valid': 1},
              {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, false]',
-              'id': 3, 'points': '2', 'task_id': '3.mmcqexample', 'valid': 0},
+              'id': 3, 'points': '2', 'task_id': task_id, 'valid': 0},
              {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, true, false]',
-              'id': 2, 'points': '1', 'task_id': '3.mmcqexample', 'valid': 1},
+              'id': 2, 'points': '1', 'task_id': task_id, 'valid': 1},
              {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, false]',
-              'id': 1, 'points': '2', 'task_id': '3.mmcqexample', 'valid': 1}],
+              'id': 1, 'points': '2', 'task_id': task_id, 'valid': 1}],
             [{k: v for k, v in ans.items() if k != 'answered_on'} for ans in answer_list])
         for ans in answer_list:
             datetime.datetime.strptime(ans['answered_on'], '%Y-%m-%d %H:%M:%S')
-        resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, True, False],
+        resp = self.post_answer(plugin_type, task_id, [True, True, False],
                                 save_teacher=False, teacher=True, answer_id=answer_list[0]['id'],
                                 user_id=session['user_id'] - 1)
         self.assertDictResponse({'error': 'userId is not associated with answer_id'}, resp, expect_status=400)
 
-        resp = self.post_answer(plugin_type, doc.doc_id, task_name, [False, False, False],
+        resp = self.post_answer(plugin_type, task_id, [False, False, False],
                                 save_teacher=False, teacher=True, answer_id=answer_list[0]['id'],
                                 user_id=session['user_id'])
         self.check_ok_answer(resp, is_new=False)
@@ -98,7 +105,7 @@ class PluginTest(TimRouteTest):
                                    'answer_id': answer_list[0]['id'],
                                    'par_id': par_id,
                                    'doc_id': doc.doc_id})
-        self.assertDictEqual({'html': "<div id='3.mmcqexample' data-plugin='/mmcq'><mmcq "
+        self.assertDictEqual({'html': "<div id='" + task_id + "' data-plugin='/mmcq'><mmcq "
                                       "data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;onTry&quot;:null,&quot;stem&quot;:&quot;&lt;p&gt;Answer "
                                       'yes or no to the following '
                                       'questions.&lt;/p&gt;&quot;,&quot;choices&quot;:[{&quot;text&quot;:&quot;&lt;p&gt;&lt;span '
@@ -132,7 +139,7 @@ class PluginTest(TimRouteTest):
         self.assertEqual(1, len(summary))
 
         self.logout()
-        resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, False, False])
+        resp = self.post_answer(plugin_type, task_id, [True, False, False])
         self.check_ok_answer(resp)
 
         anon_id = timdb.users.get_anon_user_id()
@@ -142,7 +149,7 @@ class PluginTest(TimRouteTest):
                                'content': '[true, false, false]',
                                'id': 7,
                                'points': '6',
-                               'task_id': '3.mmcqexample',
+                               'task_id': task_id,
                                'valid': 1}],
                              [{k: v for k, v in ans.items() if k != 'answered_on'} for ans in anon_answers])
 
@@ -164,6 +171,17 @@ class PluginTest(TimRouteTest):
         # Anonymous users can't see their answers
         self.assertIsNone(json.loads(plugs[0].find('mmcq').get('data-content'))['state'])
         timdb.close()
+
+    def test_idless_plugin(self):
+        self.login_test1()
+        doc = self.create_doc(from_file='example_docs/idless_plugin.md')
+        resp = self.app.get('/view/{}'.format(doc.doc_id))
+        self.assertResponseStatus(resp)
+        tree = html.fromstring(resp.get_data(as_text=True))
+        mmcq_xpath = r'.//div[@class="par csPlugin"]/div[@class="parContent"]/div[@id="{}..{}"]'.format(
+            doc.doc_id, doc.get_paragraphs()[0].get_id())
+        plugs = tree.findall(mmcq_xpath)
+        self.assertEqual(1, len(plugs))
 
     def check_failed_answer(self, resp, is_new=False):
         j = self.assertResponseStatus(resp, return_json=True)

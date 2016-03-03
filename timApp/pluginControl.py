@@ -97,10 +97,10 @@ def pluginify(doc,
     plugins = {}
     state_map = {}
     for idx, block in enumerate(pars):
-        attr_taskId = block.get_attr('taskId')
+        attr_taskid = block.get_attr('taskId')
         plugin_name = block.get_attr('plugin')
 
-        if attr_taskId and plugin_name:
+        if plugin_name:
             vals = parse_plugin_values(block, global_attrs=settings.global_plugin_attrs(),
                                        macros=settings.get_macros(),
                                        macro_delimiter=settings.get_macro_delimiter())
@@ -111,16 +111,19 @@ def pluginify(doc,
             if plugin_name not in plugins:
                 plugins[plugin_name] = OrderedDict()
             vals['markup']["user_id"] = user['name'] if user is not None else 'Anonymous'
-            task_id = "{}.{}".format(block.get_doc_id(), attr_taskId)
+            task_id = "{}.{}".format(block.get_doc_id(), attr_taskid or '')
 
             if load_states and custom_state is not None:
                 state = try_load_json(custom_state)
-            else:
+            elif not task_id.endswith('.'):
                 state_map[task_id] = {'plugin_name': plugin_name, 'idx': idx}
+                state = None
+            else:
                 state = None
             plugins[plugin_name][idx] = {"markup": vals['markup'],
                                          "state": state,
-                                         "taskID":task_id,
+                                         "taskID": task_id,
+                                         "taskIDExt": task_id + '.' + block.get_id(),
                                          "doLazy": do_lazy,
                                          "anonymous": user is not None}
 
@@ -194,9 +197,10 @@ def pluginify(doc,
                 html, is_lazy = make_lazy(html, markup, do_lazy)
 
                 html_pars[idx]['needs_browser'] = needs_browser or is_lazy
-                html_pars[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
-                                                                             plugin_url,
-                                                                             html)
+                html_pars[idx]['html'] = ("<div id='{}' data-plugin='{}'>{}</div>"
+                                          .format(markup['taskIDExt'],
+                                                  plugin_url,
+                                                  html))
         else:
             for idx, val in plugin_block_map.items():
                 try:
