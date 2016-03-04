@@ -68,12 +68,16 @@ def interpret_sql(db, command):
     try:
         t0 = time.time()
         c.execute(command)
+        t1 = time.time()
         n = 0
         for row in c.fetchall():
             stdout(','.join([str(col) for col in row]))
             n += 1
-        stderr('{0} row{1} returned in {2:.5} seconds.'.format(n, '' if n == 1 else 's', time.time() - t0))
+        stderr('{0} row{1} returned in {2:.5} seconds.'.format(n, '' if n == 1 else 's', t1 - t0))
+        t0 = time.time()
         db.commit()
+        t1 = time.time()
+        stderr('Commit took {0:.5} seconds.'.format(t1 - t0))
     except Exception as e:
         stderr('EXCEPTION {}: {}'.format(e.__class__, str(e)))
 
