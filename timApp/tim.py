@@ -3,6 +3,7 @@
 import imghdr
 import io
 import time
+import http.client
 
 from flask import Blueprint
 from flask import render_template
@@ -25,6 +26,7 @@ from routes.logger import logger_bp
 from routes.login import login_page
 from routes.manage import manage_page
 from routes.notes import notes
+from routes.notify import notify
 from routes.readings import readings
 from routes.search import search_routes
 from routes.settings import settings_page
@@ -52,6 +54,7 @@ app.register_blueprint(upload)
 app.register_blueprint(notes)
 app.register_blueprint(readings)
 app.register_blueprint(lecture_routes)
+app.register_blueprint(notify)
 app.register_blueprint(Blueprint('bower',
                                  __name__,
                                  static_folder='static/scripts/bower_components',
@@ -65,7 +68,10 @@ print('Profiling: {}'.format(app.config['PROFILE']))
 
 def error_generic(error, code):
     if 'text/html' in request.headers.get("Accept", ""):
-        return render_template(str(code) + '.html', message=error.description), code
+        return render_template('error.html',
+                               message=error.description,
+                               code=code,
+                               status=http.client.responses[code]), code
     else:
         return jsonResponse({'error': error.description}, code)
 
@@ -78,6 +84,12 @@ def bad_request(error):
 @app.errorhandler(403)
 def forbidden(error):
     return error_generic(error, 403)
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    error.description = "Something went wrong with the server, sorry. We'll fix this as soon as possible."
+    return error_generic(error, 500)
 
 
 @app.errorhandler(413)

@@ -11,6 +11,8 @@ from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 
+NOTIFICATION_TYPES = ['email_doc_modify', 'email_comment_add', 'email_comment_modify']
+
 
 class Documents(TimDbBase):
     """Represents a collection of Document objects."""
@@ -493,3 +495,36 @@ class Documents(TimDbBase):
     def get_short_name(self, full_name: str) -> str:
         parts = full_name.rsplit('/', 1)
         return parts[len(parts) - 1]
+
+    @contract
+    def get_notify_settings(self, user_id: 'int', doc_id: 'int') -> 'dict':
+        cursor = self.db.cursor()
+        fieldnames = ', '.join(NOTIFICATION_TYPES)
+        query = 'SELECT {} FROM Notification WHERE user_id = ? AND doc_id = ?'.format(fieldnames)
+        cursor.execute(query, [user_id, doc_id])
+
+        results = self.resultAsDictionary(cursor)
+        if len(results) == 0:
+            return {k: False for k in NOTIFICATION_TYPES}
+
+        return {key: bool(results[0][key]) for key in results[0]}
+
+    @contract
+    def set_notify_settings(self, user_id: 'int', doc_id: 'int', settings: 'dict'):
+        keys = NOTIFICATION_TYPES
+        cursor = self.db.cursor()
+        cursor.execute('SELECT EXISTS(SELECT user_id FROM Notification WHERE user_id = ? AND doc_id = ?)',
+                       [user_id, doc_id])
+        row_exists = cursor.fetchone()[0]
+
+        if row_exists:
+            update_statement = 'UPDATE Notification SET ' \
+                               + ', '.join(['{}={}'.format(k, int(settings[k])) for k in keys]) \
+                               + ' WHERE user_id = ? AND doc_id = ?'
+            cursor.execute(update_statement, [user_id, doc_id])
+        else:
+            insert_statement = 'INSERT INTO Notification (user_id, doc_id, {}) VALUES (?, ?, {})'.format(
+                ', '.join(keys), ', '.join(['?' for _ in range(len(keys))]))
+            cursor.execute(insert_statement, [user_id, doc_id] + [settings[k] for k in keys])
+
+        self.db.commit()

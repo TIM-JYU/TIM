@@ -90,8 +90,8 @@ class DocParagraph(DocParagraphBase):
         try:
             t = os.readlink(cls._get_path(doc, par_id, 'current', froot))
             return cls.get(doc, par_id, t, files_root=froot)
-        except FileNotFoundError as e:
-            return DocParagraph.create(doc, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
+        except FileNotFoundError:
+            raise TimDbException('Document {}: Paragraph not found: {}'.format(doc.doc_id, par_id))
 
     @classmethod
     @contract
@@ -101,8 +101,8 @@ class DocParagraph(DocParagraphBase):
             """
             with open(cls._get_path(doc, par_id, t, files_root), 'r') as f:
                 return cls.from_dict(doc, json.loads(f.read()), files_root=files_root)
-        except FileNotFoundError as e:
-            return DocParagraph.create(doc, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
+        except FileNotFoundError:
+            raise TimDbException('Document {}: Paragraph not found: {}'.format(doc.doc_id, par_id))
 
     def __iter__(self):
         return self.__data.__iter__()

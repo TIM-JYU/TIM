@@ -2,6 +2,7 @@
 import sqlite3
 import os
 import sys
+import time
 
 DBFILE = 'tim_files/tim.db'
 STDOUT = sys.stdout
@@ -65,13 +66,18 @@ def command_out(db, params):
 def interpret_sql(db, command):
     c = db.cursor()
     try:
+        t0 = time.time()
         c.execute(command)
+        t1 = time.time()
         n = 0
         for row in c.fetchall():
             stdout(','.join([str(col) for col in row]))
             n += 1
-        stderr('{} row{} returned.'.format(n, '' if n == 1 else 's'))
+        stderr('{0} row{1} returned in {2:.5} seconds.'.format(n, '' if n == 1 else 's', t1 - t0))
+        t0 = time.time()
         db.commit()
+        t1 = time.time()
+        stderr('Commit took {0:.5} seconds.'.format(t1 - t0))
     except Exception as e:
         stderr('EXCEPTION {}: {}'.format(e.__class__, str(e)))
 
@@ -101,11 +107,27 @@ def interpret_command(db, cmdline):
     return True
 
 
+def parse_cmdline():
+    if len(sys.argv) == 1:
+        pass
+    elif len(sys.argv) == 2:
+        global DBFILE
+        DBFILE = sys.argv[1]
+    else:
+        print("Syntax: {} [database file]".format(sys.argv[0]))
+        print("If none is specified, {} is used instead.".format(DBFILE))
+        exit(1)
+
+
 def main():
+    parse_cmdline()
+
     if not os.path.isfile(DBFILE):
         stderr("Can't find {}!".format(DBFILE))
         return
     db = sqlite3.Connection(DBFILE)
+
+    print("Using database " + DBFILE)
     show_tables(db)
     command_help()
 

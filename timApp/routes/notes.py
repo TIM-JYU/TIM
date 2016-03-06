@@ -1,9 +1,9 @@
 from flask import Blueprint, abort, request
 
 from documentmodel.document import Document
-from routes.common import getTimDb, getCurrentUserGroup, getCurrentUserId, jsonResponse, verify_view_access, \
-    verifyLoggedIn, verify_comment_right, get_referenced_pars_from_req
+from routes.common import *
 from routes.edit import par_response
+from routes.notify import notify_doc_owner
 
 notes = Blueprint('notes',
                   __name__,
@@ -51,6 +51,11 @@ def post_note():
         par = get_referenced_pars_from_req(par)[0]
 
     timdb.notes.addNote(group_id, Document(par.get_doc_id()), par, note_text, access, tags)
+
+    notify_doc_owner(doc_id, '[user_name] has posted a note on your document [doc_name]',
+                     '[user_name] has posted the following note on your document [doc_url]\n\n{}'.format(note_text),
+                     setting="comment_add", par_id=par_id)
+
     return par_response([doc.get_paragraph(par_id)],
                         doc)
 
@@ -74,7 +79,17 @@ def edit_note():
     timdb = getTimDb()
     if not (timdb.notes.hasEditAccess(group_id, note_id) or timdb.users.user_is_owner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to edit this note.")
+    prev_note_text = timdb.notes.get_note(note_id)['content']
     timdb.notes.modifyNote(note_id, note_text, access, tags)
+
+    notify_doc_owner(doc_id, '[user_name] has edited a note on your document [doc_name]',
+                     """[user_name] has edited the following note on your document [doc_url]\n
+=== ORIGINAL ===\n
+{}\n\n
+=== MODIFIED ===\n
+{}\n
+""".format(prev_note_text, note_text), setting="comment_modify", par_id=par_id)
+
     doc = Document(doc_id)
     return par_response([doc.get_paragraph(par_id)],
                         doc)

@@ -12,21 +12,31 @@ var timApp = angular.module('timApp').config(['$httpProvider', function ($httpPr
                 'request': function (config) {
                     if (re.test(config.url)) {
                         var match = re.exec(config.url);
-                        var taskId = match[1];
-                        var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
-                        if (ab.isolateScope() ) {
-                            var browserScope = ab.isolateScope();
-                            angular.extend(config.data, {abData: browserScope.getBrowserData()});
+                        var taskIdFull = match[1];
+                        var parts = taskIdFull.split('.');
+                        var docId = parseInt(parts[0], 10);
+                        var taskName = parts[1];
+                        var parId = parts[2];
+                        var taskId = docId + '.' + taskName;
+                        if (taskName !== '') {
+                            var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
+                            if (ab.isolateScope()) {
+                                var browserScope = ab.isolateScope();
+                                angular.extend(config.data, {abData: browserScope.getBrowserData()});
+                            }
                         }
-                        var $par = ab.parents('.par');
-                        if ( ab.scope() ) angular.extend(config.data, {ref_from: {docId: ab.scope().docId, par: $par.attr('id')}});
+                        angular.extend(config.data, {ref_from: {docId: docId, par: parId}});
                     }
                     return config;
                 },
                 'response': function (response) {
                     if (re.test(response.config.url)) {
                         var match = re.exec(response.config.url);
-                        var taskId = match[1];
+                        var taskIdFull = match[1];
+                        var parts = taskIdFull.split('.');
+                        var docId = parseInt(parts[0], 10);
+                        var taskName = parts[1];
+                        var taskId = docId + '.' + taskName;
                         $rootScope.$broadcast('answerSaved', {taskId: taskId, savedNew: response.data.savedNew});
                         if (response.data.error) {
                             $window.alert(response.data.error);

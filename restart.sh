@@ -6,10 +6,10 @@
 set -e
 #trap 'echo ABORTED on line \"$BASH_COMMAND\"' 0
 
-params="$*"
+params=${*/all/tim postgre plugins funnel}
 
 if [ "$params" = "" ] ; then
-    echo "Usage: restart [tim|timbeta|timdev|plugins]..."
+    echo "Usage: restart [tim|timbeta|timdev|plugins|postgre|funnel]..."
     echo "Example: restart tim timdev"
     exit
 fi
@@ -40,6 +40,10 @@ fi
 if param postgre ; then
     docker stop postgre > /dev/null 2>&1 &
 fi
+
+if param funnel; then
+    docker stop funnel > /dev/null 2>&1 &
+fi
 wait
 
 # Remove stopped containers
@@ -57,6 +61,10 @@ fi
 
 if param postgre ; then
     docker rm postgre > /dev/null 2>&1 &
+fi
+
+if param funnel; then
+    docker rm funnel > /dev/null 2>&1 &
 fi
 wait
 
@@ -78,6 +86,13 @@ if param profile ; then
   DAEMON_FLAG=''
 fi
 
+if param funnel; then
+docker run --net=timnet -dti --name funnel \
+    -v /opt/funnel:/service \
+    -v /opt/tim/tim_logs:/var/log/funnel \
+    funnel /service/run.sh
+fi
+
 if param postgre ; then
 # Restart postgre container
 docker run --net=timnet -d --name postgre \
@@ -89,17 +104,17 @@ fi
 
 if param timdev ; then
 # Start timdev
-docker run --net=timnet --name timdev -p 50002:5000 -v /opt/tim-dev/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=timdev ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
+docker run --net=timnet --name timdev -p 50002:5000 -v /opt/tim-dev/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=timdev ; export TIM_HOST=tim-dev.it.jyu.fi ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
 fi
 
 if param timbeta ; then
 # Start timbeta
-docker run --net=timnet --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=timbeta ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
+docker run --net=timnet --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=timbeta ; export TIM_HOST=tim-beta.it.jyu.fi ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
 fi
 
 if param tim ; then
 # Start tim
-docker run --net=timnet --name tim -p 50001:5000  -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=tim ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
+docker run --net=timnet --name tim -p 50001:5000  -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=tim ; export TIM_HOST=tim.jyu.fi ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
 fi
 
 #trap '' 0

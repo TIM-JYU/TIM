@@ -3,10 +3,10 @@
 # Stop the script if any error occurs
 set -e
 
-params=${*/all/tim nginx postgre plugins}
+params=${*/all/tim nginx postgre plugins funnel}
 
 if [ "$params" = "" ] ; then
-    echo "Usage: restart [tim [sshd]|nginx|plugins]..."
+    echo "Usage: restart [tim [sshd]|nginx|plugins|postgre|funnel]..."
     echo "Example: restart tim plugins"
     exit
 fi
@@ -35,6 +35,7 @@ checkdir /opt/tim $PWD
 checkdir /opt/svn $PWD/timApp/modules/svn
 checkdir /opt/cs $PWD/timApp/modules/cs
 checkdir /opt/postgre $PWD/postgresql
+checkdir /opt/funnel $PWD/funnel
 
 # Stop and remove containers
 if param tim; then
@@ -48,7 +49,18 @@ fi
 if param postgre; then
     docker rm -f postgre > /dev/null 2>&1 &
 fi
+
+if param funnel; then
+    docker rm -f funnel > /dev/null 2>&1 &
+fi
 wait
+
+if param funnel; then
+    docker run --net=timnet -dti --name funnel \
+    -v /opt/funnel:/service \
+    -v /opt/tim/tim_logs:/var/log/funnel \
+    funnel /service/run_local.sh
+fi
 
 if param plugins; then
  ./start_plugins.sh
@@ -78,9 +90,9 @@ fi
 
 if param tim; then
   if param sshd ; then
-    docker run --net=timnet --name tim -p 50001:5000 -p 49999:22 -v /opt/tim/:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c 'cd /service/timApp && source initenv.sh && export TIM_NAME=tim ; /usr/sbin/sshd -D ; /bin/bash'
+    docker run --net=timnet --name tim -p 50001:5000 -p 49999:22 -v /opt/tim/:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c 'cd /service/timApp && source initenv.sh && export TIM_NAME=tim ; export TIM_HOST=localhost ; /usr/sbin/sshd -D ; /bin/bash'
   else
-    docker run --net=timnet --name tim -p 50001:5000 -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=tim ; $TIM_SETTINGS python3 launch.py $END_SHELL"
+    docker run --net=timnet --name tim -p 50001:5000 -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=tim ; export TIM_HOST=localhost ; $TIM_SETTINGS python3 launch.py $END_SHELL"
   fi
 fi
 

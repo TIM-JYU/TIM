@@ -1,50 +1,34 @@
 """Routes for login view."""
 from .common import *
 from .logger import log_message
-from email.mime.text import MIMEText
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+from routes.notify import send_email
 
 import codecs
 import os
-import smtplib
 import string
 import random
 import re
 import requests
 import requests.exceptions
-import socket
 
 
 login_page = Blueprint('login_page',
-                        __name__,
-                        url_prefix='')  # TODO: Better URL prefix.
+                       __name__,
+                       url_prefix='')  # TODO: Better URL prefix.
 
-def __getRealName(email):
+
+def get_real_name(email):
     atindex = email.index('@')
     if atindex <= 0:
         return email
     parts = email[0:atindex].split('.')
     parts2 = [part.capitalize() if len(part) > 1 else part.capitalize() + '.' for part in parts]
     return ' '.join(parts2)
-    
-def __isValidEmail(email):
+
+
+def is_valid_email(email):
     return re.match('^[\w\.-]+@([\w-]+\.)+[\w-]+$', email) is not None
-
-def __sendMail(email, subject, text, sender='no-reply@tim.it.jyu.fi'):
-    # Check connectivity first
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(3)
-    sock.connect(('smtp.jyu.fi', 25))
-    sock.close()
-
-    msg = MIMEText(text)
-    msg['Subject'] = subject
-    msg['From'] = sender
-    msg['To'] = email
-
-    s = smtplib.SMTP('smtp.jyu.fi')
-    s.sendmail(sender, [email], msg.as_string())
-    s.quit()
 
 
 @login_page.route("/logout", methods=['POST'])
@@ -71,9 +55,9 @@ def login():
     if request.args.get('korppiLogin'):
         return login_with_korppi()
     elif request.args.get('emailLogin'):
-        return loginWithEmail()
+        return login_with_email()
     elif request.args.get('emailSignup'):
-        return signupWithEmail()
+        return signup_with_email()
     else:
         return render_template('loginpage.html',
                                hide_require_text=True,
@@ -135,11 +119,11 @@ def login_with_korppi():
     session['real_name'] = real_name
     session['email'] = email
 
-    return finishLogin()
+    return finish_login()
 
 
-def loginWithEmail():
-    if ('altlogin' in session and session['altlogin'] == 'login'):
+def login_with_email():
+    if 'altlogin' in session and session['altlogin'] == 'login':
         session.pop('altlogin', None)
     else:
         session['altlogin'] = "login"
@@ -147,28 +131,28 @@ def loginWithEmail():
     return safe_redirect(session.get('came_from', '/'))
 
 
-def signupWithEmail():
-    if ('altlogin' in session and session['altlogin'] == 'signup'):
+def signup_with_email():
+    if 'altlogin' in session and session['altlogin'] == 'signup':
         session.pop('altlogin', None)
     else:
         session['altlogin'] = "signup"
 
     return safe_redirect(session.get('came_from', '/'))
 
+
 @login_page.route("/altsignup", methods=['POST'])
-def altSignup():
+def alt_signup():
     # Before password verification
     email = request.form['email']
-    if not email or not __isValidEmail(email):
+    if not email or not is_valid_email(email):
         flash("You must supply a valid email address!")
-        return finishLogin(ready=False)
+        return finish_login(ready=False)
         
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     
     timdb = getTimDb()
     timdb.users.create_potential_user(email, password)
     
-    #print("Signup: email {}, password {}".format(email, password))
     session.pop('altlogin', None)
     session.pop('user_id', None)
     session.pop('appcookie', None)
@@ -176,21 +160,22 @@ def altSignup():
     session["email"] = email
 
     try:
-        __sendMail(email, 'Your new TIM password', 'Your password is {}'.format(password))
+        send_email(email, 'Your new TIM password', 'Your password is {}'.format(password))
         flash("A password has been sent to you. Please check your email.")
     except Exception as e:
         log_message('Could not send login email (user: {}, password: {}, exception: {})'.format(email, password, str(e)), 'ERROR')
         flash('Could not send the email, please try again later. The error was: {}'.format(str(e)))
 
-    return finishLogin(ready=False)
+    return finish_login(ready=False)
+
 
 @login_page.route("/altsignup2", methods=['POST'])
-def altSignupAfter():
+def alt_signup_after():
     # After password verification
-    userId = 0
-    realName = request.form['realname']
+    user_id = 0
+    real_name = request.form['realname']
     email = session['email']
-    userName = email
+    username = email
     oldpass = request.form['token']
     password = request.form['password']
     confirm = request.form['passconfirm']
@@ -203,45 +188,46 @@ def altSignupAfter():
     if timdb.users.get_user_by_email(email) is not None:
         # User with this email already exists
         user_data = timdb.users.get_user_by_email(email)
-        userId = user_data['id']
-        nameId = timdb.users.get_user_by_name(userName)
+        user_id = user_data['id']
+        nameId = timdb.users.get_user_by_name(username)
 
-        if nameId is not None and nameId != userId:
+        if nameId is not None and nameId != user_id:
             flash('User name already exists. Please try another one.', 'loginmsg')
-            return finishLogin(ready=False)
+            return finish_login(ready=False)
 
         # Use the existing user name; don't replace it with email
-        userName = user_data['name']
+        username = user_data['name']
     else:
-        if timdb.users.get_user_by_name(userName) is not None:
+        if timdb.users.get_user_by_name(username) is not None:
             flash('User name already exists. Please try another one.', 'loginmsg')
-            return finishLogin(ready=False)
+            return finish_login(ready=False)
     
     if password != confirm:
         flash('Passwords do not match.', 'loginmsg')
-        return finishLogin(ready=False)
+        return finish_login(ready=False)
         
     if len(password) < 6:
         flash('A password should contain at least six characters.', 'loginmsg')
-        return finishLogin(ready=False)
+        return finish_login(ready=False)
     
-    if userId == 0:
-        userId = timdb.users.create_user(userName, realName, email, password=password)
-        gid = timdb.users.create_usergroup(userName)
-        timdb.users.add_user_to_group(gid, userId)
+    if user_id == 0:
+        user_id = timdb.users.create_user(username, real_name, email, password=password)
+        gid = timdb.users.create_usergroup(username)
+        timdb.users.add_user_to_group(gid, user_id)
     else:
-        timdb.users.update_user(userId, userName, realName, email, password=password)
+        timdb.users.update_user(user_id, username, real_name, email, password=password)
     
     timdb.users.delete_potential_user(email)
     
     session.pop('altlogin', None)
-    session['user_id'] = userId
-    session['user_name'] = userName
-    session['real_name'] = realName
-    return finishLogin()
+    session['user_id'] = user_id
+    session['user_name'] = username
+    session['real_name'] = real_name
+    return finish_login()
+
 
 @login_page.route("/altlogin", methods=['POST'])
-def altLogin():
+def alt_login():
     save_came_from()
     email = request.form['email']
     password = request.form['password']
@@ -261,13 +247,13 @@ def altLogin():
             gid = timdb.users.create_usergroup(user['name'])
             timdb.users.add_user_to_group(gid, user['id'])
 
-        return finishLogin()
+        return finish_login()
 
     elif timdb.users.test_potential_user(email, password):
         # New user
         session['user_id'] = 0
         session['user_name'] = email
-        session['real_name'] = __getRealName(email)
+        session['real_name'] = get_real_name(email)
         session['email'] = email
         session['altlogin'] = 'signup2'
         session['token'] = password
@@ -275,7 +261,8 @@ def altLogin():
     else:
         flash("Email address or password did not match. Please try again.", 'loginmsg')
     
-    return finishLogin(ready=False)
+    return finish_login(ready=False)
+
 
 @login_page.route("/testuser")
 @login_page.route("/testuser/<path:anything>")
@@ -294,7 +281,7 @@ def save_came_from():
     session['anchor'] = request.args.get('anchor') or request.form.get('anchor') or ''
 
 
-def finishLogin(ready=True):
+def finish_login(ready=True):
     anchor = session.get('anchor', '')
     if anchor:
         anchor = "#" + anchor
@@ -303,7 +290,7 @@ def finishLogin(ready=True):
 
 
 @login_page.route("/quickLogin/<username>")
-def quickLogin(username):
+def quick_login(username):
     """A debug helping method for logging in as another user.
        For developer use only.
     """

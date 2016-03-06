@@ -13,6 +13,7 @@ class DocSettings:
     source_document_key = "source_document"
     auto_number_headings_key = 'auto_number_headings'
     heading_format_key = 'heading_format'
+    show_task_summary_key = 'show_task_summary'
 
     @classmethod
     def is_valid_paragraph(cls, par):
@@ -120,5 +121,7 @@ class DocSettings:
                 5: hformat.get(5, defaults[5]),
                 6: hformat.get(6, defaults[6])}
 
+    def show_task_summary(self, default=False) -> bool:
+        return self.__dict.get(self.show_task_summary_key, default)
 
 new_contract('DocSettings', DocSettings)

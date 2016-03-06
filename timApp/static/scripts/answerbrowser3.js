@@ -28,10 +28,20 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
             scope: {
                 taskId: '@'
             },
-            
+
             controller: function ($scope) {
-                timLogTime("answerbrowserlazy ctrl function","answ",1);
+                timLogTime("answerbrowserlazy ctrl function", "answ", 1);
                 $scope.compiled = false;
+
+                /**
+                 * Returns whether the given task id is valid.
+                 * A valid task id is of the form '1.taskname'.
+                 * @param taskId {string} The task id to validate.
+                 * @returns {boolean} True if the task id is valid, false otherwise.
+                 */
+                $scope.isValidTaskId = function (taskId) {
+                    return taskId.slice(-1) !== ".";
+                };
             },
             
             link: function ($scope, $element, $attrs) {
@@ -41,8 +51,7 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
                     var plugin = $element.parents('.par').find('.parContent');
                     if ( $scope.compiled ) return;
                     $scope.compiled = true;
-                    var newScope = $scope;
-                    if (!$scope.$parent.noBrowser) {
+                    if (!$scope.$parent.noBrowser && $scope.isValidTaskId($scope.taskId)) {
                         var newHtml = '<answerbrowser task-id="' + $scope.taskId + '"></answerbrowser>';
                         var newElement = $compile(newHtml);
                         var parent = $element.parents(".par")[0];
@@ -58,7 +67,6 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
                         var newPluginElement = $compile(newPluginHtml);
                         plugin.html(newPluginElement($scope));
                         $scope.$parent.processAllMathDelayed(plugin);
-                        origHtml = null; // save some space
                     }
                 });
             }

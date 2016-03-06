@@ -21,6 +21,7 @@ ANON_USER_ID = None
 LOGGED_USER_ID = None
 ANON_GROUP_ID = None
 LOGGED_GROUP_ID = None
+ADMIN_GROUP_ID = None
 
 
 class Users(TimDbBase):
@@ -389,7 +390,8 @@ class Users(TimDbBase):
     @contract
     def get_users_in_group(self, group_id: 'int', limit:'int'=1000) -> 'list(dict)':
         cursor = self.db.cursor()
-        cursor.execute("""SELECT UserGroupMember.User_id as id, User.real_name as name from UserGroupMember
+        cursor.execute("""SELECT UserGroupMember.User_id as id, User.real_name as name, User.email as email
+                          FROM UserGroupMember
                           INNER JOIN User ON UserGroupMember.User_id=User.id
                           WHERE UserGroupMember.UserGroup_id=?
                           LIMIT ?
@@ -414,6 +416,10 @@ class Users(TimDbBase):
                           UserGroup_id = (SELECT id FROM UserGroup WHERE name = ?)
                        """, [user_id, usergroup_name])
         return len(cursor.fetchall()) > 0
+
+    def is_user_id_in_group_id(self, user_id: int, usergroup_id: int) -> bool:
+        return self.db.execute("""SELECT User_id FROM UserGroupMember
+                           WHERE User_id = ? AND UserGroup_id = ?""", (user_id, usergroup_id)).fetchone() is not None
 
     def grant_access(self, group_id: 'int', block_id: 'int', access_type: 'str'):
         """Grants access to a group for a block.
@@ -480,7 +486,7 @@ class Users(TimDbBase):
 
     @contract
     def has_admin_access(self, user_id: 'int') -> 'bool':
-        return self.is_user_id_in_group(user_id, 'Administrators')
+        return self.is_user_id_in_group_id(user_id, self.get_admin_group_id())
 
     @contract
     def has_view_access(self, user_id: 'int', block_id: 'int') -> 'bool':
@@ -553,6 +559,8 @@ WHERE UserGroup_id IN
 
     @contract
     def get_accessible_blocks(self, user_id: int, access_types: 'list(int)') -> 'set(int)':
+        if self.has_admin_access(user_id):
+            return set(row[0] for row in self.db.execute("""SELECT id FROM Block""").fetchall())
         user_ids = [user_id, self.get_anon_user_id()]
         if user_id > 0:
             user_ids.append(self.get_logged_user_id())
@@ -720,6 +728,14 @@ WHERE User_id IN ({}))
             return LOGGED_GROUP_ID
         LOGGED_GROUP_ID = self.get_usergroup_by_name(LOGGED_IN_GROUPNAME)
         return LOGGED_GROUP_ID
+
+    @contract
+    def get_admin_group_id(self) -> int:
+        global ADMIN_GROUP_ID
+        if ADMIN_GROUP_ID is not None:
+            return ADMIN_GROUP_ID
+        ADMIN_GROUP_ID = self.get_usergroup_by_name(ADMIN_GROUPNAME)
+        return ADMIN_GROUP_ID
 
     def set_usergroup_name(self, group_id: int, user_name: str):
         self.db.execute("""UPDATE UserGroup SET name = ? WHERE id = ?""", (user_name, group_id))

@@ -5,7 +5,7 @@ body {
 	font-size: 18px;
 	line-height: 1.75;
 	color: #202020;
-	/* overflow-x: hidden; */ /* Jos p‰‰ll‰, niin Parsons ei toimi */
+	/* overflow-x: hidden; */ /* If enabled, Parsons does not work */
 	padding-left: 55px;
 	padding-right: 55px;
 	-webkit-font-smoothing: antialiased; /* Fix for webkit rendering */
