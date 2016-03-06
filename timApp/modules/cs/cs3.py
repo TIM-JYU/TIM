@@ -426,6 +426,8 @@ def log(self):
 
 def give_points(points_rule, rule, default=0):
     if not points_rule: return
+    if rule in points_rule or default != 0: 
+        points_rule["valid"] = True  # rule found
     p = points_rule.get(rule, default)
     if not points_rule.get("cumulative", True):
         points_rule["result"] = max(points_rule.get("result", 0), p)
@@ -455,6 +457,7 @@ def get_points_rule(points_rule, key, default):
 def return_points(points_rule, result):
     if not points_rule: return
     if "save" not in result: return
+    # if not points_rule.get("valid", False) and "points" not in points_rule: return # no rule found
     if "result" in points_rule:
         tim_info = {"points": points_rule["result"]}
         result["tim_info"] = tim_info
