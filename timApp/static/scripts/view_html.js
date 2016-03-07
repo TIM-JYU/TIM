@@ -1176,6 +1176,11 @@ timApp.controller("ViewCtrl", [
             sc.showOptionsWindow(e, $par);
         };
 
+        sc.showReviewWindow = function (e, $par) {
+            alert($par.text);
+            console.log($par);
+        };
+
         sc.getEditorFunctions = function () {
             if (sc.editing) {
                 return [
@@ -1187,6 +1192,7 @@ timApp.controller("ViewCtrl", [
             } else {
                 return [
                     {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
+                    {func: sc.showReviewWindow, desc: 'Review', show: sc.rights.can_comment},
                     {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
                     {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
                     {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
