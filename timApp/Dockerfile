@@ -94,6 +94,9 @@ run bower --allow-root install ng-table-export
 run bower --allow-root install rangyinputs
 run bower --allow-root install ngstorage#~0.3
 run bower --allow-root install chartjs#~1.0
+run bower --allow-root install angular-bootstrap#~1.2
+run bower --allow-root install angular-animate#~1.4
+run bower --allow-root install angular-touch#~1.4
 
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
 run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js
