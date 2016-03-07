@@ -70,6 +70,7 @@
     <span>
         <button ng-click="toggleDiv('translate')">Create a translation</button>
         <button ng-click="toggleDiv('cite')">Create a cited copy</button>
+        <button ng-click="toggleDiv('copy')">Create a copy</button>
     </span>
 
     <div class="margin rights-list" ng-show="showCreateDiv == 'translate'">
@@ -87,6 +88,14 @@
         </p>
         <input type="text" ng-model="citationName" placeholder="New document name"/>
         <button ng-click="createCitation()">Create cited copy</button>
+    </div>
+
+    <div class="margin rights-list" ng-show="showCreateDiv == 'copy'">
+        <p>
+            Please enter a fully qualified name for the new document.
+        </p>
+        <input type="text" ng-model="documentName" placeholder="New document name"/>
+        <button ng-click="createCopy()">Create copy</button>
     </div>
 
     {% if rights['owner'] %}

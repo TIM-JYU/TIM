@@ -38,6 +38,16 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
         return sc.folder + '/' + name;
     };
 
+    sc.copyDocument = function(docId, templateName) {
+        http.post('/update/' + docId, {
+            "template_name" : templateName
+        }).success(function(data, status, headers, config) {
+            $window.location.reload();
+        }).error(function(data, status, headers, config) {
+            $window.alert(data.error);
+        });
+    };
+
     sc.createDocument = function(name) {
         http.post('/createDocument', {
             "doc_name" : sc.getAbsolutePath(name)
@@ -106,15 +116,40 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
         });
     };
 
+    sc.getTemplates = function() {
+       http({
+            method : 'GET',
+            url : '/getTemplates',
+            params: {
+                root_path: sc.folder,
+                _: Date.now()
+            }
+        }).success(function(data, status, headers, config) {
+            sc.templateList = data;
+        }).error(function(data, status, headers, config) {
+            // TODO: Show some error message.
+        });
+    };
+
     sc.crumbs = crumbs;
     sc.userGroups = groups;
 	sc.parentfolder = "";
     sc.initFolderVars();
     sc.folderList = [];
     sc.documentList = [];
-    sc.getFolders();
-    sc.getDocs();
-    sc.displayIndex = 0;
+    sc.templateList = [];
+    sc.templates = $window.templates
+    sc.noIndex = $window.noIndex
+    if (sc.noIndex == null || !sc.noIndex)
+    {
+        sc.getFolders();
+        sc.getDocs();
+        sc.displayIndex = 0;
+    }
+    if (sc.templates)
+    {
+        sc.getTemplates();
+    }
 
     sc.onFileSelect = function(file) {
         sc.file = file;

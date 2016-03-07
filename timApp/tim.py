@@ -135,12 +135,54 @@ def get_all_images():
 
 @app.route("/getDocuments")
 def get_documents():
+    return jsonResponse(get_documents(request.args.get('folder')))
+
+
+@app.route("/getFolders")
+def get_folders():
+    root_path = request.args.get('root_path')
+    timdb = getTimDb()
+    folders = timdb.folders.get_folders(root_path)
+    viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
+    allowed_folders = [f for f in folders if f['id'] in viewable]
+    uid = getCurrentUserId()
+    is_admin = timdb.users.has_admin_access(uid)
+    for f in allowed_folders:
+        f['isOwner'] = is_admin or timdb.users.user_is_owner(uid, f['id'])
+        f['owner'] = timdb.users.get_owner_group(f['id'])
+
+    allowed_folders.sort(key=lambda folder: folder['name'].lower())
+    return jsonResponse(allowed_folders)
+
+
+@app.route("/getTemplates")
+def get_templates():
+    current_path = request.args.get('root_path')
+    timdb = getTimDb()
+    templates = []
+
+    while True:
+        if current_path != '':
+            found_templates = get_documents(current_path + '/Templates')
+        else:
+            found_templates = get_documents('Templates')
+        for t in found_templates:
+            if timdb.users.has_manage_access(getCurrentUserId(), timdb.documents.get_document_id(t['fullname'])):
+                templates.append(t)
+        if current_path == '':
+            break
+        current_path, _ = timdb.folders.split_location(current_path)
+
+    return jsonResponse(templates)
+
+
+def get_documents(folder):
     timdb = getTimDb()
     docs = timdb.documents.get_documents()
     viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
     allowed_docs = [doc for doc in docs if doc['id'] in viewable]
 
-    req_folder = request.args.get('folder')
+    req_folder = folder
     if req_folder is not None and len(req_folder) == 0:
         req_folder = None
     final_docs = []
@@ -167,24 +209,7 @@ def get_documents():
         final_docs.append(doc)
 
     final_docs.sort(key=lambda d: d['name'].lower())
-    return jsonResponse(final_docs)
-
-
-@app.route("/getFolders")
-def get_folders():
-    root_path = request.args.get('root_path')
-    timdb = getTimDb()
-    folders = timdb.folders.get_folders(root_path)
-    viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
-    allowed_folders = [f for f in folders if f['id'] in viewable]
-    uid = getCurrentUserId()
-    is_admin = timdb.users.has_admin_access(uid)
-    for f in allowed_folders:
-        f['isOwner'] = is_admin or timdb.users.user_is_owner(uid, f['id'])
-        f['owner'] = timdb.users.get_owner_group(f['id'])
-
-    allowed_folders.sort(key=lambda folder: folder['name'].lower())
-    return jsonResponse(allowed_folders)
+    return final_docs
 
 
 def create_item(item_name, item_type, create_function, owner_group_id):
