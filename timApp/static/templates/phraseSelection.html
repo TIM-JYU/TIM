@@ -1,19 +1,20 @@
 <uib-accordion close-others="false">
     <link rel="stylesheet" href="/static/css/phraseSelection.css"/>
-    <h2>Select phrase {{ testi }}</h2>
-    <uib-accordion-group heading="Labels" is-open="true">
-        <label>Search labels: <input ng-model="filterTag" placeholder="filter labels"></label>
 
+    <uib-accordion-group heading="Select phrase" is-open="true">
+        <label for="searchLabels" ng-click="toggleLabelShow()">Filter by labels: </label>
+        <span class="{{ showLabels() }}">
+        <input id="searchLabels" ng-model="filterTag" placeholder="filter labels">
         <div>
             <p ng-repeat="tag in tags | filter:{content:filterTag}" class="label tag-{{ tag.selected }}"
-
+               style="background-color: {{ getColor(tag.id) }}"
                ng-click="toggleTag(tag)" ng-model="test" value="{{ tag.id }}">
                 {{ tag.content }}
             </p>
         </div>
-    </uib-accordion-group>
 
-    <uib-accordion-group heading="Phrases" is-open="true">
+        </span>
+        <br />
         <label>Search phrases: <input ng-model="filterPhrase" placeholder="filter phrases"></label>
         <label>Order phrases: <select ng-model="orderPhrase">
             <option value="content">Alphabetical</option>
@@ -26,13 +27,10 @@
 
         <div>
             <p class="label phrase"
-
-               ng-repeat="phrase in phrases "
-               ng-click="usePhrase(phrase)">
+               ng-repeat="phrase in phrases | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedTags:tags">
                         <span class="glyphicon glyphicon-tag" ng-repeat="tag in phrase.tags"
-                              style="color: {{ getPhraseColor(tag) }} "></span>
-                &ensp;{{ phrase.content }}&ensp;<span class="badge">{{ phrase.points }}
-            </span>
+                              style="color: {{ getColor(tag) }} "></span>
+                &ensp;{{ phrase.content }}&ensp;<span class="badge">{{ phrase.points }}</span>
             </p>
         </div>
     </uib-accordion-group>
