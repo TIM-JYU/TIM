@@ -107,8 +107,10 @@
                     <h3>Customize</h3>
                     <a href="/settings">Customize TIM</a>
                     <h4>Lecture settings</h4>
-                    <h4>Document settings</h4>
-                    <button ng-click="editSettingsPars()">Edit settings</button>
+                    {% if route and rights.manage %}
+                        <h4>Document settings</h4>
+                        <button ng-click="editSettingsPars()">Edit settings</button>
+                    {% endif %}
                     {% raw %}
                     <ul ng-show="lectureSettings.inLecture">
                         <li>
