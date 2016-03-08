@@ -639,16 +639,23 @@ class Document:
             raise TimDbException('Area not found: ' + section_name)
         return pars
 
-    def get_referenced_document_ids(self) -> 'set':
+    def get_referenced_document_ids(self) -> Set[int]:
+        """Gets all the document ids that are referenced from this document recursively.
+        :return: The set of the document ids.
+        """
         refs = set()
-        for par in self:
-            if par.is_reference():
+        for p in self:
+            if p.is_reference():
                 try:
-                    refs.add(int(par.get_rd()))
-                except (ValueError, TypeError):
-                    print('Invalid document reference: ' + str(par.get_rd()))
-
-
+                    referenced_pars = p.get_referenced_pars()
+                except TimDbException:
+                    pass
+                else:
+                    for par in referenced_pars:
+                        try:
+                            refs.add(int(par.get_doc_id()))
+                        except (ValueError, TypeError):
+                            print('Invalid document reference: ' + str(par.get_rd()))
         return refs
 
     def get_paragraphs(self) -> List[DocParagraph]:
