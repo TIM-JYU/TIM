@@ -103,7 +103,7 @@
                 Total points: {{ task_info.total_points }},
                 total tasks: {{ task_info.tasks_done }} / {{ task_info.total_tasks }}
                 </span>
-                <span class="smallNote">Refresh (F5) to recount</span>
+                <a class="smallNote" ng-click="reload()">Refresh (F5) to recount</a>
             </div>
             <div class="taskSmallSummary"><p>{{ task_info.total_points }} p</p></div>
         {% endif %}
