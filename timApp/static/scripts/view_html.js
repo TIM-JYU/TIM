@@ -548,17 +548,6 @@ timApp.controller("ViewCtrl", [
             }
         };
 
-        /*
-        // We need some code to hide document settings but this will not do.
-        $(function() {
-            $(".par").each(function () {
-                if ($(this).attr("attrs").indexOf("settings") >= 0)
-                {
-                    //$(this).hide();
-                }
-            });
-        });*/
-
         sc.beginAreaEditing = function (e, $par) {
             $(".par.new").remove();
             sc.toggleParEditor($par, {showDelete: true, area: true});
