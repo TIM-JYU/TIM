@@ -38,6 +38,8 @@
         <script src="{{ url_for('static', filename='scripts/userlistController.js') }}"></script>
     {% endif %}
 
+    <script src="{{ url_for('static', filename='scripts/directives/phraseSelection.js') }}"></script>
+
     {% if in_lecture or lecture_mode %}
         {% include 'lecture_head.html' %}
     {% endif %}
@@ -118,42 +120,7 @@
         {% endif %}
 
         {% raw %}
-        <uib-accordion close-others="false">
-            <h2>Select phrase</h2>
-            <uib-accordion-group heading="Labels" is-open="true">
-                <label>Search labels: <input ng-model="filterTag" placeholder="filter labels"></label>
-
-                <div>
-                    <p ng-repeat="tag in tags | filter:{content:filterTag}" class="label tag-{{tag.selected}}"
-                       style="background-color: {{ getPhraseColor(tag.id) }}"
-                       ng-click="toggleTag(tag)" ng-model="test" value="{{tag.id}}">
-                        {{ tag.content }}
-                    </p>
-                </div>
-            </uib-accordion-group>
-
-            <uib-accordion-group heading="Phrases" is-open="true">
-                <label>Search phrases: <input ng-model="filterPhrase" placeholder="filter phrases"></label>
-                <label>Order phrases: <select ng-model="orderPhrase">
-                    <option value="content">Alphabetical</option>
-                    <option value="-used">Most used</option>
-                    <option value="tag">Labels</option>
-                    <option value="-points">Highest point</option>
-                    <option value="points">Lowest point</option>
-                </select>
-                </label>
-
-                <div>
-                    <p class="label phrase"
-                       ng-repeat="phrase in phrases | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedTags:tags"
-                       ng-click="usePhrase(phrase)">
-                        <span class="glyphicon glyphicon-tag" ng-repeat="tag in phrase.tags"
-                              style="color: {{ getPhraseColor(tag)}} "></span>
-                        &ensp;{{ phrase.content }}&ensp;<span class="badge">{{phrase.points}}</span>
-                    </p>
-                </div>
-            </uib-accordion-group>
-        </uib-accordion>
+        <phrase-selection></phrase-selection>
         {% endraw %}
 
         {% if teacher_mode %}

@@ -1,0 +1,27 @@
+/* app css stylesheet */
+.tag-true, .tag-false {
+    font-size: 0.85em;
+    margin: 0.25em;
+    padding: 0.5em;
+    display: inline-block;
+    cursor: pointer;
+    background-color: #000000;
+}
+
+.tag-true {
+    border-bottom: solid 4px darkblue;
+}
+
+.phrase {
+    font-size: 0.85em;
+    margin: 0.25em;
+    padding: 0.5em;
+    display: inline-block;
+    cursor: pointer;
+    background-color: #ececec;
+    color: black;
+}
+
+.marking {
+    cursor: pointer;
+}
