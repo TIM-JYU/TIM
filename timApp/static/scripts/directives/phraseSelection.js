@@ -59,10 +59,12 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
 }]);
 
-
+/**
+ * Filter for ordering phrases
+ */
 timApp.filter('selectedTags', function () {
     return function (phrases, tags) {
-        var selectedPhrases = new Set();
+
         var selectedTags = [];
         if (typeof tags != "undefined" && typeof phrases != "undefined") {
 
@@ -74,13 +76,35 @@ timApp.filter('selectedTags', function () {
             if (selectedTags.length == 0)
                 return phrases;
 
+            var selectedPhrases = {};
+
             for (var i = 0; i < phrases.length; i++) {
                 for (var j = 0; j < selectedTags.length; j++) {
-                    if (phrases[i].tags.indexOf(selectedTags[j]) != -1)
-                        selectedPhrases.add(phrases[i]);
+                    if (phrases[i].tags.indexOf(selectedTags[j]) != -1){
+                        if (!(phrases[i].id in selectedPhrases))
+                            selectedPhrases[phrases[i].id] = 1;
+                        else
+                            selectedPhrases[phrases[i].id] += 1;
+                    }
                 }
             }
+
+            var sortedPhrases = [];
+            var returnPhrases = [];
+
+            for (var phrase in selectedPhrases){
+                sortedPhrases.push([phrase, selectedPhrases[phrase]]);
+            }
+
+            sortedPhrases.sort(function(a,b) {return a[1] - b[1]});
+
+            for (var p in sortedPhrases)
+                returnPhrases.push(p[0]);
+
+             console.log(returnPhrases);
         }
-        return Array.from(selectedPhrases);
+
+        // return something more useful
+        return phrases;
     };
 });
