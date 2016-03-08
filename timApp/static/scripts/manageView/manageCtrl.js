@@ -454,8 +454,17 @@ text = '\n'.join(a)
         };
 
         sc.createCopy = function() {
+            var docPath = "";
+            if (sc.documentPath == "")
+            {
+                docPath = sc.documentName;
+            }
+            else
+            {
+                docPath = sc.documentPath + "/" + sc.documentName;
+            }
             $http.post('/createDocument', {
-                'doc_name': sc.documentName
+                'doc_name': docPath
             }).success(function (data, status, headers, config) {
                 forwardName = data.name;
                 $http.post('/update/' + data.id, {
@@ -503,6 +512,12 @@ text = '\n'.join(a)
         sc.accessType = sc.accessTypes[0];
         sc.doc = doc;
         sc.isFolder = isFolder;
+
+        var docPath = $window.doc.fullname.split("/");
+        docPath.pop();
+        sc.documentPath = docPath.join("/");
+        sc.documentName = $window.doc.name;
+
         //sc.newName = sc.getJustDocName(doc.name);
         //sc.newFolderName = sc.getFolderName(doc.name);
         //sc.oldName = sc.newName;
