@@ -33,6 +33,7 @@ class DocParagraph(DocParagraphBase):
         self.html_sanitized = False
         self.html = None
         self.__htmldata = None
+        self.ref_pars = None
 
     @classmethod
     @contract
@@ -576,6 +577,9 @@ class DocParagraph(DocParagraphBase):
         self.__data['links'].append(str(doc_id))
         self.__write()
 
+        # Clear cached referenced paragraphs because this was modified
+        self.ref_pars = None
+
     @contract
     def remove_link(self, doc_id: 'int'):
         self.__read()
@@ -610,6 +614,8 @@ class DocParagraph(DocParagraphBase):
         return s[:rindex] + new + s[rindex + len(old):] if rindex >= 0 else s
 
     def get_referenced_pars(self, edit_window=False, set_html=True, source_doc=None, tr_get_one=True, cycle=None):
+        if self.ref_pars is not None:
+            return self.ref_pars
         if cycle is None:
             cycle = []
         par_doc_id = self.get_doc_id(), self.get_id()
@@ -696,10 +702,12 @@ class DocParagraph(DocParagraphBase):
                 else:
                     ref_pars.append(p)
             if tr_get_one and attrs.get('r', None) == 'tr' and len(ref_pars) > 0:
-                return [reference_par(ref_pars[0])]
+                self.ref_pars = [reference_par(ref_pars[0])]
+                return self.ref_pars
         else:
             assert False
-        return [reference_par(ref_par) for ref_par in ref_pars]
+        self.ref_pars = [reference_par(ref_par) for ref_par in ref_pars]
+        return self.ref_pars
 
     def set_original(self, orig):
         self.original = orig
