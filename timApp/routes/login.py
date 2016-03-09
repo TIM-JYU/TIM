@@ -73,15 +73,14 @@ def login_with_korppi():
         random_hex = codecs.encode(os.urandom(24), 'hex').decode('utf-8')
         session['appcookie'] = random_hex
     url = "https://korppi.jyu.fi/kotka/interface/allowRemoteLogin.jsp"
+    korppi_down_text = 'Korppi seems to be down, so login is currently not possible. Try again later.'
     try:
         r = requests.get(url, params={'request': session['appcookie']}, verify=True)
     except requests.exceptions.SSLError:
-        return render_template('503.html', message='Korppi seems to be down, so login is currently not possible. '
-                                                   'Try again later.'), 503
+        return abort(503, korppi_down_text)
     
     if r.status_code != 200:
-        return render_template('503.html', message='Korppi seems to be down, so login is currently not possible. '
-                                                   'Try again later.'), 503
+        return abort(503, korppi_down_text)
     korppi_response = r.text.strip()
     if not korppi_response:
         return redirect(url+"?authorize=" + session['appcookie'] + "&returnTo=" + urlfile, code=303)

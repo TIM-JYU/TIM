@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import http.client
 import imghdr
 import io
 import time
-import http.client
 
 from flask import Blueprint
 from flask import render_template
-from flask import send_from_directory
 from flask import stream_with_context
 from flask.helpers import send_file
 from werkzeug.contrib.profiler import ProfilerMiddleware
@@ -18,10 +17,10 @@ from plugin import PluginException
 from routes.answer import answers
 from routes.cache import cache
 from routes.common import *
+from routes.common import get_user_settings
 from routes.edit import edit_page
 from routes.groups import groups
 from routes.lecture import getTempDb, user_in_lecture, lecture_routes
-from routes.common import get_user_settings
 from routes.logger import logger_bp
 from routes.login import login_page
 from routes.manage import manage_page
@@ -92,6 +91,11 @@ def internal_error(error):
     return error_generic(error, 500)
 
 
+@app.errorhandler(503)
+def service_unavailable(error):
+    return error_generic(error, 503)
+
+
 @app.errorhandler(413)
 def entity_too_large(error):
     error.description = 'Your file is too large to be uploaded. Maximum size is {} MB.'\
@@ -100,7 +104,7 @@ def entity_too_large(error):
 
 
 @app.errorhandler(404)
-def notFound(error):
+def not_found(error):
     return error_generic(error, 404)
 
 
@@ -129,12 +133,12 @@ def get_image(image_id, image_filename):
 def get_all_images():
     timdb = getTimDb()
     images = timdb.images.getImages()
-    allowedImages = [image for image in images if timdb.users.has_view_access(getCurrentUserId(), image['id'])]
-    return jsonResponse(allowedImages)
+    allowed_images = [image for image in images if timdb.users.has_view_access(getCurrentUserId(), image['id'])]
+    return jsonResponse(allowed_images)
 
 
 @app.route("/getDocuments")
-def get_documents():
+def get_docs():
     return jsonResponse(get_documents(request.args.get('folder')))
 
 
