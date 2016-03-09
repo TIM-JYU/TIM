@@ -28,7 +28,11 @@ def manage(path):
         block_id = doc_info['id']
 
     if not timdb.users.has_manage_access(getCurrentUserId(), block_id):
-        abort(403)
+        if verify_view_access(block_id):
+            if isFolder:
+                return redirect('/view/' + block_id)
+            session['message'] = "Did someone give you a wrong link? Showing normal view instead of manage view."
+            return redirect('/view/' + block_id)
 
     possible_groups = timdb.users.get_usergroups_printable(getCurrentUserId())
     grouprights = timdb.users.get_rights_holders(block_id)

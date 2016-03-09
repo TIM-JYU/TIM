@@ -370,6 +370,25 @@ class Documents(TimDbBase):
         return results
 
     @contract
+    def get_documents_in_folder(self, folder_pathname: 'str', include_nonpublic: 'bool' = False) -> 'list(dict)':
+        """Gets all the documents in a folder
+
+        :param folder_pathname: path to be searched for documents without ending '/'
+        :param include_nonpublic: Whether to include non-public document names or not.
+        :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
+        """
+        timdb = getTimDb()
+        documents = get_documents(include_nonpublic=include_nonpublic)
+        results = []
+
+        for document in documents:
+            document_path, _ = timdb.folders.split_location(document['name'])
+            if document_path == folder_pathname:
+                results.append(document)
+
+        return results
+
+    @contract
     def getDocumentPath(self, document_id: 'int') -> 'str':
         """Gets the path of the specified document.
         

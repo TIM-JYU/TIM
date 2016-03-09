@@ -33,7 +33,7 @@ PLUGINS = {
 def call_plugin_generic(plugin, method, route, data=None, headers=None):
     plug = get_plugin(plugin)
     try:
-        request = requests.request(method, plug['host'] + route + "/", data=data, timeout=5, headers=headers)
+        request = requests.request(method, plug['host'] + route + "/", data=data, timeout=15, headers=headers)
         request.encoding = 'utf-8'
         return request.text
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:

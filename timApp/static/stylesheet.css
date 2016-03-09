@@ -1145,6 +1145,10 @@ p.stem {
     margin-top: 0.9em;
 }
 
+.csPlugin {
+    margin-top: 1em;
+}
+ 
 .pluginHide {
     text-align: right;
 }

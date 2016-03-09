@@ -8,7 +8,7 @@ from time import time
 
 from contracts import contract, new_contract
 from lxml import etree, html
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Set, Union
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.docsettings import DocSettings
@@ -44,7 +44,7 @@ class Document:
             count += 1
         return count
 
-    def __iter__(self):
+    def __iter__(self) -> 'Union[DocParagraphIter, CacheIterator]':
         if self.par_cache is None:
             return DocParagraphIter(self)
         else:
@@ -622,7 +622,7 @@ class Document:
         for par in old_pars:
             self.delete_paragraph(par)
 
-    def get_named_section(self, section_name):
+    def get_named_section(self, section_name: str):
         start_found = False
         end_found = False
         pars = []
@@ -639,16 +639,23 @@ class Document:
             raise TimDbException('Area not found: ' + section_name)
         return pars
 
-    def get_referenced_document_ids(self) -> 'set':
+    def get_referenced_document_ids(self) -> Set[int]:
+        """Gets all the document ids that are referenced from this document recursively.
+        :return: The set of the document ids.
+        """
         refs = set()
-        for par in self:
-            if par.is_reference():
+        for p in self:
+            if p.is_reference():
                 try:
-                    refs.add(int(par.get_rd()))
-                except (ValueError, TypeError):
-                    print('Invalid document reference: ' + str(par.get_rd()))
-
-
+                    referenced_pars = p.get_referenced_pars()
+                except TimDbException:
+                    pass
+                else:
+                    for par in referenced_pars:
+                        try:
+                            refs.add(int(par.get_doc_id()))
+                        except (ValueError, TypeError):
+                            print('Invalid document reference: ' + str(par.get_rd()))
         return refs
 
     def get_paragraphs(self) -> List[DocParagraph]:
@@ -712,7 +719,7 @@ class CacheIterator:
     def __iter__(self):
         return self.i
 
-    def __next__(self):
+    def __next__(self) -> DocParagraph:
         return self.i.__next__()
 
 
