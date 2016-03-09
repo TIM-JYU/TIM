@@ -92,6 +92,11 @@ def internal_error(error):
     return error_generic(error, 500)
 
 
+@app.errorhandler(503)
+def service_unavailable(error):
+    return error_generic(error, 503)
+
+
 @app.errorhandler(413)
 def entity_too_large(error):
     error.description = 'Your file is too large to be uploaded. Maximum size is {} MB.'\
