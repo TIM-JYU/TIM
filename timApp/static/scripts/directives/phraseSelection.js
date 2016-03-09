@@ -64,7 +64,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
  */
 timApp.filter('selectedTags', function () {
     return function (phrases, tags) {
-
+        var selectedPhrases = {};
         var selectedTags = [];
         if (typeof tags != "undefined" && typeof phrases != "undefined") {
 
@@ -72,39 +72,36 @@ timApp.filter('selectedTags', function () {
                 if (tags[i].selected)
                     selectedTags.push(tags[i].id);
             }
+
             // return all phrases if no tags selected
             if (selectedTags.length == 0)
                 return phrases;
 
-            var selectedPhrases = {};
-
             for (var i = 0; i < phrases.length; i++) {
                 for (var j = 0; j < selectedTags.length; j++) {
-                    if (phrases[i].tags.indexOf(selectedTags[j]) != -1){
-                        if (!(phrases[i].id in selectedPhrases))
-                            selectedPhrases[phrases[i].id] = 1;
+                    if (phrases[i].tags.indexOf(selectedTags[j]) != -1)
+                        if (!(i in selectedPhrases))
+                            selectedPhrases[i] = [phrases[i],1];
                         else
-                            selectedPhrases[phrases[i].id] += 1;
-                    }
+                            selectedPhrases[i][1] += 1;
                 }
             }
-
-            var sortedPhrases = [];
-            var returnPhrases = [];
-
-            for (var phrase in selectedPhrases){
-                sortedPhrases.push([phrase, selectedPhrases[phrase]]);
-            }
-
-            sortedPhrases.sort(function(a,b) {return a[1] - b[1]});
-
-            for (var p in sortedPhrases)
-                returnPhrases.push(p[0]);
-
-             console.log(returnPhrases);
         }
 
-        // return something more useful
-        return phrases;
+        var selectedArray = [];
+        var returnPhrases = [];
+        for (var p in selectedPhrases){
+            selectedArray.push(selectedPhrases[p]);
+        }
+
+        selectedArray.sort(function(a, b) {return b[1] - a[1]});
+
+        for (var s in selectedArray)
+            returnPhrases.push(selectedArray[s][0]);
+
+       // console.log(returnPhrases);
+
+
+        return returnPhrases;
     };
 });
