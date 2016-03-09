@@ -177,17 +177,18 @@ def show_time(s):
 def view(doc_path, template_name, usergroup=None, route="view"):
 
     session['last_doc'] = request.path
-    try:
-        message = session['message']
-        session['message'] = None
-    except KeyError:
-        message = None
 
     timdb = getTimDb()
     doc_info = timdb.documents.resolve_doc_id_name(doc_path)
 
     if doc_info is None:
         return try_return_folder(doc_path)
+
+    try:
+        message = session['message']
+        session['message'] = None
+    except KeyError:
+        message = None
 
     doc_id = doc_info['id']
     if route == 'teacher':

@@ -1,5 +1,5 @@
 {% extends "folder.html" %}
-{% block title %}The requested page was not found{% endblock %}
+{% block title %}The requested page does not exist.{% endblock %}
 {% block head %}
     {{ super() }}
 
@@ -34,7 +34,7 @@
             {% include 'side_menu.html' %}
         {% endif %}
 
-        <p class="errormsg">{{ message or 'The requested page was not found.' }}</p>
+        <p class="errormsg">{{ message or 'The requested page does not exist.' }}</p>
         {% if session.user_id %}
             {% if rights %}
                 <table>
