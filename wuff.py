@@ -12,6 +12,7 @@ PLUGIN_HTTPS = False
 TIM_NAME = 'tim'
 RESTART_SCRIPT = './restart_local.sh'
 
+
 def make_request(host, url, https):
     if https:
         conn = HTTPSConnection(host)
@@ -32,6 +33,7 @@ def make_request(host, url, https):
     #print('DEBUG:', status, reason)
     return (status, reason)
 
+
 def retry_request(host, url, https, times=3, delay=1):
     for i in range(0, times):
         status, reason = make_request(host, url, https)
@@ -40,6 +42,7 @@ def retry_request(host, url, https, times=3, delay=1):
         sleep(delay)
 
     return status, reason
+
 
 def print_status(name, status, reason, restarted):
     ts = str(datetime.now())[:19]
@@ -53,6 +56,7 @@ def print_status(name, status, reason, restarted):
 
     print(statstr)
     return True
+
 
 def send_email(name, status, reason, restarted):
     print_status(name, status, reason, restarted)
@@ -73,12 +77,15 @@ def send_email(name, status, reason, restarted):
     s.quit()
     return False
 
+
 def poll_nginx():
     status, reason = retry_request(TIM_HOST, '/', USE_HTTPS)
     return (status, reason) if status == 111 else (200, 'OK')
 
+
 def poll_tim():
     return retry_request(TIM_HOST, '/', USE_HTTPS)
+
 
 def poll_csplugin():
     pluginhost = 'localhost:56000'
@@ -89,9 +96,11 @@ def poll_csplugin():
 
     return (status, reason)
 
+
 def poll_haskellplugins():
     pluginhost = 'localhost:60000'
     return retry_request(pluginhost, '/reqs', PLUGIN_HTTPS)
+
 
 def restart(*args, timeout=60, timeout_after=5):
     try:
@@ -100,14 +109,18 @@ def restart(*args, timeout=60, timeout_after=5):
     except TimeoutExpired:
         print("Restarting", str(args), "didn't terminate")
 
+
 def restart_nginx():
     restart('nginx')
+
 
 def restart_tim():
     restart('tim')
 
+
 def restart_plugins():
     restart('plugins')
+
 
 def watchdog(name, pollfunc, restartfunc, reportfunc, retries=1):
     restarted = False
@@ -120,6 +133,7 @@ def watchdog(name, pollfunc, restartfunc, reportfunc, retries=1):
         restarted = True
 
     return reportfunc(name, status, reason, False)
+
 
 if __name__ == '__main__':
     run = True
