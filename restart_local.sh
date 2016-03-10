@@ -25,7 +25,7 @@ param () {
 checkdir() {
   if [ ! -d "$1" ] && [ ! -L "$1" ]; then
     echo "File $1 doesn't exist, creating symbolic link"
-    ln -s $2 $1
+    sudo ln -s $2 $1
   fi
 }
 
@@ -35,6 +35,11 @@ checkdir /opt/tim $PWD
 checkdir /opt/svn $PWD/timApp/modules/svn
 checkdir /opt/cs $PWD/timApp/modules/cs
 checkdir /opt/funnel $PWD/funnel
+checkdir /var/log/funnel $PWD/tim_logs
+checkdir /var/log/wuff $PWD/tim_logs
+
+# Set a lock for the watchdog
+touch /opt/tim/restarting
 
 # Stop and remove containers
 if param tim; then
@@ -98,5 +103,8 @@ fi
 if param nginx; then
   docker run --net=timnet -d --name nginx -p 80:80 -v /opt/cs/:/opt/cs/ local_nginx /startup.sh
 fi
+
+# Remove the lock
+rm /opt/tim/restarting
 
 exit 0

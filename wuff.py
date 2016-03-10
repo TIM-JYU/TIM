@@ -1,4 +1,5 @@
 import logging
+import os
 
 from email.mime.text import MIMEText
 from http.client import *
@@ -13,7 +14,7 @@ USE_HTTPS = False
 PLUGIN_HTTPS = False
 TIM_NAME = 'tim'
 RESTART_SCRIPT = './restart_local.sh'
-MONITOR_INTERVAL = 10
+MONITOR_INTERVAL = 120
 
 
 def make_request(host, url, https):
@@ -23,7 +24,7 @@ def make_request(host, url, https):
         conn = HTTPConnection(host)
 
     try:
-        req = conn.request('GET', url)
+        conn.request('GET', url, headers={'User-Agent': 'wuff'})
         resp = conn.getresponse()
         status, reason = resp.status, resp.reason
     except ConnectionError as e:
@@ -33,7 +34,7 @@ def make_request(host, url, https):
     finally:
         conn.close()
 
-    return (status, reason)
+    return status, reason
 
 
 def retry_request(host, url, https, times=3, delay=1):
@@ -46,92 +47,72 @@ def retry_request(host, url, https, times=3, delay=1):
     return status, reason
 
 
-def log_status(name, status, reason, restarted):
-    if status == 200:
-        logging.getLogger().info(name + " is up")
-        return True
-
-    if restarted:
-        logging.getLogger().warn("{} was down ({} {}) but was restarted".format(name, status, reason))
-    else:
-        logging.getLogger().error("{} is down ({} {}) and could not be restarted".format(name, status, reason))
-
-    return True
+def get_crashed_message(args):
+    return '{} down'.format(', '.join(args))
 
 
-def send_email(name, status, reason, restarted):
-    log_status(name, status, reason, restarted)
-    if status == 200 or restarted:
-        return True
-    msg = MIMEText("""
-{0} is down and could not be restarted.
-HTTP status is: {1} {2}
-""".format(name, status, reason)
-    )
-    msg['Subject'] = "{} is down".format(name)
+def log_crashed(args):
+    if len(args) == 0:
+        logging.getLogger().info("Everything is up and running")
+        return []
+
+    logging.getLogger().critical(get_crashed_message(args))
+
+
+def report_crashed(args):
+    if len(args) == 0:
+        return []
+
+    log_crashed(args)
+    msg = MIMEText(get_crashed_message(args))
+    msg['Subject'] = get_crashed_message(args)
     msg['From'] = "wuff@tim.jyu.fi"
     msg['To'] = "tomi.karppinen@jyu.fi"
 
     s = SMTP('smtp.jyu.fi')
     s.send_message(msg)
     s.quit()
-    return False
 
 
-def poll_nginx():
-    status, reason = retry_request(TIM_HOST, '/', USE_HTTPS)
-    return (status, reason) if status == 111 else (200, 'OK')
+def poll(name, host, url, https):
+    status, reason = retry_request(host, url, https)
+    if status != 200:
+        logging.getLogger().warn('{} returned status {} - {}'.format(name, status, reason))
+        return status < 0 # ignore bad status lines and such for now
+
+    return True
 
 
 def poll_tim():
-    return retry_request(TIM_HOST, '/', USE_HTTPS)
+    return [] if poll('tim', TIM_HOST, '/', USE_HTTPS) else ['tim', 'postgre', 'nginx', 'funnel']
 
 
-def poll_csplugin():
-    pluginhost = 'localhost:56000'
-    status, reason = retry_request(pluginhost, '/reqs', PLUGIN_HTTPS)
-    if status == -1 and 'BadStatusLine' in reason:
-        # This is normal for csplugin, for now
-        status = 200
+def poll_plugins():
+    plugins = poll('csplugin', TIM_HOST, '/cs/reqs', USE_HTTPS) \
+              and poll('haskellplugins', 'localhost:57000', '/reqs', False) \
+              and poll('haskellplugins', 'localhost:58000', '/reqs', False) \
+              and poll('haskellplugins', 'localhost:59000', '/reqs', False) \
+              and poll('haskellplugins', 'localhost:60000', '/reqs', False) \
 
-    return (status, reason)
-
-
-def poll_haskellplugins():
-    pluginhost = 'localhost:60000'
-    return retry_request(pluginhost, '/reqs', PLUGIN_HTTPS)
+    return [] if plugins else ['plugins']
 
 
-def restart(*args, timeout=60, timeout_after=5):
+def restart(args, timeout=120, timeout_after=60):
+    if len(args) == 0:
+        return []
+
     try:
-        call([RESTART_SCRIPT] + list(args), timeout=timeout)
+        logging.getLogger().info('Restarting {}'.format(', '.join(args)))
+        call([RESTART_SCRIPT] + args, timeout=timeout)
         sleep(timeout_after)
+        return get_crashed_programs()
     except TimeoutExpired:
-        logging.getLogger().critical("{} {} didn't terminate".format(RESTART_SCRIPT, ' '.join(list(args))))
+        logging.getLogger().critical("{} {} didn't terminate".format(RESTART_SCRIPT, ' '.join(args)))
+        return args
 
 
-def restart_nginx():
-    restart('nginx')
-
-
-def restart_tim():
-    restart('tim')
-
-
-def restart_plugins():
-    restart('plugins')
-
-
-def watchdog(name, pollfunc, restartfunc, reportfunc, retries=1):
-    restarted = False
-    for i in range(0, retries):
-        status, reason = pollfunc()
-        if status == 200:
-            return reportfunc(name, status, reason, restarted)
-        restartfunc()
-        restarted = True
-
-    return reportfunc(name, status, reason, False)
+def get_crashed_programs():
+    return poll_tim() + poll_plugins()
 
 
 if __name__ == '__main__':
@@ -150,16 +131,18 @@ if __name__ == '__main__':
         USE_HTTPS = True
         TIM_NAME = argv[1]
         RESTART_SCRIPT = './restart.sh'
-        report_func = send_email
+        report_func = report_crashed
     else:
-        report_func = log_status
+        report_func = log_crashed
 
     try:
         logging.critical("Monitoring " + TIM_HOST)
-        while run and watchdog('nginx', poll_nginx, restart_nginx, report_func) \
-                  and watchdog('tim', poll_tim, restart_tim, report_func) \
-                  and watchdog('csplugin', poll_csplugin, restart_plugins, report_func) \
-                  and watchdog('haskellplugins', poll_haskellplugins, restart_plugins, report_func):
+        while True:
+            if not os.path.isfile('restarting'):
+                report_func(restart(get_crashed_programs()))
+            else:
+                logging.getLogger().debug('Restart script is running, wuff is paused')
+
             sleep(MONITOR_INTERVAL)
 
     except KeyboardInterrupt:
