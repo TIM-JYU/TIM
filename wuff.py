@@ -53,7 +53,7 @@ def get_crashed_message(args):
 
 def log_crashed(args):
     if len(args) == 0:
-        logging.getLogger().info("Everything is up and running")
+        logging.getLogger().debug("Everything is up and running")
         return []
 
     logging.getLogger().critical(get_crashed_message(args))
@@ -136,7 +136,7 @@ if __name__ == '__main__':
         report_func = log_crashed
 
     try:
-        logging.critical("Monitoring " + TIM_HOST)
+        logging.info("Monitoring " + TIM_HOST)
         while True:
             if not os.path.isfile('restarting'):
                 report_func(restart(get_crashed_programs()))
@@ -146,5 +146,5 @@ if __name__ == '__main__':
             sleep(MONITOR_INTERVAL)
 
     except KeyboardInterrupt:
-        logging.critical("Shutting down")
+        logging.info("Shutting down")
 
