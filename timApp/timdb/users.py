@@ -287,7 +287,7 @@ class Users(TimDbBase):
     def get_user_by_email(self, email: 'str') -> 'dict|None':
         """Gets the data of the specified user email address.
         
-        :param name: Email address.
+        :param email: Email address.
         :returns: The user data.
         """
 
