@@ -34,7 +34,7 @@ checkdir() {
 checkdir /opt/tim $PWD
 checkdir /opt/svn $PWD/timApp/modules/svn
 checkdir /opt/cs $PWD/timApp/modules/cs
-checkdir /opt/postgre $PWD/postgresql
+checkdir /opt/postgre $PWD/postgre
 checkdir /opt/funnel $PWD/funnel
 
 # Stop and remove containers
