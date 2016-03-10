@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+from functools import lru_cache
 
 import requests
 from requests.exceptions import Timeout
@@ -76,6 +77,7 @@ def call_plugin_answer(plugin, answer_data):
 
 
 # Get lists of js and css files required by plugin, as well as list of Angular modules they define.
+@lru_cache(maxsize=100)
 def plugin_reqs(plugin):
     return call_plugin_generic(plugin, 'get', 'reqs')
 

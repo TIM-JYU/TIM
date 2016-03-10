@@ -1,5 +1,7 @@
 import json
 from contracts import contract, new_contract
+from typing import Optional
+
 from timdb.timdbbase import TimDbBase, TimDbException
 
 import hashlib
@@ -257,7 +259,7 @@ class Users(TimDbBase):
         return result[0] if len(result) > 0 else None
 
     @contract
-    def get_user_by_name(self, name: 'str') -> 'int|None':
+    def get_user_id_by_name(self, name: 'str') -> 'int|None':
         """Gets the id of the specified username.
         
         :param name: The name of the user.
@@ -269,11 +271,23 @@ class Users(TimDbBase):
         result = cursor.fetchone()
         return result[0] if result is not None else None
 
+    def get_user_by_name(self, name: str) -> Optional[dict]:
+        """Gets the user information of the specified username.
+
+        :param name: The name of the user.
+        :returns: The user information or None if the user does not exist.
+        """
+
+        cursor = self.db.cursor()
+        cursor.execute('SELECT * FROM User WHERE name = ?', [name])
+        result = cursor.fetchone()
+        return result
+
     @contract
     def get_user_by_email(self, email: 'str') -> 'dict|None':
         """Gets the data of the specified user email address.
         
-        :param name: Email address.
+        :param email: Email address.
         :returns: The user data.
         """
 
@@ -702,7 +716,7 @@ WHERE User_id IN ({}))
         global ANON_USER_ID
         if ANON_USER_ID is not None:
             return ANON_USER_ID
-        ANON_USER_ID = self.get_user_by_name(ANONYMOUS_USERNAME)
+        ANON_USER_ID = self.get_user_id_by_name(ANONYMOUS_USERNAME)
         return ANON_USER_ID
 
     @contract
@@ -710,7 +724,7 @@ WHERE User_id IN ({}))
         global LOGGED_USER_ID
         if LOGGED_USER_ID is not None:
             return LOGGED_USER_ID
-        LOGGED_USER_ID = self.get_user_by_name(LOGGED_IN_USERNAME)
+        LOGGED_USER_ID = self.get_user_id_by_name(LOGGED_IN_USERNAME)
         return LOGGED_USER_ID
 
     @contract

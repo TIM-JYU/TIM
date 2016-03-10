@@ -131,7 +131,7 @@ CREATE TABLE Notification (
 
 
 def add_logged_in_user(timdb):
-    lu = timdb.users.get_user_by_name(LOGGED_IN_USERNAME)
+    lu = timdb.users.get_user_id_by_name(LOGGED_IN_USERNAME)
     if lu is not None:
         return False
     uid = timdb.users.create_user(LOGGED_IN_USERNAME, LOGGED_IN_USERNAME, '')

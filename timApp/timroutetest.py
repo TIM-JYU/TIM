@@ -2,6 +2,8 @@
 
 import json
 import unittest
+import socket
+from functools import lru_cache
 
 import flask
 from lxml import html
@@ -15,6 +17,26 @@ from flask.testing import FlaskClient
 def load_json(resp):
     return json.loads(resp.get_data(as_text=True))
 
+orig_getaddrinfo = socket.getaddrinfo
+
+
+# noinspection PyIncorrectDocstring
+@lru_cache(maxsize=100)
+def fast_getaddrinfo(host, port, family=0, addrtype=0, proto=0, flags=0):
+    """
+    On Windows/Boot2docker, the getaddrinfo function is really slow,
+    so we wrap the function and cache the result.
+    """
+    return orig_getaddrinfo(host, port, family, addrtype, proto, flags)
+
+
+socket.getaddrinfo = fast_getaddrinfo
+
+tim.app.config['DATABASE'] = TimDbTest.db_path
+tim.app.config['TESTING'] = True
+testclient = tim.app.test_client()
+testclient = testclient.__enter__()  # type: FlaskClient
+
 
 class TimRouteTest(TimDbTest):
     """
@@ -26,10 +48,7 @@ class TimRouteTest(TimDbTest):
     @classmethod
     def setUpClass(cls):
         TimDbTest.setUpClass()
-        tim.app.config['DATABASE'] = cls.db_path
-        tim.app.config['TESTING'] = True
-        cls.app = tim.app.test_client()
-        cls.app = cls.app.__enter__()  # type: FlaskClient
+        cls.app = testclient
 
     def assertResponseStatus(self, resp, expect_status=200, return_json=False):
         resp_data = resp.get_data(as_text=True)
@@ -120,15 +139,16 @@ class TimRouteTest(TimDbTest):
     def logout(self):
         self.assertResponseStatus(self.app.post('/logout'), expect_status=302)
 
-    def login(self, username, email, passw, force=False):
-        # Make a bogus request; something is wrong with session being cleared after a request if we're in a different
-        # test class when running multiple tests at once
-        self.app.get('/zzz')
-        if not force \
-                and self.app.application.got_first_request \
-                and flask.session.get('user_name') == username \
-                and flask.session.get('user_id') != 0:
-            return
+    def login(self, username, email, passw, force=False, clear_last_doc=True):
+        if self.app.application.got_first_request:
+            if not force:
+                if flask.session.get('user_name') == username \
+                        and flask.session.get('user_id') != 0:
+                    return
+            if clear_last_doc:
+                with self.app.session_transaction() as s:
+                    s.pop('last_doc', None)
+                    s.pop('came_from', None)
         return self.app.post('/altlogin',
                              data={'email': email, 'password': passw},
                              follow_redirects=True)
