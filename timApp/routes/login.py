@@ -90,7 +90,7 @@ def login_with_korppi():
     email = pieces[2]
 
     timdb = getTimDb()
-    user_id = timdb.users.get_user_by_name(user_name)
+    user_id = timdb.users.get_user_id_by_name(user_name)
     
     if user_id is None:
         # Try email
@@ -188,7 +188,7 @@ def alt_signup_after():
         # User with this email already exists
         user_data = timdb.users.get_user_by_email(email)
         user_id = user_data['id']
-        nameId = timdb.users.get_user_by_name(username)
+        nameId = timdb.users.get_user_id_by_name(username)
 
         if nameId is not None and nameId != user_id:
             flash('User name already exists. Please try another one.', 'loginmsg')
@@ -197,7 +197,7 @@ def alt_signup_after():
         # Use the existing user name; don't replace it with email
         username = user_data['name']
     else:
-        if timdb.users.get_user_by_name(username) is not None:
+        if timdb.users.get_user_id_by_name(username) is not None:
             flash('User name already exists. Please try another one.', 'loginmsg')
             return finish_login(ready=False)
     
@@ -296,7 +296,7 @@ def quick_login(username):
     timdb = getTimDb()
     if not timdb.users.has_admin_access(getCurrentUserId()):
         abort(403)
-    user = timdb.users.get_user_by_name(username)
+    user = timdb.users.get_user_id_by_name(username)
     if user is None:
         abort(404, 'User not found.')
     user = timdb.users.get_user(user)

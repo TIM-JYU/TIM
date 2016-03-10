@@ -25,8 +25,18 @@ function param {
   return $result
 }
 
-# Stop the watchdog during this script
-sudo kill $(ps a | grep 'python3 wuff' | grep -v grep | awk -F" " '{ print $1 }')
+checkdir() {
+  if [ ! -d "$1" ] && [ ! -L "$1" ]; then
+    echo "File $1 doesn't exist, creating symbolic link"
+    sudo ln -s $2 $1
+  fi
+}
+
+checkdir /var/log/funnel $PWD/tim_logs
+checkdir /var/log/wuff $PWD/tim_logs
+
+# Set a lock for the watchdog
+touch /opt/tim/restarting
 
 if param tim ; then
     docker stop tim > /dev/null 2>&1 &
@@ -120,8 +130,18 @@ if param tim ; then
 docker run --net=timnet --name tim -p 50001:5000  -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=tim ; export TIM_HOST=tim.jyu.fi ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
 fi
 
-# Restart the watchdog
-screen -dmS wuff python3 wuff.py 
+if param wuff ; then
+# (Re)start the watchdog
+wuffpid=$(ps a | grep 'python3 wuff' | grep -v grep | awk -F" " '{ print $1 }')
+if [ ! -z "$wuffpid" ] ; then
+sudo kill $wuffpid
+fi
+#sudo kill $(ps a | grep 'python3 wuff' | grep -v grep | awk -F" " '{ print $1 }') 2> /dev/null
+screen -dmS wuff sudo python3 wuff.py tim
+fi
+
+# Remove the lock
+rm /opt/tim/restarting
 
 #trap '' 0
 exit 0
