@@ -1,6 +1,8 @@
-from datetime import datetime
+import logging
+
 from email.mime.text import MIMEText
 from http.client import *
+from logging.config import fileConfig
 from smtplib import SMTP
 from subprocess import call, TimeoutExpired
 from sys import argv
@@ -11,6 +13,7 @@ USE_HTTPS = False
 PLUGIN_HTTPS = False
 TIM_NAME = 'tim'
 RESTART_SCRIPT = './restart_local.sh'
+MONITOR_INTERVAL = 10
 
 
 def make_request(host, url, https):
@@ -30,7 +33,6 @@ def make_request(host, url, https):
     finally:
         conn.close()
 
-    #print('DEBUG:', status, reason)
     return (status, reason)
 
 
@@ -44,29 +46,27 @@ def retry_request(host, url, https, times=3, delay=1):
     return status, reason
 
 
-def print_status(name, status, reason, restarted):
-    ts = str(datetime.now())[:19]
-    statstr = '{} {} '.format(ts, name)
+def log_status(name, status, reason, restarted):
     if status == 200:
-        statstr += "is up"
-    elif restarted:
-        statstr += "was down ({} {}) but was restarted".format(status, reason)
-    else:
-        statstr += "is down ({} {})".format(status, reason)
+        logging.getLogger().info(name + " is up")
+        return True
 
-    print(statstr)
+    if restarted:
+        logging.getLogger().warn("{} was down ({} {}) but was restarted".format(name, status, reason))
+    else:
+        logging.getLogger().error("{} is down ({} {}) and could not be restarted".format(name, status, reason))
+
     return True
 
 
 def send_email(name, status, reason, restarted):
-    print_status(name, status, reason, restarted)
+    log_status(name, status, reason, restarted)
     if status == 200 or restarted:
         return True
-    msg = MIMEText(
-    """
-    {0} is down and could not be restarted.
-    HTTP status is: {1} {2}
-    """.format(name, status, reason)
+    msg = MIMEText("""
+{0} is down and could not be restarted.
+HTTP status is: {1} {2}
+""".format(name, status, reason)
     )
     msg['Subject'] = "{} is down".format(name)
     msg['From'] = "wuff@tim.jyu.fi"
@@ -107,7 +107,7 @@ def restart(*args, timeout=60, timeout_after=5):
         call([RESTART_SCRIPT] + list(args), timeout=timeout)
         sleep(timeout_after)
     except TimeoutExpired:
-        print("Restarting", str(args), "didn't terminate")
+        logging.getLogger().critical("{} {} didn't terminate".format(RESTART_SCRIPT, ' '.join(list(args))))
 
 
 def restart_nginx():
@@ -128,7 +128,6 @@ def watchdog(name, pollfunc, restartfunc, reportfunc, retries=1):
         status, reason = pollfunc()
         if status == 200:
             return reportfunc(name, status, reason, restarted)
-        print('DEBUG: restarting', name)
         restartfunc()
         restarted = True
 
@@ -136,6 +135,8 @@ def watchdog(name, pollfunc, restartfunc, reportfunc, retries=1):
 
 
 if __name__ == '__main__':
+    fileConfig('wuff_logging.ini')
+
     run = True
     if len(argv) > 1:
         if argv[1] == 'tim':
@@ -151,12 +152,16 @@ if __name__ == '__main__':
         RESTART_SCRIPT = './restart.sh'
         report_func = send_email
     else:
-        report_func = print_status
+        report_func = log_status
 
-    while run and watchdog('nginx', poll_nginx, restart_nginx, report_func) \
-              and watchdog('tim', poll_tim, restart_tim, report_func) \
-              and watchdog('csplugin', poll_csplugin, restart_plugins, report_func) \
-              and watchdog('haskellplugins', poll_haskellplugins, restart_plugins, report_func):
-        sleep(600)
-        print()
+    try:
+        logging.critical("Monitoring " + TIM_HOST)
+        while run and watchdog('nginx', poll_nginx, restart_nginx, report_func) \
+                  and watchdog('tim', poll_tim, restart_tim, report_func) \
+                  and watchdog('csplugin', poll_csplugin, restart_plugins, report_func) \
+                  and watchdog('haskellplugins', poll_haskellplugins, restart_plugins, report_func):
+            sleep(MONITOR_INTERVAL)
+
+    except KeyboardInterrupt:
+        logging.critical("Shutting down")
 
