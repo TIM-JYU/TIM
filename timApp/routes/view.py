@@ -222,8 +222,20 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     user = getCurrentUserId()
 
+    clear_cache = get_option(request, "nocache", False)
+    hide_answers = get_option(request, 'noanswers', False)
+
     teacher_or_see_answers = route in ('teacher', 'answers')
     doc_settings = doc.get_settings()
+
+    # Preload htmls here to make dereferencing faster
+    DocParagraph.preload_htmls(xs, doc_settings, clear_cache)
+    if doc_settings:
+        src_doc_id = doc_settings.get_source_document()
+        if src_doc_id is not None:
+            src_doc = Document(src_doc_id)
+            DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), clear_cache)
+
     # We need to deference paragraphs at this point already to get the correct task ids
     xs = dereference_pars(xs, edit_window=False, source_doc=doc.get_original_document())
     total_tasks = None
@@ -248,18 +260,8 @@ def view(doc_path, template_name, usergroup=None, route="view"):
             tasks_done = info[0]['task_count']
     current_user = timdb.users.get_user(user)
 
-    clear_cache = get_option(request, "nocache", False)
-    hide_answers = get_option(request, 'noanswers', False)
-
     raw_css = doc_settings.css() if doc_settings else None
     doc_css = sanitize_html('<style type="text/css">' + raw_css + '</style>') if raw_css else None
-    DocParagraph.preload_htmls(xs, doc_settings, clear_cache)
-
-    if doc_settings:
-        src_doc_id = doc_settings.get_source_document()
-        if src_doc_id is not None:
-            src_doc = Document(src_doc_id)
-            DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), clear_cache)
 
     texts, jsPaths, cssPaths, modules = post_process_pars(doc,
                                                           xs,
