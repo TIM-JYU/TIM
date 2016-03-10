@@ -47,25 +47,22 @@ def retry_request(host, url, https, times=3, delay=1):
     return status, reason
 
 
-def get_crashed_message(args):
-    return '{} down'.format(', '.join(args))
-
-
-def log_crashed(args):
+def log_critical(state, args):
     if len(args) == 0:
         logging.getLogger().debug("Everything is up and running")
         return []
 
-    logging.getLogger().critical(get_crashed_message(args))
+    logging.getLogger().critical(', '.join(args) + ' ' + state)
+    return args
 
 
-def report_crashed(args):
+def report_critical(state, args):
     if len(args) == 0:
         return []
 
-    log_crashed(args)
-    msg = MIMEText(get_crashed_message(args))
-    msg['Subject'] = get_crashed_message(args)
+    log_critical(args)
+    msg = MIMEText(', '.join(args) + ' is ' + state)
+    msg['Subject'] = ', '.join(args) + ' ' + state
     msg['From'] = "wuff@tim.jyu.fi"
     msg['To'] = "tomi.karppinen@jyu.fi"
 
@@ -131,15 +128,15 @@ if __name__ == '__main__':
         USE_HTTPS = True
         TIM_NAME = argv[1]
         RESTART_SCRIPT = './restart.sh'
-        report_func = report_crashed
+        report_func = report_critical
     else:
-        report_func = log_crashed
+        report_func = log_critical
 
     try:
         logging.info("Monitoring " + TIM_HOST)
         while True:
             if not os.path.isfile('restarting'):
-                report_func(restart(get_crashed_programs()))
+                report_func('down', restart(report_func('restarting', get_crashed_programs())))
             else:
                 logging.getLogger().debug('Restart script is running, wuff is paused')
 
