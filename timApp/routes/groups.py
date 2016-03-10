@@ -11,7 +11,7 @@ groups = Blueprint('groups',
 def get_uid_gid(groupname, usernames):
     timdb = getTimDb()
 
-    uids = [timdb.users.get_user_by_name(u) for u in usernames]
+    uids = [timdb.users.get_user_id_by_name(u) for u in usernames]
     gid = timdb.users.get_usergroup_by_name(groupname)
     if gid is None:
         abort(404, 'Usergroup does not exist.')

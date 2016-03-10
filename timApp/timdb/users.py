@@ -257,7 +257,7 @@ class Users(TimDbBase):
         return result[0] if len(result) > 0 else None
 
     @contract
-    def get_user_by_name(self, name: 'str') -> 'int|None':
+    def get_user_id_by_name(self, name: 'str') -> 'int|None':
         """Gets the id of the specified username.
         
         :param name: The name of the user.
@@ -702,7 +702,7 @@ WHERE User_id IN ({}))
         global ANON_USER_ID
         if ANON_USER_ID is not None:
             return ANON_USER_ID
-        ANON_USER_ID = self.get_user_by_name(ANONYMOUS_USERNAME)
+        ANON_USER_ID = self.get_user_id_by_name(ANONYMOUS_USERNAME)
         return ANON_USER_ID
 
     @contract
@@ -710,7 +710,7 @@ WHERE User_id IN ({}))
         global LOGGED_USER_ID
         if LOGGED_USER_ID is not None:
             return LOGGED_USER_ID
-        LOGGED_USER_ID = self.get_user_by_name(LOGGED_IN_USERNAME)
+        LOGGED_USER_ID = self.get_user_id_by_name(LOGGED_IN_USERNAME)
         return LOGGED_USER_ID
 
     @contract
