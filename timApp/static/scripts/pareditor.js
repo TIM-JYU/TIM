@@ -102,6 +102,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                         $scope.setEditorText(data.text);
                         angular.extend($scope.extraData, data.extraData);
                         $scope.aceChanged();
+                        $scope.aceReady();
                     }).error(function (data, status, headers, config) {
                         $window.alert('Failed to get text: ' + data.error);
                     });
@@ -375,10 +376,16 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                     $scope.editor = editor;
                     $scope.createAce(editor);
                     if ($scope.initialTextUrl) $scope.setInitialText();
+                    editor.focus();
 
                     /*iPad does not open the keyboard if not manually focused to editable area
                      var iOS = /(iPad|iPhone|iPod)/g.test($window.navigator.platform);
                      if (!iOS) editor.focus();*/
+                };
+
+                $scope.aceReady = function () {
+                    $scope.editor.focus();
+                    $scope.bottomClicked();
                 };
 
                 $('.editorContainer').on('resize', $scope.adjustPreview);
