@@ -55,7 +55,16 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
         if (!$scope.labelsOn)
             return "hide";
         return "";
-    }
+    };
+
+    /**
+     * Use selected phrase
+     * @param phrase selected phrase
+
+    $scope.usePhrase = function(phrase){
+        console.log("using a " + phrase.content);
+        // broadcast this phrase to anohter controller
+    }*/
 
 }]);
 

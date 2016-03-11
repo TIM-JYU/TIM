@@ -1,5 +1,6 @@
 <!-- tim-draggable-fixed class="editorArea" ei oikeasti kuulu tähän paikkaan... -->
-<div id="reviewEditor" tim-draggable-fixed class="editorArea">
+
+<div id="reviewEditor" tim-draggable-fixed class="editorArea" ng-controller="ReviewController">
     <div class="col-md-8">
     <ul class="tabsarea">
         <li id="navigate" class="tab active"><a ng-click="tabClicked($event, 'navigateButtons')">Navigation</a></li>
@@ -143,7 +144,7 @@
             &#8594;</button>
         <span ng-show="outofdate">...</span>
 
-        <div class="previewcontent"></div>
+        <div class="previewcontent" ng-click="selectText()"></div>
     </div>
     </div>
     <div class="col-md-4">

@@ -29,7 +29,8 @@
 
         <div>
             <p class="label phrase"
-               ng-repeat="phrase in phrases | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedTags:tags">
+               ng-repeat="phrase in phrases | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedTags:tags"
+               ng-click="usePhrase(phrase)">
                         <span class="glyphicon glyphicon-tag" ng-repeat="tag in phrase.tags"
                               style="color: {{ getColor(tag) }} "></span>
                 &ensp;{{ phrase.content }}&ensp;<span class="badge">{{ phrase.points }}</span>
