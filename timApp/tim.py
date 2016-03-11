@@ -75,6 +75,19 @@ def error_generic(error, code):
         return jsonResponse({'error': error.description}, code)
 
 
+@app.context_processor
+def inject_custom_css() -> dict:
+    """Injects the custom_css and custom_css_files variables to all templates."""
+    if not logged_in():
+        return {}
+    prefs = getTimDb().users.get_preferences(getCurrentUserId())
+    custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
+    custom_css_files = json.loads(prefs).get('css_files', {}) if prefs is not None else {}
+    if custom_css_files:
+        custom_css_files = {key: value for key, value in custom_css_files.items() if value}
+    return dict(custom_css=custom_css, custom_css_files=custom_css_files)
+
+
 @app.errorhandler(400)
 def bad_request(error):
     return error_generic(error, 400)

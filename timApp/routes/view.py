@@ -284,12 +284,6 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                 user['name'] = '-'
                 user['real_name'] = 'Undisclosed student %d' % user['id']
 
-    prefs = timdb.users.get_preferences(getCurrentUserId())
-    custom_css_files = json.loads(prefs).get('css_files', {}) if prefs is not None else {}
-    if custom_css_files:
-        custom_css_files = {key: value for key, value in custom_css_files.items() if value}
-    custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
-
     settings = get_user_settings()
 
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
@@ -307,8 +301,6 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                              js=jsPaths,
                              cssFiles=cssPaths,
                              jsMods=modules,
-                             custom_css_files=custom_css_files,
-                             custom_css=custom_css,
                              doc_css=doc_css,
                              start_index=start_index,
                              in_lecture=is_in_lecture,
