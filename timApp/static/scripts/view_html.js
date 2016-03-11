@@ -66,6 +66,9 @@ timApp.controller("ViewCtrl", [
     function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout) {
         "use strict";
         timLogTime("VieCtrl start","view");
+
+        sc.reviewMode = true;
+
         http.defaults.headers.common.Version = $window.version.hash;
         http.defaults.headers.common.RefererPath = $window.refererPath;
         sc.noBrowser = $window.noBrowser;
@@ -208,6 +211,79 @@ timApp.controller("ViewCtrl", [
             return $("[t='" + t + "']");
         };
 
+        /**
+         * Toggles review editor window
+         * @param $par paragraph to review
+         * @param options additional options
+         */
+         sc.toggleReviewEditor = function ($par, options) {
+            var caption = 'Add paragraph';
+            var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
+            var mobile = touch && (window.screen.width < 1200);
+            var url;
+            var par_id = sc.getParId($par);
+            var par_next_id = sc.getParId($par.next());
+            if (par_next_id == "null")
+                par_next_id = null;
+
+            // TODO: Use same route (postParagraph) for both cases, determine logic based on given parameters
+            if (par_id == "null" || $par.hasClass("new")) {
+                url = '/newParagraph/';
+            } else {
+                url = '/postParagraph/';
+            }
+
+            var area_start;
+            var area_end;
+
+            if (options.area) {
+                if (sc.selection.reversed) {
+                    area_start = sc.selection.end;
+                    area_end = sc.selection.start;
+                } else {
+                    area_end = sc.selection.end;
+                    area_start = sc.selection.start;
+                }
+            } else {
+                area_start = null;
+                area_end = null;
+            }
+
+            var attrs = {
+                "save-url": url,
+                "extra-data": {
+                    docId: sc.docId, // current document id
+                    par: par_id, // the id of paragraph on which the editor was opened
+                    par_next: par_next_id, // the id of the paragraph that follows par or null if par is the last one
+                    area_start: area_start,
+                    area_end: area_end
+                },
+                "options": {
+                    showDelete: options.showDelete,
+                    showImageUpload: true,
+                    showPlugins: true,
+                    destroyAfterSave: true,
+                    touchDevice: mobile,
+                    tags: [
+                        {name: 'markread', desc: 'Mark as read'}
+                    ]
+                },
+                "after-save": 'addSavedParToDom(saveData, extraData)',
+                "after-cancel": 'handleCancel(extraData)',
+                "after-delete": 'handleDelete(saveData, extraData)',
+                "preview-url": '/preview/' + sc.docId,
+                "delete-url": '/deleteParagraph/' + sc.docId
+            };
+             caption = 'Edit paragraph';
+             attrs["initial-text-url"] = '/getBlock/' + sc.docId + "/" + par_id;
+           /* if (options.showDelete) {
+                caption = 'Edit paragraph';
+                if (par_id != "null")
+                    attrs["initial-text-url"] = '/getBlock/' + sc.docId + "/" + par_id;
+            }*/
+            sc.toggleEditor($par, options, attrs, caption, "review-editor");
+        };
+
         sc.toggleParEditor = function ($par, options) {
             var caption = 'Add paragraph';
             var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
@@ -271,7 +347,7 @@ timApp.controller("ViewCtrl", [
                 if (par_id != "null")
                     attrs["initial-text-url"] = '/getBlock/' + sc.docId + "/" + par_id;
             }
-            sc.toggleEditor($par, options, attrs, caption);
+            sc.toggleEditor($par, options, attrs, caption, "pareditor");
         };
 
         sc.getRefAttrs = function ($par) {
@@ -282,7 +358,7 @@ timApp.controller("ViewCtrl", [
             };
         };
 
-        sc.toggleEditor = function ($par, options, attrs, caption) {
+        sc.toggleEditor = function ($par, options, attrs, caption, directive) {
             if (sc.isReference($par)) {
                 angular.extend(attrs['extra-data'], sc.getRefAttrs($par));
             }
@@ -299,7 +375,7 @@ timApp.controller("ViewCtrl", [
                 $(EDITOR_CLASS_DOT).remove();
 
                 var createEditor = function (attrs) {
-                    var $div = $("<pareditor>", {class: EDITOR_CLASS}).attr(attrs);
+                    var $div = $("<"+directive+">", {class: EDITOR_CLASS}).attr(attrs);
                     $div.attr('tim-draggable-fixed', '');
                     if (caption) {
                         $div.attr('caption', caption);
@@ -1177,9 +1253,21 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.showReviewWindow = function (e, $par) {
-            alert($par.text);
-            console.log($par);
+            $(".par.new").remove();
+            sc.toggleReviewEditor($par, {showDelete: false, area: false});
         };
+
+        sc.selectText = function () {
+            var sel = $window.getSelection();
+            if (sel.toString().length > 0) {
+                var range = sel.getRangeAt(0);
+                $scope.selectedArea = range;
+            } else {
+                $scope.selectedArea = undefined;
+            }
+            console.log(sel.toString());
+        };
+
 
         sc.getEditorFunctions = function () {
             if (sc.editing) {
@@ -1212,8 +1300,6 @@ timApp.controller("ViewCtrl", [
                 ];
             }
         };
-
-
 
         sc.editorFunctions = sc.getEditorFunctions();
 

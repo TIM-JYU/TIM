@@ -1,4 +1,6 @@
-<div id="pareditor" >
+<!-- tim-draggable-fixed class="editorArea" ei oikeasti kuulu tähän paikkaan... -->
+<div id="reviewEditor" tim-draggable-fixed class="editorArea">
+    <div class="col-md-8">
     <ul class="tabsarea">
         <li id="navigate" class="tab active"><a ng-click="tabClicked($event, 'navigateButtons')">Navigation</a></li>
         <li id="style" class="tab"><a ng-click="tabClicked($event, 'styleButtons')">Style</a></li>
@@ -143,4 +145,8 @@
 
         <div class="previewcontent"></div>
     </div>
+    </div>
+    <div class="col-md-4">
+    <phrase-selection></phrase-selection>
 </div>
+    </div>
