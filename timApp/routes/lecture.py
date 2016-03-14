@@ -738,6 +738,11 @@ def join_lecture():
     if check_if_lecture_is_full(lecture_id):
         return jsonResponse({'lecture_full': True})
 
+    lecture = timdb.lectures.get_lecture(lecture_id)
+    if lecture[0].get("password") != password_quess:
+        return jsonResponse({"correctPassword": False})
+
+    anon_login = False
     if current_user == 0:
         user_name = 'Anonymous'
         user_real_name = 'Guest'
@@ -746,10 +751,7 @@ def join_lecture():
         session['user_name'] = user_name
         session['real_name'] = user_real_name
         current_user = user_id
-
-    lecture = timdb.lectures.get_lecture(lecture_id)
-    if lecture[0].get("password") != password_quess:
-        return jsonResponse({"correctPassword": False})
+        anon_login = True
 
     doc_name = timdb.documents.get_document(lecture[0].get("doc_id"))["name"]
 
@@ -773,7 +775,8 @@ def join_lecture():
     return jsonResponse(
         {"correctPassword": True, "inLecture": True, "lectureId": lecture_id, "isLecturer": is_lecturer,
          "lectureCode": lecture_code, "startTime": lecture[0].get("start_time"),
-         "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students, "doc_name": doc_name})
+         "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students, "doc_name": doc_name,
+         "anonLogin": anon_login})
 
 
 @lecture_routes.route('/leaveLecture', methods=['POST'])
