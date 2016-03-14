@@ -21,6 +21,43 @@
     color: black;
 }
 
+/* Marking styles */
 .marking {
     cursor: pointer;
 }
+
+.marking.positive {
+    background: palegreen;
+}
+
+.marking.neutral {
+    background: khaki;
+}
+
+.marking.negative {
+    background: lightpink;
+}
+
+
+.clickable {
+    cursor: pointer;
+    color: darkblue;
+}
+
+.clickable:hover {
+    cursor: pointer;
+    color: blue;
+    text-decoration: underline;
+}
+
+/* Table styles */
+.phraseTable {
+    width: 100%;
+    border: 0;
+}
+.phraseTable td{
+    border: 0;
+    margin: 0;
+    padding: 0 0 0.5em 0;
+}
+

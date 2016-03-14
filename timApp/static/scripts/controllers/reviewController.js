@@ -1,5 +1,6 @@
 /**
  * Created by sevitarv on 8.3.2016.
+ * This controller requires phraseSelection directive to work.
  */
 
 var angular;
@@ -9,7 +10,6 @@ console.log("reviewController.js added");
 
 timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile', function ($scope, $http, $window, $compile) {
     "use strict";
-
 
     /**
      * Select text range
@@ -31,15 +31,19 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @returns marking color (should return some CSS-style)
      */
     $scope.getMarkingHighlight = function (points) {
-        var colorIndex = 0;
+        var highlightStyle = "positive";
         if (points == 0)
-            colorIndex = 1;
+            highlightStyle = "neutral";
         else if (points < 0)
-            colorIndex = 2;
-        return markingColorPalette[colorIndex];
+            highlightStyle = "negative";
+        return highlightStyle;
     };
 
-        $scope.usePhrase = function (phrase) {
+    /**
+     * Uses selected phrase, if area is selected.
+     * @param phrase phrase selected in phraseSelection directive
+     */
+    $scope.usePhrase = function (phrase) {
         if (typeof $scope.selectedArea != "undefined") {
             /*
              var span = angular.element("<span></span>");
@@ -48,10 +52,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             //var span = $scope.createPopOverElement(phrase.content);
             var span = document.createElement("span");
             span.classList.add("marking");
+            span.classList.add($scope.getMarkingHighlight(phrase.points));
 
-            // color should be by points
-            span.style.background = $scope.getMarkingHighlight(phrase.points);
-            //span.style.background = $scope.tags[phrase.tags[0]].color;
             $compile(span)($scope);
 
             $scope.selectedArea.surroundContents(span);

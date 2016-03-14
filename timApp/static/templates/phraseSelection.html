@@ -1,12 +1,21 @@
 
 
-<uib-accordion close-others="false">
+<div>
     <link rel="stylesheet" href="/static/css/phraseSelection.css"/>
+    <h2>Select phrase</h2>
+    <table class="phraseTable">
+        <tr>
+            <td>
+                <label class="clickable" for="searchLabels" ng-click="toggleLabelShow()">Filter by labels </label>
+            </td>
+            <td>
+                <input id="searchLabels" ng-model="filterTag" placeholder="filter labels">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                            <span class="{{ showLabels() }}">
 
-    <uib-accordion-group heading="Select phrase" is-open="true">
-        <label for="searchLabels" ng-click="toggleLabelShow()">Filter by labels: </label>
-        <span class="{{ showLabels() }}">
-        <input id="searchLabels" ng-model="filterTag" placeholder="filter labels">
         <div>
             <p ng-repeat="tag in tags | filter:{content:filterTag}" class="label tag-{{ tag.selected }}"
                style="background-color: {{ getColor(tag.id) }}"
@@ -16,25 +25,41 @@
         </div>
 
         </span>
-        <br />
-        <label>Search phrases: <input ng-model="filterPhrase" placeholder="filter phrases"></label>
-        <label>Order phrases: <select ng-model="orderPhrase">
-            <option value="content">Alphabetical</option>
-            <option value="-used">Most used</option>
-            <option value="tag">Labels</option>
-            <option value="-points">Highest point</option>
-            <option value="points">Lowest point</option>
-        </select>
-        </label>
-
-        <div>
-            <p class="label phrase"
-               ng-repeat="phrase in phrases | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedTags:tags"
-               ng-click="usePhrase(phrase)">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for="searchPhrases">Search phrases:</label>
+            </td>
+            <td>
+                <input id="searchPhrases" ng-model="filterPhrase" placeholder="filter phrases">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for="orderPhrases">Order phrases:</label>
+            </td>
+            <td><select id="orderPhrases" ng-model="orderPhrase">
+                <option value="content">Alphabetical</option>
+                <option value="-used">Most used</option>
+                <option value="tag">Labels</option>
+                <option value="-points">Highest point</option>
+                <option value="points">Lowest point</option>
+            </select>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <div>
+                    <p class="label phrase"
+                       ng-repeat="phrase in phrases | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedTags:tags"
+                       ng-click="usePhrase(phrase)">
                         <span class="glyphicon glyphicon-tag" ng-repeat="tag in phrase.tags"
                               style="color: {{ getColor(tag) }} "></span>
-                &ensp;{{ phrase.content }}&ensp;<span class="badge">{{ phrase.points }}</span>
-            </p>
-        </div>
-    </uib-accordion-group>
-</uib-accordion>
+                        &ensp;{{ phrase.content }}&ensp;<span class="badge">{{ phrase.points }}</span>
+                    </p>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>

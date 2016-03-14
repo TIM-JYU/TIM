@@ -1,0 +1,28 @@
+[
+  {
+    "tags": [
+      0
+    ],
+    "id": 0,
+    "points": -1,
+    "content": "Sentinel missing",
+    "coord": [0, 2],
+    "comment": "You should use a sentinel here"
+  },
+  {
+    "tags": [2,3,7],
+    "id": 5,
+    "points": 0,
+    "content": "Division by zero OK in some cases (many return-clauses)",
+    "coord": [3, 5],
+    "comment": "Nice"
+  },
+  {
+    "tags": [2],
+    "id": 9,
+    "points": 1,
+    "content": "Checkin division by zero OK",
+    "coord": [6, 8],
+    "comment": ""
+  }
+]
