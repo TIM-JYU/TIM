@@ -643,6 +643,13 @@ class Document:
         """Gets all the document ids that are referenced from this document recursively.
         :return: The set of the document ids.
         """
+
+        # begin workaround
+        # todo: find a faster way to implement this function
+        src_doc = self.get_settings().get_source_document()
+        return set() if src_doc is None else {src_doc}
+        # end workaround
+
         refs = set()
         for p in self:
             if p.is_reference():
