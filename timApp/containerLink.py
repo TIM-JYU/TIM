@@ -20,7 +20,7 @@ PALIPLUGIN_NAME = 'pali'
 
 TIM_HOST = os.environ.get('TIM_HOST', default='localhost')
 
-if TIM_HOST != 'localhost' and app.config['PLUGIN_CONNECTIONS'] == 'nginx':
+if TIM_HOST != 'localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'nginx':
     # To use this, put your IP in TIM_HOST environment variable
     # so tim can get out of the container and to the plugins,
     # and set PLUGIN_CONNECTIONS = "nginx" in the flask config file
