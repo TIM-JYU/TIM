@@ -19,6 +19,8 @@
     cursor: pointer;
     background-color: #ececec;
     color: black;
+    max-width: 100%;
+    white-space: normal;
 }
 
 /* Marking styles */
@@ -52,12 +54,26 @@
 
 /* Table styles */
 .phraseTable {
-    width: 100%;
+    max-width: 300px;
     border: 0;
+    background-color: pink;
+    margin-left: 0;
+    border-radius: 10px;
+    -moz-border-radius: 10px;
+    padding: 40px;
 }
 .phraseTable td{
     border: 0;
     margin: 0;
     padding: 0 0 0.5em 0;
+    width: 120px;
+}
+
+.phraseMenu {
+    width: 100%;
+    border: 0;
+    border-color: black;
+    border-radius: 10px;
+    background-color: #3EAAB3;
 }
 
