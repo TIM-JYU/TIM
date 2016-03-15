@@ -59,7 +59,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
     };
 
-
     /**
      * Adds marking to given element on given coordinate
      * @param el element
