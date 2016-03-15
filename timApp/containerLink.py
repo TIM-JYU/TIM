@@ -8,6 +8,7 @@ from requests.exceptions import Timeout
 
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from plugin import PluginException
+from tim_app import app
 
 TIM_URL = ""
 
@@ -17,21 +18,28 @@ HASKELLPLUGIN_NAME = 'haskellplugins2'
 PALIPLUGIN_NAME = 'pali'
 
 
-if os.environ.get('TIM_HOST', default='localhost') == 'localhost':
+TIM_HOST = os.environ.get('TIM_HOST', default='localhost')
+
+if TIM_HOST != 'localhost' and app.config['PLUGIN_CONNECTIONS'] == 'nginx':
+    # To use this, put your IP in TIM_HOST environment variable
+    # so tim can get out of the container and to the plugins,
+    # and set PLUGIN_CONNECTIONS = "nginx" in the flask config file
+    print("Using nginx for plugins")
     PLUGINS = {
-        "csPlugin":      {"host": "http://localhost:56000/cs/"},
-        "taunoPlugin":   {"host": "http://localhost:56000/cs/tauno/"},
-        "simcirPlugin":  {"host": "http://localhost:56000/cs/simcir/"},
-        "csPluginRikki": {"host": "http://localhost:56000/cs/rikki/"},  # demonstrates a broken plugin
-        "showCode":      {"host": "http://localhost:55000/svn/", "browser": False},
-        "showImage":     {"host": "http://localhost:55000/svn/image/", "browser": False},
-        "showVideo":     {"host": "http://localhost:55000/svn/video/", "browser": False},
-        "mcq":           {"host": "http://57000/"},
-        "mmcq":          {"host": "http://58000/"},
-        "shortNote":     {"host": "http://59000/"},
-        "graphviz":      {"host": "http://60000/", "browser": False},
+        "csPlugin":      {"host": "http://" + TIM_HOST + ":56000/cs/"},
+        "taunoPlugin":   {"host": "http://" + TIM_HOST + ":56000/cs/tauno/"},
+        "simcirPlugin":  {"host": "http://" + TIM_HOST + ":56000/cs/simcir/"},
+        "csPluginRikki": {"host": "http://" + TIM_HOST + ":56000/cs/rikki/"},  # demonstrates a broken plugin
+        "showCode":      {"host": "http://" + TIM_HOST + ":55000/svn/", "browser": False},
+        "showImage":     {"host": "http://" + TIM_HOST + ":55000/svn/image/", "browser": False},
+        "showVideo":     {"host": "http://" + TIM_HOST + ":55000/svn/video/", "browser": False},
+        "mcq":           {"host": "http://" + TIM_HOST + ":57000/"},
+        "mmcq":          {"host": "http://" + TIM_HOST + ":58000/"},
+        "shortNote":     {"host": "http://" + TIM_HOST + ":59000/"},
+        "graphviz":      {"host": "http://" + TIM_HOST + ":60000/", "browser": False},
     }
 else:
+    print("Using container network for plugins")
     PLUGINS = {
         "csPlugin":      {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/"},
         "taunoPlugin":   {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/tauno/"},
@@ -49,17 +57,11 @@ else:
 
 
 def call_plugin_generic(plugin, method, route, data=None, headers=None):
-    import time
     plug = get_plugin(plugin)
     try:
-        print("Connecting to plugin " + plugin)
-        t0 = time.time()
         request = requests.request(method, plug['host'] + route + "/", data=data, timeout=15, headers=headers)
         request.encoding = 'utf-8'
-        #return request.text
-        text = request.text
-        print("Took {} seconds".format(time.time() - t0))
-        return text
+        return request.text
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
         raise PluginException("Could not connect to plugin.")
 
