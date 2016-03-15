@@ -33,7 +33,7 @@ class Folders(TimDbBase):
             return block_id
 
         cursor = self.db.cursor()
-            block_id = self.insertBlockToDb(name, owner_group_id, blocktypes.FOLDER)
+        block_id = self.insertBlockToDb(name, owner_group_id, blocktypes.FOLDER)
 
         rel_path, rel_name = self.split_location(name)
         cursor.execute("INSERT INTO Folder (id, name, location) VALUES (?, ?, ?)", [block_id, rel_name, rel_path])
