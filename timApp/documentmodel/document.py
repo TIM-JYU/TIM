@@ -565,7 +565,7 @@ class Document:
         pars = dereference_pars(pars, edit_window=False, source_doc=self.get_original_document())
 
         # Skip plugins
-        html_list = [par.get_html() for par in pars if not par.is_dynamic()]
+        html_list = [par.get_html(from_preview=False) for par in pars if not par.is_dynamic()]
         return get_index_from_html_list(html_list)
 
     @staticmethod
