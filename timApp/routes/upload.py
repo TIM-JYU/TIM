@@ -8,7 +8,7 @@ from bs4 import UnicodeDammit
 from flask import Blueprint, request, send_file
 from werkzeug.utils import secure_filename
 
-from routes.common import logged_in, getTimDb, jsonResponse, getCurrentUserGroup, okJsonResponse, validate_item, \
+from routes.common import logged_in, getTimDb, jsonResponse, getCurrentUserGroup, okJsonResponse, validate_item_and_create, \
     verify_view_access
 from flask import abort
 
@@ -41,7 +41,7 @@ def upload_file():
         return upload_image_or_file(file)
     filename = posixpath.join(folder, secure_filename(file.filename))
 
-    validate_item(filename, 'document', getCurrentUserGroup())
+    validate_item_and_create(filename, 'document', getCurrentUserGroup())
 
     if not allowed_file(file.filename):
         abort(403, 'The file format is not allowed.')
