@@ -22,6 +22,16 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
         <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.css') }}">
 
+        {% block customcss %}
+            {% for cssFile in custom_css_files %}
+                <link rel="stylesheet" href="{{ url_for('static', filename='css/' + cssFile + '.css') }}">
+            {% endfor %}
+
+            <style type="text/css">
+                {{ custom_css }}
+            </style>
+        {% endblock %}
+
         <script src="{{ url_for('bower.static', filename='jquery/dist/jquery.min.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='jquery-ui/jquery-ui.min.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='angular/angular.min.js') }}"></script>

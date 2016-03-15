@@ -41,6 +41,16 @@ def update_document(doc_id):
             content = UnicodeDammit(raw).unicode_markup
         original = request.form['original']
         strict_validation = not request.form.get('ignore_warnings', False)
+    elif 'template_name' in request.get_json():
+        template_id = timdb.documents.get_document_id(request.get_json()['template_name'])
+        if not has_manage_access(template_id):
+            abort(403, 'Permission denied')
+        doc = Document(template_id)
+        content = doc.export_markdown()
+        if content == '':
+            return abort(400, 'The selected template is empty.')
+        original = ''
+        strict_validation = True
     else:
         request_json = request.get_json()
         if 'fulltext' not in request_json:
