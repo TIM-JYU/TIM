@@ -6,7 +6,7 @@
     "id": 0,
     "points": -1,
     "content": "Sentinel missing",
-    "coord": [0, 2],
+    "coord": {"el": 0, "start":2, "end":6 },
     "comment": "You should use a sentinel here"
   },
   {
@@ -14,7 +14,7 @@
     "id": 5,
     "points": 0,
     "content": "Division by zero OK in some cases (many return-clauses)",
-    "coord": [3, 5],
+    "coord": {"el": 1, "start":5, "end":10 },
     "comment": "Nice"
   },
   {
@@ -22,7 +22,7 @@
     "id": 9,
     "points": 1,
     "content": "Checkin division by zero OK",
-    "coord": [6, 8],
+    "coord": {"el": 0, "start":18, "end":28 },
     "comment": ""
   }
 ]
