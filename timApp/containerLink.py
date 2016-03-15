@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import os
 from functools import lru_cache
 
 import requests
@@ -15,28 +16,50 @@ SVNPLUGIN_NAME = 'showFile'
 HASKELLPLUGIN_NAME = 'haskellplugins2'
 PALIPLUGIN_NAME = 'pali'
 
-PLUGINS = {
-    "csPlugin":      {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/"},
-    "taunoPlugin":   {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/tauno/"},
-    "simcirPlugin":  {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/simcir/"},
-    "csPluginRikki": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/rikki/"},  # demonstrates a broken plugin
-    "showCode":      {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/", "browser": False},
-    "showImage":     {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/image/", "browser": False},
-    "showVideo":     {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
-    "mcq":           {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
-    "mmcq":          {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
-    "shortNote":     {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
-    "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
-    # "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"}
-}
+
+if os.environ.get('TIM_HOST', default='localhost') == 'localhost':
+    PLUGINS = {
+        "csPlugin":      {"host": "http://localhost:56000/cs/"},
+        "taunoPlugin":   {"host": "http://localhost:56000/cs/tauno/"},
+        "simcirPlugin":  {"host": "http://localhost:56000/cs/simcir/"},
+        "csPluginRikki": {"host": "http://localhost:56000/cs/rikki/"},  # demonstrates a broken plugin
+        "showCode":      {"host": "http://localhost:55000/svn/", "browser": False},
+        "showImage":     {"host": "http://localhost:55000/svn/image/", "browser": False},
+        "showVideo":     {"host": "http://localhost:55000/svn/video/", "browser": False},
+        "mcq":           {"host": "http://57000/"},
+        "mmcq":          {"host": "http://58000/"},
+        "shortNote":     {"host": "http://59000/"},
+        "graphviz":      {"host": "http://60000/", "browser": False},
+    }
+else:
+    PLUGINS = {
+        "csPlugin":      {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/"},
+        "taunoPlugin":   {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/tauno/"},
+        "simcirPlugin":  {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/simcir/"},
+        "csPluginRikki": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/rikki/"},  # demonstrates a broken plugin
+        "showCode":      {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/", "browser": False},
+        "showImage":     {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/image/", "browser": False},
+        "showVideo":     {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
+        "mcq":           {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
+        "mmcq":          {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
+        "shortNote":     {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
+        "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
+        # "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"}
+    }
 
 
 def call_plugin_generic(plugin, method, route, data=None, headers=None):
+    import time
     plug = get_plugin(plugin)
     try:
+        print("Connecting to plugin " + plugin)
+        t0 = time.time()
         request = requests.request(method, plug['host'] + route + "/", data=data, timeout=15, headers=headers)
         request.encoding = 'utf-8'
-        return request.text
+        #return request.text
+        text = request.text
+        print("Took {} seconds".format(time.time() - t0))
+        return text
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
         raise PluginException("Could not connect to plugin.")
 
