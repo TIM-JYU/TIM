@@ -13,6 +13,7 @@
 
 .phrase {
     font-size: 0.85em;
+    line-height: 1.75em;
     margin: 0.25em;
     padding: 0.5em;
     display: inline-block;
@@ -21,6 +22,7 @@
     color: black;
     max-width: 100%;
     white-space: normal;
+    text-align: left;
 }
 
 /* Marking styles */
@@ -54,26 +56,40 @@
 
 /* Table styles */
 .phraseTable {
-    max-width: 300px;
-    border: 0;
-    background-color: pink;
+   /* max-width: 700px;
+    border: 3px;
+    border-color: black;*/
+    background-color: #00bfff;
     margin-left: 0;
     border-radius: 10px;
-    -moz-border-radius: 10px;
-    padding: 40px;
+   /* padding: 20px;
+    -moz-border-radius: 10px;*/
 }
 .phraseTable td{
     border: 0;
     margin: 0;
-    padding: 0 0 0.5em 0;
+    padding: 4px;/*0 0 0.5em 0;*/
     width: 120px;
 }
-
+/*
 .phraseMenu {
-    width: 100%;
-    border: 0;
+    max-width: 350px;
+    border: 5px;
     border-color: black;
     border-radius: 10px;
     background-color: #3EAAB3;
+    padding: 2em;
+}
+*/
+
+.zero {
+    background-color: #FFCC00;
 }
 
+.positive {
+    background-color: green;
+}
+
+.negative {
+    background-color: red;
+}

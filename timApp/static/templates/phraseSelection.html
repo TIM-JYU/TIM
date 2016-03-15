@@ -55,7 +55,7 @@
                        ng-click="usePhrase(phrase)">
                         <span class="glyphicon glyphicon-tag" ng-repeat="tag in phrase.tags"
                               style="color: {{ getColor(tag) }} "></span>
-                        &ensp;{{ phrase.content }}&ensp;<span class="badge">{{ phrase.points }}</span>
+                        &ensp;{{ phrase.content }}&ensp;<span ng-class="['badge', {zero: phrase.points == 0, positive: phrase.points > 0, negative: phrase.points < 0}]">{{ phrase.points }}</span>
                     </p>
                 </div>
             </td>
