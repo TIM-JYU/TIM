@@ -32,14 +32,8 @@ class Folders(TimDbBase):
         if block_id is not None:
             return block_id
 
-        # Backwards compatibility
         cursor = self.db.cursor()
-        cursor.execute("SELECT id FROM Block WHERE description = ?", [name])
-        row = cursor.fetchone()
-        if row is not None:
-            block_id = row[0]
-        else:
-            block_id = self.insertBlockToDb(name, owner_group_id, blocktypes.FOLDER)
+        block_id = self.insertBlockToDb(name, owner_group_id, blocktypes.FOLDER)
 
         rel_path, rel_name = self.split_location(name)
         cursor.execute("INSERT INTO Folder (id, name, location) VALUES (?, ?, ?)", [block_id, rel_name, rel_path])

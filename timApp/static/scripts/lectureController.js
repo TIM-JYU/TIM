@@ -976,7 +976,10 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 if (lastID === null) {
                     lastID = -1;
                 }
-
+                if ($scope.requestOnTheWay === true) {
+                    $window.console.log("Poll multiplication prevented");
+                    return;
+                }
                 $scope.requestOnTheWay = true;
                 http({
                     url: '/getUpdates',
@@ -1106,6 +1109,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
         };
 
         $scope.showQuestion = function (answer) {
+            console.log('Showing question');
             var showPoints = '';
             if (answer.result) showPoints = 'Show points: ';
             $scope.showAnswerWindow = true;

@@ -128,7 +128,7 @@ class DocParagraph(DocParagraphBase):
     def dict(self) -> 'dict':
         return self.__data
 
-    def _mkhtmldata(self):
+    def _mkhtmldata(self, from_preview: 'bool' = True):
         self._cache_props()
 
         if self.original:
@@ -147,7 +147,7 @@ class DocParagraph(DocParagraphBase):
             self.__htmldata['doc_id'] = self.doc.doc_id
 
         try:
-            self.__htmldata['html'] = self.get_html()
+            self.__htmldata['html'] = self.get_html(from_preview=from_preview)
         except Exception as e:
             self.__htmldata['html'] = get_error_html(e)
 
@@ -223,7 +223,14 @@ class DocParagraph(DocParagraphBase):
             return '<div class="pluginError">Invalid settings paragraph detected</div>'
 
     @contract
-    def get_html(self) -> 'str':
+    def get_html(self, from_preview: 'bool' = True) -> 'str':
+        """
+        Gets the html for the paragraph.
+        :param from_preview: Whether this is called from a preview window or not.
+                             If True, previous paragraphs are preloaded too and the result is not cached.
+                             Safer, but slower. Set explicitly False if you know what you're doing.
+        :return: html string
+        """
         if self.html is not None:
             return self.html
         if self.is_plugin():
@@ -231,11 +238,11 @@ class DocParagraph(DocParagraphBase):
         if self.is_setting():
             return self.__set_html(self.__get_setting_html())
 
-        # get_html might get called from preview, so we don't want to save anything by default
+        context_par = self.doc.get_previous_par(self, get_last_if_no_prev=False) if from_preview else None
         DocParagraph.preload_htmls([self],
                                    self.doc.get_settings(),
-                                   context_par=self.doc.get_previous_par(self, get_last_if_no_prev=False),
-                                   persist=False)
+                                   context_par=context_par,
+                                   persist=not from_preview)
         return self.html
 
     @classmethod
@@ -647,11 +654,11 @@ class DocParagraph(DocParagraphBase):
             par.set_original(self)
 
             if set_html:
-                html = self.get_html() if tr else ref_par.get_html()
+                html = self.get_html(from_preview=False) if tr else ref_par.get_html(from_preview=False)
                 
                 # if html is empty, use the source
                 if html == '':
-                    html = ref_par.get_html()
+                    html = ref_par.get_html(from_preview=False)
                 par.__set_html(html)
             return par
 
