@@ -1,6 +1,6 @@
 /**
  * Created by sevitarv on 8.3.2016.
- * NOTE: This controller requires phraseSelection directive to work.
+ * NOTE: This controller requires phraseSelection directive to work!!!
  */
 
 var angular;
@@ -12,6 +12,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     $scope.markingsAdded = false;
     $scope.selectedMarking = {"comment": "", "phrase": "", "points": 0};
+
 
     $http.get('http://192.168.99.100/static/test_data/markings.json').success(function (data) {
         $scope.markings = data;
@@ -38,9 +39,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
                 $scope.addMarkingToCoord(range, $scope.markings[i]);
             }
-
             $scope.markingsAdded = true;
-
         }
     };
 
@@ -126,12 +125,5 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
     };
 
-    /**
-     * Adds new phrase
-     */
-    $scope.addPhrase = function(){
-
-        
-    };
 
 }]);
