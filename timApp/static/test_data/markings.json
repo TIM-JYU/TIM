@@ -1,27 +1,25 @@
 [
   {
-    "tags": [
-      0
-    ],
+    "tags": [0],
     "id": 0,
     "points": -1,
-    "content": "Sentinel missing",
+    "phrase": 0,
     "coord": {"el": 0, "start":2, "end":6 },
     "comment": "You should use a sentinel here"
   },
   {
     "tags": [2,3,7],
-    "id": 5,
+    "id": 1,
     "points": 0,
-    "content": "Division by zero OK in some cases (many return-clauses)",
+    "phrase": 5,
     "coord": {"el": 1, "start":5, "end":10 },
     "comment": "Nice"
   },
   {
     "tags": [2],
-    "id": 9,
+    "id": 2,
     "points": 1,
-    "content": "Checkin division by zero OK",
+    "phrase": 9,
     "coord": {"el": 0, "start":18, "end":28 },
     "comment": ""
   }
