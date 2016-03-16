@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import os
 from functools import lru_cache
 
 import requests
@@ -7,6 +8,7 @@ from requests.exceptions import Timeout
 
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from plugin import PluginException
+from tim_app import app
 
 TIM_URL = ""
 
@@ -15,20 +17,43 @@ SVNPLUGIN_NAME = 'showFile'
 HASKELLPLUGIN_NAME = 'haskellplugins2'
 PALIPLUGIN_NAME = 'pali'
 
-PLUGINS = {
-    "csPlugin":      {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/"},
-    "taunoPlugin":   {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/tauno/"},
-    "simcirPlugin":  {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/simcir/"},
-    "csPluginRikki": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/rikki/"},  # demonstrates a broken plugin
-    "showCode":      {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/", "browser": False},
-    "showImage":     {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/image/", "browser": False},
-    "showVideo":     {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
-    "mcq":           {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
-    "mmcq":          {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
-    "shortNote":     {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
-    "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
-    # "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"}
-}
+
+TIM_HOST = os.environ.get('TIM_HOST', default='localhost')
+
+if TIM_HOST != 'localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'nginx':
+    # To use this, put your IP in TIM_HOST environment variable
+    # so tim can get out of the container and to the plugins,
+    # and set PLUGIN_CONNECTIONS = "nginx" in the flask config file
+    print("Using nginx for plugins")
+    PLUGINS = {
+        "csPlugin":      {"host": "http://" + TIM_HOST + ":56000/cs/"},
+        "taunoPlugin":   {"host": "http://" + TIM_HOST + ":56000/cs/tauno/"},
+        "simcirPlugin":  {"host": "http://" + TIM_HOST + ":56000/cs/simcir/"},
+        "csPluginRikki": {"host": "http://" + TIM_HOST + ":56000/cs/rikki/"},  # demonstrates a broken plugin
+        "showCode":      {"host": "http://" + TIM_HOST + ":55000/svn/", "browser": False},
+        "showImage":     {"host": "http://" + TIM_HOST + ":55000/svn/image/", "browser": False},
+        "showVideo":     {"host": "http://" + TIM_HOST + ":55000/svn/video/", "browser": False},
+        "mcq":           {"host": "http://" + TIM_HOST + ":57000/"},
+        "mmcq":          {"host": "http://" + TIM_HOST + ":58000/"},
+        "shortNote":     {"host": "http://" + TIM_HOST + ":59000/"},
+        "graphviz":      {"host": "http://" + TIM_HOST + ":60000/", "browser": False},
+    }
+else:
+    print("Using container network for plugins")
+    PLUGINS = {
+        "csPlugin":      {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/"},
+        "taunoPlugin":   {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/tauno/"},
+        "simcirPlugin":  {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/simcir/"},
+        "csPluginRikki": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/rikki/"},  # demonstrates a broken plugin
+        "showCode":      {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/", "browser": False},
+        "showImage":     {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/image/", "browser": False},
+        "showVideo":     {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
+        "mcq":           {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
+        "mmcq":          {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
+        "shortNote":     {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
+        "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
+        # "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"}
+    }
 
 
 def call_plugin_generic(plugin, method, route, data=None, headers=None):

@@ -55,7 +55,7 @@ PermApp.controller("PermCtrl", [
                     sc.aliases = data;
 
             }).error(function (data, status, headers, config) {
-                alert("Error loading aliases: " + data.message);
+                alert("Error loading aliases: " + data.error);
             });
 
             return [];
@@ -187,7 +187,7 @@ PermApp.controller("PermCtrl", [
                 //sc.doc.name = newName;
                 //sc.oldName = newName;
             }).error(function (data, status, headers, config) {
-                alert(data.message);
+                alert(data.error);
             });
         };
 
@@ -201,7 +201,7 @@ PermApp.controller("PermCtrl", [
                 //sc.doc.location = newLocation;
                 //sc.oldFolderName = newLocation;
             }).error(function (data, status, headers, config) {
-                alert(data.message);
+                alert(data.error);
             });
         };
 
@@ -224,7 +224,7 @@ PermApp.controller("PermCtrl", [
             }).success(function (data, status, headers, config) {
                 sc.getAliases();
             }).error(function (data, status, headers, config) {
-                alert(data.message);
+                alert(data.error);
             });
 
             sc.newAlias = {location: sc.oldFolderName};
@@ -235,7 +235,7 @@ PermApp.controller("PermCtrl", [
             }).success(function (data, status, headers, config) {
                 sc.getAliases();
             }).error(function (data, status, headers, config) {
-                alert(data.message);
+                alert(data.error);
             });
         };
 
@@ -246,7 +246,7 @@ PermApp.controller("PermCtrl", [
             }).success(function (data, status, headers, config) {
                 sc.getAliases();
             }).error(function (data, status, headers, config) {
-                alert(data.message);
+                alert(data.error);
             });
         };
 
@@ -256,7 +256,7 @@ PermApp.controller("PermCtrl", [
                     .success(function (data, status, headers, config) {
                         location.replace('/view/');
                     }).error(function (data, status, headers, config) {
-                        alert(data.message);
+                        alert(data.error);
                     });
             }
         };
@@ -267,7 +267,7 @@ PermApp.controller("PermCtrl", [
                     .success(function (data, status, headers, config) {
                         location.replace('/view/');
                     }).error(function (data, status, headers, config) {
-                        alert(data.message);
+                        alert(data.error);
                     });
             }
         };

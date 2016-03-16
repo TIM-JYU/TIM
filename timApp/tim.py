@@ -230,7 +230,7 @@ def get_documents(folder):
 
 
 def create_item(item_name, item_type, create_function, owner_group_id):
-    validate_item(item_name, item_type, owner_group_id)
+    validate_item_and_create(item_name, item_type, owner_group_id)
 
     item_id = create_function(item_name, owner_group_id)
     return jsonResponse({'id': item_id, 'name': item_name})

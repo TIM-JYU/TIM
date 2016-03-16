@@ -113,7 +113,7 @@ def modify_paragraph():
             new_start, new_end = doc.update_section(md, area_start, area_end)
             updated_md = doc.export_section(new_start, new_end)
             pars = doc.get_section(new_start, new_end)
-        except ValidationException as e:
+        except (ValidationException, TimDbException) as e:
             return abort(400, str(e))
     else:
         original_par = doc.get_paragraph(par_id)
