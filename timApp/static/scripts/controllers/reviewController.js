@@ -11,6 +11,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     "use strict";
 
     $scope.markingsAdded = false;
+    $scope.selectedMarking = {"comment": "", "phrase": "", "points": 0};
 
     $http.get('http://192.168.99.100/static/test_data/markings.json').success(function (data) {
         $scope.markings = data;
@@ -35,25 +36,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 range.setStart(el, placeInfo["start"]);
                 range.setEnd(el, placeInfo["end"]);
 
-                $scope.addMarkingToCoord(range, $scope.markings[i]["points"]);
+                $scope.addMarkingToCoord(range, $scope.markings[i]);
             }
 
-
-            /*
-            console.log($scope.markings[0]["coord"]);
-            var coord = $scope.markings[0]["coord"];
-
-            var startOffset = 0;
-
-            console.log(elements.length);
-                console.log(elements[0]);
-            console.log(elements[0].html());
-
-            range.setEnd(elements[0], 2);
-
-
-            $scope.addMarkingToCoord(elements[0].innerHTML, range);
-            */
             $scope.markingsAdded = true;
 
         }
@@ -65,10 +50,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param start start coordinate
      * @param end end coordinate
      */
-    $scope.addMarkingToCoord = function(range, points){
+    $scope.addMarkingToCoord = function(range, marking){
         var span = document.createElement("span");
+        span.setAttribute("ng-click", "selectMarking(" + marking.id + ")");
         span.classList.add("marking");
-        span.classList.add($scope.getMarkingHighlight(points));
+        span.classList.add($scope.getMarkingHighlight( marking.points));
         $compile(span)($scope);
 
         range.surroundContents(span);
@@ -86,16 +72,22 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         } else {
             $scope.selectedArea = undefined;
         }
-
-
     };
 
-
+    /**
+     * Method for showing marking information in view (reviewEditor.html)
+     * @param marking marking info to show
+     */
+    $scope.selectMarking = function(markingId){
+        $scope.selectedMarking["points"] = $scope.markings[markingId].points;
+        $scope.selectedMarking["comment"] = $scope.markings[markingId].comment;
+        $scope.selectedMarking["phrase"] = $scope.phrases[ $scope.markings[markingId].phrase ]["content"];
+    };
 
     /**
      * Get marking highlight style
      * @param points points given in marking
-     * @returns marking color (should return some CSS-style)
+     * @returns highlight style
      */
     $scope.getMarkingHighlight = function (points) {
         var highlightStyle = "positive";
@@ -117,15 +109,29 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
              console.log(span);
             */
             //var span = $scope.createPopOverElement(phrase.content);
-            var span = document.createElement("span");
-            span.classList.add("marking");
-            span.classList.add($scope.getMarkingHighlight(phrase.points));
-            $compile(span)($scope);
 
-            $scope.selectedArea.surroundContents(span);
+            var newMarking = {
+                "id": $scope.markings.length,
+                "phrase": phrase.id,
+                "points": phrase.points,
+                "coord": {"el": 0, "start": 0, "end":0 }, // TODO: get coordinates from selectedArea
+                "comment": ""
+            };
+
+            $scope.markings.push(newMarking);
+            $scope.addMarkingToCoord($scope.selectedArea, newMarking );
+
             $scope.selectedArea = undefined;
             phrase.used += 1;
         }
+    };
+
+    /**
+     * Adds new phrase
+     */
+    $scope.addPhrase = function(){
+
+        
     };
 
 }]);
