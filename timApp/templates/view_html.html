@@ -25,6 +25,10 @@
 {% set slide_mode = route == "slide" %}
 
 {% block title %}{{ doc.title }}{% endblock %}
+
+{# The custom style should be the last style element, so don't render it in base.html #}
+{% block customcss %}{% endblock %}
+
 {% block head %}
     {{ super() }}
 
@@ -58,7 +62,7 @@
 
     {{ (doc_css | safe ) if doc_css }}
     <style type="text/css">
-        {{ custom_css if custom_css }}
+        {{ custom_css }}
     </style>
     <script>
         var noBrowser = {{ no_browser|tojson }};
@@ -110,7 +114,7 @@
                 Total points: {{ task_info.total_points }},
                 total tasks: {{ task_info.tasks_done }} / {{ task_info.total_tasks }}
                 </span>
-                <span class="smallNote">Refresh (F5) to recount</span>
+                <a class="smallNote" ng-click="reload()">Refresh (F5) to recount</a>
             </div>
             <div class="taskSmallSummary"><p>{{ task_info.total_points }} p</p></div>
         {% endif %}

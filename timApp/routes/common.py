@@ -322,8 +322,8 @@ def validate_item(item_name, item_type, owner_group_id):
     if item_name is None:
         return abort(400, 'item_name was None')
 
-    if item_name.startswith('/') or item_name.endswith('/'):
-        abort(400, 'The {} name cannot start or end with /.'.format(item_type))
+    if not all(part for part in item_name.split('/')):
+        abort(400, 'The {} name cannot have empty parts.'.format(item_type))
 
     if re.match('^(\d)*$', item_name) is not None:
         abort(400, 'The {} name can not be a number to avoid confusion with document id.'.format(item_type))

@@ -144,10 +144,14 @@
             &#8594;</button>
         <span ng-show="outofdate">...</span>
 
-        <div class="previewcontent" ng-click="selectText()"></div>
+        <div id="previewContent" class="previewcontent" ng-click="selectText()"></div>
     </div>
+        <p>{{ selectedMarking["points"] }}</p>
+        <p>{{ selectedMarking["phrase"] }}</p>
+        <p>{{ selectedMarking["comment"] }}</p>
     </div>
     <div class="col-md-4">
     <phrase-selection></phrase-selection>
 </div>
+    {{ loadMarkings() }}
     </div>

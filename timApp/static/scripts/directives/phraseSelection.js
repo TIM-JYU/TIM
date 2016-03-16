@@ -29,6 +29,8 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     // Data
     $scope.orderPhrase = 'tag';
     $scope.labelsOn = true;
+    $scope.newPhrase = {"content": "", "points": 0, "tags": []};
+
 
     $http.get('http://192.168.99.100/static/test_data/phrases.json').success(function (data) {
         $scope.phrases = data;
@@ -58,13 +60,31 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     };
 
     /**
-     * Use selected phrase
-     * @param phrase selected phrase
+     * Adds new phrase
+     */
+    $scope.addPhrase = function(){
 
-    $scope.usePhrase = function(phrase){
-        console.log("using a " + phrase.content);
-        // broadcast this phrase to anohter controller
-    }*/
+        var phraseLabels = [];
+        for (var i = 0; i < $scope.tags.length; i++) {
+            if ($scope.tags[i].selected)
+                phraseLabels.push($scope.tags[i].id);
+        }
+
+        console.log(phraseLabels);
+        var phraseToAdd = {
+            "tags": phraseLabels,
+            "used": 0,
+            "id": $scope.phrases.length,
+            "points": $scope.newPhrase["points"],
+            "content": $scope.newPhrase["content"]
+        };
+        $scope.resetNewPhrase();
+        $scope.phrases.push(phraseToAdd);
+    };
+
+    $scope.resetNewPhrase = function(){
+        $scope.newPhrase = {"content": "", "points": 0, "tags": []};
+    }
 
 }]);
 

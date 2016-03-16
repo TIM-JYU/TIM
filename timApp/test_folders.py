@@ -8,6 +8,7 @@ class FolderTest(TimRouteTest):
         db = self.get_db()
         user_folder = 'users/{}'.format(session['user_name'])
         fname = "{}/testing".format(user_folder)
+        invalid = "{}//test".format(user_folder)
         personal_group_id = db.users.get_personal_usergroup_by_id(session['user_id'])
         resp = self.json_post('/createFolder',
                               {"name": fname,
@@ -15,6 +16,16 @@ class FolderTest(TimRouteTest):
         j = self.assertResponseStatus(resp, return_json=True)
         self.assertEqual(fname, j['name'])
         self.assertIsInstance(j['id'], int)
+        self.assertDictResponse({'error': 'Item with a same name already exists.'},
+                                self.json_post('/createFolder',
+                                               {"name": fname,
+                                                "owner": personal_group_id}),
+                                expect_status=403)
+        self.assertDictResponse({'error': 'The folder name cannot have empty parts.'},
+                                self.json_post('/createFolder',
+                                               {"name": invalid,
+                                                "owner": personal_group_id}),
+                                expect_status=400)
         new_name = fname + '1'
         resp = self.json_put('/rename/{}'.format(j['id']), {"new_name": new_name})
         j2 = self.assertResponseStatus(resp, return_json=True)

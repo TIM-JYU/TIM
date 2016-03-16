@@ -232,6 +232,10 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                     } else if (!answer.correctPassword) {
                         $scope.showDialog("Wrong access code!");
                         return false;
+                    } else if (answer.anonLogin) {
+                        // if the user was logged in as a temporary user, we must refresh
+                        // to update the plugins (they may require login)
+                        $window.location.reload();
                     } else {
                         $scope.focusOn();
                         $scope.studentTable = [];

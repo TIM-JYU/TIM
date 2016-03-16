@@ -13,14 +13,83 @@
 
 .phrase {
     font-size: 0.85em;
+    line-height: 1.75em;
     margin: 0.25em;
     padding: 0.5em;
     display: inline-block;
     cursor: pointer;
     background-color: #ececec;
     color: black;
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
 }
 
+/* Marking styles */
 .marking {
     cursor: pointer;
+}
+
+.marking.positive {
+    background: palegreen;
+}
+
+.marking.neutral {
+    background: khaki;
+}
+
+.marking.negative {
+    background: lightpink;
+}
+
+
+.clickable {
+    cursor: pointer;
+    color: darkblue;
+}
+
+.clickable:hover {
+    cursor: pointer;
+    color: blue;
+    text-decoration: underline;
+}
+
+/* Table styles */
+.phraseTable {
+   /* max-width: 700px;
+    border: 3px;
+    border-color: black;*/
+    background-color: #00bfff;
+    margin-left: 0;
+    border-radius: 10px;
+   /* padding: 20px;
+    -moz-border-radius: 10px;*/
+}
+.phraseTable td{
+    border: 0;
+    margin: 0;
+    padding: 4px;/*0 0 0.5em 0;*/
+    width: 120px;
+}
+/*
+.phraseMenu {
+    max-width: 350px;
+    border: 5px;
+    border-color: black;
+    border-radius: 10px;
+    background-color: #3EAAB3;
+    padding: 2em;
+}
+*/
+
+.zero {
+    background-color: #FFCC00;
+}
+
+.positive {
+    background-color: green;
+}
+
+.negative {
+    background-color: red;
 }

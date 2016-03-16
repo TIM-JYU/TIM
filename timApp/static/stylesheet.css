@@ -336,6 +336,7 @@ ul ul ul, ol ol ol {
 }
 
 #previewDiv {
+    min-width: 20em;
     max-width: 52em;
     clear: both;
     overflow: hidden;
@@ -654,6 +655,12 @@ table td {
     border-style: solid;
 }
 
+.ace_scrollbar-v {
+    display: block !important;
+    padding-left: 10px;
+    visibility: visible;
+}
+
 .parContent p {
     margin-top: 1.2em;
     margin-bottom: 0.3em;
@@ -906,6 +913,8 @@ a.anchor:hover {
 
 #pareditor {
     background: inherit;
+    max-height: 93vh;
+    overflow: hidden;
 }
 
 .editButtonArea {
@@ -1136,6 +1145,10 @@ p.stem {
     margin-top: 0.9em;
 }
 
+.csPlugin {
+    margin-top: 1em;
+}
+ 
 .pluginHide {
     text-align: right;
 }

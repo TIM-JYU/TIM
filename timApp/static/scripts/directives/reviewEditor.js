@@ -1,5 +1,6 @@
 /**
  * Created by sevitarv on 11.3.2016.
+ * copied from pareditor
  */
 var angular;
 var MENU_BUTTON_CLASS = 'menuButtons';

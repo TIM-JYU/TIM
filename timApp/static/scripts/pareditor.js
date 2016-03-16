@@ -23,7 +23,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
             controller: function ($scope) {
                 $scope.setEditorMinSize = function() {
                     var editor = $('pareditor');
-                    editor.css('min-height', editor.height(), 'overflow', 'visible');
+                    editor.css('min-height', editor.height());
                     $scope.minSizeSet = true;
                     $scope.previewReleased = false;
                 };
@@ -102,6 +102,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                         $scope.setEditorText(data.text);
                         angular.extend($scope.extraData, data.extraData);
                         $scope.aceChanged();
+                        $scope.aceReady();
                     }).error(function (data, status, headers, config) {
                         $window.alert('Failed to get text: ' + data.error);
                     });
@@ -110,46 +111,53 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                 $scope.adjustPreview = function () {
                     window.setTimeout(function () {
                         var $editor = $('.editorArea');
-                        var height = $editor.height();
                         var editorMaxHeight = $editor.cssUnit('max-height')[0];
-
-                        var $preview = $('.previewcontent');
-                        var offset = $preview.position().top;
-                        var prevHeight = $preview.css('height');
-                        //$preview.css('height', (height - offset+1));
-                        if (height < editorMaxHeight) {
-                            var newHeight = $scope.calculateEditorSize();
-                            if (!$scope.previewReleased) {
-                                $preview.css('max-height', newHeight/3);
-                            }
+                        var $previewContent = $('.previewcontent');
+                        var newHeight = $scope.calculateEditorSize();
+                        if (newHeight < editorMaxHeight) {
                             $editor.css('height', newHeight);
+                        } else {
+                            $editor.css('height', editorMaxHeight);
                         }
-                        $preview.scrollTop($scope.scrollPos);
-                    }, 50);
+                        if ($scope.previewReleased) {
+                            var previewDiv = $('#previewDiv');
+                            var previewOffset = previewDiv.offset();
+                            if (previewOffset.top < 0) {
+                                previewDiv.offset({'top': 0, 'left': previewDiv.offset().left});
+                            }
+                            if (previewOffset.left < 0) {
+                                previewDiv.offset({'top': previewDiv.offset().top, 'left': 0 });
+                            }
+
+                        }
+                        var editorOffset = $editor.offset();
+                        if (editorOffset.top < 0) {
+                            $editor.offset({'top': 0, 'left': $editor.offset().left});
+                        }
+                        if (editorOffset.left < 0) {
+                            $editor.offset({'top': $editor.offset().top, 'left': 0});
+                        }
+                        $previewContent.scrollTop($scope.scrollPos);
+                    }, 25);
 
                 };
 
                 // Calculates what the size of the editor should be
                 $scope.calculateEditorSize = function() {
-                    if($scope.previewReleased === false) {
-                        return ($('.draghandle').cssUnit('min-height')[0] +
-                            $('.tabsarea').height() +
-                            $('.extraButtonArea').height() +
-                            $('.editorContainer').height() +
-                            $('.editButtonArea').height() +
-                            $('.preview').height() + 33
-                        );
+                    var newSize = ($('.draghandle').cssUnit('min-height')[0] +
+                    $('#pareditor').cssUnit('height')[0] + 33);
+                    if(!$scope.previewReleased) {
+                        return newSize;
                     }
-                    if($scope.previewReleased === true) {
-                        return ($('.draghandle').cssUnit('min-height')[0] +
-                            $('.tabsarea').height() +
-                            $('.extraButtonArea').height() +
-                            $('.editorContainer').height() +
-                            $('.editButtonArea').height() + 20);
+                    if($scope.previewReleased) {
+                        return newSize + 10;
                     }
                 };
 
                 $scope.createAce = function (editor, text) {
+                    if (!$scope.minSizeSet) {
+                        $scope.setEditorMinSize();
+                    }
                     $scope.isAce = true;
                     var line = editor.renderer.lineHeight;
                     var containertop = $('.editorContainer').position().top;
@@ -157,14 +165,19 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                     var max = Math.floor((height / 2) / line);
 
                     editor.$blockScrolling = Infinity;
-                    editor.renderer.setPadding(10, 10, 10, 10);
+                    editor.renderer.setPadding(10, 10, 10, 30);
+                    editor.renderer.setScrollMargin(2, 2, 2, 40);
+                    editor.renderer.setVScrollBarAlwaysVisible(true);
                     editor.getSession().setMode("markdown");
                     editor.getSession().setUseWrapMode(false);
                     editor.getSession().setWrapLimitRange(0, 79);
+                    //$('.ace_scrollbar-v').css('display', '');
+
                     editor.setOptions({
                         maxLines: max,
                         minLines: 5,
                         autoScrollEditorIntoView: true,
+                        hScrollBarAlwaysVisible: false,
                         vScrollBarAlwaysVisible: true
                     });
 
@@ -372,10 +385,16 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                     $scope.editor = editor;
                     $scope.createAce(editor);
                     if ($scope.initialTextUrl) $scope.setInitialText();
+                    editor.focus();
 
                     /*iPad does not open the keyboard if not manually focused to editable area
                      var iOS = /(iPad|iPhone|iPod)/g.test($window.navigator.platform);
                      if (!iOS) editor.focus();*/
+                };
+
+                $scope.aceReady = function () {
+                    $scope.editor.focus();
+                    $scope.bottomClicked();
                 };
 
                 $('.editorContainer').on('resize', $scope.adjustPreview);
@@ -399,10 +418,6 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                             $scope.outofdate = false;
                             $scope.parCount = len;
                             $('.editorContainer').resize();
-                            if (!$scope.minSizeSet) {
-                                $scope.setEditorMinSize();
-                            }
-
                         }).error(function (data, status, headers, config) {
                             $window.alert("Failed to show preview: " + data.error);
                         });
@@ -545,26 +560,74 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                     var div = $("#previewDiv");
                     var content = $('.previewcontent');
                     var editor = $('.editorArea');
-                    $scope.previewReleased = !($scope.previewReleased);
+
 
                     if (div.css("position") == "absolute") {
+                        $scope.savePreviewPosition();
                         div.css("position", "static");
                         div.find(".draghandle").css("visibility", "hidden");
-                        editor.css('overflow', '');
+                        div.css("max-width", editor.width() - 8);
+                        div.css("width", editor.width() - 8);
+                        div.css("display", "default");
+                        editor.css('overflow', 'hidden');
+                        content.css('max-height', '');
+                        content.css('max-width', editor.width() - 14);
+                        content.css('overflow-x', '');
+                        content.css('width', '');
+                        div.css("padding", 0);
                         document.getElementById("releaseButton").innerHTML = "&#8594;";
-                        $scope.adjustPreview();
                     }
                     else {
+                        var top = div.offset().top;
+                        var left = div.offset().left;
+                        if ($window.localStorage.getItem('previewReleasedOffset')) {
+                            var savedOffset = (JSON.parse(localStorage.getItem('previewReleasedOffset')));
+                            left = savedOffset.left;
+                            top = editor.offset().top - savedOffset.top;
+                        } else {
+                            if ($(window).width() < editor.width() + div.width()) {
+                                top += 5;
+                                left += 5;
+                            } else {
+                                top = editor.offset().top;
+                                left = editor.offset().left + editor.width() + 3;
+                            }
+                        }
                         div.css("position", "absolute");
-                        editor.css('overflow', 'visible');
+                        editor.css("overflow", "visible");
                         div.find(".draghandle").css("visibility", "visible");
+                        div.css("display", "table");
+                        //div.css("overflow", "visible");
+                        //div.css("width", editor.width());
+
+                        div.css("width", "100%");
+                        //div.css("height", "100%");
+                        div.css("padding", 5);
                         var height = window.innerHeight - 90;
                         content.css('max-height', height);
+                        content.css("max-width", window.innerWidth - 90);
+                        content.css('overflow-x', 'auto');
+                        //div.css('max-height', )
                         document.getElementById("releaseButton").innerHTML = "&#8592;";
+                        div.offset({'left': left, 'top': top});
+                    }
+                    $scope.previewReleased = !($scope.previewReleased);
+                    $scope.adjustPreview();
+                };
+
+                $scope.savePreviewPosition = function () {
+                    if($scope.previewReleased) {
+                        // Calculate distance from editor's top and left
+                        var editorOffset = $('.editorArea').offset();
+                        var previewOffset = $('#previewDiv').offset();
+                        var left = previewOffset.left;
+                        var top = editorOffset.top - previewOffset.top;
+                        $window.localStorage.setItem('previewReleasedOffset', JSON.stringify({'left': left, 'top': top}));
                     }
                 };
 
                 $scope.saveClicked = function () {
+                    $scope.savePreviewPosition();
                     var text = $scope.getEditorText();
                     $http.post($scope.saveUrl, angular.extend({
                         text: text
@@ -1059,7 +1122,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                         wordrange.end.column -= difference;
                         $scope.editor.selection.setRange(wordrange);
                         return true;
-                    }
+                    };
 
                     $scope.surroundedBy = function (before, after) {
                         var range = $scope.editor.getSelectionRange();
@@ -1410,6 +1473,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                     }
                     oldeditor.remove();
                     $scope.editor.focus();
+                    $scope.adjustPreview();
                 };
 
                 var viewport = {};
@@ -1419,9 +1483,10 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                 bounds.top = $element.offset().top;
                 bounds.bottom = bounds.top + $element.outerHeight();
                 if (bounds.bottom > viewport.bottom || bounds.top < viewport.top) {
-                    $('html, body').animate({
+                    /*$('html, body').animate({
                         scrollTop: $element.offset().top
-                    }, 2000);
+                    }, 2000);*/
+                    $('html, body').scrollTop($element.offset().top);
                 }
             }
         };
