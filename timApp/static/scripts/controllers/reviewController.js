@@ -126,4 +126,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
     };
 
+    /**
+     * Adds new phrase
+     */
+    $scope.addPhrase = function(){
+
+        
+    };
+
 }]);
