@@ -100,6 +100,9 @@ def update_database():
         print('Database is up to date.')
     else:
         print('Database was updated from version {} to {}.'.format(ver_old, ver))
+    # TODO: integrate this into the version system once we merge to tim proper.
+    timdb.execute_script('schematimber.sql')
+    print('Timber\'s stuff was dropped and added to the database.')
     timdb.close()
 
 
