@@ -93,3 +93,18 @@
 .negative {
     background-color: red;
 }
+
+.reviewPreview {
+    max-width: 100%;
+}
+.pointsPhrase {
+    margin-top: 5px;
+    border-radius: 10px;
+    border: #000000 solid 2px;
+    padding: 4px;
+    color: red;
+    background-color: yellow;
+    max-width: 25em;
+    white-space: normal;
+    text-align: left;
+}

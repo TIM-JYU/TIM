@@ -131,7 +131,7 @@
             </label>
         </div>
     </div>
-    <div id="previewDiv" tim-draggable-fixed caption="Preview" class="preview"
+    <div id="previewDiv" tim-draggable-fixed caption="Preview" class="reviewPreview"
          style='z-index:100; top: 0px; right: 0px;'>
     <span>Preview
         (<ng-pluralize count="parCount"
@@ -146,9 +146,11 @@
 
         <div id="previewContent" class="previewcontent" ng-click="selectText()"></div>
     </div>
-        <p>{{ selectedMarking["points"] }}</p>
+      <div class="pointsPhrase">
+        <p>Points: {{ selectedMarking["points"] }}</p>
         <p>{{ selectedMarking["phrase"] }}</p>
-        <p>{{ selectedMarking["comment"] }}</p>
+        <p>Comment: {{ selectedMarking["comment"] }}</p>
+      </div>
     </div>
     <div class="col-md-4">
     <phrase-selection></phrase-selection>
