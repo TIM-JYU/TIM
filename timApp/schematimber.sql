@@ -3,11 +3,13 @@ CREATE TABLE IF NOT EXISTS Velp (
   id              INTEGER       NOT NULL,
   creator_id      INTEGER       NOT NULL,
   creation_time   TIMESTAMP     NOT NULL,
-  default_points  INTEGER       NOT NULL  DEFAULT 0,
+  default_points  INTEGER       NOT NULL  DEFAULT 0,      -- change to some better type?
   icon_id         INTEGER       NOT NULL,
   valid_until     TIMESTAMP,
+
   CONSTRAINT Velp_PK
   PRIMARY KEY (id),
+
   CONSTRAINT icon_id_FK
   FOREIGN KEY (icon_id)
   REFERENCES icon (id)
@@ -15,40 +17,315 @@ CREATE TABLE IF NOT EXISTS Velp (
   ON UPDATE CASCADE
 );
 
+DROP TABLE IF EXISTS Velp_in_annotation_setting;
+CREATE TABLE Velp_in_annotation_setting (
+  id              INTEGER NOT NULL,
+  velp_id         INTEGER NOT NULL,
+  default_points  INTEGER NOT NULL,                       -- change to some better type?
+  velp_hidden     BOOLEAN NOT NULL,
+
+  CONSTRAINT Velp_in_annotation_setting_PK
+  PRIMARY KEY (id),
+
+  CONSTRAINT velp_id_FK
+  FOREIGN KEY (velp_id)
+  REFERENCES Velp(id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+/*
+Add annotation setting locations here pls plox
+ */
+
+
 DROP TABLE IF EXISTS Icon;
 CREATE TABLE IF NOT EXISTS Icon (
   id        INT NOT NULL,
   filename  TEXT,
+
   CONSTRAINT Icon_PK
   PRIMARY KEY (id)
 );
+
 
 DROP TABLE IF EXISTS Label;
 CREATE TABLE IF NOT EXISTS Label (
   id          INTEGER     NOT NULL,
   language_id VARCHAR(2)  NOT NULL,
   content     Text,
+
   CONSTRAINT Label_PK
   PRIMARY KEY (id, language_id)
 );
 
+
 DROP TABLE IF EXISTS Label_in_velp;
 CREATE TABLE IF NOT EXISTS Label_in_velp (
-  label_id  INT NOT NULL,
-  velp_id   INT NOT NULL,
+  label_id  INTEGER NOT NULL,
+  velp_id   INTEGER NOT NULL,
+
   CONSTRAINT Label_in_velp_PK
   PRIMARY KEY (label_id, velp_id),
+
   CONSTRAINT label_id_FK
   FOREIGN KEY (label_id)
-  REFERENCES label(id)
+  REFERENCES Label(id)
   ON DELETE CASCADE
   ON UPDATE CASCADE,
+
   CONSTRAINT velp_id_FK
   FOREIGN KEY (velp_id)
-  REFERENCES velp(id)
+  REFERENCES Velp(id)
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
+
+
+DROP TABLE IF EXISTS Velp_version;
+CREATE TABLE IF NOT EXISTS Velp_version (
+  id          INTEGER   NOT NULL,
+  velp_id     INTEGER   NOT NULL,
+  version     INTEGER   NOT NULL,
+  modify_time TIMESTAMP NOT NULL,
+
+  CONSTRAINT Velp_version_PK
+  PRIMARY KEY (id),
+
+  CONSTRAINT velp_id_FK
+  FOREIGN KEY (velp_id)
+  REFERENCES  Velp(id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+DROP TABLE IF EXISTS Velp_content;
+CREATE TABLE IF NOT EXISTS Velp_version (
+  id          INTEGER     NOT NULL,
+  language_id VARCHAR(2)  NOT NULL,
+  version_id  INTEGER     NOT NULL,
+  content     TEXT,
+  PRIMARY KEY (id),
+
+  CONSTRAINT Velp_content_id_PK
+  PRIMARY KEY (id),
+
+  CONSTRAINT version_id_FK
+  FOREIGN KEY (version_id)
+  REFERENCES Velp_version(id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+DROP TABLE IF EXISTS Annotation;
+CREATE TABLE Annotation (
+  id            INTEGER   NOT NULL,
+  version_id    INTEGER   NOT NULL,
+  points        INTEGER,                  -- change to some better type?
+  time          TIMESTAMP NOT NULL,
+  icon_id       INTEGER,
+  annotator_id  INTEGER   NOT NULL,
+  answer_id     INTEGER,
+  document_id   INTEGER,
+  paragraph_id  TEXT,
+  place_start   INTEGER   NOT NULL,
+  place_end     INTEGER   NOT NULL,
+
+  CONSTRAINT Annotation_PK
+  PRIMARY KEY (id),
+
+  CONSTRAINT version_id_FK
+  FOREIGN KEY (version_id)
+  REFERENCES Velp_version(id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE,
+
+  CONSTRAINT icon_id_FK
+  FOREIGN KEY (icon_id)
+  REFERENCES Icon(id)
+  ON DELETE SET NULL
+  ON UPDATE CASCADE
+);
+
+
+-- NOT FINISHED THIS ONE DO SOMETHING ANYTHING I DON'T EVEN KNOW MY WORLD RIGHT NOW
+DROP TABLE  IF EXISTS Annotation_visibility;
+CREATE TABLE Annotation_visibility (
+  annotation_id INTEGER NOT NULL,
+
+  CONSTRAINT annoation_id_FK
+  FOREIGN KEY (annotation_id)
+  REFERENCES Annotation(id)
+);
+-- READ ABOVE THEN YOU CAN READ BELOW OR RIGHT OF LEFT OR WHEREVER YOU WANT UP TO YOU
+
+
+DROP TABLE IF EXISTS Comment;
+CREATE TABLE Comment (
+  id            INTEGER   NOT NULL,
+  annotation_id INTEGER   NOT NULL,
+  comment_time  TIMESTAMP NOT NULL,
+  commenter_id  INTEGER   NOT NULL,
+  content       TEXT,
+
+  CONSTRAINT Comment_PK
+  PRIMARY KEY (id),
+
+  CONSTRAINT annotation_id_FK
+  FOREIGN KEY (annotation_id)
+  REFERENCES Annotation(id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+DROP TABLE IF EXISTS Velp_group;
+CREATE TABLE Velp_group (
+  id            INTEGER   NOT NULL,
+  name          TEXT      NOT NULL,
+  block_id      INTEGER   NOT NULL,
+  creation_time TIMESTAMP NOT NULL,
+  valid_until   TIMESTAMP,
+
+  CONSTRAINT Velp_group_PK
+  PRIMARY KEY (id)
+);
+
+
+DROP TABLE IF EXISTS Velp_in_group;
+CREATE TABLE Velp_in_group (
+  velp_group_id INTEGER NOT NULL,
+  velp_id       INTEGER NOT NULL,
+
+  CONSTRAINT Velp_in_group_PK
+  PRIMARY KEY (velp_group_id, velp_id),
+
+  CONSTRAINT velp_group_id_FK
+  FOREIGN KEY (velp_group_id)
+  REFERENCES Velp_group(id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE,
+
+  CONSTRAINT velp_id_FK
+  FOREIGN KEY (velp_id)
+  REFERENCES Velp(id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+DROP TABLE IF EXISTS Velp_group_in_document;
+CREATE TABLE Velp_group_in_document (
+  velp_group_id INTEGER NOT NULL,
+  document_id   INTEGER NOT NULL,
+
+  CONSTRAINT Velp_group_in_document_PK
+  PRIMARY KEY (velp_group_id, document_id),
+
+  CONSTRAINT velp_group_id_FK
+  FOREIGN KEY (velp_group_id)
+  REFERENCES Velp_group(id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+DROP TABLE IF EXISTS Velp_group_in_paragraph;
+CREATE TABLE Velp_group_in_paragraph (
+  velp_group_id INTEGER NOT NULL,
+  document_id   INTEGER NOT NULL,
+  paragraph_id  TEXT    NOT NULL,
+
+  CONSTRAINT Velp_group_in_paragraph_PK
+  PRIMARY KEY (velp_group_id, document_id, paragraph_id),
+
+  CONSTRAINT velp_group_id_FK
+  FOREIGN KEY (velp_group_id)
+  REFERENCES Velp_group(id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+DROP TABLE IF EXISTS Velp_group_in_area;
+CREATE TABLE Velp_group_in_area (
+  velp_group_id INTEGER NOT NULL,
+  document_id   INTEGER NOT NULL,
+  area_id       TEXT    NOT NULL,
+
+  CONSTRAINT Velp_group_in_area_PK
+  PRIMARY KEY (velp_group_id, document_id, area_id),
+
+  CONSTRAINT velp_group_id_FK
+  FOREIGN KEY (velp_group_id)
+  REFERENCES Velp_group(id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+DROP TABLE IF EXISTS Velp_group_in_folder;
+CREATE TABLE Velp_group_in_folder (
+  velp_group_id INTEGER NOT NULL,
+  folder_id     INTEGER NOT NULL,
+
+  CONSTRAINT Velp_group_in_folder_PK
+  PRIMARY KEY (velp_group_id, folder_id),
+
+  CONSTRAINT velp_group_id_FK
+  FOREIGN KEY (velp_group_id)
+  REFERENCES Velp_group(id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+DROP TABLE IF EXISTS Velp_group_label;
+CREATE TABLE Velp_group_label (
+  id      INTEGER NOT NULL,
+  content TEXT    NOT NULL,
+
+  CONSTRAINT Velp_group_label_id_PK
+  PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS Label_in_velp_group;
+CREATE TABLE Label_in_velp_group (
+  velp_group_id   INTEGER NOT NULL,
+  group_label_id  INTEGER NOT NULL,
+
+  CONSTRAINT Label_in_velp_group_PK
+  PRIMARY KEY (velp_group_id, group_label_id),
+
+  CONSTRAINT velp_group_id_FK
+  FOREIGN KEY (velp_group_id)
+  REFERENCES Velp_group(id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE,
+
+  CONSTRAINT label_group_id_FK
+  FOREIGN KEY (group_label_id)
+  REFERENCES Velp_group_label(id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+  /*
+    CONSTRAINT `fk_phrase_in_group_phrase_group1`
+    FOREIGN KEY (`phrase_group_id`)
+    REFERENCES `mydb`.`phrase_group` (`id`)
+    ON DELETE RESTRICT
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_phrase_in_group_phrase1`
+    FOREIGN KEY (`phrase_id`)
+    REFERENCES `mydb`.`phrase` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+   */
+
+
 
 
 /*
