@@ -1,60 +1,54 @@
 /* Sinisävyinen teema */
 input[type="submit"], button, input[type="button"] {
-    background: #004494 ;
+    background: #004494;
 }
 
 .editline:hover {
-    background: #004494 ; /* rgb(236,103,27); */
+    background: #004494;
 }
 
 .areacollapse::before {
-    color: #004494 ; 
+    color: #004494;
 }
 
 .areaexpand::before {
-    color: #004494 ;
+    color: #004494;
 }
-
 
 li.tab.active, li.tab.pinned {
-    background: #004494 ;
+    background: #004494;
 }
 
-task, .csRunDiv {
-    border: solid 1px #004494 ;
+.csRunDiv {
+    border: solid 1px #004494;
 }
 
 .csRunDiv h4 {
-    background-color: #004494 ;
+    background-color: #004494;
 }
 
 .note.private {
-    border-color: #004494 ;
+    border-color: #004494;
 }
 
 pre {
-    border-left: 4px solid #004494 ;
+    border-left: 4px solid #004494;
 }
 
 .csRunMenu button {
-    background: #004494 ;
+    background: #004494;
 }
 
 .csRunMenu link, .csRunMenu :visited {
-    color: #004494 ;
+    color: #004494;
 }
 
 .timButton, .editorButton {
-    background: #004494 ;
-}
-
-
-.doctitle {
-    color: #004494 ;
+    background: #004494;
 }
 
 .viewLogin a {
-    color: #004494 ;
+    color: #004494;
 }
 
 .draghandle {
@@ -62,18 +56,17 @@ pre {
 }
 
 .sidebar h1 {
-    background-color:  #004494 ;
-}    
-
+    background-color: #004494;
+}
 
 .sidebar h3, .sidebar h4 {
-    color:  #004494 ;
+    color: #004494;
 }
 
 .index-sidebar a {
-    color:  #004494;
+    color: #004494;
 }
 
 .sidebar a:hover {
-    color:  #0044A4;
+    color: #0044A4;
 }
