@@ -1,7 +1,7 @@
 from contracts import contract
 from timdb.timdbbase import TimDbBase,TimDbException
 
-class Phrases(TimDbBase):
+class Labels(TimDbBase):
     @contract
     def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
         """Initializes TimDB with the specified database and root path.
@@ -14,15 +14,12 @@ class Phrases(TimDbBase):
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
 
     @contract
-    def get_document_phrases(self,doc_id:'int') -> 'list(dict)':
-        """Gets phrases that are linked to the document.
-
-        :param doc_id: The id of the document.
-        :returns: a list of dictionaries, each describing a different phrase.
+    def get_velp_labels(self,velp_id: 'int') -> 'list(str)':
         """
-
-        #TODO use doc_id and not return everything.
+        :param self:
+        :param velp_id:
+        :return:
+        """
         cursor=self.db.cursor()
-        cursor.execute('SELECT * FROM Phrase')
-        results=self.resultAsDictionary(cursor)
-        return results
+        #todo get label content also. return something.
+        cursor.execute('SELECT label_id FROM Label_in_velp WHERE velp_id=?',velp_id)
