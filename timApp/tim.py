@@ -142,14 +142,6 @@ def get_image(image_id, image_filename):
     return send_file(f, mimetype='image/' + imgtype)
 
 
-@app.route('/images')
-def get_all_images():
-    timdb = getTimDb()
-    images = timdb.images.getImages()
-    allowed_images = [image for image in images if timdb.users.has_view_access(getCurrentUserId(), image['id'])]
-    return jsonResponse(allowed_images)
-
-
 @app.route("/getDocuments")
 def get_docs():
     return jsonResponse(get_documents(request.args.get('folder')))
