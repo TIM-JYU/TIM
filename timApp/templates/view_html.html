@@ -2,15 +2,9 @@
 {% block ngmodules %}
     {{ super() }}
     {% if teacher_mode %}
-<<<<<<< HEAD
-    {{ (['ui.ace', 'ui.bootstrap', 'ngStorage', "ngTable", "ngTableExport", "ngTableExportKorppi"] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
+    {{ (['oc.lazyLoad', 'ui.bootstrap', 'ui.ace', 'ngStorage', "ngTable", "ngTableExport", "ngTableExportKorppi"] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
     {% else %}
-    {{ (['ui.ace', 'ui.bootstrap', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
-=======
-    {{ (['oc.lazyLoad', 'ui.ace', 'ngStorage', "ngTable", "ngTableExport", "ngTableExportKorppi"] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
-    {% else %}
-    {{ (['oc.lazyLoad', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
->>>>>>> be4673b4cb5977026fcd2de45fb2192c8911654d
+    {{ (['oc.lazyLoad', 'ui.bootstrap', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
     {% endif %}
 {% endblock %}
 {% block ngscripts %}
