@@ -1,7 +1,7 @@
 
 <link rel="stylesheet" href="/static/css/phraseSelection.css"/>
 <div class="phraseMenu">
-    <h2>Select phrase</h2>
+    <h3>Select phrase</h3>
     <table class="phraseTable">
         <tr>
             <td>
@@ -62,7 +62,7 @@
         </tr>
     </table>
 
-    <h2>Add phrase</h2>
+    <h3>Add phrase</h3>
     <form>
         <table class="phraseTable">
             <tr>
@@ -70,7 +70,7 @@
                     <label for="addPhraseName">Phrase name</label>
                 </td>
                 <td>
-                    <input id="addPhraseName" type="text" ng-model="newPhraseName">
+                    <input id="addPhraseName" type="text" ng-model="newPhrase['content']">
                 </td>
             </tr>
             <tr>
@@ -78,11 +78,33 @@
                     <label for="addPhrasePoints">Phrase points</label>
                 </td>
                 <td>
-                    <input id="addPhrasePoints" type="number" value="0" ng-model="newPhrasePoints">
+                    <input id="addPhrasePoints" type="number" ng-model="newPhrase['points']" value="0">
                 </td>
             </tr>
+            <tr>
+                <td>
+                    <label class="clickable" for="searchLabels" ng-click="toggleLabelShow()">Filter labels </label>
+                </td>
+                <td>
+                    <input id="searchLabels" ng-model="filterTag" placeholder="filter labels">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                            <span class="{{ showLabels() }}">
+
+        <div>
+            <p ng-repeat="tag in tags | filter:{content:filterTag}" class="label tag-{{ tag.selected }}"
+               style="background-color: {{ getColor(tag.id) }}"
+               ng-click="toggleTag(tag)" ng-model="test" value="{{ tag.id }}">
+                {{ tag.content }}
+            </p>
+        </div>
+
+        </span>
+            </tr>
         </table>
-        <input type="submit" value="Add phrase">
+        <input type="submit" value="Add phrase" ng-click="addPhrase()">
     </form>
 
 </div>

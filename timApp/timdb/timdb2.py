@@ -93,6 +93,7 @@ class TimDb(object):
         """Initializes the database from the schema2.sql file.
         NOTE: The database is emptied if it exists."""
         self.execute_script('schema2.sql')
+        self.execute_script('schematimber.sql')
 
     def execute_script(self, sql_file):
         """Executes an SQL file on the database.
