@@ -32,11 +32,11 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     $scope.newPhrase = {"content": "", "points": 0, "tags": []};
 
 
-    $http.get('http://192.168.99.100/static/test_data/phrases.json').success(function (data) {
+    $http.get('/static/test_data/phrases.json').success(function (data) {
         $scope.phrases = data;
         $scope.selectedPhrase = $scope.phrases[0];
     });
-    $http.get('http://192.168.99.100/static/test_data/tags.json').success(function (data) {
+    $http.get('/static/test_data/tags.json').success(function (data) {
         $scope.tags = data;
     });
 

@@ -2,13 +2,14 @@
 {% block ngmodules %}
     {{ super() }}
     {% if teacher_mode %}
-    {{ (['ui.ace', 'ui.bootstrap', 'ngStorage', "ngTable", "ngTableExport", "ngTableExportKorppi"] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
+    {{ (['oc.lazyLoad', 'ui.bootstrap', 'ui.ace', 'ngStorage', "ngTable", "ngTableExport", "ngTableExportKorppi"] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
     {% else %}
-    {{ (['ui.ace', 'ui.bootstrap', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
+    {{ (['oc.lazyLoad', 'ui.bootstrap', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
     {% endif %}
 {% endblock %}
 {% block ngscripts %}
     {{ super() }}
+    <script src="{{ url_for('bower.static', filename='oclazyload/dist/ocLazyLoad.min.js') }}"></script>
     {% if teacher_mode %}
         <script src="{{ url_for('bower.static', filename='ng-table/dist/ng-table.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='ng-table-export/ng-table-export.js') }}"></script>

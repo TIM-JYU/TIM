@@ -142,14 +142,6 @@ def get_image(image_id, image_filename):
     return send_file(f, mimetype='image/' + imgtype)
 
 
-@app.route('/images')
-def get_all_images():
-    timdb = getTimDb()
-    images = timdb.images.getImages()
-    allowed_images = [image for image in images if timdb.users.has_view_access(getCurrentUserId(), image['id'])]
-    return jsonResponse(allowed_images)
-
-
 @app.route("/getDocuments")
 def get_docs():
     return jsonResponse(get_documents(request.args.get('folder')))
@@ -230,7 +222,7 @@ def get_documents(folder):
 
 
 def create_item(item_name, item_type, create_function, owner_group_id):
-    validate_item(item_name, item_type, owner_group_id)
+    validate_item_and_create(item_name, item_type, owner_group_id)
 
     item_id = create_function(item_name, owner_group_id)
     return jsonResponse({'id': item_id, 'name': item_name})

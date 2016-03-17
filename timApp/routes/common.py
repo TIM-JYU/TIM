@@ -315,12 +315,12 @@ def get_referenced_pars_from_req(par):
         return [par]
 
 
-def validate_item(item_name, item_type, owner_group_id):
+def validate_item(item_name, item_type):
     if not logged_in():
-        abort(403, 'You have to be logged in to create a {}.'.format(item_type))
+        abort(403, 'You have to be logged in to perform this action.'.format(item_type))
 
     if item_name is None:
-        return abort(400, 'item_name was None')
+        abort(400, 'item_name was None')
 
     if not all(part for part in item_name.split('/')):
         abort(400, 'The {} name cannot have empty parts.'.format(item_type))
@@ -335,6 +335,10 @@ def validate_item(item_name, item_type, owner_group_id):
     if not can_write_to_folder(item_name):
         abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(item_type, username))
 
+
+def validate_item_and_create(item_name, item_type, owner_group_id):
+    timdb = getTimDb()
+    validate_item(item_name, item_type)
     item_path, _ = timdb.folders.split_location(item_name)
     timdb.folders.create(item_path, owner_group_id)
 

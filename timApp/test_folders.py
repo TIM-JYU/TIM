@@ -8,7 +8,7 @@ class FolderTest(TimRouteTest):
         db = self.get_db()
         user_folder = 'users/{}'.format(session['user_name'])
         fname = "{}/testing".format(user_folder)
-        invalid = "{}//test".format(user_folder)
+
         personal_group_id = db.users.get_personal_usergroup_by_id(session['user_id'])
         resp = self.json_post('/createFolder',
                               {"name": fname,
@@ -21,15 +21,14 @@ class FolderTest(TimRouteTest):
                                                {"name": fname,
                                                 "owner": personal_group_id}),
                                 expect_status=403)
-        self.assertDictResponse({'error': 'The folder name cannot have empty parts.'},
-                                self.json_post('/createFolder',
-                                               {"name": invalid,
-                                                "owner": personal_group_id}),
-                                expect_status=400)
         new_name = fname + '1'
         resp = self.json_put('/rename/{}'.format(j['id']), {"new_name": new_name})
         j2 = self.assertResponseStatus(resp, return_json=True)
         self.assertEqual(new_name, j2['new_name'])
+        self.assertDictResponse({'error': 'A folder cannot contain itself.'},
+                                self.json_put('/rename/{}'.format(j['id']),
+                                               {"new_name": new_name + '/testing1'}),
+                                expect_status=403)
 
         # Create another folder and give access to anonymous users
         fname2 = "{}/{}".format(user_folder, 'testing2')
@@ -55,3 +54,28 @@ class FolderTest(TimRouteTest):
                                   'owner': {'id': 7, 'name': 'testuser1'}}],
                                 self.json_req('/getFolders', query_string={'root_path': user_folder}))
         db.close()
+
+    def test_folders_invalid(self):
+        self.login_test1()
+        db = self.get_db()
+        user_folder = 'users/{}'.format(session['user_name'])
+        invalid = "{}//test".format(user_folder)
+        invalid2 = "test"
+        invalid3 = "1234"
+        personal_group_id = db.users.get_personal_usergroup_by_id(session['user_id'])
+        self.assertDictResponse({'error': 'The folder name cannot have empty parts.'},
+                                self.json_post('/createFolder',
+                                               {"name": invalid,
+                                                "owner": personal_group_id}),
+                                expect_status=400)
+        self.assertDictResponse({'error': 'You cannot create folders in this folder. Try users/{} '
+                                          'instead.'.format(session['user_name'])},
+                                self.json_post('/createFolder',
+                                               {"name": invalid2,
+                                                "owner": personal_group_id}),
+                                expect_status=403)
+        self.assertDictResponse({'error': 'The folder name can not be a number to avoid confusion with document id.'},
+                                self.json_post('/createFolder',
+                                               {"name": invalid3,
+                                                "owner": personal_group_id}),
+                                expect_status=400)

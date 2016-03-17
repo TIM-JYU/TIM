@@ -2,8 +2,9 @@ var angular;
 var MENU_BUTTON_CLASS = 'menuButtons';
 var timApp = angular.module('timApp');
 
-timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window', '$localStorage', '$timeout',
-    function (Upload, $http, $sce, $compile, $window, $localStorage, $timeout) {
+timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
+    '$window', '$localStorage', '$timeout', '$ocLazyLoad',
+    function (Upload, $http, $sce, $compile, $window, $localStorage, $timeout, $ocLazyLoad) {
         return {
             templateUrl: "/static/templates/parEditor.html",
             restrict: 'E',
@@ -412,12 +413,29 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window',
                             text: text
                         }, $scope.extraData)).success(function (data, status, headers, config) {
                             var $previewDiv = angular.element(".previewcontent");
-                            $previewDiv.html($compile(data.texts)($scope));
-                            var len = $previewDiv.children().length;
-                            $scope.$parent.processAllMathDelayed($previewDiv);
-                            $scope.outofdate = false;
-                            $scope.parCount = len;
-                            $('.editorContainer').resize();
+                            var simpleDirectiveUrl = '/mmcq/SimpleDirective.js';
+                            var loadingFn = function () {
+                                $ocLazyLoad.load(data.js.concat(data.css)).then(function () {
+                                    $previewDiv.html($compile(data.texts)($scope));
+                                    var len = $previewDiv.children().length;
+                                    $scope.$parent.processAllMathDelayed($previewDiv);
+                                    $scope.outofdate = false;
+                                    $scope.parCount = len;
+                                    $('.editorContainer').resize();
+                                });
+                            };
+                            // Workaround: load SimpleDirective.js before other scripts; otherwise there
+                            // will be a ReferenceError.
+                            if (angular.isUndefined($window.standardDirective)
+                                && data.js.indexOf(simpleDirectiveUrl) >= 0) {
+                                $.ajax({
+                                    dataType: "script",
+                                    cache: true,
+                                    url: simpleDirectiveUrl
+                                }).done(loadingFn);
+                            } else {
+                                loadingFn();
+                            }
                         }).error(function (data, status, headers, config) {
                             $window.alert("Failed to show preview: " + data.error);
                         });

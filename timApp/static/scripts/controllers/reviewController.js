@@ -14,7 +14,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.selectedMarking = {"comment": "", "phrase": "", "points": 0};
 
 
-    $http.get('http://192.168.99.100/static/test_data/markings.json').success(function (data) {
+    $http.get('/static/test_data/markings.json').success(function (data) {
         $scope.markings = data;
        //$scope.loadMarkings();
     });
