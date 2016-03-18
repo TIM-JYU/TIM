@@ -113,6 +113,7 @@ timApp.directive("reviewEditor", ['Upload', '$http', '$sce', '$compile', '$windo
 
                 $scope.adjustPreview = function () {
                     window.setTimeout(function () {
+                        return; // max height disabled
                         var $editor = $('.editorArea');
                         var height = $editor.height();
 

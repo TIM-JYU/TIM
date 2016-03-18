@@ -56,12 +56,12 @@
 
 /* Table styles */
 .phraseTable {
-   /* max-width: 700px;
-    border: 3px;
-    border-color: black;*/
+   /* max-width: 700px;*/
     background-color: #00bfff;
-    margin-left: 0;
     border-radius: 10px;
+    border: black solid 1px;
+    margin-left: 0;
+    border-collapse: separate;
    /* padding: 20px;
     -moz-border-radius: 10px;*/
 }
@@ -69,7 +69,7 @@
     border: 0;
     margin: 0;
     padding: 4px;/*0 0 0.5em 0;*/
-    width: 120px;
+    max-width: 900px;
 }
 /*
 .phraseMenu {
@@ -93,18 +93,19 @@
 .negative {
     background-color: red;
 }
-
+/*
 .reviewPreview {
     max-width: 100%;
-}
+}*/
 .pointsPhrase {
-    margin-top: 5px;
+    margin-top: 30px;
+   /* margin-right: 0;
+    max-width: 20%;
+    float: right;*/
     border-radius: 10px;
-    border: #000000 solid 2px;
+    border: #000000 solid 1px;
     padding: 4px;
-    color: red;
-    background-color: yellow;
-    max-width: 25em;
+    color: blue;
     white-space: normal;
     text-align: left;
 }
