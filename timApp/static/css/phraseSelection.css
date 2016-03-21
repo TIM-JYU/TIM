@@ -56,6 +56,7 @@
 
 /* Table styles */
 .phraseTable {
+    width: 100%;
    /* max-width: 700px;*/
     background-color: #bfbfbf;
     border-radius: 10px;
@@ -69,7 +70,7 @@
     border: 0;
     margin: 0;
     padding: 4px;/*0 0 0.5em 0;*/
-    max-width: 900px;
+    /*max-width: 900px;*/
 }
 /*
 .phraseMenu {
