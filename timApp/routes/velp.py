@@ -9,7 +9,7 @@ velps = Blueprint('velps',
 @velps.route("/<document_id>/<paragraph_id>/velps", methods=['GET'])
 def get_velps(document_id: str, paragraph_id: str):
     timdb = getTimDb()
-
+    timdb.Velps.get_document_velps(document_id)
     velp_data ="""
       [{
     "tags": [

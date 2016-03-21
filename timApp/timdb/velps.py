@@ -62,7 +62,10 @@ class Velps(TimDbBase):
 
         #TODO use doc_id and not return the whole database.
         cursor=self.db.cursor()
-        cursor.execute('SELECT label_id,velp_id FROM label_in_phrase WHERE velp_id IN (SELECT id FROM Velp)')
+        cursor.execute("""
+                      SELECT velp_id, default_points FROM Velp
+                      """
+                       )
 
         results=self.resultAsDictionary(cursor)
         return results
