@@ -40,20 +40,63 @@ class Velps(TimDbBase):
                       VALUES(?, ?, ?, ?, ?)
                       """, [creator_id, creation_time, default_points, icon_id, valid_until]
         )
+        self.db.commit()
         velp_id = cursor.lastrowid
         return velp_id
 
-    def create_velp_version(self):
-
+    @contract
+    def create_velp_version(self, velp_id: 'int'):
+        """
+        :param velp_id:
+        :return:
+        """
         cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO
+                      VelpVersion(velp_id)
+                      VALUES(?)
+                      """, [velp_id]
+        )
+        self.db.commit()
 
-                      """
+    @contract
+    def create_velp_content(self, version_id: 'int', language_id: 'str', content: 'str'):
+        """
+        :param version_id:
+        :param language_id:
+        :param content:
+        :return:
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      INSERT INTO
+                      VelpContent(version_id, language_id, content)
+                      VALUES (?, ?, ?)
+                      """, [version_id, language_id, content]
+        )
+        self.db.commit()
+
+    @contract
+    def update_velp(self, velp_id: 'int', new_content: 'str', languages: 'str'):
+        cursor = self.db.cursor()
+        cursor.execute("""
+        """)
+        cursor.execute("""
+                      INSERT INTO
+                      VelpVersion(velp_id)
+                      VALUES (?)
+                      """, [velp_id]
+        )
+        new_versionId = cursor.lastrowid
+        cursor.execute("""
+                      INSERT INTO
+                      VelpContent(version_id, language_id, content)
+                      VALUES (?, ?, ?)
+                      """, [new_versionId, languages[0], new_content[0]]
         )
 
     @contract
-    def get_document_velps(self,doc_id: 'int') -> 'list(dict)':
+    def get_document_velps(self, doc_id: 'int') -> 'list(dict)':
         """Gets phrases that are linked to the document.
 
         :param doc_id: The id of the document.
