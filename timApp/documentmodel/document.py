@@ -163,7 +163,7 @@ class Document:
     def create(self, ignore_exists : bool = False):
         path = os.path.join(self.files_root, 'docs', str(self.doc_id))
         if not os.path.exists(path):
-            os.makedirs(path)
+            os.makedirs(path, exist_ok=True)
         elif not ignore_exists:
             raise DocExistsError(self.doc_id)
 
@@ -677,7 +677,6 @@ class Document:
         :return: The set of the document ids.
         """
 
-        print("Calculating references")
         refs = set()
         source = self
         if ver is not None:
@@ -704,7 +703,7 @@ class Document:
 
     def __save_reflist(self, reflist_name: str, reflist: Set[int]):
         reflist_dir = os.path.dirname(reflist_name)
-        os.makedirs(reflist_dir)
+        os.makedirs(reflist_dir, exist_ok=True)
 
         with open(reflist_name, 'w') as reffile:
             reffile.write(json.dumps(list(reflist)))
