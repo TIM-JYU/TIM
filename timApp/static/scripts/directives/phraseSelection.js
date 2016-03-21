@@ -28,7 +28,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
     // Data
     $scope.orderPhrase = 'tag';
-    $scope.labelsOn = true;
+    $scope.advancedOn = false;
     $scope.newPhrase = {"content": "", "points": 0, "tags": []};
 
 
@@ -49,12 +49,12 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
         tag.selected = !tag.selected;
     };
 
-    $scope.toggleLabelShow = function () {
-        $scope.labelsOn = !$scope.labelsOn;
+    $scope.toggleAdvancedShow = function () {
+        $scope.advancedOn = !$scope.advancedOn;
     };
 
-    $scope.showLabels = function(){
-        if (!$scope.labelsOn)
+    $scope.getAdvancedStyle = function(){
+        if (!$scope.advancedOn)
             return "hide";
         return "";
     };

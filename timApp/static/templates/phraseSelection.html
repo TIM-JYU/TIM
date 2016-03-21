@@ -2,22 +2,21 @@
 <link rel="stylesheet" href="/static/css/phraseSelection.css"/>
 <div class="phraseMenu">
     <label>
-        <input type="checkbox"></input>
+        <input type="checkbox" ng-model="advancedOn" />
         Advanced view
     </label>
     <h3>Select velp</h3>
     <table class="phraseTable">
-      <!--  <tr>
+        <tr class="{{ getAdvancedStyle() }}">
             <td>
-                <label class="clickable" for="searchLabels" ng-click="toggleLabelShow()">Filter by labels </label>
+                <label for="searchLabels">Filter by labels </label>
             </td>
             <td>
                 <input id="searchLabels" ng-model="filterTag" placeholder="filter labels">
             </td>
         </tr>
-        <tr>
+        <tr class="{{ getAdvancedStyle() }}">
             <td colspan="2">
-                            <span class="{{ showLabels() }}">
 
         <div>
             <p ng-repeat="tag in tags | filter:{content:filterTag}" class="label tag-{{ tag.selected }}"
@@ -26,10 +25,9 @@
                 {{ tag.content }}
             </p>
         </div>
-
-        </span>
             </td>
-        </tr>-->
+        </tr>
+
         <tr>
             <td>
                 <label for="searchPhrases">Search velps:</label>
