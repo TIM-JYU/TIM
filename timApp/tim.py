@@ -15,6 +15,7 @@ import containerLink
 from ReverseProxied import ReverseProxied
 from plugin import PluginException
 from routes.answer import answers
+from routes.velp import velps
 from routes.cache import cache
 from routes.common import *
 from routes.common import get_user_settings
@@ -47,6 +48,7 @@ app.register_blueprint(view_page)
 app.register_blueprint(login_page)
 app.register_blueprint(logger_bp)
 app.register_blueprint(answers)
+app.register_blueprint(velps)
 app.register_blueprint(groups)
 app.register_blueprint(search_routes)
 app.register_blueprint(upload)

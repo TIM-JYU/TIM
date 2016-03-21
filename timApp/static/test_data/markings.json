@@ -4,7 +4,7 @@
     "id": 0,
     "points": -1,
     "phrase": 0,
-    "coord": {"el": 0, "start":2, "end":6 },
+    "coord": {"el": 0, "start":2, "end":3 },
     "comment": "You should use a sentinel here"
   },
   {

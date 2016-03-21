@@ -32,7 +32,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     $scope.newPhrase = {"content": "", "points": 0, "tags": []};
 
 
-    $http.get('/static/test_data/phrases.json').success(function (data) {
+    $http.get('/doc_id/par_id/velps').success(function (data) {
         $scope.phrases = data;
         $scope.selectedPhrase = $scope.phrases[0];
     });
