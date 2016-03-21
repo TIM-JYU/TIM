@@ -3,6 +3,14 @@ var csPluginStartTime = new Date();
 /*
 Sagea varten ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst#id3
 */
+
+// Workaround for lazy loading: the directive definition functions below are not re-run when reloading the module
+// so csApp.sanitize and csApp.compile will be undefined without this trick
+if (angular.isDefined(window.csApp)) {
+    var csAppSanitize = csApp.sanitize;
+    var csAppCompile = csApp.compile;
+}
+
 var csApp = angular.module('csApp', ['ngSanitize']);
 csApp.directive('csRunner',['$sanitize','$compile', function ($sanitize,$compile1) {	"use strict"; csApp.sanitize = $sanitize; csApp.compile = $compile1; return csApp.directiveFunction('console',false); }]);
 csApp.directive('csJypeliRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('jypeli',false); }]);
@@ -17,6 +25,11 @@ csApp.directive('csSageRunner', ['$sanitize','$compile', function ($sanitize,$co
 csApp.directive('csSimcirRunner', ['$sanitize','$compile', function ($sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('simcir',false); }]);
 // csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
 
+// redefine csApp.sanitize and csApp.compile if needed
+if (angular.isDefined(window.csAppSanitize) && angular.isDefined(window.csAppCompile)) {
+    csApp.sanitize = csAppSanitize;
+    csApp.compile = csAppCompile;
+}
 
 function csLogTime(msg) {
    var d = new Date();       
