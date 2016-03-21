@@ -1,7 +1,7 @@
 
 <link rel="stylesheet" href="/static/css/phraseSelection.css"/>
 <div class="phraseMenu">
-    <h3>Select phrase</h3>
+    <h3>Select velp</h3>
     <table class="phraseTable">
         <tr>
             <td>
@@ -28,7 +28,7 @@
         </tr>
         <tr>
             <td>
-                <label for="searchPhrases">Search phrases:</label>
+                <label for="searchPhrases">Search velps:</label>
             </td>
             <td>
                 <input id="searchPhrases" ng-model="filterPhrase" placeholder="filter phrases">
@@ -36,7 +36,7 @@
         </tr>
         <tr>
             <td>
-                <label for="orderPhrases">Order phrases:</label>
+                <label for="orderPhrases">Order velps:</label>
             </td>
             <td><select id="orderPhrases" ng-model="orderPhrase">
                 <option value="content">Alphabetical</option>
@@ -62,12 +62,12 @@
         </tr>
     </table>
 
-    <h3>Add phrase</h3>
+    <h3>Add velp</h3>
     <form>
         <table class="phraseTable">
             <tr>
                 <td>
-                    <label for="addPhraseName">Phrase name</label>
+                    <label for="addPhraseName">Velp name</label>
                 </td>
                 <td>
                     <input id="addPhraseName" type="text" ng-model="newPhrase['content']">
@@ -75,7 +75,7 @@
             </tr>
             <tr>
                 <td>
-                    <label for="addPhrasePoints">Phrase points</label>
+                    <label for="addPhrasePoints">Velp points</label>
                 </td>
                 <td>
                     <input id="addPhrasePoints" type="number" ng-model="newPhrase['points']" value="0">
@@ -102,9 +102,10 @@
         </div>
 
         </span>
+                <input type="submit" value="Add velp" ng-click="addPhrase()">
             </tr>
         </table>
-        <input type="submit" value="Add phrase" ng-click="addPhrase()">
+
     </form>
 
 </div>

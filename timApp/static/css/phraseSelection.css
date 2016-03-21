@@ -57,7 +57,7 @@
 /* Table styles */
 .phraseTable {
    /* max-width: 700px;*/
-    background-color: #00bfff;
+    background-color: #bfbfbf;
     border-radius: 10px;
     border: black solid 1px;
     margin-left: 0;
@@ -108,4 +108,8 @@
     color: blue;
     white-space: normal;
     text-align: left;
+}
+
+.phraseTable input[type="submit"] {
+    margin: 6px;
 }
