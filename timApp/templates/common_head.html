@@ -5,17 +5,17 @@
 <script src="{{ url_for('bower.static', filename='KaTeX/dist/katex.min.js') }}"></script>
 <script src="{{ url_for('bower.static', filename='KaTeX/dist/contrib/auto-render.min.js') }}"></script>
 <script src="{{ url_for('static', filename='scripts/sidebarMenuCtrl.js') }}"></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='menustyle.css') }}">
+{{ scss('menustyle') }}
 
 <script>
-    var settings = {{settings|tojson}};
+    var sessionsettings = {{session.settings or {}|tojson}};
     window.setsetting = function (setting, value) {
         $.ajax({
             type: 'POST',
             url: '/sessionsetting/' + setting + '/' + value,
             success: function (data) {
                 console.log(data);
-                settings[setting] = value;
+                sessionsettings[setting] = value;
             },
             error: function () {
                 console.log("Could not set setting.");

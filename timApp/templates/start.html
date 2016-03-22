@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block stylesheet %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='start.css') }}">
+    {{ scss('start') }}
 {% endblock %}
 {% block title %}Welcome{% endblock %}
 {% block head %}
@@ -15,9 +15,7 @@
         })
     </script>
     {% if session.user_id %}
-        <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.min.css') }}">
         <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
-        {% include 'common_head.html' %}
         {% if in_lecture %}
             {% include 'lecture_head.html' %}
         {% endif %}
@@ -142,18 +140,6 @@
                                        tabindex="2" type="password"/>
                             </div>
 
-                            <div>
-                                {% with messages = get_flashed_messages() %}
-                                    {% if messages %}
-                                        <ul class="flashes">
-                                            {% for message in messages %}
-                                                <li>{{ message }}</li>
-                                            {% endfor %}
-                                        </ul>
-                                    {% endif %}
-                                {% endwith %}
-                            </div>
-
                             <div class="loginbutton">
                                 <button type="submit">Login</button>
                             </div>
@@ -165,18 +151,6 @@
                             <div class="textfield">
                                 <input id="user_email" name="email" placeholder="Email"
                                        required="required" size="30" tabindex="1" type="text"/>
-                            </div>
-
-                            <div>
-                                {% with messages = get_flashed_messages() %}
-                                    {% if messages %}
-                                        <ul class="flashes">
-                                            {% for message in messages %}
-                                                <li>{{ message }}</li>
-                                            {% endfor %}
-                                        </ul>
-                                    {% endif %}
-                                {% endwith %}
                             </div>
 
                             <div class="loginbutton">

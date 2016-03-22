@@ -1,3 +1,8 @@
+{% macro scss(name) -%}
+    {% assets filters="scss", output="gen/{}.css".format(name), name + ".scss" %}
+        <link rel="stylesheet" href="{{ ASSET_URL }}">
+    {% endassets %}
+{%- endmacro %}
 <!DOCTYPE html>
 <html lang="en" ng-app="timApp">
 <head>
@@ -17,18 +22,20 @@
         <script>timLogInit({{ request.query_string|string|tojson }});</script>
 
         {% block stylesheet %}
-            <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
+            {{ scss('stylesheet') }}
         {% endblock %}
-        <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
-        <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.css') }}">
+        {{ scss('common') }}
+        <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.min.css') }}">
 
         {% block customcss %}
-            {% for cssFile in custom_css_files %}
-                <link rel="stylesheet" href="{{ url_for('static', filename='css/' + cssFile + '.css') }}">
+            {% for cssFile, v in prefs.css_files.items() if v %}
+                {% assets cssFile %}
+                    <link rel="stylesheet" href="{{ ASSET_URL }}">
+                {% endassets %}
             {% endfor %}
 
             <style type="text/css">
-                {{ custom_css }}
+                {{ prefs.custom_css }}
             </style>
         {% endblock %}
 
@@ -59,7 +66,7 @@
         <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
         <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
-
+        {% include 'common_head.html' %}
         <title>{% block title %}{% endblock %} - TIM</title>
     {% endblock %}
 </head>

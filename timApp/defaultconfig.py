@@ -21,3 +21,4 @@ SECRET_FILE_PATH   = './tim_secret.py'
 PERMANENT_SESSION_LIFETIME = timedelta(days=14)
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 IMMEDIATE_PRELOAD  = False
+SASS_STYLE         = "compressed"

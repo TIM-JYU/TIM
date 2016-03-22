@@ -1,9 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Settings{% endblock %}
+{% block customcss %}
+    {# The logic for custom CSS is dynamic on settings page, so we disable it here. #}
+{% endblock %}
 {% block head %}
     {{ super() }}
     <script>
-        var settings = {{ settings|tojson }};
+        var settings = {{ prefs|tojson }};
     </script>
     <script src="{{ url_for('static', filename='scripts/settingsView/settingsCtrl.js') }}"></script>
 {% endblock %}
@@ -22,7 +25,7 @@
                               ng-model="settings.css_files.{{ css_file.name }}"
                               ng-change="submit('{{ request.path + 'save' }}')"
                               ng-disabled="saving">
-                    <a href="{{ url_for('static', filename='css/' + css_file.name + '.css') }}">
+                    <a href="{{ url_for('static', filename='gen/css/' + css_file.name + '.css') }}">
                         {{ css_file.name }}</a> - {{ css_file.desc }}
                 </label><br>
             {% endfor %}

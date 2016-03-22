@@ -813,7 +813,7 @@ pre {
 
 }
 
-/* Opettajanäkymän käyttäjälistaa varten ================================*/
+/* For user list in teacher view ================================*/
 
 .userlist {
     position: fixed;
@@ -1234,7 +1234,7 @@ p.plgfooter {
     }
 }
 
-/* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
+/* Styles for tablets and smaller devices =============================================*/
 @media only screen and (max-width: 900px) {
     .par {
         position: relative;
@@ -1244,7 +1244,7 @@ p.plgfooter {
     }
 }
 
-/* Kännyköiden erikoistyylit =============================================*/
+/* Styles for mobile devices =============================================*/
 @media only screen and (max-device-width: 500px) {
 
     P {

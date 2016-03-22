@@ -36,7 +36,6 @@
     <script src="{{ url_for('static', filename='scripts/marktree.js') }}"></script>
 
     {% include 'view_head.html' %}
-    {% include 'common_head.html' %}
 
     {% if teacher_mode %}
         <script src="{{ url_for('static', filename='scripts/userlistController.js') }}"></script>
@@ -50,13 +49,15 @@
         <link rel="stylesheet" href="{{ cssFile }}">
     {% endfor %}
 
-    {% for cssFile in custom_css_files %}
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/' + cssFile + '.css') }}">
+    {% for cssFile, v in prefs.css_files if v %}
+        {% assets cssFile %}
+            <link rel="stylesheet" href="{{ ASSET_URL }}">
+        {% endassets %}
     {% endfor %}
 
     {{ (doc_css | safe ) if doc_css }}
     <style type="text/css">
-        {{ custom_css }}
+        {{ prefs.custom_css }}
     </style>
     <script>
         var noBrowser = {{ no_browser|tojson }};

@@ -8,7 +8,9 @@ import time
 from flask import Blueprint
 from flask import render_template
 from flask import stream_with_context
+from flask.ext.assets import Environment
 from flask.helpers import send_file
+from webassets import Bundle
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
 import containerLink
@@ -17,7 +19,6 @@ from plugin import PluginException
 from routes.answer import answers
 from routes.cache import cache
 from routes.common import *
-from routes.common import get_user_settings
 from routes.edit import edit_page
 from routes.groups import groups
 from routes.lecture import getTempDb, user_in_lecture, lecture_routes
@@ -28,7 +29,7 @@ from routes.notes import notes
 from routes.notify import notify
 from routes.readings import readings
 from routes.search import search_routes
-from routes.settings import settings_page
+from routes.settings import settings_page, get_custom_style_files
 from routes.upload import upload
 from routes.view import view_page
 from tim_app import app
@@ -61,6 +62,16 @@ app.register_blueprint(Blueprint('bower',
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 
+assets = Environment(app)
+
+for name in get_custom_style_files():
+    b = Bundle('css/{}.scss'.format(name),
+               filters='scss',
+               output='gen/css/{}.css'.format(name))
+    assets.register(name, b)
+    # Generate the CSS files immediately
+    assets[name].urls()
+
 print('Debug mode: {}'.format(app.config['DEBUG']))
 print('Profiling: {}'.format(app.config['PROFILE']))
 
@@ -77,15 +88,15 @@ def error_generic(error, code):
 
 @app.context_processor
 def inject_custom_css() -> dict:
-    """Injects the custom_css and custom_css_files variables to all templates."""
-    if not logged_in():
-        return {}
-    prefs = getTimDb().users.get_preferences(getCurrentUserId())
-    custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
-    custom_css_files = json.loads(prefs).get('css_files', {}) if prefs is not None else {}
-    if custom_css_files:
-        custom_css_files = {key: value for key, value in custom_css_files.items() if value}
-    return dict(custom_css=custom_css, custom_css_files=custom_css_files)
+    """Injects the user prefs variable to all templates."""
+    prefs = {}
+    if logged_in():
+        prefs = getTimDb().users.get_preferences(getCurrentUserId())
+        prefs = json.loads(prefs) if prefs is not None else {}
+    if not prefs:
+        prefs['css_files'] = {}
+        prefs['custom_css'] = ''
+    return dict(prefs=prefs)
 
 
 @app.errorhandler(400)
@@ -416,10 +427,8 @@ def get_server_time():
 @app.route("/")
 def start_page():
     in_lecture = user_in_lecture()
-    settings = get_user_settings()
     return render_template('start.html',
-                           in_lecture=in_lecture,
-                           settings=settings)
+                           in_lecture=in_lecture)
 
 
 @app.route("/view/")
@@ -428,13 +437,11 @@ def index_page():
     current_user = getCurrentUserId()
     in_lecture = user_in_lecture()
     possible_groups = timdb.users.get_usergroups_printable(current_user)
-    settings = get_user_settings()
     return render_template('index.html',
                            userName=getCurrentUserName(),
                            userId=current_user,
                            userGroups=possible_groups,
                            in_lecture=in_lecture,
-                           settings=settings,
                            doc={'id': -1, 'fullname': ''},
                            rights={})
 

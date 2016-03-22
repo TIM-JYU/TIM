@@ -12,18 +12,23 @@ settingsApp.controller('SettingsCtrl', ['$scope', '$http', function (sc, http) {
                 sc.saving = false;
             });
 
+        sc.updateCss();
+    };
+
+    sc.updateCss = function () {
         var css_filenames = sc.getCssNames(false);
         $(".availableCss").each(function () {
             this.disabled = true;
-            for (name in css_filenames) {
-                var href = css_filenames[name] + '.css';
-                if (this.href.indexOf(href) > -1)
-                {
-                    this.disabled = false;
+            for (var name in css_filenames) {
+                if (css_filenames.hasOwnProperty(name)) {
+                    var href = css_filenames[name] + '.css';
+                    if (this.href.indexOf(href) > -1) {
+                        this.disabled = false;
+                    }
                 }
             }
         });
-    }
+    };
 
     sc.getCssNames = function(noCheck) {
         var css_filenames = [];
@@ -37,27 +42,30 @@ settingsApp.controller('SettingsCtrl', ['$scope', '$http', function (sc, http) {
             }
         }
         return css_filenames;
-    } 
+    };
 
     sc.loadCssFiles = function() {
         var css_filenames = sc.getCssNames(true);
-        for (name in css_filenames)
+        for (var name in css_filenames)
         {
-            var link  = document.createElement('link');
-            link.className = 'availableCss';
-            link.rel  = 'stylesheet';
-            link.type = 'text/css';
-            link.href = '../static/css/' + css_filenames[name] + '.css';
-            link.disabled = true;
-            document.getElementsByTagName('head')[0].appendChild(link);
+            if (css_filenames.hasOwnProperty(name)) {
+                var link = document.createElement('link');
+                link.className = 'availableCss';
+                link.rel = 'stylesheet';
+                link.type = 'text/css';
+                link.href = '../static/gen/css/' + css_filenames[name] + '.css';
+                document.getElementsByTagName('head')[0].appendChild(link);
+                link.disabled = true;
+            }
         }
-    }
+    };
 
     $(".docEditor").change(function() {
         sc.style.innerHTML = sc.settings.custom_css;
     });
 
     sc.loadCssFiles();
+    sc.updateCss();
     sc.style = document.createElement("style");
     sc.style.type = 'text/css';
     document.getElementsByTagName('head')[0].appendChild(sc.style);
