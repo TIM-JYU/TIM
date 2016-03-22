@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS Velp (
   creator_id      INTEGER       NOT NULL,
   creation_time   TIMESTAMP     NOT NULL  DEFAULT CURRENT_TIMESTAMP,
   default_points  INTEGER       NOT NULL  DEFAULT 0,      -- change to some better type?
-  icon_id         INTEGER       NOT NULL,
+  icon_id         INTEGER,
   valid_until     TIMESTAMP,
 
   CONSTRAINT Velp_PK
@@ -117,7 +117,6 @@ CREATE TABLE LabelInVelp (
 CREATE TABLE VelpVersion (
   id          INTEGER   NOT NULL,
   velp_id     INTEGER   NOT NULL,
-  version     INTEGER   NOT NULL,
   modify_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   CONSTRAINT VelpVersion_PK
@@ -209,7 +208,6 @@ CREATE TABLE Comment (
 CREATE TABLE VelpGroup (
   id            INTEGER   NOT NULL,
   name          TEXT      NOT NULL,
-  block_id      INTEGER   NOT NULL,
   creation_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   valid_until   TIMESTAMP,
 
@@ -330,7 +328,7 @@ CREATE TABLE LabelInVelpGroup (
   ON UPDATE CASCADE
 );
 
--- IMPORTANT! DELETE THESE BEFORE RUNNING IN PRODUCTION
+-- IMPORTANT! DELETE FROM HERE TO EOF BEFORE RUNNING IN PRODUCTION
 /*
 CREATE TABLE IF NOT EXISTS Velp (
   id              INTEGER       NOT NULL,
@@ -350,11 +348,15 @@ CREATE TABLE IF NOT EXISTS Velp (
   ON UPDATE CASCADE
 );
 */
-INSERT INTO Velp
-    VALUES (1,1,datetime('now') , 0, 0, null);
+INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (1, 1, 0, null, null);
 
-INSERT INTO VelpContent
-    VALUES (2,"FI","Hyva velppi");
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (1,"FI","Hyva velppi");
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (1,"EN","Nice velp.");
 
-INSERT INTO VelpVersion
-    VALUES (1,1,2,datetime('now')  );
+INSERT INTO VelpVersion(id, velp_id) VALUES (1,1);
+
+INSERT INTO VelpGroup(id,name) VALUES (1,'Paljon velppeja');
+
+INSERT INTO VelpGroupInDocument(velp_group_id, document_id) VALUES (1,1);
+
+INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (1,1);

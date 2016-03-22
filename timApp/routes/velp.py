@@ -25,4 +25,4 @@ def get_velps(document_id: int, paragraph_id: str):
         "points": -1,
         "content": "Does not terminate with sentinel"
         }]"""
-    return velp_data
+    return jsonResponse(velp_data_raw)

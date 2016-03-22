@@ -103,12 +103,13 @@ class Velps(TimDbBase):
         :returns: a list of dictionaries, each describing a different velp.
         """
 
-        #TODO use doc_id and not return the whole database.
         cursor=self.db.cursor()
         cursor.execute("""
-                      SELECT * FROM VelpContent
-                      """
-                       ) # SELECT velp_id, default_points FROM Velp
-
-        results = self.resultAsDictionary(cursor)
-        return results
+                      SELECT * FROM Velp WHERE id IN (
+                        SELECT velp_id FROM VelpInGroup WHERE velp_group_id IN (
+                          SELECT velp_group_id FROM VelpGroupInDocument WHERE document_id = ?
+                        )
+                      )
+                      """, [doc_id]
+                      )
+        return self.resultAsDictionary(cursor)
