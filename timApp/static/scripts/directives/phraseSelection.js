@@ -32,7 +32,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     $scope.newPhrase = {"content": "", "points": 0, "tags": []};
     $scope.newLabelContent = "";
 
-    $http.get('/2/asd/velps').success(function (data) {
+    $http.get('/{0}/asd/velps'.replace('{0}',$scope.extraData["docId"])).success(function (data) {
         console.log(data);
         $scope.phrases = data;
         $scope.selectedPhrase = $scope.phrases[0];
@@ -167,7 +167,6 @@ timApp.filter('selectedTags', function () {
             returnPhrases.push(selectedArray[s][0]);
 
        // console.log(returnPhrases);
-
 
         return returnPhrases;
     };
