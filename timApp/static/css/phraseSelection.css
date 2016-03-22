@@ -1,4 +1,27 @@
 /* app css stylesheet */
+.phraseMenu {
+    margin-top: 1.75em;
+}
+
+.phraseMenu .nav-tabs {
+    margin-left: 0;
+    margin-top: 1em;
+}
+
+.phraseMenu .nav-tabs > li.active > a {
+    color: black;
+    font-size: 1.3em;
+    background-color: #bfbfbf;
+    border: #bfbfbf solid 2px;
+}
+
+.phraseMenu .nav-tabs > li > a {
+    color: black;
+    font-size: 1.3em;
+    background-color: #3cc;
+    border: #3cc solid 2px;
+}
+
 .tag-true, .tag-false {
     font-size: 0.85em;
     margin: 0.25em;
@@ -59,8 +82,10 @@
     width: 100%;
    /* max-width: 700px;*/
     background-color: #bfbfbf;
-    border-radius: 10px;
-    border: black solid 1px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+  /*  border: black solid 1px;*/
     margin-left: 0;
     border-collapse: separate;
    /* padding: 20px;
@@ -72,18 +97,6 @@
     padding: 4px;/*0 0 0.5em 0;*/
     /*max-width: 900px;*/
 }
-/*
-.phraseMenu {
-    max-width: 350px;
-    border: 5px;
-    border-color: black;
-    border-radius: 10px;
-    background-color: #3EAAB3;
-    padding: 2em;
-}
-*/
-
-
 
 .zero {
     background-color: #FFCC00;
@@ -116,3 +129,4 @@
 .phraseTable input[type="submit"] {
     margin: 6px;
 }
+

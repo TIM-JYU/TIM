@@ -5,7 +5,10 @@
         <input type="checkbox" ng-model="advancedOn" />
         Advanced view
     </label>
-    <h3>Select velp</h3>
+
+    <uib-tabset active="active">
+        <uib-tab index="0" heading="Select velp">
+ <!--   <h3>Select velp</h3>-->
     <table class="phraseTable">
         <tr ng-class="getAdvancedStyle()">
             <td>
@@ -62,9 +65,9 @@
                 </div>
             </td>
         </tr>
-    </table>
-
-    <h3>Add velp</h3>
+    </table></uib-tab>
+    <uib-tab index="1" heading="Add velp">
+  <!--  <h3>Add velp</h3>-->
     <form>
         <table class="phraseTable">
             <tr>
@@ -121,5 +124,6 @@
         </table>
 
     </form>
-
+    </uib-tab>
+    </uib-tabset>
 </div>
