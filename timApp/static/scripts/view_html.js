@@ -208,6 +208,14 @@ timApp.controller("ViewCtrl", [
             return $("[t='" + t + "']");
         };
 
+        sc.getAreaStart = function() {
+            return sc.selection.reversed ? sc.selection.end : sc.selection.start;
+        };
+
+        sc.getAreaEnd = function() {
+            return sc.selection.reversed ? sc.selection.start : sc.selection.end;
+        };
+
         sc.toggleParEditor = function ($par, options) {
             var caption = 'Add paragraph';
             var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
@@ -225,21 +233,8 @@ timApp.controller("ViewCtrl", [
                 url = '/postParagraph/';
             }
 
-            var area_start;
-            var area_end;
-
-            if (options.area) {
-                if (sc.selection.reversed) {
-                    area_start = sc.selection.end;
-                    area_end = sc.selection.start;
-                } else {
-                    area_end = sc.selection.end;
-                    area_start = sc.selection.start;
-                }
-            } else {
-                area_start = null;
-                area_end = null;
-            }
+            var area_start = options.area ? sc.getAreaEnd() : null;
+            var area_end = options.area ? sc.getAreaEnd() : null;
 
             var attrs = {
                 "save-url": url,
@@ -1204,6 +1199,17 @@ timApp.controller("ViewCtrl", [
             sc.selection.end = null;
         };
 
+        sc.copyArea = function (e, $par) {
+            var area_start = sc.getAreaStart();
+            var area_end = sc.getAreaEnd();
+
+            http.post('/clipboard/copy/' + sc.docId + '/' + area_start + '/' + area_end, {
+                }).success(function(data, status, headers, config) {
+                }).error(function(data, status, headers, config) {
+                    $window.alert(data.error);
+                });
+        };
+
         sc.nothing = function () {
         };
 
@@ -1236,6 +1242,7 @@ timApp.controller("ViewCtrl", [
                         desc: 'Edit area',
                         show: true
                     },
+                    {func: sc.copyArea, desc: 'Copy area', show: true},
                     {func: sc.cancelArea, desc: 'Cancel area', show: true},
                     {func: sc.nothing, desc: 'Close menu', show: true}
                 ];
