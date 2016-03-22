@@ -165,6 +165,10 @@
                     <img ng-click="toggleSettings()" ng-class="['menu-icon', settingsIconState]"
                          src="{{ url_for('static', filename='images/settings-icon.png') }}" width="50"
                          height="50" title="Settings-menu"/>
+
+                    <img ng-click="toggleEditMode()" ng-class="['menu-icon', editIconState]"
+                         src="{{ url_for('static', filename='images/edit-icon.png') }}" width="50"
+                         height="50" title="Toggle edit mode"/>
                 </div>
             </div>
 

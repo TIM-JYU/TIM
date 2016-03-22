@@ -1,4 +1,11 @@
 {% extends 'item.html' %}
+{% block header %}
+    {{ super() }}
+    <script>
+        var editMode = {{edit_mode|tojson}};
+    </script>
+{% endblock %}
+
 {% block itemlinks %}
     {{ super() }}
     {% if rights.teacher %}

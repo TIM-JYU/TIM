@@ -30,6 +30,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 		$scope.questionIconState = 'noClick';
 		$scope.peopleIconState = 'noClick';
 		$scope.settingsIconState = 'noClick';
+        $scope.editIconState = $window.editMode ? 'clicked': 'noClick';
 
         /**
          * FILL WITH SUITABLE TEXT
@@ -64,6 +65,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 			$scope.questionIconState = 'noClick';
 			$scope.peopleIconState = 'noClick';
 			$scope.settingsIconState = 'noClick';
+            $scope.editIconState = 'noClick';
         });
 
         /**
@@ -86,6 +88,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 				$scope.questionIconState = 'noClick';
 				$scope.peopleIconState = 'noClick';
 				$scope.settingsIconState = 'noClick';
+                $scope.editIconState = 'noClick';
             }
         };
 
@@ -110,6 +113,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 				$scope.questionIconState = 'noClick';
 				$scope.peopleIconState = 'noClick';
 				$scope.settingsIconState = 'noClick';
+                $scope.editIconState = 'noClick';
 
                 $http({
                     url: '/getAllLecturesFromDocument',
@@ -152,6 +156,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 				$scope.questionIconState = 'clicked';
 				$scope.peopleIconState = 'noClick';
 				$scope.settingsIconState = 'noClick';
+                $scope.editIconState = 'noClick';
 
                 $http({
                     url: '/questions/' + $scope.docId,
@@ -193,6 +198,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 				$scope.questionIconState = 'noClick';
 				$scope.peopleIconState = 'clicked';
 				$scope.settingsIconState = 'noClick';
+                $scope.editIconState = 'noClick';
             }
         };
 
@@ -217,6 +223,20 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 				$scope.peopleIconState = 'noClick';
 				$scope.settingsIconState = 'clicked';
             }
+        };
+
+        /**
+         * FILL WITH SUITABLE TEXT
+         * @memberof module:sidebarMenuCtrl
+         */
+        $scope.toggleEditMode = function () {
+            if ($window.editMode) {
+                $scope.editIconState = 'noClick';
+            } else {
+                $scope.editIconState = 'clicked';
+            }
+
+            $window.editMode = !$window.editMode;
         };
 
         /**
