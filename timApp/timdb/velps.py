@@ -106,9 +106,9 @@ class Velps(TimDbBase):
         #TODO use doc_id and not return the whole database.
         cursor=self.db.cursor()
         cursor.execute("""
-                      SELECT velp_id, default_points FROM Velp
+                      SELECT * FROM VelpContent
                       """
-                       )
+                       ) # SELECT velp_id, default_points FROM Velp
 
-        results=self.resultAsDictionary(cursor)
+        results = self.resultAsDictionary(cursor)
         return results

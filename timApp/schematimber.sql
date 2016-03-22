@@ -329,3 +329,32 @@ CREATE TABLE LabelInVelpGroup (
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
+
+-- IMPORTANT! DELETE THESE BEFORE RUNNING IN PRODUCTION
+/*
+CREATE TABLE IF NOT EXISTS Velp (
+  id              INTEGER       NOT NULL,
+  creator_id      INTEGER       NOT NULL,
+  creation_time   TIMESTAMP     NOT NULL  DEFAULT CURRENT_TIMESTAMP,
+  default_points  INTEGER       NOT NULL  DEFAULT 0,      -- change to some better type?
+  icon_id         INTEGER       NOT NULL,
+  valid_until     TIMESTAMP,
+
+  CONSTRAINT Velp_PK
+  PRIMARY KEY (id),
+
+  CONSTRAINT Icon_id
+  FOREIGN KEY (icon_id)
+  REFERENCES Icon(id)
+  ON DELETE SET NULL
+  ON UPDATE CASCADE
+);
+*/
+INSERT INTO Velp
+    VALUES (1,1,datetime('now') , 0, 0, null);
+
+INSERT INTO VelpContent
+    VALUES (2,"FI","Hyva velppi");
+
+INSERT INTO VelpVersion
+    VALUES (1,1,2,datetime('now')  );
