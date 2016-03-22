@@ -17,7 +17,6 @@ body {
     padding: 0.5em;
 }
 
-
 .mcq table p {
     margin-left: 0;
     text-align: left;
@@ -42,112 +41,6 @@ body {
     border: 1px solid black;
     border-radius: 3px;
     padding: 0.5em;
-}
-
-/*=============================================*/
-/* Gather all colors here                      */
-/*=============================================*/
-.ansi_fore {
-    color: #FFFFFF;
-}
-
-.ansi_back {
-    background-color: #000000;
-}
-
-.ansi1 {
-    font-weight: bold;
-}
-
-.ansi3 {
-    font-style: italic;
-}
-
-.ansi4 {
-    text-decoration: underline;
-}
-
-.ansi9 {
-    text-decoration: line-through;
-}
-
-.ansi30 {
-    color: #000000;
-}
-
-.ansi31 {
-    color: #FF0000;
-}
-
-.ansi32 {
-    color: #00FF00;
-}
-
-.ansi33 {
-    color: #FFFF00;
-}
-
-.ansi34 {
-    color: #0000FF;
-}
-
-.ansi35 {
-    color: #FF00FF;
-}
-
-.ansi36 {
-    color: #00FFFF;
-}
-
-.ansi37 {
-    color: #FFFFFF;
-}
-
-.ansi40 {
-    background-color: #000000;
-}
-
-.ansi41 {
-    background-color: #FF0000;
-}
-
-.ansi42 {
-    background-color: #00FF00;
-}
-
-.ansi43 {
-    background-color: #FFFF00;
-}
-
-.ansi44 {
-    background-color: #0000FF;
-}
-
-.ansi45 {
-    background-color: #FF00FF;
-}
-
-.ansi46 {
-    background-color: #00FFFF;
-}
-
-.ansi47 {
-    background-color: #FFFFFF;
-}
-
-.noteButton, .addNoteButton, .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton, .addQuestionButton {
-    background-color: #f8f8f8;
-    color: white;
-    font-size: x-small;
-    text-align: center;
-    border-radius: 12px;
-    outline: none;
-    float: left;
-
-    border: 2px none;
-    line-height: 0.8;
-    width: 5em;
-    height: 3em;
 }
 
 .smallNote {
@@ -223,7 +116,6 @@ td p {
     border-color: red;
 }
 
-/*=============================================*/
 li p {
     margin-left: 0;
 }
@@ -251,18 +143,6 @@ ul ul ul, ol ol ol {
     margin-bottom: 0;
 }
 
-.paragraph {
-    position: relative;
-    margin-left: 1em;
-    padding-top: 0.25em;
-    padding-bottom: 1em;
-    margin-top: 0.25em;
-    margin-bottom: 0.25em;
-    border-bottom: 1px solid transparent;
-    border-top: 1px solid transparent;
-    border-right: 1px solid transparent;
-}
-
 .par {
     position: relative;
 }
@@ -281,10 +161,6 @@ ul ul ul, ol ol ol {
     margin: 0 auto;
 }
 
-.figure {
-    text-align: center;
-}
-
 .notes, .speaker {
     position: absolute;
     left: 112%;
@@ -298,20 +174,6 @@ ul ul ul, ol ol ol {
 
 .note .timestamp {
     color: lightgrey;
-}
-
-.noteButton {
-    z-index: 3;
-    height: 1.8em;
-    top: 0;
-    float: left;
-}
-
-.addNoteButton {
-    position: absolute;
-    right: -8.2em;
-    z-index: 3;
-    top: 0;
 }
 
 .headerlink {
@@ -344,7 +206,7 @@ ul ul ul, ol ol ol {
     background: inherit;
 }
 
-#previewDiv .editline, #previewDiv .readline, #previewDiv .arealine .csrunPreview  .editline, .csrunPreview  .readline {
+#previewDiv .editline, #previewDiv .readline, #previewDiv .arealine .csrunPreview .editline, .csrunPreview .readline {
     display: none;
 }
 
@@ -361,14 +223,6 @@ ul ul ul, ol ol ol {
     -moz-box-sizing: border-box;
     box-sizing: border-box;
     border: 1px solid #cccccc;
-}
-
-.released {
-    clear: both;
-    padding: 10px;
-    overflow: hidden;
-    border-radius: 5px;
-    background: inherit;
 }
 
 .previewcontent {
@@ -396,17 +250,8 @@ ul ul ul, ol ol ol {
     height: 100%;
     top: 0;
     border-right: 0.5em solid;
-    border-color: #F60; /* rgb(236,103,27); */
+    border-color: #F60;
 }
-
-/*.editline {
-    position: absolute;
-    left: -1.2em;
-    z-index: 3;
-    width: 3em;
-    height: 100%;
-    top: 0;
-}*/
 
 .editline {
     position: absolute;
@@ -418,7 +263,7 @@ ul ul ul, ol ol ol {
 }
 
 .areacollapse::before {
-    color: #3cc; 
+    color: #3cc;
     content: "[-]";
 }
 
@@ -451,166 +296,20 @@ ul ul ul, ol ol ol {
     top: 0;
 }
 
-.addNoteButton:hover {
-    background: #C0C0C0;
-    color: black;
-}
-
-.noteButton:hover {
-    background: #C0C0C0;
-    color: black;
-}
-
-.edit {
-    top: 0;
-}
-
-.edit:before {
-    content: "Edit";
-}
-
-.delete:before {
-    content: "Delete";
-}
-
-.delete {
-    top: 3em;
-}
-
-.editButton {
-    z-index: 3;
-    position: absolute;
-    right: -8.2em;
-}
-
-.editButton:hover {
-    visibility: visible;
-    background: #C0C0C0;
-    color: black;
-}
-
-.deleteButton {
-    left: 0;
-    z-index: 10;
-    top: 6em;
-    background: #FF0000;
-}
-
-.deleteButton:hover {
-    color: black;
-}
-
-.parSaveButton {
-    top: 0;
-    left: 0;
-    z-index: 10;
-    background: #19D119;
-}
-
-.parSaveButton:hover {
-    color: black;
-}
-
-.parSaveButton:before {
-    content: "Save";
-}
-
-.cancelButton:hover {
-    background: #999966;
-    color: black;
-}
-
-.cancelButton:before {
-    content: "Cancel";
-}
-
-.cancelButton {
-    z-index: 10;
-    left: 0;
-    top: 3em;
-    background: #999966;
-}
-
-#topBar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 50px;
-    z-index: 100;
-
-}
-
-.navigationBar {
-    width: auto;
-    background-color: #00CC00;
-
-}
-
-.flashEdit {
-    position: absolute;
-    background-color: #FF1919;
-    left: 45em;
-    height: 10em;
-    width: 40em;
-}
-
-.addParButton:before {
-    content: "Add";
-}
-
-.addParButton:hover:before {
-    content: "Add new paragraph here";
-}
-
 #editorHelpCiteText {
     margin-left: 2.0em;
 }
 
-.addParButton {
-    z-index: 2;
-    right: -8.2em;
-    bottom: -1.5em;
-    height: 1.5em;
-    padding-top: 0.5em;
-    position: absolute;
-}
-
-.addParButton:hover {
-    content: "Add new paragraph here";
-    display: block;
-    background-color: #C0C0C0;
-    border: 1px dotted #338533;
-    border-radius: 25px;
-    opacity: 1;
-    width: 110%;
-    left: 0;
-    color: black;
-}
-
 PRE {
-    /* border-style: solid; */
-
-    /* border-width: 1px; */
-
-    /* border-radius: 5px; */
-
     padding: 4px;
 
     margin-left: 2.5em;
     margin-right: 0.00cm;
     line-height: 1;
     font-size: 1em;
-
-    /* box-shadow: 10px 10px 5px #888888; */
 }
 
-.leveaPre {
-    width: 100em;
-    background-color: white;
-}
-
-code { 
+code {
     font-size: 1.2em;
 }
 
@@ -620,20 +319,11 @@ pre code {
     font-size: 1em;
 }
 
-PRE.esimerkki-western {
-    font-size: 1em;
-}
-
-PRE.huonoesimerkki-western {
-    font-size: 1em;
-}
-
 table {
     font-family: verdana, arial, sans-serif;
     font-size: 0.8em;
     color: #333333;
-    border-width: 1px;
-    border-color: #666666;
+    border: 1px #666666;
     border-collapse: collapse;
     margin-left: auto;
     margin-right: auto;
@@ -644,15 +334,13 @@ table code {
 }
 
 table th {
-    border-width: 1px;
     padding: 8px;
-    border-style: solid;
+    border: 1px solid;
 }
 
 table td {
-    border-width: 1px;
     padding: 8px;
-    border-style: solid;
+    border: 1px solid;
 }
 
 .ace_scrollbar-v {
@@ -667,34 +355,9 @@ table td {
     margin-left: 2em;
 }
 
-P.sananselitys-western {
-    padding: 0.4cm;
-    margin-left: 0;
-    margin-right: 0;
-}
-
-p.kannentiedot-western {
-    margin-top: 0.1cm;
-    margin-bottom: 0.1cm;
-}
-
-p.kannentiedotoikea-western {
-    margin-top: 0.1cm;
-    margin-bottom: 0.1cm;
-}
-
-.caption {
-    text-align: center;
-    font-style: italic;
-    margin-top: 1em;
-    margin-left: 5em;
-    margin-right: 5em;
-}
-
 .par h1 {
     text-align: center;
     margin-top: 3cm;
-    /*margin-top: 0cm;*/
     margin-bottom: 1cm;
     color: navy;
     border-top: navy 2pt solid;
@@ -707,14 +370,12 @@ p.kannentiedotoikea-western {
 .par h2 {
     text-align: left;
     margin-top: 1.5cm;
-    /*margin-top: 0cm;*/
     line-height: 1.2;
 }
 
 .par h3 {
     text-align: left;
     margin-top: 1cm;
-    /*margin-top: 0cm;*/
     margin-bottom: 0.5cm;
 }
 
@@ -738,21 +399,14 @@ p.kannentiedotoikea-western {
 
 /*Georgia, - huonot numerot pystysuunnassa*/
 body {
-    /*	margin-left: 0.7cm; */
-    /*	margin-right: 0.7cm; */
     font-family: Verdana, Arial, sans-serif;
     font-size: 1em;
     line-height: 1.2;
 }
 
 :link, a {
-    color: navy;
     text-decoration: none;
     font-size: 0.8em;
-}
-
-:visited {
-    color: blue;
 }
 
 a:active {
@@ -785,80 +439,6 @@ br {
     line-height: 0.4; /* pienempi vali monisteen kansia varten */
 }
 
-/* lukujen #-linkit */
-a.placeholder {
-    font-size: 0.7em;
-    color: #ccccff;
-    text-decoration: none;
-}
-
-a.placeholder:visited {
-    font-size: 0.7em;
-    color: #ccccff;
-    text-decoration: none;
-}
-
-a.placeholder:hover {
-    font-size: 0.7em;
-    color: #aaaaff;
-    text-decoration: none;
-}
-
-p.links_h1 {
-    float: right;
-    margin-bottom: 0;
-    padding-bottom: 0;
-    margin-top: 0;
-    padding-top: 1.55em;
-    font-size: 1em;
-}
-
-p.links_h2 {
-    float: right;
-    margin-bottom: 0;
-    padding-bottom: 0;
-    margin-top: 0;
-    padding-top: 0;
-    font-size: 0.9em;
-}
-
-p.links {
-    float: right;
-    margin-bottom: 0;
-    padding-bottom: 0;
-    margin-top: 0;
-    padding-top: 0;
-    font-size: 0.8em;
-}
-
-/* uusi ankkurityyli, korvaa placeholderit.
-influenced by trac anchors */
-a.anchor:hover {
-    border: none;
-    font-weight: bold;
-    color: #7777ff;
-    text-decoration: none;
-    vertical-align: text-bottom;
-}
-
-.anchor:link, .anchor:visited {
-    border: none;
-    color: #aaaaff;
-    text-decoration: none;
-    vertical-align: text-bottom;
-}
-
-* > .anchor:link, * > .anchor:visited {
-    visibility: hidden;
-}
-
-.kaava {
-    text-align: center;
-    line-height: 1.7em;
-    font-size: 1.2em;
-    font-family: serif;
-}
-
 .huomautus {
     margin-left: 3em;
     margin-top: 1.5em;
@@ -875,14 +455,6 @@ a.anchor:hover {
     margin-left: 0.3em;
 }
 
-
-/* pre-blokit, joissa sub/sup - spanit ymp�rill�, v�hennet��n paddingia */
-/*pre.esimerkki-western-sub {
-    font-size:1em;
-    border: 1px solid #000000; padding: 0cm 0.1cm; so-language: zxx
-}*/
-
-/*body {font-family: Verdana, Arial, sans-serif}*/
 .editor {
     width: 100%;
     padding: 5px 0;
@@ -999,15 +571,6 @@ input[type="file"] {
     text-decoration: none;
 }
 
-video {
-    display: block;
-    margin: 0 auto;
-}
-
-img.console {
-    margin-left: 2em;
-}
-
 /* csRun-tyylit ================================================== */
 .console {
     font-family: Courier, serif;
@@ -1037,7 +600,6 @@ p.stem {
     position: absolute;
     top: 0;
     left: -0.5em;
-    /* margin-bottom: 2em; */
 }
 
 .csRunPre, .csRunPost {
@@ -1067,25 +629,16 @@ p.stem {
 .csRunCode {
     font-family: Courier, serif;
     margin-left: 2em;
-    /* border-style: solid; */
-
     border-width: 1px;
-
-    /* border-radius: 5px; */
     padding: 4px;
     margin-right: 0;
     line-height: 1;
     font-size: 1em;
-
-    /* box-shadow: 10px 10px 5px #888888; */
-    /* width: 98%; */
 }
 
 .csRunArea {
     font-family: Courier, serif;
     margin: 0;
-    border-style: none;
-    border-width: 0;
     border-radius: 0;
     padding: 1px;
     line-height: 1.1;
@@ -1094,6 +647,7 @@ p.stem {
     width: 100% !important;
     min-width: 600px !important;
     white-space: pre;
+    border: 0 none;
     border-left: thin solid #0066FF;
 }
 
@@ -1101,23 +655,6 @@ p.stem {
     display: block;
     margin: 0 auto;
 }
-
-.showVideoHolder {
-    text-align: center;
-    display: block;
-    margin: 0 auto;
-}
-
-/*
-.listVideoRunDiv {
-    margin-top: -0.5em;
-    margin-bottom: -0.9em;
-}
-
-.smallVideoRunDiv {
-    margin-bottom: -1.0em;
-}
-*/
 
 .listVideoRunDiv img {
     display: inline-block;
@@ -1135,8 +672,7 @@ p.stem {
 }
 
 .csRunArea:focus {
-    border-style: solid;
-    border-width: 1px;
+    border: 1px solid;
     border-radius: 5px;
     width: 100% !important;
 }
@@ -1148,7 +684,7 @@ p.stem {
 .csPlugin {
     margin-top: 1em;
 }
- 
+
 .pluginHide {
     text-align: right;
 }
@@ -1166,8 +702,6 @@ p.stem {
 
 .unitTestRed {
     background: #FF7777;
-    /* width: 30%; */
-    /* height: 1em; */
 }
 
 .smalllink {
@@ -1187,7 +721,7 @@ body {
     margin-left: 2em;
 }
 
-task, .csRunDiv {
+.csRunDiv {
     border: solid 1px #3CC;
     border-radius: 5px;
     margin: 0.3em 0 0.3em 2em;
@@ -1210,7 +744,6 @@ task, .csRunDiv {
     border-top: 4px solid;
     width: 240px;
     padding-bottom: 5px;
-    /*position: absolute;*/
     overflow-y: auto;
     border-color: #F60;
 }
@@ -1224,7 +757,6 @@ pre {
     font-weight: normal;
     border-left: 4px solid #3CC;
     padding: 0.5em 0 0.5em 1em;
-    /* margin: 0 0 1em 1em; */
     font-size: 0.95em;
 }
 
@@ -1259,11 +791,6 @@ pre {
 
 .console {
     margin-left: 0.2em;
-    /* max-width: 60em; */
-}
-
-img.console {
-    margin-left: 0.2em;
 }
 
 .csRunMenu link, .csRunMenu :visited {
@@ -1279,12 +806,9 @@ img.console {
 @media only screen and (max-width: 1600px) {
 
     .notes:hover, .speaker:hover {
-        /* margin-left: -60%; */
-        /* width: 200em; */
         background-color: white;
         display: block;
         z-index: 9;
-        /* padding-left: 2em; */
     }
 
 }
@@ -1329,27 +853,9 @@ img.console {
     display: inline;
 }
 
-.userentry {
-    font-family: Verdana, serif;
-    font-size: 12px;
-    color: #a6b6f6;
-}
-
 .close {
     float: right;
     position: relative;
-}
-
-.runo {
-    text-align: center;
-    font-style: italic;
-    margin-bottom: 2em;
-    font-size: 0.9em;
-}
-
-.tehtava {
-    margin-left: 2em;
-    font-size: 0.9em;
 }
 
 .questionAdded img {
@@ -1357,8 +863,6 @@ img.console {
     z-index: 1;
     position: relative;
 }
-
-/* =============================== Vesan lisäyksiä ==================================*/
 
 .ace_editor {
     position: relative;
@@ -1370,7 +874,6 @@ img.console {
 }
 
 .timButton, .editorButton {
-    margin: auto;
     background: #3CC;
     border: 0;
     border-radius: 3px;
@@ -1382,7 +885,7 @@ img.console {
     line-height: normal;
     padding: 8px 10px;
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    margin-bottom: 5px;
+    margin: auto auto 5px;
 }
 
 .actionButtons, .menuButtons {
@@ -1423,26 +926,15 @@ img.console {
     background-color: #f8f8f8;
 }
 
-.addNote, .editPar, .addPar .menuClose {
-    width: 220px;
-}
-
-.defaultButton {
-    margin: 0.2em;
-    float: right;
-}
-
 .questionButton {
     margin: 0.2em;
 }
-
 
 .csArgsArea {
     width: 90%;
     margin-top: 0;
     margin-bottom: 0;
-    border-style: none;
-    border-width: 0;
+    border: 0 none;
     border-left: thin solid #0066FF;
 }
 
@@ -1524,13 +1016,6 @@ img.console {
     width: 400px;
 }
 
-.doctitle {
-    font-size: 0.7em;
-    color: #3cc;
-    text-align: center;
-    margin-bottom: -1.5em;
-}
-
 .mcq {
     padding-left: 2em;
 }
@@ -1595,15 +1080,10 @@ button:disabled, input[type="submit"]:disabled, input[type="button"]:disabled {
 
 .breadcrumb a {
     /* Overrides the default TIM style for links */
-    /*background-color: #fff;  */
     font-size: 1.0em;
     padding: 0 !important;
     margin-bottom: 20px;
     border-radius: 4px;
-}
-
-.breadcrumb active {
-    text-decoration: bold;
 }
 
 .breadcrumb > li {
@@ -1659,27 +1139,27 @@ p.plgfooter {
 
 .lazyHidden {
     visibility: hidden;
-}    
+}
 
 .lazyVisible {
-    margin-top: 0pt;
-    padding-top: 0pt;
+    margin-top: 0;
+    padding-top: 0;
 }
 
 .csLazyPre {
     margin-left: 0.7em;
     border-left: none;
-    margin-top: 0pt;
-    padding-top: 0pt;
+    margin-top: 0;
+    padding-top: 0;
 }
 
 .csLazyPre pre {
-    margin-left: 0pt;
-	border-left: thin solid #0066FF;
-    padding-left: 0pt;
+    margin-left: 0;
+    border-left: thin solid #0066FF;
+    padding-left: 0;
     margin-top: 0.1em;
-    margin-bottom: 0pt;
-    padding-top: 0pt;
+    margin-bottom: 0;
+    padding-top: 0;
     padding-bottom: 2pt;
 }
 
@@ -1687,11 +1167,8 @@ p.plgfooter {
 @media only screen and (max-width: 1200px) {
     .arealine {
         position: absolute;
-        right: -1.5em; 
+        right: -1.5em;
         left: auto;
-    }
-    .editor {
-        /* height: 5em; */
     }
 
     div.header {
@@ -1707,22 +1184,15 @@ p.plgfooter {
         margin-right: 0.5em;
     }
 
-    .paragraph, .par {
+    .par {
         position: relative;
         margin-left: 0;
         margin-top: 1em;
-        margin-right: 0em;  
+        margin-right: 0;
     }
 
     .addBottomContainer {
         margin-left: 0;
-    }
-
-    .addNoteButton {
-        position: absolute;
-        top: 0;
-        left: 106%;
-        outline: none;
     }
 
     .readline {
@@ -1736,13 +1206,6 @@ p.plgfooter {
         top: 0;
     }
 
-    .editButton {
-        position: absolute;
-        top: 0;
-        left: 106%;
-        outline: none;
-    }
-
     .editorArea {
         position: absolute;
         -webkit-box-sizing: border-box;
@@ -1753,10 +1216,6 @@ p.plgfooter {
     .previewcontent {
         min-height: 5em;
         max-height: 15em;
-    }
-
-    .addParButton {
-        left: 106%;
     }
 
     body {
@@ -1773,27 +1232,17 @@ p.plgfooter {
         width: 100%;
         margin-left: 0;
     }
-
-    .noteeditor {
-        /*
-            position: absolute;
-            top: 0em;
-            left: 0em;
-        */
-    }
 }
 
 /* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
 @media only screen and (max-width: 900px) {
-    .paragraph, .par {
+    .par {
         position: relative;
         margin-left: 0;
         margin-top: 1em;
-        margin-right: 1em;  
+        margin-right: 1em;
     }
-
 }
-
 
 /* Kännyköiden erikoistyylit =============================================*/
 @media only screen and (max-device-width: 500px) {
@@ -1828,15 +1277,6 @@ p.plgfooter {
 
     .csRunCode {
         margin-left: 1.1em;
-        /*width: 98%;  */
-    }
-
-    .addNoteButton {
-        position: absolute;
-        line-height: 0.8;
-        top: 0;
-        left: 101%;
-        outline: none;
     }
 
     .notes, .speaker {
@@ -1850,13 +1290,9 @@ p.plgfooter {
         width: 3em;
     }
 
-    task, .csRunDiv {
+    .csRunDiv {
         margin-left: 0.2em;
         margin-right: 0;
-    }
-
-    .csrunEditorDiv .csEditArea {
-        /* margin-left: 1px;  */
     }
 
     .huomautus {
@@ -1876,31 +1312,32 @@ p.plgfooter {
     .sidebar.autohidden {
         display: none;
     }
-    
+
     .csRunMenu {
         margin-left: 25px;
     }
 }
 
 @media print {
-  div.header {
-    display: none;
-  }
-  .showSidebar {
-    display: none;
-  }  
+    div.header {
+        display: none;
+    }
 
-  div#header {
-    display: none;
-  }
-  
-  .breadcrumb-div {
-    display: none;
-  }
-  
-  .addBottomContainer {
-    display: none;
-  }
+    .showSidebar {
+        display: none;
+    }
+
+    div#header {
+        display: none;
+    }
+
+    .breadcrumb-div {
+        display: none;
+    }
+
+    .addBottomContainer {
+        display: none;
+    }
 }
 
 .dialog {
@@ -1911,7 +1348,7 @@ p.plgfooter {
     top: 0;
 }
 
-.collapsed .parContent {  
+.collapsed .parContent {
     display: none;
     z-index: 10;
     position: relative;
@@ -1923,21 +1360,17 @@ p.plgfooter {
     border-bottom: 1px solid transparent;
     border-top: 1px solid transparent;
     border-right: 1px solid transparent;
-    /*
-    margin-top: -0.1em;
-    */
 }
 
 p.docsettings {
     margin-top: -3.4em;
 }
 
-
 .rights-list {
     font-size: smaller;
     margin-left: 2em;
     margin-right: -5em;
-    text-align: left; 
+    text-align: left;
 }
 
 .userlist .active {
@@ -1966,4 +1399,3 @@ p.docsettings {
     z-index: 200;
     font-size: 9px;
 }
-
