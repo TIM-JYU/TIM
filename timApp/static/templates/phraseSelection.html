@@ -7,7 +7,7 @@
     </label>
     <h3>Select velp</h3>
     <table class="phraseTable">
-        <tr class="{{ getAdvancedStyle() }}">
+        <tr ng-class="getAdvancedStyle()">
             <td>
                 <label for="searchLabels">Filter by labels </label>
             </td>
@@ -15,7 +15,7 @@
                 <input id="searchLabels" ng-model="filterTag" placeholder="filter labels">
             </td>
         </tr>
-        <tr class="{{ getAdvancedStyle() }}">
+        <tr ng-class="getAdvancedStyle()">
             <td colspan="2">
 
         <div>
@@ -85,15 +85,15 @@
             </tr>
             <tr>
                 <td>
-                    <label class="clickable" for="searchLabels" ng-click="toggleLabelShow()">Filter labels </label>
+                    <label for="searchLabels">Filter labels </label>
                 </td>
                 <td>
                     <input id="searchLabels" ng-model="filterTag" placeholder="filter labels">
                 </td>
             </tr>
+
             <tr>
                 <td colspan="2">
-                            <span class="{{ showLabels() }}">
 
         <div>
             <p ng-repeat="tag in tags | filter:{content:filterTag}" class="label tag-{{ tag.selected }}"
@@ -102,9 +102,21 @@
                 {{ tag.content }}
             </p>
         </div>
-
-        </span>
+                    </td>
+                </tr>
+                        <tr>
+                <td>
+                    <label for="newLabel">Label content </label>
+                </td>
+                <td>
+                    <input id="newLabel" ng-model="newLabelContent" placeholder="Label content">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                <button ng-click="addLabel()">Add label</button>
                 <input type="submit" value="Add velp" ng-click="addPhrase()">
+                </td>
             </tr>
         </table>
 

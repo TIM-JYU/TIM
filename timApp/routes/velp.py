@@ -10,23 +10,19 @@ velps = Blueprint('velps',
 def get_velps(document_id: int, paragraph_id: str):
     timdb = getTimDb()
     velp_data_raw = timdb.velps.get_document_velps(int(document_id))
-    velp_data ="""
-      [{
-    "tags": [
-      0
-    ],
-    "used": 3,
-    "id": 0,
-    "points": -1,
-    "content": "Sentinel missing"
-  },
-  {
-    "tags": [
-      0
-    ],
-    "used": 0,
-    "id": 1,
-    "points": -1,
-    "content": "Does not terminate with sentinel"
-  }]"""
-    return str(velp_data_raw)
+    velp_data = """[
+        {
+        "tags": [0],
+        "used": 3,
+        "id": 0,
+        "points": -1,
+        "content": "Sentinel missing"
+        },
+        {
+        "tags": [0],
+        "used": 0,
+        "id": 1,
+        "points": -1,
+        "content": "Does not terminate with sentinel"
+        }]"""
+    return velp_data

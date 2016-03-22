@@ -30,29 +30,51 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     $scope.orderPhrase = 'tag';
     $scope.advancedOn = false;
     $scope.newPhrase = {"content": "", "points": 0, "tags": []};
+    $scope.newLabelContent = "";
 
-
-    $http.get('/doc_id/par_id/velps').success(function (data) {
+    $http.get('/2/asd/velps').success(function (data) {
+        console.log(data);
         $scope.phrases = data;
         $scope.selectedPhrase = $scope.phrases[0];
     });
+
     $http.get('/static/test_data/tags.json').success(function (data) {
         $scope.tags = data;
     });
 
+    // Data
+    console.log($scope.extraData["docId"]);
+
     // Methods
+
+    /**
+     * Get color for object.
+     * @param index index of the color in color palette. (modulo by lenght of color palette)
+     * @returns {string}
+     */
     $scope.getColor = function (index) {
-        return colorPalette[index];
+        return colorPalette[index % colorPalette.length];
     };
 
+    /**
+     * Toggles label selected attribute
+     * @param tag label to toggle
+     */
     $scope.toggleTag = function (tag) {
         tag.selected = !tag.selected;
     };
 
+    /**
+     * Toggles advanced view on and off
+     */
     $scope.toggleAdvancedShow = function () {
         $scope.advancedOn = !$scope.advancedOn;
     };
 
+    /**
+     * Get correct CSS-style for advanced view
+     * @returns {*}
+     */
     $scope.getAdvancedStyle = function(){
         if (!$scope.advancedOn)
             return "hide";
@@ -60,7 +82,21 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     };
 
     /**
+     * Add new label
+     */
+    $scope.addLabel = function(){
+        var labelToAdd = {
+            "id": $scope.tags.length,
+            "content": $scope.newLabelContent,
+            "selected": true
+        };
+        $scope.newLabelContent = "";
+        $scope.tags.push(labelToAdd);
+    };
+
+    /**
      * Adds new phrase
+     * TODO: validate form
      */
     $scope.addPhrase = function(){
 
@@ -70,7 +106,6 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
                 phraseLabels.push($scope.tags[i].id);
         }
 
-        console.log(phraseLabels);
         var phraseToAdd = {
             "tags": phraseLabels,
             "used": 0,
@@ -82,6 +117,9 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
         $scope.phrases.push(phraseToAdd);
     };
 
+    /**
+     * Reset velp information
+     */
     $scope.resetNewPhrase = function(){
         $scope.newPhrase = {"content": "", "points": 0, "tags": []};
     }
