@@ -1103,10 +1103,12 @@ timApp.controller("ViewCtrl", [
         }
         sc.processAllMath($('body'));
 
+        sc.getEditMode = function() { return $window.editMode; };
+
         sc.defaultAction = {func: sc.showOptionsWindow, desc: 'Show options window'};
         timLogTime("VieCtrl end","view");
         sc.selection = {start: null, end: null};
-        sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end', 'editing'], function (newValues, oldValues, scope) {
+        sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end', 'editing', 'getEditMode()'], function (newValues, oldValues, scope) {
             sc.editorFunctions = sc.getEditorFunctions();
             if (sc.editing) {
                 sc.notification = "Editor is already open.";
@@ -1227,6 +1229,16 @@ timApp.controller("ViewCtrl", [
                     {func: sc.closeWithoutSaving, desc: 'Close editor and cancel', show: true},
                     {func: sc.nothing, desc: 'Close menu', show: true}
                 ];
+            } else if (sc.selection.start !== null && $window.editMode) {
+                return [
+                    {
+                        func: sc.beginAreaEditing,
+                        desc: 'Edit area',
+                        show: true
+                    },
+                    {func: sc.cancelArea, desc: 'Cancel area', show: true},
+                    {func: sc.nothing, desc: 'Close menu', show: true}
+                ];
             } else {
                 return [
                     {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
@@ -1237,14 +1249,8 @@ timApp.controller("ViewCtrl", [
                     {
                         func: sc.startArea,
                         desc: 'Start selecting area',
-                        show: sc.rights.editable && sc.selection.start === null
+                        show: $window.editMode && sc.selection.start === null
                     },
-                    {
-                        func: sc.beginAreaEditing,
-                        desc: 'Edit area',
-                        show: sc.selection.start !== null && sc.rights.editable
-                    },
-                    {func: sc.cancelArea, desc: 'Cancel area', show: sc.selection.start !== null},
                     {func: sc.nothing, desc: 'Close menu', show: true}
                 ];
             }
