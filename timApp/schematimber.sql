@@ -351,7 +351,7 @@ CREATE TABLE IF NOT EXISTS Velp (
 INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (1, 1, 0, null, null);
 
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (1,"FI","Hyva velppi");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (1,"En","Nice velp.");
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (1,"EN","Nice velp.");
 
 INSERT INTO VelpVersion(id, velp_id) VALUES (1,1);
 
