@@ -290,8 +290,12 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
             pars = pars_dict.get(key)
             if pars:
                 for p in pars:
-                    p['status'] = 'read' if r['par_hash'] == p['t'] or r['par_hash'] == p.get('ref_t') else 'modified'
-    
+                    if r['par_hash'] == p['t'] or r['par_hash'] == p.get('ref_t'):
+                        p['status'] = 'read'
+                    elif p.get('status') != 'read':
+                        # elif is here so not to overwrite an existing 'read' marking
+                        p['status'] = 'modified'
+
     notes = timdb.notes.getNotes(group, doc)
 
     for n in notes:
