@@ -32,7 +32,9 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     $scope.newPhrase = {"content": "", "points": 0, "tags": []};
     $scope.newLabel = {"content": "", "selected": true};
 
-    $http.get('/{0}/asd/velps'.replace('{0}',$scope.extraData["docId"])).success(function (data) {
+    //
+    console.log($scope.extraData["docId"]);
+    $http.get('/{0}/asd/velps'.replace('{0}',1)).success(function (data) {
         console.log(data);
         $scope.phrases = data;
         $scope.selectedPhrase = $scope.phrases[0];
@@ -41,9 +43,6 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     $http.get('/static/test_data/tags.json').success(function (data) {
         $scope.tags = data;
     });
-
-    // Data
-    console.log($scope.extraData["docId"]);
 
     // Methods
 
@@ -122,7 +121,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
             "tags": phraseLabels,
             "used": 0,
             "id": $scope.phrases.length,
-            "points": $scope.newPhrase["points"],
+            "default_points": $scope.newPhrase["default_points"],
             "content": $scope.newPhrase["content"]
         };
 
@@ -135,7 +134,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
      * Reset velp information
      */
     $scope.resetNewPhrase = function(){
-        $scope.newPhrase = {"content": "", "points": 0, "tags": []};
+        $scope.newPhrase = {"content": "", "default_points": 0, "tags": []};
     };
 
     /**
