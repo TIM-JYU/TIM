@@ -22,11 +22,13 @@
             <td colspan="2">
 
         <div>
-            <p ng-repeat="tag in tags | filter:{content:filterTag}" class="label tag-{{ tag.selected }}"
+            <p ng-repeat="tag in filteredTags = ( tags | filter:{content:filterTag} )" class="label tag-{{ tag.selected }}"
                style="background-color: {{ getColor(tag.id) }}"
                ng-click="toggleTag(tag)" ng-model="test" value="{{ tag.id }}">
                 {{ tag.content }}
+
             </p>
+            <p ng-hide="filteredTags.length">No labels :'(</p>
         </div>
             </td>
         </tr>
@@ -39,7 +41,7 @@
                 <input id="searchPhrases" ng-model="filterPhrase" placeholder="filter phrases">
             </td>
         </tr>
-  <!--      <tr>
+        <tr ng-class="getAdvancedStyle()">
             <td>
                 <label for="orderPhrases">Order velps:</label>
             </td>
@@ -51,31 +53,37 @@
                 <option value="points">Lowest point</option>
             </select>
             </td>
-        </tr>-->
+        </tr>
         <tr>
             <td colspan="4">
                 <div>
                     <p class="label phrase"
-                       ng-repeat="phrase in phrases | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedTags:tags"
+                       ng-repeat="phrase in filteredPhrases = (phrases | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedTags:tags)"
                        ng-click="usePhrase(phrase)">
                         <span class="glyphicon glyphicon-tag" ng-repeat="tag in phrase.tags"
                               style="color: {{ getColor(tag) }} "></span>
                         &ensp;{{ phrase.content }}&ensp;<span ng-class="['badge', {zero: phrase.points == 0, positive: phrase.points > 0, negative: phrase.points < 0}]">{{ phrase.points }}</span>
                     </p>
+                    <p ng-hide="filteredPhrases.length">No velps :'(</p>
                 </div>
             </td>
         </tr>
     </table></uib-tab>
     <uib-tab index="1" heading="Add velp">
   <!--  <h3>Add velp</h3>-->
-    <form>
+        <form name="addVelpForm" ng-submit="addVelp(addVelpForm)" novalidate>
         <table class="phraseTable">
-            <tr>
+                        <tr>
                 <td>
                     <label for="addPhraseName">Velp name</label>
                 </td>
                 <td>
-                    <input id="addPhraseName" type="text" ng-model="newPhrase['content']">
+                    <input id="addPhraseName" name="velpName" type="text" ng-model="newPhrase['content']" required>
+                </td>
+            </tr>
+            <tr ng-show="(addVelpForm.velpName.$invalid && !addVelpForm.velpName.$pristine) || (submitted && addVelpForm.velpName.$invalid)">
+                <td colspan="2">
+                    <p>Velp content is required</p>
                 </td>
             </tr>
             <tr>
@@ -101,29 +109,47 @@
         <div>
             <p ng-repeat="tag in tags | filter:{content:filterTag}" class="label tag-{{ tag.selected }}"
                style="background-color: {{ getColor(tag.id) }}"
-               ng-click="toggleTag(tag)" ng-model="test" value="{{ tag.id }}">
+               ng-click="toggleTag(tag)"  value="{{ tag.id }}">
                 {{ tag.content }}
             </p>
         </div>
                     </td>
                 </tr>
-                        <tr>
+
+            <tr>
+                <td colspan="2">
+
+
+                <input type="submit" value="Add velp" />
+                </td>
+            </tr>
+            </table>
+        </form>
+        <form name="addLabelForm" ng-submit="addLabel(addLabelForm)" novalidate>
+
+            <table class="phraseTable">
+
+                <tr>
                 <td>
                     <label for="newLabel">Label content </label>
                 </td>
                 <td>
-                    <input id="newLabel" ng-model="newLabelContent" placeholder="Label content">
+                    <input id="newLabel" name="labelContent" ng-model="newLabel['content']" placeholder="Label content" required>
                 </td>
             </tr>
-            <tr>
+            <tr ng-show="(labelAdded && addLabelForm.labelContent.$invalid) || (addLabelForm.labelContent.$invalid && !addLabelForm.labelContent.$pristine)">
                 <td colspan="2">
-                <button ng-click="addLabel()">Add label</button>
-                <input type="submit" value="Add velp" ng-click="addPhrase()">
+                    <p>Label content is too short</p>
                 </td>
             </tr>
-        </table>
+                <tr>
+                    <td colspan="2">
+                    <input type="submit" value="Add label">
+                    </td>
+                </tr>
+            </table>
+            </form>
 
-    </form>
     </uib-tab>
     </uib-tabset>
 </div>
