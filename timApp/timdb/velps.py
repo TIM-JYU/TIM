@@ -103,19 +103,26 @@ class Velps(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute("""
-                      SELECT Velp.id, Velp.default_points, Velp.icon_id, VelpContent.content FROM VelpContent
-                      INNER JOIN VelpVersion ON VelpVersion.id = VelpContent.version_id
-                      INNER JOIN Velp ON Velp.id = VelpVersion.velp_id
-                      WHERE VelpContent.language_id = ? AND Velp.id IN(
-                        SELECT velp_id
-                        FROM VelpInGroup
-                        WHERE velp_group_id IN (
-                          SELECT velp_group_id
-                            FROM VelpGroupInDocument
-                            WHERE document_id = ?
-                        )
-                      )
-                      """, [language, doc_id]
+                       SELECT Velp.id, Velp.default_points, Velp.icon_id, y.content, y.language_id
+                       FROM Velp
+                       INNER JOIN(
+                         SELECT x.velp_id, VelpContent.content, VelpContent.language_id
+                         FROM VelpContent
+                         INNER JOIN (
+                           SELECT VelpVersion.velp_id, max(VelpVersion.id) AS latest_version
+                           FROM VelpVersion GROUP BY VelpVersion.velp_id
+                           ) AS x ON VelpContent.version_id=x.latest_version
+                       ) AS y ON y.velp_id = velp.id
+                       WHERE y.language_id = ? AND velp_id IN (
+                         SELECT VelpInGroup.velp_id
+                         FROM VelpInGroup
+                         WHERE VelpInGroup.velp_group_id IN (
+                           SELECT velp_group_id
+                           FROM VelpGroupInDocument
+                           WHERE document_id = ?
+                         )
+                       )
+                       """, [language, doc_id]
                        )
         results = self.resultAsDictionary(cursor)
         return results

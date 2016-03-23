@@ -371,6 +371,7 @@ INSERT INTO VelpContent(version_id, language_id, content) VALUES (4, "FI", "Kehu
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (5, "FI", "Ei hyva");
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (6, "FI", "Paras ikina!");
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (7, "FI", "Ei saatana...");
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (5, "EN", "Not good");
 
 INSERT INTO VelpGroup(id, name, valid_until) VALUES (1, "Paljon velppeja", null);
 INSERT INTO VelpGroup(id, name, valid_until) VALUES (2, "Kehuja", null);
