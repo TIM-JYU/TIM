@@ -1,7 +1,7 @@
 from contracts import contract
 from timdb.timdbbase import TimDbBase,TimDbException
 
-class Labels(TimDbBase):
+class VelpGroupLabels(TimDbBase):
     @contract
     def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
         """Initializes TimDB with the specified database and root path.
@@ -14,7 +14,7 @@ class Labels(TimDbBase):
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
 
     @contract
-    def create_label(self, language_id: 'str', content: 'str'):
+    def create_velp_group_label(self, language_id: 'str', content: 'str'):
         """
         Creates a new label
         :param language_id: Language chosen
@@ -24,7 +24,7 @@ class Labels(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO
-                      Label(language_id, content)
+                      VelpGroupLabel(language_id, content)
                       VALUES (?, ?)
                       """, [language_id, content]
         )
@@ -42,14 +42,14 @@ class Labels(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO
-                      Label(id, language_id, content)
+                      VelpGroupLabel(id, language_id, content)
                       VALUES (?, ?, ?)
                       """, [label_id, language_id, content]
         )
         self.db.commit()
 
     @contract
-    def update_label(self, label_id: 'int', language_id: 'str', content: 'str'):
+    def update_velp_group_label(self, label_id: 'int', language_id: 'str', content: 'str'):
         """
         Updates content of label in specific language
         :param label_id: Label id
@@ -59,7 +59,7 @@ class Labels(TimDbBase):
         """
         cursor = self.db.cursor()
         cursor.execute("""
-                      UPDATE Label
+                      UPDATE VelpGroupLabel
                       SET content = ?
                       WHERE id = ? AND language_id = ?
                       """, [content, label_id, language_id]
@@ -70,7 +70,7 @@ class Labels(TimDbBase):
 
 
     @contract
-    def get_velp_labels(self, velp_id: 'int', language_id: 'str'):
+    def get_velp_group_labels(self, velp_id: 'int', language_id: 'str'):
         """
         Gets information of labels for one velp in specific language
         :param velp_id: ID of velp
@@ -81,15 +81,15 @@ class Labels(TimDbBase):
         #todo get label content also. return something.
         cursor.execute("""
                       SELECT *
-                      FROM Label
+                      FROM VelpGroupLabel
                       WHERE language_id = ? AND (id IN
-                      (SELECT velp_id FROM LabelInVelp WHERE velp_id = ?))
+                      (SELECT velp_id FROM LabelInVelpGroup WHERE velp_id = ?))
                       """, [language_id, velp_id]
         )
         return self.resultAsDictionary(cursor)
 
     @contract
-    def delete_label(self, label_id):
+    def delete_velp_group_label(self, label_id):
         """
         Deletes label (use with extreme caution)
         :param label_id: Label ID
@@ -98,7 +98,7 @@ class Labels(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                       DELETE
-                      FROM Label
+                      FROM VelpGroupLabel
                       WHERE id = ?
                       """, [label_id]
         )

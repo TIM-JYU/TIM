@@ -30,7 +30,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     $scope.orderPhrase = 'tag';
     $scope.advancedOn = false;
     $scope.newPhrase = {"content": "", "points": 0, "tags": []};
-    $scope.newLabelContent = "";
+    $scope.newLabel = {"content": "", "selected": true};
 
     $http.get('/{0}/asd/velps'.replace('{0}',$scope.extraData["docId"])).success(function (data) {
         console.log(data);
@@ -82,24 +82,36 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     };
 
     /**
-     * Add new label
+     * Add new label on form submit
      */
-    $scope.addLabel = function(){
+    $scope.addLabel = function(form){
+        var valid = form.$valid;
+        $scope.labelAdded = true;
+        if (!valid) return;
+
+        form.$setPristine();
         var labelToAdd = {
             "id": $scope.tags.length,
-            "content": $scope.newLabelContent,
-            "selected": true
+            "content": $scope.newLabel["content"],
+            "selected": $scope.newLabel["selected"]
         };
-        $scope.newLabelContent = "";
+
+        $scope.resetNewLabel();
         $scope.tags.push(labelToAdd);
+        $scope.labelAdded = false;
     };
 
-    /**
-     * Adds new phrase
-     * TODO: validate form
-     */
-    $scope.addPhrase = function(){
 
+    /**
+     * Adds new phrase on form submit
+     */
+    $scope.addVelp = function(form) {
+        var valid = form.$valid;
+        $scope.submitted = true;
+        if (!valid) return;
+
+        // Form is valid:
+        form.$setPristine();
         var phraseLabels = [];
         for (var i = 0; i < $scope.tags.length; i++) {
             if ($scope.tags[i].selected)
@@ -113,8 +125,10 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
             "points": $scope.newPhrase["points"],
             "content": $scope.newPhrase["content"]
         };
+
         $scope.resetNewPhrase();
         $scope.phrases.push(phraseToAdd);
+        $scope.submitted = false;
     };
 
     /**
@@ -122,8 +136,14 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
      */
     $scope.resetNewPhrase = function(){
         $scope.newPhrase = {"content": "", "points": 0, "tags": []};
-    }
+    };
 
+    /**
+     * Reset label information
+     */
+    $scope.resetNewLabel = function(){
+        $scope.newLabel = {"content": "", "selected": true};
+    };
 }]);
 
 /**
