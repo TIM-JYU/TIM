@@ -132,10 +132,10 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             if (previewOffset.left < 0) {
                                 previewDiv.offset({'top': previewDiv.offset().top, 'left': 0 });
                             }
-                        }
+                        }/*
                         else {
                             $previewContent.css('max-height', $previewContent.height());
-                        }
+                        }*/
                         var editorOffset = $editor.offset();
                         if (editorOffset.top < 0) {
                             $editor.offset({'top': 0, 'left': $editor.offset().left});
