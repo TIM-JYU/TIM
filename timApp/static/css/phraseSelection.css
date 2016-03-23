@@ -9,17 +9,21 @@
 }
 
 .phraseMenu .nav-tabs > li.active > a {
-    color: black;
-    font-size: 1.3em;
-    background-color: #bfbfbf;
-    border: #bfbfbf solid 2px;
+    color: white;
+    font-size: 0.8em;
+    background-color: #3cc;
+    border: 1px solid #B7B7B7;
+    border-bottom: none;
+    padding: 0.5em 1em;
 }
 
 .phraseMenu .nav-tabs > li > a {
-    color: black;
-    font-size: 1.3em;
-    background-color: #3cc;
-    border: #3cc solid 2px;
+    color: #333;
+    font-size: 0.8em;
+    background-color: #F6F6F6;
+    border: 1px solid #B7B7B7;
+    border-bottom: none;
+    padding: 0.5em 1em;
 }
 
 .tag-true, .tag-false {
@@ -81,15 +85,20 @@
 .phraseTable {
     width: 100%;
    /* max-width: 700px;*/
-    background-color: #bfbfbf;
-    border-top-right-radius: 10px;
-    border-bottom-right-radius: 10px;
-    border-bottom-left-radius: 10px;
-  /*  border: black solid 1px;*/
+    background-color: white;
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border: 1px solid #B7B7B7;
     margin-left: 0;
     border-collapse: separate;
    /* padding: 20px;
     -moz-border-radius: 10px;*/
+}
+.phraseTable input {
+    border: 1px solid #B7B7B7;
+}
+.phraseTable input[type="submit"] {
+    border: none;
 }
 .phraseTable td{
     border: 0;
@@ -97,6 +106,10 @@
     padding: 4px;/*0 0 0.5em 0;*/
     /*max-width: 900px;*/
 }
+/*
+.phraseTable label[for="newLabel"]{
+    margin-top: 7px;
+}*/
 
 .zero {
     background-color: #FFCC00;
