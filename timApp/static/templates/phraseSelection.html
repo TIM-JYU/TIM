@@ -49,8 +49,8 @@
                 <option value="content">Alphabetical</option>
                 <option value="-used">Most used</option>
                 <option value="tag">Labels</option>
-                <option value="-points">Highest point</option>
-                <option value="points">Lowest point</option>
+                <option value="-default_points">Highest point</option>
+                <option value="default_points">Lowest point</option>
             </select>
             </td>
         </tr>
@@ -62,7 +62,7 @@
                        ng-click="usePhrase(phrase)">
                         <span class="glyphicon glyphicon-tag" ng-repeat="tag in phrase.tags"
                               style="color: {{ getColor(tag) }} "></span>
-                        &ensp;{{ phrase.content }}&ensp;<span ng-class="['badge', {zero: phrase.points == 0, positive: phrase.points > 0, negative: phrase.points < 0}]">{{ phrase.points }}</span>
+                        &ensp;{{ phrase.content }}&ensp;<span ng-class="['badge', {zero: phrase.default_points == 0, positive: phrase.default_points > 0, negative: phrase.default_points < 0}]">{{ phrase.default_points }}</span>
                     </p>
                     <p ng-hide="filteredPhrases.length">No velps :'(</p>
                 </div>
@@ -88,10 +88,10 @@
             </tr>
             <tr>
                 <td>
-                    <label for="addPhrasePoints">Velp points</label>
+                    <label for="addPhrasedefault_points">Velp default_points</label>
                 </td>
                 <td>
-                    <input id="addPhrasePoints" type="number" ng-model="newPhrase['points']" value="0">
+                    <input id="addPhrasedefault_points" type="number" ng-model="newPhrase['default_points']" value="0">
                 </td>
             </tr>
             <tr>
