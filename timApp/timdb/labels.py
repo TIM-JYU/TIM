@@ -1,7 +1,9 @@
 from contracts import contract
-from timdb.timdbbase import TimDbBase,TimDbException
+from timdb.timdbbase import TimDbBase, TimDbException
+
 
 class Labels(TimDbBase):
+
     @contract
     def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
         """Initializes TimDB with the specified database and root path.
@@ -12,6 +14,7 @@ class Labels(TimDbBase):
         :param files_root_path: The root path where all the files will be stored.
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
+
 
     @contract
     def create_label(self, language_id: 'str', content: 'str'):
@@ -66,8 +69,6 @@ class Labels(TimDbBase):
         )
         self.db.commit()
 
-    @contract
-
 
     @contract
     def get_velp_labels(self, velp_id: 'int', language_id: 'str'):
@@ -89,7 +90,37 @@ class Labels(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def delete_label(self, label_id):
+    def get_document_velp_labels(self,document_id: 'int',language_id: 'str' = 'FI') -> 'list(dict)':
+        """Fetches all labels that are used by some velp that has been linked to the document.
+
+        :param document_id: ID for the document.
+        :param language_id: Optional, Id of the requested language. Default is 'FI'.
+        :return: List of labels, each label represented by a dictionary
+        """
+        cursor=self.db.cursor()
+        cursor.execute("""
+                       SELECT Label.id, Label.content
+                       FROM Label
+                       WHERE label.language_id = ? AND label.id IN (
+                         SELECT DISTINCT LabelInVelp.label_id
+                         FROM LabelInVelp
+                         WHERE LabelInVelp.velp_id IN (
+                           SELECT VelpInGroup.velp_id
+                           FROM VelpInGroup
+                           WHERE VelpInGroup.velp_group_id IN (
+                             SELECT VelpGroupInDocument.velp_group_id
+                             FROM VelpGroupInDocument
+                             WHERE VelpGroupInDocument.document_id = ?
+                           )
+                         )
+                       )
+                       """, [language_id, document_id]
+        )
+        results=self.resultAsDictionary(cursor)
+        return results
+
+    @contract
+    def delete_label(self, label_id: 'int'):
         """
         Deletes label (use with extreme caution)
         :param label_id: Label ID
