@@ -352,8 +352,10 @@ INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (1
 
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (1,"FI","Hyva velppi");
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (1,"EN","Nice velp.");
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (2,"FI","Uudempi velppi");
 
 INSERT INTO VelpVersion(id, velp_id) VALUES (1,1);
+INSERT INTO VelpVersion(id, velp_id) VALUES (2,1);
 
 INSERT INTO VelpGroup(id,name) VALUES (1,'Paljon velppeja');
 
