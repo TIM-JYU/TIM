@@ -83,3 +83,42 @@ class ClipboardTest(TimDbTest):
             self.assertEqual(read_pars[i-3]['md'], pars[i].get_markdown())
             self.assertDictEqual(read_pars[i-3]['attrs'], pars[i].get_attrs())
 
+    def test_paste(self):
+        clip = self.clipboard.get(1)
+
+        pars = [{'md': 'Kappale 1.{}'.format(i), 'attrs': {'kappale': str(i)}} for i in range(0, 1)]
+        clip.write(pars)
+
+        db = self.get_db()
+        doc = db.documents.create('Kohdedokumentti', 1)
+        dest_pars = [doc.add_paragraph('Kohdekappale {}'.format(i), attrs={'kkappale': str(i)}) for i in range(0, 10)]
+
+        clip.paste_before(doc, dest_pars[0].get_id())
+
+        new_pars = doc.get_paragraphs()
+        self.assertEqual(len(new_pars), 11)
+        self.assertEqual(new_pars[0].get_markdown(), pars[0]['md'])
+        self.assertEqual(new_pars[1].get_markdown(), dest_pars[0].get_markdown())
+
+        pars = [{'md': 'Kappale 2.{}'.format(i), 'attrs': {'kappale': str(i)}} for i in range(0, 3)]
+        clip.write(pars)
+
+        clip.paste_before(doc, new_pars[2].get_id())
+
+        new_new_pars = doc.get_paragraphs()
+        self.assertEqual(len(new_new_pars), 14)
+        self.assertEqual(new_new_pars[0].get_markdown(), new_pars[0].get_markdown())
+        self.assertEqual(new_new_pars[1].get_markdown(), new_pars[1].get_markdown())
+        self.assertEqual(new_new_pars[2].get_markdown(), pars[0]['md'])
+        self.assertEqual(new_new_pars[3].get_markdown(), pars[1]['md'])
+        self.assertEqual(new_new_pars[4].get_markdown(), pars[2]['md'])
+        self.assertEqual(new_new_pars[5].get_markdown(), new_pars[2].get_markdown())
+
+        clip.paste_before(doc, None)
+        final_pars = doc.get_paragraphs()
+        self.assertEqual(len(final_pars), 17)
+        self.assertEqual(final_pars[13].get_markdown(), new_new_pars[13].get_markdown())
+        self.assertEqual(final_pars[14].get_markdown(), pars[0]['md'])
+        self.assertEqual(final_pars[15].get_markdown(), pars[1]['md'])
+        self.assertEqual(final_pars[16].get_markdown(), pars[2]['md'])
+

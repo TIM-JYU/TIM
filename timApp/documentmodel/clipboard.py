@@ -73,6 +73,12 @@ class Clipboard:
 
             self.write(pars)
 
-        def paste_before(self, doc: Document, par_id: str):
-            pass
-
+        def paste_before(self, doc: Document, par_id: Optional[str]):
+            pars = self.read()
+            if pars is None:
+                return
+            par_before = par_id
+            for par in reversed(pars):
+                # We need to reverse the sequence because we're inserting before, not after
+                new_par = doc.insert_paragraph(par['md'], par_before, attrs=par.get('attrs'), properties=par.get('properties'))
+                par_before = new_par.get_id()
