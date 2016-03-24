@@ -146,15 +146,6 @@ CREATE TABLE VelpContent (
 );
 
 
-DROP VIEW IF EXISTS VelpInformation;
-CREATE VIEW VelpInformation AS
-  SELECT VelpVersion.id, VelpVersion.velp_id, VelpContent.language_id,
-    VelpContent.content, VelpVersion.modify_time
-  FROM VelpVersion
-    INNER JOIN VelpContent
-;
-
-
 CREATE TABLE Annotation (
   id            INTEGER   NOT NULL,
   version_id    INTEGER   NOT NULL,
@@ -339,6 +330,16 @@ CREATE TABLE LabelInVelpGroup (
 
 -- Next up, some views!
 
+DROP VIEW IF EXISTS VelpInformation;
+CREATE VIEW VelpInformation AS
+  SELECT VelpVersion.id, VelpVersion.velp_id, VelpContent.language_id,
+    VelpContent.content, VelpVersion.modify_time
+  FROM VelpVersion
+    INNER JOIN VelpContent
+  ;
+
+
+DROP VIEW IF EXISTS VelpGroupInAssessmentArea;
 CREATE VIEW VelpGroupInAssessmentArea AS
   SELECT
     VelpGroupInDocument.velp_group_id AS velp_group_id,
@@ -448,6 +449,8 @@ INSERT INTO VelpGroupInFolder(velp_group_id, folder_id) VALUES (1, 1);
 
 INSERT INTO Label(id, language_id, content) VALUES (1, "FI", "Kehuja");
 INSERT INTO Label(id, language_id, content) VALUES (2, "FI", "Oikeasti sisalloton");
+INSERT INTO Label(id, language_id, content) VALUES (3, "FI", "Muutakin");
+INSERT INTO Label(id, language_id, content) VALUES (4, "FI", "Monta labelia");
 
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (1, 2);
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (1, 3);
@@ -455,3 +458,5 @@ INSERT INTO LabelInVelp(label_id, velp_id) VALUES (1, 5);
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 1);
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 2);
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 5);
+INSERT INTO LabelInVelp(label_id, velp_id) VALUES (3, 1);
+INSERT INTO LabelInVelp(label_id, velp_id) VALUES (4, 1);
