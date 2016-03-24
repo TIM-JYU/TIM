@@ -451,6 +451,10 @@ timApp.controller("ViewCtrl", [
             var downCoords = null;
 
             $document.on('mousedown touchstart', className, function (e) {
+                if ($(".actionButtons").length > 0 || $(EDITOR_CLASS_DOT).length > 0) {
+                    // Disable while there are modal gui elements
+                    return;
+                }
                 downEvent = sc.fixPageCoords(e);
                 downCoords = {left: downEvent.pageX, top: downEvent.pageY};
             });
@@ -466,7 +470,6 @@ timApp.controller("ViewCtrl", [
                 }
             });
             $document.on('touchcancel', className, function (e) {
-                $window.console.log("cancel");
                 downEvent = null;
             });
             $document.on('mouseup touchend', className, function (e) {
