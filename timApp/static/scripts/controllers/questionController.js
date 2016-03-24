@@ -338,6 +338,10 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             scope.errorize("", "You cannot have an empty table.");
         }
 
+        for (var i = 0; i < scope.rows.length; i++) {
+            scope.rows[i].id = i;
+        }
+
         if (scope.question.showPreview) scope.createJson();
     };
 

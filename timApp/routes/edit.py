@@ -203,7 +203,7 @@ def preview(doc_id):
             blocks = [DocParagraph.create(doc=doc, md='', html=err_html)]
             return par_response(blocks, doc, edit_window=True)
     else:
-        return jsonResponse({'texts': md_to_html(text)})
+        return jsonResponse({'texts': md_to_html(text), 'js': [], 'css': []})
 
 
 def par_response(blocks, doc, edit_window=False, update_cache=False, context_par=None):

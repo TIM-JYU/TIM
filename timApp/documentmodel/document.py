@@ -163,7 +163,7 @@ class Document:
     def create(self, ignore_exists : bool = False):
         path = os.path.join(self.files_root, 'docs', str(self.doc_id))
         if not os.path.exists(path):
-            os.makedirs(path)
+            os.makedirs(path, exist_ok=True)
         elif not ignore_exists:
             raise DocExistsError(self.doc_id)
 
@@ -227,8 +227,16 @@ class Document:
     def get_document_path(self) -> str:
         return os.path.join(self.files_root, 'docs', str(self.doc_id))
 
-    def get_version_path(self, ver: Tuple[int, int]) -> str:
-        return os.path.join(self.files_root, 'docs', str(self.doc_id), str(ver[0]), str(ver[1]))
+    def get_version_path(self, ver: Optional[Tuple[int, int]]=None) -> str:
+        version = self.get_version() if ver is None else ver
+        return os.path.join(self.files_root, 'docs', str(self.doc_id), str(version[0]), str(version[1]))
+
+    def get_refs_dir(self, ver: Optional[Tuple[int, int]]=None) -> str:
+        version = self.get_version() if ver is None else ver
+        return os.path.join(self.files_root, 'refs', str(self.doc_id), str(version[0]), str(version[1]))
+
+    def get_reflist_filename(self, ver: Optional[Tuple[int, int]]=None) -> str:
+        return os.path.join(self.get_refs_dir(ver), 'reflist_to')
 
     def getlogfilename(self) -> str:
         return os.path.join(self.get_document_path(), 'changelog')
@@ -285,6 +293,25 @@ class Document:
         self.par_cache = None
         self.par_map = None
         return ver
+
+    def __update_metadata(self, pars: List[DocParagraph], old_ver: Tuple[int, int], new_ver: Tuple[int, int]):
+        if old_ver == new_ver:
+            raise TimDbException("__update_metadata called with old_ver == new_ver")
+        new_reflist_file = self.get_reflist_filename(new_ver)
+        reflist = self.get_referenced_document_ids(old_ver)
+        for p in pars:
+            if p.is_reference():
+                try:
+                    referenced_pars = p.get_referenced_pars()
+                except TimDbException:
+                    pass
+                else:
+                    for par in referenced_pars:
+                        try:
+                            reflist.add(int(par.get_doc_id()))
+                        except (ValueError, TypeError):
+                            print('Invalid document reference: ' + str(par.get_rd()))
+        self.__save_reflist(new_reflist_file, reflist)
 
     def has_paragraph(self, par_id: str) -> bool:
         """
@@ -374,6 +401,8 @@ class Document:
 
         old_ver = self.get_version()
         new_ver = self.__increment_version('Deleted', par_id, increment_major=True)
+        self.__update_metadata([], old_ver, new_ver)
+
         with open(self.get_version_path(old_ver), 'r') as f_src:
             with open(self.get_version_path(new_ver), 'w') as f:
                 while True:
@@ -417,6 +446,8 @@ class Document:
         old_ver = self.get_version()
         new_ver = self.__increment_version('Inserted', p.get_id(), increment_major=True,
                                            op_params={'before_id': insert_before_id})
+        self.__update_metadata([p], old_ver, new_ver)
+
         with open(self.get_version_path(old_ver), 'r') as f_src:
             with open(self.get_version_path(new_ver), 'w') as f:
                 while True:
@@ -460,6 +491,8 @@ class Document:
         old_hash = p_src.get_hash()
         new_ver = self.__increment_version('Modified', par_id, increment_major=False,
                                            op_params={'old_hash': old_hash, 'new_hash': new_hash})
+        self.__update_metadata([p], old_ver, new_ver)
+
         old_line = '{}/{}\n'.format(par_id, old_hash)
         old_line_legacy = '{}\n'.format(par_id)
         new_line = '{}/{}\n'.format(par_id, new_hash)
@@ -639,19 +672,18 @@ class Document:
             raise TimDbException('Area not found: ' + section_name)
         return pars
 
-    def get_referenced_document_ids(self) -> Set[int]:
+    def calculate_referenced_document_ids(self, ver: Optional[Tuple[int, int]]=None) -> Set[int]:
         """Gets all the document ids that are referenced from this document recursively.
         :return: The set of the document ids.
         """
 
-        # begin workaround
-        # todo: find a faster way to implement this function
-        src_doc = self.get_settings().get_source_document()
-        return set() if src_doc is None else {src_doc}
-        # end workaround
-
         refs = set()
-        for p in self:
+        source = self
+        if ver is not None:
+            from documentmodel.documentversion import DocumentVersion
+            source = DocumentVersion(self.doc_id, ver, self.files_root)
+
+        for p in source:
             if p.is_reference():
                 try:
                     referenced_pars = p.get_referenced_pars()
@@ -664,6 +696,26 @@ class Document:
                         except (ValueError, TypeError):
                             print('Invalid document reference: ' + str(par.get_rd()))
         return refs
+
+    def __load_reflist(self, reflist_name: str) -> Set[int]:
+        with open(reflist_name, 'r') as reffile:
+            return set(json.loads(reffile.read()))
+
+    def __save_reflist(self, reflist_name: str, reflist: Set[int]):
+        reflist_dir = os.path.dirname(reflist_name)
+        os.makedirs(reflist_dir, exist_ok=True)
+
+        with open(reflist_name, 'w') as reffile:
+            reffile.write(json.dumps(list(reflist)))
+
+    def get_referenced_document_ids(self, ver: Optional[Tuple[int, int]]=None) -> Set[int]:
+        reflist_name = self.get_reflist_filename(ver)
+        if os.path.isfile(reflist_name):
+            reflist = self.__load_reflist(reflist_name)
+        else:
+            reflist = self.calculate_referenced_document_ids(ver)
+            self.__save_reflist(reflist_name, reflist)
+        return reflist
 
     def get_paragraphs(self) -> List[DocParagraph]:
         return [par for par in self]

@@ -102,12 +102,24 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
      Updates the header links in base.html
      */
     $scope.updateHeaderLinks = function () {
-        document.getElementById("headerView").setAttribute("href", "https://" + location.host + "/view/" + window.docName);
-        document.getElementById("headerManage").setAttribute("href", "https://" + location.host + "/manage/" + window.docName);
-        document.getElementById("headerTeacher").setAttribute("href", "https://" + location.host + "/teacher/" + window.docName);
-        document.getElementById("headerAnswers").setAttribute("href", "https://" + location.host + "/answers/" + window.docName);
-        document.getElementById("headerLecture").setAttribute("href", "https://" + location.host + "/lecture/" + window.docName)
-        document.getElementById("headerSlide").setAttribute("href", "https://" + location.host + "/slide/" + window.docName);
+        if (document.getElementById("headerView")) {
+            document.getElementById("headerView").setAttribute("href", "https://" + location.host + "/view/" + window.docName);
+        }
+        if (document.getElementById("headerManage")) {
+            document.getElementById("headerManage").setAttribute("href", "https://" + location.host + "/manage/" + window.docName);
+        }
+        if (document.getElementById("headerTeacher")) {
+            document.getElementById("headerTeacher").setAttribute("href", "https://" + location.host + "/teacher/" + window.docName);
+        }
+        if (document.getElementById("headerAnswers")) {
+            document.getElementById("headerAnswers").setAttribute("href", "https://" + location.host + "/answers/" + window.docName);
+        }
+        if (document.getElementById("headerLecture")) {
+            document.getElementById("headerLecture").setAttribute("href", "https://" + location.host + "/lecture/" + window.docName)
+        }
+        if (document.getElementById("headerSlide")) {
+            document.getElementById("headerSlide").setAttribute("href", "https://" + location.host + "/slide/" + window.docName);
+        }
     };
 
     /**
@@ -125,7 +137,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
         returnImg.setAttribute("title", "Return to lecture");
         linkToLecture.appendChild(returnImg);
         menu.appendChild(linkToLecture);
-    }
+    };
 
     /**
      * Sends http request to delete the lecture.
