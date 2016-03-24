@@ -22,6 +22,7 @@ class ClipboardTest(TimDbTest):
     def setUp(self):
         db = self.get_db()
         self.clipboard = Clipboard(db.files_root_path)
+        self.clipboard.clear_all()
 
     def test_empty(self):
         clip = self.clipboard.get(1)
@@ -66,4 +67,19 @@ class ClipboardTest(TimDbTest):
         self.assertEqual(len(read_pars), 1)
         self.assertEqual(read_pars[0]['md'], par['md'])
         self.assertDictEqual(read_pars[0]['attrs'], par['attrs'])
+
+    def test_copy(self):
+        db = self.get_db()
+        doc = db.documents.create('Lähdedokumentti', 1)
+
+        pars = [doc.add_paragraph('Kappale {}'.format(i), attrs={'kappale': str(i)}) for i in range(0, 10)]
+
+        clip = self.clipboard.get(1)
+        clip.copy_pars(doc, pars[3].get_id(), pars[6].get_id())
+
+        read_pars = clip.read()
+        self.assertEqual(len(read_pars), 4)
+        for i in range(3, 7):
+            self.assertEqual(read_pars[i-3]['md'], pars[i].get_markdown())
+            self.assertDictEqual(read_pars[i-3]['attrs'], pars[i].get_attrs())
 
