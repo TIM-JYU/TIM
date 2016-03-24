@@ -103,7 +103,8 @@ class Velps(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute("""
-                       SELECT Velp.id, Velp.default_points, Velp.icon_id, y.content, y.language_id
+                       SELECT Velp.id AS id, Velp.default_points AS points, Velp.icon_id AS icon_id,
+                       y.content AS content, y.language_id AS language_id
                        FROM Velp
                        INNER JOIN(
                          SELECT x.velp_id, VelpContent.content, VelpContent.language_id
@@ -111,7 +112,7 @@ class Velps(TimDbBase):
                          INNER JOIN (
                            SELECT VelpVersion.velp_id, max(VelpVersion.id) AS latest_version
                            FROM VelpVersion GROUP BY VelpVersion.velp_id
-                           ) AS x ON VelpContent.version_id=x.latest_version
+                           ) AS x ON VelpContent.version_id = x.latest_version
                        ) AS y ON y.velp_id = velp.id
                        WHERE y.language_id = ? AND velp_id IN (
                          SELECT VelpInGroup.velp_id
