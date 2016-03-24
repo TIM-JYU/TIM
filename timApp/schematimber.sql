@@ -328,6 +328,43 @@ CREATE TABLE LabelInVelpGroup (
   ON UPDATE CASCADE
 );
 
+-- Next up, some views!
+
+CREATE VIEW VelpGroupInAssessmentArea AS
+  SELECT
+    VelpGroupInDocument.velp_group_id AS velp_group_id,
+    VelpGroupInDocument.document_id   AS document_id,
+    NULL                              AS paragraph_id,
+    NULL                              AS area_id,
+    NULL                              AS folder_id
+  FROM VelpGroupInDocument
+  UNION ALL
+  SELECT
+    VelpGroupInParagraph.velp_group_id,
+    VelpGroupInParagraph.document_id,
+    VelpGroupInParagraph.paragraph_id,
+    NULL,
+    NULL
+  FROM VelpGroupInParagraph
+  UNION ALL
+  SELECT
+    VelpGroupInArea.velp_group_id,
+    VelpGroupInArea.document_id,
+    NULL,
+    VelpGroupInArea.area_id,
+    NULL
+  FROM VelpGroupInArea
+  UNION ALL
+  SELECT
+    VelpGroupInFolder.velp_group_id,
+    NULL,
+    NULL,
+    NULL,
+    VelpGroupInFolder.folder_id
+  FROM VelpGroupInFolder;
+
+
+
 -- IMPORTANT! DELETE FROM HERE TO EOF BEFORE RUNNING IN PRODUCTION
 /*
 CREATE TABLE IF NOT EXISTS Velp (
@@ -393,6 +430,12 @@ INSERT INTO VelpGroupInDocument(velp_group_id, document_id) VALUES (1, 1);
 INSERT INTO VelpGroupInDocument(velp_group_id, document_id) VALUES (2, 1);
 INSERT INTO VelpGroupInDocument(velp_group_id, document_id) VALUES (3, 1);
 INSERT INTO VelpGroupInDocument(velp_group_id, document_id) VALUES (2, 7);
+
+INSERT INTO VelpGroupInParagraph(velp_group_id, document_id, paragraph_id) VALUES (1, 1, "4S2wxuOzeuNb");
+
+INSERT INTO VelpGroupInArea(velp_group_id, document_id, area_id) VALUES (1,1, "joku area-id");
+
+INSERT INTO VelpGroupInFolder(velp_group_id, folder_id) VALUES (1, 1);
 
 INSERT INTO Label(id, language_id, content) VALUES (1, "FI", "Kehuja");
 INSERT INTO Label(id, language_id, content) VALUES (2, "FI", "Oikeasti sisalloton");
