@@ -71,8 +71,10 @@
     </table></uib-tab>
     <uib-tab index="1" heading="Add velp">
   <!--  <h3>Add velp</h3>-->
+        <div class="phraseTable">
         <form name="addVelpForm" ng-submit="addVelp(addVelpForm)" novalidate>
-        <table class="phraseTable">
+
+        <table>
                         <tr>
                 <td>
                     <label for="addPhraseName">Velp name</label>
@@ -123,11 +125,11 @@
                 <input type="submit" value="Add velp" />
                 </td>
             </tr>
-       <!--     </table>
+        </table>
         </form>
         <form name="addLabelForm" ng-submit="addLabel(addLabelForm)" novalidate>
 
-            <table class="phraseTable"> -->
+            <table>
 
                 <tr>
                 <td>
@@ -149,7 +151,7 @@
                 </tr>
             </table>
             </form>
-
+    </div>
     </uib-tab>
     </uib-tabset>
 </div>
