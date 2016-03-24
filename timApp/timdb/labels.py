@@ -3,7 +3,6 @@ from timdb.timdbbase import TimDbBase, TimDbException
 
 
 class Labels(TimDbBase):
-
     @contract
     def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
         """Initializes TimDB with the specified database and root path.
@@ -14,7 +13,6 @@ class Labels(TimDbBase):
         :param files_root_path: The root path where all the files will be stored.
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
-
 
     @contract
     def create_label(self, language_id: 'str', content: 'str'):
@@ -30,7 +28,7 @@ class Labels(TimDbBase):
                       Label(language_id, content)
                       VALUES (?, ?)
                       """, [language_id, content]
-        )
+                       )
         self.db.commit()
 
     @contract
@@ -48,7 +46,7 @@ class Labels(TimDbBase):
                       Label(id, language_id, content)
                       VALUES (?, ?, ?)
                       """, [label_id, language_id, content]
-        )
+                       )
         self.db.commit()
 
     @contract
@@ -66,9 +64,8 @@ class Labels(TimDbBase):
                       SET content = ?
                       WHERE id = ? AND language_id = ?
                       """, [content, label_id, language_id]
-        )
+                       )
         self.db.commit()
-
 
     @contract
     def get_velp_labels(self, velp_id: 'int', language_id: 'str'):
@@ -78,26 +75,26 @@ class Labels(TimDbBase):
         :param language_id: Language chosen
         :return: List of labels associated with velp as JSON
         """
-        cursor=self.db.cursor()
-        #todo get label content also. return something.
+        cursor = self.db.cursor()
+        # todo get label content also. return something.
         cursor.execute("""
                       SELECT *
                       FROM Label
                       WHERE language_id = ? AND (id IN
                       (SELECT velp_id FROM LabelInVelp WHERE velp_id = ?))
                       """, [language_id, velp_id]
-        )
+                       )
         return self.resultAsDictionary(cursor)
 
     @contract
-    def get_document_velp_labels(self,document_id: 'int',language_id: 'str' = 'FI') -> 'list(dict)':
+    def get_document_velp_labels(self, document_id: 'int', language_id: 'str' = 'FI') -> 'list(dict)':
         """Fetches all labels that are used by some velp that has been linked to the document.
 
         :param document_id: ID for the document.
         :param language_id: Optional, Id of the requested language. Default is 'FI'.
         :return: List of labels, each label represented by a dictionary
         """
-        cursor=self.db.cursor()
+        cursor = self.db.cursor()
         cursor.execute("""
                        SELECT Label.id, Label.content
                        FROM Label
@@ -115,8 +112,8 @@ class Labels(TimDbBase):
                          )
                        )
                        """, [language_id, document_id]
-        )
-        results=self.resultAsDictionary(cursor)
+                       )
+        results = self.resultAsDictionary(cursor)
         return results
 
     @contract
@@ -132,4 +129,4 @@ class Labels(TimDbBase):
                       FROM Label
                       WHERE id = ?
                       """, [label_id]
-        )
+                       )

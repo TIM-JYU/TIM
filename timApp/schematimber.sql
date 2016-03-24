@@ -146,6 +146,15 @@ CREATE TABLE VelpContent (
 );
 
 
+DROP VIEW IF EXISTS VelpInformation;
+CREATE VIEW VelpInformation AS
+  SELECT VelpVersion.id, VelpVersion.velp_id, VelpContent.language_id,
+    VelpContent.content, VelpVersion.modify_time
+  FROM VelpVersion
+    INNER JOIN VelpContent
+;
+
+
 CREATE TABLE Annotation (
   id            INTEGER   NOT NULL,
   version_id    INTEGER   NOT NULL,
