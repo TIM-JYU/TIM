@@ -233,7 +233,7 @@ timApp.controller("ViewCtrl", [
                 url = '/postParagraph/';
             }
 
-            var area_start = options.area ? sc.getAreaEnd() : null;
+            var area_start = options.area ? sc.getAreaStart() : null;
             var area_end = options.area ? sc.getAreaEnd() : null;
 
             var attrs = {
