@@ -25,8 +25,11 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 $scope.setEditorMinSize = function() {
                     var editor = $('pareditor');
                     editor.css('min-height', editor.height());
-                    $scope.minSizeSet = true;
                     $scope.previewReleased = false;
+                    if (JSON.parse($window.localStorage.getItem('previewIsReleased')) === true) {
+                        $scope.releaseClicked();
+                    }
+                    $scope.minSizeSet = true;
                 };
 
                 $scope.deleteAttribute = function(key) {
@@ -129,8 +132,10 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             if (previewOffset.left < 0) {
                                 previewDiv.offset({'top': previewDiv.offset().top, 'left': 0 });
                             }
-
-                        }
+                        }/*
+                        else {
+                            $previewContent.css('max-height', $previewContent.height());
+                        }*/
                         var editorOffset = $editor.offset();
                         if (editorOffset.top < 0) {
                             $editor.offset({'top': 0, 'left': $editor.offset().left});
@@ -578,10 +583,13 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     var div = $("#previewDiv");
                     var content = $('.previewcontent');
                     var editor = $('.editorArea');
-
+                    $scope.previewReleased = !($scope.previewReleased);
 
                     if (div.css("position") == "absolute") {
-                        $scope.savePreviewPosition();
+                        // If preview has been clicked back in, save the preview position before making it static again
+                        if ($scope.minSizeSet) {
+                            $scope.savePreviewData(true);
+                        }
                         div.css("position", "static");
                         div.find(".draghandle").css("visibility", "hidden");
                         div.css("max-width", editor.width() - 8);
@@ -596,19 +604,22 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         document.getElementById("releaseButton").innerHTML = "&#8594;";
                     }
                     else {
-                        var top = div.offset().top;
-                        var left = div.offset().left;
-                        if ($window.localStorage.getItem('previewReleasedOffset')) {
-                            var savedOffset = (JSON.parse(localStorage.getItem('previewReleasedOffset')));
-                            left = savedOffset.left;
-                            top = editor.offset().top - savedOffset.top;
-                        } else {
-                            if ($(window).width() < editor.width() + div.width()) {
-                                top += 5;
-                                left += 5;
+                        // If preview has just been released or it was released last time editor was open
+                        if ($scope.minSizeSet || JSON.parse($window.localStorage.getItem('previewIsReleased')) === true) {
+                            var top = div.offset().top;
+                            var left = div.offset().left;
+                            if ($window.localStorage.getItem('previewReleasedOffset')) {
+                                var savedOffset = (JSON.parse(localStorage.getItem('previewReleasedOffset')));
+                                left = savedOffset.left;
+                                top = editor.offset().top - savedOffset.top;
                             } else {
-                                top = editor.offset().top;
-                                left = editor.offset().left + editor.width() + 3;
+                                if ($(window).width() < editor.width() + div.width()) {
+                                    top += 5;
+                                    left += 5;
+                                } else {
+                                    top = editor.offset().top;
+                                    left = editor.offset().left + editor.width() + 3;
+                                }
                             }
                         }
                         div.css("position", "absolute");
@@ -616,36 +627,40 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         div.find(".draghandle").css("visibility", "visible");
                         div.css("display", "table");
                         //div.css("overflow", "visible");
-                        //div.css("width", editor.width());
 
                         div.css("width", "100%");
-                        //div.css("height", "100%");
                         div.css("padding", 5);
                         var height = window.innerHeight - 90;
                         content.css('max-height', height);
                         content.css("max-width", window.innerWidth - 90);
                         content.css('overflow-x', 'auto');
-                        //div.css('max-height', )
                         document.getElementById("releaseButton").innerHTML = "&#8592;";
                         div.offset({'left': left, 'top': top});
                     }
-                    $scope.previewReleased = !($scope.previewReleased);
                     $scope.adjustPreview();
                 };
 
-                $scope.savePreviewPosition = function () {
-                    if($scope.previewReleased) {
+                $scope.savePreviewData = function (savePreviewPosition) {
+                    if (savePreviewPosition) {
                         // Calculate distance from editor's top and left
                         var editorOffset = $('.editorArea').offset();
                         var previewOffset = $('#previewDiv').offset();
                         var left = previewOffset.left;
                         var top = editorOffset.top - previewOffset.top;
                         $window.localStorage.setItem('previewReleasedOffset', JSON.stringify({'left': left, 'top': top}));
+
+                    }
+                    if ($scope.previewReleased) {
+                        $window.localStorage.setItem('previewIsReleased', JSON.stringify(true));
+                    } else {
+                        $window.localStorage.setItem('previewIsReleased', JSON.stringify(false));
                     }
                 };
 
                 $scope.saveClicked = function () {
-                    $scope.savePreviewPosition();
+                    if ($scope.previewReleased) {
+                        $scope.savePreviewData(true);
+                    } else $scope.savePreviewData(false);
                     var text = $scope.getEditorText();
                     $http.post($scope.saveUrl, angular.extend({
                         text: text
