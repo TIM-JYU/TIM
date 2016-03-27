@@ -610,7 +610,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         //div.css("width", editor.width() - 8);
                         div.css("display", "default");
                         editor.css('overflow', 'hidden');
-                        content.css('max-height', '');
+                        content.css('max-height', '40vh');
                         //content.css('max-width', editor.width() - 14);
                         content.css('overflow-x', '');
                         content.css('width', '');
