@@ -24,7 +24,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
             controller: function ($scope) {
                 $scope.setEditorMinSize = function() {
                     var editor = $('pareditor');
-                    editor.css('min-height', editor.height());
+                    editor.css('min-height', '40vh');
                     $scope.previewReleased = false;
                     if (JSON.parse($window.localStorage.getItem('previewIsReleased')) === true) {
                         $scope.releaseClicked();
@@ -117,14 +117,14 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         var $editor = $('.editorArea');
                         var editorMaxHeight = $editor.cssUnit('max-height')[0];
                         var $previewContent = $('.previewcontent');
-                        var newHeight = $scope.calculateEditorSize();
+                        /*var newHeight = $scope.calculateEditorSize($editor);
                         if (newHeight < editorMaxHeight) {
-                            $editor.css('height', newHeight);
+                            $editor.innerHeight(newHeight);
                         } else {
-                            $editor.css('height', editorMaxHeight);
-                        }
+                            $editor.innerHeight(newHeight);
+                        }*/
+                        var previewDiv = $('#previewDiv');
                         if ($scope.previewReleased) {
-                            var previewDiv = $('#previewDiv');
                             var previewOffset = previewDiv.offset();
                             if (previewOffset.top < 0) {
                                 previewDiv.offset({'top': 0, 'left': previewDiv.offset().left});
@@ -132,10 +132,15 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             if (previewOffset.left < 0) {
                                 previewDiv.offset({'top': previewDiv.offset().top, 'left': 0 });
                             }
-                        }/*
+                        }
                         else {
-                            $previewContent.css('max-height', $previewContent.height());
-                        }*/
+                            //previewDiv.css('max-height', $editor.cssUnit('height')[0] - (previewDiv.offset().top - $editor.offset().top));
+                            //$previewContent.css('max-height', previewDiv.cssUnit('height')[0] - 78);
+                            //$previewContent.css('position', 'absolute');
+                            //previewDiv.css('height', '100%');
+                            //$previewContent.css('max-height', previewDiv.height() - $('#releaseButton').height() - 100);
+                            //$previewContent.css('max-height', $previewContent.height());
+                        }
                         var editorOffset = $editor.offset();
                         if (editorOffset.top < 0) {
                             $editor.offset({'top': 0, 'left': $editor.offset().left});
@@ -148,17 +153,26 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                 };
 
+                /*
                 // Calculates what the size of the editor should be
-                $scope.calculateEditorSize = function() {
-                    var newSize = ($('.draghandle').cssUnit('min-height')[0] +
-                    $('#pareditor').cssUnit('height')[0] + 33);
-                    if(!$scope.previewReleased) {
-                        return newSize;
+                $scope.calculateEditorSize = function($editor) {
+                    var children = $editor.children();
+                    for (var i = 0; i < children.length; i++) {
+                        newHeight += children[i].offsetHeight;
                     }
-                    if($scope.previewReleased) {
-                        return newSize + 10;
+                    newHeight += $editor.marginHeight;
+                    if (!$scope.previewReleased) {
+                        return newHeight;
+                    }
+                    var newHeight = $('#pareditor').outerHeight();
+                    if (!$scope.previewReleased) {
+                        return newHeight;
+                    }
+                    if ($scope.previewReleased) {
+                        return newHeight + 10;
                     }
                 };
+                */
 
                 $scope.createAce = function (editor, text) {
                     if (!$scope.minSizeSet) {
@@ -592,12 +606,12 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         }
                         div.css("position", "static");
                         div.find(".draghandle").css("visibility", "hidden");
-                        div.css("max-width", editor.width() - 8);
-                        div.css("width", editor.width() - 8);
+                        content.css("max-width", '');
+                        //div.css("width", editor.width() - 8);
                         div.css("display", "default");
                         editor.css('overflow', 'hidden');
                         content.css('max-height', '');
-                        content.css('max-width', editor.width() - 14);
+                        //content.css('max-width', editor.width() - 14);
                         content.css('overflow-x', '');
                         content.css('width', '');
                         div.css("padding", 0);
