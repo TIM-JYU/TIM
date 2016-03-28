@@ -27,7 +27,7 @@
                     {{ text[0].html|safe }}
                     {% set ignore=False %}
                     {% for t in text[1:] %}
-                        {% if t.html|safe == "<div></div>" %}
+                        {% if t.html.strip()|safe == "" %}
                             </section>
                             <section>
                                 {% else %}
