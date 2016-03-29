@@ -41,14 +41,14 @@ class Clipboard:
             clipfilename = self.get_clipfilename()
             if not os.path.isfile(clipfilename):
                 return None
-            with open(clipfilename, 'r') as clipfile:
+            with open(clipfilename, 'rt', encoding='utf-8') as clipfile:
                 content = clipfile.read()
             return DocumentParser(content).validate_structure(is_whole_document=False).get_blocks()
 
         def write(self, pars: List[Dict]):
             os.makedirs(self.path, exist_ok=True)
             text = DocumentWriter(pars).get_text()
-            with open(self.get_clipfilename(), 'w') as clipfile:
+            with open(self.get_clipfilename(), 'wt', encoding='utf-8') as clipfile:
                 clipfile.write(text)
 
         def copy_pars(self, doc: Document, par_start: str, par_end: str):
