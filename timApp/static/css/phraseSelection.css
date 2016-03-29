@@ -80,19 +80,21 @@
     color: blue;
     text-decoration: underline;
 }
-
-/* Table styles */
-.phraseTable {
+.velpArea {
     width: 100%;
-   /* max-width: 700px;*/
     background-color: white;
     border-bottom-right-radius: 5px;
     border-bottom-left-radius: 5px;
     border: 1px solid #B7B7B7;
+}
+
+/* Table styles */
+.phraseTable {
+    table-layout: fixed;
     margin-left: 0;
+    margin-top: 1em;
+    margin-bottom: 1em;
     border-collapse: separate;
-   /* padding: 20px;
-    -moz-border-radius: 10px;*/
 }
 .phraseTable input {
     border: 1px solid #B7B7B7;
@@ -103,12 +105,14 @@
 .phraseTable td{
     border: 0;
     margin: 0;
-    padding: 4px;/*0 0 0.5em 0;*/
-    /*max-width: 900px;*/
+    padding: 4px;
+    width: 10em;
+    white-space: normal;
 }
+
 /*
-.phraseTable label[for="newLabel"]{
-    margin-top: 7px;
+.phraseTable label {
+    float: left;
 }*/
 
 .zero {
@@ -142,4 +146,5 @@
 .phraseTable input[type="submit"] {
     margin: 6px;
 }
+
 
