@@ -732,7 +732,10 @@ timApp.controller("ViewCtrl", [
             var area_name = $this.parent().attr('data-area-start');
             console.log("Collapse " + area_name);
             sc.setAreaAttr(area_name, "display", "none");
-            $this.addClass("areaexpand");
+            $this.addClass("disabledexpand");
+
+            // Set expandable after a timeout to avoid expanding right after collapse
+            $window.setTimeout(function() { $this.removeClass("disabledexpand"); $this.addClass("areaexpand"); }, 200);
         });
 
         sc.onClick(".areaexpand", function ($this, e) {
@@ -740,7 +743,10 @@ timApp.controller("ViewCtrl", [
             var area_name = $this.parent().attr('data-area-start');
             console.log("Expand " + area_name);
             sc.setAreaAttr(area_name, "display", "");
-            $this.addClass("areacollapse");
+            $this.addClass("disabledcollapse");
+
+            // Set collapsible after a timeout to avoid collapsing right after expand
+            $window.setTimeout(function() { $this.removeClass("disabledcollapse"); $this.addClass("areacollapse"); }, 200);
         });
 
         sc.showNoteWindow = function (e, $par) {

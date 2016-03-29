@@ -272,6 +272,16 @@ ul ul ul, ol ol ol {
     content: "[+]";
 }
 
+.disabledcollapse::before {
+    color: #ccc;
+    content: "[-]";
+}
+
+.disabledexpand::before {
+    color: #ccc;
+    content: "[+]";
+}
+
 .areapartline::before {
     color: #D8D8D8;
     content: "|";
