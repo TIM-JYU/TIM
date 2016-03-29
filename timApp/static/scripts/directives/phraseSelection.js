@@ -29,19 +29,19 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     // Data
     $scope.orderPhrase = 'tag';
     $scope.advancedOn = false;
-    $scope.newPhrase = {"content": "", "points": 0, "tags": []};
+    $scope.newPhrase = {"content": "", "points": 0, "labels": []};
     $scope.newLabel = {"content": "", "selected": true};
 
     //
     console.log($scope.extraData["docId"]);
     $http.get('/{0}/asd/velps'.replace('{0}',1)).success(function (data) {
         console.log(data);
-        $scope.phrases = data;
-        $scope.selectedPhrase = $scope.phrases[0];
+        $scope.velps = data;
+        $scope.selectedPhrase = $scope.velps[0];
     });
 
     $http.get('/static/test_data/tags.json').success(function (data) {
-        $scope.tags = data;
+        $scope.labels = data;
     });
 
     // Methods
@@ -90,13 +90,13 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
         form.$setPristine();
         var labelToAdd = {
-            "id": $scope.tags.length,
+            "id": $scope.labels.length,
             "content": $scope.newLabel["content"],
             "selected": $scope.newLabel["selected"]
         };
 
         $scope.resetNewLabel();
-        $scope.tags.push(labelToAdd);
+        $scope.labels.push(labelToAdd);
         $scope.labelAdded = false;
     };
 
@@ -112,21 +112,21 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
         // Form is valid:
         form.$setPristine();
         var phraseLabels = [];
-        for (var i = 0; i < $scope.tags.length; i++) {
-            if ($scope.tags[i].selected)
-                phraseLabels.push($scope.tags[i].id);
+        for (var i = 0; i < $scope.labels.length; i++) {
+            if ($scope.labels[i].selected)
+                phraseLabels.push($scope.labels[i].id);
         }
 
         var phraseToAdd = {
-            "tags": phraseLabels,
+            "labels": phraseLabels,
             "used": 0,
-            "id": $scope.phrases.length,
+            "id": $scope.velps.length,
             "default_points": $scope.newPhrase["default_points"],
             "content": $scope.newPhrase["content"]
         };
 
         $scope.resetNewPhrase();
-        $scope.phrases.push(phraseToAdd);
+        $scope.velps.push(phraseToAdd);
         $scope.submitted = false;
     };
 
@@ -134,7 +134,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
      * Reset velp information
      */
     $scope.resetNewPhrase = function(){
-        $scope.newPhrase = {"content": "", "default_points": 0, "tags": []};
+        $scope.newPhrase = {"content": "", "default_points": 0, "labels": []};
     };
 
     /**
@@ -149,35 +149,35 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
  * Filter for ordering phrases
  */
 timApp.filter('selectedTags', function () {
-    return function (phrases, tags) {
-        var selectedPhrases = {};
-        var selectedTags = [];
-        if (typeof tags != "undefined" && typeof phrases != "undefined") {
+    return function (velps, labels) {
+        var selectedVelps = {};
+        var selectedLabels = [];
+        if (typeof labels != "undefined" && typeof velps != "undefined") {
 
-            for (var i = 0; i < tags.length; i++) {
-                if (tags[i].selected)
-                    selectedTags.push(tags[i].id);
+            for (var i = 0; i < labels.length; i++) {
+                if (labels[i].selected)
+                    selectedTags.push(labels[i].id);
             }
 
             // return all phrases if no tags selected
-            if (selectedTags.length == 0)
-                return phrases;
+            if (selectedLabels.length == 0)
+                return velps;
 
-            for (var i = 0; i < phrases.length; i++) {
+            for (var i = 0; i < velps.length; i++) {
                 for (var j = 0; j < selectedTags.length; j++) {
-                    if (phrases[i].tags.indexOf(selectedTags[j]) != -1)
-                        if (!(i in selectedPhrases))
-                            selectedPhrases[i] = [phrases[i],1];
+                    if (velps[i].tags.indexOf(selectedTags[j]) != -1)
+                        if (!(i in selectedVelps))
+                            selectedVelps[i] = [velps[i],1];
                         else
-                            selectedPhrases[i][1] += 1;
+                            selectedVelps[i][1] += 1;
                 }
             }
         }
 
         var selectedArray = [];
         var returnPhrases = [];
-        for (var p in selectedPhrases){
-            selectedArray.push(selectedPhrases[p]);
+        for (var p in selectedVelps){
+            selectedArray.push(selectedVelps[p]);
         }
 
         selectedArray.sort(function(a, b) {return b[1] - a[1]});
@@ -185,7 +185,7 @@ timApp.filter('selectedTags', function () {
         for (var s in selectedArray)
             returnPhrases.push(selectedArray[s][0]);
 
-       // console.log(returnPhrases);
+       // console.log(returngit Phrases);
 
         return returnPhrases;
     };

@@ -22,11 +22,11 @@
                  <!--   <tr>
                         <td colspan="4">-->
                             <div ng-class="getAdvancedStyle()">
-                                <p ng-repeat="tag in filteredTags = ( tags | filter:{content:filterTag} )"
-                                   class="label tag-{{ tag.selected }}"
-                                   style="background-color: {{ getColor(tag.id) }}"
-                                   ng-click="toggleTag(tag)" ng-model="test" value="{{ tag.id }}">
-                                    {{ tag.content }}
+                                <p ng-repeat="label in filteredTags = ( labels | filter:{content:filterTag} )"
+                                   class="label tag-{{ label.selected }}"
+                                   style="background-color: {{ getColor(label.id) }}"
+                                   ng-click="toggleTag(label)" ng-model="test" value="{{ label.id }}">
+                                    {{ label.content }}
                                 </p>
                                 <p ng-hide="filteredTags.length">No labels :'(</p>
                             </div>
@@ -59,14 +59,14 @@
                         <td colspan="4">-->
                             <div>
                                 <p class="label phrase"
-                                   ng-repeat="phrase in filteredPhrases = (phrases | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedTags:tags)"
+                                   ng-repeat="velp in filteredVelps = (velps | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedTags:labels)"
                                    ng-click="usePhrase(phrase)">
-                        <span class="glyphicon glyphicon-tag" ng-repeat="tag in phrase.tags"
-                              style="color: {{ getColor(tag) }} "></span>
-                                    &ensp;{{ phrase.content }}&ensp;<span
-                                        ng-class="['badge', {zero: phrase.default_points == 0, positive: phrase.default_points > 0, negative: phrase.default_points < 0}]">{{ phrase.default_points }}</span>
+                        <span class="glyphicon glyphicon-tag" ng-repeat="label in velp.labels"
+                              style="color: {{ getColor(label) }} "></span>
+                                    &ensp;{{ velp.content }}&ensp;<span
+                                        ng-class="['badge', {zero: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0}]">{{ velp.points }}</span>
                                 </p>
-                                <p ng-hide="filteredPhrases.length">No velps :'(</p>
+                                <p ng-hide="filteredVelps.length">No velps :'(</p>
                             </div>
                       <!--  </td>
                     </tr>-->
@@ -112,16 +112,16 @@
                       <!--  <tr>
                             <td colspan="2">-->
                                 <div>
-                                    <p ng-repeat="tag in tags | filter:{content:filterTag}"
-                                       class="label tag-{{ tag.selected }}"
-                                       style="background-color: {{ getColor(tag.id) }}"
-                                       ng-click="toggleTag(tag)" ng-model="test" value="{{ tag.id }}">
-                                        {{ tag.content }}
+                                    <p ng-repeat="label in labels | filter:{content:filterTag}"
+                                       class="label tag-{{ label.selected }}"
+                                       style="background-color: {{ getColor(label.id) }}"
+                                       ng-click="toggleTag(label)" ng-model="test" value="{{ label.id }}">
+                                        {{ label.content }}
                                     </p>
                                 </div>
                         <!--    </td>
                         </tr>-->
-                    <table class="phraseTable"
+                    <table class="phraseTable">
                         <tr>
                             <td colspan="2">
                                 <input type="submit" value="Add velp"/>
@@ -131,7 +131,7 @@
                 </form>
                 <form name="addLabelForm" ng-submit="addLabel(addLabelForm)" novalidate>
 
-                    <table class="phraseTable">
+                    <table class="velpTable">
                         <tr>
                             <td colspan="2">
                                 <label>Add new label (optional):</label>

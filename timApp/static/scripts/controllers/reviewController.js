@@ -80,7 +80,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.selectMarking = function(markingId){
         $scope.selectedMarking["points"] = $scope.markings[markingId].points;
         $scope.selectedMarking["comment"] = $scope.markings[markingId].comment;
-        $scope.selectedMarking["phrase"] = $scope.phrases[ $scope.markings[markingId].phrase ]["content"];
+        $scope.selectedMarking["phrase"] = $scope.velps[ $scope.markings[markingId].phrase ]["content"];
     };
 
     /**
