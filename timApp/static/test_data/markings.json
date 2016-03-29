@@ -3,7 +3,7 @@
     "tags": [0],
     "id": 0,
     "points": -1,
-    "phrase": 0,
+    "velp": 0,
     "coord": {"el": 0, "start":2, "end":3 },
     "comment": "You should use a sentinel here"
   },
@@ -11,7 +11,7 @@
     "tags": [2,3,7],
     "id": 1,
     "points": 0,
-    "phrase": 5,
+    "velp": 1,
     "coord": {"el": 1, "start":5, "end":10 },
     "comment": "Nice"
   },
@@ -19,7 +19,7 @@
     "tags": [2],
     "id": 2,
     "points": 1,
-    "phrase": 9,
+    "velp": 2,
     "coord": {"el": 0, "start":18, "end":28 },
     "comment": ""
   }

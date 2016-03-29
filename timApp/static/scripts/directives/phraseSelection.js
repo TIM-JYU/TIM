@@ -100,7 +100,8 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     };
 
     /**
-     * Add new label on form submit
+     * Adds new label
+     * @param form form information
      */
     $scope.addLabel = function(form){
         var valid = form.$valid;
@@ -109,11 +110,10 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
         form.$setPristine();
         var labelToAdd = {
-            "id": $scope.labels.length + 1,
+            "id": $scope.labels.length,
             "content": $scope.newLabel["content"],
             "selected": $scope.newLabel["selected"]
         };
-
 
         $scope.resetNewLabel();
         $scope.labels.push(labelToAdd);

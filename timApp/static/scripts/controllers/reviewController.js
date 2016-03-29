@@ -10,6 +10,7 @@ console.log("reviewController.js added");
 timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile', function ($scope, $http, $window, $compile) {
     "use strict";
 
+    $scope.showSource = false;
     $scope.markingsAdded = false;
     $scope.selectedMarking = {"comment": "", "velp": "", "points": 0};
 
@@ -19,6 +20,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
        //$scope.loadMarkings();
     });
 
+    $scope.toggleShowSource = function(){
+        $scope.showSource = !$scope.showSource;
+    };
 
     /**
      * Loads used markings into view
