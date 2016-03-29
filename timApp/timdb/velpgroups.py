@@ -1,8 +1,8 @@
 from contracts import contract
 from timdb.timdbbase import TimDbBase, TimDbException
 
-class VelpGroups(TimDbBase):
 
+class VelpGroups(TimDbBase):
     @contract
     def create_velp_group(self, name: 'str', valid_until: 'str'):
         """
@@ -17,7 +17,7 @@ class VelpGroups(TimDbBase):
                       VelpGroup(name, valid_until)
                       VALUES (?, ?)
                       """, [name, valid_until]
-        )
+                       )
         self.db.commit()
 
     @contract
@@ -35,7 +35,7 @@ class VelpGroups(TimDbBase):
                       SET name = ? AND  valid_until = ?
                       WHERE id = ?
                       """, [name, valid_until, velp_group_id]
-        )
+                       )
         self.db.commit()
 
     @contract
@@ -56,7 +56,7 @@ class VelpGroups(TimDbBase):
                       FROM VelpInGroup
                       WHERE velp_group_id = ?
                       """, [velp_group_id, velp_group_id]
-        )
+                       )
 
     @contract
     def add_velp_to_group(self, velp_id: 'int', velp_group_id: 'int'):
@@ -72,7 +72,7 @@ class VelpGroups(TimDbBase):
                       VelpInGroup(velp_group_id, velp_id)
                       VALUES (?, ?)
                       """, [velp_group_id, velp_id]
-        )
+                       )
         self.db.commit()
 
     @contract
@@ -89,7 +89,7 @@ class VelpGroups(TimDbBase):
                       FROM VelpInGroup
                       WHERE velp_id = ? AND velp_group_id = ?
                       """, [velp_id, velp_group_id]
-        )
+                       )
         self.db.commit()
 
     @contract
@@ -105,5 +105,26 @@ class VelpGroups(TimDbBase):
                       FROM VelpInGroup
                       WHERE velp_group_id = ?
                       """, [velp_group_id]
-        )
+                       )
         return self.resultAsDictionary(cursor)
+
+    @contract
+    def get_velp_groups_in_assessment_area(self, document_id: 'int' = None, paragraph_id: 'str' = None,
+                                          area_id: 'str' = None, folder_id: 'int' = None) -> 'list(int)':
+        """
+        Get all velp groups linked to this assessment area. Any and even all of the parameters can be null.
+        :param document_id: Id of the document.
+        :param paragraph_id: Id of the paragraph
+        :param area_id: Id of the area
+        :param folder_id: Id of the folder.
+        :return: List of velp group ids.
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                       SELECT DISTINCT velp_group_id
+                       FROM VelpGroupInAssessmentArea
+                       WHERE document_id = ? OR (document_id = ? AND paragraph_id = ?) OR area_id = ? OR folder_id = ?
+                       """, [document_id, document_id, paragraph_id, area_id, folder_id]
+                       )
+        results=self.resultAsDictionary(cursor)
+        return results

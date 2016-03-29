@@ -328,6 +328,53 @@ CREATE TABLE LabelInVelpGroup (
   ON UPDATE CASCADE
 );
 
+-- Next up, some views!
+
+DROP VIEW IF EXISTS VelpInformation;
+CREATE VIEW VelpInformation AS
+  SELECT VelpVersion.id, VelpVersion.velp_id, VelpContent.language_id,
+    VelpContent.content, VelpVersion.modify_time
+  FROM VelpVersion
+    INNER JOIN VelpContent
+  ;
+
+
+DROP VIEW IF EXISTS VelpGroupInAssessmentArea;
+CREATE VIEW VelpGroupInAssessmentArea AS
+  SELECT
+    VelpGroupInDocument.velp_group_id AS velp_group_id,
+    VelpGroupInDocument.document_id   AS document_id,
+    NULL                              AS paragraph_id,
+    NULL                              AS area_id,
+    NULL                              AS folder_id
+  FROM VelpGroupInDocument
+  UNION ALL
+  SELECT
+    VelpGroupInParagraph.velp_group_id,
+    VelpGroupInParagraph.document_id,
+    VelpGroupInParagraph.paragraph_id,
+    NULL,
+    NULL
+  FROM VelpGroupInParagraph
+  UNION ALL
+  SELECT
+    VelpGroupInArea.velp_group_id,
+    VelpGroupInArea.document_id,
+    NULL,
+    VelpGroupInArea.area_id,
+    NULL
+  FROM VelpGroupInArea
+  UNION ALL
+  SELECT
+    VelpGroupInFolder.velp_group_id,
+    NULL,
+    NULL,
+    NULL,
+    VelpGroupInFolder.folder_id
+  FROM VelpGroupInFolder;
+
+
+
 -- IMPORTANT! DELETE FROM HERE TO EOF BEFORE RUNNING IN PRODUCTION
 /*
 CREATE TABLE IF NOT EXISTS Velp (
@@ -353,7 +400,7 @@ INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (2
 INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (3, 1, 1, null, null);
 INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (4, 1, -1, null, null);
 INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (5, 1, 2, null, null);
-INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (6, 1, -666, null, null);
+INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (6, 1, -3, null, null);
 
 INSERT INTO VelpVersion(id, velp_id) VALUES (1,1);
 INSERT INTO VelpVersion(id, velp_id) VALUES (2,1);
@@ -370,7 +417,7 @@ INSERT INTO VelpContent(version_id, language_id, content) VALUES (3, "FI", "Tama
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (4, "FI", "Kehu tamakin");
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (5, "FI", "Ei hyva");
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (6, "FI", "Paras ikina!");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (7, "FI", "Ei saatana...");
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (7, "FI", "Iso vika");
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (5, "EN", "Not good");
 
 INSERT INTO VelpGroup(id, name, valid_until) VALUES (1, "Paljon velppeja", null);
@@ -394,8 +441,16 @@ INSERT INTO VelpGroupInDocument(velp_group_id, document_id) VALUES (2, 1);
 INSERT INTO VelpGroupInDocument(velp_group_id, document_id) VALUES (3, 1);
 INSERT INTO VelpGroupInDocument(velp_group_id, document_id) VALUES (2, 7);
 
+INSERT INTO VelpGroupInParagraph(velp_group_id, document_id, paragraph_id) VALUES (1, 1, "4S2wxuOzeuNb");
+
+INSERT INTO VelpGroupInArea(velp_group_id, document_id, area_id) VALUES (1,1, "joku area-id");
+
+INSERT INTO VelpGroupInFolder(velp_group_id, folder_id) VALUES (1, 1);
+
 INSERT INTO Label(id, language_id, content) VALUES (1, "FI", "Kehuja");
 INSERT INTO Label(id, language_id, content) VALUES (2, "FI", "Oikeasti sisalloton");
+INSERT INTO Label(id, language_id, content) VALUES (3, "FI", "Muutakin");
+INSERT INTO Label(id, language_id, content) VALUES (4, "FI", "Monta labelia");
 
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (1, 2);
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (1, 3);
@@ -403,3 +458,5 @@ INSERT INTO LabelInVelp(label_id, velp_id) VALUES (1, 5);
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 1);
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 2);
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 5);
+INSERT INTO LabelInVelp(label_id, velp_id) VALUES (3, 1);
+INSERT INTO LabelInVelp(label_id, velp_id) VALUES (4, 1);
