@@ -82,9 +82,18 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param marking marking info to show
      */
     $scope.selectMarking = function(markingId){
+        console.log($scope.getVelpById( $scope.markings[markingId].velp) );
         $scope.selectedMarking["points"] = $scope.markings[markingId].points;
         $scope.selectedMarking["comment"] = $scope.markings[markingId].comment;
-        $scope.selectedMarking["velp"] = $scope.velps[ $scope.markings[markingId].velp ]["content"];
+        $scope.selectedMarking["velp"] = $scope.getVelpById( $scope.markings[markingId].velp).content;
+    };
+
+    $scope.getVelpById = function(id){
+        for (var i=0; i<$scope.velps.length; i++)
+            if ($scope.velps[i].id == "" +id)
+                return $scope.velps[i];
+
+        return undefined;
     };
 
     /**
