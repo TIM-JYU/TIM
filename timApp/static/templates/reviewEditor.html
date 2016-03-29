@@ -3,9 +3,12 @@
 <div id="reviewEditor" tim-draggable-fixed class="editorArea" ng-controller="ReviewController">
     <div class="col-md-8">
         <button class="timButton cancelPar" ng-click="cancelClicked()">Back</button>
+        <button class="timButton" ng-show="fullscreenSupported()" ng-click="goFullScreen()">Fullscreen</button>
+        <button class="timButton" ng-click="toggleShowSource()">View source</button>
+
         <!-- editori alkaa -->
-        <button class="timButton">View source</button>
-        <div class="sourceArea">
+        
+        <div ng-class="{hide: !showSource}">
             <ul class="tabsarea">
                 <li id="navigate" class="tab active"><a ng-click="tabClicked($event, 'navigateButtons')">Navigation</a>
                 </li>
@@ -140,8 +143,8 @@
             <div class="editButtonArea">
                 <button class="timButton">Run</button>
                 <!--    <button class="timButton" title="Change editor between Ace and normal textarea" ng-click="changeEditor()">Editor</button>-->
-                <button class="timButton" ng-show="fullscreenSupported()" ng-click="goFullScreen()">Fullscreen</button>
-                <!--   <button class="timButton savePar" title="Save (Ctrl-S)" ng-click="saveClicked()">Save</button>-->
+
+                   <button class="timButton savePar" title="Save (Ctrl-S)" ng-click="saveClicked()">Save</button>
 
                 <!--   <button class="timButton deletePar" ng-show="options.showDelete" ng-click="deleteClicked()">Delete</button>-->
             </div>
@@ -180,7 +183,7 @@
              style='z-index:100; top: 0px; right: 0px;'>
             <div class="pointsPhrase col-md-3">
                 <p>Points: {{ selectedMarking["points"] }}</p>
-                <p>{{ selectedMarking["velp"] }}</p>
+                <p>Velp: {{ selectedMarking["content"] }}</p>
                 <p>Comment: {{ selectedMarking["comment"] }}</p>
             </div>
             <div class="col-md-9">
