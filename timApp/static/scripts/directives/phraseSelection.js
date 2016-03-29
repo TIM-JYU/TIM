@@ -50,6 +50,21 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
     // Methods
 
+    var makePostRequest = function(velp){
+        $http({
+        method: 'POST',
+        url: url,
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        transformRequest: function(obj) {
+            var str = [];
+            for(var p in obj)
+                str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+            return str.join("&");
+        },
+        data: {username: $scope.userName, password: $scope.password}
+        }).success(function () {});
+    };
+
     /**
      * Get color for object.
      * @param index index of the color in color palette. (modulo by lenght of color palette)
@@ -98,6 +113,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
             "content": $scope.newLabel["content"],
             "selected": $scope.newLabel["selected"]
         };
+
 
         $scope.resetNewLabel();
         $scope.labels.push(labelToAdd);
@@ -166,7 +182,7 @@ timApp.filter('selectedLabels', function () {
             // return all phrases if no tags selected
             if (selectedLabels.length == 0)
                 return velps;
-            console.log("filter");
+
             for (var i = 0; i < velps.length; i++) {
                 for (var j = 0; j < selectedLabels.length; j++) {
 
