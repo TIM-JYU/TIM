@@ -21,11 +21,10 @@ class Velps(TimDbBase):
     """
 
     @contract
-    def create_velp(self, creator_id: 'int', creation_time: 'str', default_points: 'float', icon_id: 'int',
-                    valid_until: 'str'):
+    def create_velp(self, creator_id: 'int', default_points: 'float', icon_id: 'int | None' = None,
+                    valid_until: 'str | None' = None):
         """
         :param creator_id: User id of creator.
-        :param creation_time: Time of creation.
         :param default_points: Default points for velp.
         :param icon_id: Icon id attached to velp. Can be null.
         :param valid_until: Time after velp becomes unusable.
@@ -34,9 +33,9 @@ class Velps(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO
-                      Velp(creator_id, creation_time, default_points, icon_id, valid_until)
-                      VALUES(?, ?, ?, ?, ?)
-                      """, [creator_id, creation_time, default_points, icon_id, valid_until]
+                      Velp(creator_id, default_points, icon_id, valid_until)
+                      VALUES(?, ?, ?, ?)
+                      """, [creator_id, default_points, icon_id, valid_until]
                        )
         self.db.commit()
         velp_id = cursor.lastrowid
@@ -56,6 +55,8 @@ class Velps(TimDbBase):
                       """, [velp_id]
                        )
         self.db.commit()
+        version_id = cursor.lastrowid
+        return version_id
 
     @contract
     def create_velp_content(self, version_id: 'int', language_id: 'str', content: 'str'):

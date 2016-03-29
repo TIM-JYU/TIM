@@ -68,3 +68,19 @@ def get_labels(document_id: int)-> 'str':
     #I have no idea why labels is not a member of timdb.
     label_data = timdb.labels.get_document_velp_labels(int(document_id))
     return jsonResponse(label_data)
+
+
+@velps.route("/addvelp", methods=['GET'])
+def add_velp(velp_content: str = "MOIMOI", default_points: int = -5.0, language_id: str = "FI",
+             icon_id: int = None, valid_until: str = None, velp_labels: [] = [2]):
+
+    timdb = getTimDb()
+    current_user_id = getCurrentUserId()
+
+    latest_velp = timdb.velps.create_velp(current_user_id, default_points, icon_id, valid_until)
+    latest_version = timdb.velps.create_velp_version(latest_velp)
+    timdb.velps.create_velp_content(latest_version, language_id, velp_content)
+    for i in range(len(velp_labels)):
+        timdb.velp_groups.add_velp_to_group(latest_velp, velp_labels[i])
+
+    return str(latest_version)

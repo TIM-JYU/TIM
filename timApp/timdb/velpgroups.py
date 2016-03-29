@@ -3,6 +3,7 @@ from timdb.timdbbase import TimDbBase, TimDbException
 
 
 class VelpGroups(TimDbBase):
+
     @contract
     def create_velp_group(self, name: 'str', valid_until: 'str'):
         """

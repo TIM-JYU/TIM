@@ -17,6 +17,7 @@ from timdb.lectures import Lectures
 from timdb.folders import Folders
 from timdb.lectureanswers import LectureAnswers
 from timdb.velps import Velps
+from timdb.velpgroups import VelpGroups
 from timdb.labels import Labels
 import os
 
@@ -79,6 +80,7 @@ class TimDb(object):
         self.folders = Folders(self.db, files_root_path, 'folders', current_user_name)
         self.lecture_answers = LectureAnswers(self.db, files_root_path, 'lecture_answers', current_user_name)
         self.velps = Velps(self.db, files_root_path, 'velps', current_user_name)
+        self.velp_groups = VelpGroups(self.db, files_root_path, 'velp_groups', current_user_name)
         self.labels = Labels(self.db, files_root_path, 'labels', current_user_name)
 
     def clear(self):
