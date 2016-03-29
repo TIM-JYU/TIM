@@ -11,7 +11,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     "use strict";
 
     $scope.markingsAdded = false;
-    $scope.selectedMarking = {"comment": "", "phrase": "", "points": 0};
+    $scope.selectedMarking = {"comment": "", "velp": "", "points": 0};
 
 
     $http.get('/static/test_data/markings.json').success(function (data) {
@@ -80,7 +80,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.selectMarking = function(markingId){
         $scope.selectedMarking["points"] = $scope.markings[markingId].points;
         $scope.selectedMarking["comment"] = $scope.markings[markingId].comment;
-        $scope.selectedMarking["phrase"] = $scope.velps[ $scope.markings[markingId].phrase ]["content"];
+        $scope.selectedMarking["velp"] = $scope.velps[ $scope.markings[markingId].velp ]["content"];
     };
 
     /**
@@ -98,21 +98,21 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Uses selected phrase, if area is selected.
-     * @param phrase phrase selected in phraseSelection directive
+     * Uses selected velp, if area is selected.
+     * @param velp velp selected in velpSelection directive
      */
-    $scope.usePhrase = function (phrase) {
+    $scope.usePhrase = function (velp) {
         if (typeof $scope.selectedArea != "undefined") {
             /*
              var span = angular.element("<span></span>");
              console.log(span);
             */
-            //var span = $scope.createPopOverElement(phrase.content);
+            //var span = $scope.createPopOverElement(velp.content);
 
             var newMarking = {
                 "id": $scope.markings.length,
-                "phrase": phrase.id,
-                "points": phrase.points,
+                "velp": velp.id,
+                "points": velp.points,
                 "coord": {"el": 0, "start": 0, "end":0 }, // TODO: get coordinates from selectedArea
                 "comment": ""
             };
@@ -121,7 +121,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             $scope.addMarkingToCoord($scope.selectedArea, newMarking );
 
             $scope.selectedArea = undefined;
-            phrase.used += 1;
+            velp.used += 1;
         }
     };
 

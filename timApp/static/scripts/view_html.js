@@ -274,7 +274,7 @@ timApp.controller("ViewCtrl", [
                 "preview-url": '/preview/' + sc.docId,
                 "delete-url": '/deleteParagraph/' + sc.docId
             };
-             caption = 'Edit paragraph';
+             caption = 'Review editor';
              attrs["initial-text-url"] = '/getBlock/' + sc.docId + "/" + par_id;
            /* if (options.showDelete) {
                 caption = 'Edit paragraph';

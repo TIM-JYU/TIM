@@ -60,7 +60,7 @@
                             <div>
                                 <p class="label phrase"
                                    ng-repeat="velp in filteredVelps = (velps | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedTags:labels)"
-                                   ng-click="usePhrase(phrase)">
+                                   ng-click="usePhrase(velp)">
                         <span class="glyphicon glyphicon-tag" ng-repeat="label in velp.labels"
                               style="color: {{ getColor(label) }} "></span>
                                     &ensp;{{ velp.content }}&ensp;<span
