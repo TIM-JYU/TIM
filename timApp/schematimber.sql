@@ -400,7 +400,7 @@ INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (2
 INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (3, 1, 1, null, null);
 INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (4, 1, -1, null, null);
 INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (5, 1, 2, null, null);
-INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (6, 1, -666, null, null);
+INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (6, 1, -3, null, null);
 
 INSERT INTO VelpVersion(id, velp_id) VALUES (1,1);
 INSERT INTO VelpVersion(id, velp_id) VALUES (2,1);
@@ -417,7 +417,7 @@ INSERT INTO VelpContent(version_id, language_id, content) VALUES (3, "FI", "Tama
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (4, "FI", "Kehu tamakin");
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (5, "FI", "Ei hyva");
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (6, "FI", "Paras ikina!");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (7, "FI", "Ei saatana...");
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (7, "FI", "Iso vika");
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (5, "EN", "Not good");
 
 INSERT INTO VelpGroup(id, name, valid_until) VALUES (1, "Paljon velppeja", null);
