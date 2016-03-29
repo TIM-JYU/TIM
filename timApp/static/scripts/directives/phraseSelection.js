@@ -32,16 +32,20 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     $scope.newPhrase = {"content": "", "points": 0, "labels": []};
     $scope.newLabel = {"content": "", "selected": true};
 
+    var doc_id = $scope.extraData["docId"];
+    var par = $scope.extraData["par"];
     //
-    console.log($scope.extraData["docId"]);
-    $http.get('/{0}/asd/velps'.replace('{0}',1)).success(function (data) {
-        console.log(data);
+    console.log($scope.extraData);
+    $http.get('/{0}/{1}/velps'.replace('{0}',doc_id).replace('{1}', par)).success(function (data) {
         $scope.velps = data;
         $scope.selectedPhrase = $scope.velps[0];
     });
 
-    $http.get('/static/test_data/tags.json').success(function (data) {
+    $http.get('/{0}/labels'.replace('{0}',doc_id)).success(function (data) {
         $scope.labels = data;
+        $scope.labels.forEach(function (l) {
+            l.selected = false;
+        });
     });
 
     // Methods
@@ -57,10 +61,10 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
     /**
      * Toggles label selected attribute
-     * @param tag label to toggle
+     * @param label label to toggle
      */
-    $scope.toggleTag = function (tag) {
-        tag.selected = !tag.selected;
+    $scope.toggleTag = function (label) {
+        label.selected = !label.selected;
     };
 
     /**
@@ -90,7 +94,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
         form.$setPristine();
         var labelToAdd = {
-            "id": $scope.labels.length,
+            "id": $scope.labels.length + 1,
             "content": $scope.newLabel["content"],
             "selected": $scope.newLabel["selected"]
         };
@@ -121,7 +125,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
             "labels": phraseLabels,
             "used": 0,
             "id": $scope.velps.length,
-            "default_points": $scope.newPhrase["default_points"],
+            "points": $scope.newPhrase["points"],
             "content": $scope.newPhrase["content"]
         };
 
@@ -134,7 +138,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
      * Reset velp information
      */
     $scope.resetNewPhrase = function(){
-        $scope.newPhrase = {"content": "", "default_points": 0, "labels": []};
+        $scope.newPhrase = {"content": "", "points": 0, "labels": []};
     };
 
     /**
@@ -146,9 +150,9 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 }]);
 
 /**
- * Filter for ordering phrases
+ * Filter for ordering velps
  */
-timApp.filter('selectedTags', function () {
+timApp.filter('selectedLabels', function () {
     return function (velps, labels) {
         var selectedVelps = {};
         var selectedLabels = [];
@@ -156,16 +160,17 @@ timApp.filter('selectedTags', function () {
 
             for (var i = 0; i < labels.length; i++) {
                 if (labels[i].selected)
-                    selectedTags.push(labels[i].id);
+                    selectedLabels.push(labels[i].id);
             }
 
             // return all phrases if no tags selected
             if (selectedLabels.length == 0)
                 return velps;
-
+            console.log("filter");
             for (var i = 0; i < velps.length; i++) {
-                for (var j = 0; j < selectedTags.length; j++) {
-                    if (velps[i].tags.indexOf(selectedTags[j]) != -1)
+                for (var j = 0; j < selectedLabels.length; j++) {
+
+                    if (typeof velps[i].labels != "undefined" && velps[i].labels.indexOf(selectedLabels[j]) != -1)
                         if (!(i in selectedVelps))
                             selectedVelps[i] = [velps[i],1];
                         else

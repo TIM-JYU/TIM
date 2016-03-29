@@ -59,7 +59,7 @@
                         <td colspan="4">-->
                             <div>
                                 <p class="label phrase"
-                                   ng-repeat="velp in filteredVelps = (velps | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedTags:labels)"
+                                   ng-repeat="velp in filteredVelps = (velps | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedLabels:labels)"
                                    ng-click="usePhrase(velp)">
                         <span class="glyphicon glyphicon-tag" ng-repeat="label in velp.labels"
                               style="color: {{ getColor(label) }} "></span>
@@ -93,10 +93,10 @@
                         </tr>
                         <tr>
                             <td>
-                                <label for="addPhrasedefault_points">Points</label>
+                                <label for="addPhrasePoints">Points</label>
                             </td>
                             <td>
-                                <input id="addPhrasedefault_points" type="number" ng-model="newPhrase['default_points']"
+                                <input id="addPhrasePoints" type="number" ng-model="newPhrase['points']"
                                        value="0">
                             </td>
                         </tr>
