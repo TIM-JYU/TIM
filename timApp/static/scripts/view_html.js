@@ -568,6 +568,16 @@ timApp.controller("ViewCtrl", [
             sc.toggleParEditor($newpar, {showDelete: false, area: false});
         };
 
+        sc.pasteBefore = function (e, $par) {
+            http.post('/clipboard/paste/' + sc.docId, {
+                "par_before" : sc.getParId($par)
+            }).success(function(data, status, headers, config) {
+                $window.location.reload();
+            }).error(function(data, status, headers, config) {
+                $window.alert(data.error);
+            });
+        };
+
         // Event handler for "Add question below"
         // Opens pop-up window to create question.
         sc.addQuestion = function (e, $par) {
@@ -1261,6 +1271,7 @@ timApp.controller("ViewCtrl", [
                     {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
                     {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
                     {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
+                    {func: sc.pasteBefore, desc: 'Paste before', show: sc.rights.editable},
                     {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
                     {
                         func: sc.startArea,
