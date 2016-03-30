@@ -11,8 +11,8 @@ velps = Blueprint('velps',
 def get_velps(document_id: int, paragraph_id: str) -> 'str':
     timdb = getTimDb()
     #Todo Somehow communicate the language string for the get_document_velps function.
-    velp_data_raw = timdb.velps.get_document_velps(int(document_id))
-    velp_data = """[
+    velp_data = timdb.velps.get_document_velps(int(document_id))
+    test_velp_data = """[
         {
         "tags": [0],
         "used": 3,
@@ -27,39 +27,39 @@ def get_velps(document_id: int, paragraph_id: str) -> 'str':
         "points": -1,
         "content": "Does not terminate with sentinel"
         }]"""
-    label_data_raw = timdb.labels.get_document_velp_label_ids(int(document_id))
-    print(velp_data_raw)
-    print(label_data_raw)
+    label_data = timdb.labels.get_document_velp_label_ids(int(document_id))
+    print(velp_data)
+    print(label_data)
 
     # Add try catch in case there are no labels at all
     # Add null label lists as well?
 
-    velp_id = label_data_raw[0]['velp_id']
+    velp_id = label_data[0]['velp_id']
     list_help = []
     label_dict = {}
-    for i in range(len(label_data_raw)):
-        next_id = label_data_raw[i]['velp_id']
+    for i in range(len(label_data)):
+        next_id = label_data[i]['velp_id']
         if next_id != velp_id:
             label_dict[velp_id] = copy.deepcopy(list_help)
             velp_id = next_id
             del list_help[:]
-            list_help.append(label_data_raw[i]['labels'])
+            list_help.append(label_data[i]['labels'])
         else:
-            list_help.append(label_data_raw[i]['labels'])
-            if i == len(label_data_raw) - 1:
+            list_help.append(label_data[i]['labels'])
+            if i == len(label_data) - 1:
                 label_dict[velp_id] = copy.deepcopy(list_help)
 
-    for i in range(len(velp_data_raw)):
-        searchID = velp_data_raw[i]['id']
+    for i in range(len(velp_data)):
+        searchID = velp_data[i]['id']
         if searchID in label_dict:
-            velp_data_raw[i]['labels'] = label_dict[searchID]
+            velp_data[i]['labels'] = label_dict[searchID]
 
     # Try catch should end here
 
-    print(velp_data_raw)
+    print(velp_data)
 
 
-    return jsonResponse(velp_data_raw)
+    return jsonResponse(velp_data)
 
 @velps.route("/<document_id>/labels", methods=['GET'])
 def get_labels(document_id: int)-> 'str':
