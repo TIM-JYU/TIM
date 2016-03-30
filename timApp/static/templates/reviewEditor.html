@@ -4,11 +4,36 @@
     <div class="col-md-8">
         <button class="timButton cancelPar" ng-click="cancelClicked()">Back</button>
         <button class="timButton" ng-show="fullscreenSupported()" ng-click="goFullScreen()">Fullscreen</button>
-        <button class="timButton" ng-click="toggleShowSource()">View source</button>
+        <button class="timButton" ng-click="toggleShowSource()">Switch view</button>
+
+        <div id="previewDiv" caption="Preview" class="reviewPreview col-md-12" ng-class="{hide: showSource}"
+             style='z-index:100; top: 0px; right: 0px;'>
+            <div class="pointsPhrase col-md-3">
+                <p>Points: {{ selectedMarking["points"] }}</p>
+                <p>{{ selectedMarking["velp"] }}</p>
+                <p>Comment: {{ selectedMarking["comment"] }}</p>
+            </div>
+            <div class="col-md-9">
+            <span>Preview
+                (<ng-pluralize count="parCount"
+                       when="{'0': 'empty',
+                     '1': '1 paragraph',
+                     'other': '{} paragraphs'}">
+                </ng-pluralize>)
+            </span>
+                <!--    <button id="releaseButton" class="timButton" style='float: right' ng-click="releaseClicked()">
+                        &#8594;</button> -->
+                <span ng-show="outofdate">...</span>
+
+                <div id="previewContent" class="previewcontent" ng-click="selectText()"></div>
+            </div>
+
+        </div>
 
         <!-- editori alkaa -->
 
         <div ng-class="{hide: !showSource}">
+            <p style="color: red;">NOTE: Any changes to the below content will affect answer!</p>
             <ul class="tabsarea">
                 <li id="navigate" class="tab active"><a ng-click="tabClicked($event, 'navigateButtons')">Navigation</a>
                 </li>
@@ -144,7 +169,7 @@
                 <button class="timButton">Run</button>
                 <!--    <button class="timButton" title="Change editor between Ace and normal textarea" ng-click="changeEditor()">Editor</button>-->
 
-                   <button class="timButton savePar" title="Save (Ctrl-S)" ng-click="saveClicked()">Save</button>
+                <!--   <button class="timButton savePar" title="Save (Ctrl-S)" ng-click="saveClicked()">Save</button>-->
 
                 <!--   <button class="timButton deletePar" ng-show="options.showDelete" ng-click="deleteClicked()">Delete</button>-->
             </div>
@@ -179,29 +204,7 @@
             </div>
         </div>
 
-        <div id="previewDiv" caption="Preview" class="reviewPreview col-md-12"
-             style='z-index:100; top: 0px; right: 0px;'>
-            <div class="pointsPhrase col-md-3">
-                <p>Points: {{ selectedMarking["points"] }}</p>
-                <p>Velp: {{ selectedMarking["velp"] }}</p>
-                <p>Comment: {{ selectedMarking["comment"] }}</p>
-            </div>
-            <div class="col-md-9">
-    <span>Preview
-        (<ng-pluralize count="parCount"
-                       when="{'0': 'empty',
-                     '1': '1 paragraph',
-                     'other': '{} paragraphs'}">
-        </ng-pluralize>)
-    </span>
-                <!--    <button id="releaseButton" class="timButton" style='float: right' ng-click="releaseClicked()">
-                        &#8594;</button> -->
-                <span ng-show="outofdate">...</span>
 
-                <div id="previewContent" class="previewcontent" ng-click="selectText()"></div>
-            </div>
-
-        </div>
     </div>
 
     <div class="col-md-4">
