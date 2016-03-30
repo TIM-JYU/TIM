@@ -1,11 +1,12 @@
 from contracts import contract
 from timdb.timdbbase import TimDbBase
 
-class Annotation(TimDbBase):
+class Annotations(TimDbBase):
     @contract
-    def create_annotation(self, version_id: 'int', document_id: 'int', paragraph_id: 'int',
-                          answer_id: 'int', place_start: 'int', place_end: 'int',
-                          annotator_id: 'int', points: 'float', icon_id: 'int'):
+    def create_annotation(self, version_id: 'int',  points: 'float', place_start: 'int', place_end: 'int',
+                          annotator_id: 'int', icon_id: 'int | None' = None,
+                          document_id: 'int | None' = None, paragraph_id: 'int | None' = None,
+                          answer_id: 'int | None' = None):
         """
         Create new annotation
         :param version_id: Version of velp annotation uses
@@ -17,7 +18,6 @@ class Annotation(TimDbBase):
         :param annotator_id: id of user who left the annotation
         :param points: Points given, overrides velp's default and can be null
         :param icon_id: Icon id, can be null
-        :return:
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -25,7 +25,7 @@ class Annotation(TimDbBase):
                       Annotation(version_id, document_id, paragraph_id, answer_id, place_start,
                       place_end, annotator_id, points, icon_id)
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                      """ [version_id, document_id, paragraph_id, answer_id, place_start,
-                       place_end, annotator_id, points, icon_id]
+                      """, [version_id, document_id, paragraph_id, answer_id, place_start,
+                           place_end, annotator_id, points, icon_id]
         )
         self.db.commit()

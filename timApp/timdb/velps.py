@@ -75,6 +75,8 @@ class Velps(TimDbBase):
                        )
         self.db.commit()
 
+
+        # Something is f...d up here
     @contract
     def update_velp(self, velp_id: 'int', new_content: 'str', languages: 'str'):
         cursor = self.db.cursor()
@@ -93,6 +95,20 @@ class Velps(TimDbBase):
                       VALUES (?, ?, ?)
                       """, [new_versionId, languages[0], new_content[0]]
                        )
+
+    @contract
+    def get_latest_velp_version(self, velp_id: 'int', language_id: 'str' = "FI"):
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT
+                      MAX(id)
+                      FROM
+                      VelpInformation
+                      WHERE velp_id = ? AND language_id = ?
+                      """, [velp_id, language_id]
+                       )
+        velp_version = cursor.fetchone()[0]
+        return velp_version
 
     @contract
     def get_document_velps(self, doc_id: 'int', language: 'str' = 'FI') -> 'list(dict)':

@@ -65,7 +65,6 @@ def get_velps(document_id: int, paragraph_id: str) -> 'str':
 def get_labels(document_id: int)-> 'str':
     timdb = getTimDb()
     #Todo select language.
-    #I have no idea why labels is not a member of timdb.
     label_data = timdb.labels.get_document_velp_labels(int(document_id))
     return jsonResponse(label_data)
 
@@ -84,3 +83,15 @@ def add_velp(velp_content: str = "MOIMOI", default_points: int = -5.0, language_
         timdb.velp_groups.add_velp_to_group(latest_velp, velp_labels[i])
 
     return str(latest_version)
+
+@velps.route("/addannotation", methods=['GET'])
+def add_annotation(velp_id: int = 1, points: float = 1.5, place_start: int = 1, place_end: int = 2,
+                   document_id: int = None, paragraph_id: int = None, answer_id: int = None,
+                   icon_id: int = None):
+    timdb = getTimDb()
+    annotator_id = getCurrentUserId()
+    velp_version = timdb.velps.get_latest_velp_version(velp_id)
+    timdb.annotations.create_annotation(velp_version, points, place_start, place_end, annotator_id,
+                                                 icon_id, document_id, paragraph_id, answer_id)
+
+    return "Added annotation"
