@@ -6,6 +6,7 @@ from copy import copy
 from contracts import contract, new_contract
 
 from documentmodel.documentparser import DocumentParser
+from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
 from htmlSanitize import sanitize_html
 from markdownconverter import md_to_html, par_list_to_html_list, expand_macros
@@ -420,7 +421,7 @@ class DocParagraph(DocParagraphBase):
             return prev_par_auto_values
 
         md_expanded = expand_macros(prev_par.get_markdown(), macros, macro_delim)
-        blocks = DocumentParser(md_expanded).get_blocks(break_on_empty_line=True)
+        blocks = DocumentParser(md_expanded).get_blocks(DocumentParserOptions.break_on_empty_lines())
         deltas = copy(prev_par_auto_values['h'])
         titles = []
         for e in blocks:
