@@ -1101,7 +1101,7 @@ timApp.controller("ViewCtrl", [
                 return sc.showAddParagraphAbove(e, $(".addBottomContainer"));
             });
         }
-        sc.processAllMath($('body'));
+        sc.processAllMathDelayed($('body'));
 
         sc.defaultAction = {func: sc.showOptionsWindow, desc: 'Show options window'};
         timLogTime("VieCtrl end","view");
