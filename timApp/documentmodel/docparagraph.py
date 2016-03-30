@@ -212,7 +212,9 @@ class DocParagraph(DocParagraphBase):
             data = [par.__data for par in self.get_referenced_pars(edit_window=True)]
             return DocumentWriter(data, export_hashes=False, export_ids=False).get_text()
 
-        return DocumentWriter([self.__data], export_hashes=False, export_ids=False).get_text()
+        return DocumentWriter([self.__data],
+                              export_hashes=False,
+                              export_ids=False).get_text(DocumentParserOptions.single_paragraph())
 
     @contract
     def __get_setting_html(self) -> 'str':
