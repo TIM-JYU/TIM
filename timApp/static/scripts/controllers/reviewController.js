@@ -10,6 +10,7 @@ console.log("reviewController.js added");
 timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile', function ($scope, $http, $window, $compile) {
     "use strict";
 
+    $scope.testi = "TESTI";
     $scope.showSource = false;
     $scope.markingsAdded = false;
     $scope.selectedMarking = {"selected":false, "comment": "", "velp": "", "points": 0};
@@ -40,7 +41,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 range.setStart(el, placeInfo["start"]);
                 range.setEnd(el, placeInfo["end"]);
 
-                $scope.addMarkingToCoord(range, $scope.markings[i]);
+                $scope.addMarkingToCoord(range, $scope.markings[i], false);
             }
             $scope.markingsAdded = true;
         }
@@ -52,8 +53,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param start start coordinate
      * @param end end coordinate
      */
-    $scope.addMarkingToCoord = function(range, marking){
-        var span = document.createElement("span");
+    $scope.addMarkingToCoord = function(range, marking, show){
+        var span = $scope.createPopOverElement("Testi", show);
         span.setAttribute("ng-click", "selectMarking(" + marking.id + ")");
         span.classList.add("marking");
         span.classList.add("emphasise");
@@ -132,12 +133,23 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             };
 
             $scope.markings.push(newMarking);
-            $scope.addMarkingToCoord($scope.selectedArea, newMarking );
+            $scope.addMarkingToCoord($scope.selectedArea, newMarking, true );
 
             $scope.selectedArea = undefined;
             velp.used += 1;
         }
     };
 
+    $scope.createPopOverElement = function (marking, show) {
+        var span = document.createElement('span');
+        span.setAttribute("uib-popover-template", "dynamicPopover.templateUrl");
+        span.setAttribute("popover-is-open", "{0}".replace("{0}", ""+show));
+        return span;
+    };
+
+    $scope.dynamicPopover = {
+        templateUrl: '/static/templates/popOverTemplate.html',
+        title: 'Velp'
+    };
 
 }]);
