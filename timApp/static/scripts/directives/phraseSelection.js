@@ -45,7 +45,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
         $scope.velps.forEach(function (v) {
             v.used = 0;
             if (v.id > new_velp_id)
-                new_velp_id = l.id
+                new_velp_id = v.id
         });
         new_velp_id++;
         $scope.selectedPhrase = $scope.velps[0];
