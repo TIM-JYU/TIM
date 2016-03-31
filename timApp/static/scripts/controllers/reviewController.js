@@ -12,7 +12,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     $scope.showSource = false;
     $scope.markingsAdded = false;
-    $scope.selectedMarking = {"comment": "", "velp": "", "points": 0};
+    $scope.selectedMarking = {"selected":false, "comment": "", "velp": "", "points": 0};
 
 
     $http.get('/static/test_data/markings.json').success(function (data) {
@@ -84,6 +84,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.selectMarking = function(markingId){
         console.log($scope.getVelpById( $scope.markings[markingId].velp) );
+        $scope.selectedMarking["selected"] = true;
         $scope.selectedMarking["points"] = $scope.markings[markingId].points;
         $scope.selectedMarking["comment"] = $scope.markings[markingId].comment;
         $scope.selectedMarking["velp"] = $scope.getVelpById( $scope.markings[markingId].velp).content;

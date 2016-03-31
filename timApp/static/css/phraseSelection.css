@@ -81,10 +81,16 @@
 
 /* Velp info styles */
 .velpInfo {
+    margin-top: 1em;
     float: left;
     border-left: solid 2px grey;
     border-bottom: solid 2px grey;
     padding: 0.5em 0.25em;
+}
+
+.velpInfo textarea{
+    background-color: transparent;
+    border: none;
 }
 
 /* Marking styles */

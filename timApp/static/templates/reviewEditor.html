@@ -7,7 +7,7 @@
         <button class="timButton" ng-click="toggleShowSource()">Switch view</button>
 
         <div id="previewDiv" caption="Preview" class="reviewPreview col-md-12" ng-class="{hide: showSource}">
-            <div class="col-md-9">
+
             <span>Preview
                 (<ng-pluralize count="parCount"
                        when="{'0': 'empty',
@@ -20,7 +20,7 @@
                 <span ng-show="outofdate">...</span>
 
                 <div id="previewContent" class="previewcontent" ng-click="selectText()"></div>
-            </div>
+
 
         </div>
 
@@ -200,9 +200,10 @@
 
 
         <div class="col-md-6">
-            <div ng-class="['velpInfo', 'emphasise', {neutral: selectedMarking['points']==0, positive: selectedMarking['points']>0, negative: selectedMarking['points']<0}]">
+            <div ng-class="['velpInfo', 'emphasise', {hide:!selectedMarking['selected'], neutral: selectedMarking['points']==0, positive: selectedMarking['points']>0, negative: selectedMarking['points']<0}]">
                 <p><strong>{{ selectedMarking["velp"] }}</strong> {{ selectedMarking["points"] }}</p>
-                <p>{{ selectedMarking["comment"] }}</p>
+                <p ng-repeat="comment in selectedMarking['comments']">{{ comment.text }}</p>
+                <textarea placeholder="Add comment here!">{{ selectedMarking["comment"] }}</textarea>
             </div>
         </div>
     </div>
