@@ -10,7 +10,7 @@
             <!--   <h3>Select velp</h3>-->
             <div class="velpArea">
                 <table class="phraseTable">
-                    <tr ng-class="getAdvancedStyle()">
+                    <tr ng-class="{hide: !showAdvanced}">
                         <td>
                             <label for="searchLabels">Filter by labels </label>
                         </td>
@@ -57,15 +57,20 @@
                 </table>
                  <!--   <tr>
                         <td colspan="4">-->
-                            <div>
-                                <p class="label phrase"
-                                   ng-repeat="velp in filteredVelps = (velps | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedLabels:labels)"
-                                   ng-click="usePhrase(velp)">
-                        <span class="glyphicon glyphicon-tag" ng-repeat="label in velp.labels"
-                              style="color: {{ getColor(label) }} "></span>
-                                    &ensp;{{ velp.content }}&ensp;<span
-                                        ng-class="['badge', {zero: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0}]">{{ velp.points }}</span>
-                                </p>
+                            <div ng-repeat="velp in filteredVelps = (velps | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedLabels:labels)">
+
+                                <div class="velp" ng-click="usePhrase(velp)">
+                                    <div ng-class="['emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0}]"></div>
+                                    <div class="content">
+                                        <p>
+                                    <span>{{ velp.content }}&ensp;</span>
+                                    <span class="points">{{ velp.points }}</span>
+                                    <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]" ng-repeat="label in velp.labels" style="color: {{ getColor(label) }} "></span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- div ng-class="['emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0}]" style="height: 2px;"></div -->
+
                                 <p ng-hide="filteredVelps.length">No velps :'(</p>
                             </div>
                       <!--  </td>
@@ -73,6 +78,7 @@
             </div>
         </uib-tab>
         <uib-tab index="1" heading="Add velp">
+
             <!--  <h3>Add velp</h3>-->
             <div class="velpArea">
                 <form name="addVelpForm" ng-submit="addVelp(addVelpForm)" novalidate>

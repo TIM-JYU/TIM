@@ -65,7 +65,7 @@ def get_velps(document_id: int, paragraph_id: str) -> 'str':
 def get_labels(document_id: int)-> 'str':
     timdb = getTimDb()
     #Todo select language.
-    label_data = timdb.labels.get_document_velp_labels(int(document_id))
+    label_data = timdb.labels.get_document_velp_label_content(int(document_id))
     return jsonResponse(label_data)
 
 

@@ -34,17 +34,29 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
     var doc_id = $scope.extraData["docId"];
     var par = $scope.extraData["par"];
-    //
+
+    var new_velp_id = 0; // get latest velp id
+    var new_label_id = 0; // get latest label id
+
+    // velp[order} =
     console.log($scope.extraData);
     $http.get('/{0}/{1}/velps'.replace('{0}',doc_id).replace('{1}', par)).success(function (data) {
         $scope.velps = data;
-        $scope.selectedPhrase = $scope.velps[0];
+        $scope.velps.forEach(function (v) {
+            v.used = 0;
+            if (v.id > new_velp_id)
+                new_velp_id = v.id
+        });
+        new_velp_id++;
+        console.log($scope.velps)
     });
 
     $http.get('/{0}/labels'.replace('{0}',doc_id)).success(function (data) {
         $scope.labels = data;
         $scope.labels.forEach(function (l) {
             l.selected = false;
+            if (l.id > new_label_id)
+                new_label_id = l.id
         });
     });
 
@@ -140,7 +152,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
         var phraseToAdd = {
             "labels": phraseLabels,
             "used": 0,
-            "id": $scope.velps.length,
+            "id": ++new_velp_id,
             "points": $scope.newPhrase["points"],
             "content": $scope.newPhrase["content"]
         };
