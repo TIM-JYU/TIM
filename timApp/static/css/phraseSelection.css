@@ -1,4 +1,5 @@
 /* app css stylesheet */
+
 .phraseMenu {
     margin-top: 1.75em;
 }
@@ -78,6 +79,14 @@
     float: left;
 }
 
+/* Velp info styles */
+.velpInfo {
+    float: left;
+    border-left: solid 2px grey;
+    border-bottom: solid 2px grey;
+    padding: 0.5em 0.25em;
+}
+
 /* Marking styles */
 .marking {
     cursor: pointer;
@@ -141,17 +150,6 @@
     float: left;
 }*/
 
-.zero {
-    background-color: #FFCC00;
-}
-
-.positive {
-    background-color: green;
-}
-
-.negative {
-    background-color: red;
-}
 /*
 .reviewPreview {
     max-width: 100%;

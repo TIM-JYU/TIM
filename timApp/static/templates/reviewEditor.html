@@ -6,13 +6,7 @@
         <button class="timButton" ng-show="fullscreenSupported()" ng-click="goFullScreen()">Fullscreen</button>
         <button class="timButton" ng-click="toggleShowSource()">Switch view</button>
 
-        <div id="previewDiv" caption="Preview" class="reviewPreview col-md-12" ng-class="{hide: showSource}"
-             style='z-index:100; top: 0px; right: 0px;'>
-            <div class="pointsPhrase col-md-3">
-                <p>Points: {{ selectedMarking["points"] }}</p>
-                <p>{{ selectedMarking["velp"] }}</p>
-                <p>Comment: {{ selectedMarking["comment"] }}</p>
-            </div>
+        <div id="previewDiv" caption="Preview" class="reviewPreview col-md-12" ng-class="{hide: showSource}">
             <div class="col-md-9">
             <span>Preview
                 (<ng-pluralize count="parCount"
@@ -205,10 +199,17 @@
         </div>
 
 
+        <div class="col-md-6">
+            <div ng-class="['velpInfo', 'emphasise', {neutral: selectedMarking['points']==0, positive: selectedMarking['points']>0, negative: selectedMarking['points']<0}]">
+                <p><strong>{{ selectedMarking["velp"] }}</strong> {{ selectedMarking["points"] }}</p>
+                <p>{{ selectedMarking["comment"] }}</p>
+            </div>
+        </div>
     </div>
 
     <div class="col-md-4">
         <phrase-selection></phrase-selection>
     </div>
+
     {{ loadMarkings() }}
 </div>
