@@ -14,7 +14,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.markingsAdded = false;
     $scope.selectedMarking = {"selected":false, "comment": "", "velp": "", "points": 0};
 
-
     $http.get('/static/test_data/markings.json').success(function (data) {
         $scope.markings = data;
        //$scope.loadMarkings();

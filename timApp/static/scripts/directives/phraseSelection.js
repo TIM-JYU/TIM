@@ -48,7 +48,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
                 new_velp_id = v.id
         });
         new_velp_id++;
-        $scope.selectedPhrase = $scope.velps[0];
+        console.log($scope.velps)
     });
 
     $http.get('/{0}/labels'.replace('{0}',doc_id)).success(function (data) {
