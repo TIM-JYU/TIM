@@ -62,11 +62,15 @@
                                 <div class="velp" ng-click="usePhrase(velp)">
                                     <div ng-class="['emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0}]"></div>
                                     <div class="content">
+                                        <p>
                                     <span>{{ velp.content }}&ensp;</span>
                                     <span class="points">{{ velp.points }}</span>
                                     <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]" ng-repeat="label in velp.labels" style="color: {{ getColor(label) }} "></span>
+                                        </p>
                                     </div>
                                 </div>
+                                <!-- div ng-class="['emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0}]" style="height: 2px;"></div -->
+
                                 <p ng-hide="filteredVelps.length">No velps :'(</p>
                             </div>
                       <!--  </td>
