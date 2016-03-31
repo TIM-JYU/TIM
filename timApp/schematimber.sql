@@ -395,12 +395,13 @@ CREATE TABLE IF NOT EXISTS Velp (
   ON UPDATE CASCADE
 );
 */
-INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (1, 1, 0, null, null);
-INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (2, 1, 1, null, null);
-INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (3, 1, 1, null, null);
+INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (1, 1, -2, null, null);
+INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (2, 1, -1, null, null);
+INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (3, 1, -0.5, null, null);
 INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (4, 1, -1, null, null);
-INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (5, 1, 2, null, null);
-INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (6, 1, -3, null, null);
+INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (5, 1, -2, null, null);
+INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (6, 1, 0, null, null);
+INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (7, 1, 1, null, null);
 
 INSERT INTO VelpVersion(id, velp_id) VALUES (1,1);
 INSERT INTO VelpVersion(id, velp_id) VALUES (2,1);
@@ -409,16 +410,18 @@ INSERT INTO VelpVersion(id, velp_id) VALUES (4,3);
 INSERT INTO VelpVersion(id, velp_id) VALUES (5,4);
 INSERT INTO VelpVersion(id, velp_id) VALUES (6,5);
 INSERT INTO VelpVersion(id, velp_id) VALUES (7,6);
+INSERT INTO VelpVersion(id, velp_id) VALUES (8,7);
 
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (1, "FI", "Perusvelppi");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (1, "EN", "Common velp");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (2, "FI", "Uudempi perusvelppi");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (3, "FI", "Tama on kehu");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (4, "FI", "Kehu tamakin");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (5, "FI", "Ei hyva");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (6, "FI", "Paras ikina!");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (7, "FI", "Iso vika");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (5, "EN", "Not good");
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (1, "FI", "Virheellinen alue");/*ei toimi*/
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (1, "EN", "Erroneus region");/*ei toimi*/
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (2, "FI", "Virheellinen ajankohta");
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (3, "FI", "Virheellinen henkilo");
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (4, "FI", "Kirjoitusvirhe");
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (5, "FI", "Kielioppivirhe");
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (5, "EN", "Grammatical error");
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (6, "FI", "Virheellinen alue");
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (7, "FI", "Kommentti");
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (8, "FI", "Hyvin muistettu!");
 
 INSERT INTO VelpGroup(id, name, valid_until) VALUES (1, "Paljon velppeja", null);
 INSERT INTO VelpGroup(id, name, valid_until) VALUES (2, "Kehuja", null);
@@ -430,6 +433,7 @@ INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (1, 3);
 INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (1, 4);
 INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (1, 5);
 INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (1, 6);
+INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (1, 7);
 INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (2, 2);
 INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (2, 3);
 INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (2, 5);
@@ -447,16 +451,17 @@ INSERT INTO VelpGroupInArea(velp_group_id, document_id, area_id) VALUES (1,1, "j
 
 INSERT INTO VelpGroupInFolder(velp_group_id, folder_id) VALUES (1, 1);
 
-INSERT INTO Label(id, language_id, content) VALUES (1, "FI", "Kehuja");
-INSERT INTO Label(id, language_id, content) VALUES (2, "FI", "Oikeasti sisalloton");
-INSERT INTO Label(id, language_id, content) VALUES (3, "FI", "Muutakin");
-INSERT INTO Label(id, language_id, content) VALUES (4, "FI", "Monta labelia");
+INSERT INTO Label(id, language_id, content) VALUES (1, "FI", "Historia");
+INSERT INTO Label(id, language_id, content) VALUES (2, "FI", "Waterloo");
+INSERT INTO Label(id, language_id, content) VALUES (3, "FI", "Kielenhuolto");
+INSERT INTO Label(id, language_id, content) VALUES (4, "FI", "Kehut");
 
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (1, 2);
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (1, 3);
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (1, 5);
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 1);
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 2);
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 5);
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (3, 1);
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (4, 1);
+INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 3);
+INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 5);/*
+INSERT INTO LabelInVelp(label_id, velp_id) VALUES (3, 7);
+INSERT INTO LabelInVelp(label_id, velp_id) VALUES (3, 7);*/
+INSERT INTO LabelInVelp(label_id, velp_id) VALUES (4, 7);
