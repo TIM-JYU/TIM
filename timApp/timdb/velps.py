@@ -1,5 +1,6 @@
 from contracts import contract
 from timdb.timdbbase import TimDbBase, TimDbException
+from assesment_area import *
 
 
 class Velps(TimDbBase):
@@ -77,6 +78,7 @@ class Velps(TimDbBase):
 
 
         # Something is f...d up here
+
     @contract
     def update_velp(self, velp_id: 'int', new_content: 'str', languages: 'str'):
         cursor = self.db.cursor()
@@ -111,11 +113,12 @@ class Velps(TimDbBase):
         return velp_version
 
     @contract
-    def get_document_velps(self, doc_id: 'int', language: 'str' = 'FI') -> 'list(dict)':
-        """Gets velps that are linked to the document.
+    def get_velps(self, assessment_area: 'AssessmentArea', language_id: 'str' = 'FI') -> 'list(dict)':
+        """Get velps that are linked to an assessment area.
 
-        :param doc_id: The id of the document.
-        :return: a list of dictionaries, each describing a different velp.
+        :param assessment_area: the relevant assessment area
+        :param language_id The id of the language. 'EN', for example.
+        :return: A list of dictionaries, each describing a different velp.
         """
 
         cursor = self.db.cursor()
@@ -132,15 +135,21 @@ class Velps(TimDbBase):
                            ) AS x ON VelpContent.version_id = x.latest_version
                        ) AS y ON y.velp_id = velp.id
                        WHERE y.language_id = ? AND velp_id IN (
-                         SELECT VelpInGroup.velp_id
-                         FROM VelpInGroup
-                         WHERE VelpInGroup.velp_group_id IN (
-                           SELECT velp_group_id
-                           FROM VelpGroupInDocument
-                           WHERE document_id = ?
-                         )
+                       """ +
+                       assessment_area.get_sql_for_velp_ids()
+                       + """
                        )
-                       """, [language, doc_id]
+                       """, [language_id] + assessment_area.get_parameter_list()
                        )
         results = self.resultAsDictionary(cursor)
         return results
+
+    @contract
+    def get_document_velps(self, doc_id: 'int', language_id: 'str' = 'FI') -> 'list(dict)':
+        """Gets velps that are linked to the document.
+
+        :param doc_id: The id of the document.
+        :param language_id The id of the language. 'EN', for example.
+        :return: A list of dictionaries, each describing a different velp.
+        """
+        return self.get_velps(assessment_area_from_document(doc_id), language_id)

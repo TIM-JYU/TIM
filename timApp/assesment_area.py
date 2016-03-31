@@ -1,49 +1,5 @@
-from contracts import contract
+from contracts import contract, new_contract
 from enum import Enum
-
-
-# Helpers for object creation. Default parameters can't support all cases.
-# Use of these is recommended instead of the __init__
-@contract
-def assessment_area_from_document(document_id: 'int') -> 'AssessmentArea':
-    """
-    Creates an assessment area for a document.
-    :param document_id: Id of the document
-    :return: an AssessmentArea
-    """
-    return AssessmentArea(None, document_id, None, None)
-
-
-@contract
-def assessment_area_from_folder(folder_id: 'int') -> 'AssessmentArea':
-    """
-    Creates an assessment area for a folder.
-    :param folder_id: Id of the folder
-    :return: an AssessmentArea
-    """
-    return AssessmentArea(folder_id, None, None, None)
-
-
-@contract
-def assessment_area_from_area(document_id: 'int', area_id: 'str') -> 'AssessmentArea':
-    """
-    Creates an assessment area for an area in a document.
-    :param document_id Id of the document the area belongs to.
-    :param area_id: Id of the area.
-    :return: an AssessmentArea
-    """
-    return AssessmentArea(None, document_id, area_id, None)
-
-
-@contract
-def assessment_area_from_paragraph(document_id: 'int', paragraph_id: 'str') -> 'AssessmentArea':
-    """
-    Creates an assessment area for a paragraph in a document.
-    :param document_id: Id of the document
-    :param paragraph_id: Id of the paragraph.
-    :return: an AssessmentArea
-    """
-    return AssessmentArea(None, document_id, None, paragraph_id, None)
 
 
 class AssessmentArea:
@@ -94,7 +50,7 @@ class AssessmentArea:
     @contract
     def get_parameter_list(self) -> 'list':
         """
-        Returns a list suitable for placeholder substitution in a parameterized sql statement.
+        Returns a list suitable for placeholder substitution in a parametrized sql statement.
         :return: List of values.
         """
         if self._type is AssessmentArea._AssessmentAreaTypes.folder:
@@ -106,7 +62,7 @@ class AssessmentArea:
         if self._type is AssessmentArea._AssessmentAreaTypes.paragraph:
             return [self._document_id, self._document_id]
 
-    def get_sql_for_velp_ids_here(self) -> 'str':
+    def get_sql_for_velp_ids(self) -> 'str':
         """
         Returns an sql script which will query the database for velps in use in this assessment area.
         :return: string of sql code.
@@ -123,3 +79,50 @@ class AssessmentArea:
                    """
         else:
             raise NotImplementedError
+
+
+new_contract('AssessmentArea',AssessmentArea)
+
+
+# Helpers for object creation. Default parameters can't support all cases.
+# Use of these is recommended instead of the __init__
+@contract
+def assessment_area_from_document(document_id: 'int') -> 'AssessmentArea':
+    """
+    Creates an assessment area for a document.
+    :param document_id: Id of the document
+    :return: an AssessmentArea
+    """
+    return AssessmentArea(None, document_id, None, None)
+
+
+@contract
+def assessment_area_from_folder(folder_id: 'int') -> 'AssessmentArea':
+    """
+    Creates an assessment area for a folder.
+    :param folder_id: Id of the folder
+    :return: an AssessmentArea
+    """
+    return AssessmentArea(folder_id, None, None, None)
+
+
+@contract
+def assessment_area_from_area(document_id: 'int', area_id: 'str') -> 'AssessmentArea':
+    """
+    Creates an assessment area for an area in a document.
+    :param document_id Id of the document the area belongs to.
+    :param area_id: Id of the area.
+    :return: an AssessmentArea
+    """
+    return AssessmentArea(None, document_id, area_id, None)
+
+
+@contract
+def assessment_area_from_paragraph(document_id: 'int', paragraph_id: 'str') -> 'AssessmentArea':
+    """
+    Creates an assessment area for a paragraph in a document.
+    :param document_id: Id of the document
+    :param paragraph_id: Id of the paragraph.
+    :return: an AssessmentArea
+    """
+    return AssessmentArea(None, document_id, None, paragraph_id, None)
