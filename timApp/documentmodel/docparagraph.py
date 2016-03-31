@@ -208,7 +208,9 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def get_exported_markdown(self) -> 'str':
-        if self.is_reference():
+        if self.is_par_reference() and self.is_translation():
+            # This gives a default translation based on the source paragraph
+            # todo: same for area reference
             data = [par.__data for par in self.get_referenced_pars(edit_window=True)]
             return DocumentWriter(data, export_hashes=False, export_ids=False).get_text()
 
@@ -614,6 +616,9 @@ class DocParagraph(DocParagraphBase):
 
     def is_area_reference(self):
         return self.get_attr('ra') is not None
+
+    def is_translation(self):
+        return self.get_attr('r') == 'tr'
 
     def __repr__(self):
         return self.__data.__repr__()
