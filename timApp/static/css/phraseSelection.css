@@ -38,18 +38,44 @@
     border-bottom: solid 4px darkblue;
 }
 
-.phrase {
+.velp:hover{
+    text-decoration: underline;
+}
+
+.velp {
+    position: relative;
     font-size: 0.85em;
-    line-height: 1.75em;
-    margin: 0.25em;
-    padding: 0.5em;
-    display: inline-block;
+    line-height: 1.25em;
+    font-weight: 600;
     cursor: pointer;
-    background-color: #ececec;
-    color: black;
-    max-width: 100%;
-    white-space: normal;
-    text-align: left;
+    width: 98%;
+    border-bottom: solid grey 2px;
+    margin: 0 1%;
+    padding: 0.5em;
+}
+
+.velp .emphasise{
+    position: absolute;
+    opacity: 0.7;
+    top:0;
+    left:0;
+    bottom:0;
+    right:0;
+    height: 100%;
+    width: 100%;
+    z-index: 0;
+}
+.velp .content{
+    position: relative;
+    z-index: 1;
+}
+
+.velp .content .right{
+    float: right;
+}
+
+.velp .content .left{
+    float: left;
 }
 
 /* Marking styles */
@@ -57,18 +83,18 @@
     cursor: pointer;
 }
 
-.marking.positive {
+
+.emphasise.positive {
     background: palegreen;
 }
 
-.marking.neutral {
+.emphasise.neutral {
     background: khaki;
 }
 
-.marking.negative {
+.emphasise.negative {
     background: lightpink;
 }
-
 
 .clickable {
     cursor: pointer;

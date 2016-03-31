@@ -57,6 +57,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var span = document.createElement("span");
         span.setAttribute("ng-click", "selectMarking(" + marking.id + ")");
         span.classList.add("marking");
+        span.classList.add("emphasise");
         span.classList.add($scope.getMarkingHighlight( marking.points));
         $compile(span)($scope);
 
