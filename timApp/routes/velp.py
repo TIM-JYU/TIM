@@ -46,8 +46,8 @@ def get_velps(document_id: int, paragraph_id: str) -> 'str':
             list_help.append(label_data[i]['labels'])
         else:
             list_help.append(label_data[i]['labels'])
-            if i == len(label_data) - 1:
-                label_dict[velp_id] = copy.deepcopy(list_help)
+        if i == len(label_data) - 1:
+            label_dict[velp_id] = copy.deepcopy(list_help)
 
     for i in range(len(velp_data)):
         searchID = velp_data[i]['id']

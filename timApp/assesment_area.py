@@ -49,7 +49,8 @@ def assessment_area_from_paragraph(document_id: 'int', paragraph_id: 'str') -> '
 class AssessmentArea:
     """
     Used as a helper to refer to an assessment area without signifying the type of the target. You can also retrieve sql
-    blobs for querying the database about the area.
+    scripts for querying the database about the area. To query areas that contain this one, you need to create those
+    areas yourself.
     """
 
     class _AssessmentAreaTypes(Enum):
@@ -84,4 +85,41 @@ class AssessmentArea:
         elif area_id is not None:
             self._type = AssessmentArea._AssessmentAreaTypes.area
         else:
-            self._type=AssessmentArea._AssessmentAreaTypes.paragraph
+            self._type = AssessmentArea._AssessmentAreaTypes.paragraph
+        self._folder_id = folder_id
+        self._document_id = document_id
+        self._area_id = area_id
+        self._paragraph_id = paragraph_id
+
+    @contract
+    def get_parameter_list(self) -> 'list':
+        """
+        Returns a list suitable for placeholder substitution in a parameterized sql statement.
+        :return: List of values.
+        """
+        if self._type is AssessmentArea._AssessmentAreaTypes.folder:
+            return [self._folder_id]
+        if self._type is AssessmentArea._AssessmentAreaTypes.document:
+            return [self._document_id]
+        if self._type is AssessmentArea._AssessmentAreaTypes.area:
+            return [self._document_id, self._area_id]
+        if self._type is AssessmentArea._AssessmentAreaTypes.paragraph:
+            return [self._document_id, self._document_id]
+
+    def get_sql_for_velp_ids_here(self) -> 'str':
+        """
+        Returns an sql script which will query the database for velps in use in this assessment area.
+        :return: string of sql code.
+        """
+        if self._type is AssessmentArea._AssessmentAreaTypes.document:
+            return """
+                   SELECT VelpInGroup.velp_id
+                   FROM VelpInGroup
+                   WHERE VelpInGroup.velp_group_id IN (
+                     SELECT velp_group_id
+                     FROM VelpGroupInDocument
+                     WHERE document_id = ?
+                   )
+                   """
+        else:
+            raise NotImplementedError
