@@ -1141,6 +1141,11 @@ timApp.controller("ViewCtrl", [
                 //return sc.showAddParagraphBelow(e, $par);
                 return sc.showAddParagraphAbove(e, $(".addBottomContainer"));
             });
+
+            sc.onClick(".pasteBottom", function ($this, e) {
+                $(".actionButtons").remove();
+                sc.pasteBefore(e, $(".addBottomContainer"));
+            });
         }
         sc.processAllMathDelayed($('body'));
 
