@@ -1303,7 +1303,7 @@ timApp.controller("ViewCtrl", [
                     {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
                     {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
                     {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
-                    {func: sc.pasteBefore, desc: 'Paste before', show: sc.rights.editable},
+                    {func: sc.pasteBefore, desc: 'Paste before', show: $window.editMode},
                     {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
                     {
                         func: sc.startArea,
