@@ -441,6 +441,15 @@ def index_page():
                            rights={})
 
 
+@app.route("/manage/")
+@app.route("/slide/")
+@app.route("/teacher/")
+@app.route("/answers/")
+@app.route("/lecture/")
+def index_redirect():
+    return redirect('/view')
+
+
 @app.route("/getslidestatus/")
 def getslidestatus():
     if 'doc_id' not in request.args:
