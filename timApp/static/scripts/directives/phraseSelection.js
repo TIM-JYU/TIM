@@ -160,6 +160,8 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
         $scope.resetNewPhrase();
         $scope.velps.push(phraseToAdd);
         $scope.submitted = false;
+
+        $scope.resetLabels();
     };
 
     /**
@@ -175,6 +177,11 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     $scope.resetNewLabel = function(){
         $scope.newLabel = {"content": "", "selected": true};
     };
+
+    $scope.resetLabels = function() {
+        for (var i=0;i<$scope.labels.length; i++)
+            $scope.labels[i].selected = false;
+    }
 }]);
 
 /**

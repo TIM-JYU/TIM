@@ -51,15 +51,16 @@
     border-bottom: solid grey 2px;
     margin: 0 1%;
     padding: 0.5em;
+
 }
 
 .velp:hover .emphasise{
-    opacity: 0.7;
+    opacity:1;
 }
 
 .velp .emphasise{
     position: absolute;
-    opacity: 0.4;
+    opacity: 0.7;
     top:0;
     left:0;
     bottom:0;
@@ -68,6 +69,12 @@
     width: 100%;
     z-index: 0;
     background: gainsboro;
+
+    /*
+    -webkit-box-shadow: inset 2px -27px 32px 8px rgba(0,0,0,0.08);
+    -moz-box-shadow: inset 2px -27px 32px 8px rgba(0,0,0,0.08);
+    box-shadow: inset 2px -27px 32px 8px rgba(0,0,0,0.08);
+    */
 }
 .velp .content{
     position: relative;
@@ -84,11 +91,26 @@
 
 /* Velp info and PopOver styles */
 .velpInfo {
-    margin-top: 1em;
     float: left;
-    border-left: solid 2px grey;
-    border-bottom: solid 2px grey;
+    border: 0;
+}
+
+.velpInfo input.points{
+    background: transparent;
+    border: 0;
+    width: 50px;
+}
+
+.velp-content{
     padding: 0.5em 0.25em;
+}
+
+.velp-bg {
+    position: relative;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
 }
 
 .velpInfo textarea{
@@ -96,12 +118,26 @@
     border: none;
 }
 
-.popover h3, .popover p{
+.velpInfo-parent-draggable{
+
+}
+
+.popover h3, .popover p, .popover-content{
     margin: 0;
 }
 
+.popover-content{
+    padding: 0;
+}
+
 .popover {
-    border-radius: 0;
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.popover.top>.arrow:after {
+    border-top-color: lightpink;
 }
 
 /* Marking styles */

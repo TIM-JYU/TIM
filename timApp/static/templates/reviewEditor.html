@@ -199,13 +199,7 @@
         </div>
 
 
-        <div class="col-md-6">
-            <div ng-class="['velpInfo', 'emphasise', {hide:!selectedMarking['selected'], neutral: selectedMarking['points']==0, positive: selectedMarking['points']>0, negative: selectedMarking['points']<0}]">
-                <p><strong>{{ selectedMarking["velp"] }}</strong> {{ selectedMarking["points"] }}</p>
-                <p ng-repeat="comment in selectedMarking['comments']">{{ comment.text }}</p>
-                <textarea placeholder="Add comment here!">{{ selectedMarking["comment"] }}</textarea>
-            </div>
-        </div>
+
     </div>
 
     <div class="col-md-4">
