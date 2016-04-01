@@ -93,7 +93,9 @@ class ClipboardTest(TimDbTest):
         doc = db.documents.create('Kohdedokumentti', 1)
         dest_pars = [doc.add_paragraph('Kohdekappale {}'.format(i), attrs={'kkappale': str(i)}) for i in range(0, 10)]
 
+        ver_before = doc.get_version()
         clip.paste_before(doc, dest_pars[0].get_id())
+        self.assertEqual(doc.get_version(), (ver_before[0] + 1, 0))
 
         new_pars = doc.get_paragraphs()
         self.assertEqual(len(new_pars), 11)
@@ -103,7 +105,9 @@ class ClipboardTest(TimDbTest):
         pars = [{'md': 'Kappale 2.{}'.format(i), 'attrs': {'kappale': str(i)}} for i in range(0, 3)]
         clip.write(pars)
 
+        ver_before = doc.get_version()
         clip.paste_before(doc, new_pars[2].get_id())
+        self.assertEqual(doc.get_version(), (ver_before[0] + 3, 0))
 
         new_new_pars = doc.get_paragraphs()
         self.assertEqual(len(new_new_pars), 14)
@@ -114,7 +118,10 @@ class ClipboardTest(TimDbTest):
         self.assertEqual(new_new_pars[4].get_markdown(), pars[2]['md'])
         self.assertEqual(new_new_pars[5].get_markdown(), new_pars[2].get_markdown())
 
+        ver_before = doc.get_version()
         clip.paste_before(doc, None)
+        self.assertEqual(doc.get_version(), (ver_before[0] + 3, 0))
+
         final_pars = doc.get_paragraphs()
         self.assertEqual(len(final_pars), 17)
         self.assertEqual(final_pars[13].get_markdown(), new_new_pars[13].get_markdown())
