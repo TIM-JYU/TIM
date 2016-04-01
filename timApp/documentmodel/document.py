@@ -443,7 +443,7 @@ class Document:
         :param insert_before_id: Id of the paragraph to insert before, or None if last.
         :return: The inserted paragraph object.
         """
-        if not insert_before_id:
+        if insert_before_id is None:
             return self.add_paragraph(text=text, par_id=par_id, attrs=attrs, properties=properties)
 
         p = DocParagraph.create(
@@ -457,6 +457,9 @@ class Document:
         return self.insert_paragraph_obj(p, insert_before_id=insert_before_id)
 
     def insert_paragraph_obj(self, p: DocParagraph, insert_before_id: Optional[str]) -> DocParagraph:
+        if insert_before_id is None:
+            return self.add_paragraph_obj(p)
+
         p.add_link(self.doc_id)
         p.set_latest()
         old_ver = self.get_version()
