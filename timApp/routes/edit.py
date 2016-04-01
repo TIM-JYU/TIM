@@ -5,6 +5,7 @@ from flask import Blueprint, render_template
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser, ValidationException, ValidationWarning
+from documentmodel.documentparseroptions import DocumentParserOptions
 from markdownconverter import md_to_html
 from routes import logger
 from routes.notify import notify_doc_owner
@@ -236,11 +237,13 @@ def par_response(blocks, doc, edit_window=False, update_cache=False, context_par
 
 
 def get_pars_from_editor_text(doc, text, break_on_elements=False):
+    options = DocumentParserOptions()
+    options.break_on_code_block = break_on_elements
+    options.break_on_header = break_on_elements
+    options.break_on_normal = break_on_elements
     blocks = [DocParagraph.create(doc=doc, md=par['md'], attrs=par.get('attrs'))
               for par in DocumentParser(text).validate_structure(
-                  is_whole_document=False).get_blocks(break_on_code_block=break_on_elements,
-                                                      break_on_header=break_on_elements,
-                                                      break_on_normal=break_on_elements)]
+                  is_whole_document=False).get_blocks(options)]
     for p in blocks:
         if p.is_reference():
             try:

@@ -6,6 +6,7 @@ from copy import copy
 from contracts import contract, new_contract
 
 from documentmodel.documentparser import DocumentParser
+from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
 from htmlSanitize import sanitize_html
 from markdownconverter import md_to_html, par_list_to_html_list, expand_macros
@@ -207,11 +208,15 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def get_exported_markdown(self) -> 'str':
-        if self.is_reference():
+        if self.is_par_reference() and self.is_translation():
+            # This gives a default translation based on the source paragraph
+            # todo: same for area reference
             data = [par.__data for par in self.get_referenced_pars(edit_window=True)]
             return DocumentWriter(data, export_hashes=False, export_ids=False).get_text()
 
-        return DocumentWriter([self.__data], export_hashes=False, export_ids=False).get_text()
+        return DocumentWriter([self.__data],
+                              export_hashes=False,
+                              export_ids=False).get_text(DocumentParserOptions.single_paragraph())
 
     @contract
     def __get_setting_html(self) -> 'str':
@@ -420,7 +425,7 @@ class DocParagraph(DocParagraphBase):
             return prev_par_auto_values
 
         md_expanded = expand_macros(prev_par.get_markdown(), macros, macro_delim)
-        blocks = DocumentParser(md_expanded).get_blocks(break_on_empty_line=True)
+        blocks = DocumentParser(md_expanded).get_blocks(DocumentParserOptions.break_on_empty_lines())
         deltas = copy(prev_par_auto_values['h'])
         titles = []
         for e in blocks:
@@ -611,6 +616,9 @@ class DocParagraph(DocParagraphBase):
 
     def is_area_reference(self):
         return self.get_attr('ra') is not None
+
+    def is_translation(self):
+        return self.get_attr('r') == 'tr'
 
     def __repr__(self):
         return self.__data.__repr__()
