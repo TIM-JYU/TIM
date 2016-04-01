@@ -3,6 +3,7 @@
 from .common import *
 from documentmodel.clipboard import Clipboard
 from flask import Blueprint
+from routes.edit import par_response
 
 clipboard = Blueprint('clipboard',
                       __name__,
@@ -34,9 +35,8 @@ def paste_from_clipboard(doc_id):
     timdb = getTimDb()
     doc = Document(doc_id)
     clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
-    clip.paste_before(doc, par_before)
-
-    return jsonResponse(clip.read())
+    pars = clip.paste_before(doc, par_before)
+    return par_response(pars, doc)
 
 
 @clipboard.route('/clipboard', methods=['GET'])

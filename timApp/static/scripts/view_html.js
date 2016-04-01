@@ -586,7 +586,20 @@ timApp.controller("ViewCtrl", [
             http.post('/clipboard/paste/' + sc.docId, {
                 "par_before" : sc.getParId($par)
             }).success(function(data, status, headers, config) {
-                $window.location.reload();
+                if (data == null)
+                    return;
+
+                var $newpar = sc.createNewPar();
+                $par.before($newpar);
+
+                var extra_data = {
+                    docId: sc.docId, // current document id
+                    par: sc.getParId($newpar), // the id of paragraph on which the editor was opened
+                    par_next: $par.id // the id of the paragraph that follows par
+                };
+
+                sc.addSavedParToDom(data, extra_data);
+
             }).error(function(data, status, headers, config) {
                 $window.alert(data.error);
             });

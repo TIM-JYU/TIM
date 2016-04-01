@@ -2,6 +2,7 @@ import os
 import shutil
 
 from documentmodel.document import Document
+from documentmodel.docparagraph import DocParagraph
 from documentmodel.documentwriter import DocumentParser, DocumentWriter
 from typing import Dict, List, Optional, TypeVar
 
@@ -73,12 +74,17 @@ class Clipboard:
 
             self.write(pars)
 
-        def paste_before(self, doc: Document, par_id: Optional[str]):
+        def paste_before(self, doc: Document, par_id: Optional[str]) -> List[DocParagraph]:
             pars = self.read()
             if pars is None:
                 return
+            doc_pars = []
             par_before = par_id
             for par in reversed(pars):
                 # We need to reverse the sequence because we're inserting before, not after
                 new_par = doc.insert_paragraph(par['md'], par_before, attrs=par.get('attrs'), properties=par.get('properties'))
+                doc_pars = [new_par] + doc_pars
                 par_before = new_par.get_id()
+
+            return doc_pars
+
