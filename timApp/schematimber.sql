@@ -456,12 +456,12 @@ INSERT INTO Label(id, language_id, content) VALUES (2, "FI", "Waterloo");
 INSERT INTO Label(id, language_id, content) VALUES (3, "FI", "Kielenhuolto");
 INSERT INTO Label(id, language_id, content) VALUES (4, "FI", "Kehut");
 
+INSERT INTO LabelInVelp(label_id, velp_id) VALUES (1, 1);
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (1, 2);
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (1, 3);
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (1, 5);
+INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 1);
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 2);
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 3);
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 5);/*
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (3, 7);
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (3, 7);*/
+INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 5);
+INSERT INTO LabelInVelp(label_id, velp_id) VALUES (3, 3);
+INSERT INTO LabelInVelp(label_id, velp_id) VALUES (3, 4);
 INSERT INTO LabelInVelp(label_id, velp_id) VALUES (4, 7);
