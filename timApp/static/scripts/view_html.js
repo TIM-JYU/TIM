@@ -1264,7 +1264,8 @@ timApp.controller("ViewCtrl", [
             }
         };
 
-
+        // call marktree.js initialization function so that TOC clicking works
+        $window.addEvents();
 
         sc.editorFunctions = sc.getEditorFunctions();
 
