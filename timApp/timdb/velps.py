@@ -24,12 +24,13 @@ class Velps(TimDbBase):
     @contract
     def create_velp(self, creator_id: 'int', default_points: 'float', icon_id: 'int | None' = None,
                     valid_until: 'str | None' = None):
-        """
-        :param creator_id: User id of creator.
+        """Creates a new velp
+
+        :param creator_id: User ID of creator.
         :param default_points: Default points for velp.
-        :param icon_id: Icon id attached to velp. Can be null.
+        :param icon_id: Icon ID attached to velp. Can be null.
         :param valid_until: Time after velp becomes unusable.
-        :return:
+        :return: ID of velp that was just created
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -44,9 +45,10 @@ class Velps(TimDbBase):
 
     @contract
     def create_velp_version(self, velp_id: 'int'):
-        """
-        :param velp_id:
-        :return:
+        """Creates a new version for a velp to use
+
+        :param velp_id: ID of velp we're adding version for
+        :return: ID of version that was just created
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -61,11 +63,12 @@ class Velps(TimDbBase):
 
     @contract
     def create_velp_content(self, version_id: 'int', language_id: 'str', content: 'str'):
-        """
-        :param version_id:
-        :param language_id:
-        :param content:
-        :return:
+        """Method to create content (text) for velp
+
+        :param version_id: Version ID where the content will be stored
+        :param language_id: Language id
+        :param content: Text of velp
+        :return: -
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -81,6 +84,13 @@ class Velps(TimDbBase):
 
     @contract
     def update_velp(self, velp_id: 'int', new_content: 'str', languages: 'str'):
+        """Updates velp content
+
+        :param velp_id: ID of velp that's being updated
+        :param new_content: New velp text
+        :param languages: Language used
+        :return:
+        """
         cursor = self.db.cursor()
         cursor.execute("""
         """)
@@ -99,7 +109,32 @@ class Velps(TimDbBase):
                        )
 
     @contract
+    def check_velp_languages(self, velp_id: 'int'):
+        """Fetches all languages used within one velp
+
+        :param velp_id: Velp ID
+        :return: Returns languages as JSON
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT
+                      language_id
+                      FROM
+                      VelpInformation
+                      WHERE id = ?
+                      """, [velp_id]
+        )
+        results = self.resultAsDictionary(cursor) # e.g. [{'language_id': 'EN'}, {'language_id': 'FI'}]
+        return results
+
+    @contract
     def get_latest_velp_version(self, velp_id: 'int', language_id: 'str' = "FI"):
+        """Method to fetch the latest version for velp in specific language
+
+        :param velp_id: ID of velp we're checking
+        :param language_id: ID of language
+        :return: ID of version
+        """
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT

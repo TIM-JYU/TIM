@@ -332,10 +332,15 @@ CREATE TABLE LabelInVelpGroup (
 
 DROP VIEW IF EXISTS VelpInformation;
 CREATE VIEW VelpInformation AS
-  SELECT VelpVersion.id, VelpVersion.velp_id, VelpContent.language_id,
-    VelpContent.content, VelpVersion.modify_time
+  SELECT DISTINCT
+    VelpVersion.id,
+    VelpVersion.velp_id,
+    VelpContent.language_id,
+    VelpContent.content,
+    VelpVersion.modify_time
   FROM VelpVersion
-    INNER JOIN VelpContent
+    JOIN VelpContent
+  WHERE VelpVersion.id = VelpContent.version_id
   ;
 
 

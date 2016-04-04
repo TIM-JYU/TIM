@@ -29,3 +29,13 @@ class Annotations(TimDbBase):
                            place_end, annotator_id, points, icon_id]
         )
         self.db.commit()
+
+    @contract
+    def update_annotation(self, version_id: 'int',  points: 'float', place_start: 'int', place_end: 'int',
+                          annotator_id: 'int', icon_id: 'int | None' = None):
+        cursor = self.db.cursor()
+        cursor.execute("""
+
+                      """
+        )
+        return;
