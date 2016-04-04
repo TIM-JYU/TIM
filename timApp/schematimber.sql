@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS VelpContent;
 
 DROP TABLE IF EXISTS Annotation;
 
-DROP TABLE  IF EXISTS AnnotationVisibility;
+DROP TABLE IF EXISTS AnnotationVisibility;
 
 DROP TABLE IF EXISTS Comment;
 
@@ -36,35 +36,35 @@ DROP TABLE IF EXISTS LabelInVelpGroup;
 
 
 CREATE TABLE IF NOT EXISTS Velp (
-  id              INTEGER       NOT NULL,
-  creator_id      INTEGER       NOT NULL,
-  creation_time   DATETIME      NOT NULL  DEFAULT CURRENT_TIMESTAMP,
-  default_points  REAL,
-  icon_id         INTEGER,
-  valid_until     DATETIME,
+  id             INTEGER  NOT NULL,
+  creator_id     INTEGER  NOT NULL,
+  creation_time  DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP,
+  default_points REAL,
+  icon_id        INTEGER,
+  valid_until    DATETIME,
 
   CONSTRAINT Velp_PK
   PRIMARY KEY (id),
 
   CONSTRAINT Icon_id
   FOREIGN KEY (icon_id)
-  REFERENCES Icon(id)
+  REFERENCES Icon (id)
   ON DELETE SET NULL
   ON UPDATE CASCADE
 );
 
 CREATE TABLE VelpInAnnotationSetting (
-  id              INTEGER NOT NULL,
-  velp_id         INTEGER NOT NULL,
-  default_points  INTEGER NOT NULL,                       -- change to some better type?
-  velp_hidden     BOOLEAN NOT NULL,
+  id             INTEGER NOT NULL,
+  velp_id        INTEGER NOT NULL,
+  default_points INTEGER NOT NULL, -- change to some better type?
+  velp_hidden    BOOLEAN NOT NULL,
 
   CONSTRAINT VelpInAnnotationSetting_PK
   PRIMARY KEY (id),
 
   CONSTRAINT Velp_id
   FOREIGN KEY (velp_id)
-  REFERENCES Velp(id)
+  REFERENCES Velp (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
@@ -75,8 +75,8 @@ Add annotation setting locations here pls plox
 
 
 CREATE TABLE Icon (
-  id        INT NOT NULL,
-  filename  TEXT,
+  id       INT NOT NULL,
+  filename TEXT,
 
   CONSTRAINT Icon_PK
   PRIMARY KEY (id)
@@ -84,9 +84,9 @@ CREATE TABLE Icon (
 
 
 CREATE TABLE Label (
-  id          INTEGER     NOT NULL,
-  language_id VARCHAR(2)  NOT NULL,
-  content     Text,
+  id          INTEGER    NOT NULL,
+  language_id VARCHAR(2) NOT NULL,
+  content     TEXT,
 
   CONSTRAINT Label_PK
   PRIMARY KEY (id, language_id)
@@ -94,45 +94,45 @@ CREATE TABLE Label (
 
 
 CREATE TABLE LabelInVelp (
-  label_id  INTEGER NOT NULL,
-  velp_id   INTEGER NOT NULL,
+  label_id INTEGER NOT NULL,
+  velp_id  INTEGER NOT NULL,
 
   CONSTRAINT LabelInVelp_PK
   PRIMARY KEY (label_id, velp_id),
 
   CONSTRAINT Label_id
   FOREIGN KEY (label_id)
-  REFERENCES Label(id)
+  REFERENCES Label (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE,
 
   CONSTRAINT Velp_id
   FOREIGN KEY (velp_id)
-  REFERENCES Velp(id)
+  REFERENCES Velp (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
 
 
 CREATE TABLE VelpVersion (
-  id          INTEGER   NOT NULL,
-  velp_id     INTEGER   NOT NULL,
-  modify_time DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  id          INTEGER  NOT NULL,
+  velp_id     INTEGER  NOT NULL,
+  modify_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   CONSTRAINT VelpVersion_PK
   PRIMARY KEY (id),
 
   CONSTRAINT Velp_id
   FOREIGN KEY (velp_id)
-  REFERENCES  Velp(id)
+  REFERENCES Velp (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
 
 
 CREATE TABLE VelpContent (
-  version_id  INTEGER     NOT NULL,
-  language_id VARCHAR(2)  NOT NULL,
+  version_id  INTEGER    NOT NULL,
+  language_id VARCHAR(2) NOT NULL,
   content     TEXT,
 
   CONSTRAINT VelpContent_PK
@@ -140,25 +140,25 @@ CREATE TABLE VelpContent (
 
   CONSTRAINT Version_id
   FOREIGN KEY (version_id)
-  REFERENCES VelpVersion(id)
+  REFERENCES VelpVersion (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
 
 
 CREATE TABLE Annotation (
-  id            INTEGER   NOT NULL,
-  version_id    INTEGER   NOT NULL,
+  id            INTEGER  NOT NULL,
+  version_id    INTEGER  NOT NULL,
   points        REAL,
-  creation_time DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  creation_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   valid_until   DATETIME,
   icon_id       INTEGER,
-  annotator_id  INTEGER   NOT NULL,
+  annotator_id  INTEGER  NOT NULL,
   answer_id     INTEGER,
   document_id   INTEGER,
   paragraph_id  TEXT,
-  place_start   INTEGER   NOT NULL,
-  place_end     INTEGER   NOT NULL,
+  place_start   INTEGER  NOT NULL,
+  place_end     INTEGER  NOT NULL,
 
 
   CONSTRAINT Annotation_PK
@@ -166,17 +166,16 @@ CREATE TABLE Annotation (
 
   CONSTRAINT Version_id
   FOREIGN KEY (version_id)
-  REFERENCES VelpVersion(id)
+  REFERENCES VelpVersion (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE,
 
   CONSTRAINT Icon_id
   FOREIGN KEY (icon_id)
-  REFERENCES Icon(id)
+  REFERENCES Icon (id)
   ON DELETE SET NULL
   ON UPDATE CASCADE
 );
-
 
 -- NOT FINISHED THIS ONE DO SOMETHING ANYTHING I DON'T EVEN KNOW MY WORLD RIGHT NOW
 CREATE TABLE AnnotationVisibility (
@@ -184,16 +183,16 @@ CREATE TABLE AnnotationVisibility (
 
   CONSTRAINT Annotation_id
   FOREIGN KEY (annotation_id)
-  REFERENCES Annotation(id)
+  REFERENCES Annotation (id)
 );
 -- READ ABOVE THEN YOU CAN READ BELOW OR RIGHT OF LEFT OR WHEREVER YOU WANT UP TO YOU
 
 
 CREATE TABLE Comment (
-  id            INTEGER   NOT NULL,
-  annotation_id INTEGER   NOT NULL,
-  comment_time  DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  commenter_id  INTEGER   NOT NULL,
+  id            INTEGER  NOT NULL,
+  annotation_id INTEGER  NOT NULL,
+  comment_time  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  commenter_id  INTEGER  NOT NULL,
   content       TEXT,
 
   CONSTRAINT Comment_PK
@@ -201,16 +200,16 @@ CREATE TABLE Comment (
 
   CONSTRAINT Annotation_id
   FOREIGN KEY (annotation_id)
-  REFERENCES Annotation(id)
+  REFERENCES Annotation (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
 
 
 CREATE TABLE VelpGroup (
-  id            INTEGER   NOT NULL,
-  name          TEXT      NOT NULL,
-  creation_time DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  id            INTEGER  NOT NULL,
+  name          TEXT     NOT NULL,
+  creation_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   valid_until   DATETIME,
 
   CONSTRAINT VelpGroup_PK
@@ -227,13 +226,13 @@ CREATE TABLE VelpInGroup (
 
   CONSTRAINT VelpGroup_id
   FOREIGN KEY (velp_group_id)
-  REFERENCES VelpGroup(id)
+  REFERENCES VelpGroup (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE,
 
   CONSTRAINT Velp_id
   FOREIGN KEY (velp_id)
-  REFERENCES Velp(id)
+  REFERENCES Velp (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
@@ -248,7 +247,7 @@ CREATE TABLE VelpGroupInDocument (
 
   CONSTRAINT VelpGroup_id
   FOREIGN KEY (velp_group_id)
-  REFERENCES VelpGroup(id)
+  REFERENCES VelpGroup (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
@@ -264,7 +263,7 @@ CREATE TABLE VelpGroupInParagraph (
 
   CONSTRAINT VelpGroup_id
   FOREIGN KEY (velp_group_id)
-  REFERENCES VelpGroup(id)
+  REFERENCES VelpGroup (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
@@ -280,7 +279,7 @@ CREATE TABLE VelpGroupInArea (
 
   CONSTRAINT VelpGroup_id
   FOREIGN KEY (velp_group_id)
-  REFERENCES VelpGroup(id)
+  REFERENCES VelpGroup (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
@@ -295,7 +294,7 @@ CREATE TABLE VelpGroupInFolder (
 
   CONSTRAINT VelpGroup_id
   FOREIGN KEY (velp_group_id)
-  REFERENCES VelpGroup(id)
+  REFERENCES VelpGroup (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
@@ -311,21 +310,21 @@ CREATE TABLE VelpGroupLabel (
 
 
 CREATE TABLE LabelInVelpGroup (
-  velp_group_id   INTEGER NOT NULL,
-  group_label_id  INTEGER NOT NULL,
+  velp_group_id  INTEGER NOT NULL,
+  group_label_id INTEGER NOT NULL,
 
   CONSTRAINT LabelInVelpGroup_PK
   PRIMARY KEY (velp_group_id, group_label_id),
 
   CONSTRAINT VelpGroup_id
   FOREIGN KEY (velp_group_id)
-  REFERENCES VelpGroup(id)
+  REFERENCES VelpGroup (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE,
 
   CONSTRAINT LabelGroup_id
   FOREIGN KEY (group_label_id)
-  REFERENCES VelpGroupLabel(id)
+  REFERENCES VelpGroupLabel (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
@@ -379,78 +378,85 @@ CREATE VIEW VelpGroupInAssessmentArea AS
     VelpGroupInFolder.folder_id
   FROM VelpGroupInFolder;
 
-
-
 -- IMPORTANT! THIS IS EXAMPLE DATA. YOU SHOULD PROBABLY DELETE IT BEFORE RUNNING IN PRODUCTION.
-INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (1, 1, -2, null, null);
-INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (2, 1, -1, null, null);
-INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (3, 1, -0.5, null, null);
-INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (4, 1, -1, null, null);
-INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (5, 1, -2, null, null);
-INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (6, 1, 0, null, null);
-INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (7, 1, 1, null, null);
+INSERT INTO Velp (id, creator_id, default_points, icon_id, valid_until) VALUES (1, 1, -2, NULL, NULL);
+INSERT INTO Velp (id, creator_id, default_points, icon_id, valid_until) VALUES (2, 1, -1, NULL, NULL);
+INSERT INTO Velp (id, creator_id, default_points, icon_id, valid_until) VALUES (3, 1, -0.5, NULL, NULL);
+INSERT INTO Velp (id, creator_id, default_points, icon_id, valid_until) VALUES (4, 1, -1, NULL, NULL);
+INSERT INTO Velp (id, creator_id, default_points, icon_id, valid_until) VALUES (5, 1, -2, NULL, NULL);
+INSERT INTO Velp (id, creator_id, default_points, icon_id, valid_until) VALUES (6, 1, 0, NULL, NULL);
+INSERT INTO Velp (id, creator_id, default_points, icon_id, valid_until) VALUES (7, 1, 1, NULL, NULL);
+/*A velp that is now longer valid.*/
+INSERT INTO Velp (id, creator_id, default_points, icon_id, valid_until)
+VALUES (8, 1, -1.5, NULL, datetime('now', '-1 month'));
 
-INSERT INTO VelpVersion(id, velp_id) VALUES (1,1);
-INSERT INTO VelpVersion(id, velp_id) VALUES (2,1);
-INSERT INTO VelpVersion(id, velp_id) VALUES (3,2);
-INSERT INTO VelpVersion(id, velp_id) VALUES (4,3);
-INSERT INTO VelpVersion(id, velp_id) VALUES (5,4);
-INSERT INTO VelpVersion(id, velp_id) VALUES (6,5);
-INSERT INTO VelpVersion(id, velp_id) VALUES (7,6);
-INSERT INTO VelpVersion(id, velp_id) VALUES (8,7);
+INSERT INTO VelpVersion (id, velp_id) VALUES (1, 1);
+INSERT INTO VelpVersion (id, velp_id) VALUES (2, 1);
+INSERT INTO VelpVersion (id, velp_id) VALUES (3, 2);
+INSERT INTO VelpVersion (id, velp_id) VALUES (4, 3);
+INSERT INTO VelpVersion (id, velp_id) VALUES (5, 4);
+INSERT INTO VelpVersion (id, velp_id) VALUES (6, 5);
+INSERT INTO VelpVersion (id, velp_id) VALUES (7, 6);
+INSERT INTO VelpVersion (id, velp_id) VALUES (8, 7);
+INSERT INTO VelpVersion (id, velp_id) VALUES (9, 8);
 
 /*This one will be hidden by default, because there is a newer version.*/
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (1, "FI", "Virheellinen alue");
+INSERT INTO VelpContent (version_id, language_id, content) VALUES (1, "FI", "Virheellinen alue");
 /*This is the latest english version, but there is a newer in finish.*/
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (1, "EN", "Erroneus region");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (2, "FI", "Virheellinen ajankohta");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (3, "FI", "Virheellinen henkilo");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (4, "FI", "Kirjoitusvirhe");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (5, "FI", "Kielioppivirhe");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (5, "EN", "Grammatical error");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (6, "FI", "Virheellinen alue");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (7, "FI", "Kommentti");
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (8, "FI", "Hyvin muistettu!");
+INSERT INTO VelpContent (version_id, language_id, content) VALUES (1, "EN", "Erroneus region");
+INSERT INTO VelpContent (version_id, language_id, content) VALUES (2, "FI", "Virheellinen ajankohta");
+INSERT INTO VelpContent (version_id, language_id, content) VALUES (3, "FI", "Virheellinen henkilo");
+INSERT INTO VelpContent (version_id, language_id, content) VALUES (4, "FI", "Kirjoitusvirhe");
+INSERT INTO VelpContent (version_id, language_id, content) VALUES (5, "FI", "Kielioppivirhe");
+INSERT INTO VelpContent (version_id, language_id, content) VALUES (5, "EN", "Grammatical error");
+INSERT INTO VelpContent (version_id, language_id, content) VALUES (6, "FI", "Virheellinen alue");
+INSERT INTO VelpContent (version_id, language_id, content) VALUES (7, "FI", "Kommentti");
+INSERT INTO VelpContent (version_id, language_id, content) VALUES (8, "FI", "Hyvin muistettu!");
+INSERT INTO VelpContent (version_id, language_id, content) VALUES (9, "FI", "Vanhentunut velppi");
 
-INSERT INTO VelpGroup(id, name, valid_until) VALUES (1, "Paljon velppeja", null);
-INSERT INTO VelpGroup(id, name, valid_until) VALUES (2, "Kehuja", null);
-INSERT INTO VelpGroup(id, name, valid_until) VALUES (3, "Haukkuja (vuh vuh)", null);
+INSERT INTO VelpGroup (id, name, valid_until) VALUES (1, "Paljon velppeja", NULL);
+INSERT INTO VelpGroup (id, name, valid_until) VALUES (2, "Kehuja", NULL);
+INSERT INTO VelpGroup (id, name, valid_until) VALUES (3, "Haukkuja (vuh vuh)", NULL);
 
-INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (1, 1);
-INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (1, 2);
-INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (1, 3);
-INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (1, 4);
-INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (1, 5);
-INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (1, 6);
-INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (1, 7);
-INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (2, 2);
-INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (2, 3);
-INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (2, 5);
-INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (3, 4);
-INSERT INTO VelpInGroup(velp_group_id, velp_id) VALUES (3, 6);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (1, 1);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (1, 2);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (1, 3);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (1, 4);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (1, 5);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (1, 6);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (1, 7);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (1, 8);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (2, 2);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (2, 3);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (2, 5);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (3, 4);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (3, 6);
 
-INSERT INTO VelpGroupInDocument(velp_group_id, document_id) VALUES (1, 1);
-INSERT INTO VelpGroupInDocument(velp_group_id, document_id) VALUES (2, 1);
-INSERT INTO VelpGroupInDocument(velp_group_id, document_id) VALUES (3, 1);
-INSERT INTO VelpGroupInDocument(velp_group_id, document_id) VALUES (2, 7);
+INSERT INTO VelpGroupInDocument (velp_group_id, document_id) VALUES (1, 1);
+INSERT INTO VelpGroupInDocument (velp_group_id, document_id) VALUES (2, 1);
+INSERT INTO VelpGroupInDocument (velp_group_id, document_id) VALUES (3, 1);
+INSERT INTO VelpGroupInDocument (velp_group_id, document_id) VALUES (2, 7);
+INSERT INTO VelpGroupInDocument (velp_group_id, document_id) VALUES (1, 7);
+INSERT INTO VelpGroupInDocument (velp_group_id, document_id) VALUES (3, 7);
+INSERT INTO VelpGroupInDocument (velp_group_id, document_id) VALUES (4, 7);
 
-INSERT INTO VelpGroupInParagraph(velp_group_id, document_id, paragraph_id) VALUES (1, 1, "4S2wxuOzeuNb");
+INSERT INTO VelpGroupInParagraph (velp_group_id, document_id, paragraph_id) VALUES (1, 1, "4S2wxuOzeuNb");
 
-INSERT INTO VelpGroupInArea(velp_group_id, document_id, area_id) VALUES (1,1, "joku area-id");
+INSERT INTO VelpGroupInArea (velp_group_id, document_id, area_id) VALUES (1, 1, "joku area-id");
 
-INSERT INTO VelpGroupInFolder(velp_group_id, folder_id) VALUES (1, 1);
+INSERT INTO VelpGroupInFolder (velp_group_id, folder_id) VALUES (1, 1);
 
-INSERT INTO Label(id, language_id, content) VALUES (1, "FI", "Historia");
-INSERT INTO Label(id, language_id, content) VALUES (2, "FI", "Waterloo");
-INSERT INTO Label(id, language_id, content) VALUES (3, "FI", "Kielenhuolto");
-INSERT INTO Label(id, language_id, content) VALUES (4, "FI", "Kehut");
+INSERT INTO Label (id, language_id, content) VALUES (1, "FI", "Historia");
+INSERT INTO Label (id, language_id, content) VALUES (2, "FI", "Waterloo");
+INSERT INTO Label (id, language_id, content) VALUES (3, "FI", "Kielenhuolto");
+INSERT INTO Label (id, language_id, content) VALUES (4, "FI", "Kehut");
 
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (1, 1);
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (1, 2);
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (1, 5);
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 1);
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 2);
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (2, 5);
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (3, 3);
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (3, 4);
-INSERT INTO LabelInVelp(label_id, velp_id) VALUES (4, 7);
+INSERT INTO LabelInVelp (label_id, velp_id) VALUES (1, 1);
+INSERT INTO LabelInVelp (label_id, velp_id) VALUES (1, 2);
+INSERT INTO LabelInVelp (label_id, velp_id) VALUES (1, 5);
+INSERT INTO LabelInVelp (label_id, velp_id) VALUES (2, 1);
+INSERT INTO LabelInVelp (label_id, velp_id) VALUES (2, 2);
+INSERT INTO LabelInVelp (label_id, velp_id) VALUES (2, 5);
+INSERT INTO LabelInVelp (label_id, velp_id) VALUES (3, 3);
+INSERT INTO LabelInVelp (label_id, velp_id) VALUES (3, 4);
+INSERT INTO LabelInVelp (label_id, velp_id) VALUES (4, 7);
