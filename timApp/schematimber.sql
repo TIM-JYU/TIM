@@ -342,8 +342,7 @@ CREATE VIEW VelpInformation AS
     VelpVersion.modify_time
   FROM VelpVersion
     JOIN VelpContent
-  WHERE VelpVersion.id = VelpContent.version_id
-  ;
+  WHERE VelpVersion.id = VelpContent.version_id;
 
 
 DROP VIEW IF EXISTS VelpGroupInAssessmentArea;
@@ -382,26 +381,7 @@ CREATE VIEW VelpGroupInAssessmentArea AS
 
 
 
--- IMPORTANT! DELETE FROM HERE TO EOF BEFORE RUNNING IN PRODUCTION
-/*
-CREATE TABLE IF NOT EXISTS Velp (
-  id              INTEGER       NOT NULL,
-  creator_id      INTEGER       NOT NULL,
-  creation_time   TIMESTAMP     NOT NULL  DEFAULT CURRENT_TIMESTAMP,
-  default_points  INTEGER       NOT NULL  DEFAULT 0,      -- change to some better type?
-  icon_id         INTEGER       NOT NULL,
-  valid_until     TIMESTAMP,
-
-  CONSTRAINT Velp_PK
-  PRIMARY KEY (id),
-
-  CONSTRAINT Icon_id
-  FOREIGN KEY (icon_id)
-  REFERENCES Icon(id)
-  ON DELETE SET NULL
-  ON UPDATE CASCADE
-);
-*/
+-- IMPORTANT! THIS IS EXAMPLE DATA. YOU SHOULD PROBABLY DELETE IT BEFORE RUNNING IN PRODUCTION.
 INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (1, 1, -2, null, null);
 INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (2, 1, -1, null, null);
 INSERT INTO Velp(id, creator_id, default_points, icon_id, valid_until) VALUES (3, 1, -0.5, null, null);
@@ -419,8 +399,10 @@ INSERT INTO VelpVersion(id, velp_id) VALUES (6,5);
 INSERT INTO VelpVersion(id, velp_id) VALUES (7,6);
 INSERT INTO VelpVersion(id, velp_id) VALUES (8,7);
 
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (1, "FI", "Virheellinen alue");/*ei toimi*/
-INSERT INTO VelpContent(version_id, language_id, content) VALUES (1, "EN", "Erroneus region");/*ei toimi*/
+/*This one will be hidden by default, because there is a newer version.*/
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (1, "FI", "Virheellinen alue");
+/*This is the latest english version, but there is a newer in finish.*/
+INSERT INTO VelpContent(version_id, language_id, content) VALUES (1, "EN", "Erroneus region");
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (2, "FI", "Virheellinen ajankohta");
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (3, "FI", "Virheellinen henkilo");
 INSERT INTO VelpContent(version_id, language_id, content) VALUES (4, "FI", "Kirjoitusvirhe");
