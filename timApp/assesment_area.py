@@ -6,7 +6,8 @@ class AssessmentArea:
     """
     Used as a helper to refer to an assessment area without signifying the type of the target. You can also retrieve sql
     scripts for querying the database about the area. To query areas that contain this one, you need to create those
-    areas yourself.
+    areas yourself. This should be the natural place to include sql to check access rights for viewing velps, but this
+    is not yet implemented.
     """
 
     class _AssessmentAreaTypes(Enum):
