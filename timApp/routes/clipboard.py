@@ -30,12 +30,13 @@ def paste_from_clipboard(doc_id):
     verify_doc_exists(doc_id)
     verify_edit_access(doc_id)
 
-    (par_before,) = verify_json_params('par_before', require=False)
+    (par_before, as_ref) = verify_json_params('par_before', 'as_ref', require=False)
 
     timdb = getTimDb()
     doc = Document(doc_id)
     clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
-    pars = clip.paste_before(doc, par_before)
+    pars = clip.paste_before(doc, par_before, as_ref)
+
     return par_response(pars, doc)
 
 

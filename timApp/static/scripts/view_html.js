@@ -582,9 +582,18 @@ timApp.controller("ViewCtrl", [
             sc.toggleParEditor($newpar, {showDelete: false, area: false});
         };
 
-        sc.pasteBefore = function (e, $par) {
+        sc.pasteContentAbove = function (e, $par) {
+            sc.pasteAbove(e, $par, false);
+        };
+
+        sc.pasteRefAbove = function (e, $par) {
+            sc.pasteAbove(e, $par, true);
+        };
+
+        sc.pasteAbove = function (e, $par, as_ref) {
             http.post('/clipboard/paste/' + sc.docId, {
-                "par_before" : sc.getParId($par)
+                "par_before" : sc.getParId($par),
+                "as_ref": as_ref
             }).success(function(data, status, headers, config) {
                 if (data == null)
                     return;
@@ -1144,7 +1153,12 @@ timApp.controller("ViewCtrl", [
 
             sc.onClick(".pasteBottom", function ($this, e) {
                 $(".actionButtons").remove();
-                sc.pasteBefore(e, $(".addBottomContainer"));
+                sc.pasteAbove(e, $(".addBottomContainer"), false);
+            });
+
+            sc.onClick(".pasteRefBottom", function ($this, e) {
+                $(".actionButtons").remove();
+                sc.pasteAbove(e, $(".addBottomContainer"), true);
             });
         }
         sc.processAllMathDelayed($('body'));
@@ -1303,7 +1317,8 @@ timApp.controller("ViewCtrl", [
                     {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
                     {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
                     {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
-                    {func: sc.pasteBefore, desc: 'Paste before', show: $window.editMode},
+                    {func: sc.pasteRefAbove, desc: 'Paste reference above', show: $window.editMode},
+                    {func: sc.pasteContentAbove, desc: 'Paste content above', show: $window.editMode},
                     {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
                     {
                         func: sc.startArea,
