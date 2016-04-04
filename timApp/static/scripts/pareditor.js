@@ -322,6 +322,17 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             $scope.paragraphClicked();
                         }
                     });
+                    editor.commands.addCommand({
+                        name: 'commentBlock',
+                        bindKey: {
+                            win: 'Ctrl-Y',
+                            mac: 'Command-Y',
+                            sender: 'editor|cli'
+                        },
+                        exec: function (env, args, request) {
+                            $scope.commentClicked();
+                        }
+                    });
 
                     if (text) editor.getSession().setValue(text);
                 };
@@ -361,6 +372,9 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                                 }
                             } else if (e.keyCode === 79) {
                                 $scope.surroundClicked('`', '`');
+                                e.preventDefault();
+                            } else if (e.keyCode === 89) {
+                                $scope.commentClicked();
                                 e.preventDefault();
                             } else if (e.keyCode === 49) {
                                 $scope.headerClicked('#');
@@ -981,19 +995,40 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                     $scope.ruleClicked = function () {
                         $scope.endClicked();
-                        $scope.editor.replaceSelectedText("\n---\n");
+                        $scope.editor.replaceSelectedText("\n#-\n---\n#-\n");
                     };
 
                     $scope.paragraphClicked = function () {
                         $scope.endClicked();
                         $scope.editor.replaceSelectedText("\n#-\n");
                     };
+
                     /*
-                    $scope.slideClicked = function () {
-                        $scope.endClicked();
-                        $scope.editor.replaceSelectedText($scope.editor.getSelection().text + "\n---------------\n");
+                     * Creates a comment section of selected text, comment block or comments the cursor line
+                     */
+                    $scope.commentClicked = function () {
+                        var editor = $scope.editor.get(0);
+                        // If text is selected surround selected text with comment brackets
+                        if (editor.selectionEnd - editor.selectionStart > 0) {
+                            $scope.editor.replaceSelectedText("{!!!" + $scope.editor.getSelection().text + "!!!}");
+                        }
+                        else {
+                            var pos = editor.selectionEnd;
+                            var endOfLastLine = editor.value.lastIndexOf('\n', pos-1);
+                            // If the cursor is in the beginning of a line, make the whole line a comment
+                            if (pos - endOfLastLine == 1) {
+                                var selection = $scope.selectLine(true);
+                                $scope.editor.replaceSelectedText("{!!!" + $scope.editor.getSelection().text + "!!!}");
+                                $scope.editor.setSelection(selection.end + 4, selection.end + 4);
+                            }
+                            else {
+                                // If the cursor is in another position place a comment block
+                                $scope.editor.replaceSelectedText("{!!!!!!}");
+                                $scope.editor.setSelection(pos+4, pos+4);
+                            }
+                        }
                     };
-                    */
+
                     $scope.endLineClicked = function () {
                         var editor = $scope.editor.get(0);
                         var selection = $scope.editor.getSelection();
@@ -1258,8 +1293,39 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                     $scope.ruleClicked = function () {
                         $scope.editor.navigateLineEnd();
-                        $scope.snippetManager.insertSnippet($scope.editor, "\n---\n");
+                        $scope.snippetManager.insertSnippet($scope.editor, "\n#-\n---\n#-\n");
                     };
+
+                    /*
+                     * Creates a comment section of selected text, comment block or comments the cursor line
+                     */
+                    $scope.commentClicked = function () {
+                        var selection = $scope.editor.getSelection();
+                        if (!selection.isEmpty()) {
+                            $scope.editor.insert("{!!!" + $scope.editor.getSelectedText() + "!!!}");
+                            //$scope.snippetManager.insertSnippet($scope.editor, "{!!!${0:$SELECTION}!!!}");
+                            $scope.wrapFn();
+                            return;
+                        }
+                        else {
+                            var pos = $scope.editor.getCursorPosition();
+                            if (pos.column == 0) {
+                                var line = $scope.editor.session.getLine(pos.row);
+                                $scope.editor.selection.selectLine();
+                                $scope.editor.insert("{!!!" + line + "!!!}\n");
+                                pos.column = line.length + 4;
+                                $scope.editor.moveCursorToPosition(pos);
+                                $scope.wrapFn();
+                            }
+                            else {
+                                $scope.editor.insert("{!!!!!!}");
+                                pos.column = pos.column + 4;
+                                $scope.editor.moveCursorToPosition(pos);
+                                $scope.wrapFn();
+                            }
+                        }
+                    };
+
                     //Insert
                     //Special characters
                     $scope.charClicked = function ($event) {

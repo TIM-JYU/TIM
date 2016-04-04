@@ -466,7 +466,6 @@ def getslidestatus():
 
 @app.route("/setslidestatus")
 def setslidestatus():
-    print(request.args)
     if 'doc_id' not in request.args or 'status' not in request.args:
         abort(404, "Missing doc id or status")
     doc_id = int(request.args['doc_id'])
