@@ -38,8 +38,9 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     var new_velp_id = 0; // get latest velp id
     var new_label_id = 0; // get latest label id
 
-    // velp[order} =
     console.log($scope.extraData);
+
+    // Get velp data
     $http.get('/{0}/{1}/velps'.replace('{0}',doc_id).replace('{1}', par)).success(function (data) {
         $scope.velps = data;
         $scope.velps.forEach(function (v) {
@@ -51,6 +52,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
         console.log($scope.velps)
     });
 
+    // Get label data
     $http.get('/{0}/labels'.replace('{0}',doc_id)).success(function (data) {
         $scope.labels = data;
         $scope.labels.forEach(function (l) {
@@ -135,6 +137,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
     /**
      * Adds new phrase on form submit
+     * @param form form information
      */
     $scope.addVelp = function(form) {
         var valid = form.$valid;
@@ -178,6 +181,9 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
         $scope.newLabel = {"content": "", "selected": true};
     };
 
+    /**
+     * Set all labels not selected
+     */
     $scope.resetLabels = function() {
         for (var i=0;i<$scope.labels.length; i++)
             $scope.labels[i].selected = false;

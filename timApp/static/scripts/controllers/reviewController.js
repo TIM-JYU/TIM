@@ -17,7 +17,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.selectedMarking = {"comment": "", "velp": "", "points": 0};
 
     $http.get('/static/test_data/markings.json').success(function (data) {
-        $scope.markings = data;
+        $scope.markings = [];
+        //$scope.markings = data;
        //$scope.loadMarkings();
     });
 
@@ -55,7 +56,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param end end coordinate
      */
     $scope.addMarkingToCoord = function(range, marking, show){
-        var span = $scope.createPopOverElement("Testi", show);
+
+        var span = $scope.createPopOverElement(marking, show);
         span.setAttribute("ng-click", "selectMarking(" + marking.id + ")");
         span.classList.add("marking");
         span.classList.add("emphasise");
@@ -84,7 +86,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param marking marking info to show
      */
     $scope.selectMarking = function(markingId){
-        console.log($scope.getVelpById( $scope.markings[markingId].velp) );
         $scope.selectedMarking["points"] = $scope.markings[markingId].points;
         $scope.selectedMarking["comment"] = $scope.markings[markingId].comment;
         $scope.selectedMarking["velp"] = $scope.getVelpById( $scope.markings[markingId].velp).content;
@@ -118,11 +119,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.usePhrase = function (velp) {
         if (typeof $scope.selectedArea != "undefined") {
-            /*
-             var span = angular.element("<span></span>");
-             console.log(span);
-            */
-            //var span = $scope.createPopOverElement(velp.content);
 
             var newMarking = {
                 "id": $scope.markings.length,
@@ -138,15 +134,17 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             $scope.addMarkingToCoord($scope.selectedArea, newMarking, true );
             $scope.selectedArea = undefined;
 
-
-
             velp.used += 1;
         }
     };
 
     $scope.createPopOverElement = function (marking, show) {
         var span = document.createElement('span');
+        var velp_content = String($scope.getVelpById(marking.velp).content);
+
+        console.log("Mikä ongelma? " + $scope.getVelpById(marking.velp).content);
         span.setAttribute("uib-popover-template", "dynamicPopover.templateUrl");
+        span.setAttribute("popover-title", velp_content);
         span.setAttribute("popover-is-open", "{0}".replace("{0}", ""+show));
         return span;
     };
