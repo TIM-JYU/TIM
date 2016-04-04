@@ -1,8 +1,13 @@
 from contracts import contract
 from timdb.timdbbase import TimDbBase, TimDbException
+from assesment_area import *
 
 
 class Labels(TimDbBase):
+    """
+    Used as an interface to query the database about labels.
+    """
+
     @contract
     def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
         """Initializes TimDB with the specified database and root path.
@@ -86,11 +91,11 @@ class Labels(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def get_document_velp_label_ids(self, document_id: 'int') -> 'list(dict)':
-        """
-        Finds all velps in use in the document and lists the labels associated with each of them.
-        :param document_id: Id of the document
-        :return: list of velp ids and label ids.
+    def get_velp_label_ids(self, assessment_area: 'AssessmentArea') -> 'list(dict)':
+        """Get labels for velps that are linked to an assessment area.
+
+        :param assessment_area: the relevant assessment area
+        :return: A list of dictionaries, each representing a single label-velp link.
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -99,32 +104,32 @@ class Labels(TimDbBase):
                          LabelInVelp.label_id AS labels
                        FROM LabelInVelp
                        WHERE velp_id IN (
-                         SELECT VelpInGroup.velp_id
-                         FROM VelpInGroup
-                         WHERE velp_group_id IN (
-                           SELECT VelpInGroup.velp_group_id
-                           FROM VelpInGroup
-                           WHERE VelpInGroup.velp_group_id IN (
-                             SELECT VelpGroupInDocument.velp_group_id
-                             FROM VelpGroupInDocument
-                             WHERE VelpGroupInDocument.document_id = ?
-                           )
-                         )
+                       """ +
+                       assessment_area.get_sql_for_velp_ids()
+                       + """
                        )
                        ORDER BY velp_id ASC
-                       """, [document_id]
+                       """, assessment_area.get_parameter_list()
                        )
         results = self.resultAsDictionary(cursor)
         return results
 
+    @contract
+    def get_document_velp_label_ids(self, document_id: 'int') -> 'list(dict)':
+        """Get labels for velps that are linked to a document.
+
+        :param document_id: Id of the document
+        :return: A list of dictionaries, each representing a single label-velp link.
+        """
+        return self.get_velp_label_ids(assessment_area_from_document(document_id))
 
     @contract
-    def get_document_velp_label_content(self, document_id: 'int', language_id: 'str' = 'FI') -> 'list(dict)':
-        """Finds the relevant labels in the document and returns their content in the language specified.
+    def get_velp_label_content(self, assessment_area: 'AssessmentArea', language_id: 'str' = 'FI') -> 'list(dict)':
+        """Get label content for labels that are linked to an assessment area.
 
-        :param document_id: ID for the document.
-        :param language_id: Optional, Id of the requested language. Default is 'FI'.
-        :return: List of labels, each label represented by a dictionary
+        :param assessment_area: the relevant assessment area
+        :param language_id: Optional, Id of the requested language of the content. Default is 'FI'
+        :return: A list of dictionaries with each dictionary representing a single label.
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -134,19 +139,25 @@ class Labels(TimDbBase):
                          SELECT DISTINCT LabelInVelp.label_id
                          FROM LabelInVelp
                          WHERE LabelInVelp.velp_id IN (
-                           SELECT VelpInGroup.velp_id
-                           FROM VelpInGroup
-                           WHERE VelpInGroup.velp_group_id IN (
-                             SELECT VelpGroupInDocument.velp_group_id
-                             FROM VelpGroupInDocument
-                             WHERE VelpGroupInDocument.document_id = ?
-                           )
+                       """ +
+                       assessment_area.get_sql_for_velp_ids()
+                       + """
                          )
                        )
-                       """, [language_id, document_id]
+                       """, [language_id] + assessment_area.get_parameter_list()
                        )
         results = self.resultAsDictionary(cursor)
         return results
+
+    @contract
+    def get_document_velp_label_content(self, document_id: 'int', language_id: 'str' = 'FI') -> 'list(dict)':
+        """Get label content for labels that are linked to a document.
+
+        :param document_id: ID for the document.
+        :param language_id: Optional, Id of the requested language. Default is 'FI'.
+        :return: List of labels, each label represented by a dictionary
+        """
+        return self.get_velp_label_content(assessment_area_from_document(document_id),language_id)
 
     @contract
     def delete_label(self, label_id: 'int'):
@@ -162,3 +173,4 @@ class Labels(TimDbBase):
                       WHERE id = ?
                       """, [label_id]
                        )
+        self.db.commit()

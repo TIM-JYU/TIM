@@ -5,21 +5,19 @@ from assesment_area import *
 
 class Velps(TimDbBase):
     """
-
-    Näitä tuskin tarvitsee?
+    Used as an interface to query the database about velps.
+    """
 
     @contract
     def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
-        ""Initializes TimDB with the specified database and root path.
+        """Initializes TimDB with the specified database and root path.
 
         :param type_name: The type name.
         :param current_user_name: The name of the current user.
         :param db_path: The path of the database file.
         :param files_root_path: The root path where all the files will be stored.
-        ""
+        """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
-
-    """
 
     @contract
     def create_velp(self, creator_id: 'int', default_points: 'float', icon_id: 'int | None' = None,
