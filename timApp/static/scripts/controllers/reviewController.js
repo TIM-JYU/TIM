@@ -33,7 +33,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var elements = document.getElementById("previewContent").getElementsByTagName("p");
 
         if (elements.length > 0 && !$scope.markingsAdded && typeof $scope.markings != "undefined" && $scope.markings.length > 0) {
-
             for (var i=$scope.markings.length-1;i>=0; i--){
                 var placeInfo = $scope.markings[i]["coord"];
                 console.log($scope.markings[i]);
@@ -43,7 +42,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 range.setStart(el, placeInfo["start"]);
                 range.setEnd(el, placeInfo["end"]);
 
-                $scope.addMarkingToCoord(range, $scope.markings[i], false);
+                //$scope.addMarkingToCoord(range, $scope.markings[i], false);
             }
             $scope.markingsAdded = true;
         }
@@ -56,15 +55,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param end end coordinate
      */
     $scope.addMarkingToCoord = function(range, marking, show){
-
+        console.log("marking added");
         var span = $scope.createPopOverElement(marking, show);
-        span.setAttribute("ng-click", "selectMarking(" + marking.id + ")");
-        span.classList.add("marking");
-        span.classList.add("emphasise");
-        span.classList.add($scope.getMarkingHighlight( marking.points));
-        $compile(span)($scope);
-
         range.surroundContents(span);
+        $compile(span)($scope);
     };
 
     /**
@@ -125,33 +119,30 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 "velp": velp.id,
                 "points": velp.points,
                 "coord": {"el": 0, "start": 0, "end":0 }, // TODO: get coordinates from selectedArea
-                "comment": ""
+                "comments": []
             };
 
             $scope.markings.push(newMarking);
-            $scope.selectMarking(newMarking['id']);
+            //$scope.selectMarking(newMarking['id']);
 
             $scope.addMarkingToCoord($scope.selectedArea, newMarking, true );
             $scope.selectedArea = undefined;
 
             velp.used += 1;
         }
+        $scope.markingsAdded = true;
     };
 
     $scope.createPopOverElement = function (marking, show) {
-        var span = document.createElement('span');
+        var element = document.createElement('marking');
         var velp_content = String($scope.getVelpById(marking.velp).content);
 
-        console.log("Mikä ongelma? " + $scope.getVelpById(marking.velp).content);
-        span.setAttribute("uib-popover-template", "dynamicPopover.templateUrl");
-        span.setAttribute("popover-title", velp_content);
-        span.setAttribute("popover-is-open", "{0}".replace("{0}", ""+show));
-        return span;
-    };
 
-    $scope.dynamicPopover = {
-        templateUrl: '/static/templates/popOverTemplate.html',
-        position: 'Velp'
+        element.setAttribute("velp", velp_content);
+        element.setAttribute("points", marking.points);
+        element.setAttribute("comments", marking.comments);
+
+        return element;
     };
 
 }]);

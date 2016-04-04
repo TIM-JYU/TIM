@@ -1,0 +1,25 @@
+<!-- Pop over element
+--><div ng-show="show" ng-class="['marking-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
+    <div class="fulldiv">
+        <div class="div-90">
+            <p><span><strong>{{ velp }}</strong></span></p>
+        </div>
+        <div class="div-10">
+            <span class="float-right glyphicon glyphicon-remove clickable-icon" ng-click="toggleMarking()"></span>
+        </div>
+    </div>
+    <div class="fulldiv">
+    <p><label>Points: <input type="number" ng-model="points" value="{{ points }}"></label></p>
+        <ul>
+            <li>Comment</li>
+            <li ng-repeat="comment in comments">Testi <strong>{{ comment["author"] }}</strong>: {{ comment["content"] }}</li>
+        </ul>
+
+    <textarea placeholder="Add comment" autofocus></textarea>
+    <button>Add</button>
+    </div>
+</div><!--
+
+Surrounded text
+--><span ng-click="toggleMarking()" ng-class="['marking', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]"
+      ng-transclude></span>
