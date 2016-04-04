@@ -56,8 +56,6 @@ def get_velps(document_id: int, paragraph_id: str) -> 'str':
 
     # Try catch should end here
 
-    print(velp_data)
-
 
     return jsonResponse(velp_data)
 
