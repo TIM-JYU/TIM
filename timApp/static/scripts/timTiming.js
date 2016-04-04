@@ -27,8 +27,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 document.onreadystatechange = function () {
     timLogTime("ready changed " + document.readyState,"main");
-    if ( timTimingDiv & !timDivLogger ) {
-        timDivLogger = document.createElement("div")
+    if ( timTimingDiv && !timDivLogger ) {
+        timDivLogger = document.createElement("div");
         timDivLogger.appendChild(timDivPreLogger);
         //document.body.appendChild(timDivLogger);
         document.body.insertBefore(timDivLogger,document.body.firstChild);
@@ -85,6 +85,7 @@ function timLogTime(msg,id,level) {
     var d = new Date();       
     var diff = d - timJavaScriptStartTime;
     var diffLast = d - timJavaScriptLastTime;
+    var str;
     if ( timTimingSummary ) {
         timLogText = "";
         str = diff.valueOf();
@@ -98,5 +99,3 @@ function timLogTime(msg,id,level) {
     }    
     timJavaScriptLastTime = d;
 }   
-
-

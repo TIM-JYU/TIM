@@ -166,6 +166,33 @@ class RefTest(TimDbTest):
 
         db.close()
 
+    def test_editparagraph_citearea(self):
+        db = self.init_testdb()
+        areastart_par = self.src_doc.add_paragraph("", attrs={"area": "testarea"})
+        area_par1 = self.src_doc.add_paragraph("Testarea par 1", attrs={"x": 1, "y": 2})
+        area_par2 = self.src_doc.add_paragraph("Testarea par 2", attrs={"a": 3, "b": 4})
+        areaend_par = self.src_doc.add_paragraph("", attrs={"area_end": "testarea"})
+
+        areastart_md = areastart_par.get_exported_markdown()
+        areapar1_md = area_par1.get_exported_markdown()
+        areapar2_md = area_par2.get_exported_markdown()
+        areaend_md = areaend_par.get_exported_markdown()
+
+        self.assertRegex(areastart_md, '^#- *\\{area="testarea" ?\\}\n+$')
+        self.assertRegex(areapar1_md, '^#- *\\{([xy]="[12]" ?){2}\\}\nTestarea par 1\n$')
+        self.assertRegex(areapar2_md, '^#- *\\{([ab]="[34]" ?){2}\\}\nTestarea par 2\n$')
+        self.assertRegex(areaend_md, '^#- *\\{area_end="testarea" ?\\}\n+$')
+
+        ref_par = self.ref_doc.add_area_ref_paragraph(self.src_doc, 'testarea')
+        ref_md = ref_par.get_exported_markdown()
+
+        src_docid = str(self.src_doc.doc_id)
+        self.assertRegex(ref_md, '^#- *\\{(((ra="testarea")|(rd="' + src_docid + '")) ?){2}\\}\n+$')
+
+        # todo: test the contents of the rendered area
+
+        db.close()
+
     def test_editparagraph_translate(self):
         db = self.init_testdb()
 
@@ -210,6 +237,36 @@ class RefTest(TimDbTest):
 
         db.close()
 
+    def test_editparagraph_translatearea(self):
+        db = self.init_testdb()
+        areastart_par = self.src_doc.add_paragraph("", attrs={"area": "testarea"})
+        area_par1 = self.src_doc.add_paragraph("Testarea par 1", attrs={"x": 1, "y": 2})
+        area_par2 = self.src_doc.add_paragraph("Testarea par 2", attrs={"a": 3, "b": 4})
+        areaend_par = self.src_doc.add_paragraph("", attrs={"area_end": "testarea"})
+
+        areastart_md = areastart_par.get_exported_markdown()
+        areapar1_md = area_par1.get_exported_markdown()
+        areapar2_md = area_par2.get_exported_markdown()
+        areaend_md = areaend_par.get_exported_markdown()
+
+        self.assertRegex(areastart_md, '^#- *\\{area="testarea" ?\\}\n+$')
+        self.assertRegex(areapar1_md, '^#- *\\{([xy]="[12]" ?){2}\\}\nTestarea par 1\n$')
+        self.assertRegex(areapar2_md, '^#- *\\{([ab]="[34]" ?){2}\\}\nTestarea par 2\n$')
+        self.assertRegex(areaend_md, '^#- *\\{area_end="testarea" ?\\}\n+$')
+
+        ref_par = self.ref_doc.add_area_ref_paragraph(self.src_doc, 'testarea', 'translation')
+        ref_md = ref_par.get_exported_markdown()
+
+        src_docid = str(self.src_doc.doc_id)
+        self.assertRegex(ref_md, '^#- *\\{(((ra="testarea")|(rd="' + src_docid + '")|(r="tr")) ?){3}\\}\ntranslation\n+$')
+
+        ref_par = self.ref_doc.modify_paragraph(ref_par.get_id(), '')
+        ref_md = ref_par.get_exported_markdown()
+        self.assertRegex(ref_md, '^#- *\\{(((ra="testarea")|(rd="' + src_docid + '")|(r="tr")) ?){3}\\}\n+$')
+
+        # todo: test the contents of the rendered area
+
+        db.close()
 
 if __name__ == '__main__':
     unittest.main()

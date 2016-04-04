@@ -2,6 +2,7 @@ import random
 import unittest
 
 from documentmodel.documentparser import DocumentParser, ValidationException
+from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
 
 
@@ -128,7 +129,7 @@ test
         self.assertListEqual([{'md': '```', 'type': 'code', 'attrs': {}}],
                              DocumentParser('```').get_blocks())
 
-        result = DocumentParser(doc_text).get_blocks(break_on_empty_line=True)
+        result = DocumentParser(doc_text).get_blocks(DocumentParserOptions.break_on_empty_lines())
         self.assertListEqual([{'md': '```\ncode\n\ncode\n```', 'attrs': {'plugin': 'csPlugin'}, 'type': 'code'},
                               {'md': 'text1', 'type': 'autonormal', 'attrs': {}},
                               {'md': 'text2', 'type': 'autonormal', 'attrs': {}},
@@ -150,9 +151,7 @@ test
                               {'attrs': {}, 'type': 'code',
                                'md': '````\n#- {rd=x rp=y}\n\n``` {rp=x rd=y}\n```\n\n````'},
                               {'attrs': {}, 'md': '````\ntest\n````', 'type': 'code'}], result)
-        result = DocumentParser(doc_text).get_blocks(break_on_code_block=False,
-                                                     break_on_header=False,
-                                                     break_on_normal=False)
+        result = DocumentParser(doc_text).get_blocks(DocumentParserOptions.single_paragraph())
         expected = [{'md': '```\ncode\n\ncode\n```', 'attrs': {'plugin': 'csPlugin'}, 'type': 'code'},
                     {'md': 'text1\n\ntext2', 'type': 'autonormal', 'attrs': {}},
                     {'md': '```\ncode2\n```', 'attrs': {'plugin': 'mmcq'}, 'type': 'code'},

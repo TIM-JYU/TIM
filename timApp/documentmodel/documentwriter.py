@@ -1,5 +1,8 @@
 """Defines the DocumentWriter class."""
+from typing import Optional
+
 from documentmodel.documentparser import DocumentParser
+from documentmodel.documentparseroptions import DocumentParserOptions
 from utils import count_chars
 
 
@@ -21,14 +24,16 @@ class DocumentWriter:
         if not export_ids:
             self.ignored_attrs.append('id')
 
-    def get_text(self):
+    def get_text(self, options: Optional[DocumentParserOptions]=None):
         """Gets the full text for the document.
 
         :return: The full text of the document.
         """
+        if options is None:
+            options = DocumentParserOptions()
         text = ''
         for p in self.pars:
-            blocks = DocumentParser(p['md']).get_blocks()
+            blocks = DocumentParser(p['md']).get_blocks(options)
             text += '\n'
             if len(blocks) > 1:
                 atomized = p.copy()

@@ -17,6 +17,7 @@
             document.getElementsByTagName('head')[0].appendChild(link);
         }
         var is_owner = rights.manage;
+        var pollInterval = 500;
     </script>
 {% endblock %}
 {% block body %}
@@ -27,7 +28,7 @@
                     {{ text[0].html|safe }}
                     {% set ignore=False %}
                     {% for t in text[1:] %}
-                        {% if t.html|safe == "<div></div>" %}
+                        {% if t.md.startswith('---') and t.md.endswith('---') %}
                             </section>
                             <section>
                                 {% else %}
@@ -98,27 +99,30 @@
                 dataType: 'json',
                 error: function (xhr, status, err) {
                     console.log('error');
-                    pollTimeout = setTimeout(refresh, 250);
+                    pollTimeout = setTimeout(refresh, pollInterval);
                 },
                 success: function (data) {
                     var oldstate = Reveal.getState();
                     var oldh = 0, oldv = 0, newh = 0, newv = 0;
                     if (oldstate.indexh !== undefined) oldh = oldstate.indexh;
                     if (oldstate.indexv !== undefined) oldv = oldstate.indexv;
+                    data = JSON.parse(data);
+                    console.log(data);
                     if (data !== null) {
                         if (data.indexh !== undefined) newh = data.indexh;
                         if (data.indexv !== undefined) newv = data.indexv;
                         if ((newh != oldh || newv != oldv
                                 || data.indexf != oldstate.indexf) && receiving) {
-                            Reveal.slide(data.indexh, data.indexv, data.indexf, 'remote');
+                            console.log('Change slide');
+                            Reveal.slide(newh, newv, data.indexf, 'remote');
                         }
                     }
-                    pollTimeout = setTimeout(refresh, 250);
+                    pollTimeout = setTimeout(refresh, pollInterval);
                 }
             });
         }
 
-        if (GetURLParameter('controls') === undefined && is_owner) pollTimeout = setTimeout(refresh, 250);
+        if (GetURLParameter('controls') === undefined && is_owner) pollTimeout = setTimeout(refresh, pollInterval);
 
 
         function updateSlideStatus(h, v, f) {
@@ -130,12 +134,12 @@
                 url: '/setslidestatus',
                 data: {'doc_id': docId, 'status': JSON.stringify({indexh: h, indexv: v, indexf: f})},
                 success: function (data) {
-                    pollTimeout = setTimeout(refresh, 250);
+                    pollTimeout = setTimeout(refresh, pollInterval);
                     receiving = true;
                 },
                 error: function () {
                     console.log('error');
-                    pollTimeout = setTimeout(refresh, 250);
+                    pollTimeout = setTimeout(refresh, pollInterval);
                     receiving = true;
                 }
             })
@@ -145,7 +149,7 @@
             document.onkeyup = function (evt) {
                 evt = evt || window.event;
                 if (evt.keyCode == 82) {
-                    pollTimeout = setTimeout(refresh, 250);
+                    pollTimeout = setTimeout(refresh, pollInterval);
                 }
             };
             setTimeout(function () {

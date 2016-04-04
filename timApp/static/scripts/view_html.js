@@ -100,6 +100,20 @@ timApp.controller("ViewCtrl", [
         var EDITOR_CLASS = "editorArea";
         var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
 
+        // from https://stackoverflow.com/a/7317311
+        $window.onload = function () {
+            $window.addEventListener("beforeunload", function (e) {
+                if (!sc.editing) {
+                    return undefined;
+                }
+
+                var msg = 'You are currently editing something. Are you sure you want to leave the page?';
+
+                (e || $window.event).returnValue = msg; //Gecko + IE
+                return msg; //Gecko + Webkit, Safari, Chrome etc.
+            });
+        };
+
         sc.reload = function() {
             sc.markPageNotDirty();
             $window.location.reload();
@@ -1101,7 +1115,7 @@ timApp.controller("ViewCtrl", [
                 return sc.showAddParagraphAbove(e, $(".addBottomContainer"));
             });
         }
-        sc.processAllMath($('body'));
+        sc.processAllMathDelayed($('body'));
 
         sc.defaultAction = {func: sc.showOptionsWindow, desc: 'Show options window'};
         timLogTime("VieCtrl end","view");
@@ -1250,7 +1264,8 @@ timApp.controller("ViewCtrl", [
             }
         };
 
-
+        // call marktree.js initialization function so that TOC clicking works
+        $window.addEvents();
 
         sc.editorFunctions = sc.getEditorFunctions();
 

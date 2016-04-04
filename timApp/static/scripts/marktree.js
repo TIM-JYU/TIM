@@ -555,8 +555,3 @@ function addEvents() {
     initEvents(document);
     document.onclick = onClickHandler;
 }
-
-/*document.onkeypress = presstest;
- document.onkeyup = keytest;*/
-window.onload = addEvents;
-  
