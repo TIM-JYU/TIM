@@ -38,10 +38,10 @@ DROP TABLE IF EXISTS LabelInVelpGroup;
 CREATE TABLE IF NOT EXISTS Velp (
   id              INTEGER       NOT NULL,
   creator_id      INTEGER       NOT NULL,
-  creation_time   TIMESTAMP     NOT NULL  DEFAULT CURRENT_TIMESTAMP,
-  default_points  INTEGER       NOT NULL  DEFAULT 0,      -- change to some better type?
+  creation_time   DATETIME      NOT NULL  DEFAULT CURRENT_TIMESTAMP,
+  default_points  REAL,
   icon_id         INTEGER,
-  valid_until     TIMESTAMP,
+  valid_until     DATETIME,
 
   CONSTRAINT Velp_PK
   PRIMARY KEY (id),
@@ -117,7 +117,7 @@ CREATE TABLE LabelInVelp (
 CREATE TABLE VelpVersion (
   id          INTEGER   NOT NULL,
   velp_id     INTEGER   NOT NULL,
-  modify_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  modify_time DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   CONSTRAINT VelpVersion_PK
   PRIMARY KEY (id),
@@ -149,8 +149,9 @@ CREATE TABLE VelpContent (
 CREATE TABLE Annotation (
   id            INTEGER   NOT NULL,
   version_id    INTEGER   NOT NULL,
-  points        INTEGER,                  -- change to some better type?
-  time          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  points        REAL,
+  creation_time DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  valid_until   DATETIME,
   icon_id       INTEGER,
   annotator_id  INTEGER   NOT NULL,
   answer_id     INTEGER,
@@ -158,6 +159,7 @@ CREATE TABLE Annotation (
   paragraph_id  TEXT,
   place_start   INTEGER   NOT NULL,
   place_end     INTEGER   NOT NULL,
+
 
   CONSTRAINT Annotation_PK
   PRIMARY KEY (id),
@@ -190,7 +192,7 @@ CREATE TABLE AnnotationVisibility (
 CREATE TABLE Comment (
   id            INTEGER   NOT NULL,
   annotation_id INTEGER   NOT NULL,
-  comment_time  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  comment_time  DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP,
   commenter_id  INTEGER   NOT NULL,
   content       TEXT,
 
@@ -208,8 +210,8 @@ CREATE TABLE Comment (
 CREATE TABLE VelpGroup (
   id            INTEGER   NOT NULL,
   name          TEXT      NOT NULL,
-  creation_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  valid_until   TIMESTAMP,
+  creation_time DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  valid_until   DATETIME,
 
   CONSTRAINT VelpGroup_PK
   PRIMARY KEY (id)
