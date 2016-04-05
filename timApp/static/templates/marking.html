@@ -1,22 +1,22 @@
-<!-- Pop over element
---><div ng-show="show" ng-class="['marking-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
+<!-- Pop-over element
+--><div ng-show="!show" ng-class="['marking-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
     <div class="fulldiv">
         <div class="div-90">
-            <p><span><strong>{{ velp }}</strong></span></p>
+            <p><span><strong>{{ velp }}</strong></span>
+            <br /><label>Points: <input type="number" ng-model="points" ng-value="points"></label>
+            </p>
         </div>
         <div class="div-10">
             <span class="float-right glyphicon glyphicon-remove clickable-icon" ng-click="toggleMarking()"></span>
         </div>
     </div>
     <div class="fulldiv">
-    <p><label>Points: <input type="number" ng-model="points" value="{{ points }}"></label></p>
-        <ul>
-            <li>Comment</li>
-            <li ng-repeat="comment in comments">Testi <strong>{{ comment["author"] }}</strong>: {{ comment["content"] }}</li>
+        <ul class="comments">
+            <li ng-repeat="comment in comments"><strong>{{ comment["author"] }}</strong>: {{ comment["content"] }}</li>
         </ul>
 
-    <textarea placeholder="Add comment" autofocus></textarea>
-    <button>Add</button>
+    <textarea placeholder="Add comment" ng-model="newComment" autofocus></textarea>
+    <button ng-click="addComment()">Add</button>
     </div>
 </div><!--
 

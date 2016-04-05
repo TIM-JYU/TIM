@@ -14,12 +14,14 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.testi = "TESTI";
     $scope.showSource = false;
     $scope.markingsAdded = false;
-    $scope.selectedMarking = {"comment": "", "velp": "", "points": 0};
+    $scope.selectedMarking = {"comments": [], "velp": "", "points": 0};
+
+    var username = $scope.$parent.$parent.users[0].name;
 
     $http.get('/static/test_data/markings.json').success(function (data) {
-        $scope.markings = [];
-        //$scope.markings = data;
-       //$scope.loadMarkings();
+        //$scope.markings = [];
+        $scope.markings = data;
+        $scope.loadMarkings();
     });
 
     $scope.toggleShowSource = function(){
@@ -33,16 +35,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var elements = document.getElementById("previewContent").getElementsByTagName("p");
 
         if (elements.length > 0 && !$scope.markingsAdded && typeof $scope.markings != "undefined" && $scope.markings.length > 0) {
-            for (var i=$scope.markings.length-1;i>=0; i--){
+            for (var i=$scope.markings.length-1; i>=0; i--){
                 var placeInfo = $scope.markings[i]["coord"];
-                console.log($scope.markings[i]);
                 var el = elements.item(placeInfo["el"]).childNodes[0];
                 var range = document.createRange();
 
                 range.setStart(el, placeInfo["start"]);
                 range.setEnd(el, placeInfo["end"]);
 
-                //$scope.addMarkingToCoord(range, $scope.markings[i], false);
+                $scope.addMarkingToCoord(range, $scope.markings[i], false);
             }
             $scope.markingsAdded = true;
         }
@@ -55,10 +56,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param end end coordinate
      */
     $scope.addMarkingToCoord = function(range, marking, show){
-        console.log("marking added");
         var span = $scope.createPopOverElement(marking, show);
         range.surroundContents(span);
         $compile(span)($scope);
+        console.log("marking added");
+
     };
 
     /**
@@ -73,16 +75,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         } else {
             $scope.selectedArea = undefined;
         }
-    };
-
-    /**
-     * Method for showing marking information in view (reviewEditor.html)
-     * @param marking marking info to show
-     */
-    $scope.selectMarking = function(markingId){
-        $scope.selectedMarking["points"] = $scope.markings[markingId].points;
-        $scope.selectedMarking["comment"] = $scope.markings[markingId].comment;
-        $scope.selectedMarking["velp"] = $scope.getVelpById( $scope.markings[markingId].velp).content;
     };
 
     $scope.getVelpById = function(id){
@@ -125,7 +117,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             $scope.markings.push(newMarking);
             //$scope.selectMarking(newMarking['id']);
 
-            $scope.addMarkingToCoord($scope.selectedArea, newMarking, true );
+            $scope.addMarkingToCoord($scope.selectedArea, newMarking, true);
             $scope.selectedArea = undefined;
 
             velp.used += 1;
@@ -133,14 +125,22 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         $scope.markingsAdded = true;
     };
 
+    $scope.getMarkingComments = function (id){
+        for (var i=0; i<$scope.markings.length; i++){
+            if (id == $scope.markings[i].id)
+                return $scope.markings[i].comments;
+        }
+    };
+
     $scope.createPopOverElement = function (marking, show) {
         var element = document.createElement('marking');
         var velp_content = String($scope.getVelpById(marking.velp).content);
 
-
         element.setAttribute("velp", velp_content);
         element.setAttribute("points", marking.points);
-        element.setAttribute("comments", marking.comments);
+        element.setAttribute("user", username);
+        element.setAttribute("show", show);
+        element.setAttribute("comments", JSON.stringify(marking.comments));
 
         return element;
     };

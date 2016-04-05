@@ -4,35 +4,47 @@
 
 'use strict';
 
-/* Directives */
+/* Directive for marking */
 timApp.directive("marking", function() {
     return{
         templateUrl: "/static/templates/marking.html",
         transclude: true,
         scope: {
             // locked, selected ?
-            show: '@',
+            show: '=',
             velp: '@',
             points: '@',
-            comments: '@',
-            evalAsync: '@'
+            evalAsync: '@',
+            user: '@',
+            comments: '='
         },
         controller: 'MarkingController'
     }
 });
 
 timApp.controller('MarkingController', ['$scope', '$timeout', function ($scope, $timeout){
-    $scope.comments = [
-        {
-            "content": "Ensimmäinen kommentti tähän ketjuun",
-            "author": "sevitarv"
-        }
-    ];
+    $scope.newComment = "";
 
+    /**
+     * Toggle marking visibility
+     */
     $scope.toggleMarking = function() {
         $scope.show = !$scope.show;
     };
 
-    $timeout(function () {$scope.toggleMarking();}, 100);
+    /**
+     * Add comment to annotation
+     */
+    $scope.addComment = function() {
+        if ($scope.newComment.length > 0) {
+            $scope.comments.push({author: $scope.user, content: $scope.newComment});
+            $scope.newComment = "";
+        }
+    };
+
+    $timeout(function () {
+        $scope.toggleMarking();
+    }, 1);
+    $scope.toggleMarking();
 
 }]);

@@ -1,26 +1,24 @@
 [
   {
-    "tags": [0],
     "id": 0,
     "points": -1,
-    "velp": 0,
+    "velp": 3,
     "coord": {"el": 0, "start":2, "end":3 },
-    "comment": "You should use a sentinel here"
+    "comments": [{"author": "vesal", "content": "You should use a sentinel here"},
+                 {"author": "sevitarv", "content": "Eikä pitäis?"}]
   },
   {
-    "tags": [2,3,7],
     "id": 1,
     "points": 0,
-    "velp": 1,
+    "velp": 5,
     "coord": {"el": 1, "start":5, "end":10 },
-    "comment": "Nice"
+    "comment": []
   },
   {
-    "tags": [2],
     "id": 2,
     "points": 1,
     "velp": 2,
     "coord": {"el": 0, "start":18, "end":28 },
-    "comment": ""
+    "comment": []
   }
 ]

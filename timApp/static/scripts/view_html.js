@@ -496,7 +496,8 @@ timApp.controller("ViewCtrl", [
                     "delete-url": '/deleteNote',
                     "initial-text-url": initUrl
                 };
-            sc.toggleEditor($par, options, attrs, caption);
+
+            sc.toggleEditor($par, options, attrs, caption, "pareditor");
         };
 
         sc.forEachParagraph = function (func) {
