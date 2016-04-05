@@ -1,6 +1,5 @@
 from flask import Blueprint
 from .common import *
-from assesment_area import assessment_area_from_document
 
 annotations = Blueprint('annotations',
                         __name__,
