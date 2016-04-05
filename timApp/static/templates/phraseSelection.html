@@ -58,14 +58,14 @@
                             <div class="stack">
                             <div ng-repeat="velp in filteredVelps = (velps | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedLabels:labels)">
 
-                                <div class="velp" ng-click="usePhrase(velp)" ng-style="{top: $index*2.5 + 'em'}">
+                                <div class="velp" ng-click="usePhrase(velp)" ng-style="{top: -$index*7.5 + 'em'}">
                                     <div ng-class="['emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0}]">
 
                                     <div ng-class="['content']">
                                         <p>
                                             <span>{{ velp.content }}&ensp;</span>
                                             <span class="points">{{ velp.points }}</span>
-                                            <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]" ng-repeat="label in velp.labels" style="color: {{ getColor(label) }} "></span>
+                                            <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]" ng-repeat="label in velp.labels" ng-style="{ color: getColor(label) }"></span>
                                         </p>
                                     </div>
                                 </div>

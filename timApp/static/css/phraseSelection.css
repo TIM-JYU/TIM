@@ -66,19 +66,19 @@
 }
 
 .velp {
-    position: absolute;
+    position: relative;
     line-height: 1.25em;
     font-weight: 600;
     cursor: pointer;
-    height: 13em;
+    height: 10em;
     width: 18em;
 }
 
 .velp:hover .emphasise{
     margin-top: -1em;
     -webkit-box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
--moz-box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
-box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
+    -moz-box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
+    box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
 }
 
 .velp .emphasise{
@@ -243,14 +243,16 @@ marking {
     border: 1px solid #B7B7B7;
     float:left;
     position: relative;
+    height: 45em; /* TODO: set height */
 }
 
 /* needs media queries */
 .velpArea .stack{
-    width: 99%;
+    width: 98%;
     height: auto;
-    margin-right: 1%;
+    margin: 1em 1%;
     float: left;
+    height: 22em;
     position: absolute;
 }
 
@@ -262,6 +264,7 @@ marking {
     margin-bottom: 1em;
     border-collapse: separate;
 }
+
 .phraseTable input {
     border: 1px solid #B7B7B7;
 }

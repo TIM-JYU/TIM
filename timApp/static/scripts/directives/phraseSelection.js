@@ -8,7 +8,7 @@
 var angular;
 var timApp = angular.module('timApp');
 
-var colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "lightblue", "coral", "goldenrod", "blue"];
+var colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "cornflowerblue", "coral", "goldenrod", "blue"];
 
 /**
  * Angular directive for phrase selection
@@ -38,6 +38,8 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     var new_velp_id = 0; // get latest velp id
     var new_label_id = 0; // get latest label id
 
+    $scope.filteredVelpCount = 0;
+
     console.log($scope.extraData);
 
     // Get velp data
@@ -49,7 +51,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
                 new_velp_id = v.id
         });
         new_velp_id++;
-        console.log($scope.velps)
+        console.log($scope.velps);
     });
 
     // Get label data
@@ -60,6 +62,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
             if (l.id > new_label_id)
                 new_label_id = l.id
         });
+        new_label_id++;
     });
 
     // Methods
@@ -113,6 +116,8 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
         return "";
     };
 
+
+
     /**
      * Adds new label
      * @param form form information
@@ -124,11 +129,11 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
         form.$setPristine();
         var labelToAdd = {
-            "id": $scope.labels.length,
+            "id": new_label_id,
             "content": $scope.newLabel["content"],
             "selected": $scope.newLabel["selected"]
         };
-
+        new_label_id++;
         $scope.resetNewLabel();
         $scope.labels.push(labelToAdd);
         $scope.labelAdded = false;
