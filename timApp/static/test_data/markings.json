@@ -2,23 +2,24 @@
   {
     "id": 0,
     "points": -1,
-    "velp": 3,
-    "coord": {"el": 0, "start":2, "end":3 },
-    "comments": [{"author": "vesal", "content": "You should use a sentinel here"},
-                 {"author": "sevitarv", "content": "Eikä pitäis?"}]
+    "velp": 2,
+    "coord": {"el": 0, "start":48, "end":62 },
+    "comments": [{"author": "vesal", "content": "Kyseessä oli siis Napoleon I"},
+                 {"author": "sevitarv", "content": "Ahaa"}]
   },
   {
     "id": 1,
     "points": 0,
-    "velp": 5,
-    "coord": {"el": 1, "start":5, "end":10 },
-    "comment": []
+    "velp": 6,
+    "coord": {"el": 1, "start":105, "end":140 },
+    "comments": [{"author": "vesal", "content": "Tämä on hieman epämääräisesti sanottu"}]
   },
   {
     "id": 2,
     "points": 1,
-    "velp": 2,
-    "coord": {"el": 0, "start":18, "end":28 },
-    "comment": []
+    "velp": 7,
+    "coord": {"el": 2, "start":396, "end":422 },
+    "comments": [{"author": "vesal", "content": "Hyvä yksityiskohta"}]
   }
+
 ]
