@@ -405,16 +405,16 @@ INSERT INTO VelpContent (version_id, language_id, content) VALUES (1, "FI", "Vir
 /*This is the latest english version, but there is a newer in finish.*/
 INSERT INTO VelpContent (version_id, language_id, content) VALUES (1, "EN", "Erroneus region");
 INSERT INTO VelpContent (version_id, language_id, content) VALUES (2, "FI", "Virheellinen ajankohta");
-INSERT INTO VelpContent (version_id, language_id, content) VALUES (3, "FI", "Virheellinen henkilo");
+INSERT INTO VelpContent (version_id, language_id, content) VALUES (3, "FI", "Virheellinen henkilö");
 INSERT INTO VelpContent (version_id, language_id, content) VALUES (4, "FI", "Kirjoitusvirhe");
 INSERT INTO VelpContent (version_id, language_id, content) VALUES (5, "FI", "Kielioppivirhe");
 INSERT INTO VelpContent (version_id, language_id, content) VALUES (5, "EN", "Grammatical error");
 INSERT INTO VelpContent (version_id, language_id, content) VALUES (6, "FI", "Virheellinen alue");
-INSERT INTO VelpContent (version_id, language_id, content) VALUES (7, "FI", "Kommentti");
+INSERT INTO VelpContent (version_id, language_id, content) VALUES (7, "FI", "Epäolennaista");
 INSERT INTO VelpContent (version_id, language_id, content) VALUES (8, "FI", "Hyvin muistettu!");
 INSERT INTO VelpContent (version_id, language_id, content) VALUES (9, "FI", "Vanhentunut velppi");
 
-INSERT INTO VelpGroup (id, name, valid_until) VALUES (1, "Paljon velppeja", NULL);
+INSERT INTO VelpGroup (id, name, valid_until) VALUES (1, "Paljon velppejä", NULL);
 INSERT INTO VelpGroup (id, name, valid_until) VALUES (2, "Kehuja", NULL);
 INSERT INTO VelpGroup (id, name, valid_until) VALUES (3, "Haukkuja (vuh vuh)", NULL);
 
