@@ -330,18 +330,16 @@ CREATE TABLE LabelInVelpGroup (
 );
 
 -- Next up, some views!
-
 DROP VIEW IF EXISTS VelpInformation;
 CREATE VIEW VelpInformation AS
-  SELECT DISTINCT
-    VelpVersion.id,
-    VelpVersion.velp_id,
-    VelpContent.language_id,
-    VelpContent.content,
-    VelpVersion.modify_time
-  FROM VelpVersion
-    JOIN VelpContent
-  WHERE VelpVersion.id = VelpContent.version_id;
+SELECT
+  VelpVersion.id,
+  VelpVersion.velp_id,
+  VelpContent.language_id,
+  VelpContent.content,
+  VelpVersion.modify_time
+FROM VelpVersion
+  INNER JOIN VelpContent ON VelpVersion.id = VelpContent.version_id;
 
 
 DROP VIEW IF EXISTS VelpGroupInAssessmentArea;
@@ -377,6 +375,7 @@ CREATE VIEW VelpGroupInAssessmentArea AS
     NULL,
     VelpGroupInFolder.folder_id
   FROM VelpGroupInFolder;
+
 
 -- IMPORTANT! THIS IS EXAMPLE DATA. YOU SHOULD PROBABLY DELETE IT BEFORE RUNNING IN PRODUCTION.
 INSERT INTO Velp (id, creator_id, default_points, icon_id, valid_until) VALUES (1, 1, -2, NULL, NULL);
