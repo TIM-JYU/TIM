@@ -64,25 +64,29 @@ class AssessmentArea:
             return [self._document_id, self._document_id]
 
     def get_sql_for_velp_ids(self) -> 'str':
-        """
-        Returns an sql script which will query the database for velps in use in this assessment area.
+        """Returns an sql script which will query the database for velps in use in this assessment area.
+        Only returns velps that are still valid.
         :return: string of sql code.
         """
         if self._type is AssessmentArea._AssessmentAreaTypes.document:
             return """
-                   SELECT VelpInGroup.velp_id
-                   FROM VelpInGroup
-                   WHERE VelpInGroup.velp_group_id IN (
-                     SELECT velp_group_id
-                     FROM VelpGroupInDocument
-                     WHERE document_id = ?
+                   SELECT Velp.id
+                   FROM Velp
+                   WHERE (Velp.valid_until >= current_timestamp OR Velp.valid_until ISNULL) AND Velp.id IN (
+                     SELECT VelpInGroup.velp_id
+                     FROM VelpInGroup
+                     WHERE VelpInGroup.velp_group_id IN (
+                       SELECT velp_group_id
+                       FROM VelpGroupInDocument
+                       WHERE document_id = ?
+                     )
                    )
                    """
         else:
             raise NotImplementedError
 
 
-new_contract('AssessmentArea',AssessmentArea)
+new_contract('AssessmentArea', AssessmentArea)
 
 
 # Helpers for object creation. Default parameters can't support all cases.
