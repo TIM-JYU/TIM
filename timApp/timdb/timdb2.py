@@ -108,7 +108,7 @@ class TimDb(object):
         """Executes an SQL file on the database.
         :param sql_file: The SQL script to be executed.
         """
-        with open(sql_file, 'r') as schema_file:
+        with open(sql_file, 'r', encoding='utf-8') as schema_file:
             self.db.cursor().executescript(schema_file.read())
         self.db.commit()
 
