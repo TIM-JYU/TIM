@@ -1,6 +1,6 @@
 from contracts import contract
 from timdb.timdbbase import TimDbBase, TimDbException
-from assesment_area import *
+from assesment_area import AssessmentArea
 
 
 class Velps(TimDbBase):
@@ -172,7 +172,7 @@ class Velps(TimDbBase):
                        assessment_area.get_sql_for_velp_ids()
                        + """
                        )
-                       """, [language_id] + assessment_area.get_parameter_list()
+                       """, [language_id] + assessment_area.get_parameters_for_velp_ids()
                        )
         results = self.resultAsDictionary(cursor)
         return results

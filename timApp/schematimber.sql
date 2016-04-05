@@ -155,8 +155,8 @@ CREATE TABLE Annotation (
   icon_id       INTEGER,
   annotator_id  INTEGER  NOT NULL,
   answer_id     INTEGER,
-  document_id   INTEGER,
-  paragraph_id  TEXT,
+  document_id   INTEGER  NOT NULL,
+  paragraph_id  TEXT     NOT NULL,
   place_start   INTEGER  NOT NULL,
   place_end     INTEGER  NOT NULL,
 

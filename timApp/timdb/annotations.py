@@ -1,11 +1,56 @@
 from contracts import contract
 from timdb.timdbbase import TimDbBase
+from assesment_area import AssessmentArea
+
 
 class Annotations(TimDbBase):
+    """
+    Used as an interface to query the database about annotations.
+    """
+
     @contract
-    def create_annotation(self, version_id: 'int',  points: 'float', place_start: 'int', place_end: 'int',
-                          annotator_id: 'int', icon_id: 'int | None' = None,
-                          document_id: 'int | None' = None, paragraph_id: 'int | None' = None,
+    def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
+        """Initializes TimDB with the specified database and root path.
+
+        :param type_name: The type name.
+        :param current_user_name: The name of the current user.
+        :param db_path: The path of the database file.
+        :param files_root_path: The root path where all the files will be stored.
+        """
+        TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
+
+    @contract
+    def get_annotations(self, document_id: int, paragraph_id: str) -> 'list(dict)':
+        """
+        Gets all annotations made in a given area.
+        :param document_id: The relevant document.
+        :param paragraph_id: The relevant paragraph in the document.
+        :return: List of dictionaries, each dictionary representing a single annotation.
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                       SELECT
+                         Annotation.id,
+                         VelpVersion.velp_id,
+                         Annotation.icon_id,
+                         Annotation.points,
+                         Annotation.creation_time,
+                         Annotation.annotator_id,
+                         Annotation.place_start,
+                         Annotation.place_end
+                       FROM Annotation
+                         INNER JOIN VelpVersion ON VelpVersion.id = Annotation.version_id
+                       WHERE (Annotation.valid_until ISNULL OR
+                             Annotation.valid_until >= CURRENT_TIMESTAMP) AND
+                             Annotation.document_id = ? AND
+                             Annotation.paragraph_id = ?
+                       """, [document_id, paragraph_id]
+                       )
+        return self.resultAsDictionary(cursor)
+
+    @contract
+    def create_annotation(self, version_id: 'int', points: 'float', place_start: 'int', place_end: 'int',
+                          annotator_id: 'int', document_id: int, paragraph_id: 'str', icon_id: 'int | None' = None,
                           answer_id: 'int | None' = None):
         """
         Create new annotation
@@ -26,16 +71,16 @@ class Annotations(TimDbBase):
                       place_end, annotator_id, points, icon_id)
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                       """, [version_id, document_id, paragraph_id, answer_id, place_start,
-                           place_end, annotator_id, points, icon_id]
-        )
+                            place_end, annotator_id, points, icon_id]
+                       )
         self.db.commit()
 
     @contract
-    def update_annotation(self, version_id: 'int',  points: 'float', place_start: 'int', place_end: 'int',
+    def update_annotation(self, version_id: 'int', points: 'float', place_start: 'int', place_end: 'int',
                           annotator_id: 'int', icon_id: 'int | None' = None):
         cursor = self.db.cursor()
         cursor.execute("""
 
                       """
-        )
-        return;
+                       )
+        return

@@ -109,7 +109,7 @@ class Labels(TimDbBase):
                        + """
                        )
                        ORDER BY velp_id ASC
-                       """, assessment_area.get_parameter_list()
+                       """, assessment_area.get_parameters_for_velp_ids()
                        )
         results = self.resultAsDictionary(cursor)
         return results
@@ -144,7 +144,7 @@ class Labels(TimDbBase):
                        + """
                          )
                        )
-                       """, [language_id] + assessment_area.get_parameter_list()
+                       """, [language_id] + assessment_area.get_parameters_for_velp_ids()
                        )
         results = self.resultAsDictionary(cursor)
         return results

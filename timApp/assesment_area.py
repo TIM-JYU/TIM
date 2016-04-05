@@ -49,7 +49,7 @@ class AssessmentArea:
         self._paragraph_id = paragraph_id
 
     @contract
-    def get_parameter_list(self) -> 'list':
+    def get_parameters_for_velp_ids(self) -> 'list':
         """
         Returns a list suitable for placeholder substitution in a parametrized sql statement.
         :return: List of values.
@@ -66,7 +66,7 @@ class AssessmentArea:
     def get_sql_for_velp_ids(self) -> 'str':
         """Returns an sql script which will query the database for velps in use in this assessment area.
         Only returns velps that are still valid.
-        :return: string of sql code.
+        :return: string of sql script.
         """
         if self._type is AssessmentArea._AssessmentAreaTypes.document:
             return """
