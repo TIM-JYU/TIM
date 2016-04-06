@@ -81,3 +81,25 @@ def add_velp(velp_content: str = "MOIMOI", default_points: int = -5.0, language_
         timdb.velp_groups.add_velp_to_group(latest_velp, velp_labels[i])
 
     return str(latest_version)
+
+# Alternative adding style for testing
+@velps.route("/addvelp2", methods=['POST'])
+def add_velp2():
+
+    velp_content = request.args.get('content')
+    default_points = request.args.get('points')
+    language_id = request.args.get('language_id')
+    icon_id = request.args.get('icon_id')
+    valid_until = request.args.get('valid_until')
+    velp_labels = request.args.get('labels')
+
+    timdb = getTimDb()
+    current_user_id = getCurrentUserId()
+
+    latest_velp = timdb.velps.create_velp(current_user_id, default_points, icon_id, valid_until)
+    latest_version = timdb.velps.create_velp_version(latest_velp)
+    timdb.velps.create_velp_content(latest_version, language_id, velp_content)
+    for i in range(len(velp_labels)):
+        timdb.velp_groups.add_velp_to_group(latest_velp, velp_labels[i])
+
+    return str(latest_version)
