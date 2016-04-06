@@ -1,7 +1,5 @@
 @charset "UTF-8";
 /* Fontiksi Georgia, harvempi riviväli */
-body {
-    font-family: Georgia, Times, serif, serif;
-    font-size: 18px;
-    line-height: 1.75;
-}
+$line-height: 1.75;
+$font-family: Georgia, Times, serif, serif;
+$font-size: 18px;

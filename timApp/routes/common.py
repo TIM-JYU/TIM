@@ -10,6 +10,7 @@ import pluginControl
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from documentmodel.document import Document
 from timdb.timdb2 import TimDb
+from utils import generate_theme_scss, get_combined_css_filename
 
 
 def is_safe_url(url):
@@ -350,3 +351,21 @@ def validate_item_and_create(item_name, item_type, owner_group_id):
 def get_user_settings():
     return session.get('settings', {})
 
+
+def get_preferences():
+    """
+    Gets the preferences of the current user.
+
+    :return: A dictionary of the user preferences.
+    """
+    prefs = {}
+    if logged_in():
+        prefs = getTimDb().users.get_preferences(getCurrentUserId())
+        prefs = json.loads(prefs) if prefs is not None else {}
+    if not prefs:
+        prefs['css_files'] = {}
+        prefs['custom_css'] = ''
+    css_file_list = [css for css, v in prefs['css_files'].items() if v]
+    generate_theme_scss(css_file_list, 'static/css', 'static/gen')
+    prefs['css_combined'] = get_combined_css_filename(css_file_list)
+    return prefs

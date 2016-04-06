@@ -45,4 +45,5 @@ def save_settings():
     timdb = getTimDb()
     prefs = request.get_json()
     timdb.users.set_preferences(getCurrentUserId(), json.dumps(prefs))
-    return okJsonResponse()
+    show()  # Regenerate CSS
+    return jsonResponse(get_preferences())

@@ -5,7 +5,6 @@
 <script src="{{ url_for('bower.static', filename='KaTeX/dist/katex.min.js') }}"></script>
 <script src="{{ url_for('bower.static', filename='KaTeX/dist/contrib/auto-render.min.js') }}"></script>
 <script src="{{ url_for('static', filename='scripts/sidebarMenuCtrl.js') }}"></script>
-{{ scss('menustyle') }}
 
 <script>
     var sessionsettings = {{session.settings or {}|tojson}};

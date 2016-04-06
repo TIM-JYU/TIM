@@ -1,0 +1,18 @@
+@charset "UTF-8";
+
+.normal {
+  @import "stylesheet";
+}
+
+// only front page uses Bootstrap - we'll wrap all selectors inside .bootstrap selector
+.bootstrap {
+  @import "start";
+}
+
+@import "common";
+@import "lectureInfo";
+@import "menustyle";
+@import "popUp";
+@import "style";
+@import "windowstyle";
+@import "progressbarstyle";

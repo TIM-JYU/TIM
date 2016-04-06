@@ -257,7 +257,7 @@ li.basic_active {
 
 .index-sidebar a {
     text-align: left;
-    color: #2bb;
+    color: $index-sidebar-color;
 }
 
 .settings-sidebar a {
@@ -273,7 +273,7 @@ li.basic_active {
 }
 
 .sidebar a:hover {
-    color: #3cc;
+    color: $sidebar-link-hover-color;
     text-decoration: none;
 }
 
@@ -292,13 +292,13 @@ li.basic_active {
 
 .sidebar h3, .sidebar h4 {
     margin: 10px 0 0 0;
-    color: #3cc;
+    color: $sidebar-heading-color;
     font-size: 0.9em;
 }
 
 .sidebar h1 {
     font-size: 120%;
-    background-color: #3cc;
+    background-color: $sidebar-heading-color;
     color: white;
     margin: 0 0 15px 0;
     border: none;

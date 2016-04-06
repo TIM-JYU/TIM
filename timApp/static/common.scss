@@ -37,7 +37,7 @@ a {
 
 .viewLogin a {
     font-size: 11px;
-    color: #3cc;
+    color: $viewlogin-link-color;
 }
 
 .viewLogin a:hover {
@@ -93,7 +93,7 @@ a {
 .draghandle {
     min-height: 13px;
     width: 100%;
-    background-color: #3CC;
+    background-color: $draghandle-bg-color;
     position: initial;
     margin-bottom: 10px;
     margin-top: 0;

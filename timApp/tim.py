@@ -3,14 +3,15 @@
 import http.client
 import imghdr
 import io
+import os
 import time
 
+import shutil
 from flask import Blueprint
 from flask import render_template
 from flask import stream_with_context
 from flask.ext.assets import Environment
 from flask.helpers import send_file
-from webassets import Bundle
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
 import containerLink
@@ -29,7 +30,7 @@ from routes.notes import notes
 from routes.notify import notify
 from routes.readings import readings
 from routes.search import search_routes
-from routes.settings import settings_page, get_custom_style_files
+from routes.settings import settings_page
 from routes.upload import upload
 from routes.view import view_page
 from tim_app import app
@@ -64,14 +65,6 @@ app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 assets = Environment(app)
 
-for name in get_custom_style_files():
-    b = Bundle('css/{}.scss'.format(name),
-               filters='scss',
-               output='gen/css/{}.css'.format(name))
-    assets.register(name, b)
-    # Generate the CSS files immediately
-    assets[name].urls()
-
 print('Debug mode: {}'.format(app.config['DEBUG']))
 print('Profiling: {}'.format(app.config['PROFILE']))
 
@@ -89,13 +82,7 @@ def error_generic(error, code):
 @app.context_processor
 def inject_custom_css() -> dict:
     """Injects the user prefs variable to all templates."""
-    prefs = {}
-    if logged_in():
-        prefs = getTimDb().users.get_preferences(getCurrentUserId())
-        prefs = json.loads(prefs) if prefs is not None else {}
-    if not prefs:
-        prefs['css_files'] = {}
-        prefs['custom_css'] = ''
+    prefs = get_preferences()
     return dict(prefs=prefs)
 
 
@@ -130,6 +117,21 @@ def entity_too_large(error):
 @app.errorhandler(404)
 def not_found(error):
     return error_generic(error, 404)
+
+
+@app.route('/resetcss')
+def reset_css():
+    """
+    Removes CSS cache directories and thereby forces SASS to regenerate them the next time
+    they are needed.
+
+    Requires admin privilege.
+    :return: okJsonResponse
+    """
+    verify_admin()
+    shutil.rmtree(os.path.join('static', '.webassets-cache'))
+    shutil.rmtree(os.path.join('static', 'gen'))
+    return okJsonResponse()
 
 
 @app.route('/download/<int:doc_id>')

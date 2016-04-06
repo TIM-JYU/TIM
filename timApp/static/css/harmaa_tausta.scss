@@ -1,5 +1,3 @@
 @charset "UTF-8";
 /* Harmaa tausta dokumentin ulkopuolelle */
-html > body {
-    background-color: lightgray;
-}
+$bg-color: lightgray;

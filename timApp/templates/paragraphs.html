@@ -12,18 +12,6 @@
         var noIndex = true;
     </script>
     <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
-    <style type="text/css">
-        table {
-            margin: 0em;
-            border: none;
-            font-size: 13pt;
-        }
-
-        table td {
-            padding:  0.1em 0.5em 0.1em 0.5em;
-            border: none;
-        }
-    </style>
     <div class="par"
          id="null"
          t=""
@@ -32,7 +20,7 @@
             <p>Click left side to edit. You can get help with editing from editor's Help tab.</p>
             <p>This is an automatically added help paragraph. It will disappear when you add content.</p>
         </div>
-        <div ng-controller="IndexCtrl">
+        <div ng-controller="IndexCtrl" class="index">
             <div ng-if="templateList.length">
                 <div class="parContent">
                     <p>You may also choose to use one of the templates below.</p>

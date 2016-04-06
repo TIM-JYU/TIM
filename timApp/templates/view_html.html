@@ -49,12 +49,6 @@
         <link rel="stylesheet" href="{{ cssFile }}">
     {% endfor %}
 
-    {% for cssFile, v in prefs.css_files if v %}
-        {% assets cssFile %}
-            <link rel="stylesheet" href="{{ ASSET_URL }}">
-        {% endassets %}
-    {% endfor %}
-
     {{ (doc_css | safe ) if doc_css }}
     <style type="text/css">
         {{ prefs.custom_css }}

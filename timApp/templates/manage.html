@@ -4,41 +4,6 @@
 {% block head %}
     {{ super() }}
     <script src="{{ url_for('static', filename='scripts/manageView/manageCtrl.js') }}"></script>
-
-    <style type="text/css">
-        table {
-            margin: 1em;
-        }
-
-        thead {
-            font-weight: bold;
-        }
-
-        table td {
-            padding: 0.2em;
-        }
-
-        .flashes li {
-            list-style-type: none;
-            border: 1px solid black;
-            border-radius: 3px;
-            padding: 0.5em;
-        }
-
-        .uploadForm {
-            border: 1px solid black;
-            padding: 1em;
-        }
-
-        .material {
-            padding: 1em;
-        }
-
-        .margin {
-            margin-top: 1em;
-            margin-bottom: 1em;
-        }
-    </style>
     <script>
         var isFolder = {{is_folder|tojson}};
         var doc = {{doc|tojson}};
@@ -48,7 +13,7 @@
     </script>
 {% endblock %}
 {% block content %}
-    <div ng-controller="PermCtrl">
+    <div ng-controller="PermCtrl" class="manage">
         {% if rights['owner'] %}
             <div class="margin">
                 {{ obj_name|capitalize }} owner: <select ng-model="doc.owner"

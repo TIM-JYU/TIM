@@ -1,10 +1,10 @@
 {% macro scss(name) -%}
-    {% assets filters="scss", output="gen/{}.css".format(name), name + ".scss" %}
+    {% assets filters="scss", output="{}.css".format(name), name + ".scss" %}
         <link rel="stylesheet" href="{{ ASSET_URL }}">
     {% endassets %}
 {%- endmacro %}
 <!DOCTYPE html>
-<html lang="en" ng-app="timApp">
+<html lang="en" ng-app="timApp" class="{% block baseclass %}normal{% endblock %}">
 <head>
     {% block head %}
         <base href="{{ request.path }}">
@@ -22,18 +22,11 @@
         <script>timLogInit({{ request.query_string|string|tojson }});</script>
 
         {% block stylesheet %}
-            {{ scss('stylesheet') }}
+            {{ scss('gen/' + prefs.css_combined) }}
         {% endblock %}
-        {{ scss('common') }}
         <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.min.css') }}">
 
         {% block customcss %}
-            {% for cssFile, v in prefs.css_files.items() if v %}
-                {% assets cssFile %}
-                    <link rel="stylesheet" href="{{ ASSET_URL }}">
-                {% endassets %}
-            {% endfor %}
-
             <style type="text/css">
                 {{ prefs.custom_css }}
             </style>

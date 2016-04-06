@@ -3,8 +3,9 @@
 }
 
 body {
-    text-align: justify;
-    margin: auto auto auto 250px;
+    text-align: $body-text-align;
+    margin: auto auto auto $body-margin-left;
+    background-color: $bg-color;
 }
 
 .correct {
@@ -34,13 +35,13 @@ body {
 .flashes {
     padding: 0;
     margin: 0;
-}
 
-.flashes li {
-    list-style-type: none;
-    border: 1px solid black;
-    border-radius: 3px;
-    padding: 0.5em;
+    li {
+        list-style-type: none;
+        border: 1px solid black;
+        border-radius: 3px;
+        padding: 0.5em;
+    }
 }
 
 .smallNote {
@@ -53,7 +54,7 @@ body {
 
 input[type="submit"], button, input[type="button"] {
     margin-right: 1px;
-    background: #3CC;
+    background: $button-bg-color;
     border: 0;
     border-radius: 3px;
     color: #FFF;
@@ -71,6 +72,9 @@ p.caption {
 
 .material {
     background-color: white;
+    box-shadow: $material-shadow;
+    border: $material-border;
+    border-radius: $material-border-radius;
 }
 
 .editorArea {
@@ -87,28 +91,27 @@ td p {
 
 .readline {
     border-color: #F60; /* rgb(236,103,27); */
-}
 
-.readline:hover {
-    opacity: 0.5;
-    background: #F60; /* rgb(236,103,27); */
+    &:hover {
+        opacity: 0.5;
+        background: #F60; /* rgb(236,103,27); */
+    }
+
+    &.read {
+        display: none;
+    }
+
+    &.modified {
+        border-color: yellow;
+        &:hover {
+            background: yellow;
+        }
+    }
 }
 
 .editline:hover {
     opacity: 0.5;
-    background: #3CC; /* rgb(236,103,27); */
-}
-
-.readline.read {
-    display: none;
-}
-
-.readline.modified {
-    border-color: yellow;
-}
-
-.readline.modified:hover {
-    background: yellow;
+    background: $editline-bg-color; /* rgb(236,103,27); */
 }
 
 .pluginError, .error {
@@ -116,8 +119,23 @@ td p {
     background-color: pink;
 }
 
-.note.private {
-    border-color: red;
+.note {
+    font-size: 0.7em;
+    &.private {
+        border-color: red;
+    }
+    p {
+        margin-left: 0;
+        margin-top: 0;
+        margin-bottom: 5px;
+        display: inline;
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+    .timestamp {
+        color: lightgrey;
+    }
 }
 
 li p {
@@ -136,29 +154,6 @@ ul ul ul, ol ol ol {
     margin-left: -1em;
 }
 
-.note p {
-    margin-left: 0;
-    margin-top: 0;
-    margin-bottom: 5px;
-    display: inline;
-}
-
-.note p:last-child {
-    margin-bottom: 0;
-}
-
-.par {
-    position: relative;
-}
-
-.par.lightselect {
-    background-color: #f7f7f7;
-}
-
-.par.selected {
-    background-color: lightgray;
-}
-
 .material img {
     max-width: 95%;
     display: block;
@@ -172,25 +167,10 @@ ul ul ul, ol ol ol {
     top: 0;
 }
 
-.note {
-    font-size: 0.7em;
-}
-
-.note .timestamp {
-    color: lightgrey;
-}
-
 .headerlink {
     float: right;
     visibility: hidden;
     font-size: small;
-}
-
-.par > .headerlink {
-    font-size: large;
-    position: relative;
-    right: -0.8em;
-    top: 0.5em;
 }
 
 *:hover > .headerlink {
@@ -267,12 +247,12 @@ ul ul ul, ol ol ol {
 }
 
 .areacollapse::before {
-    color: #3cc;
+    color: $areacollapse-color;
     content: "[-]";
 }
 
 .areaexpand::before {
-    color: #3cc;
+    color: $areacollapse-color;
     content: "[+]";
 }
 
@@ -359,39 +339,58 @@ table td {
     margin-left: 2em;
 }
 
-.par h1 {
-    text-align: center;
-    margin-top: 3cm;
-    margin-bottom: 1cm;
-    color: navy;
-    border-top: navy 2pt solid;
-    border-bottom: navy 2pt solid;
-    padding-top: 10pt;
-    padding-bottom: 10pt;
-    line-height: 1.3;
-}
+.par {
+    position: relative;
 
-.par h2 {
-    text-align: left;
-    margin-top: 1.5cm;
-    line-height: 1.2;
-}
+    & > .headerlink {
+        font-size: large;
+        position: relative;
+        right: -0.8em;
+        top: 0.5em;
+    }
 
-.par h3 {
-    text-align: left;
-    margin-top: 1cm;
-    margin-bottom: 0.5cm;
-}
+    &.lightselect {
+        background-color: #f7f7f7;
+    }
 
-.par h4 {
-    text-align: left;
-    margin-top: 2em;
-    margin-bottom: 0.5cm;
-}
+    &.selected {
+        background-color: lightgray;
+    }
 
-.par blockquote {
-    margin-left: 1.5cm;
-    margin-right: 1.5cm;
+    h1 {
+        text-align: center;
+        margin-top: 3cm;
+        margin-bottom: 1cm;
+        color: navy;
+        border-top: navy 2pt solid;
+        border-bottom: navy 2pt solid;
+        padding-top: 10pt;
+        padding-bottom: 10pt;
+        line-height: 1.3;
+    }
+
+    h2 {
+        text-align: left;
+        margin-top: 1.5cm;
+        line-height: 1.2;
+    }
+
+    h3 {
+        text-align: left;
+        margin-top: 1cm;
+        margin-bottom: 0.5cm;
+    }
+
+    h4 {
+        text-align: left;
+        margin-top: 2em;
+        margin-bottom: 0.5cm;
+    }
+
+    blockquote {
+        margin-left: 1.5cm;
+        margin-right: 1.5cm;
+    }
 }
 
 .parlink {
@@ -403,9 +402,9 @@ table td {
 
 /*Georgia, - huonot numerot pystysuunnassa*/
 body {
-    font-family: Verdana, Arial, sans-serif;
-    font-size: 1em;
-    line-height: 1.2;
+    font-family: $font-family;
+    font-size: $font-size;
+    line-height: $line-height;
 }
 
 :link, a {
@@ -550,7 +549,7 @@ br {
 }
 
 li.tab.active, li.tab.pinned {
-    background: #3CC;
+    background: $tab-bg-color;
 }
 
 li.tab.active a, li.tab.pinned a {
@@ -717,18 +716,15 @@ p.stem {
     text-align: right;
 }
 
-body {
-    line-height: 1.4;
-}
-
 .defaultCheckbox {
     vertical-align: middle;
     margin-left: 2em;
 }
 
 .csRunDiv {
-    border: solid 1px #3CC;
+    border: solid 1px;
     border-radius: 5px;
+    border-color: $csrundiv-color;
     margin: 0.3em 0 0.3em 2em;
     padding-bottom: 0.5em;
     width: calc(100% - 2em - 2px);
@@ -739,7 +735,7 @@ body {
     padding-top: 1em;
     padding-left: 1em;
     padding-bottom: 1em;
-    background-color: #3CC;
+    background-color: $csrundiv-color;
     color: #FFF;
     font-family: "Helvetica", Arial, sans-serif;
 
@@ -754,13 +750,14 @@ body {
 }
 
 .note.private {
-    border-color: #3CC;
+    border-color: $note-private-color;
 }
 
 pre {
     font-family: "Courier New", Courier, serif;
     font-weight: normal;
-    border-left: 4px solid #3CC;
+    border-left: 4px solid;
+    border-color: $pre-color;
     padding: 0.5em 0 0.5em 1em;
     font-size: 0.95em;
 }
@@ -781,7 +778,7 @@ pre {
 }
 
 .csRunMenu button {
-    background: #3CC;
+    background: $csrunmenu-button-bg-color;
     border: 0;
     border-radius: 3px;
     color: #FFF;
@@ -799,7 +796,7 @@ pre {
 }
 
 .csRunMenu link, .csRunMenu :visited {
-    color: #3CC;
+    color: $csrunmenu-link-color;
 }
 
 .notes:hover, .speaker:hover {
@@ -879,7 +876,7 @@ pre {
 }
 
 .timButton, .editorButton {
-    background: #3CC;
+    background: $timbutton-bg-color;
     border: 0;
     border-radius: 3px;
     color: #FFF;
@@ -925,10 +922,6 @@ pre {
 
 .actionButtonRow {
     display: table-row;
-}
-
-.par.selected {
-    background-color: #f8f8f8;
 }
 
 .questionButton {
@@ -1376,15 +1369,15 @@ p.docsettings {
     margin-left: 2em;
     margin-right: -5em;
     text-align: left;
+    p {
+        margin-left: 0;
+    }
 }
 
 .userlist .active {
     background-color: white;
 }
 
-.rights-list p {
-    margin-left: 0;
-}
 
 .shortedit {
     max-width: 4.5em;
@@ -1403,4 +1396,67 @@ p.docsettings {
     top: 35px;
     z-index: 200;
     font-size: 9px;
+}
+
+.index {
+    table {
+        margin: 1em;
+        border: none;
+    }
+
+    thead {
+        font-weight: bold;
+        border: none;
+    }
+
+    table td {
+        padding: 0.2em;
+        border: none;
+    }
+
+    .uploadForm {
+        border: 1px solid black;
+        padding: 1em;
+    }
+}
+
+.manage {
+    table {
+        margin: 1em;
+    }
+
+    thead {
+        font-weight: bold;
+    }
+
+    table td {
+        padding: 0.2em;
+    }
+
+    .flashes li {
+        list-style-type: none;
+        border: 1px solid black;
+        border-radius: 3px;
+        padding: 0.5em;
+    }
+
+    .uploadForm {
+        border: 1px solid black;
+        padding: 1em;
+    }
+
+    .material {
+        padding: 1em;
+    }
+
+    .margin {
+        margin-top: 1em;
+        margin-bottom: 1em;
+    }
+}
+
+.slides {
+    code {
+        white-space: pre;
+    }
 }

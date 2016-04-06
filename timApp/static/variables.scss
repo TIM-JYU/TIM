@@ -1,6 +1,6 @@
 @charset "UTF-8";
-/* Sinisävyinen teema */
-$basic-color: #004494;
+
+$basic-color: #3CC;
 $button-bg-color: $basic-color;
 $editline-bg-color: $basic-color;
 $areacollapse-color: $basic-color;
@@ -14,5 +14,14 @@ $timbutton-bg-color: $button-bg-color;
 $viewlogin-link-color: $basic-color;
 $draghandle-bg-color: $basic-color;
 $sidebar-heading-color: $basic-color;
-$sidebar-link-hover-color: #0044A4;
-$index-sidebar-color: $basic-color;
+$sidebar-link-hover-color: $basic-color;
+$index-sidebar-color: #2bb;
+$line-height: 1.4;
+$font-family: Verdana, Arial, sans-serif;
+$font-size: 1em;
+$bg-color: white;
+$material-shadow: none;
+$body-margin-left: 250px;
+$material-border: none;
+$material-border-radius: 0;
+$body-text-align: justify;
