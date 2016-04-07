@@ -165,7 +165,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
             "content": $scope.newPhrase["content"]
         };
 
-        $scope.resetNewPhrase();
+        $scope.resetNewVelp();
         $scope.velps.push(phraseToAdd);
         $scope.submitted = false;
 
@@ -175,7 +175,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     /**
      * Reset velp information
      */
-    $scope.resetNewPhrase = function(){
+    $scope.resetNewVelp = function(){
         $scope.newPhrase = {"content": "", "points": 0, "labels": []};
     };
 
