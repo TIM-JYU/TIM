@@ -9,10 +9,19 @@ annotations = Blueprint('annotations',
 # This and add_comment should be connected to the ui so we can get rid of the
 # default parameters and strange return values.
 
-@annotations.route("/addannotation", methods=['GET'])
-def add_annotation(velp_id: int = 1, points: float = 1.5, place_start: int = 1, place_end: int = 2,
-                   document_id: int = 1, paragraph_id: str = '1', element_number: int = 1, answer_id: int = None,
-                   icon_id: int = None):
+@annotations.route("/addannotation", methods=['POST'])
+def add_annotation():
+
+    velp_id = request.args.get('velp_id')
+    points = request.args.get('points')
+    place_start = request.args.get('place_start')
+    place_end = request.args.get('place_end')
+    document_id = request.args.get('document_id')
+    paragraph_id = request.args.get('paragraph_id')
+    answer_id = request.args.get('answer_id')
+    icon_id = request.args.get('icon_id')
+    element_number = request.args.get('element_number')
+
     timdb = getTimDb()
     annotator_id = getCurrentUserId()
     velp_version = timdb.velps.get_latest_velp_version(velp_id)
@@ -21,8 +30,11 @@ def add_annotation(velp_id: int = 1, points: float = 1.5, place_start: int = 1, 
     return "Added an annotation"
 
 
-@annotations.route("/addannotationcomment", methods=['GET'])
-def add_comment(annotation_id: int = 1, content: str = "Joo joo!-") -> str:
+@annotations.route("/addannotationcomment", methods=['POST'])
+def add_comment():
+
+    annotation_id = request.args.get('annotation_id')
+    content = request.args.get('content')
     timdb = getTimDb()
     commenter_id = getCurrentUserId()
     timdb.annotations_comments.add_comment(annotation_id, commenter_id, content)

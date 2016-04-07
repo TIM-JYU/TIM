@@ -89,12 +89,12 @@ def add_velp(velp_content: str = "MOIMOI", default_points: int = -5.0, language_
 
 @velps.route("/addvelp", methods=['POST'])
 def add_velp2():
-    velp_content = request.form.get('content')
-    default_points = request.form.get('points')
-    language_id = request.form.get('language_id')
-    icon_id = request.form.get('icon_id')
-    valid_until = request.form.get('valid_until')
-    velp_labels = request.form.get('labels')
+    velp_content = request.args.get('content')
+    default_points = request.args.get('points')
+    language_id = request.args.get('language_id')
+    icon_id = request.args.get('icon_id')
+    valid_until = request.args.get('valid_until')
+    velp_labels = request.args.get('labels')
 
     default_points = float(default_points) if default_points is not None else None
     icon_id = int(icon_id) if icon_id is not None else None

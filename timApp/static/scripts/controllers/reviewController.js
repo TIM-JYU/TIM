@@ -28,7 +28,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         $scope.showSource = !$scope.showSource;
     };
 
-    /**
+    /**a
      * Loads used markings into view
      */
     $scope.loadMarkings = function() {

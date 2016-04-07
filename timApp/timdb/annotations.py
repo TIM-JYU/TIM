@@ -111,7 +111,7 @@ class Annotations(TimDbBase):
         return
 
     @contract
-    def invalidate_annotation(self, valid_until: 'str | None' = None):
+    def invalidate_annotation(self, annotation_id: 'int', valid_until: 'str | None' = None):
         cursor = self.db.cursor()
 
         if valid_until is None:  # None if we want to invalidate immediately
@@ -120,7 +120,8 @@ class Annotations(TimDbBase):
                           Annotation
                           SET
                           valid_until = current_timestamp
-                          """
+                          WHERE Annotation.id = ?
+                          """, [annotation_id]
                            )
         else:  # Else invalidate at some specific time
             cursor.execute("""
@@ -128,5 +129,6 @@ class Annotations(TimDbBase):
                           Annotation
                           SET
                           valid_until = ?
-                          """, [valid_until]
+                          WHERE Annotation.id = ?
+                          """, [valid_until, annotation_id]
                            )
