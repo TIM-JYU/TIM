@@ -36,6 +36,7 @@ class Annotations(TimDbBase):
                          Annotation.points,
                          Annotation.creation_time,
                          Annotation.annotator_id,
+                         Annotation.element_number,
                          Annotation.place_start,
                          Annotation.place_end
                        FROM Annotation
@@ -50,14 +51,16 @@ class Annotations(TimDbBase):
 
     @contract
     def create_annotation(self, version_id: 'int', points: 'float', place_start: 'int', place_end: 'int',
-                          annotator_id: 'int', document_id: int, paragraph_id: 'str', icon_id: 'int | None' = None,
+                          annotator_id: 'int', document_id: int, paragraph_id: 'str', element_number: 'int|None',
+                          icon_id: 'int | None' = None,
                           answer_id: 'int | None' = None):
         """
         Create new annotation
-        :param version_id: Version of velp annotation uses
+        :param version_id: version of the velp that the annotation uses
         :param document_id: Document id     \
         :param paragraph_id: Paragraph id   - either bot document and paragraph or answer are null
         :param answer_id: Answer id         /
+        :param element_number Number of the html element from which we start counting.
         :param place_start: start
         :param place_end: end
         :param annotator_id: id of user who left the annotation
@@ -68,16 +71,26 @@ class Annotations(TimDbBase):
         cursor.execute("""
                       INSERT INTO
                       Annotation(version_id, document_id, paragraph_id, answer_id, place_start,
-                      place_end, annotator_id, points, icon_id)
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                      place_end, element_number, annotator_id, points, icon_id)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                       """, [version_id, document_id, paragraph_id, answer_id, place_start,
-                            place_end, annotator_id, points, icon_id]
+                            place_end, element_number, annotator_id, points, icon_id]
                        )
         self.db.commit()
 
     @contract
     def update_annotation(self, version_id: 'int', points: 'float', place_start: 'int', place_end: 'int',
                           annotator_id: 'int', icon_id: 'int | None' = None):
+        """Changes an existing annotation.
+
+        :param version_id: version of the velp that the annotation uses
+        :param points:
+        :param place_start:
+        :param place_end:
+        :param annotator_id:
+        :param icon_id:
+        :return:
+        """
         cursor = self.db.cursor()
         cursor.execute("""
 
@@ -89,19 +102,19 @@ class Annotations(TimDbBase):
     def invalidate_annotation(self, valid_until: 'str | None' = None):
         cursor = self.db.cursor()
 
-        if valid_until is None: # None if we want to invalidate immediately
+        if valid_until is None:  # None if we want to invalidate immediately
             cursor.execute("""
                           UPDATE
                           Annotation
                           SET
                           valid_until = current_timestamp
                           """
-            )
-        else:                   # Else invalidate at some specific time
+                           )
+        else:  # Else invalidate at some specific time
             cursor.execute("""
                           UPDATE
                           Annotation
                           SET
                           valid_until = ?
                           """, [valid_until]
-            )
+                           )
