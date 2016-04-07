@@ -67,19 +67,14 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
     // Methods
 
-    var makePostRequest = function(velp){
+    $scope.makePostRequest = function(url, params){
+        console.log("testi2");
         $http({
         method: 'POST',
         url: url,
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        transformRequest: function(obj) {
-            var str = [];
-            for(var p in obj)
-                str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
-            return str.join("&");
-        },
-        data: {username: $scope.userName, password: $scope.password}
-        }).success(function () {});
+        params: params}).success(function () {
+            console.log("sent post to: " + url);
+        });
     };
 
     /**
@@ -133,6 +128,8 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
             "content": $scope.newLabel["content"],
             "selected": $scope.newLabel["selected"]
         };
+        $scope.makePostRequest("/addLabel", labelToAdd);
+
         new_label_id++;
         $scope.resetNewLabel();
         $scope.labels.push(labelToAdd);
@@ -157,16 +154,20 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
                 phraseLabels.push($scope.labels[i].id);
         }
 
-        var phraseToAdd = {
+        var velpToAdd = {
             "labels": phraseLabels,
             "used": 0,
             "id": ++new_velp_id,
             "points": $scope.newPhrase["points"],
-            "content": $scope.newPhrase["content"]
+            "content": $scope.newPhrase["content"],
+            "language_id": "FI"
         };
 
+        $scope.makePostRequest("/addvelp", velpToAdd);
+
         $scope.resetNewVelp();
-        $scope.velps.push(phraseToAdd);
+        $scope.velps.push(velpToAdd);
+
         $scope.submitted = false;
 
         $scope.resetLabels();
