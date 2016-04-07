@@ -1,6 +1,6 @@
 from contracts import contract
 from timdb.timdbbase import TimDbBase, TimDbException
-from assesment_area import *
+from assesment_area import AssessmentArea, assessment_area_from_document
 
 
 class Labels(TimDbBase):
@@ -73,22 +73,37 @@ class Labels(TimDbBase):
         self.db.commit()
 
     @contract
-    def get_velp_label_ids(self, velp_id: 'int', language_id: 'str'):
+    def get_velp_label_ids(self, velp_id: 'int'):
         """
         Gets information of labels for one velp in specific language
         :param velp_id: ID of velp
-        :param language_id: Language chosen
-        :return: List of labels associated with velp as
+        :return: List of labels associated with the velp
         """
         cursor = self.db.cursor()
         cursor.execute("""
-                      SELECT *
-                      FROM Label
-                      WHERE language_id = ? AND (id IN
-                      (SELECT velp_id FROM LabelInVelp WHERE velp_id = ?))
-                      """, [language_id, velp_id]
+                      SELECT LabelInVelp.label_id
+                      FROM LabelInVelp
+                      WHERE LabelInVelp.velp_id = ?
+                      """, [velp_id]
                        )
         return self.resultAsDictionary(cursor)
+
+    @contract
+    def add_labels_to_velp(self, velp_id: int, labels: 'list(int)'):
+        """Associates a set of labels to a velp. (Appends to existing labels)
+
+        :param velp_id: id of the velp that
+        :param labels: list of label ids.
+        :return: None
+        """
+        cursor = self.db.cursor()
+        for label_id in labels:
+            cursor.execute("""
+                           INSERT INTO LabelInVelp(label_id, velp_id)
+                           VALUES (?, ?)
+                           """, [label_id, velp_id]
+                           )
+        self.db.commit()
 
     @contract
     def get_velp_label_ids(self, assessment_area: 'AssessmentArea') -> 'list(dict)':
@@ -157,7 +172,7 @@ class Labels(TimDbBase):
         :param language_id: Optional, Id of the requested language. Default is 'FI'.
         :return: List of labels, each label represented by a dictionary
         """
-        return self.get_velp_label_content(assessment_area_from_document(document_id),language_id)
+        return self.get_velp_label_content(assessment_area_from_document(document_id), language_id)
 
     @contract
     def delete_label(self, label_id: 'int'):
