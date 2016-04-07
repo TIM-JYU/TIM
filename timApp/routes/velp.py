@@ -88,7 +88,7 @@ def add_velp(velp_content: str = "MOIMOI", default_points: int = -5.0, language_
 
 
 # Might replace /addvelp route as the actual route.
-@velps.route("/addvelp2", methods=['POST'])
+@velps.route("/addvelp", methods=['POST'])
 def add_velp2():
     velp_content = request.form.get('content')
     default_points = request.form.get('points')
