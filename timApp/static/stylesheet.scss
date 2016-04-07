@@ -75,6 +75,12 @@ p.caption {
     box-shadow: $material-shadow;
     border: $material-border;
     border-radius: $material-border-radius;
+
+    img {
+        max-width: 95%;
+        display: block;
+        margin: 0 auto;
+    }
 }
 
 .editorArea {
@@ -121,9 +127,6 @@ td p {
 
 .note {
     font-size: 0.7em;
-    &.private {
-        border-color: red;
-    }
     p {
         margin-left: 0;
         margin-top: 0;
@@ -135,6 +138,16 @@ td p {
     }
     .timestamp {
         color: lightgrey;
+    }
+
+    border-top: 4px solid;
+    width: 240px;
+    padding-bottom: 5px;
+    overflow-y: auto;
+    border-color: #F60;
+
+    &.private {
+        border-color: $note-private-color;
     }
 }
 
@@ -152,12 +165,6 @@ ul ul, ol ol {
 
 ul ul ul, ol ol ol {
     margin-left: -1em;
-}
-
-.material img {
-    max-width: 95%;
-    display: block;
-    margin: 0 auto;
 }
 
 .notes, .speaker {
@@ -179,6 +186,12 @@ ul ul ul, ol ol ol {
 
 .parContent {
     position: relative;
+
+    p {
+        margin-top: 1.2em;
+        margin-bottom: 0.3em;
+        margin-left: 2em;
+    }
 }
 
 #previewDiv {
@@ -311,32 +324,26 @@ table {
     border-collapse: collapse;
     margin-left: auto;
     margin-right: auto;
-}
 
-table code {
-    font-size: 1.2em;
-}
+    code {
+        font-size: 1.2em;
+    }
 
-table th {
-    padding: 8px;
-    border: 1px solid;
-}
+    th {
+        padding: 8px;
+        border: 1px solid;
+    }
 
-table td {
-    padding: 8px;
-    border: 1px solid;
+    td {
+        padding: 8px;
+        border: 1px solid;
+    }
 }
 
 .ace_scrollbar-v {
     display: block !important;
     padding-left: 10px;
     visibility: visible;
-}
-
-.parContent p {
-    margin-top: 1.2em;
-    margin-bottom: 0.3em;
-    margin-left: 2em;
 }
 
 .par {
@@ -400,7 +407,6 @@ table td {
     right: -15px;
 }
 
-/*Georgia, - huonot numerot pystysuunnassa*/
 body {
     font-family: $font-family;
     font-size: $font-size;
@@ -423,12 +429,15 @@ a:hover {
     text-decoration: underline;
 }
 
-answerbrowser a {
-    font-size: inherit;
-}
+answerbrowser {
+    padding-left: 2em;
+    a {
+        font-size: inherit;
+    }
 
-answerbrowser .firstanswer {
-    float: right;
+    .firstanswer {
+        float: right;
+    }
 }
 
 sub {
@@ -534,18 +543,31 @@ br {
 .tabsarea {
     margin: 0;
     padding: 0;
-}
 
-.tabsarea li {
-    height: 100%;
-    display: inline-block;
-    list-style: none;
-    border: 1px solid rgb(183, 183, 183);
-    border-bottom: none;
-    border-top-right-radius: 5px;
-    border-top-left-radius: 5px;
-    margin: 0;
-    background: rgb(246, 246, 246);
+    li {
+        height: 100%;
+        display: inline-block;
+        list-style: none;
+        border: 1px solid rgb(183, 183, 183);
+        border-bottom: none;
+        border-top-right-radius: 5px;
+        border-top-left-radius: 5px;
+        margin: 0;
+        background: rgb(246, 246, 246);
+
+        & > a {
+            display: block;
+            height: auto;
+            margin: 0;
+            color: rgb(96, 96, 96);
+            padding: 0.5em 1em;
+            text-decoration: none;
+
+            &:hover {
+                text-decoration: none;
+            }
+        }
+    }
 }
 
 li.tab.active, li.tab.pinned {
@@ -556,156 +578,10 @@ li.tab.active a, li.tab.pinned a {
     color: white;
 }
 
-.tabsarea li > a {
-    display: block;
-    height: auto;
-    margin: 0;
-    color: rgb(96, 96, 96);
-    padding: 0.5em 1em;
-    text-decoration: none;
-}
-
 input[type="file"] {
     margin: 0;
     padding: 0;
     border: none;
-}
-
-.tabsarea li > a:hover {
-    text-decoration: none;
-}
-
-/* csRun-tyylit ================================================== */
-.console {
-    font-family: Courier, serif;
-    color: #ccc;
-    background: #000000;
-    border: 3px double #ccc;
-    padding: 10px;
-    width: 95% !important;
-}
-
-p.stem {
-    margin-bottom: 1em;
-}
-
-.reveal .csRunChanged {
-    display: none;
-}
-
-.reveal .csRunMenu {
-    font-size: 0.1em;
-}
-
-.csRunChanged {
-    background-color: rgb(41, 255, 0);
-    width: 0.5em;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: -0.5em;
-}
-
-.csRunPre, .csRunPost {
-    margin-left: 0;
-    border-style: none;
-    box-shadow: none;
-    padding: 0;
-    margin-bottom: 0;
-    margin-top: 0;
-    line-height: 1.1;
-
-}
-
-.csRunError {
-    white-space: pre-wrap;
-    text-align: left;
-}
-
-.csRunPre {
-    margin-bottom: 0;
-}
-
-.csRunPost {
-    margin-top: 0;
-}
-
-.csRunCode {
-    font-family: Courier, serif;
-    margin-left: 2em;
-    border-width: 1px;
-    padding: 4px;
-    margin-right: 0;
-    line-height: 1;
-    font-size: 1em;
-}
-
-.csRunArea {
-    font-family: Courier, serif;
-    margin: 0;
-    border-radius: 0;
-    padding: 1px;
-    line-height: 1.1;
-    font-size: 0.96em;
-    box-shadow: none;
-    width: 100% !important;
-    min-width: 600px !important;
-    white-space: pre;
-    border: 0 none;
-    border-left: thin solid #0066FF;
-}
-
-.showVideo {
-    display: block;
-    margin: 0 auto;
-}
-
-.listVideoRunDiv img {
-    display: inline-block;
-    width: 0.8em;
-}
-
-.smallVideoRunDiv img {
-    display: inline-block;
-    width: 0.8em;
-}
-
-.taunoOhje {
-    font-size: 0.7em;
-    margin-bottom: 1em;
-}
-
-.csRunArea:focus {
-    border: 1px solid;
-    border-radius: 5px;
-    width: 100% !important;
-}
-
-.csRunMenu {
-    margin-top: 0.9em;
-}
-
-.csPlugin {
-    margin-top: 1em;
-}
-
-.pluginHide {
-    text-align: right;
-}
-
-.pluginShow {
-    text-align: right;
-}
-
-.unitTestGreen {
-    background: #00FF00;
-    width: 30%;
-    margin-top: 5pt;
-    height: 1.5em;
-}
-
-.unitTestRed {
-    background: #FF7777;
 }
 
 .smalllink {
@@ -721,38 +597,6 @@ p.stem {
     margin-left: 2em;
 }
 
-.csRunDiv {
-    border: solid 1px;
-    border-radius: 5px;
-    border-color: $csrundiv-color;
-    margin: 0.3em 0 0.3em 2em;
-    padding-bottom: 0.5em;
-    width: calc(100% - 2em - 2px);
-}
-
-.csRunDiv h4 {
-    margin-top: 0.0em;
-    padding-top: 1em;
-    padding-left: 1em;
-    padding-bottom: 1em;
-    background-color: $csrundiv-color;
-    color: #FFF;
-    font-family: "Helvetica", Arial, sans-serif;
-
-}
-
-.note {
-    border-top: 4px solid;
-    width: 240px;
-    padding-bottom: 5px;
-    overflow-y: auto;
-    border-color: #F60;
-}
-
-.note.private {
-    border-color: $note-private-color;
-}
-
 pre {
     font-family: "Courier New", Courier, serif;
     font-weight: normal;
@@ -762,42 +606,6 @@ pre {
     font-size: 0.95em;
 }
 
-.csRunPre, .csRunPost, .csRunArea {
-    margin-left: -1.5em;
-    box-shadow: none;
-    word-wrap: initial;
-}
-
-.stem {
-    margin-left: 0.3em;
-    margin-right: 0.5em;
-}
-
-.csRunMenu {
-    margin-left: 0.3em;
-}
-
-.csRunMenu button {
-    background: $csrunmenu-button-bg-color;
-    border: 0;
-    border-radius: 3px;
-    color: #FFF;
-    display: inline-block;
-    font-size: 11px;
-    font-weight: bold;
-    cursor: pointer;
-    line-height: normal;
-    padding: 8px 10px;
-    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
-.console {
-    margin-left: 0.2em;
-}
-
-.csRunMenu link, .csRunMenu :visited {
-    color: $csrunmenu-link-color;
-}
 
 .notes:hover, .speaker:hover {
     background-color: white;
@@ -828,31 +636,35 @@ pre {
     overflow: auto;
     overflow-x: hidden;
     max-height: 90vh;
-}
 
-.userlist td, .userlist th {
-    max-width: 50px;
-}
+    .active {
+        background-color: white;
+    }
 
-.userlist td {
-    padding: 1px;
-}
+    td, th {
+        max-width: 50px;
+    }
 
-.userlist td:first-child, .userlist th:first-child {
-    max-width: 200px;
-}
+    td {
+        padding: 1px;
+    }
 
-.userlist .input-filter {
-    width: 95%;
-}
+    td:first-child, th:first-child {
+        max-width: 200px;
+    }
 
-.userlist .sortable.header {
-    cursor: pointer;
-}
+    .input-filter {
+        width: 95%;
+    }
 
-.userlist li {
-    list-style-type: none;
-    display: inline;
+    .sortable.header {
+        cursor: pointer;
+    }
+
+    li {
+        list-style-type: none;
+        display: inline;
+    }
 }
 
 .close {
@@ -928,35 +740,7 @@ pre {
     margin: 0.2em;
 }
 
-.csArgsArea {
-    width: 90%;
-    margin-top: 0;
-    margin-bottom: 0;
-    border: 0 none;
-    border-left: thin solid #0066FF;
-}
-
-.csArgsDiv {
-    width: 100%;
-}
-
-.csArgsDiv span {
-    display: block;
-    overflow: hidden;
-    padding: 0 5px;
-}
-
-.csArgsDiv label {
-    margin-left: 0;
-    float: left;
-    font-size: 0.96em;
-
-}
-
-.grconsole {
-    margin-top: 0.8em !important;
-    border: 1px double black;
-}
+@import "csRun";
 
 @media print {
     p {
@@ -1016,19 +800,6 @@ pre {
 
 .mcq {
     padding-left: 2em;
-}
-
-.answerBrowser {
-    padding-left: 2em;
-}
-
-.csRunChanged {
-    background-color: rgb(41, 255, 0) !important;
-    width: 0.2em;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: -0.5em;
 }
 
 .sagecell_editor {
@@ -1142,23 +913,6 @@ p.plgfooter {
 .lazyVisible {
     margin-top: 0;
     padding-top: 0;
-}
-
-.csLazyPre {
-    margin-left: 0.7em;
-    border-left: none;
-    margin-top: 0;
-    padding-top: 0;
-}
-
-.csLazyPre pre {
-    margin-left: 0;
-    border-left: thin solid #0066FF;
-    padding-left: 0;
-    margin-top: 0.1em;
-    margin-bottom: 0;
-    padding-top: 0;
-    padding-bottom: 2pt;
 }
 
 /* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
@@ -1372,10 +1126,6 @@ p.docsettings {
     p {
         margin-left: 0;
     }
-}
-
-.userlist .active {
-    background-color: white;
 }
 
 
