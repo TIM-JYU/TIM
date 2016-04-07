@@ -119,6 +119,6 @@ def add_label():
     content = request.args.get('content')
 
     timdb = getTimDb()
-    timdb.labels.create_label(language_id, content)
+    label_id = timdb.labels.create_label(language_id, content)
 
-    return "Added a lASDASDASDASDASDbel"
+    return label_id
