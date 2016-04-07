@@ -50,8 +50,9 @@ class Annotations(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def create_annotation(self, version_id: 'int', points: 'float', place_start: 'int', place_end: 'int',
-                          annotator_id: 'int', document_id: int, paragraph_id: 'str', element_number: 'int|None',
+    def create_annotation(self, version_id: 'int', place_start: 'int', place_end: 'int',
+                          annotator_id: 'int', document_id: int, paragraph_id: 'str', points: 'float|None',
+                          element_number: 'int|None',
                           icon_id: 'int | None' = None,
                           answer_id: 'int | None' = None):
         """
@@ -79,23 +80,34 @@ class Annotations(TimDbBase):
         self.db.commit()
 
     @contract
-    def update_annotation(self, version_id: 'int', points: 'float', place_start: 'int', place_end: 'int',
-                          annotator_id: 'int', icon_id: 'int | None' = None):
+    def update_annotation(self, annotation_id: 'int', version_id: 'int', place_start: 'int', place_end: 'int',
+                          points: 'float|None',
+                          element_number: 'int|None', icon_id: 'int | None' = None):
         """Changes an existing annotation.
 
+        :param annotation_id annotation to be changed.
         :param version_id: version of the velp that the annotation uses
-        :param points:
-        :param place_start:
-        :param place_end:
-        :param annotator_id:
-        :param icon_id:
+        :param place_start: start
+        :param place_end: end
+        :param points: Points given, overrides velp's default and can be null
+        :param element_number: Number of the html element from which we start counting.
+        :param icon_id: Icon id, can be null
         :return:
         """
         cursor = self.db.cursor()
         cursor.execute("""
-
-                      """
+                       UPDATE Annotation
+                       SET
+                         version_id     = ?,
+                         place_start    = ?,
+                         place_end      = ?,
+                         points         = ?,
+                         element_number = ?,
+                         icon_id        = ?
+                       WHERE id = ?
+                      """, [version_id, place_start, place_end, points, element_number, icon_id, annotation_id]
                        )
+        self.db.commit()
         return
 
     @contract

@@ -11,18 +11,18 @@ annotations = Blueprint('annotations',
 
 @annotations.route("/addannotation", methods=['GET'])
 def add_annotation(velp_id: int = 1, points: float = 1.5, place_start: int = 1, place_end: int = 2,
-                   document_id: int = 1, paragraph_id: str = '1', answer_id: int = None,
+                   document_id: int = 1, paragraph_id: str = '1', element_number: int = 1, answer_id: int = None,
                    icon_id: int = None):
     timdb = getTimDb()
     annotator_id = getCurrentUserId()
     velp_version = timdb.velps.get_latest_velp_version(velp_id)
     timdb.annotations.create_annotation(velp_version, points, place_start, place_end, annotator_id,
-                                        document_id, paragraph_id, icon_id, answer_id)
+                                        document_id, paragraph_id, element_number, icon_id, answer_id)
     return "Added an annotation"
 
 
 @annotations.route("/addannotationcomment", methods=['GET'])
-def add_comment(annotation_id: int = 1, content: str = "Joo joo!") -> str:
+def add_comment(annotation_id: int = 1, content: str = "Joo joo!-") -> str:
     timdb = getTimDb()
     commenter_id = getCurrentUserId()
     timdb.annotations_comments.add_comment(annotation_id, commenter_id, content)
