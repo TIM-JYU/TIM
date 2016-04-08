@@ -44,8 +44,6 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
     $scope.filteredVelpCount = 0;
 
-    console.log($scope.extraData);
-
     // Get velp data
     $http.get('/{0}/{1}/velps'.replace('{0}',doc_id).replace('{1}', par)).success(function (data) {
         $scope.velps = data;
@@ -115,8 +113,6 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
         return "";
     };
 
-
-
     /**
      * Adds new label
      * @param form form information
@@ -127,12 +123,14 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
         if (!valid) return;
 
         form.$setPristine();
+        // TODO: Change to user lang
         var labelToAdd = {
             "id": new_label_id,
             "content": $scope.newLabel["content"],
+            "language_id": "FI",
             "selected": $scope.newLabel["selected"]
         };
-        $scope.makePostRequest("/addLabel", labelToAdd);
+        $scope.makePostRequest("/addlabel", labelToAdd);
 
         new_label_id++;
         $scope.resetNewLabel();

@@ -11,15 +11,12 @@ console.log("reviewController.js added");
 timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile', function ($scope, $http, $window, $compile) {
     "use strict";
 
-    $scope.testi = "TESTI";
-    $scope.showSource = false;
     $scope.markingsAdded = false;
     $scope.selectedMarking = {"comments": [], "velp": "", "points": 0};
     $scope.markings = [];
 
     //var username = $scope.$parent.$parent.users[0].name;
     var username = $scope.$parent.users[0].name;
-
 
     /*
     $http.get('/static/test_data/markings.json').success(function (data) {
@@ -28,10 +25,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         $scope.loadMarkings();
     });
     */
-
-    $scope.toggleShowSource = function(){
-        $scope.showSource = !$scope.showSource;
-    };
 
     /**a
      * Loads used markings into view
@@ -64,9 +57,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.addMarkingToCoord = function(range, marking, show){
         var span = $scope.createPopOverElement(marking, show);
         range.surroundContents(span);
-        $compile(span)($scope);
+        $compile(span)($scope); // Gives error [$compile:nonassign]
         console.log("marking added");
-
     };
 
     /**
@@ -83,6 +75,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
     };
 
+    /**
+     * Get velp by its id
+     * @param id velp to find
+     * @returns velp or undefined
+     */
     $scope.getVelpById = function(id){
         for (var i=0; i<$scope.velps.length; i++)
             if ($scope.velps[i].id == "" +id)
@@ -142,6 +139,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         $scope.markingsAdded = true;
     };
 
+    /**
+     * Get comments of given marking
+     * @param id marking id
+     * @returns {Array|*|string|boolean}
+     */
     $scope.getMarkingComments = function (id){
         for (var i=0; i<$scope.markings.length; i++){
             if (id == $scope.markings[i].id)
@@ -149,6 +151,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
     };
 
+    /**
+     * Create pop over marking element
+     * @param marking marking info
+     * @param show wether to show marking or not
+     * @returns {Element}
+     */
     $scope.createPopOverElement = function (marking, show) {
         var element = document.createElement('marking');
         var velp_content = String($scope.getVelpById(marking.velp).content);
