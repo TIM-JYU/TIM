@@ -15,7 +15,7 @@ var colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "cornflowerb
  */
 timApp.directive('phraseSelection', function () {
     return{
-        templateUrl: "/static/templates/phraseSelection.html",
+        templateUrl: "/static/templates/velpSelection.html",
         controller: 'PhraseSelectionController'
     }
 });
@@ -123,11 +123,10 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
         if (!valid) return;
 
         form.$setPristine();
-        // TODO: Change to user lang
         var labelToAdd = {
             "id": new_label_id,
             "content": $scope.newLabel["content"],
-            "language_id": "FI",
+            "language_id": "FI", // TODO: Change to user lang
             "selected": $scope.newLabel["selected"]
         };
         $scope.makePostRequest("/addlabel", labelToAdd);
