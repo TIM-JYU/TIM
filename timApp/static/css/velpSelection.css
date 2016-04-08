@@ -1,5 +1,4 @@
 /* app css stylesheet */
-
 .container{
     padding: 0;
     max-width: 75%;
@@ -36,24 +35,23 @@
 }
 
 /** Velp area styles **/
-
 .velpMenu {
     position: fixed;
     right: 0;
     top: 50px;
     bottom: 0;
     border: 1px solid gainsboro;
-    background: white;/*gainsboro;*/
+    background: white;
     z-index: 100000;
     overflow-y: auto;
     padding: 0.5em;
     border-top-left-radius: 8px;
 }
 
-/*
-.velpMenu {
-    float: left;
-}*/
+#advView {
+    padding-top: 0.5em;
+    padding-left: 0.2em;
+}
 
 .velpMenu .nav-tabs {
     margin-left: 0;
@@ -113,6 +111,7 @@
 }
 .phraseTable input[type="submit"] {
     border: none;
+    margin: 6px;
 }
 .phraseTable td{
     border: 0;
@@ -120,34 +119,6 @@
     padding: 4px;
     width: 10em;
     white-space: normal;
-}
-
-/*
-.phraseTable label {
-    float: left;
-}*/
-
-/*
-.reviewPreview {
-    max-width: 100%;
-}*/
-.pointsPhrase {
-    margin-top: 30px;
-    /*
-    margin-right: 0;
-    max-width: 20%;
-    float: right;
-    */
-    border-radius: 10px;
-    border: #000000 solid 1px;
-    padding: 4px;
-    color: blue;
-    white-space: normal;
-    text-align: left;
-}
-
-.phraseTable input[type="submit"] {
-    margin: 6px;
 }
 
 .tag-true, .tag-false {
@@ -249,6 +220,11 @@ marking {
 }
 
 .marking-info{
+    font-size: 1.4rem;
+    color: black;
+    font-style: normal;
+    font-weight: normal;
+    text-decoration: none;
     text-align: left;
     word-wrap: break-word;
     width: 18em;
