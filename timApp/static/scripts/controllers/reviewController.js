@@ -26,7 +26,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     });
     */
 
-    /**a
+    /**
      * Loads used markings into view
      */
     $scope.loadMarkings = function() {
@@ -66,6 +66,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.selectText = function () {
         var sel = $window.getSelection();
+
         if (sel.toString().length > 0) {
             console.log(sel.toString());
             var range = sel.getRangeAt(0);

@@ -99,10 +99,11 @@ def add_velp():
 
 @velps.route("/addlabel", methods=["POST"])
 def add_label():
-    language_id = request.args.get('language_id')
+    #language_id = request.args.get('language_id')
+    language_id = "FI"
     content = request.args.get('content')
 
     timdb = getTimDb()
     label_id = timdb.labels.create_label(language_id, content)
 
-    return label_id
+    return str(label_id)

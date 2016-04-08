@@ -36,7 +36,7 @@ class Labels(TimDbBase):
                        )
         self.db.commit()
         label_id = cursor.lastrowid
-        return  label_id
+        return label_id
 
     @contract
     def add_translation(self, label_id: 'int', language_id: 'str', content: 'str'):
