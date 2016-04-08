@@ -1324,7 +1324,7 @@ timApp.controller("ViewCtrl", [
             } else {
                 return [
                     {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
-                    {func: sc.showReviewWindow, desc: 'Review', show: sc.rights.editable},
+                    /* {func: sc.showReviewWindow, desc: 'Review', show: sc.rights.editable}, */
                     {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
                     {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
                     {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},

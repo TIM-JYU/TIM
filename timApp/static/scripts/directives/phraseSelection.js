@@ -32,8 +32,12 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     $scope.newPhrase = {"content": "", "points": 0, "labels": []};
     $scope.newLabel = {"content": "", "selected": true};
 
+    /*
     var doc_id = $scope.extraData["docId"];
     var par = $scope.extraData["par"];
+    */
+    var doc_id = $scope.docId;
+    var par = 0;
 
     var new_velp_id = 0; // get latest velp id
     var new_label_id = 0; // get latest label id

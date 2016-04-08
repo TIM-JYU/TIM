@@ -15,14 +15,19 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.showSource = false;
     $scope.markingsAdded = false;
     $scope.selectedMarking = {"comments": [], "velp": "", "points": 0};
+    $scope.markings = [];
 
-    var username = $scope.$parent.$parent.users[0].name;
+    //var username = $scope.$parent.$parent.users[0].name;
+    var username = $scope.$parent.users[0].name;
 
+
+    /*
     $http.get('/static/test_data/markings.json').success(function (data) {
         //$scope.markings = [];
         $scope.markings = data;
         $scope.loadMarkings();
     });
+    */
 
     $scope.toggleShowSource = function(){
         $scope.showSource = !$scope.showSource;
@@ -32,6 +37,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Loads used markings into view
      */
     $scope.loadMarkings = function() {
+        // TODO: Change this when editor is removed
         var elements = document.getElementById("previewContent").getElementsByTagName("p");
 
         if (elements.length > 0 && !$scope.markingsAdded && typeof $scope.markings != "undefined" && $scope.markings.length > 0) {
@@ -110,9 +116,20 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 "id": $scope.markings.length,
                 "velp": velp.id,
                 "points": velp.points,
-                "coord": {"el": 0, "start": 0, "end":0 }, // TODO: get coordinates from selectedArea
+                "coord": {
+                    "el": 0,
+                    "start": $scope.selectedArea["startOffset"] ,
+                    "end": $scope.selectedArea["endOffset"]
+                }, // TODO: get coordinates from selectedArea
                 "comments": []
             };
+
+            console.log("SELECTED AREA");
+            //console.log($scope.selectedArea["commonAncestorContainer"].parentElement.parentElement);
+            var parent = document.querySelectorAll("#previewContent p");
+            console.log(parent);
+
+            console.log($scope.selectedArea["endOffset"]);
 
             $scope.markings.push(newMarking);
             //$scope.selectMarking(newMarking['id']);

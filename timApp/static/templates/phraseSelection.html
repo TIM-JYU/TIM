@@ -1,5 +1,5 @@
-<link rel="stylesheet" href="/static/css/phraseSelection.css"/>
-<div class="phraseMenu" id="phraseMenu">
+
+<div class="phraseMenu">
     <label>
         <input type="checkbox" ng-model="advancedOn"/> Advanced view
     </label>
@@ -58,7 +58,7 @@
                             <div class="stack">
                             <div ng-repeat="velp in filteredVelps = (velps | filter:{content:filterPhrase} | orderBy:orderPhrase | selectedLabels:labels)">
 
-                                <div class="velp" ng-click="usePhrase(velp)" ng-style="{top: -$index*7.5 + 'em'}">
+                                <div class="velp" ng-click="usePhrase(velp)" ng-style="{top: $index*2 + 'em'}">
                                     <div ng-class="['emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0}]">
 
                                     <div ng-class="['content']">

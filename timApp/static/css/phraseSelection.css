@@ -1,5 +1,21 @@
 /* app css stylesheet */
 
+.container{
+    padding: 0;
+    max-width: 75%;
+}
+
+@media (max-width: 768px) {
+    .container{
+        margin-left: 5%;
+    }
+}
+
+@media (max-width: 768px) {
+    .container{
+        margin-left: 5%;
+    }
+}
 
 /** Layout styles **/
 .fulldiv {
@@ -25,8 +41,93 @@
     float: right;
 }
 
+/** Velp area styles **/
+
+#velpMenu {
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+
+    background: gainsboro;
+    z-index: 100000;
+    overflow-y: auto;
+}
+
+.velpArea {
+    width: 100%;
+    margin-bottom: 1em;
+    background-color: white;
+    border: solid 1px gainsboro;
+    float:left;
+    position: relative;
+    top: 0;
+    bottom: 0;
+}
+
+/* needs media queries */
+.velpArea .stack{
+    width: 98%;
+    height: auto;
+    margin: 1em 1%;
+    float: left;
+    height: 22em;
+    position: absolute;
+}
+
+/* Table styles */
+.phraseTable {
+    table-layout: fixed;
+    margin-left: 0;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    border-collapse: separate;
+}
+
+.phraseTable input {
+    border: 1px solid #B7B7B7;
+}
+.phraseTable input[type="submit"] {
+    border: none;
+}
+.phraseTable td{
+    border: 0;
+    margin: 0;
+    padding: 4px;
+    width: 10em;
+    white-space: normal;
+}
+
+/*
+.phraseTable label {
+    float: left;
+}*/
+
+/*
+.reviewPreview {
+    max-width: 100%;
+}*/
+.pointsPhrase {
+    margin-top: 30px;
+    /*
+    margin-right: 0;
+    max-width: 20%;
+    float: right;
+    */
+    border-radius: 10px;
+    border: #000000 solid 1px;
+    padding: 4px;
+    color: blue;
+    white-space: normal;
+    text-align: left;
+}
+
+.phraseTable input[type="submit"] {
+    margin: 6px;
+}
+
+
 .phraseMenu {
-    margin-top: 1.75em;
     float: left;
 }
 
@@ -66,7 +167,7 @@
 }
 
 .velp {
-    position: relative;
+    position: absolute;
     line-height: 1.25em;
     font-weight: 600;
     cursor: pointer;
@@ -232,79 +333,6 @@ marking {
     cursor: pointer;
     color: blue;
     text-decoration: underline;
-}
-
-.velpArea {
-    width: 100%;
-    margin-bottom: 1em;
-    background-color: white;
-    border-bottom-right-radius: 5px;
-    border-bottom-left-radius: 5px;
-    border: 1px solid #B7B7B7;
-    float:left;
-    position: relative;
-    height: 45em; /* TODO: set height */
-}
-
-/* needs media queries */
-.velpArea .stack{
-    width: 98%;
-    height: auto;
-    margin: 1em 1%;
-    float: left;
-    height: 22em;
-    position: absolute;
-}
-
-/* Table styles */
-.phraseTable {
-    table-layout: fixed;
-    margin-left: 0;
-    margin-top: 1em;
-    margin-bottom: 1em;
-    border-collapse: separate;
-}
-
-.phraseTable input {
-    border: 1px solid #B7B7B7;
-}
-.phraseTable input[type="submit"] {
-    border: none;
-}
-.phraseTable td{
-    border: 0;
-    margin: 0;
-    padding: 4px;
-    width: 10em;
-    white-space: normal;
-}
-
-/*
-.phraseTable label {
-    float: left;
-}*/
-
-/*
-.reviewPreview {
-    max-width: 100%;
-}*/
-.pointsPhrase {
-    margin-top: 30px;
-    /*
-    margin-right: 0;
-    max-width: 20%;
-    float: right;
-    */
-    border-radius: 10px;
-    border: #000000 solid 1px;
-    padding: 4px;
-    color: blue;
-    white-space: normal;
-    text-align: left;
-}
-
-.phraseTable input[type="submit"] {
-    margin: 6px;
 }
 
 /** Editor styles **/

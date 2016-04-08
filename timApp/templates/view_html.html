@@ -176,7 +176,9 @@
                 <iframe id="slideFrame" src="/show_slide/{{ doc.fullname }}" allowfullscreen></iframe>
             </div>
         {% else %}
-            {% include 'view_content.html' %}
+            <div ng-controller="ReviewController">
+                {% include 'velp_view.html' %}
+            </div>
         {% endif %}
     </div>
     <p id="test"></p>
