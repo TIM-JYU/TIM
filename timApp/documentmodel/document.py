@@ -8,7 +8,7 @@ from time import time
 
 from contracts import contract, new_contract
 from lxml import etree, html
-from typing import List, Optional, Tuple, Set, Union
+from typing import List, Optional, Set, Tuple, Union
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.docsettings import DocSettings
@@ -391,6 +391,22 @@ class Document:
 
         return self.add_paragraph(text, attrs=ref_attrs, properties=properties)
 
+    def add_area_ref_paragraph(self, src_doc: 'Document', src_area_name: str, text: Optional[str] = None,
+                               attrs: Optional[dict] = None, properties: Optional[dict] = None) -> DocParagraph:
+
+        ref_attrs = {} if attrs is None else attrs.copy()
+        ref_attrs['ra'] = src_area_name
+        ref_attrs.pop('rt', None)
+
+        if self.get_settings().get_source_document() != src_doc.doc_id:
+            ref_attrs['rd'] = str(src_doc.doc_id)
+        if text is not None:
+            ref_attrs['r'] = 'tr'
+        else:
+            text = ''
+
+        return self.add_paragraph(text, attrs=ref_attrs, properties=properties)
+
     def delete_paragraph(self, par_id: str):
         """
         Removes a paragraph from the document.
@@ -466,6 +482,11 @@ class Document:
         :param new_text: New text.
         :return: The new paragraph object.
         """
+
+        if new_attrs is None:
+            new_attrs = self.get_paragraph(par_id).get_attrs()
+        if new_properties is None:
+            new_properties = self.get_paragraph(par_id).get_properties()
 
         p = DocParagraph.create(
             md=new_text,

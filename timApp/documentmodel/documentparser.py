@@ -1,6 +1,9 @@
 import re
 
+from typing import Optional
+
 from documentmodel.attributeparser import AttributeParser
+from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.randutils import hashfunc, random_id, is_valid_id
 from utils import count_chars
 
@@ -61,20 +64,16 @@ class DocumentParser:
         self._doc_text = doc_text
         self._blocks = None
         self._break_on_empty_line = False
-        self._last_setting = ()
+        self._last_setting = None  # type: DocumentParserOptions
 
-    def get_blocks(self, break_on_empty_line=False,
-                   break_on_code_block=True,
-                   break_on_header=True,
-                   break_on_normal=True):
-        self._parse_document(break_on_empty_line=break_on_empty_line,
-                             break_on_code_block=break_on_code_block,
-                             break_on_header=break_on_header,
-                             break_on_normal=break_on_normal)
+    def get_blocks(self, options: Optional[DocumentParserOptions]=None):
+        if options is None:
+            options = DocumentParserOptions()
+        self._parse_document(options)
         return self._blocks
 
     def add_missing_attributes(self, hash_func=hashfunc, id_func=random_id):
-        self._parse_document(*self._last_setting)
+        self._parse_document(self._last_setting)
         for r in self._blocks:
             r['t'] = hash_func(r['md'], r['attrs'])
             if not r.get('id'):
@@ -82,7 +81,7 @@ class DocumentParser:
         return self
 
     def validate_structure(self, id_validator_func=is_valid_id, is_whole_document=True):
-        self._parse_document(*self._last_setting)
+        self._parse_document(self._last_setting)
         found_ids = set()
         found_tasks = set()
         found_areas = set()
@@ -145,15 +144,14 @@ class DocumentParser:
             raise ValidationWarning('Some areas were not ended: ' + str(unended_areas))
         return self
 
-    def _parse_document(self, break_on_empty_line=False,
-                        break_on_code_block=True,
-                        break_on_header=True,
-                        break_on_normal=True):
-        if self._last_setting == (break_on_empty_line, break_on_code_block, break_on_header, break_on_normal):
+    def _parse_document(self, options: Optional[DocumentParserOptions]):
+        if options is None:
+            options = DocumentParserOptions()
+        if self._last_setting == options:
             return
         self._blocks = []
-        self._break_on_empty_line = break_on_empty_line
-        self._last_setting = (break_on_empty_line, break_on_code_block, break_on_header, break_on_normal)
+        self._break_on_empty_line = options.break_on_empty_line
+        self._last_setting = options
         lines = self._doc_text.split("\n")
         doc = DocReader(lines)
         funcs = [self.try_parse_code_block,
@@ -167,9 +165,9 @@ class DocumentParser:
                 result = func(doc)
                 if result:
                     result['md'] = result['md'].rstrip().strip('\r\n')
-                    if ((result['type'] == 'code' and not break_on_code_block)
-                        or (result['type'] == 'header' and not break_on_header)
-                        or (result['type'] == 'autonormal' and not break_on_normal)) \
+                    if ((result['type'] == 'code' and not options.break_on_code_block)
+                        or (result['type'] == 'header' and not options.break_on_header)
+                        or (result['type'] == 'autonormal' and not options.break_on_normal)) \
                             and not result.get('attrs') and len(self._blocks) > 0 \
                             and not self._blocks[-1].get('attrs', {}).get('plugin') \
                             and self._blocks[-1]['type'] != 'atom':

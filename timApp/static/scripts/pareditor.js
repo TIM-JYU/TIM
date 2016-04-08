@@ -24,7 +24,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
             controller: function ($scope) {
                 $scope.setEditorMinSize = function() {
                     var editor = $('pareditor');
-                    editor.css('min-height', editor.height());
+                    editor.css('min-height', '40vh');
                     $scope.previewReleased = false;
                     if (JSON.parse($window.localStorage.getItem('previewIsReleased')) === true) {
                         $scope.releaseClicked();
@@ -117,14 +117,14 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         var $editor = $('.editorArea');
                         var editorMaxHeight = $editor.cssUnit('max-height')[0];
                         var $previewContent = $('.previewcontent');
-                        var newHeight = $scope.calculateEditorSize();
+                        /*var newHeight = $scope.calculateEditorSize($editor);
                         if (newHeight < editorMaxHeight) {
-                            $editor.css('height', newHeight);
+                            $editor.innerHeight(newHeight);
                         } else {
-                            $editor.css('height', editorMaxHeight);
-                        }
+                            $editor.innerHeight(newHeight);
+                        }*/
+                        var previewDiv = $('#previewDiv');
                         if ($scope.previewReleased) {
-                            var previewDiv = $('#previewDiv');
                             var previewOffset = previewDiv.offset();
                             if (previewOffset.top < 0) {
                                 previewDiv.offset({'top': 0, 'left': previewDiv.offset().left});
@@ -132,10 +132,15 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             if (previewOffset.left < 0) {
                                 previewDiv.offset({'top': previewDiv.offset().top, 'left': 0 });
                             }
-                        }/*
+                        }
                         else {
-                            $previewContent.css('max-height', $previewContent.height());
-                        }*/
+                            //previewDiv.css('max-height', $editor.cssUnit('height')[0] - (previewDiv.offset().top - $editor.offset().top));
+                            //$previewContent.css('max-height', previewDiv.cssUnit('height')[0] - 78);
+                            //$previewContent.css('position', 'absolute');
+                            //previewDiv.css('height', '100%');
+                            //$previewContent.css('max-height', previewDiv.height() - $('#releaseButton').height() - 100);
+                            //$previewContent.css('max-height', $previewContent.height());
+                        }
                         var editorOffset = $editor.offset();
                         if (editorOffset.top < 0) {
                             $editor.offset({'top': 0, 'left': $editor.offset().left});
@@ -148,17 +153,26 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                 };
 
+                /*
                 // Calculates what the size of the editor should be
-                $scope.calculateEditorSize = function() {
-                    var newSize = ($('.draghandle').cssUnit('min-height')[0] +
-                    $('#pareditor').cssUnit('height')[0] + 33);
-                    if(!$scope.previewReleased) {
-                        return newSize;
+                $scope.calculateEditorSize = function($editor) {
+                    var children = $editor.children();
+                    for (var i = 0; i < children.length; i++) {
+                        newHeight += children[i].offsetHeight;
                     }
-                    if($scope.previewReleased) {
-                        return newSize + 10;
+                    newHeight += $editor.marginHeight;
+                    if (!$scope.previewReleased) {
+                        return newHeight;
+                    }
+                    var newHeight = $('#pareditor').outerHeight();
+                    if (!$scope.previewReleased) {
+                        return newHeight;
+                    }
+                    if ($scope.previewReleased) {
+                        return newHeight + 10;
                     }
                 };
+                */
 
                 $scope.createAce = function (editor, text) {
                     if (!$scope.minSizeSet) {
@@ -308,6 +322,17 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             $scope.paragraphClicked();
                         }
                     });
+                    editor.commands.addCommand({
+                        name: 'commentBlock',
+                        bindKey: {
+                            win: 'Ctrl-Y',
+                            mac: 'Command-Y',
+                            sender: 'editor|cli'
+                        },
+                        exec: function (env, args, request) {
+                            $scope.commentClicked();
+                        }
+                    });
 
                     if (text) editor.getSession().setValue(text);
                 };
@@ -347,6 +372,9 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                                 }
                             } else if (e.keyCode === 79) {
                                 $scope.surroundClicked('`', '`');
+                                e.preventDefault();
+                            } else if (e.keyCode === 89) {
+                                $scope.commentClicked();
                                 e.preventDefault();
                             } else if (e.keyCode === 49) {
                                 $scope.headerClicked('#');
@@ -592,12 +620,12 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         }
                         div.css("position", "static");
                         div.find(".draghandle").css("visibility", "hidden");
-                        div.css("max-width", editor.width() - 8);
-                        div.css("width", editor.width() - 8);
+                        content.css("max-width", '');
+                        //div.css("width", editor.width() - 8);
                         div.css("display", "default");
                         editor.css('overflow', 'hidden');
-                        content.css('max-height', '');
-                        content.css('max-width', editor.width() - 14);
+                        content.css('max-height', '40vh');
+                        //content.css('max-width', editor.width() - 14);
                         content.css('overflow-x', '');
                         content.css('width', '');
                         div.css("padding", 0);
@@ -967,19 +995,40 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                     $scope.ruleClicked = function () {
                         $scope.endClicked();
-                        $scope.editor.replaceSelectedText("\n---\n");
+                        $scope.editor.replaceSelectedText("\n#-\n---\n#-\n");
                     };
 
                     $scope.paragraphClicked = function () {
                         $scope.endClicked();
                         $scope.editor.replaceSelectedText("\n#-\n");
                     };
+
                     /*
-                    $scope.slideClicked = function () {
-                        $scope.endClicked();
-                        $scope.editor.replaceSelectedText($scope.editor.getSelection().text + "\n---------------\n");
+                     * Creates a comment section of selected text, comment block or comments the cursor line
+                     */
+                    $scope.commentClicked = function () {
+                        var editor = $scope.editor.get(0);
+                        // If text is selected surround selected text with comment brackets
+                        if (editor.selectionEnd - editor.selectionStart > 0) {
+                            $scope.editor.replaceSelectedText("{!!!" + $scope.editor.getSelection().text + "!!!}");
+                        }
+                        else {
+                            var pos = editor.selectionEnd;
+                            var endOfLastLine = editor.value.lastIndexOf('\n', pos-1);
+                            // If the cursor is in the beginning of a line, make the whole line a comment
+                            if (pos - endOfLastLine == 1) {
+                                var selection = $scope.selectLine(true);
+                                $scope.editor.replaceSelectedText("{!!!" + $scope.editor.getSelection().text + "!!!}");
+                                $scope.editor.setSelection(selection.end + 4, selection.end + 4);
+                            }
+                            else {
+                                // If the cursor is in another position place a comment block
+                                $scope.editor.replaceSelectedText("{!!!!!!}");
+                                $scope.editor.setSelection(pos+4, pos+4);
+                            }
+                        }
                     };
-                    */
+
                     $scope.endLineClicked = function () {
                         var editor = $scope.editor.get(0);
                         var selection = $scope.editor.getSelection();
@@ -1244,8 +1293,39 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                     $scope.ruleClicked = function () {
                         $scope.editor.navigateLineEnd();
-                        $scope.snippetManager.insertSnippet($scope.editor, "\n---\n");
+                        $scope.snippetManager.insertSnippet($scope.editor, "\n#-\n---\n#-\n");
                     };
+
+                    /*
+                     * Creates a comment section of selected text, comment block or comments the cursor line
+                     */
+                    $scope.commentClicked = function () {
+                        var selection = $scope.editor.getSelection();
+                        if (!selection.isEmpty()) {
+                            $scope.editor.insert("{!!!" + $scope.editor.getSelectedText() + "!!!}");
+                            //$scope.snippetManager.insertSnippet($scope.editor, "{!!!${0:$SELECTION}!!!}");
+                            $scope.wrapFn();
+                            return;
+                        }
+                        else {
+                            var pos = $scope.editor.getCursorPosition();
+                            if (pos.column == 0) {
+                                var line = $scope.editor.session.getLine(pos.row);
+                                $scope.editor.selection.selectLine();
+                                $scope.editor.insert("{!!!" + line + "!!!}\n");
+                                pos.column = line.length + 4;
+                                $scope.editor.moveCursorToPosition(pos);
+                                $scope.wrapFn();
+                            }
+                            else {
+                                $scope.editor.insert("{!!!!!!}");
+                                pos.column = pos.column + 4;
+                                $scope.editor.moveCursorToPosition(pos);
+                                $scope.wrapFn();
+                            }
+                        }
+                    };
+
                     //Insert
                     //Special characters
                     $scope.charClicked = function ($event) {
