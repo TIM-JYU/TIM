@@ -129,8 +129,12 @@ def reset_css():
     :return: okJsonResponse
     """
     verify_admin()
-    shutil.rmtree(os.path.join('static', '.webassets-cache'))
-    shutil.rmtree(os.path.join('static', 'gen'))
+    assets_dir = os.path.join('static', '.webassets-cache')
+    if os.path.exists(assets_dir):
+        shutil.rmtree(assets_dir)
+    gen_dir = os.path.join('static', 'gen')
+    if os.path.exists(gen_dir):
+        shutil.rmtree(gen_dir)
     return okJsonResponse()
 
 
