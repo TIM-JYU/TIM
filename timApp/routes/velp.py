@@ -87,9 +87,8 @@ def add_velp(velp_content: str = "MOIMOI", default_points: int = -5.0, language_
 """
 
 
-# Might replace /addvelp route as the actual route.
 @velps.route("/addvelp", methods=['POST'])
-def add_velp2():
+def add_velp():
     velp_content = request.args.get('content')
     default_points = request.args.get('points')
     language_id = request.args.get('language_id')
@@ -111,3 +110,14 @@ def add_velp2():
     #Todo write logic that decides where the velp should go.
     timdb.velp_groups.add_velp_to_group(new_velp, 1)
     return str(new_velp)
+
+@velps.route("/addlabel", methods=["POST"])
+def add_label():
+
+    language_id = request.args.get('language_id')
+    content = request.args.get('content')
+
+    timdb = getTimDb()
+    label_id = timdb.labels.create_label(language_id, content)
+
+    return label_id

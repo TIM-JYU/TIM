@@ -35,7 +35,6 @@ def add_comment():
 
     annotation_id = request.args.get('annotation_id')
     content = request.args.get('content')
-
     timdb = getTimDb()
     commenter_id = getCurrentUserId()
     timdb.annotations_comments.add_comment(annotation_id, commenter_id, content)
