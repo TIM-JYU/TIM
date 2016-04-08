@@ -799,11 +799,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # if ttype == "console":
             # Console program
             if ttype == "cc":
-                csfname = "/tmp/%s/%s.c" % (basename, filename)
+                if filename.endswith(".h") or filename.endswith(".c") or filename.endswith(".cc"):
+                    csfname = "/tmp/%s/%s" % (basename, filename)
+                else:
+                    csfname = "/tmp/%s/%s.c" % (basename, filename)
                 fileext = "c"
 
             if ttype == "c++":
-                csfname = "/tmp/%s/%s.cpp" % (basename, filename)
+                if filename.endswith(".h") or filename.endswith(".hpp") or filename.endswith(".cpp"):
+                    csfname = "/tmp/%s/%s" % (basename, filename)
+                else:
+                    csfname = "/tmp/%s/%s.cpp" % (basename, filename)
                 fileext = "cpp"
 
             if ttype == "scala":
@@ -1125,6 +1131,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     cmdline = "mcs /r:System.Numerics /out:%s %s" % (exename, csfname)
                 else:
                     cmdline = ""
+                    
+                if get_param(query, "justSave", False):
+                    cmdline = ""
 
                 compiler_output = ""
                 if cmdline:
@@ -1194,6 +1203,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             if is_doc:
                 pass  # jos doc ei ajeta
+            elif get_param(query, "justSave", False):
+                showname = csfname.replace(basename,"").replace("/tmp//","")
+                if showname == "prg": showname = ""
+                code, out, err, pwd = (0, "", ("tallennettu " + showname), "")
             elif get_param(query, "justCompile", False) and ttype.find("comtest") < 0:
                 #code, out, err, pwd = (0, "".encode("utf-8"), ("Compiled " + filename).encode("utf-8"), "")
                 code, out, err, pwd = (0, "", ("Compiled " + filename), "")

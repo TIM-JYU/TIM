@@ -464,6 +464,7 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"blind",false);
             csApp.set(scope,attrs,"words",false);
             csApp.set(scope,attrs,"editorModes","01");
+            csApp.set(scope,attrs,"justSave",false);
             // csApp.set(scope,attrs,"program");
 
             
@@ -509,7 +510,7 @@ csApp.directiveFunction = function(t,isInput) {
             scope.showInput = (scope.type.indexOf("input") >= 0);
             scope.showArgs = (scope.type.indexOf("args") >= 0);
             scope.buttonText = english ? "Run": "Aja";
-            if ( scope.type.indexOf("text") >= 0 || scope.isSimcir) { // || scope.isSage ) {
+            if ( scope.type.indexOf("text") >= 0 || scope.isSimcir || scope.justSave ) { // || scope.isSage ) {
                 scope.isRun = true;
                 scope.buttonText = english ? "Save": "Tallenna";
             }            
