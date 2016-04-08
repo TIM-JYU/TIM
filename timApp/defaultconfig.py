@@ -22,4 +22,4 @@ PERMANENT_SESSION_LIFETIME = timedelta(days=14)
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 IMMEDIATE_PRELOAD  = False
 SASS_STYLE         = "compressed"
-SASS_LOAD_PATHS    = ["."]
+SASS_LOAD_PATHS    = [".", "../scripts/bower_components/bootstrap-sass/assets/stylesheets"]

@@ -7,6 +7,7 @@
 // only front page uses Bootstrap - we'll wrap all selectors inside .bootstrap selector
 .bs {
   @import "start";
+  @import "bootstrap";
 }
 
 @import "common";

@@ -4,7 +4,7 @@
 {% block head %}
     {{ super() }}
 
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
     <script>
         $('#loginTab').find('a').click(function (e) {
@@ -20,16 +20,15 @@
     {% endif %}
 {% endblock %}
 {% block content %}
+    <div class="row">
+    <div class="col-md-8 col-md-offset-2">
     {% if in_lecture %}
         {% include 'lecture.html' %}
     {% elif session.user_id %}
         {% include 'side_menu.html' %}
     {% endif %}
     <div class="row largetext">
-        <div class="col-md-2"></div>
-        <div class="col-md-10">
-            <h1>TIM - The Interactive Material</h1>
-        </div>
+        <h1 class="text-center">TIM - The Interactive Material</h1>
     </div>
 
     <div class="row">
@@ -37,11 +36,6 @@
             <a href="/view/tim/TIM-esittely">
                 <img src="{{ url_for('static', filename='images/responsive.jpg') }}"/>
             </a>
-            <!--<div class="jumbotron">
-                <h1>The Interactive Material.</h1>
-                <p class="lead">Cras justo odio, dapibus ac facilisis in, egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
-                <p><a class="btn btn-lg btn-success" href="#" role="button">Sign up today</a></p>
-            </div>-->
         </div>
 
         <div class="col-md-4">
@@ -52,44 +46,37 @@
                 </ul>
 
                 <form method="POST" action="/logout">
-                    <div class="loginbutton">
-                        <button type="submit">Log out</button>
-                    </div>
+                    <button class="widebutton" type="submit">Log out</button>
                 </form>
             {% elif session.altlogin == "signup2" %}
                 <form method="POST" action="/altsignup2">
-                    <div class="loginwelcome">
-                        <p>
-                            Welcome to TIM! We need just a few more details to get you started.
-                        </p>
-                    </div>
+                    <p>
+                        Welcome to TIM! We need just a few more details to get you started.
+                    </p>
                     <input type="hidden" name="token" value="{{ session.token }}">
 
-                    <div class="textfield indented">
+                    <div class="form-group">
                         <label for="username">User name</label>
-
                         <p id="username">{{ session.user_name }}</p>
                     </div>
-                    <div class="textfield indented">
+                    <div class="form-group">
                         <label for="realname">Real name</label>
-                        <input id="realname" name="realname" type="text" value="{{ session.real_name }}">
+                        <input class="form-control" id="realname" name="realname" type="text" value="{{ session.real_name }}">
                     </div>
-                    <div class="textfield indented">
+                    <div class="form-group">
                         <label for="email">Email</label>
 
                         <p id="realname">{{ session.email }}</p>
                     </div>
-                    <div class="textfield indented">
+                    <div class="form-group">
                         <label for="password">New password</label>
-                        <input id="password" name="password" type="password">
+                        <input class="form-control" id="password" name="password" type="password">
                     </div>
-                    <div class="textfield indented">
+                    <div class="form-group">
                         <label for="passconfirm">Repeat new password</label>
-                        <input id="passconfirm" name="passconfirm" type="password">
+                        <input class="form-control" id="passconfirm" name="passconfirm" type="password">
                     </div>
-                    <div class="loginbutton">
-                        <button type="submit">Create account</button>
-                    </div>
+                    <button class="widebutton" type="submit">Create account</button>
                 </form>
             {% else %}
                 <ul>
@@ -107,16 +94,14 @@
                 <div class="tab-content">
                     <div role="tabpanel" class="tab-pane tab-padding active" id="login">
                         <small>
-                            Login with:
+                            Log in with:
                         </small>
 
-                        <div class="openidbutton">
-                            <div class="openidcontent">
-                                <a href="/korppiLogin?came_from=/view/"
-                                   data-confirm="null" id="">
-                                    <img src="{{ url_for('static', filename='images/korppi.png') }}"/>
-                                </a>
-                            </div>
+                        <div class="text-center img-thumbnail">
+                            <a href="/korppiLogin?came_from=/view/"
+                               data-confirm="null" id="">
+                                <img src="{{ url_for('static', filename='images/korppi.png') }}"/>
+                            </a>
                         </div>
 
                         <div class='grid-row'>
@@ -129,31 +114,21 @@
 
                         <form accept-charset="UTF-8" action="/altlogin" class="new_user"
                               id="new-session" method="post">
-                            <div class="textfield indented">
-                                <input id="user_login" name="email"
+                                <div class="form-group"><input class="form-control" id="user_login" name="email"
                                        placeholder="Email or username" required="required"
-                                       tabindex="1" type="text" value="{{ session.email }}"/>
-                                <input id="user_password" name="password" class="textfield"
+                                       tabindex="1" type="text" value="{{ session.email }}"/></div>
+                                <div class="form-group"><input class="form-control" id="user_password" name="password"
                                        placeholder="Password" required="required" size="30"
-                                       tabindex="2" type="password"/>
-                            </div>
-
-                            <div class="loginbutton">
-                                <button type="submit">Login</button>
-                            </div>
+                                       tabindex="2" type="password"/></div>
+                            <button class="widebutton" type="submit">Login</button>
                         </form>
                     </div>
                     <div role="tabpanel" class="tab-pane tab-padding" id="signup">
                         <form accept-charset="UTF-8" action="/altsignup" autocomplete="off"
                               class="new_user" id="new-user" method="post">
-                            <div class="textfield">
-                                <input id="user_email" name="email" placeholder="Email"
-                                       required="required" size="30" tabindex="1" type="text"/>
-                            </div>
-
-                            <div class="loginbutton">
-                                <button type="submit">Get started</button>
-                            </div>
+                            <input class="form-control" id="user_email" name="email" placeholder="Email"
+                                   required="required" size="30" tabindex="1" type="text"/>
+                            <button class="widebutton" type="submit">Get started</button>
                         </form>
                     </div>
                 </div>
@@ -161,33 +136,34 @@
         </div>
     </div>
 
-    <div class="row marketing">
-        <div class="col-md-3"></div>
-        <div class="col-md-3">
-            <h5>TIM</h5>
-            <ul>
+    <div class="row">
+        <div class="col-md-3 col-md-offset-3">
+            <h4>TIM</h4>
+            <ul class="list-unstyled">
                 <li><a href="/view/tim/TIM-esittely">Esittely</a></li>
                 <li><a href="/view/tim/TIM-ohjeet">Ohjeet <sup>(*)</sup></a></li>
             </ul>
         </div>
-        <div class="col-md-6">
-            <h5>Esimerkkejä <sup>(*)</sup></h5>
-            <ul>
+        <div class="col-md-3">
+            <h4>Esimerkkejä <sup>(*)</sup></h4>
+            <ul class="list-unstyled">
                 <li><a href="/view/tim/Esimerkkejä TIMin mahdollisuuksista">TIMin mahdollisuuksia</a></li>
                 <li><a href="/view/tim/Eri%20ohjelmointikieli%C3%A4">Eri ohjelmointikieliä</a></li>
                 <li><a href="/view/tim/muita%20esimerkkeja">Käyttö eri oppiaineissa</a></li>
             </ul>
         </div>
     </div>
-    <div class="row marketing">
-        <div class="col-md-6 text-muted">
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4 text-muted text-center">
             <sup>(*)</sup> vaatii kirjautumisen
         </div>
     </div>
+    </div>
+    </div>
 {% endblock %}
 {% block footer %}
-    <p>&copy; Jyväskylän yliopisto</p>
-    <ul>
-        <li><a href="/view/tim/Rekisteriseloste">Rekisteriseloste</a></li>
-    </ul>
+    <div class="row">
+        <p class="col-md-2">&copy; Jyväskylän yliopisto</p>
+        <a class="col-md-offset-8 col-md-2 text-right" href="/view/tim/Rekisteriseloste">Rekisteriseloste</a>
+    </div>
 {% endblock %}
