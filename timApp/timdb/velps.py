@@ -20,7 +20,27 @@ class Velps(TimDbBase):
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
 
     @contract
-    def create_velp(self, creator_id: 'int', default_points: 'float', icon_id: 'int | None' = None,
+    def create_new_velp(self, creator_id: 'int', content = 'str', default_points: 'float | None' = None,
+                        icon_id: 'int | None' = None, valid_until: 'str | None' = None,
+                        language_id: 'str' = "FI"):
+        """Creates a new velp with all information
+
+        Creates a new velp with all necessary information in one function using three others
+        :param creator_id: User ID of creator.
+        :param content: Text for velp.
+        :param default_points: Default points for velp, None if not given.
+        :param icon_id: Icon ID attached to velp. Can be null.
+        :param valid_until: Time after velp becomes unusable.
+        :param language_id: Language ID of velp.
+        :return:
+        """
+        new_velp_id = self.create_velp(creator_id, default_points, icon_id, valid_until)
+        new_version_id = self.create_velp_version(new_velp_id)
+        self.create_velp_content(new_version_id, language_id, content)
+        return new_velp_id
+
+    @contract
+    def create_velp(self, creator_id: 'int', default_points: 'float | None', icon_id: 'int | None' = None,
                     valid_until: 'str | None' = None):
         """Creates a new velp
 
