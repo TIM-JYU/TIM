@@ -1,8 +1,10 @@
 from copy import deepcopy
 
+from typing import Tuple, Optional
+
 from documentmodel.document import Document
-import utils
 from markdownconverter import expand_macros
+from timdb.timdbbase import TimDbException
 from utils import parse_yaml, merge
 
 date_format = '%Y-%m-%d %H:%M:%S'
@@ -15,16 +17,22 @@ class Plugin:
     answer_limit_key = 'answerLimit'
     limit_defaults = {'mmcq': 1}
 
-    def __init__(self, task_id, values, plugin_type):
+    def __init__(self, task_id: str, values: dict, plugin_type: str):
         self.task_id = task_id
         self.values = values
         self.type = plugin_type
 
     @staticmethod
-    def from_task_id(task_id):
-        doc_id, task_id_name = Plugin.parse_task_id(task_id)
+    def from_task_id(task_id: str):
+        doc_id, task_id_name, par_id = Plugin.parse_task_id(task_id)
         doc = Document(doc_id)
-        par = doc.get_paragraph_by_task(task_id_name)
+        if par_id is not None:
+            try:
+                par = doc.get_paragraph(par_id)
+            except TimDbException as e:
+                raise PluginException(e)
+        else:
+            par = doc.get_paragraph_by_task(task_id_name)
         if par is None:
             raise PluginException('Task not found in the document: ' + task_id_name)
         plugin_data = parse_plugin_values(par,
@@ -39,7 +47,7 @@ class Plugin:
         return p
 
     @staticmethod
-    def parse_task_id(task_id):
+    def parse_task_id(task_id: str) -> Tuple[int, Optional[str], Optional[str]]:
         """Splits task id into document id and task name.
 
         :rtype: tuple[int, str]
@@ -48,11 +56,12 @@ class Plugin:
         :return: tuple of the form (22, "palindrome")
         """
         pieces = task_id.split('.')
-        if len(pieces) != 2:
-            raise PluginException('The format of task_id is invalid. Expected exactly one dot character.')
+        if not 2 <= len(pieces) <= 3:
+            raise PluginException('The format of task_id is invalid. Expected 2 or 3 dot characters.')
         doc_id = int(pieces[0])
-        task_id_name = pieces[1]
-        return doc_id, task_id_name
+        task_id_name = pieces[1] if pieces[1] else None
+        par_id = pieces[2] if len(pieces) == 3 else None
+        return doc_id, task_id_name, par_id
 
     def deadline(self, default=None):
         return self.values.get(self.deadline_key, default)

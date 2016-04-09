@@ -232,6 +232,10 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                     } else if (!answer.correctPassword) {
                         $scope.showDialog("Wrong access code!");
                         return false;
+                    } else if (answer.anonLogin) {
+                        // if the user was logged in as a temporary user, we must refresh
+                        // to update the plugins (they may require login)
+                        $window.location.reload();
                     } else {
                         $scope.focusOn();
                         $scope.studentTable = [];
@@ -972,7 +976,10 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 if (lastID === null) {
                     lastID = -1;
                 }
-
+                if ($scope.requestOnTheWay === true) {
+                    $window.console.log("Poll multiplication prevented");
+                    return;
+                }
                 $scope.requestOnTheWay = true;
                 http({
                     url: '/getUpdates',
@@ -1102,6 +1109,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
         };
 
         $scope.showQuestion = function (answer) {
+            console.log('Showing question');
             var showPoints = '';
             if (answer.result) showPoints = 'Show points: ';
             $scope.showAnswerWindow = true;

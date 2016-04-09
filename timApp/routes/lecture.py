@@ -40,7 +40,7 @@ def get_lecture_info():
 
     added_users = []
     for singleDict in answer_dicts:
-        singleDict['user_name'] = timdb.users.getUser(singleDict['user_id']).get("name")
+        singleDict['user_name'] = timdb.users.get_user(singleDict['user_id']).get("name")
         if singleDict['question_id'] not in question_ids:
             question_ids.append(singleDict['question_id'])
         if singleDict['user_id'] not in added_users:
@@ -51,7 +51,7 @@ def get_lecture_info():
 
     return jsonResponse(
         {"messages": messages, "answerers": answerers, "answers": answer_dicts, "questions": lecture_questions,
-         "isLecturer": is_lecturer, "user": {'user_name': timdb.users.getUser(current_user)['name'],
+         "isLecturer": is_lecturer, "user": {'user_name': timdb.users.get_user(current_user)['name'],
                                              'user_id': current_user}})
 
 
@@ -77,7 +77,7 @@ def get_all_messages(param_lecture_id=-1):
     if len(messages) > 0:
         list_of_new_messages = []
         for message in messages:
-            user = timdb.users.getUser(message.get('user_id'))
+            user = timdb.users.get_user(message.get('user_id'))
             time_as_time = datetime.datetime.fromtimestamp(
                 mktime(time.strptime(message.get("timestamp"), "%Y-%m-%d %H:%M:%S.%f")))
             list_of_new_messages.append(
@@ -173,7 +173,7 @@ def get_updates():
                     messages.reverse()
 
                     for message in messages:
-                        user = timdb.users.getUser(message.get('user_id'))
+                        user = timdb.users.get_user(message.get('user_id'))
                         time_as_time = datetime.datetime.fromtimestamp(
                             mktime(time.strptime(message.get("timestamp"), "%Y-%m-%d %H:%M:%S.%f")))
                         list_of_new_messages.append(
@@ -560,11 +560,11 @@ def get_lecture_users(timdb, tempdb, lecture_id):
         user_id = user.user_id
         active = user.active
         if lecture[0].get("lecturer") == user_id:
-            lecturer = {"name": timdb.users.getUser(user_id).get("name"),
+            lecturer = {"name": timdb.users.get_user(user_id).get("name"),
                         "active": active}
             lecturers.append(lecturer)
         else:
-            student = {"name": timdb.users.getUser(user_id).get("name"),
+            student = {"name": timdb.users.get_user(user_id).get("name"),
                        "active": active, "user_id": user_id}
             students.append(student)
 
@@ -738,18 +738,20 @@ def join_lecture():
     if check_if_lecture_is_full(lecture_id):
         return jsonResponse({'lecture_full': True})
 
+    lecture = timdb.lectures.get_lecture(lecture_id)
+    if lecture[0].get("password") != password_quess:
+        return jsonResponse({"correctPassword": False})
+
+    anon_login = False
     if current_user == 0:
         user_name = 'Anonymous'
         user_real_name = 'Guest'
-        user_id = timdb.users.createAnonymousUser(user_name, user_real_name)
+        user_id = timdb.users.create_anonymous_user(user_name, user_real_name)
         session['user_id'] = user_id
         session['user_name'] = user_name
         session['real_name'] = user_real_name
         current_user = user_id
-
-    lecture = timdb.lectures.get_lecture(lecture_id)
-    if lecture[0].get("password") != password_quess:
-        return jsonResponse({"correctPassword": False})
+        anon_login = True
 
     doc_name = timdb.documents.get_document(lecture[0].get("doc_id"))["name"]
 
@@ -773,7 +775,8 @@ def join_lecture():
     return jsonResponse(
         {"correctPassword": True, "inLecture": True, "lectureId": lecture_id, "isLecturer": is_lecturer,
          "lectureCode": lecture_code, "startTime": lecture[0].get("start_time"),
-         "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students, "doc_name": doc_name})
+         "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students, "doc_name": doc_name,
+         "anonLogin": anon_login})
 
 
 @lecture_routes.route('/leaveLecture', methods=['POST'])

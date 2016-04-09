@@ -5,20 +5,25 @@ from timdbtest import TimDbTest
 class UserTest(TimDbTest):
     def test_create_user(self):
         db = self.get_db()
-        test_block_id = 4
-        anonymous_usergroup_id = 2
+        anonymous_usergroup_id = db.users.get_anon_group_id()
         name, real_name, email, password_hash = ['test', 'John Doe', 'john@example.com', '0123456789abcdef']
-        user_id = db.users.createUser(name, real_name, email, password_hash)
-        saved_user = db.users.getUser(user_id)
+        user_id = db.users.create_user(name, real_name, email, password_hash)
+        gid = db.users.create_usergroup(name)
+        gid2 = db.users.create_usergroup('dummy')
+        db.users.add_user_to_group(gid, user_id)
+        test_block_id = db.documents.insertBlockToDb(name='test', owner_group_id=gid2, block_type=0)
+        test_block_id2 = db.documents.insertBlockToDb(name='test', owner_group_id=gid, block_type=0)
+
+        saved_user = db.users.get_user(user_id)
         self.assertEqual(saved_user['name'], name)
         self.assertEqual(saved_user['real_name'], real_name)
         self.assertEqual(saved_user['email'], email)
-        group_id = db.users.createUserGroup('test group')
+        group_id = db.users.create_usergroup('dummy2')
         self.assertNotEqual(group_id, anonymous_usergroup_id)  # Should not be equal to anonymous usergroup id
 
         # Testing view access
         self.assertFalse(db.users.has_view_access(user_id, test_block_id))
-        db.users.addUserToGroup(group_id, user_id)
+        db.users.add_user_to_group(group_id, user_id)
         db.users.grant_access(group_id, test_block_id, 'view')
         self.assertTrue(db.users.has_view_access(user_id, test_block_id))
         self.assertFalse(db.users.has_edit_access(user_id, test_block_id))
@@ -136,6 +141,17 @@ class UserTest(TimDbTest):
         self.assertFalse(db.users.has_view_access(user_id, test_block_id))
         self.assertFalse(db.users.has_teacher_access(user_id, test_block_id))
         self.assertFalse(db.users.has_seeanswers_access(user_id, test_block_id))
+
+        self.assertSetEqual({test_block_id2}, db.users.get_viewable_blocks(user_id))
+        db.users.addUserToAdmins(user_id)
+        self.assertSetEqual({test_block_id, test_block_id2}, db.users.get_viewable_blocks(user_id))
+        for bid in (test_block_id, test_block_id2):
+            self.assertTrue(db.users.has_manage_access(user_id, bid))
+            self.assertTrue(db.users.has_edit_access(user_id, bid))
+            self.assertTrue(db.users.has_view_access(user_id, bid))
+            self.assertTrue(db.users.has_teacher_access(user_id, bid))
+            self.assertTrue(db.users.has_seeanswers_access(user_id, bid))
+
         db.close()
 
 if __name__ == '__main__':

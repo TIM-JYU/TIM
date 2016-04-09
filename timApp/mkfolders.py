@@ -58,7 +58,7 @@ def update_tables(db):
         print('Folder id {}: {}'.format(folder_id, folder_name))
         if not timdb.folders.exists(folder_id):
             print('...Creating folder(s)')
-            owner_id = timdb.users.getOwnerGroup(folder_id)['id']
+            owner_id = timdb.users.get_owner_group(folder_id)['id']
             timdb.folders.create(folder_name, owner_id)
 
     print()
@@ -70,7 +70,7 @@ def update_tables(db):
             continue
         if timdb.folders.get_folder_id(folder_name) is None:
             print('...Creating folder(s)')
-            owner_id = timdb.users.getOwnerGroup(doc['id'])['id']
+            owner_id = timdb.users.get_owner_group(doc['id'])['id']
             folder_id = timdb.folders.create(folder_name, owner_id)
 
 

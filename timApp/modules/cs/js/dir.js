@@ -3,6 +3,14 @@ var csPluginStartTime = new Date();
 /*
 Sagea varten ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst#id3
 */
+
+// Workaround for lazy loading: the directive definition functions below are not re-run when reloading the module
+// so csApp.sanitize and csApp.compile will be undefined without this trick
+if (angular.isDefined(window.csApp)) {
+    var csAppSanitize = csApp.sanitize;
+    var csAppCompile = csApp.compile;
+}
+
 var csApp = angular.module('csApp', ['ngSanitize']);
 csApp.directive('csRunner',['$sanitize','$compile', function ($sanitize,$compile1) {	"use strict"; csApp.sanitize = $sanitize; csApp.compile = $compile1; return csApp.directiveFunction('console',false); }]);
 csApp.directive('csJypeliRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('jypeli',false); }]);
@@ -17,6 +25,11 @@ csApp.directive('csSageRunner', ['$sanitize','$compile', function ($sanitize,$co
 csApp.directive('csSimcirRunner', ['$sanitize','$compile', function ($sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('simcir',false); }]);
 // csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
 
+// redefine csApp.sanitize and csApp.compile if needed
+if (angular.isDefined(window.csAppSanitize) && angular.isDefined(window.csAppCompile)) {
+    csApp.sanitize = csAppSanitize;
+    csApp.compile = csAppCompile;
+}
 
 function csLogTime(msg) {
    var d = new Date();       
@@ -451,6 +464,7 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"blind",false);
             csApp.set(scope,attrs,"words",false);
             csApp.set(scope,attrs,"editorModes","01");
+            csApp.set(scope,attrs,"justSave",false);
             // csApp.set(scope,attrs,"program");
 
             
@@ -496,7 +510,7 @@ csApp.directiveFunction = function(t,isInput) {
             scope.showInput = (scope.type.indexOf("input") >= 0);
             scope.showArgs = (scope.type.indexOf("args") >= 0);
             scope.buttonText = english ? "Run": "Aja";
-            if ( scope.type.indexOf("text") >= 0 || scope.isSimcir) { // || scope.isSage ) {
+            if ( scope.type.indexOf("text") >= 0 || scope.isSimcir || scope.justSave ) { // || scope.isSage ) {
                 scope.isRun = true;
                 scope.buttonText = english ? "Save": "Tallenna";
             }            
@@ -1550,7 +1564,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 	$scope.showJS = function() {
         var wantsConsole = false;
         if ( $scope.type.indexOf("/c") >= 0 ) wantsConsole = true;
-        if ( !$scope.usercode && !$scope.userargs && !$scope.userinput ) return;
+        if ( !$scope.attrs.runeverytime && !$scope.usercode && !$scope.userargs && !$scope.userinput ) return;
         if ( !$scope.canvas ) { // cerate a canvas on first time
             if ( $scope.iframe ) {
                 var v = $scope.getVid();
@@ -1574,7 +1588,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
             $scope.canvas = $scope.canvas[0];
         }
         var text = $scope.usercode.replace($scope.cursor,"");
-        if ( text == $scope.lastJS && $scope.userargs == $scope.lastUserargs && $scope.userinput == $scope.lastUserinput ) return;
+        // if ( text == $scope.lastJS && $scope.userargs == $scope.lastUserargs && $scope.userinput == $scope.lastUserinput ) return;
+        if ( !$scope.attrs.runeverytime && text == $scope.lastJS && $scope.userargs == $scope.lastUserargs && $scope.userinput == $scope.lastUserinput ) return;
         $scope.lastJS = text;
         $scope.lastUserargs = $scope.userargs;
         $scope.lastUserinput = $scope.userinput;

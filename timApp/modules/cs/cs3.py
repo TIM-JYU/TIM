@@ -170,7 +170,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     # ./docker-run-timeout.sh 10s -v /opt/cs:/cs/:ro  -v $USERPATH:/home/agent/ -w /home/agent cs3 /cs/rcmd.sh $CMDNAME 
 
     dargs = ["docker", "run", "--name", tmpname, "--rm=true", "-v", "/opt/cs:/cs/:ro", "-v",
-             "/tmp/uhome/" + udir + ":/home/agent/",
+             "/tmp/uhome/" + udir + "/:/home/agent/",
              # dargs = ["/cs/docker-run-timeout.sh", "10s", "-v", "/opt/cs:/cs/:ro", "-v", "/tmp/uhome/" + udir + ":/home/agent/",
              # "-w", "/home/agent", "ubuntu", "/cs/rcmd.sh", urndname + ".sh"]
              "-w", "/home/agent", "cs3", "/cs/rcmd.sh", urndname + ".sh"]
@@ -426,8 +426,10 @@ def log(self):
 
 def give_points(points_rule, rule, default=0):
     if not points_rule: return
+    if rule in points_rule or default != 0: 
+        points_rule["valid"] = True  # rule found
     p = points_rule.get(rule, default)
-    if not points_rule.get("cumulative", False):
+    if not points_rule.get("cumulative", True):
         points_rule["result"] = max(points_rule.get("result", 0), p)
         return
     print("rule: ", rule)
@@ -455,6 +457,7 @@ def get_points_rule(points_rule, key, default):
 def return_points(points_rule, result):
     if not points_rule: return
     if "save" not in result: return
+    # if not points_rule.get("valid", False) and "points" not in points_rule: return # no rule found
     if "result" in points_rule:
         tim_info = {"points": points_rule["result"]}
         result["tim_info"] = tim_info
@@ -796,11 +799,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # if ttype == "console":
             # Console program
             if ttype == "cc":
-                csfname = "/tmp/%s/%s.c" % (basename, filename)
+                if filename.endswith(".h") or filename.endswith(".c") or filename.endswith(".cc"):
+                    csfname = "/tmp/%s/%s" % (basename, filename)
+                else:
+                    csfname = "/tmp/%s/%s.c" % (basename, filename)
                 fileext = "c"
 
             if ttype == "c++":
-                csfname = "/tmp/%s/%s.cpp" % (basename, filename)
+                if filename.endswith(".h") or filename.endswith(".hpp") or filename.endswith(".cpp"):
+                    csfname = "/tmp/%s/%s" % (basename, filename)
+                else:
+                    csfname = "/tmp/%s/%s.cpp" % (basename, filename)
                 fileext = "cpp"
 
             if ttype == "scala":
@@ -1021,7 +1030,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         points_rule["points"]["run"] = 0
 
                 expect_code = get_points_rule(points_rule, is_test + "expectCode", None)
-                if expect_code:
+                if expect_code and not is_doc:
                     if expect_code == "byCode": expect_code = get_param(query, "byCode", "")
                     excode = re.compile(expect_code.rstrip('\n'), re.M)
                     if excode.match(usercode): give_points(points_rule, "code", 1)
@@ -1048,10 +1057,16 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     docfilename = p.sub("", docfilename)
                     docfilename = docfilename.replace("_","__") # jostakin syystä tekee näin
                     dochtml = "/csimages/cs/docs/%s/%s/html/%s_8%s.html" % (self.user_id, docrnd, docfilename, fileext)
+                    docfile = "%s/%s/html/%s_8%s.html" % (userdoc, docrnd, docfilename, fileext)
                     print("XXXXXXXXXXXXXXXXXXXXXX",filename)
                     print("XXXXXXXXXXXXXXXXXXXXXX",docfilename)
                     print("XXXXXXXXXXXXXXXXXXXXXX",dochtml)
+                    print("XXXXXXXXXXXXXXXXXXXXXX",docfile)
                     doc_output = check_output([doccmd], stderr=subprocess.STDOUT, shell=True).decode("utf-8")
+                    if not os.path.isfile(docfile): # There is maybe more files with same name and it is difficult to guess the name
+                        dochtml = "/csimages/cs/docs/%s/%s/html/%s" % (self.user_id, docrnd, "files.html")
+                        print("XXXXXXXXXXXXXXXXXXXXXX",dochtml)
+                        
                     web["docurl"] = dochtml
                     give_points(points_rule, "doc")
 
@@ -1115,6 +1130,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "cs":
                     cmdline = "mcs /r:System.Numerics /out:%s %s" % (exename, csfname)
                 else:
+                    cmdline = ""
+                    
+                if get_param(query, "justSave", False):
                     cmdline = ""
 
                 compiler_output = ""
@@ -1185,6 +1203,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             if is_doc:
                 pass  # jos doc ei ajeta
+            elif get_param(query, "justSave", False):
+                showname = csfname.replace(basename,"").replace("/tmp//","")
+                if showname == "prg": showname = ""
+                code, out, err, pwd = (0, "", ("tallennettu " + showname), "")
             elif get_param(query, "justCompile", False) and ttype.find("comtest") < 0:
                 #code, out, err, pwd = (0, "".encode("utf-8"), ("Compiled " + filename).encode("utf-8"), "")
                 code, out, err, pwd = (0, "", ("Compiled " + filename), "")

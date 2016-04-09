@@ -11,13 +11,17 @@ from yaml import CLoader
 from htmlSanitize import sanitize_html
 
 
+def datestr_to_relative(dstr):
+    return date_to_relative(datetime.strptime(dstr, '%Y-%m-%d %H:%M:%S'))
+
+
 def date_to_relative(d):
     """Converts the given datetime object to relative string representation, such as "2 days ago", etc.
 
     :param d: The datetime object to convert.
     :return: A string representing the given date relative to current time.
     """
-    diff = datetime.utcnow() - d
+    diff = datetime.now() - d
     s = diff.seconds
     if diff.days > 7 or diff.days < 0:
         return d.strftime('%d %b %y')

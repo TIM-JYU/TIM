@@ -26,7 +26,7 @@ def safe_redirect(url, **values):
 
 
 def get_current_user():
-    return getTimDb().users.getUser(getCurrentUserId())
+    return getTimDb().users.get_user(getCurrentUserId())
 
 
 def getCurrentUserId():
@@ -41,7 +41,7 @@ def getCurrentUserName():
 
 def getCurrentUserGroup():
     timdb = getTimDb()
-    return timdb.users.getPersonalUserGroup(get_current_user())
+    return timdb.users.get_personal_usergroup(get_current_user())
 
 
 def getTimDb():
@@ -138,7 +138,8 @@ def get_rights(doc_id):
             'browse_own_answers': logged_in(),
             'teacher': has_teacher_access(doc_id),
             'see_answers': has_seeanswers_access(doc_id),
-            'manage': has_manage_access(doc_id)
+            'manage': has_manage_access(doc_id),
+            'owner': has_ownership(doc_id)
             }
 
 
@@ -149,12 +150,12 @@ def verifyLoggedIn():
 
 def has_ownership(block_id):
     timdb = getTimDb()
-    return timdb.users.userIsOwner(getCurrentUserId(), block_id)
+    return timdb.users.user_is_owner(getCurrentUserId(), block_id)
 
 
 def verify_ownership(block_id):
     timdb = getTimDb()
-    if not timdb.users.userIsOwner(getCurrentUserId(), block_id):
+    if not timdb.users.user_is_owner(getCurrentUserId(), block_id):
         abort(403, "Sorry, you don't have permission to view this resource.")
 
 
@@ -263,7 +264,7 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
     #    ref_id = req_json.get('ref-id')
     #    html_pars = [par for par in html_pars if par['doc_id'] == ref_doc_id and par['id'] == ref_id]
 
-    if edit_window or user is None:
+    if edit_window:
         # Skip readings and notes
         return html_pars, js_paths, css_paths, modules
 
@@ -281,23 +282,27 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
         p['status'] = ''
         p['notes'] = []
 
-    group = timdb.users.getPersonalUserGroup(user)
-    readings = timdb.readings.getReadings(group, doc)
+    group = timdb.users.get_personal_usergroup(user) if user is not None else timdb.users.get_anon_group_id()
+    if user is not None:
+        readings = timdb.readings.getReadings(group, doc)
+        for r in readings:
+            key = (r['par_id'], r['doc_id'])
+            pars = pars_dict.get(key)
+            if pars:
+                for p in pars:
+                    if r['par_hash'] == p['t'] or r['par_hash'] == p.get('ref_t'):
+                        p['status'] = 'read'
+                    elif p.get('status') != 'read':
+                        # elif is here so not to overwrite an existing 'read' marking
+                        p['status'] = 'modified'
 
-    for r in readings:
-        key = (r['par_id'], r['doc_id'])
-        pars = pars_dict.get(key)
-        if pars:
-            for p in pars:
-                p['status'] = 'read' if r['par_hash'] == p['t'] or r['par_hash'] == p.get('ref_t') else 'modified'
-    
     notes = timdb.notes.getNotes(group, doc)
 
     for n in notes:
         key = (n['par_id'], n['doc_id'])
         pars = pars_dict.get(key)
         if pars:
-            n['editable'] = n['UserGroup_id'] == group or timdb.users.userIsOwner(getCurrentUserId(), doc.doc_id)
+            n['editable'] = n['UserGroup_id'] == group or timdb.users.user_is_owner(getCurrentUserId(), doc.doc_id)
             n.pop('UserGroup_id', None)
             n['private'] = n['access'] == 'justme'
             for p in pars:
@@ -314,15 +319,15 @@ def get_referenced_pars_from_req(par):
         return [par]
 
 
-def validate_item(item_name, item_type, owner_group_id):
+def validate_item(item_name, item_type):
     if not logged_in():
-        abort(403, 'You have to be logged in to create a {}.'.format(item_type))
+        abort(403, 'You have to be logged in to perform this action.'.format(item_type))
 
     if item_name is None:
-        return abort(400, 'item_name was None')
+        abort(400, 'item_name was None')
 
-    if item_name.startswith('/') or item_name.endswith('/'):
-        abort(400, 'The {} name cannot start or end with /.'.format(item_type))
+    if not all(part for part in item_name.split('/')):
+        abort(400, 'The {} name cannot have empty parts.'.format(item_type))
 
     if re.match('^(\d)*$', item_name) is not None:
         abort(400, 'The {} name can not be a number to avoid confusion with document id.'.format(item_type))
@@ -334,9 +339,14 @@ def validate_item(item_name, item_type, owner_group_id):
     if not can_write_to_folder(item_name):
         abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(item_type, username))
 
+
+def validate_item_and_create(item_name, item_type, owner_group_id):
+    timdb = getTimDb()
+    validate_item(item_name, item_type)
     item_path, _ = timdb.folders.split_location(item_name)
     timdb.folders.create(item_path, owner_group_id)
 
 
 def get_user_settings():
     return session.get('settings', {})
+

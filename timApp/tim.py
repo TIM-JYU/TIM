@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import http.client
 import imghdr
 import io
 import time
 
 from flask import Blueprint
 from flask import render_template
-from flask import send_from_directory
 from flask import stream_with_context
 from flask.helpers import send_file
 from werkzeug.contrib.profiler import ProfilerMiddleware
@@ -17,14 +17,15 @@ from plugin import PluginException
 from routes.answer import answers
 from routes.cache import cache
 from routes.common import *
+from routes.common import get_user_settings
 from routes.edit import edit_page
 from routes.groups import groups
 from routes.lecture import getTempDb, user_in_lecture, lecture_routes
-from routes.common import get_user_settings
 from routes.logger import logger_bp
 from routes.login import login_page
 from routes.manage import manage_page
 from routes.notes import notes
+from routes.notify import notify
 from routes.readings import readings
 from routes.search import search_routes
 from routes.settings import settings_page
@@ -52,6 +53,7 @@ app.register_blueprint(upload)
 app.register_blueprint(notes)
 app.register_blueprint(readings)
 app.register_blueprint(lecture_routes)
+app.register_blueprint(notify)
 app.register_blueprint(Blueprint('bower',
                                  __name__,
                                  static_folder='static/scripts/bower_components',
@@ -65,9 +67,25 @@ print('Profiling: {}'.format(app.config['PROFILE']))
 
 def error_generic(error, code):
     if 'text/html' in request.headers.get("Accept", ""):
-        return render_template(str(code) + '.html', message=error.description), code
+        return render_template('error.html',
+                               message=error.description,
+                               code=code,
+                               status=http.client.responses[code]), code
     else:
         return jsonResponse({'error': error.description}, code)
+
+
+@app.context_processor
+def inject_custom_css() -> dict:
+    """Injects the custom_css and custom_css_files variables to all templates."""
+    if not logged_in():
+        return {}
+    prefs = getTimDb().users.get_preferences(getCurrentUserId())
+    custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
+    custom_css_files = json.loads(prefs).get('css_files', {}) if prefs is not None else {}
+    if custom_css_files:
+        custom_css_files = {key: value for key, value in custom_css_files.items() if value}
+    return dict(custom_css=custom_css, custom_css_files=custom_css_files)
 
 
 @app.errorhandler(400)
@@ -80,8 +98,26 @@ def forbidden(error):
     return error_generic(error, 403)
 
 
+@app.errorhandler(500)
+def internal_error(error):
+    error.description = "Something went wrong with the server, sorry. We'll fix this as soon as possible."
+    return error_generic(error, 500)
+
+
+@app.errorhandler(503)
+def service_unavailable(error):
+    return error_generic(error, 503)
+
+
+@app.errorhandler(413)
+def entity_too_large(error):
+    error.description = 'Your file is too large to be uploaded. Maximum size is {} MB.'\
+        .format(app.config['MAX_CONTENT_LENGTH'] / 1024 / 1024)
+    return error_generic(error, 413)
+
+
 @app.errorhandler(404)
-def notFound(error):
+def not_found(error):
     return error_generic(error, 404)
 
 
@@ -106,38 +142,56 @@ def get_image(image_id, image_filename):
     return send_file(f, mimetype='image/' + imgtype)
 
 
-@app.route('/files/<int:file_id>/<file_filename>')
-def get_file(file_id, file_filename):
-    timdb = getTimDb()
-    if not timdb.files.fileExists(file_id, file_filename):
-        abort(404)
-    verify_view_access(file_id)
-    img_data = timdb.files.getFile(file_id, file_filename)
-    f = io.BytesIO(img_data)
-    return send_file(f)
-
-
-@app.route('/images')
-def get_all_images():
-    timdb = getTimDb()
-    images = timdb.images.getImages()
-    allowedImages = [image for image in images if timdb.users.has_view_access(getCurrentUserId(), image['id'])]
-    return jsonResponse(allowedImages)
-
-
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
-
 @app.route("/getDocuments")
-def get_documents():
+def get_docs():
+    return jsonResponse(get_documents(request.args.get('folder')))
+
+
+@app.route("/getFolders")
+def get_folders():
+    root_path = request.args.get('root_path')
+    timdb = getTimDb()
+    folders = timdb.folders.get_folders(root_path)
+    viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
+    allowed_folders = [f for f in folders if f['id'] in viewable]
+    uid = getCurrentUserId()
+    is_admin = timdb.users.has_admin_access(uid)
+    for f in allowed_folders:
+        f['isOwner'] = is_admin or timdb.users.user_is_owner(uid, f['id'])
+        f['owner'] = timdb.users.get_owner_group(f['id'])
+
+    allowed_folders.sort(key=lambda folder: folder['name'].lower())
+    return jsonResponse(allowed_folders)
+
+
+@app.route("/getTemplates")
+def get_templates():
+    current_path = request.args.get('root_path')
+    timdb = getTimDb()
+    templates = []
+
+    while True:
+        if current_path != '':
+            found_templates = get_documents(current_path + '/Templates')
+        else:
+            found_templates = get_documents('Templates')
+        for t in found_templates:
+            if timdb.users.has_manage_access(getCurrentUserId(), timdb.documents.get_document_id(t['fullname'])):
+                templates.append(t)
+        if current_path == '':
+            break
+        current_path, _ = timdb.folders.split_location(current_path)
+
+    return jsonResponse(templates)
+
+
+def get_documents(folder):
     timdb = getTimDb()
     docs = timdb.documents.get_documents()
     viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
     allowed_docs = [doc for doc in docs if doc['id'] in viewable]
 
-    req_folder = request.args.get('folder')
+    req_folder = folder
     if req_folder is not None and len(req_folder) == 0:
         req_folder = None
     final_docs = []
@@ -159,33 +213,16 @@ def get_documents():
         doc['name'] = docname
         doc['fullname'] = fullname
         doc['canEdit'] = timdb.users.has_edit_access(uid, doc['id'])
-        doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id']) or timdb.users.has_admin_access(uid)
-        doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
+        doc['isOwner'] = timdb.users.user_is_owner(getCurrentUserId(), doc['id']) or timdb.users.has_admin_access(uid)
+        doc['owner'] = timdb.users.get_owner_group(doc['id'])
         final_docs.append(doc)
 
     final_docs.sort(key=lambda d: d['name'].lower())
-    return jsonResponse(final_docs)
-
-
-@app.route("/getFolders")
-def get_folders():
-    root_path = request.args.get('root_path')
-    timdb = getTimDb()
-    folders = timdb.folders.get_folders(root_path)
-    viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
-    allowed_folders = [f for f in folders if f['id'] in viewable]
-    uid = getCurrentUserId()
-    is_admin = timdb.users.has_admin_access(uid)
-    for f in allowed_folders:
-        f['isOwner'] = is_admin or timdb.users.userIsOwner(uid, f['id'])
-        f['owner'] = timdb.users.getOwnerGroup(f['id'])
-
-    allowed_folders.sort(key=lambda folder: folder['name'].lower())
-    return jsonResponse(allowed_folders)
+    return final_docs
 
 
 def create_item(item_name, item_type, create_function, owner_group_id):
-    validate_item(item_name, item_type, owner_group_id)
+    validate_item_and_create(item_name, item_type, owner_group_id)
 
     item_id = create_function(item_name, owner_group_id)
     return jsonResponse({'id': item_id, 'name': item_name})
@@ -390,7 +427,7 @@ def index_page():
     timdb = getTimDb()
     current_user = getCurrentUserId()
     in_lecture = user_in_lecture()
-    possible_groups = timdb.users.getUserGroupsPrintable(current_user)
+    possible_groups = timdb.users.get_usergroups_printable(current_user)
     settings = get_user_settings()
     return render_template('index.html',
                            userName=getCurrentUserName(),
@@ -400,6 +437,15 @@ def index_page():
                            settings=settings,
                            doc={'id': -1, 'fullname': ''},
                            rights={})
+
+
+@app.route("/manage/")
+@app.route("/slide/")
+@app.route("/teacher/")
+@app.route("/answers/")
+@app.route("/lecture/")
+def index_redirect():
+    return redirect('/view')
 
 
 @app.route("/getslidestatus/")
@@ -418,7 +464,6 @@ def getslidestatus():
 
 @app.route("/setslidestatus")
 def setslidestatus():
-    print(request.args)
     if 'doc_id' not in request.args or 'status' not in request.args:
         abort(404, "Missing doc id or status")
     doc_id = int(request.args['doc_id'])

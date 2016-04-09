@@ -60,6 +60,7 @@
         <button class="editorButton" title="Break text to start a new slide" ng-click="wrapFn(ruleClicked)">Slide break</button>
         <button class="editorButton" title="Break text to start a new paragraph (Shift-Enter)" ng-click="wrapFn(paragraphClicked)">Paragraph break</button>
         <button class="editorButton" title="Forces line to end at cursor position (Ctrl-Enter)" ng-click="wrapFn(endLineClicked)">End line</button>
+        <button class="editorButton" title="Creates a comment block or sets the line to a comment (Ctrl-Y)" ng-click="wrapFn(commentClicked)">Comment</button>
     </div>
     <div id="specialButtons" class="extraButtonArea hidden">
         <button class="editorButton" ng-click="charClicked($event)">@</button>
@@ -87,9 +88,10 @@
     <div id="uploadButtons" class="extraButtonArea hidden" ng-if="options.showImageUpload">
         <span>
             Upload image/file: <input type="file" ngf-select="onFileSelect($file)">
-            <span ng-show="file.progress >= 0"
+            <span ng-show="file.progress >= 0 && !file.error"
                   ng-bind="file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!'"></span>
         </span>
+        <div class="error" ng-show="file.error" ng-bind="file.error"></div>
     </div>
     <div id="helpButtons" class="extraButtonArea hidden">
         <a onclick="window.open('https://tim.it.jyu.fi/view/tim/TIM-ohjeet','_blank')">Help</a>
@@ -103,7 +105,7 @@
         <div id="ace_editor" ng-if="!options.touchDevice" class="editor" ui-ace="{
   useWrapMode: false,
   onLoad: aceLoaded,
-  onChange: aceChanged
+  onChange: aceChanged,
     }" ng-model="editorText">
         </div>
     </div>
@@ -127,7 +129,7 @@
             </label>
         </div>
     </div>
-    <div id="previewDiv" tim-draggable-fixed caption="Preview" class="preview"
+    <div id="previewDiv" tim-draggable-fixed="" caption="Preview" class="preview"
          style='z-index:100; top: 0px; right: 0px;'>
     <span>Preview
         (<ng-pluralize count="parCount"

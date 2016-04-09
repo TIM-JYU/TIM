@@ -9,11 +9,11 @@
     {% include 'lecture_head.html' %}
 
     <script>
-        var lectureId = {{lectureId|tojson|safe}};
-        var lectureCode = {{lectureCode|tojson|safe}};
-        var lectureStartTime = {{lectureStartTime|tojson|safe}};
-        var lectureEndTime = {{lectureEndTime|tojson|safe}};
-        var inLecture = {{in_lecture|tojson|safe}};
+        var lectureId = {{lectureId|tojson}};
+        var lectureCode = {{lectureCode|tojson}};
+        var lectureStartTime = {{lectureStartTime|tojson}};
+        var lectureEndTime = {{lectureEndTime|tojson}};
+        var inLecture = {{in_lecture|tojson}};
     </script>
 
 {% endblock %}

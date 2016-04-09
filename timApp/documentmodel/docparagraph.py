@@ -6,6 +6,7 @@ from copy import copy
 from contracts import contract, new_contract
 
 from documentmodel.documentparser import DocumentParser
+from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
 from htmlSanitize import sanitize_html
 from markdownconverter import md_to_html, par_list_to_html_list, expand_macros
@@ -33,6 +34,7 @@ class DocParagraph(DocParagraphBase):
         self.html_sanitized = False
         self.html = None
         self.__htmldata = None
+        self.ref_pars = None
 
     @classmethod
     @contract
@@ -90,8 +92,8 @@ class DocParagraph(DocParagraphBase):
         try:
             t = os.readlink(cls._get_path(doc, par_id, 'current', froot))
             return cls.get(doc, par_id, t, files_root=froot)
-        except FileNotFoundError as e:
-            return DocParagraph.create(doc, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
+        except FileNotFoundError:
+            raise TimDbException('Document {}: Paragraph not found: {}'.format(doc.doc_id, par_id))
 
     @classmethod
     @contract
@@ -101,8 +103,8 @@ class DocParagraph(DocParagraphBase):
             """
             with open(cls._get_path(doc, par_id, t, files_root), 'r') as f:
                 return cls.from_dict(doc, json.loads(f.read()), files_root=files_root)
-        except FileNotFoundError as e:
-            return DocParagraph.create(doc, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
+        except FileNotFoundError:
+            raise TimDbException('Document {}: Paragraph not found: {}'.format(doc.doc_id, par_id))
 
     def __iter__(self):
         return self.__data.__iter__()
@@ -127,7 +129,7 @@ class DocParagraph(DocParagraphBase):
     def dict(self) -> 'dict':
         return self.__data
 
-    def _mkhtmldata(self):
+    def _mkhtmldata(self, from_preview: 'bool' = True):
         self._cache_props()
 
         if self.original:
@@ -146,7 +148,7 @@ class DocParagraph(DocParagraphBase):
             self.__htmldata['doc_id'] = self.doc.doc_id
 
         try:
-            self.__htmldata['html'] = self.get_html()
+            self.__htmldata['html'] = self.get_html(from_preview=from_preview)
         except Exception as e:
             self.__htmldata['html'] = get_error_html(e)
 
@@ -206,11 +208,15 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def get_exported_markdown(self) -> 'str':
-        if self.is_reference():
+        if self.is_par_reference() and self.is_translation():
+            # This gives a default translation based on the source paragraph
+            # todo: same for area reference
             data = [par.__data for par in self.get_referenced_pars(edit_window=True)]
             return DocumentWriter(data, export_hashes=False, export_ids=False).get_text()
 
-        return DocumentWriter([self.__data], export_hashes=False, export_ids=False).get_text()
+        return DocumentWriter([self.__data],
+                              export_hashes=False,
+                              export_ids=False).get_text(DocumentParserOptions.single_paragraph())
 
     @contract
     def __get_setting_html(self) -> 'str':
@@ -222,7 +228,14 @@ class DocParagraph(DocParagraphBase):
             return '<div class="pluginError">Invalid settings paragraph detected</div>'
 
     @contract
-    def get_html(self) -> 'str':
+    def get_html(self, from_preview: 'bool' = True) -> 'str':
+        """
+        Gets the html for the paragraph.
+        :param from_preview: Whether this is called from a preview window or not.
+                             If True, previous paragraphs are preloaded too and the result is not cached.
+                             Safer, but slower. Set explicitly False if you know what you're doing.
+        :return: html string
+        """
         if self.html is not None:
             return self.html
         if self.is_plugin():
@@ -230,11 +243,11 @@ class DocParagraph(DocParagraphBase):
         if self.is_setting():
             return self.__set_html(self.__get_setting_html())
 
-        # get_html might get called from preview, so we don't want to save anything by default
+        context_par = self.doc.get_previous_par(self, get_last_if_no_prev=False) if from_preview else None
         DocParagraph.preload_htmls([self],
                                    self.doc.get_settings(),
-                                   context_par=self.doc.get_previous_par(self, get_last_if_no_prev=False),
-                                   persist=False)
+                                   context_par=context_par,
+                                   persist=not from_preview)
         return self.html
 
     @classmethod
@@ -412,7 +425,7 @@ class DocParagraph(DocParagraphBase):
             return prev_par_auto_values
 
         md_expanded = expand_macros(prev_par.get_markdown(), macros, macro_delim)
-        blocks = DocumentParser(md_expanded).get_blocks(break_on_empty_line=True)
+        blocks = DocumentParser(md_expanded).get_blocks(DocumentParserOptions.break_on_empty_lines())
         deltas = copy(prev_par_auto_values['h'])
         titles = []
         for e in blocks:
@@ -576,6 +589,9 @@ class DocParagraph(DocParagraphBase):
         self.__data['links'].append(str(doc_id))
         self.__write()
 
+        # Clear cached referenced paragraphs because this was modified
+        self.ref_pars = None
+
     @contract
     def remove_link(self, doc_id: 'int'):
         self.__read()
@@ -601,6 +617,9 @@ class DocParagraph(DocParagraphBase):
     def is_area_reference(self):
         return self.get_attr('ra') is not None
 
+    def is_translation(self):
+        return self.get_attr('r') == 'tr'
+
     def __repr__(self):
         return self.__data.__repr__()
 
@@ -610,6 +629,8 @@ class DocParagraph(DocParagraphBase):
         return s[:rindex] + new + s[rindex + len(old):] if rindex >= 0 else s
 
     def get_referenced_pars(self, edit_window=False, set_html=True, source_doc=None, tr_get_one=True, cycle=None):
+        if self.ref_pars is not None:
+            return self.ref_pars
         if cycle is None:
             cycle = []
         par_doc_id = self.get_doc_id(), self.get_id()
@@ -641,11 +662,11 @@ class DocParagraph(DocParagraphBase):
             par.set_original(self)
 
             if set_html:
-                html = self.get_html() if tr else ref_par.get_html()
+                html = self.get_html(from_preview=False) if tr else ref_par.get_html(from_preview=False)
                 
                 # if html is empty, use the source
                 if html == '':
-                    html = ref_par.get_html()
+                    html = ref_par.get_html(from_preview=False)
                 par.__set_html(html)
             return par
 
@@ -696,10 +717,12 @@ class DocParagraph(DocParagraphBase):
                 else:
                     ref_pars.append(p)
             if tr_get_one and attrs.get('r', None) == 'tr' and len(ref_pars) > 0:
-                return [reference_par(ref_pars[0])]
+                self.ref_pars = [reference_par(ref_pars[0])]
+                return self.ref_pars
         else:
             assert False
-        return [reference_par(ref_par) for ref_par in ref_pars]
+        self.ref_pars = [reference_par(ref_par) for ref_par in ref_pars]
+        return self.ref_pars
 
     def set_original(self, orig):
         self.original = orig

@@ -4,7 +4,7 @@
     {{ super() }}
 
     <script>
-        var groups = {{userGroups|tojson|safe}};
+        var groups = {{userGroups|tojson}};
         var folder = "{{doc.fullname if doc else ''}}";
     </script>
     <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>

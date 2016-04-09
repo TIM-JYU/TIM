@@ -12,21 +12,31 @@ var timApp = angular.module('timApp').config(['$httpProvider', function ($httpPr
                 'request': function (config) {
                     if (re.test(config.url)) {
                         var match = re.exec(config.url);
-                        var taskId = match[1];
-                        var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
-                        if (ab.isolateScope() ) {
-                            var browserScope = ab.isolateScope();
-                            angular.extend(config.data, {abData: browserScope.getBrowserData()});
+                        var taskIdFull = match[1];
+                        var parts = taskIdFull.split('.');
+                        var docId = parseInt(parts[0], 10);
+                        var taskName = parts[1];
+                        var parId = parts[2];
+                        var taskId = docId + '.' + taskName;
+                        if (taskName !== '') {
+                            var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
+                            if (ab.isolateScope()) {
+                                var browserScope = ab.isolateScope();
+                                angular.extend(config.data, {abData: browserScope.getBrowserData()});
+                            }
                         }
-                        var $par = ab.parents('.par');
-                        if ( ab.scope() ) angular.extend(config.data, {ref_from: {docId: ab.scope().docId, par: $par.attr('id')}});
+                        angular.extend(config.data, {ref_from: {docId: docId, par: parId}});
                     }
                     return config;
                 },
                 'response': function (response) {
                     if (re.test(response.config.url)) {
                         var match = re.exec(response.config.url);
-                        var taskId = match[1];
+                        var taskIdFull = match[1];
+                        var parts = taskIdFull.split('.');
+                        var docId = parseInt(parts[0], 10);
+                        var taskName = parts[1];
+                        var taskId = docId + '.' + taskName;
                         $rootScope.$broadcast('answerSaved', {taskId: taskId, savedNew: response.data.savedNew});
                         if (response.data.error) {
                             $window.alert(response.data.error);
@@ -85,9 +95,24 @@ timApp.controller("ViewCtrl", [
         sc.mathJaxLoadDefer = null;
         sc.hideRefresh = false;
         sc.hidePending = false;
+        sc.hideMessage = false;
         sc.pendingUpdates = {};
         var EDITOR_CLASS = "editorArea";
         var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
+
+        // from https://stackoverflow.com/a/7317311
+        $window.onload = function () {
+            $window.addEventListener("beforeunload", function (e) {
+                if (!sc.editing) {
+                    return undefined;
+                }
+
+                var msg = 'You are currently editing something. Are you sure you want to leave the page?';
+
+                (e || $window.event).returnValue = msg; //Gecko + IE
+                return msg; //Gecko + Webkit, Safari, Chrome etc.
+            });
+        };
 
         sc.reload = function() {
             sc.markPageNotDirty();
@@ -96,6 +121,10 @@ timApp.controller("ViewCtrl", [
 
         sc.closeRefreshDlg = function() {
             sc.hideRefresh = true;
+        };
+
+        sc.closeMessageDlg = function() {
+            sc.hideMessage = true;
         };
 
         sc.markPageDirty = function() {
@@ -490,6 +519,49 @@ timApp.controller("ViewCtrl", [
             sc.toggleParEditor($par, {showDelete: true, area: false});
         };
 
+        sc.editSettingsPars = function () {
+            var pars = [];
+            $(".par").each(function () {
+                if ($(this).attr("attrs").indexOf("settings") >= 0)
+                {
+                    pars.push(this);
+                }
+            });
+            if (pars.length == 0)
+            {
+                var par_next = sc.getParId($(".par:first"));
+                if (par_next == "null")
+                {
+                    par_next = null;
+                }
+                http.post('/newParagraph/', {
+                    "text" : '``` {settings=""}\nexample:\n```',
+                    "docId" : sc.docId,
+                    "par_next" : par_next
+                }).success(function(data, status, headers, config) {
+                    $window.location.reload();
+                }).error(function(data, status, headers, config) {
+                    $window.alert(data.error);
+                });
+            }
+            else if (pars.length == 1)
+            {
+                sc.toggleParEditor($(pars[0]), {showDelete: true, area: false});
+            }
+            else
+            {
+                var start = pars[0];
+                var end = pars[pars.length - 1];
+                sc.selection.start = sc.getParId($(start));
+                sc.selection.end = sc.getParId($(end));
+                sc.selection.reversed = false;
+                $(pars).addClass('selected');
+                sc.toggleParEditor($(pars), {showDelete: true, area: true});
+                $(pars).removeClass('selected');
+                sc.cancelArea();
+            }
+        };
+
         sc.beginAreaEditing = function (e, $par) {
             $(".par.new").remove();
             sc.toggleParEditor($par, {showDelete: true, area: true});
@@ -637,7 +709,7 @@ timApp.controller("ViewCtrl", [
                 data = sc.getRefAttrs($par);
             }
             if ( !sc.selectedUser ) return true;
-            if ( sc.selectedUser.name.indexOf("Anonymous") == 0 ) return true;  
+            if ( sc.selectedUser.name.indexOf("Anonymous") == 0 ) return true;
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now(), data)
                 .success(function (data, status, headers, config) {
                     sc.markPageDirty();
@@ -818,7 +890,7 @@ timApp.controller("ViewCtrl", [
 
         sc.getQuestionHtml = function (questions) {
             var questionImage = '/static/images/show-question-icon.png';
-            var $questionsDiv = $("<div>", {class: 'questions'}); 
+            var $questionsDiv = $("<div>", {class: 'questions'});
 
             // TODO: Think better way to get the ID of question.
             for (var i = 0; i < questions.length; i++) {
@@ -1043,7 +1115,7 @@ timApp.controller("ViewCtrl", [
                 return sc.showAddParagraphAbove(e, $(".addBottomContainer"));
             });
         }
-        sc.processAllMath($('body'));
+        sc.processAllMathDelayed($('body'));
 
         sc.defaultAction = {func: sc.showOptionsWindow, desc: 'Show options window'};
         timLogTime("VieCtrl end","view");
@@ -1192,7 +1264,8 @@ timApp.controller("ViewCtrl", [
             }
         };
 
-
+        // call marktree.js initialization function so that TOC clicking works
+        $window.addEvents();
 
         sc.editorFunctions = sc.getEditorFunctions();
 

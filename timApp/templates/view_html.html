@@ -2,13 +2,14 @@
 {% block ngmodules %}
     {{ super() }}
     {% if teacher_mode %}
-    {{ (['ui.ace', 'ngStorage', "ngTable", "ngTableExport", "ngTableExportKorppi"] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
+    {{ (['oc.lazyLoad', 'ui.ace', 'ngStorage', "ngTable", "ngTableExport", "ngTableExportKorppi"] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
     {% else %}
-    {{ (['ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
+    {{ (['oc.lazyLoad', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
     {% endif %}
 {% endblock %}
 {% block ngscripts %}
     {{ super() }}
+    <script src="{{ url_for('bower.static', filename='oclazyload/dist/ocLazyLoad.min.js') }}"></script>
     {% if teacher_mode %}
         <script src="{{ url_for('bower.static', filename='ng-table/dist/ng-table.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='ng-table-export/ng-table-export.js') }}"></script>
@@ -25,6 +26,10 @@
 {% set slide_mode = route == "slide" %}
 
 {% block title %}{{ doc.title }}{% endblock %}
+
+{# The custom style should be the last style element, so don't render it in base.html #}
+{% block customcss %}{% endblock %}
+
 {% block head %}
     {{ super() }}
 
@@ -51,16 +56,16 @@
 
     {{ (doc_css | safe ) if doc_css }}
     <style type="text/css">
-        {{ custom_css if custom_css }}
+        {{ custom_css }}
     </style>
     <script>
         var noBrowser = {{ no_browser|tojson }};
         var showIndex = {{(headers|length > 0)|tojson}};
-        var version = {{version|tojson|safe}};
+        var version = {{version|tojson}};
         var translations = {{translations|tojson}};
         var reqs = {{reqs|tojson}};
         var startIndex = {{start_index|tojson}};
-        var refererPath = {{request.path|tojson|safe}};
+        var refererPath = {{request.path|tojson}};
         var teacherMode = {{teacher_mode|tojson}};
         var group = {{group|tojson}};
         var lectureMode = {{lecture_mode|tojson}};
@@ -83,6 +88,12 @@
             <button ng-click="reload()">Refresh</button>
             <button ng-click="closeRefreshDlg()">No</button>
         </div>
+        {% if message %}
+            <div ng-cloak="" class="dialog" caption="" tim-draggable-fixed="" ng-show="!hideMessage">
+                <p>{{ message }}</p>
+                <button ng-click="closeMessageDlg()">Ok</button>
+            </div>
+        {% endif %}
         {% raw %}
         <div ng-cloak="" class="dialog" caption="Updates pending" tim-draggable-fixed="" ng-show="showUpdateDialog()">
             <p>There are {{ pendingUpdatesCount() }} pending paragraph updates.</p>
@@ -90,6 +101,17 @@
             <button ng-click="hidePending = true">Dismiss</button>
         </div>
         {% endraw %}
+        {% if task_info and task_info.total_points %}
+            <div class="taskSummary">
+                <span> 
+                <strong>Task Summary</strong> 
+                Total points: {{ task_info.total_points }},
+                total tasks: {{ task_info.tasks_done }} / {{ task_info.total_tasks }}
+                </span>
+                <span class="smallNote" ng-click="reload()">Refresh (F5) to recount</span>
+            </div>
+            <div class="taskSmallSummary"><p>{{ task_info.total_points }} p</p></div>
+        {% endif %}
 
         {% if lecture_mode or in_lecture %}
             {% include 'lecture.html' %}
@@ -136,6 +158,7 @@
         {% if slide_mode %}
             <div class="paragraphs">
                 <iframe id="slideFrame" src="/show_slide/{{ doc.fullname }}" allowfullscreen></iframe>
+                <a id="showSlidesLink" href="/show_slide/{{ doc.fullname }}">Show slides only</a>
             </div>
         {% else %}
             {% include 'view_content.html' %}

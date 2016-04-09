@@ -77,21 +77,6 @@ h3 {
 	background: #3CC;
 }
 
-
-.noteButton, .addNoteButton, .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton {
-	background-color: #F4F4F4;
-	color: #CCC;
-	font-size: x-small;
-	text-align: center;
-	border-radius: 12px;
-	outline: none;
-	border: 2px none;
-	line-height: 0.8;
-	width: 5em;
-	height: 3em;
-	margin: 0 0 0 0;
-}
-
 .csRunChanged {
     background-color: #3C3;
     width: 0.5em;
@@ -101,6 +86,3 @@ h3 {
     left: -0.5em;
     /* margin-bottom: 2em; */
 }
-
-
-

@@ -28,9 +28,13 @@ def manage(path):
         block_id = doc_info['id']
 
     if not timdb.users.has_manage_access(getCurrentUserId(), block_id):
-        abort(403)
+        if verify_view_access(block_id):
+            if isFolder:
+                return redirect('/view/' + str(block_id))
+            session['message'] = "Did someone give you a wrong link? Showing normal view instead of manage view."
+            return redirect('/view/' + block_id)
 
-    possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
+    possible_groups = timdb.users.get_usergroups_printable(getCurrentUserId())
     grouprights = timdb.users.get_rights_holders(block_id)
     access_types = timdb.users.get_access_types()
 
@@ -55,7 +59,7 @@ def manage(path):
         for ver in doc_data['versions']:
             ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
 
-    doc_data['owner'] = timdb.users.getOwnerGroup(block_id)
+    doc_data['owner'] = timdb.users.get_owner_group(block_id)
     return render_template('manage_folder.html' if isFolder else 'manage_document.html',
                            route='manage',
                            translations=timdb.documents.get_translations(block_id) if not isFolder else None,
@@ -72,7 +76,7 @@ def changeOwner(doc_id, new_owner):
     if not timdb.documents.exists(doc_id) and not timdb.folders.exists(doc_id):
         abort(404)
     verify_ownership(doc_id)
-    possible_groups = timdb.users.getUserGroups(getCurrentUserId())
+    possible_groups = timdb.users.get_user_groups(getCurrentUserId())
     if new_owner not in [group['id'] for group in possible_groups]:
         abort(403, "You must belong to the new usergroup.")
     timdb.documents.setOwner(doc_id, new_owner)
@@ -87,7 +91,7 @@ def addPermission(doc_id, group_name, perm_type):
     if not timdb.users.has_manage_access(getCurrentUserId(), doc_id):
         abort(403, "You don't have permission to add permissions to this document.")
 
-    groups = timdb.users.getUserGroupsByName(group_name)
+    groups = timdb.users.get_usergroups_by_name(group_name)
     if len(groups) == 0:
         abort(404, 'No user group with this name was found.')
 
@@ -129,19 +133,14 @@ def add_alias(doc_id, new_alias):
     new_alias = new_alias.strip('/')
 
     if not timdb.documents.exists(doc_id):
-        return jsonResponse({'message': 'The document does not exist!'}, 404)
+        return abort(404, 'The document does not exist!')
 
     if not timdb.users.has_manage_access(getCurrentUserId(), doc_id):
-        return jsonResponse({'message': "You don't have permission to rename this object."}, 403)
+        return abort(403, "You don't have permission to rename this object.")
 
-    if timdb.documents.get_document_id(new_alias) is not None or timdb.folders.get_folder_id(new_alias) is not None:
-        return jsonResponse({'message': 'Item with a same name already exists.'}, 403)
+    validate_item(new_alias, 'alias')
 
     parent_folder, _ = timdb.folders.split_location(new_alias)
-
-    if not can_write_to_folder(parent_folder):
-        return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
-
     timdb.folders.create(parent_folder, getCurrentUserGroup())
     timdb.documents.add_name(doc_id, new_alias, is_public)
     return okJsonResponse()
@@ -156,24 +155,24 @@ def change_alias(doc_id, alias):
 
     doc_id2 = timdb.documents.get_document_id(alias)
     if doc_id2 is None:
-        return jsonResponse({'message': 'The document does not exist!'}, 404)
+        return abort(404, 'The document does not exist!')
     if doc_id2 != doc_id:
-        return jsonResponse({'message': 'The document name does not match the id!'}, 404)
+        return abort(404, 'The document name does not match the id!')
 
     if not timdb.users.has_manage_access(getCurrentUserId(), doc_id):
-        return jsonResponse({'message': "You don't have permission to rename this object."}, 403)
+        return abort(403, "You don't have permission to rename this object.")
 
     new_parent, _ = timdb.folders.split_location(new_alias)
 
     if alias != new_alias:
         if timdb.documents.get_document_id(new_alias) is not None or timdb.folders.get_folder_id(new_alias) is not None:
-            return jsonResponse({'message': 'Item with a same name already exists.'}, 403)
+            return abort(403, 'Item with a same name already exists.')
         parent, _ = timdb.folders.split_location(alias)
         if not can_write_to_folder(parent):
-            return jsonResponse({'message': "You don't have permission to write to the source folder."}, 403)
+            return abort(403, "You don't have permission to write to the source folder.")
 
     if not can_write_to_folder(new_parent):
-        return jsonResponse({'message': "You don't have permission to write to the destination folder."}, 403)
+        return abort(403, "You don't have permission to write to the destination folder.")
 
     timdb.folders.create(new_parent, getCurrentUserGroup())
     timdb.documents.change_name(doc_id, alias, new_alias, is_public)
@@ -187,20 +186,20 @@ def remove_alias(doc_id, alias):
 
     doc_id2 = timdb.documents.get_document_id(alias)
     if doc_id2 is None:
-        return jsonResponse({'message': 'The document does not exist!'}, 404)
+        return abort(404, 'The document does not exist!')
     if doc_id2 != doc_id:
-        return jsonResponse({'message': 'The document name does not match the id!'}, 404)
+        return abort(404, 'The document name does not match the id!')
 
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        return jsonResponse({'message': "You don't have permission to delete this object."}, 403)
+    if not timdb.users.user_is_owner(getCurrentUserId(), doc_id):
+        return abort(403, "You don't have permission to delete this object.")
 
     if len(timdb.documents.get_document_names(doc_id, include_nonpublic=True)) < 2:
-        return jsonResponse({'message': "You can't delete the only name the document has."}, 403)
+        return abort(403, "You can't delete the only name the document has.")
 
     parent_folder, _ = timdb.folders.split_location(alias)
 
     if not can_write_to_folder(parent_folder):
-        return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
+        return abort(403, "You don't have permission to write to that folder.")
 
     timdb.documents.delete_name(doc_id, alias)
     return okJsonResponse()
@@ -212,25 +211,25 @@ def rename_folder(doc_id):
     new_name = request.get_json()['new_name'].strip('/')
 
     if timdb.documents.exists(doc_id):
-        return jsonResponse({'message': 'Rename route is no longer supported for documents.'}, 403)
+        return abort(403, 'Rename route is no longer supported for documents.')
 
     if not timdb.folders.exists(doc_id):
-        return jsonResponse({'message': 'The folder does not exist!'}, 404)
-
-    if timdb.documents.get_document_id(new_name) is not None or timdb.folders.get_folder_id(new_name) is not None:
-        return jsonResponse({'message': 'Item with the same name already exists.'}, 403)
+        return abort(404, 'The folder does not exist!')
 
     if not timdb.users.has_manage_access(getCurrentUserId(), doc_id):
-        return jsonResponse({'message': "You don't have permission to rename this object."}, 403)
+        return abort(403, "You don't have permission to rename this object.")
 
     parent, _ = timdb.folders.split_location(new_name)
+    parent_id = timdb.folders.get_folder_id(parent)
 
-    if timdb.folders.get_folder_id(parent) is None:
+    if parent_id is None:
         # Maybe do a recursive create with permission checks here later?
-        return jsonResponse({'message': "The location does not exist."}, 403)
+        return abort(403, "The location does not exist.")
 
-    if not can_write_to_folder(parent):
-        return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
+    if parent_id == doc_id:
+        return abort(403, "A folder cannot contain itself.")
+
+    validate_item(new_name, 'folder')
 
     timdb.folders.rename(doc_id, new_name)
     return jsonResponse({'new_name': new_name})
@@ -263,9 +262,9 @@ def getPermissions(doc_id):
 def deleteDocument(doc_id):
     timdb = getTimDb()
     if not timdb.documents.exists(doc_id):
-        return jsonResponse({'message': 'Document does not exist.'}, 404)
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        return jsonResponse({'message': "You don't have permission to delete this document."}, 403)
+        return abort(404, 'Document does not exist.')
+    if not timdb.users.user_is_owner(getCurrentUserId(), doc_id):
+        return abort(403, "You don't have permission to delete this document.")
     timdb.documents.delete(doc_id)
     return okJsonResponse()
 
@@ -274,11 +273,11 @@ def deleteDocument(doc_id):
 def deleteFolder(doc_id):
     timdb = getTimDb()
     if not timdb.folders.exists(doc_id):
-        return jsonResponse({'message': 'Folder does not exist.'}, 404)
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        return jsonResponse({'message': "You don't have permission to delete this folder."}, 403)
+        return abort(404, 'Folder does not exist.')
+    if not timdb.users.user_is_owner(getCurrentUserId(), doc_id):
+        return abort(403, "You don't have permission to delete this folder.")
     if not timdb.folders.is_empty(doc_id):
-        return jsonResponse({'message': "The folder is not empty. Only empty folders can be deleted."}, 403)
+        return abort(403, "The folder is not empty. Only empty folders can be deleted.")
 
     timdb.folders.delete(doc_id)
     return okJsonResponse()

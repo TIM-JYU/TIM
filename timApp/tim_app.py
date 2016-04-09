@@ -10,6 +10,7 @@ import contracts
 from flask import Flask
 
 from routes.filters import map_format
+from utils import datestr_to_relative
 
 sys.setrecursionlimit(10000)
 app = Flask(__name__)
@@ -30,6 +31,7 @@ app.config['TIM_NAME'] = timname
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432/tempdb_" + timname
 
 app.jinja_env.filters['map_format'] = map_format
+app.jinja_env.filters['datestr_to_relative'] = datestr_to_relative
 
 # IMPORTANT: We want to disable contracts (if requested) as early as possible
 # before any @contract decorator is encountered.

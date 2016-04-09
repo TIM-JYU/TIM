@@ -55,7 +55,7 @@ PermApp.controller("PermCtrl", [
                     sc.aliases = data;
 
             }).error(function (data, status, headers, config) {
-                alert("Error loading aliases: " + data.message);
+                alert("Error loading aliases: " + data.error);
             });
 
             return [];
@@ -187,7 +187,7 @@ PermApp.controller("PermCtrl", [
                 //sc.doc.name = newName;
                 //sc.oldName = newName;
             }).error(function (data, status, headers, config) {
-                alert(data.message);
+                alert(data.error);
             });
         };
 
@@ -201,7 +201,7 @@ PermApp.controller("PermCtrl", [
                 //sc.doc.location = newLocation;
                 //sc.oldFolderName = newLocation;
             }).error(function (data, status, headers, config) {
-                alert(data.message);
+                alert(data.error);
             });
         };
 
@@ -224,7 +224,7 @@ PermApp.controller("PermCtrl", [
             }).success(function (data, status, headers, config) {
                 sc.getAliases();
             }).error(function (data, status, headers, config) {
-                alert(data.message);
+                alert(data.error);
             });
 
             sc.newAlias = {location: sc.oldFolderName};
@@ -235,7 +235,7 @@ PermApp.controller("PermCtrl", [
             }).success(function (data, status, headers, config) {
                 sc.getAliases();
             }).error(function (data, status, headers, config) {
-                alert(data.message);
+                alert(data.error);
             });
         };
 
@@ -246,7 +246,7 @@ PermApp.controller("PermCtrl", [
             }).success(function (data, status, headers, config) {
                 sc.getAliases();
             }).error(function (data, status, headers, config) {
-                alert(data.message);
+                alert(data.error);
             });
         };
 
@@ -256,7 +256,7 @@ PermApp.controller("PermCtrl", [
                     .success(function (data, status, headers, config) {
                         location.replace('/view/');
                     }).error(function (data, status, headers, config) {
-                        alert(data.message);
+                        alert(data.error);
                     });
             }
         };
@@ -267,7 +267,7 @@ PermApp.controller("PermCtrl", [
                     .success(function (data, status, headers, config) {
                         location.replace('/view/');
                     }).error(function (data, status, headers, config) {
-                        alert(data.message);
+                        alert(data.error);
                     });
             }
         };
@@ -453,12 +453,71 @@ text = '\n'.join(a)
                 });
         };
 
+        sc.createCopy = function() {
+            var docPath = "";
+            if (sc.documentPath == "")
+            {
+                docPath = sc.documentName;
+            }
+            else
+            {
+                docPath = sc.documentPath + "/" + sc.documentName;
+            }
+            $http.post('/createDocument', {
+                'doc_name': docPath
+            }).success(function (data, status, headers, config) {
+                forwardName = data.name;
+                $http.post('/update/' + data.id, {
+                    'template_name': $window.doc.fullname
+                }).success(function (data, status, headers, config) {
+                    location.href = "/view/" + forwardName;
+                }).error(function (data, status, headers, config) {
+                    $window.alert(data);
+                });
+            }).error(function (data, status, headers, config) {
+                $window.alert('Could not create a copy. Error message is: ' + data);
+            });
+        };
+
+        sc.getNotifySettings = function() {
+            sc.emailDocModify = false;
+            sc.emailCommentAdd = false;
+            sc.emailCommentModify = false;
+
+            $http.get('/notify/' + sc.doc.id)
+                .success(function (data, status, headers, config) {
+                    sc.emailDocModify = data.email_doc_modify;
+                    sc.emailCommentAdd = data.email_comment_add;
+                    sc.emailCommentModify = data.email_comment_modify;
+                }).error(function (data, status, headers, config) {
+                    $window.alert('Could not get notification settings. Error message is: ' + data.error);
+                }).finally(function (data, status, headers, config) {
+                });
+        };
+
+        sc.notifyChanged = function() {
+            $http.post('/notify/' + sc.doc.id, {
+                'email_doc_modify': sc.emailDocModify,
+                'email_comment_add': sc.emailCommentAdd,
+                'email_comment_modify': sc.emailCommentModify
+            }).success(function (data, status, headers, config) {
+            }).error(function (data, status, headers, config) {
+                $window.alert('Could not change notification settings. Error message is: ' + data.error);
+            });
+        };
+
         sc.grouprights = grouprights;
         sc.userGroups = groups;
         sc.accessTypes = accessTypes;
         sc.accessType = sc.accessTypes[0];
         sc.doc = doc;
         sc.isFolder = isFolder;
+
+        var docPath = $window.doc.fullname.split("/");
+        docPath.pop();
+        sc.documentPath = docPath.join("/");
+        sc.documentName = $window.doc.name;
+
         //sc.newName = sc.getJustDocName(doc.name);
         //sc.newFolderName = sc.getFolderName(doc.name);
         //sc.oldName = sc.newName;
@@ -469,6 +528,7 @@ text = '\n'.join(a)
         sc.aliases = sc.getAliases();
         sc.translations = sc.getTranslations();
         sc.showCreateDiv = "";
+        sc.getNotifySettings();
 
         if (isFolder) {
             sc.newName = doc.name;
