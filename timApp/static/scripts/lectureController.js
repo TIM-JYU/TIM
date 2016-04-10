@@ -305,7 +305,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 buster: new Date().getTime()
             };
             if (data.asked_id) args['asked_id'] = data.asked_id;
-            else if (data.question_id) args['question_id'] = data.question_id;
+            else if (data.question_id) args['question_id'] = data.question_id; // Remove when moving questions to document finished
             else args['par_id'] = data.par_id;
             http({
                 url: '/askQuestion',

@@ -373,9 +373,10 @@ timApp.controller("ViewCtrl", [
             sc.showQuestionPreview = true;
         };
 
-        sc.showQuestionNew = function (parId) {
+        sc.showQuestionNew = function (parId, parIdNext) {
             sc.json = "No data";
             sc.questionParId = parId;
+            sc.questionParIdNext = parIdNext;
 
             http({
                 url: '/getQuestionByParId',
@@ -388,6 +389,7 @@ timApp.controller("ViewCtrl", [
                     $rootScope.$broadcast("setPreviewJson", {
                         questionJson: sc.json,
                         questionParId: sc.questionParId,
+                        questionParIdNext: sc.questionParIdNext,
                         points: data.points,
                         expl: data.expl,
                         isLecturer: sc.isLecturer
@@ -867,8 +869,10 @@ timApp.controller("ViewCtrl", [
 
         sc.onClick(".questionAddedNew", function ($this, e) {
             var question = $this;
-            var parId = $(question).parent().parent()[0].getAttribute('id');
-            sc.showQuestionNew(parId);
+            var $par = $(question).parent().parent();
+            var parId = $($par)[0].getAttribute('id');
+            var parNextId = sc.getParId($par.next());
+            sc.showQuestionNew(parId, parNextId);
             sc.par = ($(question).parent());
         });
 
