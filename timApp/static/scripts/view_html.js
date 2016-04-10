@@ -373,6 +373,48 @@ timApp.controller("ViewCtrl", [
             sc.showQuestionPreview = true;
         };
 
+        sc.showQuestionNew = function (parId) {
+            sc.json = "No data";
+            sc.questionParId = parId;
+
+            http({
+                url: '/getQuestionByParId',
+                method: 'GET',
+                params: {'par_id': sc.questionParId, 'doc_id': sc.docId, 'buster': new Date().getTime()}
+            })
+                .success(function (data) {
+                    sc.json = data.questionJson;
+                    $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.TITLE});
+                    $rootScope.$broadcast("setPreviewJson", {
+                        questionJson: sc.json,
+                        questionParId: sc.questionParId,
+                        points: data.points,
+                        expl: data.expl,
+                        isLecturer: sc.isLecturer
+                    });
+                })
+
+                .error(function () {
+                    $window.console.log("Could not question.");
+                });
+
+
+            sc.lectureId = -1;
+            sc.inLecture = false;
+
+            sc.$on('postLectureId', function (event, response) {
+                sc.lectureId = response;
+            });
+
+            sc.$on('postInLecture', function (event, response) {
+                sc.inLecture = response;
+            });
+
+            $rootScope.$broadcast('getLectureId');
+            $rootScope.$broadcast('getInLecture');
+            sc.showQuestionPreview = true;
+        };
+
         sc.toggleNoteEditor = function ($par, options) {
             var caption = 'Edit comment';
             var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
@@ -821,6 +863,13 @@ timApp.controller("ViewCtrl", [
             var questionId = question[0].getAttribute('id');
             sc.showQuestion(questionId);
             sc.par = ($(question).parent().parent());
+        });
+
+        sc.onClick(".questionAddedNew", function ($this, e) {
+            var question = $this;
+            var parId = $(question).parent().parent()[0].getAttribute('id');
+            sc.showQuestionNew(parId);
+            sc.par = ($(question).parent());
         });
 
         sc.showOptionsWindow = function (e, $par, coords) {

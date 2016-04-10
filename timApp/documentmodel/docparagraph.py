@@ -154,10 +154,12 @@ class DocParagraph(DocParagraphBase):
 
         self.__htmldata['cls'] = 'par ' + self.get_class_str()
         self.__htmldata['is_plugin'] = self.is_plugin()
+        self.__htmldata['is_question'] = self.is_question()
         self.__htmldata['needs_browser'] = True #self.is_plugin() and containerLink.get_plugin_needs_browser(self.get_attr('plugin'))
 
     def _cache_props(self):
         self.__is_plugin = self.get_attr('plugin') or ""  # self.get_attr('taskId')
+        self.__is_question = self.get_attr('question') or ""
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
         self.__is_setting = 'settings' in self.get_attrs()
 
@@ -236,6 +238,8 @@ class DocParagraph(DocParagraphBase):
                              Safer, but slower. Set explicitly False if you know what you're doing.
         :return: html string
         """
+        if self.is_question():
+            return self.__set_html('<img class="questionAddedNew" width="30" height="30" src=/static/images/show-question-icon.png/>')
         if self.html is not None:
             return self.html
         if self.is_plugin():
@@ -477,6 +481,8 @@ class DocParagraph(DocParagraphBase):
 
         if attr_name == 'taskId':
             self.__is_plugin = bool(attr_val)
+        if attr_name == 'question':
+            self.__is_question = bool(attr_val)
         elif attr_name == 'rp' or attr_name == 'ra':
             self.__is_ref = self.is_par_reference() or self.is_area_reference()
 
@@ -739,6 +745,10 @@ class DocParagraph(DocParagraphBase):
 
     def is_plugin(self):
         return self.__is_plugin
+
+    def is_question(self):
+        is_question = self.__is_question
+        return is_question
 
     def is_setting(self):
         return self.__is_setting
