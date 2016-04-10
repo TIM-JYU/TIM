@@ -2,7 +2,7 @@
 Insert only configuration-related things in this file.
 Do NOT define routes here.
 """
-
+import mimetypes
 import os
 import sys
 
@@ -41,3 +41,5 @@ if app.config['CONTRACTS_ENABLED']:
 else:
     contracts.disable_all()
     print('Contracts are DISABLED')
+
+mimetypes.add_type('text/plain', '.scss')
