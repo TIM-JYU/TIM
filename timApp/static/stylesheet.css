@@ -1404,3 +1404,8 @@ p.docsettings {
     z-index: 200;
     font-size: 9px;
 }
+
+.runo { 
+    font-style: italic;
+    text-align: center;
+}

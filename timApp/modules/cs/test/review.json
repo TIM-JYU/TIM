@@ -1,0 +1,16 @@
+{"taskID": "6241.hellofs", 
+ "xreview": true,
+  "state": { 
+     "points": "1",
+     "usercode": "System.Console.WriteLine(\"Moi\");", 
+     "userinput": "Mun syöte",
+     "userargs": "Mun argsit",
+     "output": "Moi" 
+     },
+ "markup": {
+    "type": "cs", 
+    "header": "C#", 
+    "byFile": "https://svn.cc.jyu.fi/srv/svn/ohj1/luentomonistecs/esimerkit/Pohja/Pohja/Pohja.cs", 
+    "user_id": "vesal"
+    }
+}

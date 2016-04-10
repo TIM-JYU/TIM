@@ -34,7 +34,8 @@ run locale-gen fi_FI.UTF-8
 run mkdir /service
 
 # Get GPG keys for Java 8
-run sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5
+# run sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5
+run apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5
 
 #
 # Oracle Java 8 Dockerfile
@@ -106,6 +107,7 @@ run wget http://downloads.typesafe.com/scala/2.11.7/scala-2.11.7.deb
 run dpkg -i scala-2.11.7.deb
 run apt-get update
 run apt-get install scala    
+run rm scala-2.11.7.deb
 # Install Docker from Docker Inc. repositories.
 
 
