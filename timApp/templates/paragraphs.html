@@ -63,6 +63,11 @@
 {% endif %}
 
 {% for t in text %}
+     {% if t.attrs.area %}
+         <div class="area" id="area_{{t.attrs.area}}">
+         <div class="areaContent">
+     {% endif %}
+
     <div class="{{[t.cls|trim, t.is_plugin|trim]|join(' ')|trim}}"
          id="{{ t.id }}"
          t="{{ t.t }}"
@@ -145,4 +150,11 @@
         </div>
     {% endif %}
     </div>
+
+     {% if t.attrs.area_end %}
+        </div> <!-- class="areacontent" -->
+        <div class="areaeditline" title="Click to edit this area"></div>
+        </div> <!-- class="area" -->
+     {% endif %}
+
 {% endfor %}
