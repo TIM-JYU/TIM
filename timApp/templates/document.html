@@ -2,10 +2,10 @@
 {% block header %}
     {{ super() }}
     <script>
-        {% if editMode %}
+        {% if edit_mode %}
         var editMode = {{edit_mode|tojson|safe}};
         {% else %}
-        var editMode = false;
+        var editMode = null;
         {% endif %}
     </script>
 {% endblock %}

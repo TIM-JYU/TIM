@@ -191,7 +191,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
         message = None
 
     doc_id = doc_info['id']
-    edit_mode = request.args.get('edit') == 'true' if has_edit_access(doc_id) else False
+    edit_mode = request.args.get('edit', None) if has_edit_access(doc_id) else None
 
     if route == 'teacher':
         if verify_teacher_access(doc_id, False) is False:

@@ -30,7 +30,8 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 		$scope.questionIconState = 'noClick';
 		$scope.peopleIconState = 'noClick';
 		$scope.settingsIconState = 'noClick';
-        $scope.editIconState = $window.editMode ? 'clicked': 'noClick';
+        $scope.parEditIconState = $window.editMode === 'par' ? 'clicked': 'noClick';
+        $scope.areaEditIconState = $window.editMode === 'area' ? 'clicked': 'noClick';
 
         /**
          * FILL WITH SUITABLE TEXT
@@ -65,7 +66,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 			$scope.questionIconState = 'noClick';
 			$scope.peopleIconState = 'noClick';
 			$scope.settingsIconState = 'noClick';
-            $scope.editIconState = 'noClick';
+            $scope.parEditIconState = 'noClick';
         });
 
         /**
@@ -88,7 +89,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 				$scope.questionIconState = 'noClick';
 				$scope.peopleIconState = 'noClick';
 				$scope.settingsIconState = 'noClick';
-                $scope.editIconState = 'noClick';
+                $scope.parEditIconState = 'noClick';
             }
         };
 
@@ -113,7 +114,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 				$scope.questionIconState = 'noClick';
 				$scope.peopleIconState = 'noClick';
 				$scope.settingsIconState = 'noClick';
-                $scope.editIconState = 'noClick';
+                $scope.parEditIconState = 'noClick';
 
                 $http({
                     url: '/getAllLecturesFromDocument',
@@ -156,7 +157,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 				$scope.questionIconState = 'clicked';
 				$scope.peopleIconState = 'noClick';
 				$scope.settingsIconState = 'noClick';
-                $scope.editIconState = 'noClick';
+                $scope.parEditIconState = 'noClick';
 
                 $http({
                     url: '/questions/' + $scope.docId,
@@ -198,7 +199,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 				$scope.questionIconState = 'noClick';
 				$scope.peopleIconState = 'clicked';
 				$scope.settingsIconState = 'noClick';
-                $scope.editIconState = 'noClick';
+                $scope.parEditIconState = 'noClick';
             }
         };
 
@@ -226,17 +227,35 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
         };
 
         /**
-         * FILL WITH SUITABLE TEXT
+         * Changes into or out of paragraph edit mode.
          * @memberof module:sidebarMenuCtrl
          */
-        $scope.toggleEditMode = function () {
-            if ($window.editMode) {
-                $scope.editIconState = 'noClick';
+        $scope.toggleParEditMode = function () {
+            if ($window.editMode === "par") {
+                $scope.parEditIconState = 'noClick';
+                $scope.areaEditIconState = 'noClick';
+                $window.editMode = null;
             } else {
-                $scope.editIconState = 'clicked';
+                $scope.parEditIconState = 'clicked';
+                $scope.areaEditIconState = 'noClick';
+                $window.editMode = "par";
             }
+        };
 
-            $window.editMode = !$window.editMode;
+        /**
+         * Changes into or out of area edit mode.
+         * @memberof module:sidebarMenuCtrl
+         */
+        $scope.toggleAreaEditMode = function () {
+            if ($window.editMode === "area") {
+                $scope.parEditIconState = 'noClick';
+                $scope.areaEditIconState = 'noClick';
+                $window.editMode = null;
+            } else {
+                $scope.parEditIconState = 'noClick';
+                $scope.areaEditIconState = 'clicked';
+                $window.editMode = "area";
+            }
         };
 
         /**
