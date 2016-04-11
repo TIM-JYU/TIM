@@ -724,6 +724,10 @@ timApp.controller("ViewCtrl", [
                 $par.nextUntil($endpar).add($endpar).remove();
             }
             var newPars = $($compile(data.texts)(sc));
+
+            if ($window.editMode === 'area')
+                newPars.find('.editline').removeClass('editline').addClass('editline-disabled');
+
             $par.replaceWith(newPars);
             sc.processAllMathDelayed(newPars);
             http.defaults.headers.common.Version = data.version;
@@ -1365,13 +1369,13 @@ timApp.controller("ViewCtrl", [
                     {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
                     {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
                     {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
-                    {func: sc.pasteRefAbove, desc: 'Paste reference above', show: $window.editMode},
-                    {func: sc.pasteContentAbove, desc: 'Paste content above', show: $window.editMode},
+                    {func: sc.pasteRefAbove, desc: 'Paste reference above', show: $window.editMode != null},
+                    {func: sc.pasteContentAbove, desc: 'Paste content above', show: $window.editMode != null},
                     {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
                     {
                         func: sc.startArea,
                         desc: 'Start selecting area',
-                        show: $window.editMode && sc.selection.start === null
+                        show: $window.editMode == 'par' && sc.selection.start === null
                     },
                     {func: sc.nothing, desc: 'Close menu', show: true}
                 ];
