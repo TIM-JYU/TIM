@@ -214,6 +214,30 @@ timApp.controller("ViewCtrl", [
             return $par.attr("id");
         };
 
+        sc.getFirstPar = function ($par_or_area) {
+            if ($par_or_area.hasClass('area')) {
+                return $par_or_area.find('.par').first();
+            }
+
+            return $par_or_area;
+        };
+
+        sc.getLastPar = function ($par_or_area) {
+            if ($par_or_area.hasClass('area')) {
+                return $par_or_area.find('.par').last();
+            }
+
+            return $par_or_area;
+        };
+
+        sc.getFirstParId = function ($par_or_area) {
+            return sc.getParId(sc.getFirstPar($par_or_area));
+        };
+
+        sc.getLastParId = function ($par_or_area) {
+            return sc.getParId(sc.getLastPar($par_or_area));
+        };
+
         sc.getElementByParId = function (id) {
             return $("#" + id);
         };
@@ -230,25 +254,36 @@ timApp.controller("ViewCtrl", [
             return sc.selection.reversed ? sc.selection.start : sc.selection.end;
         };
 
-        sc.toggleParEditor = function ($par, options) {
+        sc.toggleParEditor = function ($par_or_area, options) {
+            var $par = sc.getFirstPar($par_or_area);
+            var area_start, area_end;
             var caption = 'Add paragraph';
             var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
             var mobile = touch && (window.screen.width < 1200);
             var url;
+
+            if ($par_or_area.hasClass('area')) {
+                area_start = sc.getParId($par);
+                area_end = sc.getLastParId($par_or_area);
+                url = '/postParagraph/';
+
+            } else {
+                // TODO: Use same route (postParagraph) for both cases, determine logic based on given parameters
+                if (par_id == "null" || $par_or_area.hasClass("new")) {
+                    url = '/newParagraph/';
+                } else {
+                    url = '/postParagraph/';
+                }
+
+                area_start = options.area ? sc.getAreaStart() : null;
+                area_end = options.area ? sc.getAreaEnd() : null;
+            }
+
             var par_id = sc.getParId($par);
             var par_next_id = sc.getParId($par.next());
             if (par_next_id == "null")
                 par_next_id = null;
 
-            // TODO: Use same route (postParagraph) for both cases, determine logic based on given parameters
-            if (par_id == "null" || $par.hasClass("new")) {
-                url = '/newParagraph/';
-            } else {
-                url = '/postParagraph/';
-            }
-
-            var area_start = options.area ? sc.getAreaStart() : null;
-            var area_end = options.area ? sc.getAreaEnd() : null;
 
             var attrs = {
                 "save-url": url,
@@ -280,7 +315,7 @@ timApp.controller("ViewCtrl", [
                 if (par_id != "null")
                     attrs["initial-text-url"] = '/getBlock/' + sc.docId + "/" + par_id;
             }
-            sc.toggleEditor($par, options, attrs, caption);
+            sc.toggleEditor($par_or_area, options, attrs, caption);
         };
 
         sc.getRefAttrs = function ($par) {
@@ -368,7 +403,7 @@ timApp.controller("ViewCtrl", [
             sc.showQuestionPreview = true;
         };
 
-        sc.toggleNoteEditor = function ($par, options) {
+        sc.toggleNoteEditor = function ($par_or_area, options) {
             var caption = 'Edit comment';
             var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
             var mobile = touch && (window.screen.width < 1200);
@@ -393,7 +428,8 @@ timApp.controller("ViewCtrl", [
                 data = {};
                 initUrl = '/note/' + options.noteData.id;
             }
-            var par_id = sc.getParId($par),
+            var $par = sc.getFirstPar($par_or_area);
+            var par_id = sc.getFirstParId($par_or_area),
                 attrs = {
                     "save-url": url,
                     "extra-data": angular.extend({
@@ -590,21 +626,21 @@ timApp.controller("ViewCtrl", [
             sc.pasteAbove(e, $par, true);
         };
 
-        sc.pasteAbove = function (e, $par, as_ref) {
+        sc.pasteAbove = function (e, $par_or_area, as_ref) {
             http.post('/clipboard/paste/' + sc.docId, {
-                "par_before" : sc.getParId($par),
+                "par_before" : sc.getFirstParId($par_or_area),
                 "as_ref": as_ref
             }).success(function(data, status, headers, config) {
                 if (data == null)
                     return;
 
                 var $newpar = sc.createNewPar();
-                $par.before($newpar);
+                $par_or_area.before($newpar);
 
                 var extra_data = {
                     docId: sc.docId, // current document id
-                    par: sc.getParId($newpar), // the id of paragraph on which the editor was opened
-                    par_next: $par.id // the id of the paragraph that follows par
+                    par: sc.getFirstParId($newpar), // the id of paragraph on which the editor was opened
+                    par_next: $par_or_area.id // the id of the paragraph that follows par
                 };
 
                 sc.addSavedParToDom(data, extra_data);
@@ -768,6 +804,18 @@ timApp.controller("ViewCtrl", [
             return sc.showOptionsWindow(e, $par, coords);
         });
 
+        sc.onClick(".areaeditline", function ($this, e) {
+            $(".actionButtons").remove();
+            var $area = $this.parent();
+            //var $pars = $area.find('.par');
+            //var $first_par = $pars.first();
+            //var $last_par = $pars.last();
+            var coords = {left: e.pageX - $area.offset().left, top: e.pageY - $area.offset().top};
+            //sc.selection.start = sc.getParId($first_par);
+            //sc.selection.end = sc.getParId($last_par);
+            return sc.showOptionsWindow(e, $area, coords);
+        });
+
         sc.setAreaAttr = function(area, attr, value) {
             var area_selector = "[data-area=" + area + "]";
             $(area_selector).css(attr, value);
@@ -859,10 +907,10 @@ timApp.controller("ViewCtrl", [
             sc.par = ($(question).parent().parent());
         });
 
-        sc.showOptionsWindow = function (e, $par, coords) {
+        sc.showOptionsWindow = function (e, $par_or_area, coords) {
             var $popup = $('<popup-menu>');
             $popup.attr('tim-draggable-fixed', '');
-            $par.prepend($popup); // need to prepend to DOM before compiling
+            $par_or_area.prepend($popup); // need to prepend to DOM before compiling
             $compile($popup[0])(sc);
             // TODO: Set offset for the popup
             var element = $popup;
@@ -1256,7 +1304,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.startArea = function (e, $par) {
-            sc.selection.start = sc.getParId($par);
+            sc.selection.start = sc.getFirstParId($par);
         };
 
         sc.cancelArea = function (e, $par) {

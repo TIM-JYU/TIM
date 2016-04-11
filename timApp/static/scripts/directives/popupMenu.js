@@ -2,7 +2,8 @@ var timApp = angular.module('timApp');
 
 /**
  * A popup menu directive that is used in the document view.
- * Requires a paragraph (element with class "par") as its ancestor.
+ * Requires a paragraph (element with class "par") or
+ * an area (element with a class "area") as its ancestor.
  */
 timApp.directive('popupMenu', ['$window', '$filter', function ($window, $filter) {
     return {
@@ -36,7 +37,7 @@ timApp.directive('popupMenu', ['$window', '$filter', function ($window, $filter)
             };
 
             $element.css('position', 'absolute'); // IE needs this
-            $scope.$par = $element.parents('.par');
+            $scope.$par = $element.parents('.par, .area');
         }
     };
 }]);
