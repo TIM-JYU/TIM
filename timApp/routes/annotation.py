@@ -6,8 +6,8 @@ annotations = Blueprint('annotations',
                         url_prefix='')
 
 
-# This and add_comment should be connected to the ui so we can get rid of the
-# default parameters and strange return values.
+# TODO connect the routes in this file to the ui.
+# TODO save element_number also.
 
 @annotations.route("/addannotation", methods=['POST'])
 def add_annotation():
@@ -43,4 +43,13 @@ def add_comment():
 def get_annotations(document_id: int, paragraph_id: str) -> str:
     timdb = getTimDb()
     results = timdb.annotations.get_annotations(int(document_id), paragraph_id)
+    return jsonResponse(results)
+
+
+# TODO decide whether we should instead return comments for just one annotation, instead of returning everything at
+# once, like here.
+@annotations.route("/<document_id>/<paragraph_id>/comments", methods=['GET'])
+def get_comments(document_id: int, paragraph_id: str) -> str:
+    timdb = getTimDb()
+    results = timdb.annotations_comments.get_comments(int(document_id), paragraph_id)
     return jsonResponse(results)
