@@ -79,7 +79,8 @@ def add_velp():
     language_id = request.args.get('language_id')
     icon_id = request.args.get('icon_id')
     valid_until = request.args.get('valid_until')
-    velp_labels = request.args.get('labels')
+    velp_labels = list(request.args.getlist('labels'))
+    velp_labels = [int(i) for i in velp_labels]
 
     default_points = float(default_points) if default_points is not None else None
     icon_id = int(icon_id) if icon_id is not None else None

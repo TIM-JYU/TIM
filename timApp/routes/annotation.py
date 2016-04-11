@@ -11,7 +11,6 @@ annotations = Blueprint('annotations',
 
 @annotations.route("/addannotation", methods=['POST'])
 def add_annotation():
-
     velp_id = request.args.get('velp_id')
     points = request.args.get('points')
     place_start = request.args.get('place_start')
@@ -32,7 +31,6 @@ def add_annotation():
 
 @annotations.route("/addannotationcomment", methods=['POST'])
 def add_comment():
-
     annotation_id = request.args.get('annotation_id')
     content = request.args.get('content')
     timdb = getTimDb()

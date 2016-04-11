@@ -1,7 +1,5 @@
 DROP TABLE IF EXISTS Velp;
 
-DROP TABLE IF EXISTS VelpInAnnotationSetting;
-
 DROP TABLE IF EXISTS Icon;
 
 DROP TABLE IF EXISTS Label;
@@ -34,8 +32,12 @@ DROP TABLE IF EXISTS VelpGroupLabel;
 
 DROP TABLE IF EXISTS LabelInVelpGroup;
 
+DROP VIEW IF EXISTS VelpInformation;
 
-CREATE TABLE IF NOT EXISTS Velp (
+DROP VIEW IF EXISTS VelpGroupInAssessmentArea;
+
+
+CREATE TABLE Velp (
   id             INTEGER  NOT NULL,
   creator_id     INTEGER  NOT NULL,
   creation_time  DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP,
@@ -53,26 +55,36 @@ CREATE TABLE IF NOT EXISTS Velp (
   ON UPDATE CASCADE
 );
 
-CREATE TABLE VelpInAnnotationSetting (
-  id             INTEGER NOT NULL,
+/* These might not needed. Remember to check on delete/update before use.
+CREATE TABLE VelpInVelpView (
+  velp_view_id   INTEGER NOT NULL,
   velp_id        INTEGER NOT NULL,
   default_points INTEGER NOT NULL, -- change to some better type?
   velp_hidden    BOOLEAN NOT NULL,
 
-  CONSTRAINT VelpInAnnotationSetting_PK
-  PRIMARY KEY (id),
+  CONSTRAINT VelpInVelpView_PK
+  PRIMARY KEY (velp_view_id),
 
   CONSTRAINT Velp_id
   FOREIGN KEY (velp_id)
-  REFERENCES Velp (id)
+  REFERENCES Velp (velp_view_id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE,
+
+  CONSTRAINT Velp_view_id
+  FOREIGN KEY (velp_view_id)
+  REFERENCES VelpView (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
 
-/*
-Add annotation setting locations here pls plox
- */
-
+-- At the moment only supports views in a paragraph.
+CREATE TABLE VelpView (
+  id           INTEGER NOT NULL,
+  document_id  INTEGER NOT NULL,
+  paragraph_id TEXT    NOT NULL
+);
+*/
 
 CREATE TABLE Icon (
   id       INT NOT NULL,
@@ -221,6 +233,7 @@ CREATE TABLE VelpGroup (
 CREATE TABLE VelpInGroup (
   velp_group_id INTEGER NOT NULL,
   velp_id       INTEGER NOT NULL,
+  points        REAL,
 
   CONSTRAINT VelpInGroup_PK
   PRIMARY KEY (velp_group_id, velp_id),
@@ -331,7 +344,6 @@ CREATE TABLE LabelInVelpGroup (
 );
 
 -- Next up, some views!
-DROP VIEW IF EXISTS VelpInformation;
 CREATE VIEW VelpInformation AS
   SELECT
     VelpVersion.id,
@@ -343,7 +355,6 @@ CREATE VIEW VelpInformation AS
     INNER JOIN VelpContent ON VelpVersion.id = VelpContent.version_id;
 
 
-DROP VIEW IF EXISTS VelpGroupInAssessmentArea;
 CREATE VIEW VelpGroupInAssessmentArea AS
   SELECT
     VelpGroupInDocument.velp_group_id AS velp_group_id,
