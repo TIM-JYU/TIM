@@ -69,16 +69,6 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
     // Methods
 
-    $scope.makePostRequest = function(url, params){
-        console.log("testi2");
-        $http({
-        method: 'POST',
-        url: url,
-        params: params}).success(function () {
-            console.log("sent post to: " + url);
-        });
-    };
-
     /**
      * Get color for object.
      * @param index index of the color in color palette. (modulo by lenght of color palette)
