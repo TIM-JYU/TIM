@@ -153,8 +153,8 @@
 
      {% if t.attrs.area_end %}
         </div> <!-- class="areacontent" -->
-        <div class="areaeditline" title="Click to edit this area"></div>
-        </div> <!-- class="area" -->
+        <div class="areaeditline" title="Click to edit this area ({{ t.attrs.area_end }})"></div>
+        </div> <!-- id="area_{{ t.attrs.area_end }}" class="area" -->
      {% endif %}
 
 {% endfor %}
