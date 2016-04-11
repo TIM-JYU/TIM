@@ -83,12 +83,41 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     $scope.deleteAnnotation = function(id){
-        var markings = document.getElementsByTagName("marking");
-        var children = markings[i].getElementsByClassName("marking")[0].childNodes;
+        console.log(id);
+        var markingParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
+        var markingHighlights = markingParents[0].getElementsByClassName("ng-scope");
+        var savedHTML = markingHighlights[0].innerHTML;
+
+        for (var i=1; i<markingHighlights.length-1; i++){
+            savedHTML += markingHighlights[0].outerHTML;
+        }
+
+        if (markingHighlights.length>1){
+            savedHTML += markingHighlights[markingHighlights.length-1].innerHTML;
+        }
+
+        console.log(savedHTML);
+
+        markingParents[0].parentNode.replaceChild(savedHTML, markingHighlights[0]);
+        /*
+        var savedHTML = marking[0].innerHTML;
+        var parent = marking[0].parentNode;
+        console.log(parent);
+        for (var i=1; i<marking.length-1; i++){
+            savedHTML += marking[i].outerHTML;
+        }
+        if (marking.length > 1)
+            savedHTML += marking[marking.length-1].innerHTML;
+
+        console.log(savedHTML);
+        */
+        /*
+        var annotations = markings.getElementsByClassName("marking");
         var savedHTML = children[0].innerHTML;
-        for (var i = 1; i<markings.length; i++){
+        for (var i = 1; i<markings.length; i++) {
             console.log(markings[i].getElementsByClassName("marking")[0].childNodes);
         }
+        */
     };
 
     /**
@@ -194,7 +223,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         element.setAttribute("velp", velp_content);
         element.setAttribute("points", marking.points);
-        element.setAttribute("annotation_id", marking.id);
+        element.setAttribute("aid", marking.id);
         element.setAttribute("user", username);
         element.setAttribute("show", show);
         element.setAttribute("comments", JSON.stringify(marking.comments));
