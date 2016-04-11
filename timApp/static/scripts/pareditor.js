@@ -1009,6 +1009,18 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     $scope.commentClicked = function () {
                         var editor = $scope.editor.get(0);
                         // If text is selected surround selected text with comment brackets
+                        if (editor.selectionEnd - editor.selectionStart == 0) {
+                            var pos = editor.selectionEnd;
+                            var endOfLastLine = editor.value.lastIndexOf('\n', pos-1);
+                            // If the cursor is in the beginning of a line, make the whole line a comment
+                            if (pos - endOfLastLine == 1) {
+                                $scope.selectLine(true);
+                            }
+                        }
+                        $scope.surroundClicked('{!!!', '!!!}');
+                        /*
+                        var editor = $scope.editor.get(0);
+                        // If text is selected surround selected text with comment brackets
                         if (editor.selectionEnd - editor.selectionStart > 0) {
                             $scope.editor.replaceSelectedText("{!!!" + $scope.editor.getSelection().text + "!!!}");
                         }
@@ -1026,7 +1038,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                                 $scope.editor.replaceSelectedText("{!!!!!!}");
                                 $scope.editor.setSelection(pos+4, pos+4);
                             }
-                        }
+                        }*/
                     };
 
                     $scope.endLineClicked = function () {
@@ -1301,6 +1313,27 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                      */
                     $scope.commentClicked = function () {
                         var selection = $scope.editor.getSelection();
+                        var range = selection.getRange();
+                        var pos = $scope.editor.getCursorPosition();
+                        // If cursor is at the start of a line and there is no selection
+                        if (pos.column == 0 && (range.start.row == range.end.row && range.start.column == range.end.column)) {
+                            $scope.editor.selection.selectLine(true);
+                        }
+                        else {
+                            // If there is nothing but a comment block in line erase it
+                            range.start.column -= 4;
+                            range.end.column += 4;
+                            var text = $scope.editor.session.getTextRange(range);
+                            if (text == "{!!!!!!}") {
+                                $scope.editor.selection.setRange(range);
+                                $scope.snippetManager.insertSnippet($scope.editor, "");
+                                return $scope.wrapFn();
+                            }
+                        }
+                        $scope.surroundClicked('{!!!', '!!!}');
+                        $scope.wrapFn();
+                        /*
+
                         if (!selection.isEmpty()) {
                             $scope.editor.insert("{!!!" + $scope.editor.getSelectedText() + "!!!}");
                             //$scope.snippetManager.insertSnippet($scope.editor, "{!!!${0:$SELECTION}!!!}");
@@ -1323,7 +1356,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                                 $scope.editor.moveCursorToPosition(pos);
                                 $scope.wrapFn();
                             }
-                        }
+                        }*/
                     };
 
                     //Insert
