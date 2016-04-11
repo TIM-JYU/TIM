@@ -16,9 +16,14 @@ timApp.directive("marking", function() {
             points: '@',
             evalAsync: '@',
             user: '@',
-            comments: '='
+            comments: '=',
+            id: '@',
         },
-        controller: 'MarkingController'
+        controller: 'MarkingController',
+        link: function(scope){
+            console.log("Elementti");
+            console.log(scope);
+        }
     }
 });
 
@@ -30,6 +35,10 @@ timApp.controller('MarkingController', ['$scope', '$timeout', function ($scope, 
      */
     $scope.toggleMarking = function() {
         $scope.show = !$scope.show;
+    };
+
+    $scope.deleteAnnotation = function(){
+        $scope.$parent.deleteAnnotation($scope.id);
     };
 
     /**

@@ -56,9 +56,39 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.addMarkingToCoord = function(range, marking, show){
         var span = $scope.createPopOverElement(marking, show);
-        range.surroundContents(span);
+        console.log(range);
+        try {
+            range.surroundContents(span);
+        } catch(err) {
+            var new_range = document.createRange();
+            var el = range.startContainer;
+            var start = range.startOffset;
+            var end = range.startContainer.parentNode.innerHTML.length;
+
+            new_range.setStart(el, start);
+            new_range.setEnd(el, end);
+            $scope.addMarkingToCoord(new_range, marking, show);
+        }
         $compile(span)($scope); // Gives error [$compile:nonassign]
-        console.log("marking added");
+
+        var parelement = range.commonAncestorContainer.parentNode;
+        var startElement = range.startContainer;
+
+        var i = 0;
+        while(!parelement.hasAttribute("id")){
+            parelement = parelement.parentNode;
+            console.log(parelement);
+            i++;
+        }
+    };
+
+    $scope.deleteAnnotation = function(id){
+        var markings = document.getElementsByTagName("marking");
+        var children = markings[i].getElementsByClassName("marking")[0].childNodes;
+        var savedHTML = children[0].innerHTML;
+        for (var i = 1; i<markings.length; i++){
+            console.log(markings[i].getElementsByClassName("marking")[0].childNodes);
+        }
     };
 
     /**
@@ -164,6 +194,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         element.setAttribute("velp", velp_content);
         element.setAttribute("points", marking.points);
+        element.setAttribute("annotation_id", marking.id);
         element.setAttribute("user", username);
         element.setAttribute("show", show);
         element.setAttribute("comments", JSON.stringify(marking.comments));
