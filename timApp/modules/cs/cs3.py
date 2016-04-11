@@ -319,6 +319,17 @@ def get_html(ttype, query):
     if "parsons" in ttype: runner = 'cs-parsons-runner'
     if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype: runner = 'cs-jypeli-runner'
     if "sage" in ttype: runner = 'cs-sage-runner'
+
+    if is_review(query):
+        usercode = get_json_eparam(query.jso, "state", "usercode", "")
+        userinput = get_json_eparam(query.jso, "state", "userinput", None)
+        userargs = get_json_eparam(query.jso, "state", "userargs", None)
+        s = ""
+        if ( userinput != None ): s = s + '<p>Input:</p><pre>' + userinput + '</pre>'
+        if ( userargs != None ): s = s + '<p>Args:</p><pre>' + userargs + '</pre>'
+        result = NOLAZY + '<div class="review"><pre>' + usercode + '</pre>'+s+'</div>'
+        return result
+
     r = runner + is_input
     s = '<' + r + '>xxxJSONxxx' + jso + '</' + r + '>'
     # print(s)
@@ -550,8 +561,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         raise Exception("Timed out!")
 
     def do_all(self, query):
-        signal.signal(signal.SIGALRM, self.signal_handler)
-        signal.alarm(20)   # Ten seconds
+        try:
+            signal.signal(signal.SIGALRM, self.signal_handler)
+            signal.alarm(20)   # Ten seconds
+        except Exception  as e:
+            print("No signal", e)
         try:
             self.do_all_t(query)
         except Exception  as e:
@@ -799,11 +813,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # if ttype == "console":
             # Console program
             if ttype == "cc":
-                csfname = "/tmp/%s/%s.c" % (basename, filename)
+                if filename.endswith(".h") or filename.endswith(".c") or filename.endswith(".cc"):
+                    csfname = "/tmp/%s/%s" % (basename, filename)
+                else:
+                    csfname = "/tmp/%s/%s.c" % (basename, filename)
                 fileext = "c"
 
             if ttype == "c++":
-                csfname = "/tmp/%s/%s.cpp" % (basename, filename)
+                if filename.endswith(".h") or filename.endswith(".hpp") or filename.endswith(".cpp"):
+                    csfname = "/tmp/%s/%s" % (basename, filename)
+                else:
+                    csfname = "/tmp/%s/%s.cpp" % (basename, filename)
                 fileext = "cpp"
 
             if ttype == "scala":
@@ -1125,6 +1145,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     cmdline = "mcs /r:System.Numerics /out:%s %s" % (exename, csfname)
                 else:
                     cmdline = ""
+                    
+                if get_param(query, "justSave", False):
+                    cmdline = ""
 
                 compiler_output = ""
                 if cmdline:
@@ -1194,6 +1217,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             if is_doc:
                 pass  # jos doc ei ajeta
+            elif get_param(query, "justSave", False):
+                showname = csfname.replace(basename,"").replace("/tmp//","")
+                if showname == "prg": showname = ""
+                code, out, err, pwd = (0, "", ("tallennettu " + showname), "")
             elif get_param(query, "justCompile", False) and ttype.find("comtest") < 0:
                 #code, out, err, pwd = (0, "".encode("utf-8"), ("Compiled " + filename).encode("utf-8"), "")
                 code, out, err, pwd = (0, "", ("Compiled " + filename), "")
