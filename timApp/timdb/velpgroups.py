@@ -5,11 +5,11 @@ from timdb.timdbbase import TimDbBase, TimDbException
 class VelpGroups(TimDbBase):
 
     @contract
-    def create_velp_group(self, name: 'str', valid_until: 'str'):
+    def create_velp_group(self, name: 'str', valid_until: 'str | None' = None):
         """
         Create a velp group
         :param name: Name of the created group
-        :param valid_until: How long velp group is valid (null is forever)
+        :param valid_until: How long velp group is valid (None is forever)
         :return:
         """
         cursor = self.db.cursor()
@@ -22,7 +22,7 @@ class VelpGroups(TimDbBase):
         self.db.commit()
 
     @contract
-    def update_velp_group(self, velp_group_id: 'int', name: 'str', valid_until: 'str'):
+    def update_velp_group(self, velp_group_id: 'int', name: 'str', valid_until: 'str | None'):
         """
         Updates name and/or valid until time of velp group
         :param velp_group_id: Velp group id
