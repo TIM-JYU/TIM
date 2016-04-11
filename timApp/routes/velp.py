@@ -82,8 +82,6 @@ def add_velp():
     velp_labels = list(request.args.getlist('labels'))
     velp_labels = [int(i) for i in velp_labels]
 
-    print(velp_labels)
-
     default_points = float(default_points) if default_points is not None else None
     icon_id = int(icon_id) if icon_id is not None else None
 
