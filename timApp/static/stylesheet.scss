@@ -341,15 +341,8 @@ pre code {
     right: -15px;
 }
 
-answerbrowser {
-    padding-left: 2em;
-    a {
-        font-size: inherit;
-    }
-
-    .firstanswer {
-        float: right;
-    }
+a {
+    cursor: pointer;
 }
 
 sub {

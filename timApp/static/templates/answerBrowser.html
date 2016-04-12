@@ -3,13 +3,13 @@
     <select ng-show="$parent.teacherMode && users.length > 0" ng-model="user"
             ng-options="(user.real_name + ' (' + user.name + ')') for user in users track by user.id"
             ng-change="getAvailableAnswers()"></select>
-    <span ng-show="!hasUserChanged()">
+    <span ng-show="!hasUserChanged()" class="form-inline">
     <span ng-show="answers.length > 0">
-    <button ng-click="previous()">&larr;</button>
-    <select ng-model="selectedAnswer"
+    <button class="timButton" ng-click="previous()">&larr;</button>
+    <select class="form-control" ng-model="selectedAnswer"
             ng-options="((filteredAnswers.length - idx) + '. ' + answer.answered_on) for (idx, answer) in filteredAnswers | orderBy:'answer.id' track by answer.id"
             ng-change="changeAnswer()"></select>
-    <button ng-click="next()">&rarr;</button>
+    <button class="timButton" ng-click="next()">&rarr;</button>
     {{ filteredAnswers.length - indexOfSelected() }}/<a ng-click="setNewest()">{{ filteredAnswers.length }}</a>
     </span>
     <span ng-show="taskInfo.answerLimit">Tries left: {{ getTriesLeft() }}</span>
