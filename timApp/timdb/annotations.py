@@ -1,6 +1,6 @@
 from contracts import contract
 from timdb.timdbbase import TimDbBase
-from assesment_area import AssessmentArea
+from assessment_area import AssessmentArea
 
 
 class Annotations(TimDbBase):

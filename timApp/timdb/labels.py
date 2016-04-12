@@ -1,6 +1,6 @@
 from contracts import contract
 from timdb.timdbbase import TimDbBase, TimDbException
-from assesment_area import AssessmentArea, assessment_area_from_document
+from assessment_area import AssessmentArea, assessment_area_from_document
 
 
 class Labels(TimDbBase):
