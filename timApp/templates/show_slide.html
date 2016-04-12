@@ -26,21 +26,19 @@
             <section>
                 {% if text %}
                     {{ text[0].html|safe }}
-                    {% set ignore=False %}
+                    {% set recentlyClosed=False %}
                     {% for t in text[1:] %}
-                        {% if t.md.startswith('---') and t.md.endswith('---') %}
+                        {% if ((t.md.startswith('---') and t.md.endswith('---')) or (t.html|safe).startswith("<h1") or (t.html|safe).startswith("<h2") or (t.html|safe).startswith("<h3")) and not recentlyClosed %}
                             </section>
                             <section>
-                                {% else %}
-                                {% if (t.html|safe).startswith("<h1") or (t.html|safe).startswith("<h2") or (t.html|safe).startswith("<h3") %}
-                                    </section>
-                                    <section>
-                                {% endif %}
-                            {{ t.html|safe }}
+                            {% set recentlyClosed=True %}
+                        {% else %}
+                            {% set recentlyClosed=False %}
                         {% endif %}
+                        {{ t.html|safe }}
                     {% endfor %}
                 {% endif %}
-                </section>
+            </section>
         </div>
     </div>
     <script src="{{ url_for('static', filename='scripts/reveal/lib/js/head.min.js') }}"></script>
