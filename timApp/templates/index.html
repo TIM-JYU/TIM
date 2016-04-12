@@ -26,7 +26,7 @@
             src="{{ url_for('static', filename='images/loading.gif') }}" ng-show="!displayIndex">
 
         <div ng-show="displayIndex >= 2">
-            <table ng-show="documentList.length > 0 || folderList.length > 0 || parentfolder != null">
+            <table class="table" ng-show="documentList.length > 0 || folderList.length > 0 || parentfolder != null">
                 <thead>
                 <tr>
                     <td></td>
@@ -82,47 +82,47 @@
             </table>
             <p ng-show="documentList.length == 0 && folderList.length == 0">There are no documents to show.</p>
             {% if session.user_id %}
-                <a ng-click="showUploadFn()">Upload a new document</a>
+                <button class="timButton" ng-click="showUploadFn()">Upload a new document</button>
                 <div class="uploadForm" ng-show="showUpload">
-                    <input type="file" ngf-select="onFileSelect($file)">
+                    <input class="form-control" type="file" ngf-select="onFileSelect($file)">
                      <span ng-show="file.progress >= 0"
                            ng-bind="file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!'">
                      </span>
-                    <button ng-disabled="uploadInProgress" type="button"
+                    <button class="timButton" ng-disabled="uploadInProgress" type="button"
                             ng-click="showUpload = false"
                             ng-bind="file.progress && !uploadInProgress ? 'Close' : 'Cancel'">
                     </button>
                 </div>
                 <div>
-                    <a ng-show="!showControls" ng-click="showControls = true">Create a new document</a>
+                    <button class="timButton" ng-show="!showControls" ng-click="showControls = true">Create a new document</button>
 
                     <div ng-show="showControls">
-                        <label>
+                        <div class="form-group"><label>
                             Document name:
-                            <input ng-model="docName" type="text">
-                        </label>
-                        <button ng-disabled="!docName" ng-click="createDocument(docName)" type="button">Create
+                            <input class="form-control" ng-model="docName" type="text">
+                        </label></div>
+                        <button class="timButton" ng-disabled="!docName" ng-click="createDocument(docName)" type="button">Create
                         </button>
-                        <button ng-click="showControls = false" type="button">Cancel</button>
+                        <button class="timButton" ng-click="showControls = false" type="button">Cancel</button>
                     </div>
                 </div>
                 <div>
-                    <a ng-show="!showCreateFolder" ng-click="showCreateFolder = true">Create a new folder</a>
+                    <button class="timButton" ng-show="!showCreateFolder" ng-click="showCreateFolder = true">Create a new folder</button>
 
                     <div ng-show="showCreateFolder">
-                        <label>
+                        <div class="form-group"><label>
                             Folder name:
-                            <input ng-model="folderName" type="text">
-                        </label>
-                        <label>
+                            <input class="form-control" ng-model="folderName" type="text">
+                        </label></div>
+                        <div class="form-group"><label>
                             Owner:
-                            <select ng-model="folderOwner"
+                            <select class="form-control" ng-model="folderOwner"
                                     ng-options="group.name for group in userGroups track by group.id"></select>
-                        </label>
-                        <button ng-disabled="!folderName || !folderOwner"
+                        </label></div>
+                        <button class="timButton" ng-disabled="!folderName || !folderOwner"
                                 ng-click="createFolder(folderName, folderOwner.id)" type="button">Create
                         </button>
-                        <button ng-click="showCreateFolder = false" type="button">Cancel</button>
+                        <button class="timButton" ng-click="showCreateFolder = false" type="button">Cancel</button>
                     </div>
                 </div>
             {% else %}

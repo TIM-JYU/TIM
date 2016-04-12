@@ -56,8 +56,7 @@ body {
 }
 
 .widebutton {
-  @extend .btn, .btn-primary, .col-md-12;
-  margin-top: 5px;
+  @extend .btn, .btn-primary, .btn-block;
 }
 
 .flashes {

@@ -2,12 +2,6 @@
     max-width: 52em;
 }
 
-body {
-    text-align: $body-text-align;
-    margin: auto auto auto $body-margin-left;
-    background-color: $bg-color;
-}
-
 .correct {
     background-color: limegreen;
     padding: 0.5em;
@@ -52,20 +46,6 @@ body {
     background-color: #990000
 }
 
-input[type="submit"], button, input[type="button"] {
-    margin-right: 1px;
-    background: $button-bg-color;
-    border: 0;
-    border-radius: 3px;
-    color: #FFF;
-    display: inline-block;
-    font-size: 11px;
-    cursor: pointer;
-    line-height: normal;
-    padding: 5px 10px;
-    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
 p.caption { 
     text-align: center;
 }
@@ -85,10 +65,6 @@ p.caption {
 
 .editorArea {
     background-color: #B0B0B0;
-}
-
-table th {
-    background-color: #dedede;
 }
 
 td p {
@@ -149,22 +125,6 @@ td p {
     &.private {
         border-color: $note-private-color;
     }
-}
-
-li p {
-    margin-left: 0;
-}
-
-ul, ol {
-    margin-left: 1.5em;
-}
-
-ul ul, ol ol {
-    margin-left: -1em;
-}
-
-ul ul ul, ol ol ol {
-    margin-left: -1em;
 }
 
 .notes, .speaker {
@@ -234,9 +194,7 @@ ul ul ul, ol ol ol {
 }
 
 .timButton, .editorButton {
-    display: block;
-    margin: auto;
-    min-width: 40px;
+    @extend .btn, .btn-primary;
 }
 
 .readline {
@@ -316,30 +274,6 @@ pre code {
     font-size: 1em;
 }
 
-table {
-    font-family: verdana, arial, sans-serif;
-    font-size: 0.8em;
-    color: #333333;
-    border: 1px #666666;
-    border-collapse: collapse;
-    margin-left: auto;
-    margin-right: auto;
-
-    code {
-        font-size: 1.2em;
-    }
-
-    th {
-        padding: 8px;
-        border: 1px solid;
-    }
-
-    td {
-        padding: 8px;
-        border: 1px solid;
-    }
-}
-
 .ace_scrollbar-v {
     display: block !important;
     padding-left: 10px;
@@ -405,28 +339,6 @@ table {
     position: absolute;
     top: 0;
     right: -15px;
-}
-
-body {
-    font-family: $font-family;
-    font-size: $font-size;
-    line-height: $line-height;
-}
-
-:link, a {
-    text-decoration: none;
-    font-size: 0.8em;
-}
-
-a:active {
-    color: navy;
-    text-decoration: none;
-}
-
-a:hover {
-    cursor: pointer;
-    color: navy;
-    text-decoration: underline;
 }
 
 answerbrowser {
@@ -687,21 +599,6 @@ pre {
     direction: ltr;
 }
 
-.timButton, .editorButton {
-    background: $timbutton-bg-color;
-    border: 0;
-    border-radius: 3px;
-    color: #FFF;
-    display: inline-block;
-    font-size: 11px;
-    font-weight: bold;
-    cursor: pointer;
-    line-height: normal;
-    padding: 8px 10px;
-    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    margin: auto auto 5px;
-}
-
 .actionButtons, .menuButtons {
     display: table;
     position: absolute;
@@ -825,38 +722,6 @@ button:disabled, input[type="submit"]:disabled, input[type="button"]:disabled {
     .body {
         margin-left: 60em !important;
     }
-}
-
-.breadcrumb > li + li:before {
-    padding-left: 5px;
-    color: #ccc;
-    content: "/";
-}
-
-.breadcrumb-div {
-    margin-top: 3px !important;
-    background-color: #fff !important;
-}
-
-.breadcrumb {
-    font-size: 1.0em;
-    background-color: #fff !important;
-}
-
-.breadcrumb.ol {
-    background-color: #fff;
-}
-
-.breadcrumb a {
-    /* Overrides the default TIM style for links */
-    font-size: 1.0em;
-    padding: 0 !important;
-    margin-bottom: 20px;
-    border-radius: 4px;
-}
-
-.breadcrumb > li {
-    display: inline-block;
 }
 
 .borderless {
@@ -1083,10 +948,6 @@ p.plgfooter {
         display: none;
     }
 
-    .breadcrumb-div {
-        display: none;
-    }
-
     .addBottomContainer {
         display: none;
     }
@@ -1117,17 +978,6 @@ p.plgfooter {
 p.docsettings {
     display: none;
 }
-
-.rights-list {
-    font-size: smaller;
-    margin-left: 2em;
-    margin-right: -5em;
-    text-align: left;
-    p {
-        margin-left: 0;
-    }
-}
-
 
 .shortedit {
     max-width: 4.5em;
@@ -1167,41 +1017,6 @@ p.docsettings {
     .uploadForm {
         border: 1px solid black;
         padding: 1em;
-    }
-}
-
-.manage {
-    table {
-        margin: 1em;
-    }
-
-    thead {
-        font-weight: bold;
-    }
-
-    table td {
-        padding: 0.2em;
-    }
-
-    .flashes li {
-        list-style-type: none;
-        border: 1px solid black;
-        border-radius: 3px;
-        padding: 0.5em;
-    }
-
-    .uploadForm {
-        border: 1px solid black;
-        padding: 1em;
-    }
-
-    .material {
-        padding: 1em;
-    }
-
-    .margin {
-        margin-top: 1em;
-        margin-bottom: 1em;
     }
 }
 

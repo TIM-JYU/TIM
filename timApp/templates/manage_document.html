@@ -1,9 +1,10 @@
 {% extends "manage.html" %}
 {% set obj_name = 'document' %}
 {% block managecontent %}
-    <div>
-        Names:
-        <table class="borderless">
+    <div class="panel panel-default">
+        <div class="panel-heading">Names</div>
+<div class="panel-body">
+    <table class="borderless">
             <tr>
                 <th>Visible in index</th>
                 <th>Location</th>
@@ -34,11 +35,15 @@
                 </form>
             </tr>
         </table>
+</div>
     </div>
 
-    <div>
-        Translations (see <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#translations">help in Finnish</a>):
-        <table class="borderless">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Translations and copies (see <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#translations">help in Finnish</a>)
+        </div>
+<div class="panel-body">
+    <table class="borderless">
             <tr>
                 <th>Language</th>
                 <th>Title</th>
@@ -65,13 +70,16 @@
                 </td>
             </tr>
         </table>
-    </div>
 
-    <span>
+        <span>
         <button ng-click="toggleDiv('translate')">Create a translation</button>
         <button ng-click="toggleDiv('cite')">Create a cited copy</button>
         <button ng-click="toggleDiv('copy')">Create a copy</button>
     </span>
+
+
+
+
 
     <div class="margin rights-list" ng-show="showCreateDiv == 'translate'">
         <p>
@@ -99,72 +107,102 @@
         <button ng-click="createCopy()">Create copy</button>
     </div>
 
+    </div>
+    </div>
+
     {% if rights['owner'] %}
-    <div>
-        <p>Notifications</p>
-        <fieldset>
-            <p>Send me email on</p>
-            <input type="checkbox" ng-model="emailDocModify" ng-click="notifyChanged()"/>Document modifications<br>
-            <input type="checkbox" ng-model="emailCommentAdd" ng-click="notifyChanged()"/>New comments<br>
-            <input type="checkbox" ng-model="emailCommentModify" ng-click="notifyChanged()"/>Edited comments<br>
-        </fieldset>
+    <div class="panel panel-default">
+        <div class="panel-heading">Notifications</div>
+        <div class="panel-body">
+            <form>
+                <p>Send me email on</p>
+                <div class="checkbox"><label>
+                    <input type="checkbox" ng-model="emailDocModify"
+                           ng-click="notifyChanged()"/>Document modifications
+                </label></div>
+                <div class="checkbox"><label>
+                    <input type="checkbox" ng-model="emailCommentAdd"
+                           ng-click="notifyChanged()"/>New comments
+                </label></div>
+                <div class="checkbox"><label>
+                    <input type="checkbox" ng-model="emailCommentModify"
+                           ng-click="notifyChanged()"/>Edited comments
+                </label></div>
+            </form>
+        </div>
     </div>
     {% endif %}
 
     <span ng-show="readUpdating">Loading...</span>
-    <form class="uploadForm margin">
-        Upload a new version for this document
-        <div>
-            <input type="file" ngf-select="updateDocument($file)">
-            <span ng-show="file.progress >= 0"
+    <div class="panel panel-default">
+        <div class="panel-heading">Upload a new version for this document</div>
+        <div class="panel-body">
+            <form>
+                <div class="input-group">
+                    <input class="form-control" type="file" ngf-select="updateDocument($file)">
+                    <span class="input-group-btn">
+                    <button class="timButton" id="reset" type="reset" value="Reset">Clear</button>
+                    </span>
+                </div>
+                <span ng-show="file.progress >= 0"
                   ng-bind="file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!'">
             </span>
-            <button id="reset" type="reset" value="Reset">Clear</button>
+            </form>
         </div>
-    </form>
+    </div>
 
-    <form class="uploadForm">
-        Edit the full document
+    <div class="panel panel-default">
+        <div class="panel-heading">Edit the full document</div>
+        <div class="panel-body">
+    <form>
         <div>
-            <textarea class="docEditor" ng-model="fulltext"></textarea>
-            <button ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument()">Save</button>
+            <textarea class="form-control" ng-model="fulltext" rows="50"></textarea>
+            <button class="timButton" ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument()">Save</button>
             <span ng-show="saving">Saving...</span>
         </div>
-        <div><p>Import TracWiki <input type="checkbox" ng-model="showTracWiki"></p>
+        <div>
+            <label>Import TracWiki <input type="checkbox" ng-model="showTracWiki"></label>
             <div ng-hide="!showTracWiki">
                 <p>Write the wiki root address to replace "wiki:" from URL's and then copy paste
                     TracWiki page below and then press "Convert TracWiki" button to get the text converted
                     above as MarkDown. Then you can edit the MarkDown before pressing Save.
                     You may need to add extra empty lines before lists.</p>
-                <p>Wiki root: <input ng-model="wikiRoot" size="50"
-                                     value="https://trac.cc.jyu.fi/projects/ohj2/wiki/"/></p>
-                <textarea class="docEditor" ng-model="tracWikiText"></textarea>
-                <button ng-click="convertDocument(doc)">Convert TracWiki</button>
+                <div class="form-group"><label for="wikiRoot">Wiki root: </label>
+                    <input id="wikiRoot" class="form-control" ng-model="wikiRoot" size="50"
+                           value="https://trac.cc.jyu.fi/projects/ohj2/wiki/"/></div>
+                <div class="form-group"><label for="tracWikiText">
+                    TracWiki content:</label>
+                    <textarea id="tracWikiText" class="form-control" ng-model="tracWikiText"></textarea></div>
+
+                <button class="timButton" ng-click="convertDocument(doc)">Convert TracWiki</button>
             </div>
         </div>
     </form>
-
-    <div>
-        <a href="/download/{{ '{{ doc.id }}' }}">Download document markdown</a>
+        </div>
     </div>
 
-    <div class="margin">
-        <button ng-click="markAllAsRead()">Mark document as read</button>
-        <button class="redbutton" ng-click="deleteDocument(doc.id)">Delete document</button>
+    <div class="panel panel-default">
+        <div class="panel-heading">Other actions</div>
+        <div class="panel-body">
+            <button class="timButton" href="/download/{{ '{{ doc.id }}' }}">Download document markdown</button>
+            <button class="timButton" ng-click="markAllAsRead()">Mark document as read</button>
+            <button class="btn btn-danger" ng-click="deleteDocument(doc.id)">Delete document</button>
+        </div>
     </div>
 
-    <div>
-        <p>Document version history</p>
-        <table>
+    <div class="panel panel-default">
+        <div class="panel-heading">Document version history</div>
+        <div class="panel-body">
+        <table class="table">
             <thead>
             <tr>
                 <!--<td>Time</td>
                 <td>User</td>
                 <td>Difference</td>-->
-                <td>Time</td>
-                <td>User / group</td>
-                <td>Paragraph</td>
-                <td>Event</td>
+                <th>Time</th>
+                <th>User / group</th>
+                <th>Paragraph</th>
+                <th>Event</th>
             </tr>
             </thead>
             <tr ng-repeat="version in doc.versions">
@@ -177,6 +215,7 @@
                 <td><a href="/diff/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.message }}' }}</a></td>-->
             </tr>
         </table>
+        </div>
     </div>
-    <a href="{{ url_for('index_page') }}">Return to the index page</a>
+    <div class="row text-center"><a href="{{ url_for('index_page') }}">Return to the index page</a></div>
 {% endblock %}

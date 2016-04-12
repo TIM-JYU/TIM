@@ -1,28 +1,11 @@
-.clearfix {
-    display: inline-block;
-    width: 100%;
-}
-
 div.header {
     margin: 0;
     padding: 0;
     border-bottom: 1px solid #e5e5e5;
 }
 
-.pull-left {
-    float: left;
-}
-
-.pull-right {
-    float: right;
-}
-
 div.header:hover .anchor {
     visibility: visible;
-}
-
-a {
-    text-decoration: none;
 }
 
 .viewLogin {
