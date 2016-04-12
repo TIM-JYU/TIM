@@ -1,6 +1,6 @@
 <link rel="stylesheet" href="/static/css/velpSelection.css"/>
 <div class="velpMenu">
-<label>
+<label id="advView">
         <input type="checkbox" ng-model="advancedOn"/> Advanced view
     </label>
     <uib-tabset active="active">
@@ -8,7 +8,7 @@
             <!--   <h3>Select velp</h3>-->
             <div class="velpArea">
 
-                <table class="phraseTable">
+                <table class="velpTable">
                     <tr ng-class="getAdvancedStyle()">
                         <td>
                             <label for="searchLabels">Filter by labels </label>
@@ -31,7 +31,7 @@
                             </div>
                     <!--    </td>
                     </tr>-->
-                <table class="phraseTable">
+                <table class="velpTable">
                     <tr>
                         <td>
                             <label for="searchPhrases">Search velps:</label>
@@ -85,7 +85,7 @@
 
             <div class="velpArea">
                 <form name="addVelpForm" ng-submit="addVelp(addVelpForm)" novalidate>
-                    <table class="phraseTable">
+                    <table class="velpTable">
                         <tr>
                             <td>
                                 <label for="addPhraseName">Velp name</label>
@@ -130,7 +130,7 @@
                                 </div>
                         <!--    </td>
                         </tr>-->
-                    <table class="phraseTable">
+                    <table class="velpTable">
                         <tr>
                             <td colspan="2">
                                 <input type="submit" value="Add velp"/>
@@ -140,7 +140,7 @@
                 </form>
                 <form ng-class="getAdvancedStyle()" name="addLabelForm" ng-submit="addLabel(addLabelForm)" novalidate>
 
-                    <table class="phraseTable">
+                    <table class="velpTable">
                         <tr>
                             <td colspan="2">
                                 <label>Add new label (optional):</label>
