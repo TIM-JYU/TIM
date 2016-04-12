@@ -34,7 +34,7 @@
 
             <ul>
                 <li ng-repeat="group in filtered = (grouprights | filter: {access_type: type.id}:true)">{{ '{{group.name}}' }}
-                    (<a ng-click="removeConfirm(group, type.name)">remove</a>)
+                    <a class="timButton btn-xs" ng-click="removeConfirm(group, type.name)">remove</a>
                 </li>
             </ul>
         </div>

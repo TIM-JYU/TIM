@@ -4,37 +4,62 @@
     <div class="panel panel-default">
         <div class="panel-heading">Names</div>
 <div class="panel-body">
-    <table class="borderless">
+    <form class="form form-group-sm">
+        <table class="table">
             <tr>
-                <th>Visible in index</th>
-                <th>Location</th>
+                <th>Visible in index, location</th>
                 <th>Name</th>
                 <th>Actions</th>
             </tr>
             <tr ng-repeat="alias in aliases">
-                <td class="checkbox-td" ng-click="aliasPublicClicked(alias)"><input type="checkbox"
-                                                                                    ng-checked="alias.public"/></td>
-                <td><input type="text" ng-model="alias.location"/><a
-                        href="{{ '/view/{{alias.location}}' }}">View</a></td>
-                <td><input type="text" ng-model="alias.name" placeholder="Document name"/><a
-                        href="{{ '/view/{{alias.fullname}}' }}">View</a></td>
                 <td>
-                    <button ng-click="updateAlias(alias)" ng-disabled="!aliasChanged(alias)">Update</button>
-                    <button ng-click="removeAlias(alias)">Remove</button>
+                    <div class="input-group">
+                        <span ng-click="aliasPublicClicked(alias)" class="input-group-addon">
+                       <input type="checkbox" ng-checked="alias.public">
+                       </span>
+                        <input class="form-control" type="text" ng-model="alias.location"/>
+                    <span class="input-group-btn">
+                    <a class="timButton btn-sm" href="{{ '/view/{{alias.location}}' }}">View</a>
+                    </span>
+                    </div>
+                </td>
+                <td>
+                    <div class="input-group">
+                        <input class="form-control" type="text" ng-model="alias.name" placeholder="Document name"/>
+                        <span class="input-group-btn">
+                    <a class="timButton btn-sm" href="{{ '/view/{{alias.fullname}}' }}">View</a>
+                            </span>
+                    </div>
+                </td>
+                <td>
+                    <button class="timButton btn-sm" ng-click="updateAlias(alias)" ng-disabled="!aliasChanged(alias)">
+                        Update
+                    </button>
+                    <button class="timButton btn-sm" ng-click="removeAlias(alias)">Remove</button>
                 </td>
             </tr>
             <tr>
-                <form>
-                    <td class="checkbox-td"><input type="checkbox" ng-model="newAlias.public"/></td>
-                    <td><input type="text" ng-model="newAlias.location"/></td>
-                    <td><input type="text" placeholder="Click to add" ng-model="newAlias.name"/></td>
-                    <td>
-                        <button class="fullwidth" ng-click="addAlias(newAlias)" ng-disabled="!newAlias.name">Add
-                        </button>
-                    </td>
-                </form>
+                <td>
+                    <div class="input-group">
+                        <span ng-click="aliasPublicClicked(newAlias)" class="input-group-addon">
+                       <input type="checkbox" ng-checked="newAlias.public">
+                       </span>
+                        <input class="form-control" type="text" ng-model="newAlias.location"/>
+                    <span class="input-group-btn">
+                    <a class="timButton btn-sm" href="{{ '/view/{{alias.location}}' }}">View</a>
+                    </span>
+                    </div>
+                </td>
+                <td>
+                    <input class="form-control" type="text" ng-model="newAlias.name" placeholder="Click to add"/>
+                </td>
+                <td>
+                    <button class="widebutton" ng-click="addAlias(newAlias)" ng-disabled="!newAlias.name">Add
+                    </button>
+                </td>
             </tr>
         </table>
+    </form>
 </div>
     </div>
 
@@ -43,7 +68,7 @@
             Translations and copies (see <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#translations">help in Finnish</a>)
         </div>
 <div class="panel-body">
-    <table class="borderless">
+    <table class="table">
             <tr>
                 <th>Language</th>
                 <th>Title</th>
@@ -52,12 +77,12 @@
                 <th>Actions</th>
             </tr>
             <tr>
-                <td><input type="text" class="shortedit" ng-model="lang_id" placeholder="Language"/></td>
-                <td><input type="text" ng-model="doc.title" placeholder="Language"/></td>
+                <td><input type="text" class="form-control" ng-model="lang_id" placeholder="Language"/></td>
+                <td><input type="text" class="form-control" ng-model="doc.title" placeholder="Language"/></td>
                 <td>{{ '{{doc.owner.name}}' }}</td>
                 <td>{{ '{{doc.id}}' }}</td>
                 <td>
-                    <button ng-click="updateMetadata()" ng-disabled="!metaChanged()">Update</button>
+                    <button class="timButton" ng-click="updateMetadata()" ng-disabled="!metaChanged()">Update</button>
                 </td>
             </tr>
             <tr ng-repeat="tr in translations">
@@ -66,15 +91,15 @@
                 <td>{{ '{{tr.owner}}' }}</td>
                 <td>{{ '{{tr.id}}' }}</td>
                 <td>
-                    <button ng-click="updateTranslation(tr)" ng-disabled="!trChanged(tr)">Update</button>
+                    <button class="timButton" ng-click="updateTranslation(tr)" ng-disabled="!trChanged(tr)">Update</button>
                 </td>
             </tr>
         </table>
 
         <span>
-        <button ng-click="toggleDiv('translate')">Create a translation</button>
-        <button ng-click="toggleDiv('cite')">Create a cited copy</button>
-        <button ng-click="toggleDiv('copy')">Create a copy</button>
+        <button class="timButton" ng-click="toggleDiv('translate')">Create a translation</button>
+        <button class="timButton" ng-click="toggleDiv('cite')">Create a cited copy</button>
+        <button class="timButton" ng-click="toggleDiv('copy')">Create a copy</button>
     </span>
 
 
@@ -87,7 +112,7 @@
         </p>
         <input type="text" ng-model="translationName" class="shortedit" placeholder="Language"/>
         <input type="text" ng-model="translationTitle" placeholder="New document title"/>
-        <button ng-click="createTranslation()">Create translation</button>
+        <button class="timButton" ng-click="createTranslation()">Create translation</button>
     </div>
 
     <div class="margin rights-list" ng-show="showCreateDiv == 'cite'">
@@ -95,7 +120,7 @@
             Please enter a fully qualified name for the new document.
         </p>
         <input type="text" ng-model="citationName" placeholder="New document name"/>
-        <button ng-click="createCitation()">Create cited copy</button>
+        <button class="timButton" ng-click="createCitation()">Create cited copy</button>
     </div>
 
     <div class="margin rights-list" ng-show="showCreateDiv == 'copy'">
@@ -104,7 +129,7 @@
         </p>
         Path: <input type="text" ng-model="documentPath" placeholder="New document path"/>
         Name: <input type="text" ng-model="documentName" placeholder="New document name"/>
-        <button ng-click="createCopy()">Create copy</button>
+        <button class="timButton" ng-click="createCopy()">Create copy</button>
     </div>
 
     </div>
@@ -172,7 +197,7 @@
                            value="https://trac.cc.jyu.fi/projects/ohj2/wiki/"/></div>
                 <div class="form-group"><label for="tracWikiText">
                     TracWiki content:</label>
-                    <textarea id="tracWikiText" class="form-control" ng-model="tracWikiText"></textarea></div>
+                    <textarea rows="50" id="tracWikiText" class="form-control" ng-model="tracWikiText"></textarea></div>
 
                 <button class="timButton" ng-click="convertDocument(doc)">Convert TracWiki</button>
             </div>
@@ -184,7 +209,7 @@
     <div class="panel panel-default">
         <div class="panel-heading">Other actions</div>
         <div class="panel-body">
-            <button class="timButton" href="/download/{{ '{{ doc.id }}' }}">Download document markdown</button>
+            <a class="timButton" href="/download/{{ '{{ doc.id }}' }}">Download document markdown</a>
             <button class="timButton" ng-click="markAllAsRead()">Mark document as read</button>
             <button class="btn btn-danger" ng-click="deleteDocument(doc.id)">Delete document</button>
         </div>
@@ -193,7 +218,7 @@
     <div class="panel panel-default">
         <div class="panel-heading">Document version history</div>
         <div class="panel-body">
-        <table class="table">
+        <table class="table table-condensed">
             <thead>
             <tr>
                 <!--<td>Time</td>
