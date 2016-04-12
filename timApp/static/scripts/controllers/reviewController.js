@@ -27,6 +27,21 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     */
 
     /**
+     * Makes post request to given url
+     * @param url request url
+     * @param params query parameters
+     */
+    $scope.makePostRequest = function (url, params) {
+        $http({
+            method: 'POST',
+            url: url,
+            params: params
+        }).success(function () {
+            console.log("sent post to: " + url);
+        });
+    };
+
+    /**
      * Loads used markings into view
      */
     $scope.loadMarkings = function() {
@@ -71,53 +86,27 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
         $compile(span)($scope); // Gives error [$compile:nonassign]
 
-        var parelement = range.commonAncestorContainer.parentNode;
-        var startElement = range.startContainer;
-
-        var i = 0;
-        while(!parelement.hasAttribute("id")){
-            parelement = parelement.parentNode;
-            console.log(parelement);
-            i++;
-        }
     };
 
+    /**
+     * Delete annotation
+     * TODO: Make query to database
+     * @param id annotation id
+     */
     $scope.deleteAnnotation = function(id){
-        console.log(id);
-        var markingParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
-        var markingHighlights = markingParents[0].getElementsByClassName("ng-scope");
-        var savedHTML = markingHighlights[0].innerHTML;
+        var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
+        var annotationHighlights = annotationParents[0].getElementsByClassName("ng-scope");
+        var savedHTML = annotationHighlights[0].innerHTML;
 
-        for (var i=1; i<markingHighlights.length-1; i++){
-            savedHTML += markingHighlights[0].outerHTML;
+        for (var i=1; i<annotationHighlights.length-1; i++){
+            savedHTML += annotationHighlights[i].outerHTML;
         }
 
-        if (markingHighlights.length>1){
-            savedHTML += markingHighlights[markingHighlights.length-1].innerHTML;
+        if (annotationHighlights.length>1){
+            savedHTML += annotationHighlights[annotationHighlights.length-1].innerHTML;
         }
 
-        console.log(savedHTML);
-
-        markingParents[0].parentNode.replaceChild(savedHTML, markingHighlights[0]);
-        /*
-        var savedHTML = marking[0].innerHTML;
-        var parent = marking[0].parentNode;
-        console.log(parent);
-        for (var i=1; i<marking.length-1; i++){
-            savedHTML += marking[i].outerHTML;
-        }
-        if (marking.length > 1)
-            savedHTML += marking[marking.length-1].innerHTML;
-
-        console.log(savedHTML);
-        */
-        /*
-        var annotations = markings.getElementsByClassName("marking");
-        var savedHTML = children[0].innerHTML;
-        for (var i = 1; i<markings.length; i++) {
-            console.log(markings[i].getElementsByClassName("marking")[0].childNodes);
-        }
-        */
+        annotationParents[0].outerHTML = savedHTML;
     };
 
     /**
@@ -168,20 +157,36 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.usePhrase = function (velp) {
         if (typeof $scope.selectedArea != "undefined") {
+            var parelement = $scope.selectedArea["commonAncestorContainer"].parentNode;
+            var startElement = $scope.selectedArea["startContainer"];
+
+            var i = 0;
+            while (!parelement.hasAttribute("id")) {
+                parelement = parelement.parentNode;
+                console.log(parelement);
+                i++;
+            }
 
             var newMarking = {
                 "id": $scope.markings.length,
                 "velp": velp.id,
                 "points": velp.points,
                 "coord": {
-                    "el": 0,
-                    "start": $scope.selectedArea["startOffset"] ,
-                    "end": $scope.selectedArea["endOffset"]
+                    "start": {
+                        "par_id": 0,
+                        "par_num": 0,
+                        "offset": $scope.selectedArea["startOffset"]
+                    } ,
+                    "end": {
+                        "par_id": $scope.selectedArea["endOffset"],
+                        "par_num": 0,
+                        "offset":  $scope.selectedArea["endOffset"],
+                    }
                 }, // TODO: get coordinates from selectedArea
                 "comments": []
             };
 
-            console.log("SELECTED AREA");
+            console.log(newMarking);
             //console.log($scope.selectedArea["commonAncestorContainer"].parentElement.parentElement);
             var parent = document.querySelectorAll("#previewContent p");
             console.log(parent);

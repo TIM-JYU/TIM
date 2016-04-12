@@ -7,7 +7,7 @@
             </p>
         </div>
         <div class="div-10">
-            <span class="float-right glyphicon glyphicon-remove clickable-icon" ng-click="toggleMarking()"></span>
+            <span class="float-right glyphicon glyphicon-remove clickable-icon" ng-click="toggleAnnotation()"></span>
         </div>
     </div>
     <div class="fulldiv">
@@ -17,10 +17,10 @@
 
     <textarea placeholder="Add comment" ng-model="newComment" autofocus></textarea>
     <button ng-click="addComment()">Add</button>
-    <button ng-click="deleteAnnotation()">Delete annotation</button>
+    <button ng-click="deleteAnnotation()"><span class="glyphicon glyphicon-trash"></span></button>
     </div>
 </div><!--
 
 Surrounded text
---><span ng-click="toggleMarking()" ng-class="['marking', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]"
-      ng-transclude></span>
+--><span ng-click="toggleAnnotation()" ng-class="['marking', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]"
+         ng-transclude></span>

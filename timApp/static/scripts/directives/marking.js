@@ -29,13 +29,14 @@ timApp.controller('MarkingController', ['$scope', '$timeout', function ($scope, 
     /**
      * Toggle marking visibility
      */
-    $scope.toggleMarking = function() {
+    $scope.toggleAnnotation = function() {
         $scope.show = !$scope.show;
     };
 
     $scope.deleteAnnotation = function(){
         //console.log($scope.aid);
         $scope.$parent.deleteAnnotation($scope.aid);
+        $scope.toggleAnnotation();
     };
 
     /**
@@ -49,8 +50,8 @@ timApp.controller('MarkingController', ['$scope', '$timeout', function ($scope, 
     };
 
     $timeout(function () {
-        $scope.toggleMarking();
+        $scope.toggleAnnotation();
     }, 1);
-    $scope.toggleMarking();
+    $scope.toggleAnnotation();
 
 }]);
