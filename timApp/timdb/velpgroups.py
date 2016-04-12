@@ -4,6 +4,26 @@ from timdb.timdbbase import TimDbBase, TimDbException
 
 class VelpGroups(TimDbBase):
 
+
+    def create_default_velp_group(self, name: str, valid_until: None):
+        """Creates default velp group where all velps used in document are stored
+
+        :param name: Name of the new default velp group
+        :param valid_until: Valid forever, thus None
+        :return:
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      INSERT INTO
+                      VelpGroup(name, valid_until, document_def)
+                      VALUES (?, ?)
+                      """, [name, valid_until, True]
+                       )
+        self.db.commit()
+        velp_id = cursor.lastrowid
+        return velp_id
+
+
     @contract
     def create_velp_group(self, name: 'str', valid_until: 'str | None' = None):
         """
@@ -127,5 +147,5 @@ class VelpGroups(TimDbBase):
                        WHERE document_id = ? OR (document_id = ? AND paragraph_id = ?) OR area_id = ? OR folder_id = ?
                        """, [document_id, document_id, paragraph_id, area_id, folder_id]
                        )
-        results=self.resultAsDictionary(cursor)
+        results = self.resultAsDictionary(cursor)
         return results
