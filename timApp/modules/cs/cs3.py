@@ -319,6 +319,17 @@ def get_html(ttype, query):
     if "parsons" in ttype: runner = 'cs-parsons-runner'
     if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype: runner = 'cs-jypeli-runner'
     if "sage" in ttype: runner = 'cs-sage-runner'
+
+    if is_review(query):
+        usercode = get_json_eparam(query.jso, "state", "usercode", "")
+        userinput = get_json_eparam(query.jso, "state", "userinput", None)
+        userargs = get_json_eparam(query.jso, "state", "userargs", None)
+        s = ""
+        if ( userinput != None ): s = s + '<p>Input:</p><pre>' + userinput + '</pre>'
+        if ( userargs != None ): s = s + '<p>Args:</p><pre>' + userargs + '</pre>'
+        result = NOLAZY + '<div class="review" ng-non-bindable><pre>' + usercode + '</pre>'+s+'</div>'
+        return result
+
     r = runner + is_input
     s = '<' + r + '>xxxJSONxxx' + jso + '</' + r + '>'
     # print(s)
@@ -336,8 +347,8 @@ def get_html(ttype, query):
             print("Ei ollut string: ", bycode, jso)
             bycode = '' + str(bycode)       
         ebycode = html.escape(bycode)
-        lazy_visible = '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,
-                                                                                                    '<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre"><pre>' + ebycode + '</pre></div>') + '</div>'
+        lazy_visible = '<div class="lazyVisible csRunDiv no-popup-menu" >' + get_surrounding_headers(query,
+                                                                                                    '<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre" ng-non-bindable><pre>' + ebycode + '</pre></div>') + '</div>'
         # lazyClass = ' class="lazyHidden"'
         lazy_start = LAZYSTART
         lazy_end = LAZYEND
@@ -550,8 +561,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         raise Exception("Timed out!")
 
     def do_all(self, query):
-        signal.signal(signal.SIGALRM, self.signal_handler)
-        signal.alarm(20)   # Ten seconds
+        try:
+            signal.signal(signal.SIGALRM, self.signal_handler)
+            signal.alarm(20)   # Ten seconds
+        except Exception  as e:
+            print("No signal", e)
         try:
             self.do_all_t(query)
         except Exception  as e:
@@ -1088,9 +1102,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "scala":
                     cmdline = "scalac %s" % (csfname)
                 elif ttype == "cc":
-                    cmdline = "gcc -Wall %s -o %s" % (csfname, exename)
+                    cmdline = "gcc -Wall %s %s -o %s -lm" % (opt, csfname, exename)
                 elif ttype == "c++":
-                    cmdline = "g++ -std=c++11 -Wall %s %s -o %s" % (opt, csfname, exename)
+                    cmdline = "g++ -std=c++11 -Wall %s %s -o %s -lm" % (opt, csfname, exename)
                 elif ttype == "py":
                     cmdline = ""
                 elif ttype == "clisp":
