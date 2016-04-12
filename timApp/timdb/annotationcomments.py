@@ -1,4 +1,6 @@
-from contracts import contract
+from sqlite3 import Connection
+from typing import Dict
+from typing import List
 from timdb.timdbbase import TimDbBase
 
 
@@ -7,8 +9,7 @@ class AnnotationComments(TimDbBase):
     Used as an interface to query the database about comments related to an annotation..
     """
 
-    @contract
-    def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
+    def __init__(self, db_path: Connection, files_root_path: str, type_name: str, current_user_name: str):
         """Initializes TimDB with the specified database and root path.
 
         :param type_name: The type name.
@@ -18,8 +19,7 @@ class AnnotationComments(TimDbBase):
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
 
-    @contract
-    def add_comment(self, annotation_id: 'int', commenter_id: 'int', content: 'str'):
+    def add_comment(self, annotation_id: int, commenter_id: int, content: str):
         """Adds new comment to an annotation
 
         :param annotation_id:
@@ -37,8 +37,7 @@ class AnnotationComments(TimDbBase):
         self.db.commit()
 
     #Todo write support for answer_id.
-    @contract
-    def get_comments(self, document_id: int, paragraph_id: str) -> 'list(dict)':
+    def get_comments(self, document_id: int, paragraph_id: str) -> List[Dict]:
         """Gets all the comments in annotations in this paragraph.
 
         :param document_id: Id of the document.

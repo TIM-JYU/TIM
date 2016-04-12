@@ -1,4 +1,5 @@
-from contracts import contract
+from sqlite3 import Connection
+from typing import Dict, List, Optional
 from timdb.timdbbase import TimDbBase
 from assessment_area import AssessmentArea
 
@@ -8,8 +9,7 @@ class Annotations(TimDbBase):
     Used as an interface to query the database about annotations.
     """
 
-    @contract
-    def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
+    def __init__(self, db_path: Connection, files_root_path: str, type_name: str, current_user_name: str):
         """Initializes TimDB with the specified database and root path.
 
         :param type_name: The type name.
@@ -19,8 +19,7 @@ class Annotations(TimDbBase):
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
 
-    @contract
-    def get_annotations(self, document_id: int, paragraph_id: str) -> 'list(dict)':
+    def get_annotations(self, document_id: int, paragraph_id: str) -> List[Dict]:
         """
         Gets all annotations made in a given area.
         :param document_id: The relevant document.
@@ -49,12 +48,11 @@ class Annotations(TimDbBase):
                        )
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def create_annotation(self, version_id: 'int', place_start: 'int', place_end: 'int',
-                          annotator_id: 'int', document_id: int, paragraph_id: 'str', points: 'float|None',
-                          element_number: 'int|None',
-                          icon_id: 'int | None' = None,
-                          answer_id: 'int | None' = None):
+    def create_annotation(self, version_id: int, place_start: int, place_end: int,
+                          annotator_id: int, document_id: int, paragraph_id: str, points: Optional[float],
+                          element_number: Optional[int],
+                          icon_id: Optional[int] = None,
+                          answer_id: Optional[int] = None):
         """
         Create new annotation
         :param version_id: version of the velp that the annotation uses
@@ -79,10 +77,9 @@ class Annotations(TimDbBase):
                        )
         self.db.commit()
 
-    @contract
-    def update_annotation(self, annotation_id: 'int', version_id: 'int', place_start: 'int', place_end: 'int',
-                          points: 'float|None',
-                          element_number: 'int|None', icon_id: 'int | None' = None):
+    def update_annotation(self, annotation_id: int, version_id: int, place_start: int, place_end: int,
+                          points: Optional[float],
+                          element_number: Optional[int], icon_id: Optional[int] = None):
         """Changes an existing annotation.
 
         :param annotation_id annotation to be changed.
@@ -110,8 +107,7 @@ class Annotations(TimDbBase):
         self.db.commit()
         return
 
-    @contract
-    def invalidate_annotation(self, annotation_id: 'int', valid_until: 'str | None' = None):
+    def invalidate_annotation(self, annotation_id: int, valid_until: Optional[str] = None):
         cursor = self.db.cursor()
 
         if valid_until is None:  # None if we want to invalidate immediately

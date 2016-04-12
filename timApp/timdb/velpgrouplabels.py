@@ -1,9 +1,7 @@
-from contracts import contract
 from timdb.timdbbase import TimDbBase,TimDbException
 
 class VelpGroupLabels(TimDbBase):
-    @contract
-    def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
+    def __init__(self, db_path: 'Connection', files_root_path: str, type_name: str, current_user_name: str):
         """Initializes TimDB with the specified database and root path.
 
         :param type_name: The type name.
@@ -13,8 +11,7 @@ class VelpGroupLabels(TimDbBase):
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
 
-    @contract
-    def create_velp_group_label(self, language_id: 'str', content: 'str'):
+    def create_velp_group_label(self, language_id: str, content: str):
         """
         Creates a new label
         :param language_id: Language chosen
@@ -30,8 +27,7 @@ class VelpGroupLabels(TimDbBase):
         )
         self.db.commit()
 
-    @contract
-    def add_translation(self, label_id: 'int', language_id: 'str', content: 'str'):
+    def add_translation(self, label_id: int, language_id: str, content: str):
         """
         Adds new translation to an existing label
         :param label_id: Label id
@@ -48,8 +44,7 @@ class VelpGroupLabels(TimDbBase):
         )
         self.db.commit()
 
-    @contract
-    def update_velp_group_label(self, label_id: 'int', language_id: 'str', content: 'str'):
+    def update_velp_group_label(self, label_id: int, language_id: str, content: str):
         """
         Updates content of label in specific language
         :param label_id: Label id
@@ -66,11 +61,7 @@ class VelpGroupLabels(TimDbBase):
         )
         self.db.commit()
 
-    @contract
-
-
-    @contract
-    def get_velp_group_labels(self, velp_id: 'int', language_id: 'str'):
+    def get_velp_group_labels(self, velp_id: int, language_id: str):
         """
         Gets information of labels for one velp in specific language
         :param velp_id: ID of velp
@@ -88,7 +79,6 @@ class VelpGroupLabels(TimDbBase):
         )
         return self.resultAsDictionary(cursor)
 
-    @contract
     def delete_velp_group_label(self, label_id):
         """
         Deletes label (use with extreme caution)
