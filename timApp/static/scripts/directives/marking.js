@@ -33,6 +33,9 @@ timApp.controller('MarkingController', ['$scope', '$timeout', function ($scope, 
         $scope.show = !$scope.show;
     };
 
+    /**
+     * Delete selected annotation. Queries parent scope.
+     */
     $scope.deleteAnnotation = function(){
         //console.log($scope.aid);
         $scope.$parent.deleteAnnotation($scope.aid);

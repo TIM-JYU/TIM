@@ -31,13 +31,14 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param url request url
      * @param params query parameters
      */
-    $scope.makePostRequest = function (url, params) {
+    $scope.makePostRequest = function (url, params, succesMethod) {
+        var response = null;
         $http({
             method: 'POST',
             url: url,
             params: params
-        }).success(function () {
-            console.log("sent post to: " + url);
+        }).then(function (data) {
+            succesMethod(data);
         });
     };
 
@@ -95,15 +96,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.deleteAnnotation = function(id){
         var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
-        var annotationHighlights = annotationParents[0].getElementsByClassName("ng-scope");
-        var savedHTML = annotationHighlights[0].innerHTML;
+        var annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
+        var savedHTML = "";
 
-        for (var i=1; i<annotationHighlights.length-1; i++){
-            savedHTML += annotationHighlights[i].outerHTML;
-        }
-
-        if (annotationHighlights.length>1){
-            savedHTML += annotationHighlights[annotationHighlights.length-1].innerHTML;
+        for (var i=0; i<annotationHighlights.length; i++){
+            var addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', '').replace('</span>', '');
+            savedHTML += addHTML
         }
 
         annotationParents[0].outerHTML = savedHTML;
@@ -160,11 +158,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             var parelement = $scope.selectedArea["commonAncestorContainer"].parentNode;
             var startElement = $scope.selectedArea["startContainer"];
 
-            var i = 0;
             while (!parelement.hasAttribute("id")) {
                 parelement = parelement.parentNode;
-                console.log(parelement);
-                i++;
             }
 
             var newMarking = {
@@ -173,25 +168,20 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 "points": velp.points,
                 "coord": {
                     "start": {
-                        "par_id": 0,
-                        "par_num": 0,
-                        "offset": $scope.selectedArea["startOffset"]
+                        par_id: parelement.id,
+                        el_num: 0,
+                        offset: $scope.selectedArea["startOffset"]
                     } ,
                     "end": {
-                        "par_id": $scope.selectedArea["endOffset"],
-                        "par_num": 0,
-                        "offset":  $scope.selectedArea["endOffset"],
+                        par_id: parelement.id,
+                        el_num: 0,
+                        "offset":  $scope.selectedArea["endOffset"]
                     }
                 }, // TODO: get coordinates from selectedArea
-                "comments": []
+                "comments": [
+                   //{"content": "Pre-printed comment", "author": username}
+                ]
             };
-
-            console.log(newMarking);
-            //console.log($scope.selectedArea["commonAncestorContainer"].parentElement.parentElement);
-            var parent = document.querySelectorAll("#previewContent p");
-            console.log(parent);
-
-            console.log($scope.selectedArea["endOffset"]);
 
             $scope.markings.push(newMarking);
             //$scope.selectMarking(newMarking['id']);

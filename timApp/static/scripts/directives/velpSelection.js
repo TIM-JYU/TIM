@@ -114,17 +114,17 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
         form.$setPristine();
         var labelToAdd = {
-            "id": new_label_id,
             "content": $scope.newLabel["content"],
             "language_id": "FI", // TODO: Change to user lang
             "selected": $scope.newLabel["selected"]
         };
-        $scope.makePostRequest("/addlabel", labelToAdd);
+        $scope.makePostRequest("/addlabel", labelToAdd, function (data) {
+            labelToAdd.id = data;
+            $scope.resetNewLabel();
+            $scope.labels.push(labelToAdd);
+            $scope.labelAdded = false;
+        });
 
-        new_label_id++;
-        $scope.resetNewLabel();
-        $scope.labels.push(labelToAdd);
-        $scope.labelAdded = false;
     };
 
 
@@ -146,22 +146,20 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
         }
 
         var velpToAdd = {
-            "labels": phraseLabels,
-            "used": 0,
-            "id": ++new_velp_id,
-            "points": $scope.newPhrase["points"],
-            "content": $scope.newPhrase["content"],
-            "language_id": "FI"
+            labels: phraseLabels,
+            used: 0,
+            points: $scope.newPhrase["points"],
+            content: $scope.newPhrase["content"],
+            language_id: "FI"
         };
 
-        $scope.makePostRequest("/addvelp", velpToAdd);
-
-        $scope.resetNewVelp();
-        $scope.velps.push(velpToAdd);
-
-        $scope.submitted = false;
-
-        $scope.resetLabels();
+        $scope.makePostRequest("/addvelp", velpToAdd, function (data) {
+            velpToAdd.id = data;
+            $scope.resetNewVelp();
+            $scope.velps.push(velpToAdd);
+            $scope.submitted = false;
+            $scope.resetLabels();
+        });
     };
 
     /**
