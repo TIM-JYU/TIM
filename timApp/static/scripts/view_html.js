@@ -1436,6 +1436,23 @@ timApp.controller("ViewCtrl", [
             $(".refPopup").remove();
         };
 
+        sc.cutPar = function (e, $par) {
+            var par_id = sc.getParId($par);
+
+            http.post('/clipboard/cut/' + sc.docId + '/' + par_id + '/' + par_id, {
+                }).success(function(data, status, headers, config) {
+                    var doc_ver = data['doc_ver'];
+                    var pars = data['pars'];
+                    if (pars.length > 0) {
+                        var first_par = pars[0].id;
+                        var last_par = pars[pars.length - 1].id;
+                        sc.handleDelete({version: doc_ver}, {par: first_par, area_start: first_par, area_end: last_par});
+                    }
+                }).error(function(data, status, headers, config) {
+                    $window.alert(data.error);
+                });
+        };
+
         sc.copyPar = function (e, $par) {
             var par_id = sc.getParId($par);
 
@@ -1455,7 +1472,11 @@ timApp.controller("ViewCtrl", [
             sc.selection.end = null;
         };
 
-        sc.copyArea = function (e, $par_or_area) {
+        sc.cutArea = function (e, $par_or_area, cut) {
+            sc.copyArea(e, $par_or_area, true);
+        };
+
+        sc.copyArea = function (e, $par_or_area, cut) {
             var ref_doc_id, area_name, area_start, area_end;
 
             if ($window.editMode == 'area') {
@@ -1470,13 +1491,30 @@ timApp.controller("ViewCtrl", [
                 area_end = sc.getAreaEnd();
             }
 
-            http.post('/clipboard/copy/' + sc.docId + '/' + area_start + '/' + area_end, {
-                    ref_doc_id: ref_doc_id,
+            if (cut) {
+                http.post('/clipboard/cut/' + sc.docId + '/' + area_start + '/' + area_end, {
                     area_name: area_name
-                }).success(function(data, status, headers, config) {
-                }).error(function(data, status, headers, config) {
+                }).success(function (data, status, headers, config) {
+                    var doc_ver = data['doc_ver'];
+                    var pars = data['pars'];
+                    if (pars.length > 0) {
+                        var first_par = pars[0].id;
+                        var last_par = pars[pars.length - 1].id;
+                        sc.handleDelete({version: doc_ver}, {par: first_par, area_start: first_par, area_end: last_par});
+                    }
+                }).error(function (data, status, headers, config) {
                     $window.alert(data.error);
                 });
+
+            } else {
+                http.post('/clipboard/copy/' + sc.docId + '/' + area_start + '/' + area_end, {
+                    ref_doc_id: ref_doc_id,
+                    area_name: area_name
+                }).success(function (data, status, headers, config) {
+                }).error(function (data, status, headers, config) {
+                    $window.alert(data.error);
+                });
+            }
         };
 
         sc.nothing = function () {
@@ -1511,6 +1549,7 @@ timApp.controller("ViewCtrl", [
                         desc: 'Edit area',
                         show: true
                     },
+                    {func: sc.cutArea, desc: 'Cut area', show: true},
                     {func: sc.copyArea, desc: 'Copy area', show: true},
                     {func: sc.cancelArea, desc: 'Cancel area', show: true},
                     {func: sc.nothing, desc: 'Close menu', show: true}
@@ -1518,9 +1557,11 @@ timApp.controller("ViewCtrl", [
             } else {
                 return [
                     {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
+                    {func: sc.cutPar, desc: 'Cut', show: $window.editMode === 'par'},
                     {func: sc.copyPar, desc: 'Copy', show: $window.editMode === 'par'},
                     {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
                     {func: sc.showAddParagraphMenu, desc: 'Add paragraph...', show: sc.rights.editable},
+                    {func: sc.cutArea, desc: 'Cut area', show: $window.editMode === 'area'},
                     {func: sc.copyArea, desc: 'Copy area', show: $window.editMode === 'area'},
                     {func: sc.showPasteMenu, desc: 'Paste...', show: $window.editMode != null},
                     {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},

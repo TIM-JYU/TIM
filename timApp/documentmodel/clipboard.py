@@ -68,8 +68,17 @@ class Clipboard:
             with open(self.get_reffilename(), 'wt', encoding='utf-8') as reffile:
                 reffile.write(reftext)
 
+        def cut_pars(self, doc: Document, par_start: str, par_end: str,
+                     area_name: Optional[str] = None) -> List[DocParagraph]:
+
+            pars = self.copy_pars(doc, par_start, par_end, area_name, doc, disable_ref=True)
+            for par in pars:
+                doc.delete_paragraph(par.get_id())
+
+            return pars
+
         def copy_pars(self, doc: Document, par_start: str, par_end: str, area_name: Optional[str] = None,
-                      ref_doc: Optional[Document] = None):
+                      ref_doc: Optional[Document] = None, disable_ref: bool = False) -> List[DocParagraph]:
 
             copying = False
             par_objs = []
@@ -97,10 +106,17 @@ class Clipboard:
 
             self.write(pars)
 
-            if area_name is None:
-                self.write_refs(par_objs)
+            if disable_ref:
+                reffilename = self.get_reffilename()
+                if os.path.isfile(reffilename):
+                    os.remove(reffilename)
             else:
-                self.write_arearef(ref_doc, area_name)
+                if area_name is None:
+                    self.write_refs(par_objs)
+                else:
+                    self.write_arearef(ref_doc, area_name)
+
+            return par_objs
 
         def paste_before(self, doc: Document, par_id: Optional[str], as_ref: Optional[bool] = False) -> List[DocParagraph]:
             pars = self.read(as_ref)

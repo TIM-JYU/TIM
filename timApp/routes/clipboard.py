@@ -10,6 +10,23 @@ clipboard = Blueprint('clipboard',
                       url_prefix='')  # TODO: Better URL prefix.
 
 
+@clipboard.route('/clipboard/cut/<int:doc_id>/<from_par>/<to_par>', methods=['POST'])
+def cut_to_clipboard(doc_id, from_par, to_par):
+    verifyLoggedIn()
+    verify_doc_exists(doc_id)
+    verify_edit_access(doc_id)
+
+    (area_name,) = verify_json_params('area_name', require=False)
+
+    timdb = getTimDb()
+    doc = Document(doc_id)
+    clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
+    pars = clip.cut_pars(doc, from_par, to_par, area_name)
+    timdb.documents.update_last_modified(doc)
+
+    return jsonResponse({'doc_ver': doc.get_version(), 'pars': [{'id': p.get_id()} for p in pars]})
+
+
 @clipboard.route('/clipboard/copy/<int:doc_id>/<from_par>/<to_par>', methods=['POST'])
 def copy_to_clipboard(doc_id, from_par, to_par):
     verifyLoggedIn()
@@ -38,6 +55,11 @@ def paste_from_clipboard(doc_id):
     timdb = getTimDb()
     doc = Document(doc_id)
     clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
+
+    if clip.read(as_ref=False) is None:
+        abort(400, 'The clipboard is empty.')
+    if as_ref and clip.read(as_ref=True) is None:
+        abort(400, 'The contents of the clipboard cannot be pasted as a reference.')
 
     if par_before is not None and par_after is None:
         pars = clip.paste_before(doc, par_before, as_ref)
