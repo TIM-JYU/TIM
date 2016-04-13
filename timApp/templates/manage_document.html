@@ -32,10 +32,17 @@
                     </div>
                 </td>
                 <td>
-                    <button class="timButton btn-sm" ng-click="updateAlias(alias)" ng-disabled="!aliasChanged(alias)">
-                        Update
-                    </button>
-                    <button class="timButton btn-sm" ng-click="removeAlias(alias)">Remove</button>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <button class="wideButton" ng-click="updateAlias(alias)"
+                                    ng-disabled="!aliasChanged(alias)">
+                                Update
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="wideButton" ng-click="removeAlias(alias)">Remove</button>
+                        </div>
+                    </div>
                 </td>
             </tr>
             <tr>
@@ -54,7 +61,7 @@
                     <input class="form-control" type="text" ng-model="newAlias.name" placeholder="Click to add"/>
                 </td>
                 <td>
-                    <button class="widebutton" ng-click="addAlias(newAlias)" ng-disabled="!newAlias.name">Add
+                    <button class="wideButton" ng-click="addAlias(newAlias)" ng-disabled="!newAlias.name">Add
                     </button>
                 </td>
             </tr>
@@ -78,7 +85,7 @@
             </tr>
             <tr>
                 <td><input type="text" class="form-control" ng-model="lang_id" placeholder="Language"/></td>
-                <td><input type="text" class="form-control" ng-model="doc.title" placeholder="Language"/></td>
+                <td><input type="text" class="form-control" ng-model="doc.title" placeholder="Title"/></td>
                 <td>{{ '{{doc.owner.name}}' }}</td>
                 <td>{{ '{{doc.id}}' }}</td>
                 <td>
@@ -102,33 +109,41 @@
         <button class="timButton" ng-click="toggleDiv('copy')">Create a copy</button>
     </span>
 
-
-
-
-
-    <div class="margin rights-list" ng-show="showCreateDiv == 'translate'">
+    <div class="margin" ng-show="showCreateDiv == 'translate'">
         <p>
             Please enter a short language identifier and the name of the document in the desired language.
         </p>
-        <input type="text" ng-model="translationName" class="shortedit" placeholder="Language"/>
-        <input type="text" ng-model="translationTitle" placeholder="New document title"/>
+        <div class="form-group"><label for="translationName">Language:</label>
+            <input id="translationName" class="form-control" type="text" ng-model="translationName"
+                   placeholder="Language"/></div>
+        <div class="form-group"><label for="translationTitle">New document title:</label>
+            <input id="translationTitle" class="form-control" type="text" ng-model="translationTitle"
+                   placeholder="New document title"/></div>
+
         <button class="timButton" ng-click="createTranslation()">Create translation</button>
     </div>
 
-    <div class="margin rights-list" ng-show="showCreateDiv == 'cite'">
+    <div class="margin" ng-show="showCreateDiv == 'cite'">
         <p>
             Please enter a fully qualified name for the new document.
         </p>
-        <input type="text" ng-model="citationName" placeholder="New document name"/>
+        <div class="form-group">
+            <label for="citationName">New document name:</label>
+            <input id="citationName" class="form-control" type="text" ng-model="citationName"
+                   placeholder="New document name"/></div>
         <button class="timButton" ng-click="createCitation()">Create cited copy</button>
     </div>
 
-    <div class="margin rights-list" ng-show="showCreateDiv == 'copy'">
+    <div class="margin" ng-show="showCreateDiv == 'copy'">
         <p>
             Please enter a fully qualified name for the new document.
         </p>
-        Path: <input type="text" ng-model="documentPath" placeholder="New document path"/>
-        Name: <input type="text" ng-model="documentName" placeholder="New document name"/>
+        <div class="form-group"><label for="documentPath">Path:</label>
+            <input id="documentPath" class="form-control" type="text" ng-model="documentPath"
+                   placeholder="New document path"/></div>
+        <div class="form-group"><label for="documentName">Name:</label>
+            <input id="documentName" class="form-control" type="text" ng-model="documentName"
+                   placeholder="New document name"/></div>
         <button class="timButton" ng-click="createCopy()">Create copy</button>
     </div>
 
