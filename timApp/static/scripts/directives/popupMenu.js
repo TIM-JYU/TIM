@@ -32,8 +32,20 @@ timApp.directive('popupMenu', ['$window', '$filter', function ($window, $filter)
                 $scope.closePopup();
             };
 
-            $scope.saveChoice = function () {
-                $scope.$storage.defaultAction = $scope.defaultAction.desc;
+            $scope.getChecked = function (fDesc) {
+                if (fDesc === null || $scope.$storage.defaultAction === null)
+                    return "";
+
+                return fDesc === $scope.$storage.defaultAction ? "checked" : "";
+            };
+
+            $scope.clicked = function (fDesc) {
+                if ($scope.$storage.defaultAction === fDesc)
+                    $scope.$storage.defaultAction = $scope.$storage.defaultDefaultAction;
+                else
+                    $scope.$storage.defaultAction = fDesc;
+
+                console.log($scope.$storage.defaultAction);
             };
 
             $element.css('position', 'absolute'); // IE needs this
