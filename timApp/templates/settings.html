@@ -12,26 +12,35 @@
 {% endblock %}
 {% block content %}
     <div ng-controller="SettingsCtrl">
-        <form ng-submit="submit('{{ request.path + 'save' }}')">
-            {% if css_files %}
-                <span>Available custom styles:</span>
-            {% else %}
-                <span>There are no available custom styles.</span>
-            {% endif %}
-            <br>
-            {% for css_file in css_files %}
-                <label><input type="checkbox"
-                              name="settings.css_files.{{ css_file.name }}"
-                              ng-model="settings.css_files.{{ css_file.name }}"
-                              ng-change="submit('{{ request.path + 'save' }}')"
-                              ng-disabled="saving">
-                    <a href="{{ url_for('static', filename='css/' + css_file.name + '.scss') }}">
-                        {{ css_file.name }}</a> - {{ css_file.desc }}
-                </label><br>
-            {% endfor %}
-            <label>Custom CSS:<br><textarea class="docEditor" ng-model="settings.custom_css"></textarea></label><br>
-            <button type="submit" ng-disabled="saving">Save custom CSS</button>
-            <span ng-show="saving">Saving...</span>
-        </form>
+        <div class="panel panel-default">
+            <div class="panel-heading">Styles</div>
+            <div class="panel-body">
+                <form ng-submit="submit('{{ request.path + 'save' }}')">
+                    {% if css_files %}
+                        <span>Available custom styles:</span>
+                    {% else %}
+                        <span>There are no available custom styles.</span>
+                    {% endif %}
+                    <br>
+                    {% for css_file in css_files %}
+                        <div class="checkbox"><label><input type="checkbox"
+                                      name="settings.css_files.{{ css_file.name }}"
+                                      ng-model="settings.css_files.{{ css_file.name }}"
+                                      ng-change="submit('{{ request.path + 'save' }}')"
+                                      ng-disabled="saving">
+                            <a href="{{ url_for('static', filename='css/' + css_file.name + '.scss') }}">
+                                {{ css_file.name }}</a> - {{ css_file.desc }}
+                        </label></div>
+                    {% endfor %}
+                    <div class="form-group">
+                        <label for="customCssArea">Custom CSS:</label>
+                    <textarea rows="15" id="customCssArea" class="form-control" ng-model="settings.custom_css"></textarea>
+                    </div>
+
+                    <button class="timButton" type="submit" ng-disabled="saving">Save custom CSS</button>
+                    <span ng-show="saving">Saving...</span>
+                </form>
+            </div>
+        </div>
     </div>
 {% endblock %}
