@@ -1,14 +1,15 @@
 from typing import Optional, List
 
-from timdb.timdbbase import TimDbBase, TimDbException
+from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 
 
 class VelpGroups(TimDbBase):
-    def create_default_velp_group(self, name: str, valid_until: None):
-        """Creates default velp group where all velps used in document are stored
+    def create_default_velp_group(self, name: str, owner_group_id: int, valid_until: None):
+        """Creates default velp group where all velps used in document are stored.
 
-        :param name: Name of the new default velp group
-        :param valid_until: Valid forever, thus None
+        :param name: Name of the new default velp group.
+        :param owner_group_id: The id of the owner group.
+        :param valid_until: Valid forever, thus None.
         :return:
         """
         cursor = self.db.cursor()
@@ -19,14 +20,16 @@ class VelpGroups(TimDbBase):
                       """, [name, valid_until, True]
                        )
         self.db.commit()
-        velp_id = cursor.lastrowid
-        return velp_id
+        velp_group_id = cursor.lastrowid
+        self.insertBlockToDb(name, owner_group_id, blocktypes.VELPGROUP)
+        return velp_group_id
 
-    def create_velp_group(self, name: str, valid_until: Optional[str] = None):
-        """
-        Create a velp group
-        :param name: Name of the created group
-        :param valid_until: How long velp group is valid (None is forever)
+    def create_velp_group(self, name: str, owner_group_id: int, valid_until: Optional[str] = None):
+        """Create a velp group
+
+        :param name: Name of the created group.
+        :param owner_group_id: The id of the owner group.
+        :param valid_until: How long velp group is valid (None is forever).
         :return:
         """
         cursor = self.db.cursor()
@@ -37,6 +40,9 @@ class VelpGroups(TimDbBase):
                       """, [name, valid_until]
                        )
         self.db.commit()
+        velp_group_id = cursor.lastrowid
+        self.insertBlockToDb(name, owner_group_id, blocktypes.VELPGROUP)
+        return  velp_group_id
 
     def update_velp_group(self, velp_group_id: int, name: str, valid_until: Optional[str]):
         """

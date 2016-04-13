@@ -22,6 +22,13 @@ def get_labels(document_id: int) -> 'str':
     label_data = timdb.velps.get_document_velp_label_content(int(document_id))
     return jsonResponse(label_data)
 
+@velps.route("/velpagrupa", methods=['GET'])
+def create_velp_group():
+    timdb = getTimDb()
+    # Todo select language.
+    velp_group_id = timdb.velp_groups.create_velp_group("apina", 1, None)
+    return jsonResponse(velp_group_id)
+
 
 # TODO remove this
 """
