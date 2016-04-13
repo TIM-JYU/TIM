@@ -16,12 +16,13 @@ def copy_to_clipboard(doc_id, from_par, to_par):
     verify_doc_exists(doc_id)
     verify_view_access(doc_id)
 
-    (area_name,) = verify_json_params('area_name', require=False)
+    (area_name, ref_doc_id) = verify_json_params('area_name', 'ref_doc_id', require=False)
+    ref_doc = Document(ref_doc_id) if ref_doc_id is not None and ref_doc_id != doc_id else None
 
     timdb = getTimDb()
     doc = Document(doc_id)
     clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
-    clip.copy_pars(doc, from_par, to_par, area_name)
+    clip.copy_pars(doc, from_par, to_par, area_name, ref_doc)
 
     return okJsonResponse()
 

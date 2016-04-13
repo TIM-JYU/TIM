@@ -64,7 +64,7 @@
 
 {% for t in text %}
     {% if t.attrs.area %}
-     <div class="area" id="area_{{t.attrs.area}}">
+     <div class="area" id="area_{{t.attrs.area}}" data-name="{{t.attrs.area}}" data-doc-id="{{t.doc_id}}">
      <div class="areaContent">
     {% endif %}
     {% if t.ref_attrs and t.ref_attrs.area %}
@@ -74,7 +74,7 @@
             {% set refcount = 0 %}
         {% endif %}
 
-        <div class="area" id="area_{{t.ref_attrs.area}}_ref{{refcount}}">
+        <div class="area" id="area_{{t.ref_attrs.area}}_ref{{refcount}}" data-name="{{t.ref_attrs.area}}" data-doc-id="{{t.ref_doc_id}}">
         <div class="areaContent">
     {% endif %}
 

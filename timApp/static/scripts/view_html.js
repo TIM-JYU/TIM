@@ -214,11 +214,20 @@ timApp.controller("ViewCtrl", [
             return $par.attr("id");
         };
 
+        sc.getAreaDocId = function ($area) {
+            if (!$area.hasClass('area')) {
+                return null;
+            }
+
+            return $area.attr("data-doc-id");
+        };
+
         sc.getAreaId = function ($area) {
             if (!$area.hasClass('area')) {
                 return null;
             }
-            return $area.attr("id").substring(5);
+
+            return $area.attr("data-name");
         };
 
         sc.getFirstPar = function ($par_or_area) {
@@ -1391,19 +1400,22 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.copyArea = function (e, $par_or_area) {
-            var area_name, area_start, area_end;
+            var ref_doc_id, area_name, area_start, area_end;
 
             if ($window.editMode == 'area') {
+                ref_doc_id = sc.getAreaDocId($par_or_area);
                 area_name = sc.getAreaId($par_or_area);
                 area_start = sc.getFirstParId($par_or_area);
                 area_end = sc.getLastParId($par_or_area);
             } else {
+                ref_doc_id = null;
                 area_name = null;
                 area_start = sc.getAreaStart();
                 area_end = sc.getAreaEnd();
             }
 
             http.post('/clipboard/copy/' + sc.docId + '/' + area_start + '/' + area_end, {
+                    ref_doc_id: ref_doc_id,
                     area_name: area_name
                 }).success(function(data, status, headers, config) {
                 }).error(function(data, status, headers, config) {

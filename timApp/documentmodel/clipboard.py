@@ -68,10 +68,15 @@ class Clipboard:
             with open(self.get_reffilename(), 'wt', encoding='utf-8') as reffile:
                 reffile.write(reftext)
 
-        def copy_pars(self, doc: Document, par_start: str, par_end: str, area_name: Optional[str] = None):
+        def copy_pars(self, doc: Document, par_start: str, par_end: str, area_name: Optional[str] = None,
+                      ref_doc: Optional[Document] = None):
+
             copying = False
             par_objs = []
             pars = []
+
+            if ref_doc is None:
+                ref_doc = doc
 
             # todo: make the iterator accept ranges
             i = doc.__iter__()
@@ -95,7 +100,7 @@ class Clipboard:
             if area_name is None:
                 self.write_refs(par_objs)
             else:
-                self.write_arearef(par_objs[0].doc, area_name)
+                self.write_arearef(ref_doc, area_name)
 
         def paste_before(self, doc: Document, par_id: Optional[str], as_ref: Optional[bool] = False) -> List[DocParagraph]:
             pars = self.read(as_ref)
