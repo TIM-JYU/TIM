@@ -1390,6 +1390,16 @@ timApp.controller("ViewCtrl", [
             $(".refPopup").remove();
         };
 
+        sc.copyPar = function (e, $par) {
+            var par_id = sc.getParId($par);
+
+            http.post('/clipboard/copy/' + sc.docId + '/' + par_id + '/' + par_id, {
+                }).success(function(data, status, headers, config) {
+                }).error(function(data, status, headers, config) {
+                    $window.alert(data.error);
+                });
+        };
+
         sc.startArea = function (e, $par) {
             sc.selection.start = sc.getFirstParId($par);
         };
@@ -1462,10 +1472,11 @@ timApp.controller("ViewCtrl", [
             } else {
                 return [
                     {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
+                    {func: sc.copyPar, desc: 'Copy', show: $window.editMode === 'par'},
                     {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
                     {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
                     {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
-                    {func: sc.copyArea, desc: 'Copy area', show: $window.editMode == 'area'},
+                    {func: sc.copyArea, desc: 'Copy area', show: $window.editMode === 'area'},
                     {func: sc.pasteRefAbove, desc: 'Paste reference above', show: $window.editMode != null},
                     {func: sc.pasteContentAbove, desc: 'Paste content above', show: $window.editMode != null},
                     {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
