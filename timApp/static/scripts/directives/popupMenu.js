@@ -2,7 +2,8 @@ var timApp = angular.module('timApp');
 
 /**
  * A popup menu directive that is used in the document view.
- * Requires a paragraph (element with class "par") as its ancestor.
+ * Requires a paragraph (element with class "par") or
+ * an area (element with a class "area") as its ancestor.
  */
 timApp.directive('popupMenu', ['$window', '$filter', function ($window, $filter) {
     return {
@@ -12,7 +13,9 @@ timApp.directive('popupMenu', ['$window', '$filter', function ($window, $filter)
         replace: true,
 
         link: function ($scope, $element, $attrs) {
-
+            $scope.actions = eval('$scope.' + $attrs['actions']);
+            if ($attrs['save'])
+                $scope.storageAttribute = '$scope.$storage.' + $attrs['save'];
         },
 
         controller: function ($scope, $element) {
@@ -31,12 +34,27 @@ timApp.directive('popupMenu', ['$window', '$filter', function ($window, $filter)
                 $scope.closePopup();
             };
 
-            $scope.saveChoice = function () {
-                $scope.$storage.defaultAction = $scope.defaultAction.desc;
+            $scope.getChecked = function (fDesc) {
+                if (fDesc === null || $scope.$storage.defaultAction === null)
+                    return "";
+
+                return fDesc === $scope.$storage.defaultAction ? "checked" : "";
+            };
+
+            $scope.clicked = function (fDesc) {
+                /*if ($scope.$storage.defaultAction === fDesc)
+                    $scope.$storage.defaultAction = $scope.$storage.defaultDefaultAction;
+                else
+                    $scope.$storage.defaultAction = fDesc;*/
+
+                if (eval($scope.storageAttribute) === fDesc)
+                    eval($scope.storageAttribute + ' = null;');
+                else
+                    eval($scope.storageAttribute + ' = fDesc;');
             };
 
             $element.css('position', 'absolute'); // IE needs this
-            $scope.$par = $element.parents('.par');
+            $scope.$par = $element.parents('.par, .area');
         }
     };
 }]);

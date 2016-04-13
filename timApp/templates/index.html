@@ -96,7 +96,7 @@
                     <td>{{ '{{ doc.modified }}' }}</td>
                     <td>{{ '{{ doc.owner.name }}' }}</td>
                     <td>
-                        <a ng-show="doc.canEdit" href="/view/{{ '{{ doc.id }}' }}">Edit</a>
+                        <a ng-show="doc.canEdit" href="/view/{{ '{{ doc.fullname }}' }}?edit=true">Edit</a>
                         <a ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}">Manage</a>
                         <a ng-show="doc.isOwner" href="/teacher/{{ '{{ doc.fullname | escape }}' }}">Teacher</a>
                     </td>

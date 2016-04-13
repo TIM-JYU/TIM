@@ -99,6 +99,11 @@ td p {
     background: #3CC; /* rgb(236,103,27); */
 }
 
+.areaeditline:hover {
+    opacity: 0.5;
+    background: #d874ff; /* rgb(236,103,27); */
+}
+
 .readline.read {
     display: none;
 }
@@ -145,6 +150,10 @@ ul ul ul, ol ol ol {
 
 .note p:last-child {
     margin-bottom: 0;
+}
+
+.area {
+    position: relative;
 }
 
 .par {
@@ -210,7 +219,7 @@ ul ul ul, ol ol ol {
     background: inherit;
 }
 
-#previewDiv .editline, #previewDiv .readline, #previewDiv .arealine .csrunPreview .editline, .csrunPreview .readline {
+#previewDiv .editline, #previewDiv .readline, #previewDiv .arealine .csrunPreview .editline .areaeditline, .csrunPreview .readline {
     display: none;
 }
 
@@ -266,6 +275,20 @@ ul ul ul, ol ol ol {
     top: 0;
 }
 
+.areaeditline {
+    position: absolute;
+    left: -1.2em;
+    z-index: 2;
+    width: 3em;
+    height: 100%;
+    top: 0;
+}
+
+.areaeditline-show {
+    opacity: 0.2;
+    background: #d874ff; /* rgb(236,103,27); */
+}
+
 .areacollapse::before {
     color: #3cc;
     content: "[-]";
@@ -273,6 +296,16 @@ ul ul ul, ol ol ol {
 
 .areaexpand::before {
     color: #3cc;
+    content: "[+]";
+}
+
+.disabledcollapse::before {
+    color: #ccc;
+    content: "[-]";
+}
+
+.disabledexpand::before {
+    color: #ccc;
     content: "[+]";
 }
 

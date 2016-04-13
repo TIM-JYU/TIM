@@ -68,6 +68,12 @@ def verify_edit_access(block_id, message="Sorry, you don't have permission to ed
         abort(403, message)
 
 
+def verify_doc_exists(doc_id, message="Sorry, the document does not exist."):
+    timdb = getTimDb()
+    if not timdb.documents.exists(doc_id):
+        abort(404, message)
+
+
 def has_edit_access(block_id):
     timdb = getTimDb()
     return timdb.users.has_edit_access(getCurrentUserId(), block_id)

@@ -1,14 +1,12 @@
 <div class="actionButtons">
     <span class="error" ng-show="notification" ng-bind="notification"></span>
-    <span class="actionButtonRow" ng-repeat="f in editorFunctions | filter:{show: true}">
+    <span class="actionButtonRow" ng-repeat="f in actions | filter:{show: true}">
     <button style="width: 150px;" class="timButton" ng-bind="f.desc" ng-click="callFunc($event, f)">
     </button>
-    <input ng-model="$parent.$parent.defaultAction"
-           ng-value="f"
+    <input ng-if="storageAttribute"
+           ng-checked="getChecked(f.desc)"
+           ng-click="clicked(f.desc)",
            class="defaultCheckbox"
-           type="radio"
-           ng-change="saveChoice()">
+           type="radio">
     </span>
-    <button style="width: 150px;" class="timButton" ng-click="$parent.defaultAction = null">Clear default action
-    </button>
 </div>
