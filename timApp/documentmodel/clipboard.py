@@ -5,7 +5,7 @@ import shutil
 from documentmodel.document import Document
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.documentwriter import DocumentParser, DocumentWriter
-from documentmodel.randutils import hashfunc
+from documentmodel.randutils import random_id
 from typing import Dict, Generic, List, Optional
 
 
@@ -126,7 +126,9 @@ class Clipboard:
             par_before = par_id
             for par in reversed(pars):
                 # We need to reverse the sequence because we're inserting before, not after
-                new_par = doc.insert_paragraph(par['md'], par_before, attrs=par.get('attrs'), properties=par.get('properties'))
+                new_par_id = par['id'] if not doc.has_paragraph(par['id']) else random_id()
+                new_par = doc.insert_paragraph(par['md'], par_before, par_id=new_par_id,
+                                               attrs=par.get('attrs'), properties=par.get('properties'))
                 doc_pars = [new_par] + doc_pars
                 par_before = new_par.get_id()
 
