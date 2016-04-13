@@ -140,7 +140,7 @@ class Clipboard:
             try:
                 while True:
                     if next(i).get_id() == par_id:
-                        par_before = next(i)
+                        par_before = next(i).get_id()
                         raise StopIteration
             except StopIteration:
                 pass

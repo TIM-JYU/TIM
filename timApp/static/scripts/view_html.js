@@ -710,6 +710,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.showPasteMenu = function (e, $par_or_area, coords) {
+            sc.pasteFunctions = sc.getPasteFunctions();
             sc.showPopupMenu(e, $par_or_area, coords, 'pasteFunctions');
         };
 
@@ -1448,6 +1449,9 @@ timApp.controller("ViewCtrl", [
                         var last_par = pars[pars.length - 1].id;
                         sc.handleDelete({version: doc_ver}, {par: first_par, area_start: first_par, area_end: last_par});
                     }
+
+                    sc.allowPasteContent = true;
+                    sc.allowPasteRef = false;
                 }).error(function(data, status, headers, config) {
                     $window.alert(data.error);
                 });
@@ -1458,6 +1462,8 @@ timApp.controller("ViewCtrl", [
 
             http.post('/clipboard/copy/' + sc.docId + '/' + par_id + '/' + par_id, {
                 }).success(function(data, status, headers, config) {
+                    sc.allowPasteContent = true;
+                    sc.allowPasteRef = true;
                 }).error(function(data, status, headers, config) {
                     $window.alert(data.error);
                 });
@@ -1501,6 +1507,9 @@ timApp.controller("ViewCtrl", [
                         var first_par = pars[0].id;
                         var last_par = pars[pars.length - 1].id;
                         sc.handleDelete({version: doc_ver}, {par: first_par, area_start: first_par, area_end: last_par});
+
+                        sc.allowPasteContent = true;
+                        sc.allowPasteRef = false;
                     }
                 }).error(function (data, status, headers, config) {
                     $window.alert(data.error);
@@ -1511,6 +1520,8 @@ timApp.controller("ViewCtrl", [
                     ref_doc_id: ref_doc_id,
                     area_name: area_name
                 }).success(function (data, status, headers, config) {
+                    sc.allowPasteContent = true;
+                    sc.allowPasteRef = true;
                 }).error(function (data, status, headers, config) {
                     $window.alert(data.error);
                 });
@@ -1563,7 +1574,7 @@ timApp.controller("ViewCtrl", [
                     {func: sc.showAddParagraphMenu, desc: 'Add paragraph...', show: sc.rights.editable},
                     {func: sc.cutArea, desc: 'Cut area', show: $window.editMode === 'area'},
                     {func: sc.copyArea, desc: 'Copy area', show: $window.editMode === 'area'},
-                    {func: sc.showPasteMenu, desc: 'Paste...', show: $window.editMode != null},
+                    {func: sc.showPasteMenu, desc: 'Paste...', show: $window.editMode && (sc.allowPasteRef || sc.allowPasteContent)},
                     {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
                     {
                         func: sc.startArea,
@@ -1585,10 +1596,10 @@ timApp.controller("ViewCtrl", [
 
         sc.getPasteFunctions = function () {
             return [
-                {func: sc.pasteRefAbove, desc: 'Above, as a reference', show: true},
-                {func: sc.pasteContentAbove, desc: 'Above, as content', show: true},
-                {func: sc.pasteRefBelow, desc: 'Below, as a reference', show: true},
-                {func: sc.pasteContentBelow, desc: 'Below, as content', show: true},
+                {func: sc.pasteRefAbove, desc: 'Above, as a reference', show: sc.allowPasteRef},
+                {func: sc.pasteContentAbove, desc: 'Above, as content', show: sc.allowPasteContent},
+                {func: sc.pasteRefBelow, desc: 'Below, as a reference', show: sc.allowPasteRef},
+                {func: sc.pasteContentBelow, desc: 'Below, as content', show: sc.allowPasteContent},
                 {func: sc.nothing, desc: 'Cancel', show: true}
             ];
         };
@@ -1599,6 +1610,9 @@ timApp.controller("ViewCtrl", [
         sc.editorFunctions = sc.getEditorFunctions();
         sc.addParagraphFunctions = sc.getAddParagraphFunctions();
         sc.pasteFunctions = sc.getPasteFunctions();
+
+        sc.allowPasteContent = true;
+        sc.allowPasteRef = true;
 
         sc.$storage = $localStorage.$default({
             defaultAction: "Show options window",
