@@ -11,18 +11,18 @@ console.log("reviewController.js added");
 timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile', function ($scope, $http, $window, $compile) {
     "use strict";
 
-    $scope.markingsAdded = false;
-    $scope.selectedMarking = {"comments": [], "velp": "", "points": 0};
-    $scope.markings = [];
+    $scope.annotationsAdded = false;
+    $scope.selectedAnnotation = {"comments": [], "velp": "", "points": 0};
+    $scope.annotations = [];
 
     //var username = $scope.$parent.$parent.users[0].name;
     var username = $scope.$parent.users[0].name;
 
     /*
     $http.get('/static/test_data/markings.json').success(function (data) {
-        //$scope.markings = [];
-        $scope.markings = data;
-        $scope.loadMarkings();
+        //$scope.annotations = [];
+        $scope.annotations = data;
+        $scope.loadAnnotations();
     });
     */
 
@@ -43,35 +43,35 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Loads used markings into view
+     * Loads used annotations into view
      */
-    $scope.loadMarkings = function() {
+    $scope.loadAnnotations = function() {
         // TODO: Change this when editor is removed
         var elements = document.getElementById("previewContent").getElementsByTagName("p");
 
-        if (elements.length > 0 && !$scope.markingsAdded && typeof $scope.markings != "undefined" && $scope.markings.length > 0) {
-            for (var i=$scope.markings.length-1; i>=0; i--){
-                var placeInfo = $scope.markings[i]["coord"];
+        if (elements.length > 0 && !$scope.annotationsAdded && typeof $scope.annotations != "undefined" && $scope.annotations.length > 0) {
+            for (var i=$scope.annotations.length-1; i>=0; i--){
+                var placeInfo = $scope.annotations[i]["coord"];
                 var el = elements.item(placeInfo["el"]).childNodes[0];
                 var range = document.createRange();
 
                 range.setStart(el, placeInfo["start"]);
                 range.setEnd(el, placeInfo["end"]);
 
-                $scope.addMarkingToCoord(range, $scope.markings[i], false);
+                $scope.addAnnotationToCoord(range, $scope.annotations[i], false);
             }
-            $scope.markingsAdded = true;
+            $scope.annotationsAdded = true;
         }
     };
 
     /**
-     * Adds marking to given element on given coordinate
-     * @param el element
-     * @param start start coordinate
-     * @param end end coordinate
+     * Adds annotation to given element on given coordinate
+     * @param range annotation location
+     * @param annotation annotation info
+     * @param show show by default
      */
-    $scope.addMarkingToCoord = function(range, marking, show){
-        var span = $scope.createPopOverElement(marking, show);
+    $scope.addAnnotationToCoord = function(range, annotation, show){
+        var span = $scope.createPopOverElement(annotation, show);
         console.log(range);
         try {
             range.surroundContents(span);
@@ -83,10 +83,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             new_range.setStart(el, start);
             new_range.setEnd(el, end);
-            $scope.addMarkingToCoord(new_range, marking, show);
+            $scope.addAnnotationToCoord(new_range, annotation, show);
         }
         $compile(span)($scope); // Gives error [$compile:nonassign]
-
     };
 
     /**
@@ -151,47 +150,76 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Uses selected velp, if area is selected.
+     * TODO: When annotations can cross taglines, change end coordinate according to end element
      * @param velp velp selected in velpSelection directive
      */
     $scope.usePhrase = function (velp) {
         if (typeof $scope.selectedArea != "undefined") {
-            var parelement = $scope.selectedArea["commonAncestorContainer"].parentNode;
-            var startElement = $scope.selectedArea["startContainer"];
+            var parelement = $scope.selectedArea["commonAncestorContainer"].parentElement;
+            var startElement = $scope.selectedArea["startContainer"].parentElement;
+            var startElementNum = null;
 
             while (!parelement.hasAttribute("id")) {
-                parelement = parelement.parentNode;
+                parelement = parelement.parentElement;
             }
 
+            var element_path = $scope.getElementPositionInTree(startElement, []);
+
             var newMarking = {
-                "id": $scope.markings.length,
+                "id": $scope.annotations.length,
                 "velp": velp.id,
                 "points": velp.points,
                 "coord": {
                     "start": {
                         par_id: parelement.id,
-                        el_num: 0,
+                        par_t: parelement.getAttribute("t"),
+                        el_path: element_path,
                         offset: $scope.selectedArea["startOffset"]
                     } ,
                     "end": {
                         par_id: parelement.id,
-                        el_num: 0,
+                        par_t: parelement.getAttribute("t"),
+                        el_path: element_path,
                         "offset":  $scope.selectedArea["endOffset"]
                     }
-                }, // TODO: get coordinates from selectedArea
+                },
                 "comments": [
                    //{"content": "Pre-printed comment", "author": username}
                 ]
             };
 
-            $scope.markings.push(newMarking);
+            $scope.annotations.push(newMarking);
             //$scope.selectMarking(newMarking['id']);
 
-            $scope.addMarkingToCoord($scope.selectedArea, newMarking, true);
+            $scope.addAnnotationToCoord($scope.selectedArea, newMarking, true);
             $scope.selectedArea = undefined;
 
             velp.used += 1;
         }
-        $scope.markingsAdded = true;
+        $scope.annotationsAdded = true;
+    };
+
+    /**
+     * Gets array of element indexes from parent to start
+     * @param start
+     * @param array
+     * @returns {*}
+     */
+    $scope.getElementPositionInTree = function(start, array){
+        var myparent = start.parentElement;
+
+        if (myparent.hasAttribute("id"))
+            return array.reverse();
+
+        for (var i = 0; i<myparent.children.length; i++){
+            if (myparent.children[i] == start){
+                console.log(array);
+                array.push(i);
+                return $scope.getElementPositionInTree(myparent, array)
+            }
+        }
+
+        return null
     };
 
     /**
@@ -200,9 +228,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @returns {Array|*|string|boolean}
      */
     $scope.getMarkingComments = function (id){
-        for (var i=0; i<$scope.markings.length; i++){
-            if (id == $scope.markings[i].id)
-                return $scope.markings[i].comments;
+        for (var i=0; i<$scope.annotations.length; i++){
+            if (id == $scope.annotations[i].id)
+                return $scope.annotations[i].comments;
         }
     };
 
@@ -213,7 +241,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @returns {Element}
      */
     $scope.createPopOverElement = function (marking, show) {
-        var element = document.createElement('marking');
+        var element = document.createElement('annotation');
         var velp_content = String($scope.getVelpById(marking.velp).content);
 
         element.setAttribute("velp", velp_content);

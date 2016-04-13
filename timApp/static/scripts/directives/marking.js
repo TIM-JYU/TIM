@@ -5,9 +5,9 @@
 'use strict';
 
 /* Directive for marking */
-timApp.directive("marking", function() {
+timApp.directive("annotation", function() {
     return{
-        templateUrl: "/static/templates/marking.html",
+        templateUrl: "/static/templates/annotation.html",
         transclude: true,
         scope: {
             // locked, selected ?
@@ -37,7 +37,6 @@ timApp.controller('MarkingController', ['$scope', '$timeout', function ($scope, 
      * Delete selected annotation. Queries parent scope.
      */
     $scope.deleteAnnotation = function(){
-        //console.log($scope.aid);
         $scope.$parent.deleteAnnotation($scope.aid);
         $scope.toggleAnnotation();
     };

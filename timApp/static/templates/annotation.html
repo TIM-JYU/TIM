@@ -1,5 +1,5 @@
 <!-- Pop-over element
---><div ng-show="!show" ng-class="['marking-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
+--><div ng-show="!show" ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
     <div class="fulldiv">
         <div class="div-90">
             <p><span><strong>{{ velp }}</strong></span>
@@ -22,5 +22,5 @@
 </div><!--
 
 Surrounded text
---><span ng-click="toggleAnnotation()" ng-class="['highlighted', 'marking', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]"
+--><span ng-click="toggleAnnotation()" ng-class="['highlighted', 'annotation', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]"
          ng-transclude></span>
