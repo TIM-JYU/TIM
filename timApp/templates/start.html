@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% block baseclass %}bs{% endblock %}
 {% block title %}Welcome{% endblock %}
 {% block head %}
     {{ super() }}
@@ -27,12 +26,12 @@
     {% elif session.user_id %}
         {% include 'side_menu.html' %}
     {% endif %}
-    <div class="row largetext">
+    <div class="row">
         <h1 class="text-center">TIM - The Interactive Material</h1>
     </div>
 
     <div class="row">
-        <div class="col-md-8 largeimage">
+        <div class="col-md-8">
             <a href="/view/tim/TIM-esittely">
                 <img src="{{ url_for('static', filename='images/responsive.jpg') }}"/>
             </a>
@@ -46,7 +45,7 @@
                 </ul>
 
                 <form method="POST" action="/logout">
-                    <button class="widebutton" type="submit">Log out</button>
+                    <button class="wideButton" type="submit">Log out</button>
                 </form>
             {% elif session.altlogin == "signup2" %}
                 <form method="POST" action="/altsignup2">
@@ -76,7 +75,7 @@
                         <label for="passconfirm">Repeat new password</label>
                         <input class="form-control" id="passconfirm" name="passconfirm" type="password">
                     </div>
-                    <button class="widebutton" type="submit">Create account</button>
+                    <button class="wideButton" type="submit">Create account</button>
                 </form>
             {% else %}
                 <ul>
@@ -120,7 +119,7 @@
                                 <div class="form-group"><input class="form-control" id="user_password" name="password"
                                        placeholder="Password" required="required" size="30"
                                        tabindex="2" type="password"/></div>
-                            <button class="widebutton" type="submit">Login</button>
+                            <button class="wideButton" type="submit">Login</button>
                         </form>
                     </div>
                     <div role="tabpanel" class="tab-pane tab-padding" id="signup">
@@ -128,7 +127,7 @@
                               class="new_user" id="new-user" method="post">
                             <input class="form-control" id="user_email" name="email" placeholder="Email"
                                    required="required" size="30" tabindex="1" type="text"/>
-                            <button class="widebutton" type="submit">Get started</button>
+                            <button class="wideButton" type="submit">Get started</button>
                         </form>
                     </div>
                 </div>

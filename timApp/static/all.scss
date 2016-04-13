@@ -1,16 +1,7 @@
 @charset "UTF-8";
 
-.no-bs {
-  @import "stylesheet";
-}
-
-// only front page uses Bootstrap - we'll wrap all selectors inside .bootstrap selector
-.bs {
-  @import "start";
-  @import "bootstrap";
-  @import "stylesheet";
-}
-
+@import "bootstrap";
+@import "stylesheet";
 @import "common";
 @import "lectureInfo";
 @import "menustyle";
