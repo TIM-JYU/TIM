@@ -284,6 +284,11 @@ ul ul ul, ol ol ol {
     top: 0;
 }
 
+.areaeditline-show {
+    opacity: 0.2;
+    background: #d874ff; /* rgb(236,103,27); */
+}
+
 .areacollapse::before {
     color: #3cc;
     content: "[-]";
