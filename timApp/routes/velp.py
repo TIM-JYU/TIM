@@ -1,6 +1,5 @@
 from flask import Blueprint
 from .common import *
-import copy
 
 velps = Blueprint('velps',
                   __name__,
@@ -12,36 +11,7 @@ def get_velps(document_id: int, paragraph_id: str) -> str:
     timdb = getTimDb()
     # Todo Somehow communicate the language string for the get_document_velps function.
     velp_data = timdb.velps.get_document_velps(int(document_id))
-
-    label_data = timdb.labels.get_document_velp_label_ids(int(document_id))
-
     print(velp_data) # Just for checking, delete later
-    print(label_data) # Just for checking, delete later
-
-    if (len(velp_data) != 0 and len(label_data) != 0): # Do magic with labels if data exists
-        velp_id = label_data[0]['velp_id']
-        list_help = []
-        label_dict = {}
-        for i in range(len(label_data)):
-            next_id = label_data[i]['velp_id']
-            if next_id != velp_id:
-                label_dict[velp_id] = copy.deepcopy(list_help)
-                velp_id = next_id
-                del list_help[:]
-                list_help.append(label_data[i]['labels'])
-            else:
-                list_help.append(label_data[i]['labels'])
-            if i == len(label_data) - 1:
-                label_dict[velp_id] = copy.deepcopy(list_help)
-
-        for i in range(len(velp_data)):
-            searchID = velp_data[i]['id']
-            if searchID in label_dict:
-                velp_data[i]['labels'] = label_dict[searchID]
-
-        # Try catch should end here
-
-
     return jsonResponse(velp_data)
 
 
@@ -49,7 +19,7 @@ def get_velps(document_id: int, paragraph_id: str) -> str:
 def get_labels(document_id: int) -> 'str':
     timdb = getTimDb()
     # Todo select language.
-    label_data = timdb.labels.get_document_velp_label_content(int(document_id))
+    label_data = timdb.velps.get_document_velp_label_content(int(document_id))
     return jsonResponse(label_data)
 
 
@@ -92,7 +62,7 @@ def add_velp():
                                               icon_id, valid_until, language_id)
 
     if velp_labels is not None:
-        timdb.labels.add_labels_to_velp(new_velp_id, velp_labels)
+        timdb.velps.add_labels_to_velp(new_velp_id, velp_labels)
     # Todo write logic that decides where the velp should go.
     timdb.velp_groups.add_velp_to_group(new_velp_id, 1)
     return str(new_velp_id)
@@ -105,6 +75,6 @@ def add_label():
     content = request.args.get('content')
 
     timdb = getTimDb()
-    label_id = timdb.labels.create_label(language_id, content)
+    label_id = timdb.velps.create_label(language_id, content)
 
     return str(label_id)
