@@ -540,12 +540,12 @@ timApp.controller("ViewCtrl", [
             }
         });
 
-        sc.onClick = function (className, func) {
+        sc.onClick = function (className, func, overrideModalCheck) {
             var downEvent = null;
             var downCoords = null;
 
             $document.on('mousedown touchstart', className, function (e) {
-                if ($(".actionButtons").length > 0 || $(EDITOR_CLASS_DOT).length > 0) {
+                if (!overrideModalCheck && $(".actionButtons").length > 0 || $(EDITOR_CLASS_DOT).length > 0) {
                     // Disable while there are modal gui elements
                     return;
                 }
@@ -937,7 +937,7 @@ timApp.controller("ViewCtrl", [
             }
             sc.$apply();
             return true;
-        });
+        }, true);
 
         sc.onClick(".note", function ($this, e) {
             if (!$this.hasClass('editable')) {
