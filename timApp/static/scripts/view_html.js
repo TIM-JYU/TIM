@@ -214,6 +214,13 @@ timApp.controller("ViewCtrl", [
             return $par.attr("id");
         };
 
+        sc.getAreaId = function ($area) {
+            if (!$area.hasClass('area')) {
+                return null;
+            }
+            return $area.attr("id").substring(5);
+        };
+
         sc.getFirstPar = function ($par_or_area) {
             if ($par_or_area.hasClass('area')) {
                 return $par_or_area.find('.par').first();
@@ -1004,6 +1011,9 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.toggleActionButtons = function (e, $par, toggle1, toggle2, coords) {
+            if ($window.editMode == 'area')
+                return;
+
             if (!sc.rights.editable && !sc.rights.can_comment) {
                 return;
             }
@@ -1380,11 +1390,21 @@ timApp.controller("ViewCtrl", [
             sc.selection.end = null;
         };
 
-        sc.copyArea = function (e, $par) {
-            var area_start = sc.getAreaStart();
-            var area_end = sc.getAreaEnd();
+        sc.copyArea = function (e, $par_or_area) {
+            var area_name, area_start, area_end;
+
+            if ($window.editMode == 'area') {
+                area_name = sc.getAreaId($par_or_area);
+                area_start = sc.getFirstParId($par_or_area);
+                area_end = sc.getLastParId($par_or_area);
+            } else {
+                area_name = null;
+                area_start = sc.getAreaStart();
+                area_end = sc.getAreaEnd();
+            }
 
             http.post('/clipboard/copy/' + sc.docId + '/' + area_start + '/' + area_end, {
+                    area_name: area_name
                 }).success(function(data, status, headers, config) {
                 }).error(function(data, status, headers, config) {
                     $window.alert(data.error);
@@ -1433,6 +1453,7 @@ timApp.controller("ViewCtrl", [
                     {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
                     {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
                     {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
+                    {func: sc.copyArea, desc: 'Copy area', show: $window.editMode == 'area'},
                     {func: sc.pasteRefAbove, desc: 'Paste reference above', show: $window.editMode != null},
                     {func: sc.pasteContentAbove, desc: 'Paste content above', show: $window.editMode != null},
                     {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},

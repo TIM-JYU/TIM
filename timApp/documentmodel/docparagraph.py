@@ -11,6 +11,7 @@ from documentmodel.documentwriter import DocumentWriter
 from htmlSanitize import sanitize_html
 from markdownconverter import md_to_html, par_list_to_html_list, expand_macros
 from timdb.timdbbase import TimDbException
+from typing import Optional
 from utils import count_chars, get_error_html
 from .randutils import *
 
@@ -73,6 +74,19 @@ class DocParagraph(DocParagraphBase):
         par.set_attr('rd', self.get_doc_id() if add_rd else None)
         par.set_attr('rp', self.get_id())
         par.set_attr('ra', None)
+
+        par._cache_props()
+        return par
+
+    @classmethod
+    def create_area_reference(cls, doc, area_name: str, r: Optional[str] = None, add_rd: Optional[bool] = True,
+                              files_root: Optional[str] = None):
+
+        par = DocParagraph.create(doc, files_root=files_root)
+        par.set_attr('r', r)
+        par.set_attr('rd', doc.doc_id if add_rd else None)
+        par.set_attr('ra', area_name)
+        par.set_attr('rp', None)
 
         par._cache_props()
         return par
