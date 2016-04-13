@@ -321,3 +321,54 @@ annotation {
 #previewDiv{
     overflow: visible;
 }
+.velpSummary {
+    position: fixed;
+    max-width: 20em;
+    word-wrap: break-word;
+    right: 0;
+    top: 50px;
+    border: 1px solid gainsboro;
+    background: white;
+    z-index: 100000;
+    overflow-y: auto;
+    padding: 0.5em;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+#summaryHeader {
+    font-size: 1.3em;
+    font-weight: bold;
+}
+
+.velpSummary table {
+    margin-top: 1.3em;
+    margin-bottom: 2em;
+    margin-left: 0;
+    width: 98%;
+    border: 1px solid gainsboro;
+}
+
+.velpSummary table th {
+    text-align: center;
+}
+
+#summaryColumn {
+    text-align: center;
+}
+
+#summaryComment {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.velpSummary textarea {
+    width: 98%;
+    height: 12em;
+}
+
+#lowerTextarea {
+    width: 98%;
+    height: 5em;
+    color: grey;
+}
