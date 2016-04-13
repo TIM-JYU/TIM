@@ -52,7 +52,7 @@ class Annotations(TimDbBase):
                           annotator_id: int, document_id: int, paragraph_id: str, points: Optional[float],
                           element_number: Optional[int],
                           icon_id: Optional[int] = None,
-                          answer_id: Optional[int] = None):
+                          answer_id: Optional[int] = None) -> int:
         """
         Create new annotation
         :param version_id: version of the velp that the annotation uses
@@ -65,6 +65,7 @@ class Annotations(TimDbBase):
         :param annotator_id: id of user who left the annotation
         :param points: Points given, overrides velp's default and can be null
         :param icon_id: Icon id, can be null
+        :return id of the new annotation.
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -76,6 +77,7 @@ class Annotations(TimDbBase):
                             place_end, element_number, annotator_id, points, icon_id]
                        )
         self.db.commit()
+        return cursor.lastrowid
 
     def update_annotation(self, annotation_id: int, version_id: int, place_start: int, place_end: int,
                           points: Optional[float],

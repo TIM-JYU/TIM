@@ -65,7 +65,7 @@ def add_velp():
         timdb.velps.add_labels_to_velp(new_velp_id, velp_labels)
     # Todo write logic that decides where the velp should go.
     timdb.velp_groups.add_velp_to_group(new_velp_id, 1)
-    return str(new_velp_id)
+    return jsonResponse(new_velp_id)
 
 
 @velps.route("/addlabel", methods=["POST"])
@@ -77,4 +77,4 @@ def add_label():
     timdb = getTimDb()
     label_id = timdb.velps.create_label(language_id, content)
 
-    return str(label_id)
+    return jsonResponse(label_id)

@@ -10,7 +10,7 @@ annotations = Blueprint('annotations',
 # TODO save element_number also.
 
 @annotations.route("/addannotation", methods=['POST'])
-def add_annotation():
+def add_annotation() -> str:
     velp_id = request.args.get('velp_id')
     points = request.args.get('points')
     place_start = request.args.get('place_start')
@@ -24,19 +24,19 @@ def add_annotation():
     timdb = getTimDb()
     annotator_id = getCurrentUserId()
     velp_version = timdb.velps.get_latest_velp_version(velp_id)
-    timdb.annotations.create_annotation(velp_version, points, place_start, place_end, annotator_id,
-                                        document_id, paragraph_id, element_number, icon_id, answer_id)
-    return "Added an annotation"
+    new_id = timdb.annotations.create_annotation(velp_version, points, place_start, place_end, annotator_id,
+                                                 document_id, paragraph_id, element_number, icon_id, answer_id)
+    return jsonResponse(new_id)
 
 
 @annotations.route("/addannotationcomment", methods=['POST'])
-def add_comment():
+def add_comment() -> str:
     annotation_id = request.args.get('annotation_id')
     content = request.args.get('content')
     timdb = getTimDb()
     commenter_id = getCurrentUserId()
-    timdb.annotations_comments.add_comment(annotation_id, commenter_id, content)
-    return "Added a comment."
+    new_id=timdb.annotations_comments.add_comment(annotation_id, commenter_id, content)
+    return jsonResponse(new_id)
 
 
 @annotations.route("/<document_id>/<paragraph_id>/annotations", methods=['GET'])

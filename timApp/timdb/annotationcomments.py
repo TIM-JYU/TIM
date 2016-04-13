@@ -19,13 +19,13 @@ class AnnotationComments(TimDbBase):
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
 
-    def add_comment(self, annotation_id: int, commenter_id: int, content: str):
+    def add_comment(self, annotation_id: int, commenter_id: int, content: str)-> int:
         """Adds new comment to an annotation
 
         :param annotation_id:
         :param commenter_id:
         :param content:
-        :return:
+        :return: id of the new comment.
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -35,6 +35,7 @@ class AnnotationComments(TimDbBase):
                       """, [annotation_id, commenter_id, content]
                        )
         self.db.commit()
+        return cursor.lastrowid
 
     #Todo write support for answer_id.
     def get_comments(self, document_id: int, paragraph_id: str) -> List[Dict]:

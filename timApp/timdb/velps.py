@@ -22,7 +22,7 @@ class Velps(TimDbBase):
 
     def create_new_velp(self, creator_id: int, content=str, default_points: Optional[float] = None,
                         icon_id: Optional[int] = None, valid_until: Optional[str] = None,
-                        language_id: str = "FI"):
+                        language_id: str = "FI") -> int:
         """Creates a new velp with all information
 
         Creates a new velp with all necessary information in one function using three others
@@ -32,16 +32,16 @@ class Velps(TimDbBase):
         :param icon_id: Icon ID attached to velp. Can be null.
         :param valid_until: Time after velp becomes unusable.
         :param language_id: Language ID of velp.
-        :return:
+        :return: id of the new velp.
         """
-        new_velp_id = self.create_velp(creator_id, default_points, icon_id, valid_until)
+        new_velp_id = self._create_velp(creator_id, default_points, icon_id, valid_until)
         new_version_id = self.create_velp_version(new_velp_id)
         self.create_velp_content(new_version_id, language_id, content)
         return new_velp_id
 
-    def create_velp(self, creator_id: int, default_points: Optional[float], icon_id: Optional[int] = None,
-                    valid_until: Optional[str] = None):
-        """Creates a new velp
+    def _create_velp(self, creator_id: int, default_points: Optional[float], icon_id: Optional[int] = None,
+                     valid_until: Optional[str] = None):
+        """Creates a new entry to the velp table.
 
         :param creator_id: User ID of creator.
         :param default_points: Default points for velp.
@@ -94,7 +94,6 @@ class Velps(TimDbBase):
                        )
         self.db.commit()
 
-
     def update_velp(self, velp_id: int, new_content: str, languages: str):
         """Updates velp content
 
@@ -137,7 +136,6 @@ class Velps(TimDbBase):
                        )
         results = self.resultAsDictionary(cursor)  # e.g. [{'language_id': 'EN'}, {'language_id': 'FI'}]
         return results
-
 
     def get_latest_velp_version(self, velp_id: int, language_id: str = "FI"):
         """Method to fetch the latest version for velp in specific language
@@ -196,11 +194,11 @@ class Velps(TimDbBase):
         :param language_id The id of the language. 'EN', for example.
         :return: A list of dictionaries, each describing a different velp.
         """
-        assessment_area=assessment_area_from_document(doc_id)
-        velp_data=self.get_velps(assessment_area, language_id)
-        label_data=self.get_velp_label_ids(assessment_area)
+        assessment_area = assessment_area_from_document(doc_id)
+        velp_data = self.get_velps(assessment_area, language_id)
+        label_data = self.get_velp_label_ids(assessment_area)
 
-        if velp_data and label_data: # Do magic with labels if data exists
+        if velp_data and label_data:  # Do magic with labels if data exists
             velp_id = label_data[0]['velp_id']
             list_help = []
             label_dict = {}
@@ -221,12 +219,12 @@ class Velps(TimDbBase):
                     velp_data[i]['labels'] = label_dict[searchID]
         return velp_data
 
-    def create_label(self, language_id: str, content: str):
+    def create_label(self, language_id: str, content: str) -> int:
         """
         Creates a new label
         :param language_id: Language chosen
         :param content: Label content
-        :return:
+        :return: id of the new label
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -245,7 +243,6 @@ class Velps(TimDbBase):
         :param label_id: Label id
         :param language_id: Language chosen
         :param content: New translation
-        :return:
         """
         cursor = self.db.cursor()
         cursor.execute("""
