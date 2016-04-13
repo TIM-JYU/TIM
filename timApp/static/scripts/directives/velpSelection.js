@@ -44,16 +44,19 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
     $scope.filteredVelpCount = 0;
 
-    // Get velp data
+    // Get velp and marking data
     $http.get('/{0}/{1}/velps'.replace('{0}',doc_id).replace('{1}', par)).success(function (data) {
         $scope.velps = data;
         $scope.velps.forEach(function (v) {
             v.used = 0;
-            if (v.id > new_velp_id)
-                new_velp_id = v.id
         });
         new_velp_id++;
         console.log($scope.velps);
+
+        $http.get('/static/test_data/markings.json').success(function (data) {
+            $scope.annotations = data;
+            $scope.loadAnnotations();
+        });
     });
 
     // Get label data
@@ -66,6 +69,8 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
         });
         new_label_id++;
     });
+
+
 
     // Methods
 

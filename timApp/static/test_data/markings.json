@@ -3,7 +3,20 @@
     "id": 0,
     "points": -1,
     "velp": 2,
-    "coord": {"el": 0, "start":48, "end":62 },
+    "coord": {
+      "start":{
+        "par_id": "pnKujWTFQrZN",
+        "offset": 48,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [0]
+      },
+      "end":{
+        "par_id": "pnKujWTFQrZN",
+        "offset":62,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [0]
+      }
+    },
     "comments": [{"author": "vesal", "content": "Kyseessä oli siis Napoleon I"},
                  {"author": "sevitarv", "content": "Ahaa"}]
   },
@@ -11,14 +24,40 @@
     "id": 1,
     "points": 0,
     "velp": 6,
-    "coord": {"el": 1, "start":105, "end":140 },
+    "coord": {
+       "start":{
+        "par_id": "pnKujWTFQrZN",
+        "offset": 105,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [1]
+      },
+      "end":{
+        "par_id": "pnKujWTFQrZN",
+        "offset":140,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [1]
+      }
+    },
     "comments": [{"author": "vesal", "content": "Tämä on hieman epämääräisesti sanottu"}]
   },
   {
     "id": 2,
     "points": 1,
     "velp": 7,
-    "coord": {"el": 2, "start":396, "end":422 },
+    "coord": {
+        "start":{
+        "par_id": "pnKujWTFQrZN",
+        "offset": 396,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [2]
+      },
+      "end":{
+        "par_id": "pnKujWTFQrZN",
+        "offset":422,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [2]
+      }
+    },
     "comments": [{"author": "vesal", "content": "Hyvä yksityiskohta"}]
   }
 ]

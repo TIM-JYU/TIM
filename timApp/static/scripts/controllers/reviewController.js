@@ -8,23 +8,18 @@ var timApp = angular.module('timApp');
 console.log("reviewController.js added");
 
 
-timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile', function ($scope, $http, $window, $compile) {
+timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile', '$timeout', function ($scope, $http, $window, $compile, $timeout) {
     "use strict";
 
     $scope.annotationsAdded = false;
     $scope.selectedAnnotation = {"comments": [], "velp": "", "points": 0};
-    $scope.annotations = [];
+    //$scope.annotations = [];
 
     //var username = $scope.$parent.$parent.users[0].name;
     var username = $scope.$parent.users[0].name;
 
-    /*
-    $http.get('/static/test_data/markings.json').success(function (data) {
-        //$scope.annotations = [];
-        $scope.annotations = data;
-        $scope.loadAnnotations();
-    });
-    */
+
+
 
     /**
      * Makes post request to given url
@@ -46,15 +41,38 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Loads used annotations into view
      */
     $scope.loadAnnotations = function() {
-        // TODO: Change this when editor is removed
+        for (var i=$scope.annotations.length-1; i>=0; i--){
+            var placeInfo = $scope.annotations[i]["coord"];
+
+            var parent = document.getElementById(placeInfo["start"]["par_id"]).querySelector(".parContent");
+            var elements = parent.children;
+            var el = elements.item(placeInfo["start"]["el_path"][0]).childNodes[0];
+            console.log(el);
+
+                            var range = document.createRange();
+            range.setStart(el, placeInfo["start"]["offset"]);
+            range.setEnd(el, placeInfo["end"]["offset"]);
+            $scope.addAnnotationToCoord(range, $scope.annotations[i], false);
+
+            /*
+            var range = document.createRange();
+            range.setStart(elements[0], 0);
+            range.setEnd(elements[0], 1);
+            */
+        }
+
+        $scope.annotationsAdded = true;
+        /*
         var elements = document.getElementById("previewContent").getElementsByTagName("p");
 
         if (elements.length > 0 && !$scope.annotationsAdded && typeof $scope.annotations != "undefined" && $scope.annotations.length > 0) {
             for (var i=$scope.annotations.length-1; i>=0; i--){
+
+
                 var placeInfo = $scope.annotations[i]["coord"];
+
                 var el = elements.item(placeInfo["el"]).childNodes[0];
                 var range = document.createRange();
-
                 range.setStart(el, placeInfo["start"]);
                 range.setEnd(el, placeInfo["end"]);
 
@@ -62,6 +80,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             }
             $scope.annotationsAdded = true;
         }
+        */
     };
 
     /**
@@ -72,7 +91,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.addAnnotationToCoord = function(range, annotation, show){
         var span = $scope.createPopOverElement(annotation, show);
-        console.log(range);
         try {
             range.surroundContents(span);
         } catch(err) {
@@ -99,8 +117,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var savedHTML = "";
 
         for (var i=0; i<annotationHighlights.length; i++){
-            var addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', '').replace('</span>', '');
-            savedHTML += addHTML
+            var addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', '');
+            addHTML = addHTML.replace('</span>', '');
+            savedHTML += addHTML;
         }
 
         annotationParents[0].outerHTML = savedHTML;
@@ -128,7 +147,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.getVelpById = function(id){
         for (var i=0; i<$scope.velps.length; i++)
-            if ($scope.velps[i].id == "" +id)
+            if ($scope.velps[i].id == id)
                 return $scope.velps[i];
 
         return undefined;
@@ -166,24 +185,24 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             var element_path = $scope.getElementPositionInTree(startElement, []);
 
             var newMarking = {
-                "id": $scope.annotations.length,
-                "velp": velp.id,
-                "points": velp.points,
-                "coord": {
-                    "start": {
+                id: $scope.annotations.length,
+                velp: velp.id,
+                points: velp.points,
+                coord: {
+                    start: {
                         par_id: parelement.id,
                         par_t: parelement.getAttribute("t"),
                         el_path: element_path,
                         offset: $scope.selectedArea["startOffset"]
                     } ,
-                    "end": {
+                    end: {
                         par_id: parelement.id,
                         par_t: parelement.getAttribute("t"),
                         el_path: element_path,
-                        "offset":  $scope.selectedArea["endOffset"]
+                        offset:  $scope.selectedArea["endOffset"]
                     }
                 },
-                "comments": [
+                comments: [
                    //{"content": "Pre-printed comment", "author": username}
                 ]
             };
