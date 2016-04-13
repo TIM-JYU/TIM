@@ -361,6 +361,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
 
         $scope.$on('toggleQuestion', function (event, data) {
             $scope.questionShown = !$scope.questionShown;
+            $scope.$emit('newQuestion', data);
         });
 
         /*

@@ -247,7 +247,8 @@ def hide_names_in_teacher(doc_id):
     return False
 
 
-def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window=False, load_plugin_states=True):
+def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window=False, load_plugin_states=True,
+                      show_questions=False):
     timdb = getTimDb()
     html_pars, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                       pars,
@@ -270,6 +271,10 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
 
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
     pars_dict = defaultdict(list)
+
+    if not show_questions:
+        html_pars[:] = [htmlpar for htmlpar in html_pars if not htmlpar.get('is_question')]
+
     for htmlpar in html_pars:
         if htmlpar.get('ref_id') and htmlpar.get('ref_doc_id'):
             key = htmlpar.get('ref_id'), htmlpar.get('ref_doc_id')

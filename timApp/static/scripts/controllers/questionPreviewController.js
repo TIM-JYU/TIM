@@ -35,6 +35,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
             $scope.points = args.points;
             $scope.expl = args.expl;
             $scope.dynamicAnswerSheetControl.createAnswer();
+
         });
 
         /**
@@ -85,11 +86,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
         $scope.deleteQuestion = function () {
             var confirmDi = $window.confirm("Are you sure you want to delete this question?");
             if (confirmDi) {
-                http({
-                    url: '/deleteQuestion',
-                    method: 'POST',
-                    params: {question_id: $scope.qId, doc_id: $scope.docId}
-                })
+                http.post('/deleteParagraph/' + scope.docId, {par: $scope.questionParId})
                     .success(function () {
                         $scope.$emit('closeQuestionPreview');
                         $window.console.log("Deleted question");

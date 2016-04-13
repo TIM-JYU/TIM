@@ -631,7 +631,12 @@ timApp.controller("ViewCtrl", [
         // Event handler for "Add question below"
         // Opens pop-up window to create question.
         sc.addQuestion = function (e, $par) {
+            var parId = sc.getParId($par);
+            var parNextId = sc.getParId($par.next());
+            var $newpar = sc.createNewPar();
+            $par.after($newpar);
             $rootScope.$broadcast('toggleQuestion');
+            $rootScope.$broadcast('newQuestion', {'par_id': parId,'par_id_next': parNextId});
             sc.par = $par;
         };
 

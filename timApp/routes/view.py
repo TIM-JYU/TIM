@@ -268,12 +268,17 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     else:
         do_lazy = get_option(request, "lazy", True)
 
+    show_questions = False
+    if route == 'lecture' and has_edit_access(doc_id):
+        show_questions = True
+
     texts, jsPaths, cssPaths, modules = post_process_pars(doc,
                                                           xs,
                                                           current_user if teacher_or_see_answers or logged_in() else None,
                                                           sanitize=False,
                                                           do_lazy=do_lazy,
-                                                          load_plugin_states=not hide_answers)
+                                                          load_plugin_states=not hide_answers,
+                                                          show_questions=show_questions)
 
     index = get_index_from_html_list(t['html'] for t in texts)
 

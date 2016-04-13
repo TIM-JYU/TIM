@@ -80,7 +80,7 @@
             </button>
             <button ng-click="createQuestion()">Save</button>
             <button ng-click="close()">Cancel</button>
-            <span ng-if="(question.question_id)"> <button ng-click="deleteQuestion()">Delete</button> </span>
+            <span ng-if="(!new_question)"> <button ng-click="deleteQuestion()">Delete</button> </span>
         </div>
     </div>
     <div class="popUpWindow" id="questionWindow" ng-if="asked_id">

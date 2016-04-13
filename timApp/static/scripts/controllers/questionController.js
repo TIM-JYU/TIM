@@ -52,6 +52,12 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
     };
 
+    scope.$on("newQuestion", function (event, data) {
+        scope.new_question = true;
+        scope.par_id = "NEW_PAR";
+        scope.par_id_next = data.par_id_next;
+    });
+
     scope.$on("editQuestion", function (event, data) {
             var id = data.question_id;
             var par_id = data.par_id;
@@ -60,6 +66,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             var json = data.json;
 
             scope.asked_id = false;
+            scope.new_question = false;
             if (id) {
                 scope.question.question_id = id;
             } else if (asked_id) {
@@ -404,6 +411,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         scope.setShowPreview(false);
         scope.dynamicAnswerSheetControl.closePreview();
         if (scope.questionShown) scope.$emit('toggleQuestion');
+        if (scope.new_question) scope.handleCancel({docId: scope.docId, par: "NEW_PAR"});
     };
 
     /**
@@ -706,7 +714,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         // Create markdown for question to be saved as a paragraph
         var md = '``` {question="' + scope.question.title + '"}\n';
         md += 'points: ' + points + '\n';
-        md += 'expl: ' + JSON.stringify(expl) +'\n';
+        md += 'expl: ' + JSON.stringify(expl) + '\n';
         md += 'json: \n';
         var questionJsonMd = JSON.stringify(questionJson, null, 4);
         questionJsonMd = questionJsonMd.replace(/.+/g, '    $&');
@@ -720,30 +728,36 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             setsetting('timelimit', questionJson.TIMELIMIT.toString());
         }, 1000);
 
-        http.post('/postParagraph/', angular.extend({
+        var route = '/postParagraph/';
+        if (scope.new_question) {
+            route = '/newParagraph/';
+        }
+        http.post(route, angular.extend({
             docId: doc_id,
             text: md,
             par: scope.par_id,
             par_next: scope.par_id_next,
             buster: new Date().valueOf()
         })).success(function (data) {
-                $window.console.log("The question was successfully added to database");
-                scope.removeErrors();
-                //TODO: This can be optimized to get only the new one.
-                scope.$parent.getQuestions();
-                if (ask) {
-                    scope.json = JSON.parse(data.questionJson);
-                    scope.$emit('askQuestion', {
-                        "lecture_id": scope.lectureId,
-                        "question_id": scope.qId,
-                        "doc_id": scope.docId,
-                        "json": scope.json
-                    });
-                }
-            }).error(function () {
+            $window.console.log("The question was successfully added to database");
+            scope.removeErrors();
+            scope.addSavedParToDom(data, {docId: scope.docId, par: scope.par_id, par_next: scope.par_id_next});
+            //TODO: This can be optimized to get only the new one.
+            scope.$parent.getQuestions();
+            if (ask) {
+                scope.json = JSON.parse(data.questionJson);
+                scope.$emit('askQuestion', {
+                    "lecture_id": scope.lectureId,
+                    "question_id": scope.qId,
+                    "doc_id": scope.docId,
+                    "json": scope.json
+                });
+            }
+            scope.close();
+        }).error(function () {
+            scope.showDialog("Could not create question");
             $window.console.log("There was some error creating question to database.");
         });
-        scope.close();
     };
 
     /**
@@ -763,21 +777,18 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             .success(function () {
                 $window.console.log("Points successfully updated.");
             }).error(function () {
-                $window.console.log("There was some error when updating points.");
-            });
+            $window.console.log("There was some error when updating points.");
+        });
         scope.close();
     };
 
     scope.deleteQuestion = function () {
         var confirmDi = $window.confirm("Are you sure you want to delete this question?");
         if (confirmDi) {
-            http({
-                url: '/deleteQuestion',
-                method: 'POST',
-                params: {question_id: scope.qId, doc_id: scope.docId}
-            })
-                .success(function () {
+            http.post('/deleteParagraph/' + scope.docId, {par: scope.par_id})
+                .success(function (data) {
                     $window.console.log("Deleted question done!");
+                    scope.handleDelete(data, {par: scope.par_id, area_start: null, area_end: null});
                     scope.close();
                     scope.getQuestions();
                 })
