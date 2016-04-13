@@ -44,8 +44,6 @@ timApp.directive('popupMenu', ['$window', '$filter', function ($window, $filter)
                     $scope.$storage.defaultAction = $scope.$storage.defaultDefaultAction;
                 else
                     $scope.$storage.defaultAction = fDesc;
-
-                console.log($scope.$storage.defaultAction);
             };
 
             $element.css('position', 'absolute'); // IE needs this
