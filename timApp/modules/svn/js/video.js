@@ -1,9 +1,22 @@
-﻿var videoApp = angular.module('videoApp', ['ngSanitize']);
+﻿// Workaround for lazy loading: the directive definition functions below are 
+// not re-run when reloading the module
+// so xxApp.sanitize 
+if (angular.isDefined(window.videoApp)) {
+    var videoAppSanitize = videoApp.sanitize;
+}
+
+
+var videoApp = angular.module('videoApp', ['ngSanitize']);
 videoApp.directive('videoRunner',['$sanitize', function ($sanitize) {	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('video'); }]);
 videoApp.directive('smallVideoRunner',['$sanitize', function ($sanitize) {	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('smallvideo'); }]);
 videoApp.directive('listVideoRunner',['$sanitize', function ($sanitize) {
 	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('listvideo');
 }]);
+
+// redefine csApp.sanitize and csApp.compile if needed
+if (angular.isDefined(window.videoAppSanitize) ) {
+    videoApp.sanitize = videoAppSanitize;
+}
 
   
 videoApp.nr = 0;
@@ -138,7 +151,7 @@ videoApp.directiveFunction = function(t) {
             if ( scope.startt ) scope.startt = ", " + scope.startt;
 			if ( attrs.stem ) scope.stem = attrs.stem;
 			if ( attrs.iframe ) scope.iframe = true;
-            if ( scope.file.indexOf("youtube") >= 0 )  scope.iframe = true; // youtube must be in iframe
+            if ( scope.file && scope.file.indexOf("youtube") >= 0 )  scope.iframe = true; // youtube must be in iframe
 			scope.videoHtml = element[0].childNodes[2]
 			head = videoApp.getHeading(attrs,"header",scope,"h4");
 			element[0].childNodes[0].outerHTML = head;

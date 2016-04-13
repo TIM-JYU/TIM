@@ -114,8 +114,8 @@ class SlideStatus(db.Model):
     doc_id = db.Column(db.Integer, primary_key=True)
     status = db.Column(db.Text, nullable=False)
 
-    def __init__(self, lecture_id, status):
-        self.lecture_id = lecture_id
+    def __init__(self, doc_id, status):
+        self.doc_id = doc_id
         self.status = status
 
 
