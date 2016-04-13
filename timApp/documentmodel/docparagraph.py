@@ -252,8 +252,9 @@ class DocParagraph(DocParagraphBase):
                              Safer, but slower. Set explicitly False if you know what you're doing.
         :return: html string
         """
-        if self.is_question():
-            return self.__set_html('<img class="questionAddedNew" width="30" height="30" src=/static/images/show-question-icon.png/>')
+        question_title = self.is_question()
+        if question_title:
+            return self.__set_html('<img class="questionAddedNew" title="%s" width="30" height="30" src=/static/images/show-question-icon.png/>' % question_title)
         if self.html is not None:
             return self.html
         if self.is_plugin():
