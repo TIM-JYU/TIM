@@ -1,5 +1,5 @@
-from contracts import contract, new_contract
 from enum import Enum
+from typing import Optional
 
 
 class AssessmentArea:
@@ -17,8 +17,8 @@ class AssessmentArea:
         area = 3
         paragraph = 4
 
-    @contract
-    def __init__(self, folder_id: 'int|None', document_id: 'int|None', area_id: 'str|None', paragraph_id: 'str|None'):
+    def __init__(self, folder_id: Optional[int], document_id: Optional[int], area_id: Optional[int],
+                 paragraph_id: Optional[str]):
         """
         Acceptable combinations of parameters:
         * folder_id with all others None.
@@ -48,8 +48,7 @@ class AssessmentArea:
         self._area_id = area_id
         self._paragraph_id = paragraph_id
 
-    @contract
-    def get_parameters_for_velp_ids(self) -> 'list':
+    def get_parameters_for_velp_ids(self) -> list:
         """
         Returns a list suitable for placeholder substitution in a parametrized sql statement.
         :return: List of values.
@@ -63,7 +62,7 @@ class AssessmentArea:
         if self._type is AssessmentArea._AssessmentAreaTypes.paragraph:
             return [self._document_id, self._document_id]
 
-    def get_sql_for_velp_ids(self) -> 'str':
+    def get_sql_for_velp_ids(self) -> str:
         """Returns an sql script which will query the database for velps in use in this assessment area.
         Only returns velps that are still valid.
         :return: string of sql script.
@@ -86,13 +85,9 @@ class AssessmentArea:
             raise NotImplementedError
 
 
-new_contract('AssessmentArea', AssessmentArea)
-
-
 # Helpers for object creation. Default parameters can't support all cases.
 # Use of these is recommended instead of the __init__
-@contract
-def assessment_area_from_document(document_id: 'int') -> 'AssessmentArea':
+def assessment_area_from_document(document_id: int) -> AssessmentArea:
     """
     Creates an assessment area for a document.
     :param document_id: Id of the document
@@ -101,8 +96,7 @@ def assessment_area_from_document(document_id: 'int') -> 'AssessmentArea':
     return AssessmentArea(None, document_id, None, None)
 
 
-@contract
-def assessment_area_from_folder(folder_id: 'int') -> 'AssessmentArea':
+def assessment_area_from_folder(folder_id: int) -> AssessmentArea:
     """
     Creates an assessment area for a folder.
     :param folder_id: Id of the folder
@@ -111,8 +105,7 @@ def assessment_area_from_folder(folder_id: 'int') -> 'AssessmentArea':
     return AssessmentArea(folder_id, None, None, None)
 
 
-@contract
-def assessment_area_from_area(document_id: 'int', area_id: 'str') -> 'AssessmentArea':
+def assessment_area_from_area(document_id: int, area_id: str) -> AssessmentArea:
     """
     Creates an assessment area for an area in a document.
     :param document_id Id of the document the area belongs to.
@@ -122,8 +115,7 @@ def assessment_area_from_area(document_id: 'int', area_id: 'str') -> 'Assessment
     return AssessmentArea(None, document_id, area_id, None)
 
 
-@contract
-def assessment_area_from_paragraph(document_id: 'int', paragraph_id: 'str') -> 'AssessmentArea':
+def assessment_area_from_paragraph(document_id: int, paragraph_id: str) -> AssessmentArea:
     """
     Creates an assessment area for a paragraph in a document.
     :param document_id: Id of the document

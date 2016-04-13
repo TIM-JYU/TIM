@@ -1,10 +1,9 @@
-from contracts import contract
+from sqlite3 import Connection
 from timdb.timdbbase import TimDbBase,TimDbException
 
 
 class Icons(TimDbBase):
-    @contract
-    def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
+    def __init__(self, db_path: Connection, files_root_path: str, type_name: str, current_user_name: str):
         """Initializes TimDB with the specified database and root path.
 
         :param type_name: The type name.
@@ -14,8 +13,7 @@ class Icons(TimDbBase):
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
 
-    @contract
-    def get_file_name(self,icon_id: 'int') -> 'str':
+    def get_file_name(self,icon_id: int) -> str:
         """Retrieves the filename for the icon.
 
         :param icon_id: The id of the icon.

@@ -1,11 +1,28 @@
-from contracts import contract
+from typing import Optional, List
+
 from timdb.timdbbase import TimDbBase, TimDbException
 
 
 class VelpGroups(TimDbBase):
+    def create_default_velp_group(self, name: str, valid_until: None):
+        """Creates default velp group where all velps used in document are stored
 
-    @contract
-    def create_velp_group(self, name: 'str', valid_until: 'str | None' = None):
+        :param name: Name of the new default velp group
+        :param valid_until: Valid forever, thus None
+        :return:
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      INSERT INTO
+                      VelpGroup(name, valid_until, document_def)
+                      VALUES (?, ?)
+                      """, [name, valid_until, True]
+                       )
+        self.db.commit()
+        velp_id = cursor.lastrowid
+        return velp_id
+
+    def create_velp_group(self, name: str, valid_until: Optional[str] = None):
         """
         Create a velp group
         :param name: Name of the created group
@@ -21,8 +38,7 @@ class VelpGroups(TimDbBase):
                        )
         self.db.commit()
 
-    @contract
-    def update_velp_group(self, velp_group_id: 'int', name: 'str', valid_until: 'str | None'):
+    def update_velp_group(self, velp_group_id: int, name: str, valid_until: Optional[str]):
         """
         Updates name and/or valid until time of velp group
         :param velp_group_id: Velp group id
@@ -39,8 +55,7 @@ class VelpGroups(TimDbBase):
                        )
         self.db.commit()
 
-    @contract
-    def delete_velp_group(self, velp_group_id: 'int'):
+    def delete_velp_group(self, velp_group_id: int):
         """
         Deletes velp group
 
@@ -59,8 +74,7 @@ class VelpGroups(TimDbBase):
                       """, [velp_group_id, velp_group_id]
                        )
 
-    @contract
-    def add_velp_to_group(self, velp_id: 'int', velp_group_id: 'int'):
+    def add_velp_to_group(self, velp_id: int, velp_group_id: int):
         """
         Adds a velp to a specific group
         :param velp_id: Velp if
@@ -76,8 +90,7 @@ class VelpGroups(TimDbBase):
                        )
         self.db.commit()
 
-    @contract
-    def remove_velp_from_group(self, velp_id: 'int', velp_group_id: 'int'):
+    def remove_velp_from_group(self, velp_id: int, velp_group_id: int):
         """
         Removes a velp from a specific group
         :param velp_id: Velp id
@@ -93,8 +106,7 @@ class VelpGroups(TimDbBase):
                        )
         self.db.commit()
 
-    @contract
-    def get_velps_from_group(self, velp_group_id: 'int'):
+    def get_velps_from_group(self, velp_group_id: int):
         """
         Gets velps belonging to specific group
         :param velp_group_id: Velp group id
@@ -109,9 +121,8 @@ class VelpGroups(TimDbBase):
                        )
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def get_velp_groups_in_assessment_area(self, document_id: 'int' = None, paragraph_id: 'str' = None,
-                                          area_id: 'str' = None, folder_id: 'int' = None) -> 'list(int)':
+    def get_velp_groups_in_assessment_area(self, document_id: int = None, paragraph_id: str = None,
+                                           area_id: str = None, folder_id: int = None) -> List[int]:
         """
         Get all velp groups linked to this assessment area. Any and even all of the parameters can be null.
         :param document_id: Id of the document.
@@ -127,5 +138,5 @@ class VelpGroups(TimDbBase):
                        WHERE document_id = ? OR (document_id = ? AND paragraph_id = ?) OR area_id = ? OR folder_id = ?
                        """, [document_id, document_id, paragraph_id, area_id, folder_id]
                        )
-        results=self.resultAsDictionary(cursor)
+        results = self.resultAsDictionary(cursor)
         return results

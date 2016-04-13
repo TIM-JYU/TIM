@@ -1,6 +1,7 @@
-from contracts import contract
+from sqlite3 import Connection
+from typing import List, Dict
 from timdb.timdbbase import TimDbBase, TimDbException
-from assesment_area import AssessmentArea, assessment_area_from_document
+from assessment_area import AssessmentArea, assessment_area_from_document
 
 
 class Labels(TimDbBase):
@@ -8,8 +9,7 @@ class Labels(TimDbBase):
     Used as an interface to query the database about labels.
     """
 
-    @contract
-    def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
+    def __init__(self, db_path: Connection, files_root_path: str, type_name: str, current_user_name: str):
         """Initializes TimDB with the specified database and root path.
 
         :param type_name: The type name.
@@ -19,8 +19,7 @@ class Labels(TimDbBase):
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
 
-    @contract
-    def create_label(self, language_id: 'str', content: 'str'):
+    def create_label(self, language_id: str, content: str):
         """
         Creates a new label
         :param language_id: Language chosen
@@ -38,8 +37,7 @@ class Labels(TimDbBase):
         label_id = cursor.lastrowid
         return label_id
 
-    @contract
-    def add_translation(self, label_id: 'int', language_id: 'str', content: 'str'):
+    def add_translation(self, label_id: int, language_id: str, content: str):
         """
         Adds new translation to an existing label
         :param label_id: Label id
@@ -56,8 +54,7 @@ class Labels(TimDbBase):
                        )
         self.db.commit()
 
-    @contract
-    def update_label(self, label_id: 'int', language_id: 'str', content: 'str'):
+    def update_label(self, label_id: int, language_id: str, content: str):
         """
         Updates content of label in specific language
         :param label_id: Label id
@@ -74,8 +71,7 @@ class Labels(TimDbBase):
                        )
         self.db.commit()
 
-    @contract
-    def get_velp_label_ids(self, velp_id: 'int'):
+    def get_velp_label_ids(self, velp_id: int):
         """
         Gets information of labels for one velp in specific language
         :param velp_id: ID of velp
@@ -90,8 +86,7 @@ class Labels(TimDbBase):
                        )
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def add_labels_to_velp(self, velp_id: int, labels: 'list(int)'):
+    def add_labels_to_velp(self, velp_id: int, labels: List[int]):
         """Associates a set of labels to a velp. (Appends to existing labels)
 
         :param velp_id: id of the velp that
@@ -107,8 +102,7 @@ class Labels(TimDbBase):
                            )
         self.db.commit()
 
-    @contract
-    def get_velp_label_ids(self, assessment_area: 'AssessmentArea') -> 'list(dict)':
+    def get_velp_label_ids(self, assessment_area: AssessmentArea) -> List[Dict]:
         """Get labels for velps that are linked to an assessment area.
 
         :param assessment_area: the relevant assessment area
@@ -131,8 +125,7 @@ class Labels(TimDbBase):
         results = self.resultAsDictionary(cursor)
         return results
 
-    @contract
-    def get_document_velp_label_ids(self, document_id: 'int') -> 'list(dict)':
+    def get_document_velp_label_ids(self, document_id: int) -> List[Dict]:
         """Get labels for velps that are linked to a document.
 
         :param document_id: Id of the document
@@ -140,8 +133,7 @@ class Labels(TimDbBase):
         """
         return self.get_velp_label_ids(assessment_area_from_document(document_id))
 
-    @contract
-    def get_velp_label_content(self, assessment_area: 'AssessmentArea', language_id: 'str' = 'FI') -> 'list(dict)':
+    def get_velp_label_content(self, assessment_area: AssessmentArea, language_id: str = 'FI') -> List[Dict]:
         """Get label content for labels that are linked to an assessment area.
 
         :param assessment_area: the relevant assessment area
@@ -166,8 +158,7 @@ class Labels(TimDbBase):
         results = self.resultAsDictionary(cursor)
         return results
 
-    @contract
-    def get_document_velp_label_content(self, document_id: 'int', language_id: 'str' = 'FI') -> 'list(dict)':
+    def get_document_velp_label_content(self, document_id: int, language_id: str = 'FI') -> List[Dict]:
         """Get label content for labels that are linked to a document.
 
         :param document_id: ID for the document.
@@ -176,8 +167,7 @@ class Labels(TimDbBase):
         """
         return self.get_velp_label_content(assessment_area_from_document(document_id), language_id)
 
-    @contract
-    def delete_label(self, label_id: 'int'):
+    def delete_label(self, label_id: int):
         """
         Deletes label (use with extreme caution)
         :param label_id: Label ID

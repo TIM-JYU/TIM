@@ -1,6 +1,7 @@
-from contracts import contract
+from sqlite3 import Connection
+from typing import Optional, List, Dict
 from timdb.timdbbase import TimDbBase, TimDbException
-from assesment_area import AssessmentArea, assessment_area_from_document
+from assessment_area import AssessmentArea, assessment_area_from_document
 
 
 class Velps(TimDbBase):
@@ -8,8 +9,7 @@ class Velps(TimDbBase):
     Used as an interface to query the database about velps.
     """
 
-    @contract
-    def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
+    def __init__(self, db_path: Connection, files_root_path: str, type_name: str, current_user_name: str):
         """Initializes TimDB with the specified database and root path.
 
         :param type_name: The type name.
@@ -19,10 +19,9 @@ class Velps(TimDbBase):
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
 
-    @contract
-    def create_new_velp(self, creator_id: 'int', content = 'str', default_points: 'float | None' = None,
-                        icon_id: 'int | None' = None, valid_until: 'str | None' = None,
-                        language_id: 'str' = "FI"):
+    def create_new_velp(self, creator_id: int, content=str, default_points: Optional[float] = None,
+                        icon_id: Optional[int] = None, valid_until: Optional[str] = None,
+                        language_id: str = "FI"):
         """Creates a new velp with all information
 
         Creates a new velp with all necessary information in one function using three others
@@ -39,9 +38,8 @@ class Velps(TimDbBase):
         self.create_velp_content(new_version_id, language_id, content)
         return new_velp_id
 
-    @contract
-    def create_velp(self, creator_id: 'int', default_points: 'float | None', icon_id: 'int | None' = None,
-                    valid_until: 'str | None' = None):
+    def create_velp(self, creator_id: int, default_points: Optional[float], icon_id: Optional[int] = None,
+                    valid_until: Optional[str] = None):
         """Creates a new velp
 
         :param creator_id: User ID of creator.
@@ -61,8 +59,7 @@ class Velps(TimDbBase):
         velp_id = cursor.lastrowid
         return velp_id
 
-    @contract
-    def create_velp_version(self, velp_id: 'int'):
+    def create_velp_version(self, velp_id: int):
         """Creates a new version for a velp to use
 
         :param velp_id: ID of velp we're adding version for
@@ -79,8 +76,7 @@ class Velps(TimDbBase):
         version_id = cursor.lastrowid
         return version_id
 
-    @contract
-    def create_velp_content(self, version_id: 'int', language_id: 'str', content: 'str'):
+    def create_velp_content(self, version_id: int, language_id: str, content: str):
         """Method to create content (text) for velp
 
         :param version_id: Version ID where the content will be stored
@@ -98,10 +94,7 @@ class Velps(TimDbBase):
         self.db.commit()
 
 
-        # Something is f...d up here
-
-    @contract
-    def update_velp(self, velp_id: 'int', new_content: 'str', languages: 'str'):
+    def update_velp(self, velp_id: int, new_content: str, languages: str):
         """Updates velp content
 
         :param velp_id: ID of velp that's being updated
@@ -126,8 +119,7 @@ class Velps(TimDbBase):
                       """, [new_versionId, languages[0], new_content[0]]
                        )
 
-    @contract
-    def check_velp_languages(self, velp_id: 'int'):
+    def check_velp_languages(self, velp_id: int):
         """Fetches all languages used within one velp
 
         :param velp_id: Velp ID
@@ -141,12 +133,12 @@ class Velps(TimDbBase):
                       VelpInformation
                       WHERE id = ?
                       """, [velp_id]
-        )
-        results = self.resultAsDictionary(cursor) # e.g. [{'language_id': 'EN'}, {'language_id': 'FI'}]
+                       )
+        results = self.resultAsDictionary(cursor)  # e.g. [{'language_id': 'EN'}, {'language_id': 'FI'}]
         return results
 
-    @contract
-    def get_latest_velp_version(self, velp_id: 'int', language_id: 'str' = "FI"):
+
+    def get_latest_velp_version(self, velp_id: int, language_id: str = "FI"):
         """Method to fetch the latest version for velp in specific language
 
         :param velp_id: ID of velp we're checking
@@ -165,8 +157,7 @@ class Velps(TimDbBase):
         velp_version = cursor.fetchone()[0]
         return velp_version
 
-    @contract
-    def get_velps(self, assessment_area: 'AssessmentArea', language_id: 'str' = 'FI') -> 'list(dict)':
+    def get_velps(self, assessment_area: AssessmentArea, language_id: str = 'FI') -> List[Dict]:
         """Get velps that are linked to an assessment area.
 
         :param assessment_area: the relevant assessment area
@@ -197,8 +188,7 @@ class Velps(TimDbBase):
         results = self.resultAsDictionary(cursor)
         return results
 
-    @contract
-    def get_document_velps(self, doc_id: 'int', language_id: 'str' = 'FI') -> 'list(dict)':
+    def get_document_velps(self, doc_id: int, language_id: str = 'FI') -> List[Dict]:
         """Gets velps that are linked to the document.
 
         :param doc_id: The id of the document.

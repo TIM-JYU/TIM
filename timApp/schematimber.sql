@@ -224,6 +224,7 @@ CREATE TABLE VelpGroup (
   name          TEXT     NOT NULL,
   creation_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   valid_until   DATETIME,
+  document_def  BOOLEAN  NOT NULL DEFAULT FALSE,
 
   CONSTRAINT VelpGroup_PK
   PRIMARY KEY (id)

@@ -37,6 +37,8 @@
 /** Velp area styles **/
 .velpMenu {
     position: fixed;
+    max-width: 20em;
+    word-wrap: break-word;
     right: 0;
     top: 50px;
     bottom: 0;
@@ -98,7 +100,7 @@
 }
 
 /* Table styles */
-.phraseTable {
+.velpTable {
     table-layout: fixed;
     margin-left: 0;
     margin-top: 1em;
@@ -106,14 +108,14 @@
     border-collapse: separate;
 }
 
-.phraseTable input {
-    border: 1px solid #B7B7B7;
+.velpTable input {
+    border: solid 1px gainsboro;
 }
-.phraseTable input[type="submit"] {
+.velpTable input[type="submit"] {
     border: none;
     margin: 6px;
 }
-.phraseTable td{
+.velpTable td{
     border: 0;
     margin: 0;
     padding: 4px;
@@ -123,10 +125,13 @@
 
 .tag-true, .tag-false {
     font-size: 0.85em;
+    word-wrap: break-word;
     margin: 0.25em;
     padding: 0.5em;
     display: inline-block;
     cursor: pointer;
+    max-width: 98%;
+    white-space: normal;
 }
 
 .tag-true {
