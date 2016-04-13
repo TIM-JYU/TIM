@@ -25,13 +25,9 @@ table.timppa {
     background: #d7e4ef;
 }
 
-.questions {
+.questionAdded, .questionAddedNew {
     display: inline-block;
     margin-left: 2em;
-}
-
-.questionAdded {
-    float: left;
 }
 
 .wall-behind {

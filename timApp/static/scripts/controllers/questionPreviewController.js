@@ -27,6 +27,8 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
 
         $scope.$on("setPreviewJson", function (event, args) {
             $scope.questionId = args.questionId;
+            $scope.questionParId = args.questionParId;
+            $scope.questionParIdNext = args.questionParIdNext;
             $scope.isLecturer = args.isLecturer;
             $scope.json = args.questionJson;
             $scope.questionTitle = args.questionJson.TITLE;
@@ -43,6 +45,8 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
             $scope.close();
             $rootScope.$broadcast("editQuestion", {
                 "question_id": $scope.questionId,
+                "par_id": $scope.questionParId,
+                "par_id_next": $scope.questionParIdNext,
                 "json": $scope.json,
                 "points": $scope.points,
                 "expl": $scope.expl
@@ -57,6 +61,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
             $scope.$emit('askQuestion', {
                 "lecture_id": $scope.lectureId,
                 "question_id": $scope.questionId,
+                "par_id": $scope.questionParId,
                 "doc_id": $scope.docId,
                 "json": $scope.json,
                 "expl": $scope.expl

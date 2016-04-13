@@ -54,6 +54,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
     scope.$on("editQuestion", function (event, data) {
             var id = data.question_id;
+            var par_id = data.par_id;
+            var par_id_next = data.par_id_next;
             var asked_id = data.asked_id;
             var json = data.json;
 
@@ -62,6 +64,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 scope.question.question_id = id;
             } else if (asked_id) {
                 scope.asked_id = data.asked_id;
+            } else {
+                scope.par_id = par_id;
+                scope.par_id_next = par_id_next;
             }
 
             if (json["TITLE"]) scope.question.title = scope.putBackQuotations(json["TITLE"]);
@@ -697,8 +702,17 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         var points = scope.createPoints();
         var expl = scope.createExplanation();
         var doc_id = scope.docId;
-        var $par = scope.par;
-        var par_id = scope.getParId($par);
+
+        // Create markdown for question to be saved as a paragraph
+        var md = '``` {question="' + scope.question.title + '"}\n';
+        md += 'points: ' + points + '\n';
+        md += 'expl: ' + JSON.stringify(expl) +'\n';
+        md += 'json: \n';
+        var questionJsonMd = JSON.stringify(questionJson, null, 4);
+        questionJsonMd = questionJsonMd.replace(/.+/g, '    $&');
+        md += questionJsonMd + '\n';
+        md += '```';
+
 
         // Without timeout 'timelimit' won't be saved in settings session variable. Thread issue?
         $window.settings['timelimit'] = questionJson.TIMELIMIT.toString();
@@ -706,29 +720,19 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             setsetting('timelimit', questionJson.TIMELIMIT.toString());
         }, 1000);
 
-        http({
-            method: 'POST',
-            url: '/addQuestion/',
-            params: {
-                'question_id': scope.question.question_id,
-                'question_title': scope.question.title,
-                'answer': "test", //answerVal,
-                'par_id': par_id,
-                'doc_id': doc_id,
-                'points': points,
-                'expl': JSON.stringify(expl),
-                'questionJson': JSON.stringify(questionJson),
-                'buster': new Date().valueOf()
-            }
-        })
-            .success(function (data) {
+        http.post('/postParagraph/', angular.extend({
+            docId: doc_id,
+            text: md,
+            par: scope.par_id,
+            par_next: scope.par_id_next,
+            buster: new Date().valueOf()
+        })).success(function (data) {
                 $window.console.log("The question was successfully added to database");
                 scope.removeErrors();
                 //TODO: This can be optimized to get only the new one.
                 scope.$parent.getQuestions();
                 if (ask) {
                     scope.json = JSON.parse(data.questionJson);
-                    scope.qId = data.question_id;
                     scope.$emit('askQuestion', {
                         "lecture_id": scope.lectureId,
                         "question_id": scope.qId,
@@ -737,8 +741,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                     });
                 }
             }).error(function () {
-                $window.console.log("There was some error creating question to database.");
-            });
+            $window.console.log("There was some error creating question to database.");
+        });
         scope.close();
     };
 

@@ -327,7 +327,7 @@ def get_html(ttype, query):
         s = ""
         if ( userinput != None ): s = s + '<p>Input:</p><pre>' + userinput + '</pre>'
         if ( userargs != None ): s = s + '<p>Args:</p><pre>' + userargs + '</pre>'
-        result = NOLAZY + '<div class="review"><pre>' + usercode + '</pre>'+s+'</div>'
+        result = NOLAZY + '<div class="review" ng-non-bindable><pre>' + usercode + '</pre>'+s+'</div>'
         return result
 
     r = runner + is_input
@@ -347,8 +347,8 @@ def get_html(ttype, query):
             print("Ei ollut string: ", bycode, jso)
             bycode = '' + str(bycode)       
         ebycode = html.escape(bycode)
-        lazy_visible = '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,
-                                                                                                    '<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre"><pre>' + ebycode + '</pre></div>') + '</div>'
+        lazy_visible = '<div class="lazyVisible csRunDiv no-popup-menu" >' + get_surrounding_headers(query,
+                                                                                                    '<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre" ng-non-bindable><pre>' + ebycode + '</pre></div>') + '</div>'
         # lazyClass = ' class="lazyHidden"'
         lazy_start = LAZYSTART
         lazy_end = LAZYEND
@@ -1102,9 +1102,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "scala":
                     cmdline = "scalac %s" % (csfname)
                 elif ttype == "cc":
-                    cmdline = "gcc -Wall %s -o %s" % (csfname, exename)
+                    cmdline = "gcc -Wall %s %s -o %s -lm" % (opt, csfname, exename)
                 elif ttype == "c++":
-                    cmdline = "g++ -std=c++11 -Wall %s %s -o %s" % (opt, csfname, exename)
+                    cmdline = "g++ -std=c++11 -Wall %s %s -o %s -lm" % (opt, csfname, exename)
                 elif ttype == "py":
                     cmdline = ""
                 elif ttype == "clisp":

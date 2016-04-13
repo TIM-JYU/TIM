@@ -126,9 +126,9 @@ td p {
 }
 
 li p {
-    margin-left: 0;
+    margin-left: 0 !important;
 }
-
+ 
 ul, ol {
     margin-left: 1.5em;
 }
@@ -891,10 +891,10 @@ pre {
     position: relative;
 }
 
-.questionAdded img {
+.questionAdded img, img.questionAddedNew {
     cursor: pointer;
     z-index: 1;
-    position: relative;
+    /* float: left; */
 }
 
 .ace_editor {

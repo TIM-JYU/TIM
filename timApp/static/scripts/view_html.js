@@ -403,6 +403,50 @@ timApp.controller("ViewCtrl", [
             sc.showQuestionPreview = true;
         };
 
+        sc.showQuestionNew = function (parId, parIdNext) {
+            sc.json = "No data";
+            sc.questionParId = parId;
+            sc.questionParIdNext = parIdNext;
+
+            http({
+                url: '/getQuestionByParId',
+                method: 'GET',
+                params: {'par_id': sc.questionParId, 'doc_id': sc.docId, 'buster': new Date().getTime()}
+            })
+                .success(function (data) {
+                    sc.json = data.questionJson;
+                    $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.TITLE});
+                    $rootScope.$broadcast("setPreviewJson", {
+                        questionJson: sc.json,
+                        questionParId: sc.questionParId,
+                        questionParIdNext: sc.questionParIdNext,
+                        points: data.points,
+                        expl: data.expl,
+                        isLecturer: sc.isLecturer
+                    });
+                })
+
+                .error(function () {
+                    $window.console.log("Could not question.");
+                });
+
+
+            sc.lectureId = -1;
+            sc.inLecture = false;
+
+            sc.$on('postLectureId', function (event, response) {
+                sc.lectureId = response;
+            });
+
+            sc.$on('postInLecture', function (event, response) {
+                sc.inLecture = response;
+            });
+
+            $rootScope.$broadcast('getLectureId');
+            $rootScope.$broadcast('getInLecture');
+            sc.showQuestionPreview = true;
+        };
+
         sc.toggleNoteEditor = function ($par_or_area, options) {
             var caption = 'Edit comment';
             var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
@@ -520,6 +564,7 @@ timApp.controller("ViewCtrl", [
                 }
             });
             $document.on('touchcancel', className, function (e) {
+                $window.console.log("cancel");
                 downEvent = null;
             });
             $document.on('mouseup touchend', className, function (e) {
@@ -808,18 +853,6 @@ timApp.controller("ViewCtrl", [
             return sc.showOptionsWindow(e, $par, coords);
         });
 
-        sc.onClick(".areaeditline", function ($this, e) {
-            $(".actionButtons").remove();
-            var $area = $this.parent();
-            //var $pars = $area.find('.par');
-            //var $first_par = $pars.first();
-            //var $last_par = $pars.last();
-            var coords = {left: e.pageX - $area.offset().left, top: e.pageY - $area.offset().top};
-            //sc.selection.start = sc.getParId($first_par);
-            //sc.selection.end = sc.getParId($last_par);
-            return sc.showOptionsWindow(e, $area, coords);
-        });
-
         sc.setAreaAttr = function(area, attr, value) {
             var area_selector = "[data-area=" + area + "]";
             $(area_selector).css(attr, value);
@@ -830,10 +863,7 @@ timApp.controller("ViewCtrl", [
             var area_name = $this.parent().attr('data-area-start');
             console.log("Collapse " + area_name);
             sc.setAreaAttr(area_name, "display", "none");
-            $this.addClass("disabledexpand");
-
-            // Set expandable after a timeout to avoid expanding right after collapse
-            $window.setTimeout(function() { $this.removeClass("disabledexpand"); $this.addClass("areaexpand"); }, 200);
+            $this.addClass("areaexpand");
         });
 
         sc.onClick(".areaexpand", function ($this, e) {
@@ -841,10 +871,7 @@ timApp.controller("ViewCtrl", [
             var area_name = $this.parent().attr('data-area-start');
             console.log("Expand " + area_name);
             sc.setAreaAttr(area_name, "display", "");
-            $this.addClass("disabledcollapse");
-
-            // Set collapsible after a timeout to avoid collapsing right after expand
-            $window.setTimeout(function() { $this.removeClass("disabledcollapse"); $this.addClass("areacollapse"); }, 200);
+            $this.addClass("areacollapse");
         });
 
         sc.showNoteWindow = function (e, $par) {
@@ -909,6 +936,15 @@ timApp.controller("ViewCtrl", [
             var questionId = question[0].getAttribute('id');
             sc.showQuestion(questionId);
             sc.par = ($(question).parent().parent());
+        });
+
+        sc.onClick(".questionAddedNew", function ($this, e) {
+            var question = $this;
+            var $par = $(question).parent().parent();
+            var parId = $($par)[0].getAttribute('id');
+            var parNextId = sc.getParId($par.next());
+            sc.showQuestionNew(parId, parNextId);
+            sc.par = ($(question).parent());
         });
 
         sc.showOptionsWindow = function (e, $par_or_area, coords) {
@@ -1202,25 +1238,13 @@ timApp.controller("ViewCtrl", [
                 //return sc.showAddParagraphBelow(e, $par);
                 return sc.showAddParagraphAbove(e, $(".addBottomContainer"));
             });
-
-            sc.onClick(".pasteBottom", function ($this, e) {
-                $(".actionButtons").remove();
-                sc.pasteAbove(e, $(".addBottomContainer"), false);
-            });
-
-            sc.onClick(".pasteRefBottom", function ($this, e) {
-                $(".actionButtons").remove();
-                sc.pasteAbove(e, $(".addBottomContainer"), true);
-            });
         }
         sc.processAllMathDelayed($('body'));
-
-        sc.getEditMode = function() { return $window.editMode; };
 
         sc.defaultAction = {func: sc.showOptionsWindow, desc: 'Show options window'};
         timLogTime("VieCtrl end","view");
         sc.selection = {start: null, end: null};
-        sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end', 'editing', 'getEditMode()'], function (newValues, oldValues, scope) {
+        sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end', 'editing'], function (newValues, oldValues, scope) {
             sc.editorFunctions = sc.getEditorFunctions();
             if (sc.editing) {
                 sc.notification = "Editor is already open.";
@@ -1308,23 +1332,12 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.startArea = function (e, $par) {
-            sc.selection.start = sc.getFirstParId($par);
+            sc.selection.start = sc.getParId($par);
         };
 
         sc.cancelArea = function (e, $par) {
             sc.selection.start = null;
             sc.selection.end = null;
-        };
-
-        sc.copyArea = function (e, $par) {
-            var area_start = sc.getAreaStart();
-            var area_end = sc.getAreaEnd();
-
-            http.post('/clipboard/copy/' + sc.docId + '/' + area_start + '/' + area_end, {
-                }).success(function(data, status, headers, config) {
-                }).error(function(data, status, headers, config) {
-                    $window.alert(data.error);
-                });
         };
 
         sc.nothing = function () {
@@ -1352,31 +1365,24 @@ timApp.controller("ViewCtrl", [
                     {func: sc.closeWithoutSaving, desc: 'Close editor and cancel', show: true},
                     {func: sc.nothing, desc: 'Close menu', show: true}
                 ];
-            } else if (sc.selection.start !== null && $window.editMode) {
-                return [
-                    {
-                        func: sc.beginAreaEditing,
-                        desc: 'Edit area',
-                        show: true
-                    },
-                    {func: sc.copyArea, desc: 'Copy area', show: true},
-                    {func: sc.cancelArea, desc: 'Cancel area', show: true},
-                    {func: sc.nothing, desc: 'Close menu', show: true}
-                ];
             } else {
                 return [
                     {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
                     {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
                     {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
                     {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
-                    {func: sc.pasteRefAbove, desc: 'Paste reference above', show: $window.editMode != null},
-                    {func: sc.pasteContentAbove, desc: 'Paste content above', show: $window.editMode != null},
                     {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
                     {
                         func: sc.startArea,
                         desc: 'Start selecting area',
-                        show: $window.editMode == 'par' && sc.selection.start === null
+                        show: sc.rights.editable && sc.selection.start === null
                     },
+                    {
+                        func: sc.beginAreaEditing,
+                        desc: 'Edit area',
+                        show: sc.selection.start !== null && sc.rights.editable
+                    },
+                    {func: sc.cancelArea, desc: 'Cancel area', show: sc.selection.start !== null},
                     {func: sc.nothing, desc: 'Close menu', show: true}
                 ];
             }
