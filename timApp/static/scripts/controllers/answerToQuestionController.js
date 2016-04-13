@@ -142,6 +142,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
         $scope.$emit('askQuestion', {
             "lecture_id": $scope.lectureId,
             "asked_id": $scope.askedId,
+            "par_id": $scope.questionParId,
             "question_id": $scope.questionId,
             "doc_id": $scope.docId,
             "json": $scope.json,
