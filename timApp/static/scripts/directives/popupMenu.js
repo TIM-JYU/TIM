@@ -13,7 +13,9 @@ timApp.directive('popupMenu', ['$window', '$filter', function ($window, $filter)
         replace: true,
 
         link: function ($scope, $element, $attrs) {
-
+            $scope.actions = eval('$scope.' + $attrs['actions']);
+            if ($attrs['save'])
+                $scope.storageAttribute = '$scope.$storage.' + $attrs['save'];
         },
 
         controller: function ($scope, $element) {
@@ -40,10 +42,15 @@ timApp.directive('popupMenu', ['$window', '$filter', function ($window, $filter)
             };
 
             $scope.clicked = function (fDesc) {
-                if ($scope.$storage.defaultAction === fDesc)
+                /*if ($scope.$storage.defaultAction === fDesc)
                     $scope.$storage.defaultAction = $scope.$storage.defaultDefaultAction;
                 else
-                    $scope.$storage.defaultAction = fDesc;
+                    $scope.$storage.defaultAction = fDesc;*/
+
+                if (eval($scope.storageAttribute) === fDesc)
+                    eval($scope.storageAttribute + ' = null;');
+                else
+                    eval($scope.storageAttribute + ' = fDesc;');
             };
 
             $element.css('position', 'absolute'); // IE needs this

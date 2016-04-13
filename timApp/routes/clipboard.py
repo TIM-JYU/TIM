@@ -33,12 +33,18 @@ def paste_from_clipboard(doc_id):
     verify_doc_exists(doc_id)
     verify_edit_access(doc_id)
 
-    (par_before, as_ref) = verify_json_params('par_before', 'as_ref', require=False)
+    (par_before, par_after, as_ref) = verify_json_params('par_before', 'par_after', 'as_ref', require=False)
 
     timdb = getTimDb()
     doc = Document(doc_id)
     clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
-    pars = clip.paste_before(doc, par_before, as_ref)
+
+    if par_before is not None and par_after is None:
+        pars = clip.paste_before(doc, par_before, as_ref)
+    elif par_before is None and par_after is not None:
+        pars = clip.paste_after(doc, par_after, as_ref)
+    else:
+        abort(400, 'Missing required parameter in request: par_before or par_after (not both)')
 
     return par_response(pars, doc)
 

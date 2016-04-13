@@ -1,9 +1,10 @@
 <div class="actionButtons">
     <span class="error" ng-show="notification" ng-bind="notification"></span>
-    <span class="actionButtonRow" ng-repeat="f in editorFunctions | filter:{show: true}">
+    <span class="actionButtonRow" ng-repeat="f in actions | filter:{show: true}">
     <button style="width: 150px;" class="timButton" ng-bind="f.desc" ng-click="callFunc($event, f)">
     </button>
-    <input ng-checked="getChecked(f.desc)"
+    <input ng-if="storageAttribute"
+           ng-checked="getChecked(f.desc)"
            ng-click="clicked(f.desc)",
            class="defaultCheckbox"
            type="radio">

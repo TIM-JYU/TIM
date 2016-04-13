@@ -116,3 +116,20 @@ class Clipboard:
 
             return doc_pars
 
+        def paste_after(self, doc: Document, par_id: Optional[str], as_ref: Optional[bool] = False) -> List[DocParagraph]:
+            par_before = None
+
+            # todo: make the iterator accept ranges
+            i = doc.__iter__()
+            try:
+                while True:
+                    if next(i).get_id() == par_id:
+                        par_before = next(i)
+                        raise StopIteration
+            except StopIteration:
+                pass
+            finally:
+                i.close()
+
+            return self.paste_before(doc, par_before, as_ref)
+

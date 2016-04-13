@@ -666,6 +666,37 @@ timApp.controller("ViewCtrl", [
                 .append($("<div>", {class: "parContent"}).html('New paragraph'));
         };
 
+        sc.showPopupMenu = function (e, $par_or_area, coords, actions, storageAttribute) {
+            var $popup = $('<popup-menu>');
+            $popup.attr('tim-draggable-fixed', '');
+            $popup.attr('actions', actions);
+            $popup.attr('save', storageAttribute);
+            $par_or_area.prepend($popup); // need to prepend to DOM before compiling
+            $compile($popup[0])(sc);
+            // TODO: Set offset for the popup
+            var element = $popup;
+            var viewport = {};
+            viewport.top = $(window).scrollTop();
+            viewport.bottom = viewport.top + $(window).height();
+            var bounds = {};
+            bounds.top = element.offset().top;
+            bounds.bottom = bounds.top + element.outerHeight();
+            var y = $(window).scrollTop();
+            if (bounds.bottom > viewport.bottom) {
+                y += (bounds.bottom - viewport.bottom);
+            }
+            else if (bounds.top < viewport.top) {
+                y += (bounds.top - viewport.top);
+            }
+            $('html, body').animate({
+                scrollTop: y
+            }, 500);
+        };
+
+        sc.showAddParagraphMenu = function (e, $par_or_area, coords) {
+            sc.showPopupMenu(e, $par_or_area, coords, 'addParagraphFunctions');
+        };
+        
         sc.showAddParagraphAbove = function (e, $par) {
             var $newpar = sc.createNewPar();
             $par.before($newpar);
@@ -678,12 +709,24 @@ timApp.controller("ViewCtrl", [
             sc.toggleParEditor($newpar, {showDelete: false, area: false});
         };
 
+        sc.showPasteMenu = function (e, $par_or_area, coords) {
+            sc.showPopupMenu(e, $par_or_area, coords, 'pasteFunctions');
+        };
+
         sc.pasteContentAbove = function (e, $par) {
             sc.pasteAbove(e, $par, false);
         };
 
         sc.pasteRefAbove = function (e, $par) {
             sc.pasteAbove(e, $par, true);
+        };
+        
+        sc.pasteContentBelow = function (e, $par) {
+            sc.pasteBelow(e, $par, false);
+        };
+
+        sc.pasteRefBelow = function (e, $par) {
+            sc.pasteBelow(e, $par, true);
         };
 
         sc.pasteAbove = function (e, $par_or_area, as_ref) {
@@ -696,6 +739,30 @@ timApp.controller("ViewCtrl", [
 
                 var $newpar = sc.createNewPar();
                 $par_or_area.before($newpar);
+
+                var extra_data = {
+                    docId: sc.docId, // current document id
+                    par: sc.getFirstParId($newpar), // the id of paragraph on which the editor was opened
+                    par_next: $par_or_area.id // the id of the paragraph that follows par
+                };
+
+                sc.addSavedParToDom(data, extra_data);
+
+            }).error(function(data, status, headers, config) {
+                $window.alert(data.error);
+            });
+        };
+        
+        sc.pasteBelow = function (e, $par_or_area, as_ref) {
+            http.post('/clipboard/paste/' + sc.docId, {
+                "par_after" : sc.getLastParId($par_or_area),
+                "as_ref": as_ref
+            }).success(function(data, status, headers, config) {
+                if (data == null)
+                    return;
+
+                var $newpar = sc.createNewPar();
+                $par_or_area.after($newpar);
 
                 var extra_data = {
                     docId: sc.docId, // current document id
@@ -981,28 +1048,7 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.showOptionsWindow = function (e, $par_or_area, coords) {
-            var $popup = $('<popup-menu>');
-            $popup.attr('tim-draggable-fixed', '');
-            $par_or_area.prepend($popup); // need to prepend to DOM before compiling
-            $compile($popup[0])(sc);
-            // TODO: Set offset for the popup
-            var element = $popup;
-            var viewport = {};
-            viewport.top = $(window).scrollTop();
-            viewport.bottom = viewport.top + $(window).height();
-            var bounds = {};
-            bounds.top = element.offset().top;
-            bounds.bottom = bounds.top + element.outerHeight();
-            var y = $(window).scrollTop();
-            if (bounds.bottom > viewport.bottom) {
-                y += (bounds.bottom - viewport.bottom);
-            }
-            else if (bounds.top < viewport.top) {
-                y += (bounds.top - viewport.top);
-            }
-            $('html, body').animate({
-                scrollTop: y
-            }, 500);
+            sc.showPopupMenu(e, $par_or_area, coords, 'editorFunctions', 'defaultAction');
         };
 
         sc.dist = function (coords1, coords2) {
@@ -1474,11 +1520,9 @@ timApp.controller("ViewCtrl", [
                     {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
                     {func: sc.copyPar, desc: 'Copy', show: $window.editMode === 'par'},
                     {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
-                    {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
-                    {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
+                    {func: sc.showAddParagraphMenu, desc: 'Add paragraph...', show: sc.rights.editable},
                     {func: sc.copyArea, desc: 'Copy area', show: $window.editMode === 'area'},
-                    {func: sc.pasteRefAbove, desc: 'Paste reference above', show: $window.editMode != null},
-                    {func: sc.pasteContentAbove, desc: 'Paste content above', show: $window.editMode != null},
+                    {func: sc.showPasteMenu, desc: 'Paste...', show: $window.editMode != null},
                     {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
                     {
                         func: sc.startArea,
@@ -1490,13 +1534,32 @@ timApp.controller("ViewCtrl", [
             }
         };
 
+        sc.getAddParagraphFunctions = function () {
+            return [
+                {func: sc.showAddParagraphAbove, desc: 'Above', show: true},
+                {func: sc.showAddParagraphBelow, desc: 'Below', show: true},
+                {func: sc.nothing, desc: 'Cancel', show: true}
+            ];
+        };
+
+        sc.getPasteFunctions = function () {
+            return [
+                {func: sc.pasteRefAbove, desc: 'Above, as a reference', show: true},
+                {func: sc.pasteContentAbove, desc: 'Above, as content', show: true},
+                {func: sc.pasteRefBelow, desc: 'Below, as a reference', show: true},
+                {func: sc.pasteContentBelow, desc: 'Below, as content', show: true},
+                {func: sc.nothing, desc: 'Cancel', show: true}
+            ];
+        };
+
         // call marktree.js initialization function so that TOC clicking works
         $window.addEvents();
 
         sc.editorFunctions = sc.getEditorFunctions();
+        sc.addParagraphFunctions = sc.getAddParagraphFunctions();
+        sc.pasteFunctions = sc.getPasteFunctions();
 
         sc.$storage = $localStorage.$default({
-            defaultDefaultAction: "Show options window",
             defaultAction: "Show options window",
             noteAccess: 'everyone'
         });
