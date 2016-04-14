@@ -11,7 +11,7 @@
                 <table class="velpTable">
                     <tr ng-class="getAdvancedStyle()">
                         <td>
-                            <label for="searchLabels">Filter by labels </label>
+                            <label for="searchLabels">Filter labels </label>
                         </td>
                         <td>
                             <input id="searchLabels" ng-model="filterLabel" placeholder="filter labels">
@@ -171,7 +171,35 @@
         </uib-tab>
         <uib-tab index="2" heading="Manage velps">
             <div class="velpArea">
-                <label>Not much here yet</label>
+                <table class="velpTable">
+                    <tr>
+                        <td>
+                            <label>Search velp groups</label>
+                        </td>
+                        <td>
+                            <input placeholder="Enter text..."></input>
+                        </td>
+                    </tr>
+                </table>
+                <input value="Import group" type="submit"></input>
+                <table class="velpTable">
+                    <tr>
+                        <td>
+                            <label>Search velps</label>
+                        </td>
+                        <td>
+                            <input placeholder="Enter text..."></input>
+                        </td>
+                    </tr>
+                </table>
+                <input value="Import velp" type="submit"></input>
+                <table class="velpTable">
+                    <tr>
+                        <td>
+                            <label>Attach velp to a group</label>
+                        </td>
+                    </tr>
+                </table>
             </div>
         </uib-tab>
     </uib-tabset>

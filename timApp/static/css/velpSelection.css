@@ -106,6 +106,7 @@
     margin-top: 1em;
     margin-bottom: 1em;
     border-collapse: separate;
+    text-align: left;
 }
 
 .velpTable input {
