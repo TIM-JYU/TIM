@@ -1,6 +1,6 @@
 /**
  * Created by sevitarv on 8.3.2016.
- * NOTE: This controller requires phraseSelection directive to work!!!
+ * NOTE: This controller requires velpSelection directive to work!!!
  */
 
 var angular;
@@ -13,13 +13,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     $scope.annotationsAdded = false;
     $scope.selectedAnnotation = {"comments": [], "velp": "", "points": 0};
-    //$scope.annotations = [];
 
-    //var username = $scope.$parent.$parent.users[0].name;
     var username = $scope.$parent.users[0].name;
-
-
-
 
     /**
      * Makes post request to given url
@@ -53,34 +48,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             range.setStart(el, placeInfo["start"]["offset"]);
             range.setEnd(el, placeInfo["end"]["offset"]);
             $scope.addAnnotationToCoord(range, $scope.annotations[i], false);
-
-            /*
-            var range = document.createRange();
-            range.setStart(elements[0], 0);
-            range.setEnd(elements[0], 1);
-            */
         }
 
         $scope.annotationsAdded = true;
-        /*
-        var elements = document.getElementById("previewContent").getElementsByTagName("p");
-
-        if (elements.length > 0 && !$scope.annotationsAdded && typeof $scope.annotations != "undefined" && $scope.annotations.length > 0) {
-            for (var i=$scope.annotations.length-1; i>=0; i--){
-
-
-                var placeInfo = $scope.annotations[i]["coord"];
-
-                var el = elements.item(placeInfo["el"]).childNodes[0];
-                var range = document.createRange();
-                range.setStart(el, placeInfo["start"]);
-                range.setEnd(el, placeInfo["end"]);
-
-                $scope.addAnnotationToCoord(range, $scope.annotations[i], false);
-            }
-            $scope.annotationsAdded = true;
-        }
-        */
     };
 
     /**
@@ -172,7 +142,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * TODO: When annotations can cross taglines, change end coordinate according to end element
      * @param velp velp selected in velpSelection directive
      */
-    $scope.usePhrase = function (velp) {
+    $scope.useVelp = function (velp) {
         if (typeof $scope.selectedArea != "undefined") {
             var parelement = $scope.selectedArea["commonAncestorContainer"].parentElement;
             var startElement = $scope.selectedArea["startContainer"].parentElement;
