@@ -24,6 +24,20 @@ class VelpGroups(TimDbBase):
         self.insertBlockToDb(name, owner_group_id, blocktypes.VELPGROUP)
         return velp_group_id
 
+    def copy_velp_group(self, copied_group_id: int, new_group_id):
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      INSERT INTO
+                      VelpInGroup(velp_group_id, velp_id, points)
+                      VALUES (?, (SELECT
+                      velp_group_id, points
+                      FROM
+                      VelpInGroup
+                      WHERE velp_group_id = ?))
+                      """, [new_group_id, copied_group_id]
+                       )
+        self.db.commit()
+
     def create_velp_group(self, name: str, owner_group_id: int, valid_until: Optional[str] = None):
         """Create a velp group
 

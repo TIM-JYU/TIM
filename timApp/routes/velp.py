@@ -29,6 +29,13 @@ def create_velp_group():
     velp_group_id = timdb.velp_groups.create_velp_group("apina", 1, None)
     return jsonResponse(velp_group_id)
 
+@velps.route("/copygrupa", methods=['GET'])
+def copy_velp_group():
+    timdb = getTimDb()
+    # Todo select language.
+    timdb.velp_groups.create_velp_group(1, 4)
+    return "ASDASD"
+
 
 # TODO remove this
 """
