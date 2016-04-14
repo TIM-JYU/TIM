@@ -1,5 +1,4 @@
 .console {
-  font-family: Courier, serif;
   color: #ccc;
   background: #000000;
   border: 3px double #ccc;
@@ -55,7 +54,6 @@ p.stem {
 }
 
 .csRunCode {
-  font-family: Courier, serif;
   margin-left: 2em;
   border-width: 1px;
   padding: 4px;
@@ -65,15 +63,14 @@ p.stem {
 }
 
 .csRunArea {
-  font-family: Courier, serif;
+  font-family: $font-family-monospace;
   margin: 0;
   border-radius: 0;
   padding: 1px;
   line-height: 1.1;
   font-size: 0.96em;
   box-shadow: none;
-  width: 100% !important;
-  min-width: 600px !important;
+  width: calc(100% - 1.4em) !important;
   white-space: pre;
   border: 0 none;
   border-left: thin solid #0066FF;
@@ -232,14 +229,4 @@ p.stem {
     border-left: none;
     margin-top: 0;
     padding-top: 0;
-}
-
-.csLazyPre pre {
-    margin-left: 0;
-    border-left: thin solid #0066FF;
-    padding-left: 0;
-    margin-top: 0.1em;
-    margin-bottom: 0;
-    padding-top: 0;
-    padding-bottom: 2pt;
 }
