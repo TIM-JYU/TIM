@@ -7,7 +7,7 @@
 <script src="{{ url_for('static', filename='scripts/sidebarMenuCtrl.js') }}"></script>
 
 <script>
-    var sessionsettings = {{session.settings or {}|tojson}};
+    var sessionsettings = {{(session.settings or {})|tojson}};
     window.setsetting = function (setting, value) {
         $.ajax({
             type: 'POST',
