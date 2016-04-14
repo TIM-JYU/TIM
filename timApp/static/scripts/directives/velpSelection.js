@@ -1,6 +1,6 @@
 /**
  * Created by sevitarv on 8.3.2016.
- * @module phraseSelection
+ * @module velpSelection
  * @licence MIT
  * @copyright 2016 Timber project authors
  */
@@ -11,31 +11,27 @@ var timApp = angular.module('timApp');
 var colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "cornflowerblue", "coral", "goldenrod", "blue"];
 
 /**
- * Angular directive for phrase selection
+ * Angular directive for velp selection
  */
-timApp.directive('phraseSelection', function () {
+timApp.directive('velpSelection', function () {
     return{
         templateUrl: "/static/templates/velpSelection.html",
-        controller: 'PhraseSelectionController'
+        controller: 'VelpSelectionController'
     }
 });
 
 /**
- * Controller for phrase selection
+ * Controller for velp selection
  */
-timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($scope, $http) {
+timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scope, $http) {
     "use strict";
 
     // Data
-    $scope.orderPhrase = 'tag';
+    $scope.orderVelp = 'label';
     $scope.advancedOn = false;
-    $scope.newPhrase = {"content": "", "points": 0, "labels": []};
-    $scope.newLabel = {"content": "", "selected": true};
+    $scope.newVelp = {content: "", points: 0, labels: []};
+    $scope.newLabel = {content: "", selected: true};
 
-    /*
-    var doc_id = $scope.extraData["docId"];
-    var par = $scope.extraData["par"];
-    */
     var doc_id = $scope.docId;
     var par = 0;
 
@@ -44,14 +40,12 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
     $scope.filteredVelpCount = 0;
 
-    // Get velp and marking data
+    // Get velp and annotation data
     $http.get('/{0}/{1}/velps'.replace('{0}',doc_id).replace('{1}', par)).success(function (data) {
         $scope.velps = data;
         $scope.velps.forEach(function (v) {
             v.used = 0;
         });
-        new_velp_id++;
-        console.log($scope.velps);
 
         $http.get('/static/test_data/markings.json').success(function (data) {
             $scope.annotations = data;
@@ -62,15 +56,11 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
     // Get label data
     $http.get('/{0}/labels'.replace('{0}',doc_id)).success(function (data) {
         $scope.labels = data;
+        var i = 0;
         $scope.labels.forEach(function (l) {
             l.selected = false;
-            if (l.id > new_label_id)
-                new_label_id = l.id
         });
-        new_label_id++;
     });
-
-
 
     // Methods
 
@@ -87,7 +77,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
      * Toggles label selected attribute
      * @param label label to toggle
      */
-    $scope.toggleTag = function (label) {
+    $scope.toggleLabel = function (label) {
         label.selected = !label.selected;
     };
 
@@ -119,22 +109,22 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
         form.$setPristine();
         var labelToAdd = {
-            "content": $scope.newLabel["content"],
-            "language_id": "FI", // TODO: Change to user lang
-            "selected": $scope.newLabel["selected"]
+            content: $scope.newLabel["content"],
+            language_id: "FI", // TODO: Change to user lang
+            selected: false
         };
-        $scope.makePostRequest("/addlabel", labelToAdd, function (data) {
-            labelToAdd.id = data;
+        $scope.makePostRequest("/addlabel", labelToAdd, function (json) {
+            labelToAdd.id = parseInt(json.data);
+            console.log(labelToAdd);
             $scope.resetNewLabel();
             $scope.labels.push(labelToAdd);
             $scope.labelAdded = false;
         });
-
     };
 
 
     /**
-     * Adds new phrase on form submit
+     * Adds new velp on form submit
      * @param form form information
      */
     $scope.addVelp = function(form) {
@@ -144,18 +134,20 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
 
         // Form is valid:
         form.$setPristine();
-        var phraseLabels = [];
+        var velpLabels = [];
         for (var i = 0; i < $scope.labels.length; i++) {
             if ($scope.labels[i].selected)
-                phraseLabels.push($scope.labels[i].id);
+                velpLabels.push($scope.labels[i].id);
         }
 
         var velpToAdd = {
-            labels: phraseLabels,
+            labels: velpLabels,
             used: 0,
-            points: $scope.newPhrase["points"],
-            content: $scope.newPhrase["content"],
-            language_id: "FI"
+            points: $scope.newVelp["points"],
+            content: $scope.newVelp["content"],
+            language_id: "FI",
+            icon_id: null,
+            valid_until: null
         };
 
         $scope.makePostRequest("/addvelp", velpToAdd, function (data) {
@@ -171,7 +163,7 @@ timApp.controller('PhraseSelectionController', ['$scope', '$http', function ($sc
      * Reset velp information
      */
     $scope.resetNewVelp = function(){
-        $scope.newPhrase = {"content": "", "points": 0, "labels": []};
+        $scope.newVelp = {"content": "", "points": 0, "labels": []};
     };
 
     /**
@@ -204,7 +196,7 @@ timApp.filter('selectedLabels', function () {
                     selectedLabels.push(labels[i].id);
             }
 
-            // return all phrases if no tags selected
+            // return all velps if no labels selected
             if (selectedLabels.length == 0)
                 return velps;
 
@@ -221,18 +213,18 @@ timApp.filter('selectedLabels', function () {
         }
 
         var selectedArray = [];
-        var returnPhrases = [];
-        for (var p in selectedVelps){
-            selectedArray.push(selectedVelps[p]);
+        var returnVelps = [];
+
+        for (var sv in selectedVelps){
+            if (selectedVelps.hasOwnProperty(sv))
+                selectedArray.push(selectedVelps[sv]);
         }
 
         selectedArray.sort(function(a, b) {return b[1] - a[1]});
 
-        for (var s in selectedArray)
-            returnPhrases.push(selectedArray[s][0]);
+        for (var i=0; i<selectedArray.length; i++)
+            returnVelps.push(selectedArray[i][0]);
 
-       // console.log(returngit Phrases);
-
-        return returnPhrases;
+        return returnVelps;
     };
 });

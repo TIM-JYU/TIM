@@ -101,7 +101,7 @@ CREATE TABLE Label (
   content     TEXT,
 
   CONSTRAINT Label_PK
-  PRIMARY KEY (id)
+  PRIMARY KEY (id, language_id)
 );
 
 

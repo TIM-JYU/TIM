@@ -19,15 +19,15 @@ timApp.directive("annotation", function() {
             comments: '=',
             aid: '@'
         },
-        controller: 'MarkingController'
+        controller: 'AnnotationController'
     }
 });
 
-timApp.controller('MarkingController', ['$scope', '$timeout', function ($scope, $timeout){
+timApp.controller('AnnotationController', ['$scope', '$timeout', function ($scope, $timeout){
     $scope.newComment = "";
 
     /**
-     * Toggle marking visibility
+     * Toggle annotation visibility
      */
     $scope.toggleAnnotation = function() {
         $scope.show = !$scope.show;

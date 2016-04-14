@@ -58,13 +58,15 @@ def add_velp(velp_content: str = "MOIMOI", default_points: int = -5.0, language_
 
 @velps.route("/addvelp", methods=['POST'])
 def add_velp():
-    velp_content = request.args.get('content')
-    default_points = request.args.get('points')
-    language_id = request.args.get('language_id')
-    icon_id = request.args.get('icon_id')
-    valid_until = request.args.get('valid_until')
-    velp_labels = list(request.args.getlist('labels'))
-    velp_labels = [int(i) for i in velp_labels]
+    jsondata = request.get_json()
+
+    velp_content = jsondata['content']
+    default_points = jsondata['points']
+    language_id = jsondata['language_id']
+    icon_id = jsondata['icon_id']
+    valid_until = jsondata['valid_until']
+    velp_labels = jsondata['labels']
+
 
     default_points = float(default_points) if default_points is not None else None
     icon_id = int(icon_id) if icon_id is not None else None
@@ -85,8 +87,9 @@ def add_velp():
 @velps.route("/addlabel", methods=["POST"])
 def add_label():
     #language_id = request.args.get('language_id')
+    jsondata = request.get_json()
     language_id = "FI"
-    content = request.args.get('content')
+    content = jsondata['content']
 
     timdb = getTimDb()
     label_id = timdb.velps.create_label(language_id, content)
