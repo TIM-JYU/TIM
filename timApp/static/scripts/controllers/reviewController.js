@@ -26,7 +26,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         $http({
             method: 'POST',
             url: url,
-            params: params
+            data: params
         }).then(function (data) {
             succesMethod(data);
         });

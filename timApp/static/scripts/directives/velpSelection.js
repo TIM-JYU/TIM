@@ -145,7 +145,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             used: 0,
             points: $scope.newVelp["points"],
             content: $scope.newVelp["content"],
-            language_id: "FI"
+            language_id: "FI",
+            icon_id: null,
+            valid_until: null
         };
 
         $scope.makePostRequest("/addvelp", velpToAdd, function (data) {
