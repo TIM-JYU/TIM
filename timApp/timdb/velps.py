@@ -229,8 +229,10 @@ class Velps(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO
-                      Label(language_id, content)
-                      VALUES (?, ?)
+                      Label(language_id, content, id)
+                      VALUES (?, ?, (SELECT
+                      MAX(Label.id)+1
+                      FROM Label))
                       """, [language_id, content]
                        )
         self.db.commit()

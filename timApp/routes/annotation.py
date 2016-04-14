@@ -11,6 +11,8 @@ annotations = Blueprint('annotations',
 
 @annotations.route("/addannotation", methods=['POST'])
 def add_annotation() -> str:
+    jsondata = request.get_json()
+
     velp_id = request.args.get('velp_id')
     points = request.args.get('points')
     place_start = request.args.get('place_start')
