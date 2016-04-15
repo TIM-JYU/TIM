@@ -83,7 +83,6 @@ class Velps(TimDbBase):
         :param version_id: Version ID where the content will be stored
         :param language_id: Language id
         :param content: Text of velp
-        :return: -
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -94,29 +93,19 @@ class Velps(TimDbBase):
                        )
         self.db.commit()
 
-    def update_velp(self, velp_id: int, new_content: str, languages: str):
-        """Updates velp content
+    def update_velp(self, velp_id: int, default_points: str, icon_id: str):
+        """Changes the non-versioned properties of a velp. Does not update labels.
 
         :param velp_id: ID of velp that's being updated
-        :param new_content: New velp text
-        :param languages: Language used
-        :return:
+        :param default_points:
+        :param icon_id:
         """
         cursor = self.db.cursor()
         cursor.execute("""
-        """)
-        cursor.execute("""
-                      INSERT INTO
-                      VelpVersion(velp_id)
-                      VALUES (?)
-                      """, [velp_id]
-                       )
-        new_versionId = cursor.lastrowid
-        cursor.execute("""
-                      INSERT INTO
-                      VelpContent(version_id, language_id, content)
-                      VALUES (?, ?, ?)
-                      """, [new_versionId, languages[0], new_content[0]]
+                       UPDATE Velp
+                       SET icon_id = ?, default_points = ?
+                       WHERE id = ?
+                       """, [icon_id, default_points, velp_id]
                        )
 
     def check_velp_languages(self, velp_id: int):
@@ -196,7 +185,7 @@ class Velps(TimDbBase):
         """
         assessment_area = assessment_area_from_document(doc_id)
         velp_data = self.get_velps(assessment_area, language_id)
-        label_data = self.get_velp_label_ids(assessment_area)
+        label_data = self.get_assessment_area_velp_label_ids(assessment_area)
 
         if velp_data and label_data:  # Do magic with labels if data exists
             velp_id = label_data[0]['velp_id']
@@ -273,10 +262,10 @@ class Velps(TimDbBase):
         self.db.commit()
 
     def get_velp_label_ids(self, velp_id: int):
-        """
-        Gets information of labels for one velp in specific language
+        """Gets labels for one velp.
+
         :param velp_id: ID of velp
-        :return: List of labels associated with the velp
+        :return: List of labels represented by their ids associated with the velp.
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -303,7 +292,24 @@ class Velps(TimDbBase):
                            )
         self.db.commit()
 
-    def get_velp_label_ids(self, assessment_area: AssessmentArea) -> List[Dict]:
+    def update_velp_labels(self, velp_id: int, labels: List[int]):
+        """Replaces the labels of a velp with new ones.
+
+        :param velp_id:
+        :param labels: list of label ids.
+        """
+        cursor = self.db.cursor()
+        # First nuke existing labels.
+        cursor.execute("""
+                       DELETE FROM LabelInVelp
+                       WHERE velp_id=?
+                       """, [velp_id]
+                       )
+        self.db.commit()
+        # Then add the new ones.
+        self.add_labels_to_velp(velp_id, labels)
+
+    def get_assessment_area_velp_label_ids(self, assessment_area: AssessmentArea) -> List[Dict]:
         """Get labels for velps that are linked to an assessment area.
 
         :param assessment_area: the relevant assessment area
@@ -332,7 +338,7 @@ class Velps(TimDbBase):
         :param document_id: Id of the document
         :return: A list of dictionaries, each representing a single label-velp link.
         """
-        return self.get_velp_label_ids(assessment_area_from_document(document_id))
+        return self.get_assessment_area_velp_label_ids(assessment_area_from_document(document_id))
 
     def get_velp_label_content(self, assessment_area: AssessmentArea, language_id: str = 'FI') -> List[Dict]:
         """Get label content for labels that are linked to an assessment area.

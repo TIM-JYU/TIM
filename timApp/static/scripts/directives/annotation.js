@@ -14,7 +14,7 @@ timApp.directive("annotation", function() {
             show: '=',
             velp: '@',
             points: '@',
-            evalAsync: '@',
+            //evalAsync: '@',
             user: '@',
             comments: '=',
             aid: '@'
