@@ -151,8 +151,10 @@ def update_velp():
     old_content = timdb.velps.get_latest_velp_version(velp_id, language_id)
     old_labels=timdb.velps.get_velp_label_ids(velp_id)
     if old_content != new_content:
-        #Todo this does not really work correctly, now any update to any language creates a new version, there can not
-        #Todo be different contents with the same version but different language.
+
+        #Todo this does not really work correctly, now any update to any language creates a new version, and we can not
+        # produce different contents with the same version but different language.
+
         version_id=timdb.velps.create_velp_version(velp_id)
         timdb.velps.create_velp_content(version_id,language_id,new_content)
     if old_labels != new_labels:
