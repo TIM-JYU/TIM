@@ -57,22 +57,81 @@
                  <!--   <tr>
                         <td colspan="4">-->
                             <div class="stack">
-                            <div ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | selectedLabels:labels)">
-
-                                <div class="velp" ng-click="useVelp(velp)" ng-style="{top: $index*2 + 'em'}">
-                                    <div ng-class="['emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0}]">
+                                <div ng-model="newVelp" class="velp" ng-dblclick="toggleEditVelp(newVelp)" ng-style="{top: 0}">
+                                    <div ng-class="['emphasise', {neutral: newVelp.points == 0, positive: newVelp.points > 0, negative: newVelp.points < 0,
+                                     edit: newVelp.edit}]">
 
                                     <div ng-class="['content']">
-                                        <p>
+                                        <p ng-class="[{hide:  newVelp.edit}]">
+                                            <span>Add velp!&ensp;</span>
+                                            <span class="points">{{ newVelp.points }}</span>
+                                        </p>
+                                        <form ng-class="[{hide: !newVelp.edit}]" name="addVelpForm"
+                                              ng-submit="addVelp(addVelpForm)" novalidate>
+
+                                            <p><input name="velpName" type="text"
+                                                   ng-model="newVelp['content']"
+                                                   required placeholder="Add velp!" autofocus>
+                                            <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]"
+                                                  ng-repeat="label in selectedLabels"
+                                                  ng-style="{ color: getColor(label) }"></span></p>
+
+                                            <p ng-show="(addVelpForm.velpName.$invalid && !addVelpForm.velpName.$pristine) || (submitted && addVelpForm.velpName.$invalid)">
+                                                Velp content is required
+                                            </p>
+
+                                            <p><input id="addVelpPoints" type="number" ng-model="newVelp['points']"
+                                                   placeholder="Points" value="0"></p>
+
+                                            <p><input type="submit" value="Add velp"/></p>
+                                        </form>
+                                    </div>
+                                    </div>
+                                </div>
+
+                            <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | selectedLabels:labels)">
+
+                                <div class="velp" ng-dblclick="toggleEditVelp(velp)" ng-click="useVelp(velp)"
+                                     ng-style="{top: 2+$index*2 + 'em'}">
+                                    <div ng-class="['emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0,
+                                    edit: velp.edit}]">
+
+                                    <div ng-class="['content']">
+                                        <p ng-class="[{hide: velp.edit}]">
                                             <span>{{ velp.content }}&ensp;</span>
                                             <span class="points">{{ velp.points }}</span>
                                             <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]" ng-repeat="label in velp.labels" ng-style="{ color: getColor(label) }"></span>
                                         </p>
+
+                                        <form ng-class="[{hide: !velp.edit}]" name="editVelpForm"
+                                              ng-submit="editVelp(editVelpForm)" novalidate>
+
+                                            <p><input name="velpName" type="text"
+                                                   ng-model="velpToEdit['content']"
+                                                   required placeholder="Edit velp!">
+                                            <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]"
+                                                  ng-repeat="label in velpToEdit.labels"
+                                                  ng-style="{ color: getColor(label) }"></span>
+                                            <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]"
+                                                  ng-repeat="label in selectedLabels"
+                                                  ng-style="{ color: getColor(label) }"></span></p>
+
+                                            <p ng-show="(editVelpForm.velpName.$invalid && !editVelpForm.velpName.$pristine) || (submitted && editVelpForm.velpName.$invalid)">
+                                                Velp content is required
+                                            </p>
+
+                                            <p><input id="addVelpPoints" type="number" ng-model="velpToEdit['points']"
+                                                   placeholder="Points" value="0"></p>
+
+                                            <p><input type="submit" value="Edit velp"/></p>
+                                        </form>
                                     </div>
                                 </div>
                                     </div>
+
                                 <!-- div ng-class="['emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0}]" style="height: 2px;"></div -->
-                            </div>
+                            </span>
+
                             <p ng-hide="filteredVelps.length">No velps :'(</p>
                                 </div>
                       <!--  </td>

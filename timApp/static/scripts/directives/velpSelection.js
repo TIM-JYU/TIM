@@ -29,8 +29,12 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     // Data
     $scope.orderVelp = 'label';
     $scope.advancedOn = false;
-    $scope.newVelp = {content: "", points: 0, labels: []};
+    $scope.newVelp = {content: "", points: "", labels: [], edit: false};
+    $scope.velpToEdit = {content: "", points: "", labels: [], edit: false};
     $scope.newLabel = {content: "", selected: true};
+    $scope.selectedLabels = [];
+
+    // Dictionaries for easier searching: Velp ids? Label ids?
 
     var doc_id = $scope.docId;
     var par = 0;
@@ -45,6 +49,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         $scope.velps = data;
         $scope.velps.forEach(function (v) {
             v.used = 0;
+            v.edit = false;
         });
 
         $http.get('/static/test_data/markings.json').success(function (data) {
@@ -79,6 +84,12 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
      */
     $scope.toggleLabel = function (label) {
         label.selected = !label.selected;
+        var labelIndex = $scope.selectedLabels.indexOf(label.id);
+        if (labelIndex < 0){
+            $scope.selectedLabels.push(label.id);
+        } else {
+            $scope.selectedLabels.splice(labelIndex, 1);
+        }
     };
 
     /**
@@ -134,14 +145,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         // Form is valid:
         form.$setPristine();
-        var velpLabels = [];
-        for (var i = 0; i < $scope.labels.length; i++) {
-            if ($scope.labels[i].selected)
-                velpLabels.push($scope.labels[i].id);
-        }
 
         var velpToAdd = {
-            labels: velpLabels,
+            labels: $scope.selectedLabels,
             used: 0,
             points: $scope.newVelp["points"],
             content: $scope.newVelp["content"],
@@ -159,11 +165,48 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         });
     };
 
+    $scope.toggleEditVelp = function(velp){
+        if (velp.id == $scope.velpToEdit.id){
+            velp.edit = !velp.edit;
+            return
+        }
+
+        if ($scope.velpToEdit.edit) {
+           for (var i=0; i<$scope.velps.length; i++){
+               $scope.velps[i].edit = false;
+           }
+        }
+
+        velp.edit = !velp.edit;
+        $scope.velpToEdit = Object.create(velp);
+    };
+
+    $scope.editVelp = function(form){
+        var valid = form.$valid;
+        $scope.submitted = true;
+        if (!valid) return;
+
+        // Form is valid
+        form.$setPristine();
+
+        for (var i=0; i<$scope.velps.length; i++){
+            if ($scope.velps[i].id == $scope.velpToEdit.id){
+                $scope.velps[i] = $scope.velpToEdit;
+                $scope.velps[i].edit = false;
+                break;
+            }
+        }
+        /*
+        $scope.makePostRequest("/editvelp", form, function () {
+        });
+        */
+    };
+
     /**
      * Reset velp information
      */
     $scope.resetNewVelp = function(){
-        $scope.newVelp = {"content": "", "points": 0, "labels": []};
+        $scope.newVelp = {"content": "", "points": "", "labels": []};
     };
 
     /**
@@ -201,6 +244,10 @@ timApp.filter('selectedLabels', function () {
                 return velps;
 
             for (var i = 0; i < velps.length; i++) {
+                // return all velps if velp is under edit
+                if (velps[i].edit)
+                     return velps;
+
                 for (var j = 0; j < selectedLabels.length; j++) {
 
                     if (typeof velps[i].labels != "undefined" && velps[i].labels.indexOf(selectedLabels[j]) != -1)
