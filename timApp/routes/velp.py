@@ -6,12 +6,28 @@ velps = Blueprint('velps',
                   url_prefix='')
 
 
+@velps.route("/<document_id>/defaultvelpgroup", methods=['GET'])
+def check_default_velp_group(document_id: int) -> str:
+    timdb = getTimDb()
+    doc_id = int(document_id)       # Make sure document_id is int
+    default_velp_group_id = timdb.velp_groups.check_default_group_exists(doc_id)
+    if default_velp_group_id == 0:
+        default_group_name = timdb.documents.get_first_document_name(doc_id)
+        default_velp_group_id = timdb.velp_groups.create_default_velp_group(default_group_name, 1, None)
+        timdb.velp_groups.insert_group_to_document(int(default_velp_group_id), doc_id)
+        print("Created a new default velp group, ID: " + str(default_velp_group_id) \
+              + ", name: " + default_group_name + ", document ID: " + document_id)
+        default_velp_group_id = [{'id': default_velp_group_id}]  # int to dictionary
+    return jsonResponse(default_velp_group_id)
+
 @velps.route("/<document_id>/<paragraph_id>/velps", methods=['GET'])
 def get_velps(document_id: int, paragraph_id: str) -> str:
     timdb = getTimDb()
-    default_exists = timdb.velp_groups.check_default_group_exists(document_id)
     doc_id = int(document_id)       # Make sure document_id is int
-    if default_exists is False:     # Create new default velp group if one does not exist yet
+
+    # TODO Remove following block, use route above instead
+    default_exists = timdb.velp_groups.check_default_group_exists(doc_id)
+    if default_exists == 0:     # Create new default velp group if one does not exist yet
         default_group_name = timdb.documents.get_first_document_name(doc_id)
         new_default_id = timdb.velp_groups.create_default_velp_group(default_group_name, 1, None)
         timdb.velp_groups.insert_group_to_document(int(new_default_id), doc_id)
@@ -20,11 +36,25 @@ def get_velps(document_id: int, paragraph_id: str) -> str:
     # Todo Somehow communicate the language string for the get_document_velps function.
 
     velp_data = timdb.velps.get_document_velps(doc_id)
-    print(velp_data) # Just for checking, delete later
+    # print(velp_data) # TODO Just for checking, delete later
     return jsonResponse(velp_data)
 
-@velps.route("/createvelpgroup", methods=['GET'])
+@velps.route("/<document_id>/getvelpgrouplocations", methods=['GET'])
+def get_velp_group_locations(document_id: int) -> str:
+    timdb = getTimDb()
+    doc_id = int(document_id)
+    location_data = timdb.velp_groups.get_velp_groups_in_assessment_area(doc_id)
+    return jsonResponse(location_data)
+
+@velps.route("/createvelpgroup", methods=['POST'])
 def create_velp_group():
+
+    json_data = request.get_json()
+    # .get returns null instead of throwing if data is missing.
+    velp_group_name = json_data.get('name')
+    owner_group_id = json_data.get('owner')
+    valid_until = json_data.get('valid_until')
+
     velp_group_name = "Kana"
     owner_group_id = 1
     valid_until = None
@@ -80,6 +110,10 @@ def add_velp():
     velp_labels = json_data.get('labels')
     velp_groups = json_data.get('velp_groups')
 
+    print(velp_content)
+    print(velp_labels)
+    print(velp_groups)
+
     default_points = float(default_points) if default_points is not None else None
     icon_id = int(icon_id) if icon_id is not None else None
 
@@ -92,7 +126,11 @@ def add_velp():
     if velp_labels is not None:
         timdb.velps.add_labels_to_velp(new_velp_id, velp_labels)
     if velp_groups is not None:
+        print("ASDASDF")
         for group_id in velp_groups:
+            print("JOIOP")
+            print(new_velp_id)
+            print(group_id)
             timdb.velp_groups.add_velp_to_group(new_velp_id, group_id)
     else:
         timdb.velp_groups.add_velp_to_group(new_velp_id, 1)
@@ -114,7 +152,7 @@ def update_velp():
     old_labels=timdb.velps.get_velp_label_ids(velp_id)
     if old_content != new_content:
         #Todo this does not really work correctly, now any update to any language creates a new version, there can not
-        #be different contents with the same version but different language.
+        #Todo be different contents with the same version but different language.
         version_id=timdb.velps.create_velp_version(velp_id)
         timdb.velps.create_velp_content(version_id,language_id,new_content)
     if old_labels != new_labels:

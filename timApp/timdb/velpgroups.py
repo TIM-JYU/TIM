@@ -93,8 +93,8 @@ class VelpGroups(TimDbBase):
                        )
 
     def add_velp_to_group(self, velp_id: int, velp_group_id: int):
-        """
-        Adds a velp to a specific group
+        """Adds a velp to a specific group
+
         :param velp_id: Velp if
         :param velp_group_id: Velp group id
         :return:
@@ -143,7 +143,7 @@ class VelpGroups(TimDbBase):
         """Checks whether document has default velp group attached.
 
         :param document_id: The id of document.
-        :return: True if default exists, false if not.
+        :return: 0 if doesn't exist, else ID as dictionary
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -156,25 +156,25 @@ class VelpGroups(TimDbBase):
                           AND id = velp_group_id;
                       """, [document_id]
                        )
-        result = cursor.fetchone()
-        if result is None:
-            return False
-        return True
+        result = self.resultAsDictionary(cursor)
+        if len(result) == 0:
+            return 0
+        return result
 
 
     def get_velp_groups_in_assessment_area(self, document_id: int = None, paragraph_id: str = None,
                                            area_id: str = None, folder_id: int = None) -> List[int]:
-        """
-        Get all velp groups linked to this assessment area. Any and even all of the parameters can be null.
+        """Get all velp groups linked to this assessment area. Any and even all of the parameters can be null.
+
         :param document_id: Id of the document.
-        :param paragraph_id: Id of the paragraph
-        :param area_id: Id of the area
+        :param paragraph_id: Id of the paragraph.
+        :param area_id: Id of the area.
         :param folder_id: Id of the folder.
-        :return: List of velp group ids.
+        :return: List of velp group ids together with their location info.
         """
         cursor = self.db.cursor()
         cursor.execute("""
-                       SELECT DISTINCT velp_group_id
+                       SELECT DISTINCT velp_group_id, document_id, paragraph_id, area_id, folder_id
                        FROM VelpGroupInAssessmentArea
                        WHERE document_id = ? OR (document_id = ? AND paragraph_id = ?) OR area_id = ? OR folder_id = ?
                        """, [document_id, document_id, paragraph_id, area_id, folder_id]
