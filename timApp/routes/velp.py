@@ -11,7 +11,7 @@ def get_velps(document_id: int, paragraph_id: str) -> str:
     timdb = getTimDb()
     # Todo Somehow communicate the language string for the get_document_velps function.
     velp_data = timdb.velps.get_document_velps(int(document_id))
-    print(velp_data) # Just for checking, delete later
+    print(velp_data)  # Just for checking, delete later
     return jsonResponse(velp_data)
 
 
@@ -45,14 +45,13 @@ def add_velp(velp_content: str = "MOIMOI", default_points: int = -5.0, language_
 @velps.route("/addvelp", methods=['POST'])
 def add_velp():
     json_data = request.get_json()
-    #.get returns null instead of throwing if data is missing.
+    # .get returns null instead of throwing if data is missing.
     velp_content = json_data.get('content')
     default_points = json_data.get('points')
     language_id = json_data.get('language_id')
     icon_id = json_data.get('icon_id')
     valid_until = json_data.get('valid_until')
     velp_labels = json_data.get('labels')
-
 
     default_points = float(default_points) if default_points is not None else None
     icon_id = int(icon_id) if icon_id is not None else None
@@ -70,12 +69,34 @@ def add_velp():
     return jsonResponse(new_velp_id)
 
 
+@velps.route("updatevelp", methods=['POST'])
+def update_velp():
+    json_data = request.get_json()
+    velp_id = json_data.get('id')
+    new_content = json_data.get('content')
+    default_points = json_data.get('points')
+    language_id = json_data.get('language_id')
+    icon_id = json_data.get('icon_id')
+    new_labels = json_data.get('labels')
+    timdb = getTimDb()
+    old_content = timdb.velps.get_latest_velp_version(velp_id, language_id)
+    old_labels=timdb.velps.get_velp_label_ids(velp_id)
+    if old_content != new_content:
+        #Todo this does not really work correctly, now any update to any language creates a new version, there can not
+        #be different contents with the same version but different language.
+        version_id=timdb.velps.create_velp_version(velp_id)
+        timdb.velps.create_velp_content(version_id,language_id,new_content)
+    if old_labels != new_labels:
+        timdb.velps.update_velp_labels(velp_id,new_labels)
+    timdb.velps.update_velp(velp_id, default_points, icon_id)
+
+
 @velps.route("/addlabel", methods=["POST"])
 def add_label():
-    #language_id = request.args.get('language_id')
-    jsondata = request.get_json()
+    # language_id = request.args.get('language_id')
+    json_data = request.get_json()
     language_id = "FI"
-    content = jsondata['content']
+    content = json_data['content']
 
     timdb = getTimDb()
     label_id = timdb.velps.create_label(language_id, content)
