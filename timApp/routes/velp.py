@@ -69,7 +69,7 @@ def add_velp():
     return jsonResponse(new_velp_id)
 
 
-@velps.route("updatevelp", methods=['POST'])
+@velps.route("/updatevelp", methods=['POST'])
 def update_velp():
     json_data = request.get_json()
     velp_id = json_data.get('id')
