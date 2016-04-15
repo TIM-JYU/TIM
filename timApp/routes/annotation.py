@@ -12,16 +12,16 @@ annotations = Blueprint('annotations',
 @annotations.route("/addannotation", methods=['POST'])
 def add_annotation() -> str:
     json_data = request.get_json()
-
-    velp_id = json_data['velp_id']
-    points = json_data['points']
-    place_start = json_data['place_start']
-    place_end = json_data['place_end']
-    document_id = json_data['document_id']
-    paragraph_id = json_data['paragraph_id']
-    answer_id = json_data['answer_id']
-    icon_id = json_data['icon_id']
-    element_number = json_data['element_number']
+    #.get() returns null if there is no data instead of throwing.
+    velp_id = json_data.get('velp_id')
+    points = json_data.get('points')
+    place_start = json_data.get('place_start')
+    place_end = json_data.get('place_end')
+    document_id = json_data.get('document_id')
+    paragraph_id = json_data.get('paragraph_id')
+    answer_id = json_data.get('answer_id')
+    icon_id = json_data.get('icon_id')
+    element_number = json_data.get('element_number')
 
     timdb = getTimDb()
     annotator_id = getCurrentUserId()
