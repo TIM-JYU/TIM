@@ -666,11 +666,15 @@ timApp.controller("ViewCtrl", [
                 .append($("<div>", {class: "parContent"}).html('New paragraph'));
         };
 
-        sc.showPopupMenu = function (e, $par_or_area, coords, actions, storageAttribute) {
+        sc.showPopupMenu = function (e, $par_or_area, coords, attrs) {
             var $popup = $('<popup-menu>');
             $popup.attr('tim-draggable-fixed', '');
-            $popup.attr('actions', actions);
-            $popup.attr('save', storageAttribute);
+            for (var key in attrs) {
+                if (attrs.hasOwnProperty(key)) {
+                    console.log(key + ': ' + attrs[key]);
+                    $popup.attr(key, attrs[key]);
+                }
+            }
             $par_or_area.prepend($popup); // need to prepend to DOM before compiling
             $compile($popup[0])(sc);
             // TODO: Set offset for the popup
@@ -694,7 +698,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.showAddParagraphMenu = function (e, $par_or_area, coords) {
-            sc.showPopupMenu(e, $par_or_area, coords, 'addParagraphFunctions');
+            sc.showPopupMenu(e, $par_or_area, coords, {actions: 'addParagraphFunctions'});
         };
         
         sc.showAddParagraphAbove = function (e, $par) {
@@ -711,7 +715,7 @@ timApp.controller("ViewCtrl", [
 
         sc.showPasteMenu = function (e, $par_or_area, coords) {
             sc.pasteFunctions = sc.getPasteFunctions();
-            sc.showPopupMenu(e, $par_or_area, coords, 'pasteFunctions');
+            sc.showPopupMenu(e, $par_or_area, coords, {actions: 'pasteFunctions', contenturl: '/clipboard'});
         };
 
         sc.pasteContentAbove = function (e, $par) {
@@ -1054,7 +1058,7 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.showOptionsWindow = function (e, $par_or_area, coords) {
-            sc.showPopupMenu(e, $par_or_area, coords, 'editorFunctions', 'defaultAction');
+            sc.showPopupMenu(e, $par_or_area, coords, {actions: 'editorFunctions', save: 'defaultAction'});
         };
 
         sc.dist = function (coords1, coords2) {

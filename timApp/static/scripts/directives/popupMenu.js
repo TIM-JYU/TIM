@@ -5,7 +5,7 @@ var timApp = angular.module('timApp');
  * Requires a paragraph (element with class "par") or
  * an area (element with a class "area") as its ancestor.
  */
-timApp.directive('popupMenu', ['$window', '$filter', function ($window, $filter) {
+timApp.directive('popupMenu', ['$http', '$window', '$filter', function ($http, $window, $filter) {
     return {
         restrict: 'E',
         scope: true, // we need functions from parent scope
@@ -14,6 +14,7 @@ timApp.directive('popupMenu', ['$window', '$filter', function ($window, $filter)
 
         link: function ($scope, $element, $attrs) {
             $scope.actions = eval('$scope.' + $attrs['actions']);
+            $scope.getContent($attrs['contenturl']);
             if ($attrs['save'])
                 $scope.storageAttribute = '$scope.$storage.' + $attrs['save'];
         },
@@ -42,15 +43,25 @@ timApp.directive('popupMenu', ['$window', '$filter', function ($window, $filter)
             };
 
             $scope.clicked = function (fDesc) {
-                /*if ($scope.$storage.defaultAction === fDesc)
-                    $scope.$storage.defaultAction = $scope.$storage.defaultDefaultAction;
-                else
-                    $scope.$storage.defaultAction = fDesc;*/
-
                 if (eval($scope.storageAttribute) === fDesc)
                     eval($scope.storageAttribute + ' = null;');
                 else
                     eval($scope.storageAttribute + ' = fDesc;');
+            };
+            
+            $scope.getContent = function (contentUrl) {
+                if (!contentUrl) {
+                    $('#content').remove();
+                    return;
+                }
+
+                $http.get(contentUrl, {}
+                ).success(function (data, status, headers, config) {
+                    //$scope.content = data.texts;
+                    $('#content').append(data.texts);
+                }).error(function () {
+                    $window.alert('Error occurred when getting contents.')
+                });
             };
 
             $element.css('position', 'absolute'); // IE needs this

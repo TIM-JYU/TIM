@@ -2,6 +2,7 @@
 
 from .common import *
 from documentmodel.clipboard import Clipboard
+from documentmodel.docparagraph import DocParagraph
 from flask import Blueprint
 from routes.edit import par_response
 
@@ -75,6 +76,17 @@ def paste_from_clipboard(doc_id):
 def show_clipboard():
     verifyLoggedIn()
     timdb = getTimDb()
+
+    (doc_id,) = verify_json_params('doc_id', require=False, default=None)
+    print('Got a request with doc id ' + str(doc_id))
+    if doc_id is None:
+        doc = Document()
+    else:
+        verify_doc_exists(doc_id)
+        verify_view_access(doc_id)
+        doc = Document(doc_id)
+
     clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
-    return jsonResponse(clip.read())
+    pars = [DocParagraph.from_dict(doc, par) for par in clip.read()]
+    return par_response(pars, doc, edit_window=True)
 

@@ -938,6 +938,15 @@ pre {
     min-height: 50px;
 }
 
+.actionButtonContent {
+    /* todo: find working values for mobile devices */
+    white-space: normal;
+    max-width: 600px;
+    max-height: 200px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
 .refPopup {
     position: relative;
     white-space: nowrap;

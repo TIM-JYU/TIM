@@ -1,5 +1,6 @@
 <div class="actionButtons">
     <span class="error" ng-show="notification" ng-bind="notification"></span>
+    <div id="content" class="actionButtonContent"></div>
     <span class="actionButtonRow" ng-repeat="f in actions | filter:{show: true}">
     <button style="width: 150px;" class="timButton" ng-bind="f.desc" ng-click="callFunc($event, f)">
     </button>
