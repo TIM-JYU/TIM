@@ -41,10 +41,6 @@
         <script src="{{ url_for('static', filename='scripts/userlistController.js') }}"></script>
     {% endif %}
 
-    {% if in_lecture or lecture_mode %}
-        {% include 'lecture_head.html' %}
-    {% endif %}
-
     {% for cssFile in cssFiles %}
         <link rel="stylesheet" href="{{ cssFile }}">
     {% endfor %}
@@ -73,11 +69,12 @@
         {% endif %}
     </script>
 {% endblock %}
+{% block mainctrl %}ng-controller="ViewCtrl"{% endblock %}
 {% block content %}
     <form name="ignore_me">
         <input type="hidden" id="page_is_dirty" name="page_is_dirty" value="0"/>
     </form>
-    <div class="paragraphs" ng-controller="ViewCtrl">
+    <div class="paragraphs">
         <div ng-cloak="" class="dialog" caption="Refresh the page?" tim-draggable-fixed="" ng-show="isPageDirty() && !hideRefresh">
             <p>The page has been modified since the last reload. Refresh now?</p>
             <button ng-click="reload()">Refresh</button>
@@ -106,12 +103,6 @@
                 <span class="smallNote" ng-click="reload()">Refresh (F5) to recount</span>
             </div>
             <div class="taskSmallSummary"><p>{{ task_info.total_points }} p</p></div>
-        {% endif %}
-
-        {% if lecture_mode or in_lecture %}
-            {% include 'lecture.html' %}
-        {% else %}
-            {% include 'side_menu.html' %}
         {% endif %}
 
         {% if teacher_mode %}

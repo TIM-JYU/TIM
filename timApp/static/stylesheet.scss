@@ -480,18 +480,7 @@ input[type="file"] {
     z-index: 9;
 }
 
-@media only screen and (max-width: 1600px) {
-
-    .notes:hover, .speaker:hover {
-        background-color: white;
-        display: block;
-        z-index: 9;
-    }
-
-}
-
 /* For user list in teacher view ================================*/
-
 .userlist {
     position: fixed;
     top: 13px;
@@ -668,12 +657,6 @@ button:disabled, input[type="submit"]:disabled, input[type="button"]:disabled {
     color: #CCC;
 }
 
-@media screen and (min-width: 60em) {
-    .body {
-        margin-left: 60em !important;
-    }
-}
-
 .borderless {
     border-collapse: collapse;
 }
@@ -728,151 +711,6 @@ p.plgfooter {
 .lazyVisible {
     margin-top: 0;
     padding-top: 0;
-}
-
-/* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
-@media only screen and (max-width: 1200px) {
-    .arealine {
-        position: absolute;
-        right: -1.5em;
-        left: auto;
-    }
-
-    div.header {
-        min-height: 46px;
-    }
-
-    .pull-left {
-        padding-left: 55px;
-    }
-
-    .content {
-        text-align: justify;
-        margin-right: 0.5em;
-    }
-
-    .par {
-        position: relative;
-        margin-left: 0;
-        margin-top: 1em;
-        margin-right: 0;
-    }
-
-    .addBottomContainer {
-        margin-left: 0;
-    }
-
-    .readline {
-        width: 6em;
-    }
-
-    .notes, .speaker {
-        position: absolute;
-        left: 116%;
-        width: 17em;
-        top: 0;
-    }
-
-    .editorArea {
-        position: absolute;
-        -webkit-box-sizing: border-box;
-        -moz-box-sizing: border-box;
-        box-sizing: border-box;
-    }
-
-    .previewcontent {
-        min-height: 5em;
-        max-height: 15em;
-    }
-
-    body {
-        margin-left: 2px;
-        margin-right: 2px;
-        font-family: Verdana, Arial, sans-serif;
-        font-size: 1em;
-        line-height: 1.2;
-    }
-
-    .material {
-        background-color: white;
-        display: inline-block;
-        width: 100%;
-        margin-left: 0;
-    }
-}
-
-/* Styles for tablets and smaller devices =============================================*/
-@media only screen and (max-width: 900px) {
-    .par {
-        position: relative;
-        margin-left: 0;
-        margin-top: 1em;
-        margin-right: 1em;
-    }
-}
-
-/* Styles for mobile devices =============================================*/
-@media only screen and (max-device-width: 500px) {
-    .content {
-        text-align: left;
-    }
-
-    .material {
-        display: inline-block;
-        width: 100%;
-    }
-
-    body {
-        text-align: left;
-        max-width: 50em;
-        margin-left: 0.0cm !important;
-        margin-right: 0.0cm;
-        font-family: Verdana, Arial, sans-serif;
-        font-size: 1em;
-        line-height: 1.2;
-    }
-
-    .csRunCode {
-        margin-left: 1.1em;
-    }
-
-    .notes, .speaker {
-        position: absolute;
-        left: 115%;
-        width: 17em;
-        top: 0;
-    }
-
-    .readline {
-        width: 3em;
-    }
-
-    .csRunDiv {
-        margin-left: 0.2em;
-        margin-right: 0;
-    }
-
-    .huomautus {
-        margin-left: 0.1em;
-        text-align: left;
-    }
-
-    blockquote {
-        margin-left: 0.2em;
-        margin-right: 0.2em;
-    }
-
-    ul, ol {
-        margin-left: 0.1em;
-    }
-
-    .sidebar.autohidden {
-        display: none;
-    }
-
-    .csRunMenu {
-        margin-left: 25px;
-    }
 }
 
 @media print {

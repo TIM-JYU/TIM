@@ -3,6 +3,7 @@
         <link rel="stylesheet" href="{{ ASSET_URL }}">
     {% endassets %}
 {%- endmacro %}
+{% set lecture_assets = in_lecture or lecture_mode or request.endpoint == 'lecture.show_lecture_info' %}
 <!DOCTYPE html>
 <html lang="en" ng-app="timApp">
 <head>
@@ -35,13 +36,15 @@
         <script src="{{ url_for('bower.static', filename='jquery/dist/jquery.min.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='jquery-ui/jquery-ui.min.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='angular/angular.min.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular-bootstrap/ui-bootstrap-tpls.min.js') }}"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
         {% block ngscripts %}
             <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.min.js') }}"></script>
         {% endblock %}
 
         <script>
-            var timApp = angular.module('timApp', [{% block ngmodules %}'ngSanitize',{% endblock %}]);
+            var timApp = angular.module('timApp', [{% block ngmodules %}'ngSanitize', 'ui.bootstrap', {% endblock %}]);
             // disable Angular URL manipulation when using ng-include; from http://stackoverflow.com/a/19825756
             timApp.config(['$provide', function ($provide) {
                 $provide.decorator('$browser', ['$delegate', function ($delegate) {
@@ -60,47 +63,81 @@
         <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
         {% include 'common_head.html' %}
+        {# TODO lecture_head is probably needed in lecture info view #}
+        {% if lecture_assets %}
+            {% include 'lecture_head.html' %}
+        {% endif %}
         <title>{% block title %}{% endblock %} - TIM</title>
     {% endblock %}
 </head>
 <body>
 {% block body %}
-<div class="container">
-    <div class="header clearfix">
-        <a href="/">
-            <img alt="TIM - The Interactive Material." class="pull-left"
-                 src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"/>
-        </a>
-        <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
-             src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
-        {% include 'loginlogout.html' %}
+    <div class="container-fluid" {% block mainctrl %}{% endblock %}>
+        <div {% if lecture_assets %}ng-controller="LectureController"{% endif %}>
+            <div class="row">
+                <div class="col-md-3 col-xs-1">
+                    <div class="affix">
+                        <div class="row">
+                            {% include 'side_menu.html' %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xs-11">
+                    <a href="/">
+                        <img alt="TIM - The Interactive Material." class="pull-left"
+                             src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"/>
+                    </a>
+                    <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
+                         src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
+                    {% include 'loginlogout.html' %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 col-md-offset-3 col-xs-11 col-xs-offset-1">
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <ul class="flashes">
+                                {% for message in messages %}
+                                    <li>{{ message }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 col-md-offset-3 col-xs-11 col-xs-offset-1">
+                    <div id="header">
+                        {% block header %}
+                        {% endblock %}
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 col-md-offset-3 col-xs-11 col-xs-offset-1">
+                    <div class="material">
+                        {% if lecture_assets %}
+                            {% include 'lectureinfo_menu.html' %}
+                        {% endif %}
+                        {% block content %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 col-md-offset-3 col-xs-11 col-xs-offset-1">
+                    <footer class="footer">
+                        {% block footer %}
+                            <div class="row">
+                                <p class="col-xs-6">&copy; Jyväskylän yliopisto</p>
+                                <a class="col-xs-6 text-right" href="/view/tim/Rekisteriseloste">Rekisteriseloste</a>
+                            </div>
+                        {% endblock %}
+                    </footer>
+                </div>
+            </div>
+        </div>
     </div>
-
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul class="flashes">
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
-
-    <div id="header">
-        {% block header %}
-        {% endblock %}
-    </div>
-
-    <div class="material">
-        {% block content %}{% endblock %}
-    </div>
-
-    <footer class="footer">
-        {% block footer %}
-        {% endblock %}
-    </footer>
-</div>
-<script>timLogTime("Document end","base");</script>
+    <script>timLogTime("Document end", "base");</script>
 {% endblock %}
 </body>
 </html>

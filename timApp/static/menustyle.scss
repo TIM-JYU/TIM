@@ -1,3 +1,15 @@
+.affix {
+    max-width: 25%;
+    min-width: 15em;
+    z-index: 4;
+}
+
+#menuTabs {
+    background: white;
+    max-height: calc(100vh - 30px);
+    overflow-y: auto;
+}
+
 /* For directory */
 .smallMenu {
     display: none;
@@ -29,7 +41,7 @@
     display: flex;
 }
 
-#largeMenu .lectureSection, .loginSection {
+#largeMenu .lectureSection {
     display: block;
 }
 
@@ -51,21 +63,10 @@
     clear: both;
 }
 
-.smallMenuBtn {
-    width: 100%;
-    height: 100%;
-}
-
 .lectureSection {
     line-height: 70%;
     width: 100%;
     display: inline-block;
-}
-
-.loginSection {
-    display: inline-block;
-    width: 100%;
-    float: right;
 }
 
 .menuSection .lectureSection h1 {
@@ -103,83 +104,7 @@
     display: block;
 }
 
-.menuSection button {
-    background: #E6E6E6;
-    border: 0;
-    border-radius: 3px;
-    color: #3CC;
-    display: inline-block;
-    font-size: 11px;
-    /* font-weight: bold; */
-    cursor: pointer;
-    line-height: normal;
-    padding: 5px 10px;
-    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
-.menu-icon.clicked {
-    z-index: 501;
-    opacity: 0.99;
-    background: #e6e6e6;
-}
-
-/* For table of contents */
-
-.menu img {
-    max-width: 95%;
-    display: block;
-    margin: 0 auto;
-}
-
-#sidebarMenuButton {
-    display: none;
-}
-
-.contents {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 5;
-}
-
-#sidebarIcons {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 3;
-}
-
-.sideMenu {
-    position: fixed;
-    top: 0;
-    left: 0;
-}
-
-.sidebarMenu p {
-    margin: 0;
-}
-
-.invisible {
-    height: 50px;
-    width: 50px;
-}
-
-.sidebar {
-    position: relative;
-    left: 44px;
-    top: -50px;
-    z-index: 500;
-    width: 180px;
-    padding: 0 10px 10px 10px;
-    max-height: 98vh;
-    word-wrap: break-word;
-    background-color: #e6e6e6;
-    overflow-x: hidden;
-    overflow-y: auto;
-}
-
-.hidden, .autohidden {
+.autohidden {
     display: none;
 }
 
@@ -187,38 +112,8 @@
     padding-left: 10px !important;
 }
 
-.lectures-sidebar .sideBarContainer, .questions-sidebar .sideBarContainer,
-.people-sidebar .sideBarContainer, .settings-sidebar .sideBarContainer {
-    padding-left: 10px;
-}
-
-.sideBarContainer ul {
-    margin: 0;
-    padding-left: 0;
-    text-align: left;
-    font-family: "Helvetica", Arial, sans-serif;
-    font-size: 0.9em;
-}
-
-.sideBarContainer p, .people-sidebar li, .sideBarContainer label {
-    text-align: left;
-    font-family: "Helvetica", Arial, sans-serif;
-    font-size: 0.85em;
-}
-
-.sidebar li {
-    list-style: none;
-}
-
-.index-sidebar li {
-    list-style-position: inside;
-    margin-top: 2px;
-    margin-bottom: 2px;
-}
-
 li.basic, li.basic_active {
     list-style: none;
-    margin-left: 20px;
 }
 
 .sub {
@@ -230,106 +125,29 @@ li.basic, li.basic_active {
 }
 
 li.exp {
-    list-style-image: url("images/plus.png");
+    list-style-image: url("#{$asset-path}/images/plus.png");
     cursor: pointer;
 }
 
 li.col {
-    list-style-image: url("images/minus.png");
+    list-style-image: url("#{$asset-path}/images/minus.png");
     cursor: pointer;
 }
 
 li.exp_active {
-    list-style-image: url("images/plus.png");
+    list-style-image: url("#{$asset-path}/images/plus.png");
     background-color: #eeeeff;
     cursor: pointer;
 }
 
 li.col_active {
-    list-style-image: url("images/minus.png");
+    list-style-image: url("#{$asset-path}/images/minus.png");
     background-color: #eeeeff;
     cursor: pointer; /* if not included, bullets are not shown right in moz*/
 }
 
 li.basic_active {
     background-color: #eeeeff;
-}
-
-.index-sidebar a {
-    text-align: left;
-    color: $index-sidebar-color;
-}
-
-.settings-sidebar a {
-    margin-top: 5px;
-    margin-left: 15px;
-    color: blue;
-}
-
-.lectures-sidebar a, .questions-sidebar a, .people-sidebar a {
-    margin: 0;
-    text-align: left;
-    color: black;
-}
-
-.sidebar a:hover {
-    color: $sidebar-link-hover-color;
-    text-decoration: none;
-}
-
-.sidebar a.a1 {
-    font-size: 110%;
-}
-
-.sidebar a.a2 {
-    font-size: 100%;
-}
-
-.sidebar a.a3 {
-    font-size: 100%;
-    padding-left: 15px;
-}
-
-.sidebar h3, .sidebar h4 {
-    margin: 10px 0 0 0;
-    color: $sidebar-heading-color;
-    font-size: 0.9em;
-}
-
-.sidebar h1 {
-    font-size: 120%;
-    background-color: $sidebar-heading-color;
-    color: white;
-    margin: 0 0 15px 0;
-    border: none;
-    padding-top: 10pt;
-    padding-bottom: 10pt;
-    padding-left: 10pt;
-    line-height: 1.3;
-    text-align: left;
-}
-
-.menu {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 500;
-    width: 45px;
-}
-
-.menu-icon {
-    z-index: 501;
-    background: #F0F0F0;
-    cursor: pointer;
-}
-
-.menu-icon:hover {
-    z-index: 501;
-    background: rgb(149, 149, 149) !important;
-    /* Filter disabled because it doesn't work with IE. It has been replaced with background color change.
-    filter: brightness(0.8);
-    -webkit-filter: brightness(0.8);
-    -moz-filter: brightness(0.8);*/
 }
 
 /*Pienet resoluutiot*/
@@ -344,20 +162,6 @@ li.basic_active {
 
     .sidebar.autohidden {
         display: none;
-    }
-
-    #sidebarMenuButton {
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 505;
-        display: block;
-        width: 46px;
-        height: 46px;
-    }
-
-    #sidebarMenuButton:hover {
-        cursor: pointer;
     }
 
     .menu, .sideMenu {
@@ -412,10 +216,6 @@ li.basic_active {
         width: 80%;
     }
 
-    .lecturesList img {
-
-    }
-
     .lecturesList div ul {
         display: block;
     }
@@ -456,10 +256,6 @@ li.basic_active {
 
     .smallIconSection img {
         display: inline;
-    }
-
-    .index-sidebar, .lectures-sidebar, .questions-sidebar, .people-sidebar, .settings-sidebar {
-        max-height: calc(100vh - 60px);
     }
 }
 

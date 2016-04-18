@@ -4,8 +4,6 @@
     {{ super() }}
 
     <script src="{{ url_for('static', filename='scripts/controllers/lectureInfoController.js') }}"></script>
-    {{ scss('lectureInfo') }}
-    {% include 'lecture_head.html' %}
 
     <script>
         var lectureId = {{lectureId|tojson}};
@@ -18,9 +16,6 @@
 {% endblock %}
 {% block content %}
     <div ng-controller="LectureInfoController">
-        {% if in_lecture %}
-            {% include 'lecture.html' %}
-        {% endif %}
         <pop-up-dialog show="showLectureForm" caption="'Edit lecture'">
             <ng-include
                     src="'{{ url_for('static', filename='templates/start_lecture.html') }}'"></ng-include>

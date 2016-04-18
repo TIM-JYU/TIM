@@ -8,20 +8,9 @@
         var folder = "{{doc.fullname if doc else ''}}";
     </script>
     <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
-    {% if session.user_id %}
-        {% if in_lecture %}
-            {% include 'lecture_head.html' %}
-        {% endif %}
-    {% endif %}
 {% endblock %}
 {% block content %}
     <div ng-controller="IndexCtrl" class="index">
-        {% if in_lecture %}
-            {% include 'lecture.html' %}
-        {% elif session.user_id %}
-            {% include 'side_menu.html' %}
-        {% endif %}
-
         <span ng-show="displayIndex">Welcome! Start by choosing a document to view: </span> <img
             src="{{ url_for('static', filename='images/loading.gif') }}" ng-show="!displayIndex">
 

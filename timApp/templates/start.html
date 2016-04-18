@@ -3,29 +3,16 @@
 {% block head %}
     {{ super() }}
 
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-
     <script>
         $('#loginTab').find('a').click(function (e) {
             e.preventDefault();
             $(this).tab('show');
         })
     </script>
-    {% if session.user_id %}
-        <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
-        {% if in_lecture %}
-            {% include 'lecture_head.html' %}
-        {% endif %}
-    {% endif %}
 {% endblock %}
 {% block content %}
     <div class="row">
-    <div class="col-md-8 col-md-offset-2">
-    {% if in_lecture %}
-        {% include 'lecture.html' %}
-    {% elif session.user_id %}
-        {% include 'side_menu.html' %}
-    {% endif %}
+    <div class="col-md-12">
     <div class="row">
         <h1 class="text-center">TIM - The Interactive Material</h1>
     </div>
@@ -158,11 +145,5 @@
         </div>
     </div>
     </div>
-    </div>
-{% endblock %}
-{% block footer %}
-    <div class="row">
-        <p class="col-md-2">&copy; Jyväskylän yliopisto</p>
-        <a class="col-md-offset-8 col-md-2 text-right" href="/view/tim/Rekisteriseloste">Rekisteriseloste</a>
     </div>
 {% endblock %}

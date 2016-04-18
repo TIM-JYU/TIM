@@ -25,7 +25,7 @@ $body-margin-left: 250px;
 $material-border: none;
 $material-border-radius: 0;
 $body-text-align: justify;
-
+$asset-path: "..";
 
 // Bootstrap variable overrides:
 $brand-primary: $basic-color;
@@ -35,3 +35,4 @@ $code-bg: white;
 $pre-color: black;
 $pre-bg: white;
 $font-family-sans-serif: Verdana, Arial, sans-serif;
+$icon-font-path: "../scripts/bower_components/bootstrap-sass/assets/fonts/bootstrap/";
