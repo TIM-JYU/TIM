@@ -72,6 +72,26 @@ def paste_from_clipboard(doc_id):
     return par_response(pars, doc)
 
 
+@clipboard.route('/clipboard/deletesrc/<int:doc_id>', methods=['POST'])
+def delete_from_source(doc_id):
+    verifyLoggedIn()
+    verify_doc_exists(doc_id)
+    verify_edit_access(doc_id)
+
+    timdb = getTimDb()
+    doc = Document(doc_id)
+    clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
+    pars = clip.read(as_ref=True)
+    if not pars:
+        return jsonResponse({'doc_ver': doc.get_version(), 'pars': []})
+
+    my_pars = [{'id': p['attrs']['rp']} for p in pars if p['attrs']['rd'] == str(doc_id)]
+    print(my_pars)
+    clip.delete_from_source()
+
+    return jsonResponse({'doc_ver': doc.get_version(), 'pars': my_pars})
+
+
 @clipboard.route('/clipboard', methods=['GET'])
 def show_clipboard():
     verifyLoggedIn()
@@ -87,6 +107,6 @@ def show_clipboard():
         doc = Document(doc_id)
 
     clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
-    pars = [DocParagraph.from_dict(doc, par) for par in clip.read()]
+    pars = [DocParagraph.from_dict(doc, par) for par in clip.read() or []]
     return par_response(pars, doc, edit_window=True)
 

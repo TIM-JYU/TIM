@@ -68,6 +68,18 @@ class Clipboard:
             with open(self.get_reffilename(), 'wt', encoding='utf-8') as reffile:
                 reffile.write(reftext)
 
+        def delete_from_source(self):
+            pars = self.read(as_ref=True)
+            if pars is None:
+                return
+
+            doc = None
+            for par in pars:
+                if doc is None or doc.doc_id != par['attrs']['rd']:
+                    doc = Document(par['attrs']['rd'])
+                doc.delete_paragraph(par['attrs']['rp'])
+            self.clear()
+
         def cut_pars(self, doc: Document, par_start: str, par_end: str,
                      area_name: Optional[str] = None) -> List[DocParagraph]:
 
