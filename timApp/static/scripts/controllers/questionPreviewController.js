@@ -79,6 +79,8 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
             $scope.$emit('closeQuestionPreview');
         };
 
+
+
         /**
          * FILL WITH SUITABLE TEXT
          * @memberof module:questionPreviewController
@@ -86,14 +88,13 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
         $scope.deleteQuestion = function () {
             var confirmDi = $window.confirm("Are you sure you want to delete this question?");
             if (confirmDi) {
-                http.post('/deleteParagraph/' + scope.docId, {par: $scope.questionParId})
-                    .success(function () {
+                http.post('/deleteParagraph/' + $scope.docId, {par: $scope.questionParId})
+                    .success(function (data) {
+                        $scope.handleDelete(data, {par: $scope.questionParId, area_start: null, area_end: null});
                         $scope.$emit('closeQuestionPreview');
                         $window.console.log("Deleted question");
-                        location.reload();
                     })
                     .error(function (error) {
-
                         $scope.$emit('closeQuestionPreview');
                         $window.console.log(error);
                     });
