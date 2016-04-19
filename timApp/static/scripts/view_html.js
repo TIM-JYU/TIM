@@ -1127,6 +1127,26 @@ timApp.controller("ViewCtrl", [
             sc.par = ($(question).parent());
         });
 
+        sc.onClick("html.ng-scope", function ($this, e) {
+            // Clicking anywhere
+            var tagName = e.target.tagName.toLowerCase();
+            var ignoreTags = ['button', 'input'];
+            if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || $(e.target).hasClass("menu-icon")) {
+                return false;
+            }
+
+            $(".actionButtons").remove();
+
+            if (tagName !== "p") {
+                $(".selected").removeClass("selected");
+                $(".lightselect").removeClass("lightselect");
+            }
+
+            //console.log(e.target);
+            return true;
+
+        }, true);
+
         sc.showOptionsWindow = function (e, $par_or_area, coords) {
             sc.showPopupMenu(e, $par_or_area, coords, {actions: 'editorFunctions', save: 'defaultAction'});
         };
