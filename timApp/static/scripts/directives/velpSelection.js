@@ -173,10 +173,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
 
         if (velp.id == $scope.velpToEdit.id){
-            velp.edit = !velp.edit;
-
-
-
+            velp.edit = false;
+            $scope.velpToEdit.edit = false;
             return
         }
 
