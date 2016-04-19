@@ -73,7 +73,7 @@
                                                    ng-model="newVelp['content']"
                                                    required placeholder="Add velp!" autofocus>
                                             <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]"
-                                                  ng-repeat="label in selectedLabels"
+                                                  ng-repeat="label in filterByLabels"
                                                   ng-style="{ color: getColor(label) }"></span></p>
 
                                             <p ng-show="(addVelpForm.velpName.$invalid && !addVelpForm.velpName.$pristine) || (submitted && addVelpForm.velpName.$invalid)">
@@ -88,8 +88,8 @@
                                     </div>
                                     </div>
                                 </div>
-
-                            <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | selectedLabels:labels)">
+                            {{ lockVelps(filteredVelps) }}
+                            <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByLabels: labels:lockedVelps)">
 
                                 <div class="velp" ng-dblclick="selectVelpToEdit(velp)" ng-click="useVelp(velp)"
                                      ng-style="{top: 2+$index*2 + 'em'}">
@@ -110,8 +110,8 @@
                                                    ng-model="velpToEdit['content']"
                                                    required placeholder="Edit velp!">
                                             <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]"
-                                                  ng-repeat="label in selectedLabels"
-                                                  ng-style="{ color: getColor(label) }"></span></p>
+                                                  ng-repeat="l in velpToEdit.labels"
+                                                  ng-style="{ color: getColor(l) }"></span></p>
 
                                             <p ng-show="(editVelpForm.velpName.$invalid && !editVelpForm.velpName.$pristine) || (submitted && editVelpForm.velpName.$invalid)">
                                                 Velp content is required
@@ -267,42 +267,18 @@
             <th>Velp</th>
             <th>Points</th>
         </tr>
-        <tr>
+        <tr ng-repeat="a in annotations">
             <td>
-               <span>Virheellinen henkilö (1 hit)</span>
+               <span>{{ getVelpById(a.velp).content }}</span>
             </td>
             <td id="summaryColumn">
-                <span>-1,5</span>
+                <span>{{ a.points }}</span>
             </td>
         </tr>
-        <tr>
-            <td>
-                <span>Virheellinen alue (2 hits)</span>
-            </td>
-            <td id="summaryColumn">
-                <span>-2</span>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <span>Virheellinen ajankohta (1 hit)</span>
-            </td>
-            <td id="summaryColumn">
-                <span>-1</span>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <span>Hienosti muistettu! (2 hits)</span>
-            </td>
-            <td id="summaryColumn">
-                <span>+2</span>
-            </td>
-        </tr>
-        <tr>
-            <th>Points total</th>
-            <th>3,5</th>
-        </tr>
+                    <tr>
+                        <th>Points total</th>
+                        <th>{{ getTotalPoints() }}</th>
+                    </tr>
     </table>
                     <span id="summaryComment">Comment:</span>
                     <textarea>Vastaus kokonaisuudessaan oli ihan hyvä; jonkin verran asiavirheitä sekä epämääräisyyksiä mutta toisaalta monia asioita oli muistettu hienosti ja pälä pälä... HUOM pitäiskö kommenttiketju muodostaa tästä eikä yksittäisistä velpeistä</textarea>
