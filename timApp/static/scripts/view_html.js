@@ -1656,12 +1656,15 @@ timApp.controller("ViewCtrl", [
             } else {
                 return [
                     {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
+                    {func: sc.cutPar, desc: 'Cut paragraph', show: $window.editMode === 'par'},
                     {func: sc.copyPar, desc: 'Mark paragraph', show: $window.editMode === 'par'},
                     {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
                     {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
+                    {func: sc.cutArea, desc: 'Cut area', show: $window.editMode === 'area'},
                     {func: sc.copyArea, desc: 'Mark area', show: $window.editMode === 'area'},
-                    {func: sc.showPasteMenu, desc: 'Copy here...', show: $window.editMode && (sc.allowPasteRef || sc.allowPasteContent)},
-                    {func: sc.showMoveMenu, desc: 'Move here...', show: $window.editMode && sc.allowPasteContent},
+                    {func: sc.showPasteMenu, desc: 'Paste...', show: $window.editMode && !sc.allowPasteRef && sc.allowPasteContent},
+                    {func: sc.showPasteMenu, desc: 'Copy/paste here...', show: $window.editMode && sc.allowPasteRef},
+                    {func: sc.showMoveMenu, desc: 'Move here...', show: $window.editMode && sc.allowPasteContent && sc.allowPasteRef},
                     {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
                     {
                         func: sc.startArea,
