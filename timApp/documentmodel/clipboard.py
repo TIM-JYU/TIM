@@ -35,13 +35,27 @@ class Clipboard:
         def get_reffilename(self) -> str:
             return os.path.join(self.path, 'ref-content')
 
+        def get_parreffilename(self) -> str:
+            return os.path.join(self.path, 'ref-parcontent')
+
         def clear(self):
-            for name in (self.get_clipfilename(), self.get_reffilename()):
+            for name in (self.get_clipfilename(), self.get_reffilename(), self.get_parreffilename()):
                 if os.path.isfile(name):
                     os.remove(name)
 
-        def read(self, as_ref: Optional[bool] = False) -> Optional[List[Dict[str, str]]]:
-            clipfilename = self.get_reffilename() if as_ref else self.get_clipfilename()
+        def clear_refs(self):
+            for name in (self.get_reffilename(), self.get_parreffilename()):
+                if os.path.isfile(name):
+                    os.remove(name)
+
+        def read(self, as_ref: Optional[bool] = False, force_parrefs: Optional[bool] = False)\
+                -> Optional[List[Dict[str, str]]]:
+
+            if as_ref:
+                clipfilename = self.get_parreffilename() if force_parrefs else self.get_reffilename()
+            else:
+                clipfilename = self.get_clipfilename()
+
             if not os.path.isfile(clipfilename):
                 return None
             with open(clipfilename, 'rt', encoding='utf-8') as clipfile:
@@ -54,22 +68,24 @@ class Clipboard:
             with open(self.get_clipfilename(), 'wt', encoding='utf-8') as clipfile:
                 clipfile.write(text)
 
-        def write_refs(self, pars: List[DocParagraph]):
+        def write_refs(self, pars: List[DocParagraph], area_name: Optional[str]):
             os.makedirs(self.path, exist_ok=True)
             ref_pars = [p.create_reference(p.doc).dict() for p in pars]
             reftext = DocumentWriter(ref_pars).get_text()
-            with open(self.get_reffilename(), 'wt', encoding='utf-8') as reffile:
+            with open(self.get_parreffilename(), 'wt', encoding='utf-8') as reffile:
                 reffile.write(reftext)
 
-        def write_arearef(self, doc: Document, area_name: str):
-            os.makedirs(self.path, exist_ok=True)
-            ref_pars = [DocParagraph.create_area_reference(doc, area_name).dict()]
-            reftext = DocumentWriter(ref_pars).get_text()
-            with open(self.get_reffilename(), 'wt', encoding='utf-8') as reffile:
-                reffile.write(reftext)
+            if area_name and len(pars) > 0:
+                os.makedirs(self.path, exist_ok=True)
+                ref_pars = [DocParagraph.create_area_reference(pars[0].doc, area_name).dict()]
+                reftext = DocumentWriter(ref_pars).get_text()
+                with open(self.get_reffilename(), 'wt', encoding='utf-8') as reffile:
+                    reffile.write(reftext)
+            else:
+                shutil.copy(self.get_parreffilename(), self.get_reffilename())
 
         def delete_from_source(self):
-            pars = self.read(as_ref=True)
+            pars = self.read(as_ref=True, force_parrefs=True)
             if pars is None:
                 return
 
@@ -78,15 +94,12 @@ class Clipboard:
                 if doc is None or doc.doc_id != par['attrs']['rd']:
                     doc = Document(par['attrs']['rd'])
                 doc.delete_paragraph(par['attrs']['rp'])
-            self.clear()
 
         def cut_pars(self, doc: Document, par_start: str, par_end: str,
                      area_name: Optional[str] = None) -> List[DocParagraph]:
 
             pars = self.copy_pars(doc, par_start, par_end, area_name, doc, disable_ref=True)
-            for par in pars:
-                doc.delete_paragraph(par.get_id())
-
+            self.delete_from_source()
             return pars
 
         def copy_pars(self, doc: Document, par_start: str, par_end: str, area_name: Optional[str] = None,
@@ -117,16 +130,10 @@ class Clipboard:
                 i.close()
 
             self.write(pars)
-
             if disable_ref:
-                reffilename = self.get_reffilename()
-                if os.path.isfile(reffilename):
-                    os.remove(reffilename)
+                self.clear_refs()
             else:
-                if area_name is None:
-                    self.write_refs(par_objs)
-                else:
-                    self.write_arearef(ref_doc, area_name)
+                self.write_refs(par_objs, area_name)
 
             return par_objs
 
@@ -162,4 +169,3 @@ class Clipboard:
                 i.close()
 
             return self.paste_before(doc, par_before, as_ref)
-

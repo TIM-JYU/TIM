@@ -86,8 +86,8 @@ def delete_from_source(doc_id):
         return jsonResponse({'doc_ver': doc.get_version(), 'pars': []})
 
     my_pars = [{'id': p['attrs']['rp']} for p in pars if p['attrs']['rd'] == str(doc_id)]
-    print(my_pars)
     clip.delete_from_source()
+    clip.clear()
 
     return jsonResponse({'doc_ver': doc.get_version(), 'pars': my_pars})
 
@@ -98,7 +98,6 @@ def show_clipboard():
     timdb = getTimDb()
 
     (doc_id,) = verify_json_params('doc_id', require=False, default=None)
-    print('Got a request with doc id ' + str(doc_id))
     if doc_id is None:
         doc = Document()
     else:
