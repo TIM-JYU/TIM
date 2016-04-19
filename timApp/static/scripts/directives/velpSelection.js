@@ -33,6 +33,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.velpToEdit = {content: "", points: "", labels: [], edit: false};
     $scope.newLabel = {content: "", selected: true};
     $scope.selectedLabels = [];
+    $scope.previouslySelectedLabels = [];
 
     // Dictionaries for easier searching: Velp ids? Label ids?
 
@@ -61,7 +62,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     // Get label data
     $http.get('/{0}/labels'.replace('{0}',doc_id)).success(function (data) {
         $scope.labels = data;
-        var i = 0;
         $scope.labels.forEach(function (l) {
             l.selected = false;
         });
@@ -165,10 +165,28 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         });
     };
 
-    $scope.toggleEditVelp = function(velp){
+    $scope.selectVelpToEdit = function(velp){
+        if ($scope.newVelp.edit)
+            $scope.newVelp.edit = false;
+
+
         if (velp.id == $scope.velpToEdit.id){
             velp.edit = !velp.edit;
+
+
+
             return
+        }
+
+        $scope.previouslySelectedLabels = $scope.selectedLabels.splice(0);
+
+        var addedLabels = [];
+        if (velp.labels !== undefined) {
+            for (var i = 0; i < velp.labels.length; i++) {
+                if (!$scope.getLabelById(velp.labels[i]).selected) {
+                    $scope.toggleLabel($scope.getLabelById(velp.labels[i]));
+                }
+            }
         }
 
         if ($scope.velpToEdit.edit) {
@@ -177,8 +195,19 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
            }
         }
 
+        velp.edit = true;
+        $scope.velpToEdit = Object.create(velp);
+
+        /*
+        if ($scope.velpToEdit.edit) {
+           for (var i=0; i<$scope.velps.length; i++){
+               $scope.velps[i].edit = false;
+           }
+        }
+
         velp.edit = !velp.edit;
         $scope.velpToEdit = Object.create(velp);
+        */
     };
 
     $scope.editVelp = function(form){
@@ -193,6 +222,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             if ($scope.velps[i].id == $scope.velpToEdit.id){
                 $scope.velps[i] = $scope.velpToEdit;
                 $scope.velps[i].edit = false;
+                $scope.velps[i].labels = $scope.selectedLabels.slice(0);
                 break;
             }
         }
@@ -201,6 +231,20 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         });
         */
     };
+
+    /**
+     * Get velp by its id
+     * @param id velp to find
+     * @returns velp or undefined
+     */
+    $scope.getLabelById = function(id){
+        for (var i=0; i<$scope.labels.length; i++)
+            if ($scope.labels[i].id == id)
+                return $scope.labels[i];
+
+        return null;
+    };
+
 
     /**
      * Reset velp information

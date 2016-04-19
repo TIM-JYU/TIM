@@ -57,8 +57,8 @@
                  <!--   <tr>
                         <td colspan="4">-->
                             <div class="stack">
-                                <div ng-model="newVelp" class="velp" ng-dblclick="toggleEditVelp(newVelp)" ng-style="{top: 0}">
-                                    <div ng-class="['emphasise', {neutral: newVelp.points == 0, positive: newVelp.points > 0, negative: newVelp.points < 0,
+                                <div ng-model="newVelp" class="velp" ng-dblclick="selectVelpToEdit(newVelp)" ng-style="{top: 0}">
+                                    <div ng-class="['emphasise', 'new', { neutral: newVelp.points == 0, positive: newVelp.points > 0, negative: newVelp.points < 0,
                                      edit: newVelp.edit}]">
 
                                     <div ng-class="['content']">
@@ -91,7 +91,7 @@
 
                             <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | selectedLabels:labels)">
 
-                                <div class="velp" ng-dblclick="toggleEditVelp(velp)" ng-click="useVelp(velp)"
+                                <div class="velp" ng-dblclick="selectVelpToEdit(velp)" ng-click="useVelp(velp)"
                                      ng-style="{top: 2+$index*2 + 'em'}">
                                     <div ng-class="['emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0,
                                     edit: velp.edit}]">
@@ -109,9 +109,6 @@
                                             <p><input name="velpName" type="text"
                                                    ng-model="velpToEdit['content']"
                                                    required placeholder="Edit velp!">
-                                            <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]"
-                                                  ng-repeat="label in velpToEdit.labels"
-                                                  ng-style="{ color: getColor(label) }"></span>
                                             <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]"
                                                   ng-repeat="label in selectedLabels"
                                                   ng-style="{ color: getColor(label) }"></span></p>

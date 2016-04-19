@@ -73,6 +73,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             new_range.setEnd(el, end);
             $scope.addAnnotationToCoord(new_range, annotation, show);
         }
+        console.log("Added annotation");
         $compile(span)($scope); // Gives error [$compile:nonassign]
     };
 
@@ -120,7 +121,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             if ($scope.velps[i].id == id)
                 return $scope.velps[i];
 
-        return undefined;
+        return null;
     };
 
     /**

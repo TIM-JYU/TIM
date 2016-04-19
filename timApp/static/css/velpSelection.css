@@ -298,6 +298,10 @@ annotation {
     background: lightpink;
 }
 
+.emphasise.new {
+    background: lightskyblue;
+}
+
 .clickable-icon {
     cursor: pointer;
     opacity: 0.6;
