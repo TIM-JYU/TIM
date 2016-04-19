@@ -82,7 +82,7 @@
     width: 100%;
     margin-bottom: 1em;
     background-color: white;
-    border: solid 1px gainsboro;
+    border-top: solid 1px gainsboro;
     float:left;
     position: relative;
     top: 0;
@@ -332,18 +332,18 @@ annotation {
     overflow: visible;
 }
 .velpSummary {
-    position: fixed;
-    max-width: 20em;
+  /*  position: fixed;
+    max-width: 20em;*/
     word-wrap: break-word;
-    right: 0;
+    /*right: 0;*/
     top: 50px;
-    border: 1px solid gainsboro;
+    /*border: 1px solid gainsboro;
     background: white;
     z-index: 100000;
     overflow-y: auto;
     padding: 0.5em;
     border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
+    border-bottom-left-radius: 8px;*/
 }
 
 #summaryHeader {
@@ -356,7 +356,7 @@ annotation {
     margin-bottom: 2em;
     margin-left: 0;
     width: 98%;
-    border: 1px solid gainsboro;
+  /*  border: 1px solid gainsboro;*/
 }
 
 .velpSummary table th {
@@ -378,7 +378,12 @@ annotation {
 }
 
 #lowerTextarea {
+    margin-top: 0.5em;
     width: 98%;
     height: 5em;
     color: grey;
+}
+
+.velpSummary input {
+    margin-top: 0.5em;
 }

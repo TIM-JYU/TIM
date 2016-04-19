@@ -137,7 +137,7 @@
         </uib-tab>
 
         <!-- ADD VELP TAB -->
-        <uib-tab index="1" heading="Add velp">
+  <!--      <uib-tab index="1" heading="Add velp">
 
             <div class="velpArea">
                 <form name="addVelpForm" ng-submit="addVelp(addVelpForm)" novalidate>
@@ -173,20 +173,20 @@
                                 <input id="searchLabels" ng-model="filterLabel" placeholder="filter labels">
                             </td>
                         </tr>
-                    </table>
+                    </table>-->
                       <!--  <tr>
                             <td colspan="2">-->
-                                <div ng-class="getAdvancedStyle()">
+                            <!--    <div ng-class="getAdvancedStyle()">
                                     <p ng-repeat="label in labels | filter:{content:filterLabel}"
                                        class="label tag-{{ label.selected }}"
                                        style="background-color: {{ getColor(label.id) }}"
                                        ng-click="toggleLabel(label)" ng-model="test" value="{{ label.id }}">
                                         {{ label.content }}
                                     </p>
-                                </div>
+                                </div>-->
                         <!--    </td>
                         </tr>-->
-                    <table class="velpTable">
+                <!--    <table class="velpTable">
                         <tr>
                             <td colspan="2">
                                 <input type="submit" value="Add velp"/>
@@ -224,8 +224,8 @@
                     </table>
                 </form>
             </div>
-        </uib-tab>
-        <uib-tab index="2" heading="Manage velps">
+        </uib-tab>-->
+        <uib-tab index="1" heading="Manage velps">
             <div class="velpArea">
                 <table class="velpTable">
                     <tr>
@@ -256,6 +256,59 @@
                         </td>
                     </tr>
                 </table>
+            </div>
+        </uib-tab>
+        <uib-tab index="2" heading="Summary">
+            <div class="velpArea">
+               <div class="velpSummary">
+             <!--    <span id="summaryHeader">Summary:</span>-->
+                <table>
+                    <tr>
+            <th>Velp</th>
+            <th>Points</th>
+        </tr>
+        <tr>
+            <td>
+               <span>Virheellinen henkilö (1 hit)</span>
+            </td>
+            <td id="summaryColumn">
+                <span>-1,5</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span>Virheellinen alue (2 hits)</span>
+            </td>
+            <td id="summaryColumn">
+                <span>-2</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span>Virheellinen ajankohta (1 hit)</span>
+            </td>
+            <td id="summaryColumn">
+                <span>-1</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span>Hienosti muistettu! (2 hits)</span>
+            </td>
+            <td id="summaryColumn">
+                <span>+2</span>
+            </td>
+        </tr>
+        <tr>
+            <th>Points total</th>
+            <th>3,5</th>
+        </tr>
+    </table>
+                    <span id="summaryComment">Comment:</span>
+                    <textarea>Vastaus kokonaisuudessaan oli ihan hyvä; jonkin verran asiavirheitä sekä epämääräisyyksiä mutta toisaalta monia asioita oli muistettu hienosti ja pälä pälä... HUOM pitäiskö kommenttiketju muodostaa tästä eikä yksittäisistä velpeistä</textarea>
+                    <textarea id="lowerTextarea">Write your reply here...</textarea>
+                    <input value="Submit" type="submit"></input>
+                </div>
             </div>
         </uib-tab>
     </uib-tabset>
