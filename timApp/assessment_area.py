@@ -19,8 +19,8 @@ class AssessmentArea:
 
     def __init__(self, folder_id: Optional[int], document_id: Optional[int], area_id: Optional[int],
                  paragraph_id: Optional[str]):
-        """
-        Acceptable combinations of parameters:
+        """Acceptable combinations of parameters:
+
         * folder_id with all others None.
         * document_id with all others None.
         * document_id with either area_id or paragraph_id not None and folder_id none.
@@ -49,8 +49,8 @@ class AssessmentArea:
         self._paragraph_id = paragraph_id
 
     def get_parameters_for_velp_ids(self) -> list:
-        """
-        Returns a list suitable for placeholder substitution in a parametrized sql statement.
+        """Returns a list suitable for placeholder substitution in a parametrized sql statement.
+
         :return: List of values.
         """
         if self._type is AssessmentArea._AssessmentAreaTypes.folder:
@@ -64,6 +64,7 @@ class AssessmentArea:
 
     def get_sql_for_velp_ids(self) -> str:
         """Returns an sql script which will query the database for velps in use in this assessment area.
+
         Only returns velps that are still valid.
         :return: string of sql script.
         """
