@@ -14,12 +14,22 @@ timApp.directive('popupMenu', ['$http', '$window', '$filter', function ($http, $
 
         link: function ($scope, $element, $attrs) {
             $scope.actions = eval('$scope.' + $attrs['actions']);
+            $scope.actionsAttr = $attrs['actions'];
             $scope.getContent($attrs['contenturl']);
             if ($attrs['save'])
                 $scope.storageAttribute = '$scope.$storage.' + $attrs['save'];
         },
 
         controller: function ($scope, $element) {
+            $scope.$watchGroup(['getLatestActions()'], function (newValues, oldValues, scope) {
+                // Update the menu if its items are changed
+                $scope.actions = newValues[0];
+            });
+
+            $scope.getLatestActions = function () {
+                return eval('$scope.' + $scope.actionsAttr);
+            };
+
             $scope.closePopup = function () {
                 $scope.$destroy();
                 $element.remove();
