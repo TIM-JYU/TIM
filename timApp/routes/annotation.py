@@ -80,8 +80,8 @@ def get_annotations(document_id: int, paragraph_id: str) -> str:
 
 # TODO decide whether we should instead return comments for just one annotation, instead of returning everything at
 # once, like here.
-@annotations.route("/<document_id>/<paragraph_id>/comments", methods=['GET'])
-def get_comments(document_id: int, paragraph_id: str) -> str:
+@annotations.route("/<document_id>/comments", methods=['GET'])
+def get_comments(document_id: int) -> str:
     timdb = getTimDb()
-    results = timdb.annotations_comments.get_comments(int(document_id), paragraph_id)
+    results = timdb.annotations_comments.get_comments(int(document_id))
     return jsonResponse(results)
