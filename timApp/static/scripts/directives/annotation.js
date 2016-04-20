@@ -37,8 +37,10 @@ timApp.controller('AnnotationController', ['$scope', '$timeout', function ($scop
      * Delete selected annotation. Queries parent scope.
      */
     $scope.deleteAnnotation = function(){
-        $scope.$parent.deleteAnnotation($scope.aid);
-        $scope.toggleAnnotation();
+        if ($scope.comments.length < 2) {
+            $scope.$parent.deleteAnnotation($scope.aid);
+            $scope.toggleAnnotation();
+        }
     };
 
     /**

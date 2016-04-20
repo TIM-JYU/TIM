@@ -29,14 +29,16 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     // Data
     $scope.orderVelp = 'label';
     $scope.advancedOn = false;
-    $scope.newVelp = {content: "", points: "", labels: [], edit: false};
+    $scope.newVelp = {content: "", points: "", labels: [], edit: false, id:-2};
     $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id:-1};
-    $scope.newLabel = {content: "", selected: true};
+    $scope.newLabel = {content: "", selected: true, edit: false};
+    $scope.labelToEdit = {content: "", selected: false, edit: false};
     $scope.selectedLabels = [];
     $scope.previouslySelectedLabels = [];
     $scope.lockedVelps = [];
 
-    // Dictionaries for easier searching: Velp ids? Label ids?
+
+    // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
 
     var doc_id = $scope.docId;
     var par = 0;
@@ -61,15 +63,22 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             $scope.annotations = data;
             $scope.loadAnnotations();
         });
+
+        $http.get('/{0}/defaultvelpgroup'.replace('{0}', doc_id)).success(function (data){
+            console.log(data[0].id);
+            default_velp_group = data[0].id;
+        });
     });
 
     // Get label data
     $http.get('/{0}/labels'.replace('{0}',doc_id)).success(function (data) {
         $scope.labels = data;
         $scope.labels.forEach(function (l) {
+            l.edit = false;
             l.selected = false;
         });
     });
+
 
     // Methods
 
@@ -79,6 +88,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
      */
     $scope.getTotalPoints = function () {
         var p = 0;
+        if ($scope.annotations === undefined)
+            return p;
+
         for (var i = 0; i < $scope.annotations.length; i++) {
             p += $scope.annotations[i].points;
         }
@@ -111,11 +123,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         }
     };
 
+    /**
+     * lock velps in list
+     * @param velps velps to lock
+     */
     $scope.lockVelps = function(velps) {
         if (!$scope.velpToEdit.edit){
             $scope.lockedVelps = velps;
         }
-        console.log($scope.lockedVelps);
     };
 
     /**
@@ -180,7 +195,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             language_id: "FI",
             icon_id: null,
             valid_until: null,
-            velp_groups: [doc_id]  // TODO: Change to default group, add choices where to add
+            velp_groups: [default_velp_group]  // TODO: Change to default group, add choices where to add
         };
 
         $scope.makePostRequest("/addvelp", velpToAdd, function (data) {
@@ -201,9 +216,25 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         }
     };
 
-    $scope.selectVelpToEdit = function(velp){
-        console.log(velp);
+    $scope.selectLabelToEdit = function(label){
+        if (label.id == $scope.labelToEdit.id){
+            label.edit = false;
+            $scope.labelToEdit = {content: "", selected: false, edit: false};
+            return;
+        }
 
+        if ($scope.labelToEdit.edit) {
+            $scope.labelTo.edit = false;
+            for (var i=0; i<$scope.labels.length; i++){
+               $scope.labels[i].edit = false;
+            }
+        }
+
+        label.edit = true;
+        $scope.labelToEdit = Object.create(label);
+    };
+
+    $scope.selectVelpToEdit = function(velp){
         $scope.deselectLabels();
 
         if (velp.id == $scope.velpToEdit.id){
@@ -278,14 +309,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     };
 
     /**
-     * Reset velp information
+     * Reset new velp information
      */
     $scope.resetNewVelp = function(){
-        $scope.newVelp = {content: "", points: "", labels: []};
+        $scope.newVelp = {content: "", points: "", labels: [], edit: false, id:-2};
     };
 
     /**
-     * Reset label information
+     * Reset new label information
      */
     $scope.resetNewLabel = function(){
         $scope.newLabel = {"content": "", "selected": true};

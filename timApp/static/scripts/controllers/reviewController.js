@@ -44,7 +44,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             var el = elements.item(placeInfo["start"]["el_path"][0]).childNodes[0];
             console.log(el);
 
-                            var range = document.createRange();
+            var range = document.createRange();
             range.setStart(el, placeInfo["start"]["offset"]);
             range.setEnd(el, placeInfo["end"]["offset"]);
             $scope.addAnnotationToCoord(range, $scope.annotations[i], false);
@@ -96,7 +96,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         annotationParents[0].outerHTML = savedHTML;
     };
 
-        /**
+    /**
      * Delete annotation
      * TODO: Make query to database
      * @param id annotation id

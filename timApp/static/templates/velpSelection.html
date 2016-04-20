@@ -21,13 +21,43 @@
                  <!--   <tr>
                         <td colspan="4">-->
                             <div ng-class="getAdvancedStyle()">
+                                <div class="fulldiv">
                                 <p ng-repeat="label in filteredLabels = ( labels | filter:{content:filterLabel} )"
                                    class="label tag-{{ label.selected }}"
                                    style="background-color: {{ getColor(label.id) }}"
                                    ng-click="toggleLabel(label)" ng-model="test" value="{{ label.id }}">
                                     {{ label.content }}
-                                </p>
-                                <p ng-hide="filteredLabels.length">No labels :'(</p>
+                                </p><!-- p ng-click="selectLabelToEdit()" ng-class="['label', 'tag-false']" style="background: blue;">
+                                <span class="glyphicon glyphicon-plus"></span> Add label
+                            </p -->
+                                    </div>
+                                <div class="fulldiv" >
+                                    <form ng-class="getAdvancedStyle()" name="addLabelForm"
+                                          ng-submit="addLabel(addLabelForm)" novalidate>
+                                        <table class="velpTable">
+                                            <tr>
+                                                <td>
+                                                    <label for="newLabel">Label text</label>
+                                                </td>
+                                                <td>
+                                                    <input id="newLabel" name="labelContent"
+                                                           ng-model="newLabel['content']"
+                                                           placeholder="Label text" required>
+                                                </td>
+                                            </tr>
+                                            <tr ng-show="(labelAdded && addLabelForm.labelContent.$invalid) || (addLabelForm.labelContent.$invalid && !addLabelForm.labelContent.$pristine)">
+                                                <td colspan="2">
+                                                    <p>Label content is too short</p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">
+                                                    <input type="submit" value="Add label">
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </form>
+                                </div>
                             </div>
                     <!--    </td>
                     </tr>-->
@@ -280,10 +310,6 @@
                         <th>{{ getTotalPoints() }}</th>
                     </tr>
     </table>
-                    <span id="summaryComment">Comment:</span>
-                    <textarea>Vastaus kokonaisuudessaan oli ihan hyvä; jonkin verran asiavirheitä sekä epämääräisyyksiä mutta toisaalta monia asioita oli muistettu hienosti ja pälä pälä... HUOM pitäiskö kommenttiketju muodostaa tästä eikä yksittäisistä velpeistä</textarea>
-                    <textarea id="lowerTextarea">Write your reply here...</textarea>
-                    <input value="Submit" type="submit"></input>
                 </div>
             </div>
         </uib-tab>

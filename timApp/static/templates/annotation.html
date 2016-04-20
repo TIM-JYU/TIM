@@ -18,11 +18,10 @@
     <textarea placeholder="Add comment" ng-model="newComment" autofocus></textarea>
     <button ng-click="addComment()">Add</button>
     <!--<button class="float-right" ng-click="deleteAnnotation()"><span class="glyphicon glyphicon-trash"></span></button>-->
-    <span title="Delete annotation" class="delAnnotation float-right glyphicon glyphicon-trash clickable-icon" ng-click="deleteAnnotation()"></span>
+    <span title="Delete annotation" ng-class="['delAnnotation', 'float-right', 'glyphicon', 'glyphicon-trash', 'clickable-icon', {hide: comments.length > 1} ]" ng-click="deleteAnnotation()"></span>
     </div>
 </div><!--
 
 Surrounded text
 --><span ng-click="toggleAnnotation()" ng-class="['highlighted', 'annotation', 'emphasise', 'default',
-{neutral: points == 0, negative: points<0, positive: points > 0}]"><span ng-transclude></span><sup ng-show="comments.length">
-    {{ comments.length }}</sup></span>
+{neutral: points == 0, negative: points<0, positive: points > 0}]" ng-transclude></span>
