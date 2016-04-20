@@ -151,6 +151,11 @@ ul ul ul, ol ol ol {
     position: relative;
 }
 
+.par.deleted {
+    opacity: 0.5;
+    background-color: #ff7580;
+}
+
 .par.lightselect {
     background-color: #f7f7f7;
 }
