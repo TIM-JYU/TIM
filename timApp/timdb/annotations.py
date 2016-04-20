@@ -19,11 +19,9 @@ class Annotations(TimDbBase):
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
 
-    def get_annotations_in_paragraph(self, document_id: int, paragraph_id: str) -> List[Dict]:
-        """
-        Gets all annotations made in a given paragraph.
+    def get_annotations_in_document(self, document_id: int) -> List[Dict]:
+        """Gets all annotations made in a document. Both in document and in answers.
         :param document_id: The relevant document.
-        :param paragraph_id: The relevant paragraph in the document.
         :return: List of dictionaries, each dictionary representing a single annotation.
         """
 
@@ -33,10 +31,12 @@ class Annotations(TimDbBase):
                        SELECT
                          Annotation.id,
                          VelpVersion.velp_id,
-                         Annotation.icon_id,
                          Annotation.points,
                          Annotation.creation_time,
+                         Annotation.valid_until,
+                         Annotation.icon_id,
                          Annotation.annotator_id,
+                         Annotation.answer_id,
                          Annotation.paragraph_id_start,
                          Annotation.paragraph_id_end,
                          Annotation.offset_start,
@@ -49,9 +49,8 @@ class Annotations(TimDbBase):
                          INNER JOIN VelpVersion ON VelpVersion.id = Annotation.version_id
                        WHERE (Annotation.valid_until ISNULL OR
                              Annotation.valid_until >= CURRENT_TIMESTAMP) AND
-                             Annotation.document_id = ? AND
-                             Annotation.paragraph_id = ?
-                       """, [document_id, paragraph_id]
+                             Annotation.document_id = ?
+                       """, [document_id]
                        )
         return self.resultAsDictionary(cursor)
 
@@ -100,18 +99,18 @@ class Annotations(TimDbBase):
         :param version_id: Version of the velp that the annotation uses.
         :param points: Points given, overrides velp's default and can be null.
         :param annotator_id: ID of user who left the annotation.
-        :param document_id:
-        :param paragraph_id_start:
-        :param paragraph_id_end:
-        :param offset_start:
-        :param offset_end:
-        :param hash_start:
-        :param hash_end:
-        :param element_path_start:
-        :param element_path_end:
-        :param valid_until:
-        :param icon_id:
-        :param answer_id:
+        :param document_id: ID of document in which annotation is located in.
+        :param paragraph_id_start: ID of paragraph where annotation starts.
+        :param paragraph_id_end: ID of paragraph where annotation ends.
+        :param offset_start: Character location where annotation starts.
+        :param offset_end: Character location where annotation ends.
+        :param hash_start: Hash code of paragraph where annotation starts.
+        :param hash_end: Hash code of paragraph where annotation ends.
+        :param element_path_start: List of elements as text (parsed in interface) connected to annotation start.
+        :param element_path_end: List of elements as text (parsed in interface) connected to annotation end.
+        :param valid_until: Datetime until which annotation is valid for, 'none' for forever.
+        :param icon_id: ID of icon associated with annotation, can be 'none'.
+        :param answer_id: ID of answer if annotation is located within one.
         :return:
         """
         """
@@ -136,8 +135,10 @@ class Annotations(TimDbBase):
                       offset_start, offset_end, hash_start, hash_end,
                       element_path_start, element_path_end)
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                      """, [version_id, document_id, paragraph_id, answer_id, place_start,
-                            place_end, element_number, annotator_id, points, icon_id]
+                      """, [version_id, points, valid_until, icon_id, annotator_id,
+                            document_id, answer_id, paragraph_id_start, paragraph_id_end,
+                            offset_start, offset_end, hash_start, hash_end,
+                            element_path_start, element_path_end]
                        )
         self.db.commit()
         return cursor.lastrowid
