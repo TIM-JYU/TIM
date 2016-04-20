@@ -67,6 +67,9 @@
          id="{{ t.id }}"
          t="{{ t.t }}"
          attrs="{{ t.attrs_str }}"
+     {% if t.ref_attrs and t.ref_attrs.classes and "deleted" in t.ref_attrs.classes %}
+         title="This paragraph has been deleted from the source document."
+     {% endif %}
      {% if t.attrs.area %}
          data-area-start="{{ t.attrs.area|safe }}"
      {% endif %}
