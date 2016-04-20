@@ -44,7 +44,7 @@ def add_comment() -> str:
 @annotations.route("/<document_id>/annotations", methods=['GET'])
 def get_annotations(document_id: int, paragraph_id: str) -> str:
     timdb = getTimDb()
-    results = timdb.annotations.get_annotations_in_document(int(document_id), paragraph_id)
+    results = timdb.annotations.get_annotations_in_document(int(document_id))
     return jsonResponse(results)
 
 

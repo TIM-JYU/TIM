@@ -20,11 +20,12 @@ class Annotations(TimDbBase):
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
 
     def get_annotations_in_document(self, document_id: int) -> List[Dict]:
-        """Gets all annotations made in a document.
-
+        """Gets all annotations made in a document. Both in document and in answers.
         :param document_id: The relevant document.
         :return: List of dictionaries, each dictionary representing a single annotation.
         """
+
+        # Todo choose velp language. Have fun.
         cursor = self.db.cursor()
         cursor.execute("""
                        SELECT
@@ -35,7 +36,6 @@ class Annotations(TimDbBase):
                          Annotation.valid_until,
                          Annotation.icon_id,
                          Annotation.annotator_id,
-                         Annotation.document_id,
                          Annotation.answer_id,
                          Annotation.paragraph_id_start,
                          Annotation.paragraph_id_end,
@@ -49,11 +49,43 @@ class Annotations(TimDbBase):
                          INNER JOIN VelpVersion ON VelpVersion.id = Annotation.version_id
                        WHERE (Annotation.valid_until ISNULL OR
                              Annotation.valid_until >= CURRENT_TIMESTAMP) AND
-                             Annotation.document_id = ? AND
-                             Annotation.paragraph_id = ?
+                             Annotation.document_id = ?
                        """, [document_id]
                        )
         return self.resultAsDictionary(cursor)
+
+    def get_annotations_in_answer(self, answer_id: int) -> List[Dict]:
+        """
+        Get all annotations made in a given answer.
+        :param answer_id: the relevant answer
+        :return: list of dictionaries, each dictionary representing one answer.
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                       SELECT
+                         Annotation.id,
+                         VelpVersion.velp_id,
+                         Annotation.icon_id,
+                         Annotation.points,
+                         Annotation.creation_time,
+                         Annotation.annotator_id,
+                         Annotation.paragraph_id_start,
+                         Annotation.paragraph_id_end,
+                         Annotation.offset_start,
+                         Annotation.offset_end,
+                         Annotation.hash_start,
+                         Annotation.hash_end,
+                         Annotation.element_path_start,
+                         Annotation.element_path_end
+                       FROM Annotation
+                         INNER JOIN VelpVersion ON VelpVersion.id = Annotation.version_id
+                       WHERE (Annotation.valid_until ISNULL OR
+                             Annotation.valid_until >= CURRENT_TIMESTAMP) AND
+                             Annotation.answer_id = ?
+                       """, [answer_id]
+                       )
+        return self.resultAsDictionary(cursor)
+
 
     def create_annotation(self, version_id: int, points: Optional[float], annotator_id: int,
                           document_id: int, paragraph_id_start: Optional[str],
