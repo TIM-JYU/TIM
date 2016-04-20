@@ -7,7 +7,7 @@
             </p>
         </div>
         <div class="div-10">
-            <span class="float-right glyphicon glyphicon-remove clickable-icon" ng-click="toggleAnnotation()"></span>
+            <span title="Close" class="float-right glyphicon glyphicon-remove clickable-icon" ng-click="toggleAnnotation()"></span>
         </div>
     </div>
     <div class="fulldiv">
@@ -17,7 +17,8 @@
 
     <textarea placeholder="Add comment" ng-model="newComment" autofocus></textarea>
     <button ng-click="addComment()">Add</button>
-    <button ng-click="deleteAnnotation()"><span class="glyphicon glyphicon-trash"></span></button>
+    <!--<button class="float-right" ng-click="deleteAnnotation()"><span class="glyphicon glyphicon-trash"></span></button>-->
+    <span title="Delete annotation" class="delAnnotation float-right glyphicon glyphicon-trash clickable-icon" ng-click="deleteAnnotation()"></span>
     </div>
 </div><!--
 
