@@ -63,7 +63,6 @@
         <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
         {% include 'common_head.html' %}
-        {# TODO lecture_head is probably needed in lecture info view #}
         {% if lecture_assets %}
             {% include 'lecture_head.html' %}
         {% endif %}
@@ -71,29 +70,63 @@
     {% endblock %}
 </head>
 <body>
+
+{# Set default column widths if they are not defined in a child template #}
+{% if col_1_lg is not defined %}
+    {% set col_1_lg = 3 %}
+    {% set col_2_lg = 6 %}
+    {% set col_3_lg = 3 %}
+    {% set col_1_md = 3 %}
+    {% set col_2_md = 6 %}
+    {% set col_3_md = 3 %}
+    {% set col_1_sm = 2 %}
+    {% set col_2_sm = 10 %}
+    {% set col_3_sm = 0 %}
+    {% set col_1_xs = 0 %}
+    {% set col_2_xs = 12 %}
+    {% set col_3_xs = 0 %}
+{% endif %}
+
 {% block body %}
     <div class="container-fluid" {% block mainctrl %}{% endblock %}>
         <div {% if lecture_assets %}ng-controller="LectureController"{% endif %}>
-            <div class="row">
-                <div class="col-md-3 col-xs-1">
-                    <div class="affix">
-                        <div class="row">
-                            {% include 'side_menu.html' %}
-                        </div>
+            <div class="row hidden-print">
+                <div class="col-lg-{{ col_1_lg }}
+                            col-md-{{ col_1_md }}
+                            col-xs-{{ col_1_xs }}
+                            col-sm-{{ col_1_sm }}">
+                    <div class="left-fixed-side">
+                        {% include 'side_menu.html' %}
                     </div>
                 </div>
-                <div class="col-md-6 col-xs-11">
-                    <a href="/">
-                        <img alt="TIM - The Interactive Material." class="pull-left"
-                             src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"/>
-                    </a>
-                    <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
-                         src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
-                    {% include 'loginlogout.html' %}
+                <div class="col-lg-{{ col_2_lg }}
+                            col-md-{{ col_2_md }}
+                            col-xs-{{ col_2_xs }}
+                            col-sm-{{ col_2_sm }}">
+                    <div class="siteheader">
+                        <a href="/">
+                            <img alt="TIM - The Interactive Material." class="pull-left"
+                                 src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"/>
+                        </a>
+                        <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
+                             src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
+                        {% include 'loginlogout.html' %}
+                    </div>
+                </div>
+                <div class="col-lg-{{ col_3_lg }}
+                            col-md-{{ col_3_md }}
+                            col-xs-{{ col_3_xs }}
+                            col-sm-{{ col_3_sm }}">
+                    <div class="right-fixed-side">
+                        {% block rightside %}{% endblock %}
+                    </div>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6 col-md-offset-3 col-xs-11 col-xs-offset-1">
+                <div class="col-lg-{{ col_2_lg }} col-lg-offset-{{ col_1_lg }}
+                            col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
+                            col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
+                            col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
                     {% with messages = get_flashed_messages() %}
                         {% if messages %}
                             <ul class="flashes">
@@ -106,7 +139,10 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6 col-md-offset-3 col-xs-11 col-xs-offset-1">
+                <div class="col-lg-{{ col_2_lg }} col-lg-offset-{{ col_1_lg }}
+                            col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
+                            col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
+                            col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
                     <div id="header">
                         {% block header %}
                         {% endblock %}
@@ -114,7 +150,10 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6 col-md-offset-3 col-xs-11 col-xs-offset-1">
+                <div class="col-lg-{{ col_2_lg }} col-lg-offset-{{ col_1_lg }}
+                            col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
+                            col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
+                            col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
                     <div class="material">
                         {% if lecture_assets %}
                             {% include 'lectureinfo_menu.html' %}
@@ -123,20 +162,25 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+    <footer class="footer hidden-print">
+        <div class="container-fluid">
             <div class="row">
-                <div class="col-md-6 col-md-offset-3 col-xs-11 col-xs-offset-1">
-                    <footer class="footer">
-                        {% block footer %}
-                            <div class="row">
-                                <p class="col-xs-6">&copy; Jyväskylän yliopisto</p>
-                                <a class="col-xs-6 text-right" href="/view/tim/Rekisteriseloste">Rekisteriseloste</a>
-                            </div>
-                        {% endblock %}
-                    </footer>
+                <div class="col-lg-{{ col_2_lg }} col-lg-offset-{{ col_1_lg }}
+                            col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
+                            col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
+                            col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
+                    {% block footer %}
+                        <div class="row">
+                            <p class="col-xs-6">&copy; Jyväskylän yliopisto</p>
+                            <a class="col-xs-6 text-right" href="/view/tim/Rekisteriseloste">Rekisteriseloste</a>
+                        </div>
+                    {% endblock %}
                 </div>
             </div>
         </div>
-    </div>
+    </footer>
     <script>timLogTime("Document end", "base");</script>
 {% endblock %}
 </body>

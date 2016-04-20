@@ -26,12 +26,19 @@ $material-border: none;
 $material-border-radius: 0;
 $body-text-align: justify;
 $asset-path: "..";
+$footer-height: 60px;
+$header-footer-border: 1px solid #e5e5e5;
+$editline-width: 3em;
+
+// these column variables must match the ones in base.html
+$left-side-columns: 2;
+$right-side-columns: 4;
 
 // Bootstrap variable overrides:
 $brand-primary: $basic-color;
 $font-family-monospace: "Courier New", Courier, serif;
 $code-color: black;
-$code-bg: white;
+$code-bg: inherit;
 $pre-color: black;
 $pre-bg: white;
 $font-family-sans-serif: Verdana, Arial, sans-serif;

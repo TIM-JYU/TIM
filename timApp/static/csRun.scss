@@ -133,9 +133,9 @@ p.stem {
   border: solid 1px;
   border-radius: 5px;
   border-color: $csrundiv-color;
-  margin: 0.3em 0 0.3em 2em;
+  margin: 0.3em 0 0.3em 0em;
   padding-bottom: 0.5em;
-  width: calc(100% - 2em - 2px);
+  width: calc(100% - 2px);
 }
 
 .csRunDiv h4 {

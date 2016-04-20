@@ -1,13 +1,34 @@
-.affix {
-    max-width: 25%;
-    min-width: 15em;
+$grid-gutter-per2: ($grid-gutter-width/2);
+$left-ratio: 100% * ($left-side-columns/$grid-columns);
+$right-ratio: 100% * ($right-side-columns/$grid-columns);
+
+.fixed-side {
+    position: fixed;
     z-index: 4;
+}
+
+.left-fixed-side {
+    @extend .fixed-side;
+    max-width: calc(#{$left-ratio} - #{$grid-gutter-per2});
+    min-width: 10em;
+    margin-left: -$grid-gutter-per2;
+}
+
+.right-fixed-side {
+    @extend .fixed-side;
+    max-width: calc(#{$right-ratio} - #{$grid-gutter-per2});
+    min-width: 10em;
 }
 
 #menuTabs {
     background: white;
     max-height: calc(100vh - 30px);
     overflow-y: auto;
+
+    .glyphicon {
+        font-size: xx-large;
+        margin: -6px -10px;
+    }
 }
 
 /* For directory */
