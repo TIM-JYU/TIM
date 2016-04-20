@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS Annotation;
 
 DROP TABLE IF EXISTS AnnotationVisibility;
 
-DROP TABLE IF EXISTS Comment;
+DROP TABLE IF EXISTS AnnotationComment;
 
 DROP TABLE IF EXISTS VelpGroup;
 
@@ -205,14 +205,14 @@ CREATE TABLE AnnotationVisibility (
 -- READ ABOVE THEN YOU CAN READ BELOW OR RIGHT OF LEFT OR WHEREVER YOU WANT UP TO YOU
 
 
-CREATE TABLE Annotation_Comment (
+CREATE TABLE AnnotationComment (
   id            INTEGER  NOT NULL,
   annotation_id INTEGER  NOT NULL,
   comment_time  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   commenter_id  INTEGER  NOT NULL,
   content       TEXT,
 
-  CONSTRAINT Annotation_comment_PK
+  CONSTRAINT AnnotationComment_PK
   PRIMARY KEY (id),
 
   CONSTRAINT Annotation_id

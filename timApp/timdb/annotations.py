@@ -206,7 +206,7 @@ class Annotations(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO
-                      Comment(annotation_id, commenter_id, content)
+                      AnnotationComment(annotation_id, commenter_id, content)
                       VALUES (?, ?, ?)
                       """, [annotation_id, commenter_id, content]
                        )
@@ -223,16 +223,16 @@ class Annotations(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                        SELECT
-                         Comment.annotation_id,
-                         Comment.comment_time,
-                         Comment.commenter_id,
-                         Comment.content
-                       FROM Comment
-                       WHERE Comment.annotation_id IN (
+                         AnnotationComment.annotation_id,
+                         AnnotationComment.comment_time,
+                         AnnotationComment.commenter_id,
+                         AnnotationComment.content
+                       FROM AnnotationComment
+                       WHERE AnnotationComment.annotation_id IN (
                          SELECT Annotation.id
                          FROM Annotation
-                         WHERE Annotation.document_id = ? AND Annotation.paragraph_id = ?
-                       ) ORDER BY Comment.annotation_id ASC;
+                         WHERE Annotation.document_id = ?
+                       ) ORDER BY AnnotationComment.annotation_id ASC;
                        """, [document_id]
                        )
         return self.resultAsDictionary(cursor)
