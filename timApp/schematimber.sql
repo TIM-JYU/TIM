@@ -159,19 +159,23 @@ CREATE TABLE VelpContent (
 
 
 CREATE TABLE Annotation (
-  id             INTEGER  NOT NULL,
-  version_id     INTEGER  NOT NULL,
-  points         REAL,
-  creation_time  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  valid_until    DATETIME,
-  icon_id        INTEGER,
-  annotator_id   INTEGER  NOT NULL,
-  answer_id      INTEGER,
-  document_id    INTEGER  NOT NULL,
-  paragraph_id   TEXT     NOT NULL,
-  element_number INTEGER,
-  place_start    INTEGER  NOT NULL,
-  place_end      INTEGER  NOT NULL,
+  id                  INTEGER  NOT NULL,
+  version_id          INTEGER  NOT NULL,
+  points              REAL,
+  creation_time       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  valid_until         DATETIME,
+  icon_id             INTEGER,
+  annotator_id        INTEGER  NOT NULL,
+  document_id         INTEGER  NOT NULL,
+  answer_id           INTEGER,
+  paragraph_id_start  TEXT,
+  paragraph_id_end    TEXT,
+  offset_start        INTEGER,
+  offset_end          INTEGER,
+  hash_start          TEXT,
+  hash_end            TEXT,
+  element_path_start  TEXT,
+  element_path_end    TEXT,
 
 
   CONSTRAINT Annotation_PK

@@ -48,11 +48,32 @@ class Annotations(TimDbBase):
                        )
         return self.resultAsDictionary(cursor)
 
-    def create_annotation(self, version_id: int, place_start: int, place_end: int,
-                          annotator_id: int, document_id: int, paragraph_id: str, points: Optional[float],
-                          element_number: Optional[int],
-                          icon_id: Optional[int] = None,
-                          answer_id: Optional[int] = None) -> int:
+    def create_annotation(self, version_id: int, points: Optional[float], annotator_id: int,
+                          document_id: int, paragraph_id_start: Optional[str],
+                          paragraph_id_end: Optional[str], offset_start: Optional[int],
+                          offset_end: Optional[int], hash_start: Optional[str],
+                          hash_end: Optional[str], element_path_start: Optional[str],
+                          element_path_end: Optional[str], valid_until: Optional[str] = None,
+                          icon_id: Optional[int] = None, answer_id: Optional[int] = None) -> int:
+        """Create a new annotation.
+
+        :param version_id: Version of the velp that the annotation uses.
+        :param points: Points given, overrides velp's default and can be null.
+        :param annotator_id: ID of user who left the annotation.
+        :param document_id:
+        :param paragraph_id_start:
+        :param paragraph_id_end:
+        :param offset_start:
+        :param offset_end:
+        :param hash_start:
+        :param hash_end:
+        :param element_path_start:
+        :param element_path_end:
+        :param valid_until:
+        :param icon_id:
+        :param answer_id:
+        :return:
+        """
         """
         Create new annotation
         :param version_id: version of the velp that the annotation uses
@@ -70,9 +91,11 @@ class Annotations(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO
-                      Annotation(version_id, document_id, paragraph_id, answer_id, place_start,
-                      place_end, element_number, annotator_id, points, icon_id)
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                      Annotation(version_id, points, valid_until, icon_id, annotator_id,
+                      document_id, answer_id, paragraph_id_start, paragraph_id_end,
+                      offset_start, offset_end, hash_start, hash_end,
+                      element_path_start, element_path_end)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                       """, [version_id, document_id, paragraph_id, answer_id, place_start,
                             place_end, element_number, annotator_id, points, icon_id]
                        )
