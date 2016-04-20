@@ -248,6 +248,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             for (var i=0; i<$scope.velps.length; i++){
                $scope.velps[i].edit = false;
             }
+            $scope.newVelp.edit = false;
         }
 
         velp.edit = true;
@@ -258,18 +259,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
                 $scope.toggleLabel($scope.getLabelById(velp.labels[i]));
             }
         }
-
-
-        /*
-        if ($scope.velpToEdit.edit) {
-           for (var i=0; i<$scope.velps.length; i++){
-               $scope.velps[i].edit = false;
-           }
-        }
-
-        velp.edit = !velp.edit;
-        $scope.velpToEdit = Object.create(velp);
-        */
     };
 
     $scope.editVelp = function(form){
