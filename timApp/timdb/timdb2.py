@@ -19,7 +19,6 @@ from timdb.lectureanswers import LectureAnswers
 from timdb.velps import Velps
 from timdb.velpgroups import VelpGroups
 from timdb.annotations import Annotations
-from timdb.annotationcomments import AnnotationComments
 import os
 
 
