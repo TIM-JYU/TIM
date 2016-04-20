@@ -205,14 +205,14 @@ CREATE TABLE AnnotationVisibility (
 -- READ ABOVE THEN YOU CAN READ BELOW OR RIGHT OF LEFT OR WHEREVER YOU WANT UP TO YOU
 
 
-CREATE TABLE Comment (
+CREATE TABLE Annotation_Comment (
   id            INTEGER  NOT NULL,
   annotation_id INTEGER  NOT NULL,
   comment_time  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   commenter_id  INTEGER  NOT NULL,
   content       TEXT,
 
-  CONSTRAINT Comment_PK
+  CONSTRAINT Annotation_comment_PK
   PRIMARY KEY (id),
 
   CONSTRAINT Annotation_id

@@ -3,6 +3,7 @@ from typing import Dict
 from typing import List
 from timdb.timdbbase import TimDbBase
 
+# TODO: NUKE THIS FILE UP BABY!
 
 class AnnotationComments(TimDbBase):
     """

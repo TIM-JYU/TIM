@@ -162,3 +162,45 @@ class Annotations(TimDbBase):
                           WHERE Annotation.id = ?
                           """, [valid_until, annotation_id]
                            )
+
+    def add_comment(self, annotation_id: int, commenter_id: int, content: str)-> int:
+        """Adds new comment to an annotation
+
+        :param annotation_id:
+        :param commenter_id:
+        :param content:
+        :return: id of the new comment.
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      INSERT INTO
+                      Comment(annotation_id, commenter_id, content)
+                      VALUES (?, ?, ?)
+                      """, [annotation_id, commenter_id, content]
+                       )
+        self.db.commit()
+        return cursor.lastrowid
+
+    #Todo write support for answer_id.
+    def get_comments_in_document(self, document_id: int) -> List[Dict]:
+        """Gets all the comments in annotations in this document.
+
+        :param document_id: Id of the document.
+        :return: a list of dictionaries, each dictionary representing a single comment
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                       SELECT
+                         Comment.annotation_id,
+                         Comment.comment_time,
+                         Comment.commenter_id,
+                         Comment.content
+                       FROM Comment
+                       WHERE Comment.annotation_id IN (
+                         SELECT Annotation.id
+                         FROM Annotation
+                         WHERE Annotation.document_id = ? AND Annotation.paragraph_id = ?
+                       ) ORDER BY Comment.annotation_id ASC;
+                       """, [document_id]
+                       )
+        return self.resultAsDictionary(cursor)
