@@ -166,7 +166,7 @@
                          src="{{ url_for('static', filename='images/settings-icon.png') }}" width="50"
                          height="50" title="Settings-menu"/>
 
-                    {% if rights.editable %}
+                    {% if rights and rights.editable %}
                         <img ng-click="toggleParEditMode()" ng-class="['menu-icon', parEditIconState]"
                              src="{{ url_for('static', filename='images/par-edit-icon.png') }}" width="50"
                              height="50" title="Toggle paragraph edit mode"/>
