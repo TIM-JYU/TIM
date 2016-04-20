@@ -67,8 +67,23 @@ def update_document(doc_id):
     doc = get_newest_document(doc_id)
     try:
         # To verify view rights for possible referenced paragraphs, we call this first:
-        get_pars_from_editor_text(doc, content, break_on_elements=True)
+        editor_pars = get_pars_from_editor_text(doc, content, break_on_elements=True)
         d = timdb.documents.update_document(doc, content, original, strict_validation)
+        check_and_rename_pluginnamehere(editor_pars, d)
+        old_pars = d.get_paragraphs()
+        i = 0
+        while i < len(editor_pars):
+            if editor_pars[i].get_attr('taskId') and old_pars[i].get_attr('taskId'):
+                if editor_pars[i].get_attr('taskId') != old_pars[i].get_attr('taskId'):
+                    timdb.documents.modify_paragraph(doc=d,
+                                                     par_id=old_pars[i].get_id(),
+                                                     new_content=old_pars[i].get_markdown(),
+                                                     new_attrs=editor_pars[i].get_attrs(),
+                                                     new_properties=old_pars[i].get_properties())
+            i += 1
+        doc = get_newest_document(doc_id)
+        duplicates = check_duplicates(doc.get_paragraphs(), doc)
+
     except ValidationWarning as e:
         return jsonResponse({'error': str(e), 'is_warning': True}, status_code=400)
     except (TimDbException, ValidationException) as e:
@@ -81,7 +96,75 @@ def update_document(doc_id):
     notify_doc_owner(doc_id, '[user_name] has edited your document [doc_name]',
                      '[user_name] has edited your document as whole: [doc_url]', setting="doc_modify")
 
-    return jsonResponse({'versions': chg, 'fulltext': d.export_markdown()})
+    return jsonResponse({'versions': chg, 'fulltext': d.export_markdown(), 'duplicates': duplicates})
+
+
+@edit_page.route("/postNewTaskNames/", methods=['POST'])
+def rename_task_ids():
+    timdb = getTimDb()
+    doc_id, duplicates = verify_json_params('docId', 'duplicates')
+    manage_view = verify_json_params('manageView', require=False, default=False)
+    verify_edit_access(doc_id)
+    doc = get_newest_document(doc_id)
+    pars = []
+    old_pars = doc.get_paragraphs()
+
+    # Get paragraphs with taskIds
+    for paragraph in old_pars:
+        if not paragraph.get_attr('taskId'):
+            old_pars.remove(paragraph)
+    i = 0
+    while len(duplicates) > i:
+        duplicate = duplicates[i]
+        # Check that paragraphs that were to be modified aren't deleted
+        if not doc.has_paragraph(duplicate[2]):
+            duplicates.remove(duplicate)
+            continue
+        else:
+            original_par = doc.get_paragraph(duplicate[2])
+            attrs = original_par.get_attrs()
+            if attrs['taskId']:
+                # If a new taskId was given use that
+                if duplicate[1]:
+                    attrs['taskId'] = duplicate[1]
+                    duplicates.remove(duplicate)
+                # Otherwise determine a new one
+                else:
+                    if old_pars:
+                        # Remove the duplicate in question from duplicates
+                        duplicates.remove(duplicate)
+                        task_id = get_next_available_task_id(attrs, old_pars, duplicates, duplicate[2])
+                        attrs['taskId'] = task_id
+            # Modify the paragraph with the new taskId
+            [par], _ = timdb.documents.modify_paragraph(doc=doc,
+                                                        par_id=duplicate[2],
+                                                        new_content=original_par.get_markdown(),
+                                                        new_attrs=attrs,
+                                                        new_properties=original_par.get_properties())
+            pars.append(par)
+            # Update old pars
+            for old_par in old_pars:
+                if old_par.get_id() == duplicate[2]:
+                    old_pars.remove(old_par)
+                    break
+            old_pars.append(par)
+
+    if not manage_view:
+        return par_response(pars,
+                            doc,
+                            update_cache=current_app.config['IMMEDIATE_PRELOAD'])
+    else:
+        doc = get_newest_document(doc_id)
+        duplicates = check_duplicates(pars, doc)
+        chg = doc.get_changelog()
+        for ver in chg:
+            ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
+
+        # todo: include diffs in the message
+        notify_doc_owner(doc_id, '[user_name] has edited your document [doc_name]',
+                        '[user_name] has edited your document as whole: [doc_url]', setting="doc_modify")
+
+        return jsonResponse({'versions': chg, 'fulltext': doc.export_markdown(), 'duplicates': duplicates})
 
 
 @edit_page.route("/postParagraph/", methods=['POST'])
@@ -107,6 +190,8 @@ def modify_paragraph():
         editor_pars = get_pars_from_editor_text(doc, md, break_on_elements=editing_area)
     except ValidationException as e:
         return abort(400, str(e))
+
+    editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
     if editing_area:
         try:
@@ -216,6 +301,8 @@ def par_response(blocks, doc, edit_window=False, update_cache=False, context_par
         changed_pars = []
         DocParagraph.preload_htmls(blocks, doc.get_settings(), context_par=context_par, persist=update_cache)
 
+    duplicates = check_duplicates(blocks, doc)
+
     current_user = get_current_user()
     pars, js_paths, css_paths, modules = post_process_pars(doc, blocks, current_user, edit_window=edit_window)
 
@@ -233,7 +320,8 @@ def par_response(blocks, doc, edit_window=False, update_cache=False, context_par
                                                                    text=[p],
                                                                    rights=get_rights(doc.doc_id)) for p in
                                           changed_pars},
-                         'version': doc.get_version()})
+                         'version': doc.get_version(),
+                         'duplicates': duplicates})
 
 
 def get_pars_from_editor_text(doc, text, break_on_elements=False):
@@ -254,6 +342,125 @@ def get_pars_from_editor_text(doc, text, break_on_elements=False):
                     and not getTimDb().users.has_view_access(getCurrentUserId(), refdoc):
                 raise ValidationException("You don't have view access to document {}".format(refdoc))
     return blocks
+
+
+# Gets next available name for plugin
+def get_next_available_task_id(attrs, old_pars, duplicates, par_id):
+    task_id = attrs['taskId']
+    need_new_task_id = False
+    # First try with original name
+    i = 0
+    while i < len(old_pars):
+        if old_pars[i].get_attr('taskId') == task_id:
+            old_par_id = old_pars[i].get_id()
+            # Ignore pars that are to be renamed
+            if old_par_id == par_id:
+                i += 1
+                continue
+            else:
+                for par in duplicates:
+                    if old_par_id == par[2]:
+                        # Flip this bool value for convenience
+                        need_new_task_id = not need_new_task_id
+                        break
+                need_new_task_id = not need_new_task_id
+                if need_new_task_id:
+                    break
+                else:
+                    i += 1
+                    continue
+        else:
+            i += 1
+
+    # If there was no previous par with the same task id keep it
+    if not need_new_task_id:
+        return task_id
+
+    # Otherwise determine a new one
+    else:
+        # Split the name into text and trailing number
+        task_id_body = ""
+        task_id_number = None
+
+        i = len(task_id) - 1
+        while i >= 0:
+            if task_id[i] in "0123456789":
+                i -= 1
+            else:
+                text_part = task_id[:i+1]
+                task_id_body = text_part
+                if i < len(task_id) - 1:
+                    task_id_number = int(task_id[(i+1):])
+                break
+        if not task_id_body:
+            task_id_body = task_id
+        if task_id_number is not None:
+            task_id = task_id_body + str(task_id_number)
+        else:
+            task_id_number = 1
+        j = 0
+        while j < len(old_pars):
+            if old_pars[j].get_attr('taskId') == task_id:
+                task_id_number += 1
+                task_id = task_id_body + str(task_id_number)
+                j = 0
+            else:
+                j += 1
+        return task_id
+
+
+# Automatically rename plugins with name pluginnamehere
+def check_and_rename_pluginnamehere(blocks, doc):
+    # Get the paragraphs from the document with taskids
+    old_pars = doc.get_paragraphs()
+    for paragraph in old_pars:
+        if not paragraph.get_attr('taskId'):
+            old_pars.remove(paragraph)
+    i = 1
+    j = 0
+    # For all blocks check if taskId is pluginnamehere, if it is find next available name.
+    for p in blocks:
+        if p.get_attr('taskId'):
+            task_id = p.get_attr('taskId')
+            if task_id == 'PLUGINNAMEHERE':
+                task_id = 'Plugin' + str(i)
+                while j < len(old_pars):
+                    if task_id == old_pars[j].get_attr('taskId'):
+                        i += 1
+                        task_id = 'Plugin' + str(i)
+                        j = 0
+                    else:
+                        j += 1
+                p.set_attr('taskId', task_id)
+                old_pars.append(p)
+                j = 0
+    return blocks
+
+
+# Check new paragraphs with plugins for duplicate task ids
+def check_duplicates(pars, doc):
+    duplicates = []
+    all_pars = doc.get_paragraphs()
+    for paragraph in all_pars:
+        if not paragraph.get_attr('taskId'):
+            all_pars.remove(paragraph)
+    for par in pars:
+        if par.is_plugin():
+            duplicate = []
+            task_id = par.get_attr('taskId')
+            count_of_same_task_ids = 0
+            j = 0
+            if len(all_pars) > 0:
+                while j < len(all_pars):
+                    if all_pars[j].get_attr('taskId') == task_id:
+                        count_of_same_task_ids += 1
+                        if count_of_same_task_ids > 1:
+                            duplicate.append(task_id)
+                            duplicate.append(par.get_id())
+                            duplicates.append(duplicate)
+                            break
+                    j += 1
+    return duplicates
 
 
 def mark_pars_as_read_if_chosen(pars, doc):
@@ -285,6 +492,8 @@ def add_paragraph():
         editor_pars = get_pars_from_editor_text(doc, md)
     except ValidationException as e:
         return abort(400, str(e))
+
+    editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
     pars = []
     separate_pars = DocumentParser(md).get_blocks()
