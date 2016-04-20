@@ -152,8 +152,15 @@ ul ul ul, ol ol ol {
 }
 
 .par.deleted {
-    opacity: 0.5;
-    background-color: #ff7580;
+    background-color: #ffc7c7;
+}
+
+.par.deleted.lightselect {
+    background-color: #ffb5b3;
+}
+
+.par.deleted.selected {
+    background-color: #ffa594;
 }
 
 .par.lightselect {
