@@ -96,6 +96,20 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         annotationParents[0].outerHTML = savedHTML;
     };
 
+        /**
+     * Delete annotation
+     * TODO: Make query to database
+     * @param id annotation id
+     */
+    $scope.changeAnnotationPoints = function(id, points){
+        for (var i=0; i<$scope.annotations.length; i++){
+            if ($scope.annotations[i].id == id) {
+                $scope.annotations[i].points = points;
+                break;
+            }
+        }
+    };
+
     /**
      * Select text range
      */
@@ -181,7 +195,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             $scope.annotations.push(newMarking);
             //$scope.selectMarking(newMarking['id']);
 
-            $scope.addAnnotationToCoord($scope.selectedArea, newMarking, true);
+            $scope.addAnnotationToCoord($scope.selectedArea, $scope.annotations[$scope.annotations.length - 1], true);
             $scope.selectedArea = undefined;
 
             velp.used += 1;

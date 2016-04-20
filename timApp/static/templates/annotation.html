@@ -3,7 +3,7 @@
     <div class="fulldiv">
         <div class="div-90">
             <p><span><strong>{{ velp }}</strong></span>
-            <br /><label>Points: <input type="number" ng-model="points" ng-value="points"></label>
+            <br /><label>Points: <input type="number" ng-model="points" ng-value="points" ng-change="changePoints(points)"></label>
             </p>
         </div>
         <div class="div-10">
@@ -22,5 +22,6 @@
 </div><!--
 
 Surrounded text
---><span ng-click="toggleAnnotation()" ng-class="['highlighted', 'annotation', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]"
-         ng-transclude></span>
+--><span ng-click="toggleAnnotation()" ng-class="['highlighted', 'annotation', 'emphasise', 'default',
+{neutral: points == 0, negative: points<0, positive: points > 0}]"><span ng-transclude></span><sup ng-show="comments.length">
+    {{ comments.length }}</sup></span>

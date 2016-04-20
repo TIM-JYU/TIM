@@ -42,6 +42,13 @@ timApp.controller('AnnotationController', ['$scope', '$timeout', function ($scop
     };
 
     /**
+     * Changes points of selected annotation. Queries parent scope.
+     */
+    $scope.changePoints = function(){
+        $scope.$parent.changeAnnotationPoints($scope.aid, $scope.points);
+    };
+
+    /**
      * Add comment to annotation
      */
     $scope.addComment = function() {
