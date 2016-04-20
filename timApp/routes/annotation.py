@@ -39,16 +39,16 @@ def add_annotation() -> str:
             paragraph_id_end = end['par_id']
             hash_end = end['t']
         except KeyError as e:
-            abort(400, "Missing data: "+e.args[0])
+            abort(400, "Missing data: " + e.args[0])
     else:
-        paragraph_id_start=start.get('par_id')
-        hash_start=start.get('t')
-        paragraph_id_end=end.get('par_id')
-        hash_end=start.get('t')
-        some_paragraph_data_present=paragraph_id_start is not None
-        some_paragraph_data_present=hash_start is not None or some_paragraph_data_present
-        some_paragraph_data_present=paragraph_id_end is not None or some_paragraph_data_present
-        some_paragraph_data_present=hash_end is not None or some_paragraph_data_present
+        paragraph_id_start = start.get('par_id')
+        hash_start = start.get('t')
+        paragraph_id_end = end.get('par_id')
+        hash_end = start.get('t')
+        some_paragraph_data_present = paragraph_id_start is not None
+        some_paragraph_data_present = hash_start is not None or some_paragraph_data_present
+        some_paragraph_data_present = paragraph_id_end is not None or some_paragraph_data_present
+        some_paragraph_data_present = hash_end is not None or some_paragraph_data_present
         if some_paragraph_data_present:
             abort(400, "Both answer_id and paragraph data present.")
 
