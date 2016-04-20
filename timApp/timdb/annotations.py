@@ -89,10 +89,10 @@ class Annotations(TimDbBase):
 
     def create_annotation(self, version_id: int, points: Optional[float], annotator_id: int,
                           document_id: int, paragraph_id_start: Optional[str],
-                          paragraph_id_end: Optional[str], offset_start: Optional[int],
-                          offset_end: Optional[int], hash_start: Optional[str],
-                          hash_end: Optional[str], element_path_start: Optional[str],
-                          element_path_end: Optional[str], valid_until: Optional[str] = None,
+                          paragraph_id_end: Optional[str], offset_start: int,
+                          offset_end: int, hash_start: Optional[str],
+                          hash_end: Optional[str], element_path_start: str,
+                          element_path_end: str, valid_until: Optional[str] = None,
                           icon_id: Optional[int] = None, answer_id: Optional[int] = None) -> int:
         """Create a new annotation.
 
@@ -116,8 +116,8 @@ class Annotations(TimDbBase):
         """
         Create new annotation
         :param version_id: version of the velp that the annotation uses
-        :param document_id: Document id     \
-        :param paragraph_id: Paragraph id   - either bot document and paragraph or answer are null
+        :param document_id: Document id for convenience, saved for answers as well.
+        :param paragraph_id: Paragraph id   \ one of these must be null
         :param answer_id: Answer id         /
         :param element_number Number of the html element from which we start counting.
         :param place_start: start
@@ -195,7 +195,7 @@ class Annotations(TimDbBase):
                           """, [valid_until, annotation_id]
                            )
 
-    def add_comment(self, annotation_id: int, commenter_id: int, content: str)-> int:
+    def add_comment(self, annotation_id: int, commenter_id: int, content: str) -> int:
         """Adds new comment to an annotation
 
         :param annotation_id:
@@ -213,7 +213,7 @@ class Annotations(TimDbBase):
         self.db.commit()
         return cursor.lastrowid
 
-    #Todo write support for answer_id.
+    # Todo write support for answer_id.
     def get_comments_in_document(self, document_id: int) -> List[Dict]:
         """Gets all the comments in annotations in this document.
 
