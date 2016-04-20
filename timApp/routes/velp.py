@@ -126,9 +126,7 @@ def add_velp():
     if velp_labels is not None:
         timdb.velps.add_labels_to_velp(new_velp_id, velp_labels)
     if velp_groups is not None:
-        print("ASDASDF")
         for group_id in velp_groups:
-            print("JOIOP")
             print(new_velp_id)
             print(group_id)
             timdb.velp_groups.add_velp_to_group(new_velp_id, group_id)
