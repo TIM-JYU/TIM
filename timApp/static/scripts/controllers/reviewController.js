@@ -192,13 +192,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 ]
             };
 
-            $scope.annotations.push(newMarking);
-            //$scope.selectMarking(newMarking['id']);
-
-            $scope.addAnnotationToCoord($scope.selectedArea, $scope.annotations[$scope.annotations.length - 1], true);
-            $scope.selectedArea = undefined;
-
-            velp.used += 1;
+            $scope.makePostRequest("/addannotation", newMarking, function () {
+                $scope.annotations.push(newMarking);
+                $scope.addAnnotationToCoord($scope.selectedArea, $scope.annotations[$scope.annotations.length - 1], true);
+                $scope.selectedArea = undefined;
+                velp.used += 1;
+            });
         }
         $scope.annotationsAdded = true;
     };
