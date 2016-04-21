@@ -50,7 +50,7 @@
                             ng-options="lecture.lecture_code + ' ' + lecture.lecture_start for lecture in futureLectures">
                     </select>
                 </div>
-                <div class="iconSection" ng-show="true || futureLectures.length > 0">
+                <div class="iconSection" ng-show="futureLectures.length > 0">
                     {{ lecbtn('play', 'Start lecture now', 'startFutureLecture()', 'isLecturer') }}
                     {{ lecbtn('edit', 'Edit this lecture', 'editLecture(futureLecture.lecture_code)', 'isLecturer') }}
                 </div>
