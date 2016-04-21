@@ -19,7 +19,6 @@ from timdb.lectureanswers import LectureAnswers
 from timdb.velps import Velps
 from timdb.velpgroups import VelpGroups
 from timdb.annotations import Annotations
-from timdb.annotationcomments import AnnotationComments
 import os
 
 
@@ -83,7 +82,6 @@ class TimDb(object):
         self.velps = Velps(self.db, files_root_path, 'velps', current_user_name)
         self.velp_groups = VelpGroups(self.db, files_root_path, 'velp_groups', current_user_name)
         self.annotations = Annotations(self.db, files_root_path, 'annotations', current_user_name)
-        self.annotations_comments = AnnotationComments(self.db,files_root_path, 'annotations_comments', current_user_name)
 
     def clear(self):
         """Clears the contents of all database tables."""

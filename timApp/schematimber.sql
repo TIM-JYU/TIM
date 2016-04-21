@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS Annotation;
 
 DROP TABLE IF EXISTS AnnotationVisibility;
 
-DROP TABLE IF EXISTS Comment;
+DROP TABLE IF EXISTS AnnotationComment;
 
 DROP TABLE IF EXISTS VelpGroup;
 
@@ -159,19 +159,23 @@ CREATE TABLE VelpContent (
 
 
 CREATE TABLE Annotation (
-  id             INTEGER  NOT NULL,
-  version_id     INTEGER  NOT NULL,
-  points         REAL,
-  creation_time  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  valid_until    DATETIME,
-  icon_id        INTEGER,
-  annotator_id   INTEGER  NOT NULL,
-  answer_id      INTEGER,
-  document_id    INTEGER  NOT NULL,
-  paragraph_id   TEXT     NOT NULL,
-  element_number INTEGER,
-  place_start    INTEGER  NOT NULL,
-  place_end      INTEGER  NOT NULL,
+  id                  INTEGER  NOT NULL,
+  version_id          INTEGER  NOT NULL,
+  points              REAL,
+  creation_time       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  valid_until         DATETIME,
+  icon_id             INTEGER,
+  annotator_id        INTEGER  NOT NULL,
+  document_id         INTEGER  NOT NULL,
+  answer_id           INTEGER,
+  paragraph_id_start  TEXT,
+  paragraph_id_end    TEXT,
+  offset_start        INTEGER,
+  offset_end          INTEGER,
+  hash_start          TEXT,
+  hash_end            TEXT,
+  element_path_start  TEXT,
+  element_path_end    TEXT,
 
 
   CONSTRAINT Annotation_PK
@@ -201,14 +205,14 @@ CREATE TABLE AnnotationVisibility (
 -- READ ABOVE THEN YOU CAN READ BELOW OR RIGHT OF LEFT OR WHEREVER YOU WANT UP TO YOU
 
 
-CREATE TABLE Comment (
+CREATE TABLE AnnotationComment (
   id            INTEGER  NOT NULL,
   annotation_id INTEGER  NOT NULL,
   comment_time  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   commenter_id  INTEGER  NOT NULL,
   content       TEXT,
 
-  CONSTRAINT Comment_PK
+  CONSTRAINT AnnotationComment_PK
   PRIMARY KEY (id),
 
   CONSTRAINT Annotation_id
