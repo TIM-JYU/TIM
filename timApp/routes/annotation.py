@@ -10,6 +10,7 @@ annotations = Blueprint('annotations',
 @annotations.route("/addannotation", methods=['POST'])
 def add_annotation() -> str:
     json_data = request.get_json()
+    print (json_data)
     # first get the non-optional arguments and abort if there is missing data.
     try:
         velp_id = json_data['velp']

@@ -173,16 +173,17 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 id: $scope.annotations.length,
                 velp: velp.id,
                 points: velp.points,
+                doc_id: $scope.docId,
                 coord: {
                     start: {
                         par_id: parelement.id,
-                        par_t: parelement.getAttribute("t"),
+                        t: parelement.getAttribute("t"),
                         el_path: element_path,
                         offset: $scope.selectedArea["startOffset"]
                     } ,
                     end: {
                         par_id: parelement.id,
-                        par_t: parelement.getAttribute("t"),
+                        t: parelement.getAttribute("t"),
                         el_path: element_path,
                         offset:  $scope.selectedArea["endOffset"]
                     }
@@ -192,7 +193,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 ]
             };
 
-            $scope.makePostRequest("/addannotation", newMarking, function () {
+            $scope.makePostRequest("/addannotation", newMarking, function (data) {
+                console.log(data);
                 $scope.annotations.push(newMarking);
                 $scope.addAnnotationToCoord($scope.selectedArea, $scope.annotations[$scope.annotations.length - 1], true);
                 $scope.selectedArea = undefined;
@@ -216,8 +218,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         for (var i = 0; i<myparent.children.length; i++){
             if (myparent.children[i] == start){
-                console.log(array);
                 array.push(i);
+                console.log(array);
                 return $scope.getElementPositionInTree(myparent, array)
             }
         }

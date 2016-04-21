@@ -59,7 +59,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
                 v.labels = [];
         });
 
-        $http.get('/static/test_data/markings.json').success(function (data) {
+        $http.get('/{0}/annotations'.replace('{0}', doc_id)).success(function (data) {
             $scope.annotations = data;
             $scope.loadAnnotations();
         });
