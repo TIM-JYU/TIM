@@ -30,7 +30,7 @@ class Annotations(TimDbBase):
         cursor.execute("""
                        SELECT
                          Annotation.id,
-                         VelpVersion.velp_id,
+                         VelpVersion.velp_id AS velp,
                          Annotation.points,
                          Annotation.creation_time,
                          Annotation.valid_until,
@@ -52,7 +52,15 @@ class Annotations(TimDbBase):
                              Annotation.document_id = ?
                        """, [document_id]
                        )
-        return self.resultAsDictionary(cursor)
+        results = self.resultAsDictionary(cursor)
+        for result in results:
+            start = {'par_id': result['paragraph_id_start'], 'offset': result['offset_start'], 't': result['hash_start'],
+                    'el_path': result['element_path_start']}
+            end = {'par_id': result['paragraph_id_end'], 'offset': result['offset_end'], 't': result['hash_end'],
+                'el_path': result['element_path_end']}
+            coord = {'start': start, 'end': end}
+            result['coord'] = coord
+        return results
 
     def get_annotations_in_answer(self, answer_id: int) -> List[Dict]:
         """
@@ -85,7 +93,6 @@ class Annotations(TimDbBase):
                        """, [answer_id]
                        )
         return self.resultAsDictionary(cursor)
-
 
     def create_annotation(self, version_id: int, points: Optional[float], annotator_id: int,
                           document_id: int, paragraph_id_start: Optional[str],
