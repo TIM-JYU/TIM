@@ -205,10 +205,9 @@ p.caption {
     }
 
     border-top: 4px solid;
-    width: 240px;
     padding-bottom: 5px;
     overflow-y: auto;
-    border-color: #F60;
+    border-color: $note-public-color;
 
     &.private {
         border-color: $note-private-color;
@@ -217,9 +216,9 @@ p.caption {
 
 .notes, .speaker {
     position: absolute;
-    left: 112%;
-    width: 17em;
+    width: $note-width;
     top: 0;
+    right: calc(-#{$note-width} + #{$readline-offset} - 5px);
 }
 
 .headerlink {
@@ -281,7 +280,7 @@ p.caption {
 
 .readline {
     position: absolute;
-    right: -1em;
+    right: $readline-offset;
     z-index: 3;
     width: 10em;
     height: 100%;

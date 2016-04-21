@@ -7,6 +7,7 @@ $areacollapse-color: $basic-color;
 $tab-bg-color: $basic-color;
 $csrundiv-color: $basic-color;
 $note-private-color: $basic-color;
+$note-public-color: #F60;
 $pre-color: $basic-color;
 $csrunmenu-button-bg-color: $basic-color;
 $csrunmenu-link-color: $basic-color;
@@ -29,6 +30,8 @@ $asset-path: "..";
 $footer-height: 60px;
 $header-footer-border: 1px solid #e5e5e5;
 $editline-width: 3em;
+$readline-offset: -1em;
+$note-width: 30%;
 
 // these column variables must match the ones in base.html
 $left-side-columns: 2;

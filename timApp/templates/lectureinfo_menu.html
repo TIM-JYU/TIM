@@ -1,4 +1,10 @@
 <!--html for upper menu-->
+{% macro lecbtn(icon, title, action, condition='') -%}
+    <button class="timButton btn-lg"
+            ng-click="{{ action }}" title="{{ title }}" ng-show="{{ condition }}">
+        <span class="glyphicon glyphicon-{{ icon }}" aria-hidden="true"></span>
+    </button>
+{%- endmacro %}
 <div class="menuSection" ng-show="lectureSettings.inLecture || lectureSettings.lectureMode">
     <div id="largeMenu">
         <div class="lectureSection" ng-show="!lectureSettings.inLecture">
@@ -10,26 +16,13 @@
                 <!--<input id="passwordInput" ng-model="passwordQuess" placeholder="Access code"
                        ng-keypress="passEnterPressed($event)" size="7" ng-disabled="!chosenLecture.is_access_code">-->
 
-                <div class="iconSection" ng-show="lectures.length > 0">
-                    <img id="join-icon" src="{{ url_for('static', filename='images/join-icon3.png') }}" class="icon"
-                         ng-click="joinLecture(_,chosenLecture.is_access_code)" title="Join the lecture">
-                    <img id="edit-icon" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
-                         title="Edit this lecture" ng-click="editLecture(chosenLecture.lecture_code)"
-                         ng-show="isLecturer">
-                    <img id="add-icon1" src="{{ url_for('static', filename='images/add-icon3.png') }}" class="icon"
-                         ng-show="isLecturer"
-                         ng-click="toggleLecture()" title="Add new lecture">
-                </div>
-
+                {{ lecbtn('log-in', 'Join the lecture', 'joinLecture(_,chosenLecture.is_access_code)') }}
+                {{ lecbtn('edit', 'Edit this lecture', 'editLecture(chosenLecture.lecture_code)', 'isLecturer') }}
+                {{ lecbtn('plus-sign', 'Add new lecture', 'toggleLecture()', 'isLecturer') }}
             </div>
             <div ng-show="lectures.length <= 0">
                 <p>No running lectures</p>
-
-                <div class="iconSection">
-                    <img id="add-icon2" src="{{ url_for('static', filename='images/add-icon3.png') }}" class="icon"
-                         ng-show="isLecturer"
-                         ng-click="toggleLecture()" title="Add new lecture">
-                </div>
+                {{ lecbtn('plus-sign', 'Add new lecture', 'toggleLecture()', 'isLecturer') }}
             </div>
         </div>
         <div class="lectureSection" ng-show="lectureSettings.inLecture">
@@ -39,13 +32,10 @@
 
             <p ng-bind="lectureEndTime"></p>
 
-            <div class="iconSection" id="inLectureIconSection">
-                <img id="leave-icon" src="{{ url_for('static', filename='images/leave-icon3.png') }}" class="icon"
-                     ng-click="leaveLecture()" title="Leave this lecture" ng-show="lectureSettings.inLecture">
-                <img id="stop-icon" src="{{ url_for('static', filename='images/stop-icon3.png') }}" class="icon"
-                     ng-click="endLecture()" title="End this lecture" ng-show="canStop">
-                <img id="edit-icon" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
-                     title="Edit this lecture" ng-click="editLecture(lectureName)" ng-show="canStop">
+            <div id="inLectureIconSection">
+                {{ lecbtn('log-out', 'Leave this lecture', 'leaveLecture()') }}
+                {{ lecbtn('stop', 'End this lecture', 'endLecture()', 'canStop') }}
+                {{ lecbtn('edit', 'Edit this lecture', 'editLecture(lectureName)', 'canStop') }}
             </div>
         </div>
 
@@ -60,13 +50,9 @@
                             ng-options="lecture.lecture_code + ' ' + lecture.lecture_start for lecture in futureLectures">
                     </select>
                 </div>
-                <div class="iconSection" ng-show="futureLectures.length > 0">
-                    <img ng-show="isLecturer" id="start-icon"
-                         src="{{ url_for('static', filename='images/play-icon3.png') }}" class="icon"
-                         title="Start lecture now" ng-click="startFutureLecture()">
-                    <img ng-show="isLecturer" id="edit-icon2"
-                         src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
-                         title="Edit this lecture" ng-click="editLecture(futureLecture.lecture_code)">
+                <div class="iconSection" ng-show="true || futureLectures.length > 0">
+                    {{ lecbtn('play', 'Start lecture now', 'startFutureLecture()', 'isLecturer') }}
+                    {{ lecbtn('edit', 'Edit this lecture', 'editLecture(futureLecture.lecture_code)', 'isLecturer') }}
                 </div>
             </div>
         </div>
@@ -113,7 +99,6 @@
                     <li ng-show="isLecturer"><p ng-click="toggleLecture()" id="addLecture1"> Add new lecture </p></li>
                     {% endraw %}
                 </ul>
-
             </div>
             <div id="futureList">
                 {% raw %}
