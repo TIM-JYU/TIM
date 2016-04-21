@@ -1079,7 +1079,7 @@ timApp.controller("ViewCtrl", [
             var tag = $target.prop("tagName");
 
             // Don't show paragraph menu on these specific tags or class
-            var ignoredTags = ['BUTTON', 'INPUT', 'TEXTAREA', 'A'];
+            var ignoredTags = ['BUTTON', 'INPUT', 'TEXTAREA', 'A', 'QUESTIONADDEDNEW'];
             if (ignoredTags.indexOf(tag) > -1 || $target.parents('.no-popup-menu').length > 0) {
                 return false;
             }
