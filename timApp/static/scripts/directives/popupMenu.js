@@ -13,6 +13,7 @@ timApp.directive('popupMenu', ['$http', '$window', '$filter', function ($http, $
         replace: true,
 
         link: function ($scope, $element, $attrs) {
+            $scope.$par = $element.parents('#' + $attrs['srcid']);
             $scope.actions = eval('$scope.' + $attrs['actions']);
             $scope.actionsAttr = $attrs['actions'];
             $scope.getContent($attrs['contenturl']);
@@ -75,7 +76,6 @@ timApp.directive('popupMenu', ['$http', '$window', '$filter', function ($http, $
             };
 
             $element.css('position', 'absolute'); // IE needs this
-            $scope.$par = $element.parents('.par, .area');
         }
     };
 }]);

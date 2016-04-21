@@ -166,12 +166,14 @@
                          src="{{ url_for('static', filename='images/settings-icon.png') }}" width="50"
                          height="50" title="Settings-menu"/>
 
-                    <img ng-click="toggleParEditMode()" ng-class="['menu-icon', parEditIconState]"
-                         src="{{ url_for('static', filename='images/par-edit-icon.png') }}" width="50"
-                         height="50" title="Toggle paragraph edit mode"/>
-                    <img ng-click="toggleAreaEditMode()" ng-class="['menu-icon', areaEditIconState]"
-                         src="{{ url_for('static', filename='images/area-edit-icon.png') }}" width="50"
-                         height="50" title="Toggle area edit mode"/>
+                    {% if rights and rights.editable %}
+                        <img ng-click="toggleParEditMode()" ng-class="['menu-icon', parEditIconState]"
+                             src="{{ url_for('static', filename='images/par-edit-icon.png') }}" width="50"
+                             height="50" title="Toggle paragraph edit mode"/>
+                        <img ng-click="toggleAreaEditMode()" ng-class="['menu-icon', areaEditIconState]"
+                             src="{{ url_for('static', filename='images/area-edit-icon.png') }}" width="50"
+                             height="50" title="Toggle area edit mode"/>
+                    {% endif %}
                 </div>
             </div>
 

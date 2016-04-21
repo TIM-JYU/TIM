@@ -669,6 +669,7 @@ timApp.controller("ViewCtrl", [
         sc.showPopupMenu = function (e, $par_or_area, coords, attrs) {
             var $popup = $('<popup-menu>');
             $popup.attr('tim-draggable-fixed', '');
+            $popup.attr('srcid', $par_or_area.attr('id'));
             for (var key in attrs) {
                 if (attrs.hasOwnProperty(key)) {
                     $popup.attr(key, attrs[key]);
@@ -1007,7 +1008,7 @@ timApp.controller("ViewCtrl", [
 
         sc.onClick(".editline", function ($this, e) {
             $(".actionButtons").remove();
-            var $par = $this.parent();
+            var $par = $this.parent().filter('.par');
             if (sc.selection.start !== null && (sc.selection.end === null || !sc.isParWithinArea($par))) {
                 sc.selection.end = sc.getParId($par);
             }
@@ -1017,7 +1018,7 @@ timApp.controller("ViewCtrl", [
 
         sc.onClick(".areaeditline", function ($this, e) {
             $(".actionButtons").remove();
-            var $area = $this.parent();
+            var $area = $this.parent().filter('.area');
             //var $pars = $area.find('.par');
             //var $first_par = $pars.first();
             //var $last_par = $pars.last();

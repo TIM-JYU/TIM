@@ -160,6 +160,18 @@ ul ul ul, ol ol ol {
     position: relative;
 }
 
+.par.deleted {
+    background-color: #ffc7c7;
+}
+
+.par.deleted.lightselect {
+    background-color: #ffb5b3;
+}
+
+.par.deleted.selected {
+    background-color: #ffa594;
+}
+
 .par.lightselect {
     background-color: #f7f7f7;
 }
