@@ -21,5 +21,6 @@ SECRET_FILE_PATH   = './tim_secret.py'
 PERMANENT_SESSION_LIFETIME = timedelta(days=14)
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 IMMEDIATE_PRELOAD  = False
-SASS_STYLE         = "compressed"
-SASS_LOAD_PATHS    = [".", "../scripts/bower_components/bootstrap-sass/assets/stylesheets"]
+LIBSASS_STYLE      = "compressed"
+LIBSASS_INCLUDES   = ["static/scripts/bower_components/bootstrap-sass/assets/stylesheets",
+                      "static/scripts/bower_components/jquery-ui/themes/base"]

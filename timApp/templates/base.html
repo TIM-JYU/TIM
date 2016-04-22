@@ -1,5 +1,5 @@
 {% macro scss(name) -%}
-    {% assets filters="scss", output="{}.css".format(name), name + ".scss" %}
+    {% assets filters="libsass", output="{}.css".format(name), name + ".scss" %}
         <link rel="stylesheet" href="{{ ASSET_URL }}">
     {% endassets %}
 {%- endmacro %}

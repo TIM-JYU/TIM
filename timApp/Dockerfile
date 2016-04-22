@@ -20,8 +20,6 @@ run apt-get install -y git-core
 run apt-get install -y zlib1g-dev # lxml dependency
 run apt-get install -y libxml2-dev libxslt-dev python3-dev # lxml dependency
 run apt-get install -y libyaml-dev # C-parser for PyYAML
-run apt-get install -y ruby2.0 # for SASS
-run gem2.0 install sass
 
 # Add the PostgreSQL PGP key
 run apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
@@ -55,6 +53,8 @@ run pip3 install cffi
 run pip3 install git+https://github.com/benoitc/gunicorn.git gevent==1.1rc4 eventlet tornado aiohttp
 run pip3 install typing
 run pip3 install python-magic
+run pip3 install git+git://github.com/miracle2k/webassets.git
+run pip3 install libsass
 run pip3 install flask-assets
 
 # Need to update the package "six"; otherwise there will be a strange error with Flask's reloader
