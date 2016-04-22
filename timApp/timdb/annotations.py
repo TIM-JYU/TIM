@@ -54,10 +54,11 @@ class Annotations(TimDbBase):
                        )
         results = self.resultAsDictionary(cursor)
         for result in results:
-            start = {'par_id': result['paragraph_id_start'], 'offset': result['offset_start'], 't': result['hash_start'],
-                    'el_path': result['element_path_start']}
+            start = {'par_id': result['paragraph_id_start'], 'offset': result['offset_start'],
+                     't': result['hash_start'],
+                     'el_path': result['element_path_start']}
             end = {'par_id': result['paragraph_id_end'], 'offset': result['offset_end'], 't': result['hash_end'],
-                'el_path': result['element_path_end']}
+                   'el_path': result['element_path_end']}
             coord = {'start': start, 'end': end}
             result['coord'] = coord
         return results
@@ -90,6 +91,7 @@ class Annotations(TimDbBase):
                        WHERE (Annotation.valid_until ISNULL OR
                              Annotation.valid_until >= CURRENT_TIMESTAMP) AND
                              Annotation.answer_id = ?
+                       ORDER BY Annotation.offset_start
                        """, [answer_id]
                        )
         return self.resultAsDictionary(cursor)
