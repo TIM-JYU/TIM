@@ -63,8 +63,13 @@ def add_annotation() -> str:
 
 @annotations.route("/addannotationcomment", methods=['POST'])
 def add_comment() -> str:
-    annotation_id = request.args.get('annotation_id')
-    content = request.args.get('content')
+    json_data=request.get_json()
+    try:
+        annotation_id = json_data['annotation_id']
+        content = json_data['content']
+    except KeyError as e:
+        abort(400, "Missing data: "+e.args[0])
+    #Todo maybe check that content isn't an empty string
     timdb = getTimDb()
     commenter_id = getCurrentUserId()
     new_id = timdb.annotations.add_comment(annotation_id, commenter_id, content)
@@ -75,7 +80,6 @@ def add_comment() -> str:
 def get_annotations(document_id: int) -> str:
     timdb = getTimDb()
     results = timdb.annotations.get_annotations_in_document(int(document_id))
-
     return jsonResponse(results)
 
 
