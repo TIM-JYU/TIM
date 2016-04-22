@@ -63,19 +63,20 @@ def add_annotation() -> str:
 
 @annotations.route("/addannotationcomment", methods=['POST'])
 def add_comment() -> str:
-    json_data=request.get_json()
+    json_data = request.get_json()
     try:
         annotation_id = json_data['annotation_id']
         content = json_data['content']
     except KeyError as e:
-        abort(400, "Missing data: "+e.args[0])
-    #Todo maybe check that content isn't an empty string
+        abort(400, "Missing data: " + e.args[0])
+    # Todo maybe check that content isn't an empty string
     timdb = getTimDb()
     commenter_id = getCurrentUserId()
     new_id = timdb.annotations.add_comment(annotation_id, commenter_id, content)
     return jsonResponse(new_id)
 
 
+# Todo maybe chech that the document in question actually exists and return on error if not.
 @annotations.route("/<document_id>/annotations", methods=['GET'])
 def get_annotations(document_id: int) -> str:
     timdb = getTimDb()
@@ -85,6 +86,7 @@ def get_annotations(document_id: int) -> str:
 
 # TODO decide whether we should instead return comments for just one annotation, instead of returning everything at
 # once, like here.
+# Todo maybe chech that the document in question actually exists and return on error if not.
 @annotations.route("/<document_id>/comments", methods=['GET'])
 def get_comments(document_id: int) -> str:
     timdb = getTimDb()
