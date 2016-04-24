@@ -26,8 +26,8 @@
 
 .questionAddedNew {
     display: inline-block !important;
-    width: 2.4em;
-    height: 2.4em;
+    width: 2.2em;
+    height: 2.2em;
 }
 
 .questionPar {
@@ -38,13 +38,13 @@
 
 .questionNumber {
     margin: 0 auto !important;
-    line-height: 1.1em;
+    line-height: 1em;
 }
 
 .readlineQuestion {
     border-right: 0.5em solid #f60;
-    width: 2.4em;
-    height: 3.7em;
+    width: 2.2em;
+    height: 3.5em;
     display: inline-block;
     margin-left: -1px;
     border-radius: 3px 6px 6px 3px;
@@ -53,9 +53,9 @@
 
 .editlineQuestion {
     display: inline-block;
-    width: 2.4em;
-    height: 3.7em;
-    margin-left: 1.6em;
+    width: 2.2em;
+    height: 3.5em;
+    margin-left: 1.2em;
     margin-right: 0.2em;
     border-radius: 6px 3px 3px 6px;
     border-left: 0.5em solid #3CC;
