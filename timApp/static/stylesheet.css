@@ -85,16 +85,16 @@ td p {
     margin-left: 0;
 }
 
-.readline {
+.readline, .readlineQuestion {
     border-color: #F60; /* rgb(236,103,27); */
 }
 
-.readline:hover {
+.readline:hover, .readlineQuestion:hover{
     opacity: 0.5;
     background: #F60; /* rgb(236,103,27); */
 }
 
-.editline:hover {
+.editline:hover, .editlineQuestion:hover {
     opacity: 0.5;
     background: #3CC; /* rgb(236,103,27); */
 }

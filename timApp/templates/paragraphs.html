@@ -3,6 +3,7 @@
 {% set editline = '' %}
 {% if rights.editable or rights.can_comment %}
     {% set editline = '<div class="editline" title="Click to edit this paragraph"></div>' %}
+    {% set editlineQuestion = '<div class="editlineQuestion" title="Click to edit this paragraph"></div>' %}
 {% endif %}
 
 {% if route == "view" and text|length == 0 and rights.editable %}
@@ -136,11 +137,21 @@
         {% endif %}
     {% endif %}
 
+    {% if not t.attrs.question %}
     {{ editline|safe }}
         {% if not disable_read_markings %}
             <div class="{{ ['readline', t.status]|join(' ')|trim }}"
                      title="Click to mark this paragraph as read"></div>
         {% endif %}
+    {% else %}
+        {{ editlineQuestion|safe }}
+        {% if not disable_read_markings %}
+            <div class="{{ ['readlineQuestion', t.status]|join(' ')|trim }}"
+                     title="Click to mark this paragraph as read"></div>
+        {% endif %}
+    {% endif %}
+
+
     {% if t.notes %}
         <div class="notes">
             {% for note in t.notes %}

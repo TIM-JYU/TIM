@@ -76,11 +76,11 @@
         <p class="error_message" id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
 
         <div class="buttons" id="question_buttons">
+            <span ng-if="(!new_question)"> <button class="deleteButton" ng-click="deleteQuestion()">Delete</button> </span>
             <button ng-if="lectureSettings.inLecture" ng-click="createQuestion(true)">Save and ask
             </button>
             <button ng-click="createQuestion()">Save</button>
             <button ng-click="close()">Cancel</button>
-            <span ng-if="(!new_question)"> <button ng-click="deleteQuestion()">Delete</button> </span>
         </div>
     </div>
     <div class="popUpWindow" id="questionWindow" ng-if="asked_id">

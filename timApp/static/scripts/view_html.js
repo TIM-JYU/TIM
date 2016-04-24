@@ -960,6 +960,8 @@ timApp.controller("ViewCtrl", [
             if (sc.pendingUpdatesCount() < 10) {
                 sc.updatePending();
             }
+            if (sc.lectureMode) { sc.getAndEditQuestions(); }
+
         };
 
         sc.updatePending = function () {
@@ -998,7 +1000,7 @@ timApp.controller("ViewCtrl", [
             return true;
         };
 
-        sc.onClick(".readline", function ($this, e) {
+        sc.onClick(".readline, .readlineQuestion" , function ($this, e) {
             return sc.markParRead($this, $this.parents('.par'));
         });
 
@@ -1006,7 +1008,7 @@ timApp.controller("ViewCtrl", [
             return sc.selection.pars.filter($par).length > 0;
         };
 
-        sc.onClick(".editline", function ($this, e) {
+        sc.onClick(".editline, .editlineQuestion", function ($this, e) {
             $(".actionButtons").remove();
             var $par = $this.parent().filter('.par');
             if (sc.selection.start !== null && (sc.selection.end === null || !sc.isParWithinArea($par))) {
@@ -1221,6 +1223,27 @@ timApp.controller("ViewCtrl", [
                 $questionsDiv.append($questionDiv);
             }
             return $questionsDiv;
+        };
+
+        sc.getAndEditQuestions = function () {
+            var questions = $('.editlineQuestion');
+            for (var i = 0; i < questions.length; i++) {
+                var questionParent = $(questions[i].parentNode);
+                var questionChildren = $(questionParent.children());
+                var questionNumber = $(questionChildren.find($('.questionNumber')));
+                if (questionNumber.length > 0) {
+                    questionNumber[0].innerHTML = (i+1) + ")";
+                }
+                else {
+                    var parContent = $(questionChildren[0]);
+                    questionParent.addClass('questionPar');
+                    parContent.css('display', 'inline-block');
+                    var p = $("<p>", {class: "questionNumber", text: i+1 +")"});
+                    parContent.append(p);
+                    var editLine = $(questionChildren[1]);
+                    parContent.before(editLine);
+                }
+            }
         };
 
         sc.getQuestions = function () {
@@ -1729,6 +1752,8 @@ timApp.controller("ViewCtrl", [
         sc.editorFunctions = sc.getEditorFunctions();
         sc.addParagraphFunctions = sc.getAddParagraphFunctions();
         sc.pasteFunctions = sc.getPasteFunctions();
+
+        sc.getAndEditQuestions();
 
         sc.allowPasteContent = true;
         sc.allowPasteRef = true;
