@@ -25,7 +25,6 @@
         {% block stylesheet %}
             {{ scss('gen/' + prefs.css_combined) }}
         {% endblock %}
-        <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.min.css') }}">
 
         {% block customcss %}
             <style type="text/css">
