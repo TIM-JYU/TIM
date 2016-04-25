@@ -40,15 +40,19 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             var placeInfo = $scope.annotations[i]["coord"];
 
             var parent = document.getElementById(placeInfo["start"]["par_id"]).querySelector(".parContent");
-            var elements = parent.children;
+            var elements = parent;
 
             // Find element
             var elpath = placeInfo["start"]["el_path"];
+
             console.log(elpath);
             console.log(elpath.length);
 
+            for (var j=0; j<elpath.length; j++){
+                elements = elements.children.item(elpath[j]);
+            }
 
-            var el = elements.item(placeInfo["start"]["el_path"][0]).childNodes[0];
+            var el = elements.childNodes[0];
             console.log(el);
 
             var range = document.createRange();
@@ -72,6 +76,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             console.log(range);
             range.surroundContents(span);
         } catch(err) {
+            // Add annotation to the "club of missing velps"
+            /*
             var new_range = document.createRange();
             var el = range.startContainer;
             var start = range.startOffset;
@@ -80,6 +86,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             new_range.setStart(el, start);
             new_range.setEnd(el, end);
             $scope.addAnnotationToCoord(new_range, annotation, show);
+            */
         }
 
         $compile(span)($scope); // Gives error [$compile:nonassign]

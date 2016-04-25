@@ -54,9 +54,12 @@ class Annotations(TimDbBase):
                        )
         results = self.resultAsDictionary(cursor)
         for result in results:
+            start_path = [int(i) for i in result['element_path_start'][1:-1].split(',')]
+            end_path = [int(i) for i in result['element_path_end'][1:-1].split(',')]
+
             start = {'par_id': result['paragraph_id_start'], 'offset': result['offset_start'],
                      't': result['hash_start'],
-                     'el_path': result['element_path_start']}
+                     'el_path': start_path}
             end = {'par_id': result['paragraph_id_end'], 'offset': result['offset_end'], 't': result['hash_end'],
                    'el_path': result['element_path_end']}
             coord = {'start': start, 'end': end}
