@@ -1232,13 +1232,13 @@ timApp.controller("ViewCtrl", [
                 var questionChildren = $(questionParent.children());
                 var questionNumber = $(questionChildren.find($('.questionNumber')));
                 if (questionNumber.length > 0) {
-                    questionNumber[0].innerHTML = (i+1) + ")";
+                    questionNumber[0].innerHTML = (i+1)+ ")\r\n1234567890";
                 }
                 else {
                     var parContent = $(questionChildren[0]);
                     questionParent.addClass('questionPar');
-                    parContent.css('display', 'inline-block');
-                    var p = $("<p>", {class: "questionNumber", text: i+1 +")"});
+                    parContent.addClass('questionParContent');
+                    var p = $("<p>", {class: "questionNumber", text: (i+1) + ")\r\n1234567890"});
                     parContent.append(p);
                     var editLine = $(questionChildren[1]);
                     parContent.before(editLine);
