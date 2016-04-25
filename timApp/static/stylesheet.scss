@@ -15,8 +15,9 @@ body {
 
 // all document-related styles under .paragraphs selector!
 .paragraphs {
-    p {
+    .parContent {
         text-align: justify;
+        font-size: 15px;
     }
 
     table {
