@@ -40,7 +40,7 @@ class VelpGroups(TimDbBase):
                       """, [velp_group_id, name, valid_until]
                        )
         self.db.commit()
-        return  velp_group_id
+        return velp_group_id
 
     def update_velp_group(self, velp_group_id: int, name: str, valid_until: Optional[str]):
         """
@@ -139,11 +139,11 @@ class VelpGroups(TimDbBase):
                        )
         return self.resultAsDictionary(cursor)
 
-    def check_default_group_exists(self, document_id):
+    def check_default_group_exists(self, document_id) -> Optional[int]:
         """Checks whether document has default velp group attached.
 
         :param document_id: The id of document.
-        :return: 0 if doesn't exist, else ID as dictionary
+        :return: id of the default group in a dictionary, none if nothing found.
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -157,10 +157,10 @@ class VelpGroups(TimDbBase):
                       """, [document_id]
                        )
         result = self.resultAsDictionary(cursor)
-        if len(result) == 0:
-            return 0
-        return result
-
+        if not result:
+            return None
+        else:
+            return result
 
     def get_velp_groups_in_assessment_area(self, document_id: int = None, paragraph_id: str = None,
                                            area_id: str = None, folder_id: int = None) -> List[int]:

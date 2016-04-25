@@ -1,5 +1,4 @@
 {
-    "doc_id": 7,
     "id": 0,
     "points": -1,
     "velp": 2,

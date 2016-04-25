@@ -9,9 +9,9 @@ velps = Blueprint('velps',
 @velps.route("/<document_id>/defaultvelpgroup", methods=['GET'])
 def check_default_velp_group(document_id: int) -> str:
     timdb = getTimDb()
-    doc_id = int(document_id)       # Make sure document_id is int
+    doc_id = int(document_id)  # Make sure document_id is int
     default_velp_group_id = timdb.velp_groups.check_default_group_exists(doc_id)
-    if default_velp_group_id == 0:
+    if default_velp_group_id is None:
         default_group_name = timdb.documents.get_first_document_name(doc_id)
         default_velp_group_id = timdb.velp_groups.create_default_velp_group(default_group_name, 1, None)
         timdb.velp_groups.insert_group_to_document(int(default_velp_group_id), doc_id)
@@ -20,14 +20,15 @@ def check_default_velp_group(document_id: int) -> str:
         default_velp_group_id = [{'id': default_velp_group_id}]  # int to dictionary
     return jsonResponse(default_velp_group_id)
 
+
 @velps.route("/<document_id>/<paragraph_id>/velps", methods=['GET'])
 def get_velps(document_id: int, paragraph_id: str) -> str:
     timdb = getTimDb()
-    doc_id = int(document_id)       # Make sure document_id is int
+    doc_id = int(document_id)  # Make sure document_id is int
 
     # TODO Remove following block, use route above instead
     default_exists = timdb.velp_groups.check_default_group_exists(doc_id)
-    if default_exists == 0:     # Create new default velp group if one does not exist yet
+    if default_exists is None:  # Create new default velp group if one does not exist yet
         default_group_name = timdb.documents.get_first_document_name(doc_id)
         new_default_id = timdb.velp_groups.create_default_velp_group(default_group_name, 1, None)
         timdb.velp_groups.insert_group_to_document(int(new_default_id), doc_id)
@@ -39,6 +40,7 @@ def get_velps(document_id: int, paragraph_id: str) -> str:
     # print(velp_data) # TODO Just for checking, delete later
     return jsonResponse(velp_data)
 
+
 @velps.route("/<document_id>/getvelpgrouplocations", methods=['GET'])
 def get_velp_group_locations(document_id: int) -> str:
     timdb = getTimDb()
@@ -46,9 +48,9 @@ def get_velp_group_locations(document_id: int) -> str:
     location_data = timdb.velp_groups.get_velp_groups_in_assessment_area(doc_id)
     return jsonResponse(location_data)
 
+
 @velps.route("/createvelpgroup", methods=['POST'])
 def create_velp_group():
-
     json_data = request.get_json()
     # .get returns null instead of throwing if data is missing.
     velp_group_name = json_data.get('name')
@@ -63,12 +65,14 @@ def create_velp_group():
     timdb.velp_groups.insert_group_to_document(velp_group_id, 1)
     return jsonResponse(velp_group_id)
 
+
 @velps.route("/<document_id>/labels", methods=['GET'])
 def get_labels(document_id: int) -> 'str':
     timdb = getTimDb()
     # Todo select language.
     label_data = timdb.velps.get_document_velp_label_content(int(document_id))
     return jsonResponse(label_data)
+
 
 @velps.route("/copygrupa", methods=['GET'])
 def copy_velp_group():
@@ -99,16 +103,22 @@ def add_velp(velp_content: str = "MOIMOI", default_points: int = -5.0, language_
 
 @velps.route("/addvelp", methods=['POST'])
 def add_velp():
-
     json_data = request.get_json()
     # .get returns null instead of throwing if data is missing.
-    velp_content = json_data.get('content')
+    try:
+        velp_content = json_data['content']
+        velp_groups = json_data['velp_groups']
+    except KeyError as e:
+        abort(400, "Missing data: " + e.args[0])
+    if not velp_content:
+        abort(400, "Empty content string.")
+
+    # Optional stuff
     default_points = json_data.get('points')
     language_id = json_data.get('language_id')
     icon_id = json_data.get('icon_id')
     valid_until = json_data.get('valid_until')
     velp_labels = json_data.get('labels')
-    velp_groups = json_data.get('velp_groups')
 
     print(velp_content)
     print(velp_labels)
@@ -138,25 +148,30 @@ def add_velp():
 
 @velps.route("/updatevelp", methods=['POST'])
 def update_velp():
-    json_data = request.get_json()
-    velp_id = json_data.get('id')
-    new_content = json_data.get('content')
+    try:
+        json_data = request.get_json()
+        velp_id = json_data.get('id')
+        new_content = json_data.get('content')
+        language_id = json_data.get('language_id')
+    except KeyError as e:
+        abort(400, "Missing data " + e.args[0])
+    if not new_content:
+        abort(400, "Empty content string.")
+
     default_points = json_data.get('points')
-    language_id = json_data.get('language_id')
     icon_id = json_data.get('icon_id')
     new_labels = json_data.get('labels')
     timdb = getTimDb()
     old_content = timdb.velps.get_latest_velp_version(velp_id, language_id)
-    old_labels=timdb.velps.get_velp_label_ids(velp_id)
+    old_labels = timdb.velps.get_velp_label_ids(velp_id)
     if old_content != new_content:
-
-        #Todo this does not really work correctly, now any update to any language creates a new version, and we can not
+        # Todo this does not really work correctly, now any update to any language creates a new version, and we can not
         # produce different contents with the same version but different language.
 
-        version_id=timdb.velps.create_velp_version(velp_id)
-        timdb.velps.create_velp_content(version_id,language_id,new_content)
+        version_id = timdb.velps.create_velp_version(velp_id)
+        timdb.velps.create_velp_content(version_id, language_id, new_content)
     if old_labels != new_labels:
-        timdb.velps.update_velp_labels(velp_id,new_labels)
+        timdb.velps.update_velp_labels(velp_id, new_labels)
     timdb.velps.update_velp(velp_id, default_points, icon_id)
 
 
@@ -164,8 +179,12 @@ def update_velp():
 def add_label():
     # language_id = request.args.get('language_id')
     json_data = request.get_json()
-    language_id = "FI"
-    content = json_data['content']
+    try:
+        content = json_data['content']
+    except KeyError as e:
+        abort(400, "Missing data: " + e.args[0])
+    language_id = json_data.get('language_id')
+    language_id = "FI" if language_id is None else language_id
 
     timdb = getTimDb()
     label_id = timdb.velps.create_label(language_id, content)
