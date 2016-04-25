@@ -144,20 +144,20 @@
     <div class="paragraphs">
         <div ng-cloak="" class="dialog" caption="Refresh the page?" tim-draggable-fixed="" ng-show="isPageDirty() && !hideRefresh">
             <p>The page has been modified since the last reload. Refresh now?</p>
-            <button ng-click="reload()">Refresh</button>
-            <button ng-click="closeRefreshDlg()">No</button>
+            <button class="timButton" ng-click="reload()">Refresh</button>
+            <button class="timButton" ng-click="closeRefreshDlg()">No</button>
         </div>
         {% if message %}
             <div ng-cloak="" class="dialog" caption="" tim-draggable-fixed="" ng-show="!hideMessage">
                 <p>{{ message }}</p>
-                <button ng-click="closeMessageDlg()">Ok</button>
+                <button class="timButton" ng-click="closeMessageDlg()">Ok</button>
             </div>
         {% endif %}
         {% raw %}
         <div ng-cloak="" class="dialog" caption="Updates pending" tim-draggable-fixed="" ng-show="showUpdateDialog()">
             <p>There are {{ pendingUpdatesCount() }} pending paragraph updates.</p>
-            <button ng-click="updatePending()">Update</button>
-            <button ng-click="hidePending = true">Dismiss</button>
+            <button class="timButton" ng-click="updatePending()">Update</button>
+            <button class="timButton" ng-click="hidePending = true">Dismiss</button>
         </div>
         {% endraw %}
         {% if task_info and task_info.total_points %}
