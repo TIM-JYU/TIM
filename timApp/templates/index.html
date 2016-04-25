@@ -18,18 +18,18 @@
             <table class="table" ng-show="documentList.length > 0 || folderList.length > 0 || parentfolder != null">
                 <thead>
                 <tr>
-                    <td></td>
-                    <td>Document name</td>
-                    <td></td>
-                    <td>Last modified</td>
-                    <td>Owner</td>
-                    <td>Rights</td>
+                    <th></th>
+                    <th>Document name</th>
+                    <th></th>
+                    <th>Last modified</th>
+                    <th>Owner</th>
+                    <th>Rights</th>
                 </tr>
                 </thead>
                 <tr ng-show="parentfolder != null">
                     <td>
                         <a href="/view/{{ '{{ parentfolder | escape }}' }}">
-                            <img src="{{ url_for('static', filename='images/folder.png') }}"/>
+                            <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
                         </a>
                     </td>
                     <td><a href="/view/{{ '{{ parentfolder | escape }}' }}">..</a></td>
@@ -41,7 +41,7 @@
                 <tr ng-repeat="doc in folderList">
                     <td>
                         <a href="/view/{{ '{{ doc.fullname | escape }}' }}">
-                            <img src="{{ url_for('static', filename='images/folder.png') }}"/>
+                            <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
                         </a>
                     </td>
                     <td>
@@ -71,34 +71,25 @@
             </table>
             <p ng-show="documentList.length == 0 && folderList.length == 0">There are no documents to show.</p>
             {% if session.user_id %}
-                <button class="timButton" ng-click="showUploadFn()">Upload a new document</button>
-                <div class="uploadForm" ng-show="showUpload">
-                    <input class="form-control" type="file" ngf-select="onFileSelect($file)">
+                <uib-tabset active="-1">
+                    <uib-tab heading="Upload a new document">
+                        <div class="form-group">
+                            <label for="docUpload">Select a file:</label>
+                            <input id="docUpload" class="form-control" type="file" ngf-select="onFileSelect($file)">
+                        </div>
                      <span ng-show="file.progress >= 0"
                            ng-bind="file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!'">
                      </span>
-                    <button class="timButton" ng-disabled="uploadInProgress" type="button"
-                            ng-click="showUpload = false"
-                            ng-bind="file.progress && !uploadInProgress ? 'Close' : 'Cancel'">
-                    </button>
-                </div>
-                <div>
-                    <button class="timButton" ng-show="!showControls" ng-click="showControls = true">Create a new document</button>
-
-                    <div ng-show="showControls">
+                    </uib-tab>
+                    <uib-tab heading="Create a new document">
                         <div class="form-group"><label>
                             Document name:
                             <input class="form-control" ng-model="docName" type="text">
                         </label></div>
                         <button class="timButton" ng-disabled="!docName" ng-click="createDocument(docName)" type="button">Create
                         </button>
-                        <button class="timButton" ng-click="showControls = false" type="button">Cancel</button>
-                    </div>
-                </div>
-                <div>
-                    <button class="timButton" ng-show="!showCreateFolder" ng-click="showCreateFolder = true">Create a new folder</button>
-
-                    <div ng-show="showCreateFolder">
+                    </uib-tab>
+                    <uib-tab heading="Create a new folder">
                         <div class="form-group"><label>
                             Folder name:
                             <input class="form-control" ng-model="folderName" type="text">
@@ -111,9 +102,8 @@
                         <button class="timButton" ng-disabled="!folderName || !folderOwner"
                                 ng-click="createFolder(folderName, folderOwner.id)" type="button">Create
                         </button>
-                        <button class="timButton" ng-click="showCreateFolder = false" type="button">Cancel</button>
-                    </div>
-                </div>
+                    </uib-tab>
+                </uib-tabset>
             {% else %}
                 To create or upload new documents, log in.
             {% endif %}
