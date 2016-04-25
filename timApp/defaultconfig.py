@@ -23,5 +23,4 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 IMMEDIATE_PRELOAD  = False
 LIBSASS_STYLE      = "compressed"
 LIBSASS_INCLUDES   = ["static/scripts/bower_components/bootstrap-sass/assets/stylesheets",
-                      "static/scripts/bower_components/jquery-ui/themes/base",
-                      "static/scripts/bower_components/KaTeX/dist"]
+                      "static/scripts/bower_components/jquery-ui/themes/base"]
