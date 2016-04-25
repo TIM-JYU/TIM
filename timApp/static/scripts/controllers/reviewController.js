@@ -36,11 +36,18 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Loads used annotations into view
      */
     $scope.loadAnnotations = function() {
-        for (var i=$scope.annotations.length-1; i>=0; i--){
+        for (var i=0; i<$scope.annotations.length; i++){
             var placeInfo = $scope.annotations[i]["coord"];
 
             var parent = document.getElementById(placeInfo["start"]["par_id"]).querySelector(".parContent");
             var elements = parent.children;
+
+            // Find element
+            var elpath = placeInfo["start"]["el_path"];
+            console.log(elpath);
+            console.log(elpath.length);
+
+
             var el = elements.item(placeInfo["start"]["el_path"][0]).childNodes[0];
             console.log(el);
 
@@ -62,6 +69,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.addAnnotationToCoord = function(range, annotation, show){
         var span = $scope.createPopOverElement(annotation, show);
         try {
+            console.log(range);
             range.surroundContents(span);
         } catch(err) {
             var new_range = document.createRange();
@@ -73,7 +81,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             new_range.setEnd(el, end);
             $scope.addAnnotationToCoord(new_range, annotation, show);
         }
-        console.log("Added annotation");
+
         $compile(span)($scope); // Gives error [$compile:nonassign]
     };
 
@@ -117,7 +125,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var sel = $window.getSelection();
 
         if (sel.toString().length > 0) {
-            console.log(sel.toString());
+            console.log(sel.getRangeAt(0));
             var range = sel.getRangeAt(0);
             $scope.selectedArea = range;
         } else {
@@ -194,9 +202,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             };
 
             $scope.makePostRequest("/addannotation", newMarking, function (data) {
+                console.log("Added annotation");
                 console.log(data);
                 $scope.annotations.push(newMarking);
-                $scope.addAnnotationToCoord($scope.selectedArea, $scope.annotations[$scope.annotations.length - 1], true);
+                $scope.addAnnotationToCoord($scope.selectedArea, newMarking, true);
                 $scope.selectedArea = undefined;
                 velp.used += 1;
             });
@@ -217,6 +226,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             return array.reverse();
 
         for (var i = 0; i<myparent.children.length; i++){
+            console.log(myparent);
             if (myparent.children[i] == start){
                 array.push(i);
                 console.log(array);
@@ -226,6 +236,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         return null
     };
+
+
 
     /**
      * Get comments of given marking

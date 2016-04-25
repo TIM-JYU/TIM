@@ -42,22 +42,22 @@
   },
   {
     "id": 2,
-    "points": 0,
-    "velp": 6,
+    "points": 1,
+    "velp": 7,
     "coord": {
-       "start":{
+        "start":{
         "par_id": "pnKujWTFQrZN",
-        "offset": 90,
+        "offset": 396,
         "t": "LTB4M2JkMTBiMWQ=",
-        "el_path": [1]
+        "el_path": [2]
       },
       "end":{
         "par_id": "pnKujWTFQrZN",
-        "offset":100,
+        "offset":422,
         "t": "LTB4M2JkMTBiMWQ=",
-        "el_path": [1]
+        "el_path": [2]
       }
     },
-    "comments": [{"author": "vesal", "content": "Tämä on hieman epämääräisesti sanottu"}]
+    "comments": [{"author": "vesal", "content": "Hyvä yksityiskohta"}]
   }
 ]
