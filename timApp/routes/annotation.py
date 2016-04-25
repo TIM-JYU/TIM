@@ -20,12 +20,25 @@ def add_annotation() -> str:
         end = coordinates['end']
 
         offset_start = start['offset']
-        element_path_start = str(start['el_path'])
+        element_path_start = start['el_path']
+        if type(element_path_start) is not list:
+            raise TypeError(str(element_path_start))
+        if any(type(i) is not int for i in element_path_start):
+            raise TypeError(str(element_path_start))
+        element_path_start=str(element_path_start)
 
         offset_end = end['offset']
-        element_path_end = str(end['el_path'])
+        element_path_end = end['el_path']
+        if type(element_path_end) is not list:
+            raise TypeError(str(element_path_end))
+        if any(type(i) is not int for i in element_path_end):
+            raise TypeError(str(element_path_end))
+        element_path_end=str(element_path_end)
+
     except KeyError as e:
         abort(400, "Missing data: " + e.args[0])
+    except TypeError as e:
+        abort(400, "Malformed element path. "+e.args[0])
 
     # .get() returns None if there is no data instead of throwing.
     points = json_data.get('points')

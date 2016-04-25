@@ -50,6 +50,8 @@ class Annotations(TimDbBase):
                        WHERE (Annotation.valid_until ISNULL OR
                              Annotation.valid_until >= CURRENT_TIMESTAMP) AND
                              Annotation.document_id = ?
+                       GROUP BY element_path_start
+                       ORDER BY offset_start
                        """, [document_id]
                        )
         results = self.resultAsDictionary(cursor)
