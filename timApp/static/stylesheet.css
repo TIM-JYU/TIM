@@ -119,7 +119,7 @@ td p {
     background: #F60; /* rgb(236,103,27); */
 }
 
-.editline:hover, .editlineQuestion:hover {
+.editline:hover, .editlineQuestion:hover, .editline.menuopen {
     opacity: 0.5;
     background: #3CC; /* rgb(236,103,27); */
 }

@@ -1009,7 +1009,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.onClick(".editline, .editlineQuestion", function ($this, e) {
-            $(".actionButtons").remove();
+            sc.closeOptionsWindow();
             var $par = $this.parent().filter('.par');
             if (sc.selection.start !== null && (sc.selection.end === null || !sc.isParWithinArea($par))) {
                 sc.selection.end = sc.getParId($par);
@@ -1019,7 +1019,7 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.onClick(".areaeditline", function ($this, e) {
-            $(".actionButtons").remove();
+            sc.closeOptionsWindow();
             var $area = $this.parent().filter('.area');
             //var $pars = $area.find('.par');
             //var $first_par = $pars.first();
@@ -1098,7 +1098,7 @@ timApp.controller("ViewCtrl", [
 
                 $(".par.selected").removeClass("selected");
                 $(".par.lightselect").removeClass("lightselect");
-                $(".actionButtons").remove();
+                sc.closeOptionsWindow();
                 sc.toggleActionButtons(e, $par, toggle1, toggle2, coords);
             }
             sc.$apply();
@@ -1138,7 +1138,7 @@ timApp.controller("ViewCtrl", [
                 return false;
             }
 
-            $(".actionButtons").remove();
+            sc.closeOptionsWindow();
 
             if (tagName !== "p") {
                 $(".selected").removeClass("selected");
@@ -1151,7 +1151,21 @@ timApp.controller("ViewCtrl", [
         }, true);
 
         sc.showOptionsWindow = function (e, $par_or_area, coords) {
-            sc.showPopupMenu(e, $par_or_area, coords, {actions: 'editorFunctions', save: 'defaultAction'});
+            $par_or_area.children('.editline').addClass('menuopen');
+            sc.showPopupMenu(e, $par_or_area, coords,
+                {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'});
+        };
+
+        sc.closeOptionsWindow = function () {
+            var $actionButtons = $(".actionButtons");
+            var $par_or_area = $actionButtons.parent();
+            $actionButtons.remove();
+            sc.optionsWindowClosed($par_or_area);
+        };
+
+        sc.optionsWindowClosed = function ($par_or_area) {
+            var $editline = $par_or_area.find('.editline');
+            $editline.removeClass('menuopen');
         };
 
         sc.dist = function (coords1, coords2) {
