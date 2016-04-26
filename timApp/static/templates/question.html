@@ -4,12 +4,12 @@
             <div id="questionName">
                 <label>
                     Question title:
-                    <input id="qTitle" name="question.title" type="text" ng-model="question.title"/>
+                    <input id="qTitle" name="question.title" type="text" ng-model="question.title" ng-change="questionTitleChanged(question.title)" />
                 </label>
             </div>
             <div id="question-textarea-div">
                 <div>Question:</div>
-                <textarea id="question-textarea" name="question" rows="3" ng-model="question.question"></textarea>
+                <textarea id="question-textarea" name="question" rows="3" ng-model="question.question" onfocus="this.select()"></textarea>
             </div>
             <div id="qType">
                 <label>Question type:

@@ -821,5 +821,14 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             $(".createQuestion").off('change.createjson');
         }
     };
+
+    /**
+     * Changes the question field to match the title when question title changes
+     * @param title of question
+     * @param question of question
+     */
+    scope.questionTitleChanged = function (title) {
+        $('#question-textarea').val(title);
+    };
 }])
 ;
