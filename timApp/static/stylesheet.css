@@ -176,16 +176,26 @@ ul ul ul, ol ol ol {
     position: relative;
 }
 
-.par.deleted {
+.par.editmode.deleted {
     background-color: #ffc7c7;
 }
 
-.par.deleted.lightselect {
+.par.editmode.deleted.lightselect {
     background-color: #ffb5b3;
 }
 
-.par.deleted.selected {
+.par.editmode.deleted.selected {
     background-color: #ffa594;
+}
+
+.par.deleted {
+    background-color: #fff7f7;
+}
+
+.par.deleted.lightselect {
+}
+
+.par.deleted.selected {
 }
 
 .par.lightselect {
@@ -429,6 +439,10 @@ table td {
 .par blockquote {
     margin-left: 1.5cm;
     margin-right: 1.5cm;
+}
+
+.parlink.deleted {
+    color: red;
 }
 
 .parlink {
