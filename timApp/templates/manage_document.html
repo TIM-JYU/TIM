@@ -123,14 +123,14 @@
         </div>
     </form>
 
-    <form class="uploadForm">
+    <form class="uploadForm" id="fullDocumentEditor">
         Edit the full document
-        <div>
-            <textarea class="docEditor" ng-model="fulltext"></textarea>
-            <button ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument()">Save</button>
+        <div id="documentEditorDiv">
+            <textarea class="docEditor" ng-model="fulltext" ng-hide="renameFormShowing"></textarea>
+            <button id="documentEditorSaveButton" ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument()" ng-hide="renameFormShowing">Save</button>
             <span ng-show="saving">Saving...</span>
         </div>
-        <div><p>Import TracWiki <input type="checkbox" ng-model="showTracWiki"></p>
+        <div id="tracWikiDiv" ng-hide="renameFormShowing"><p>Import TracWiki <input type="checkbox" ng-model="showTracWiki"></p>
             <div ng-hide="!showTracWiki">
                 <p>Write the wiki root address to replace "wiki:" from URL's and then copy paste
                     TracWiki page below and then press "Convert TracWiki" button to get the text converted

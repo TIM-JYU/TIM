@@ -77,6 +77,31 @@ p.caption {
     background-color: #B0B0B0;
 }
 
+.pluginRenameObject {
+    display: inline-block;
+    margin: 5px;
+    min-width: 80px;
+}
+
+#pluginRenameForm {
+    height: 100%;
+    padding-bottom: 15px;
+}
+
+.pluginRenameForm {
+    overflow: auto;
+    width: 100%;
+    position: absolute;
+    background: #e0e0e0;
+    z-index: 110;
+    border-radius: 3px;
+}
+
+.pluginRenameInner {
+    margin-left: 15px;
+    margin-top: 15px;
+}
+
 table th {
     background-color: #dedede;
 }
@@ -160,16 +185,26 @@ ul ul ul, ol ol ol {
     position: relative;
 }
 
-.par.deleted {
+.par.editmode.deleted {
     background-color: #ffc7c7;
 }
 
-.par.deleted.lightselect {
+.par.editmode.deleted.lightselect {
     background-color: #ffb5b3;
 }
 
-.par.deleted.selected {
+.par.editmode.deleted.selected {
     background-color: #ffa594;
+}
+
+.par.deleted {
+    background-color: #fff7f7;
+}
+
+.par.deleted.lightselect {
+}
+
+.par.deleted.selected {
 }
 
 .par.lightselect {
@@ -437,6 +472,10 @@ table td {
 .par blockquote {
     margin-left: 1.5cm;
     margin-right: 1.5cm;
+}
+
+.parlink.deleted {
+    color: red;
 }
 
 .parlink {
