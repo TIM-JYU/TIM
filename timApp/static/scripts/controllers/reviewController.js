@@ -78,7 +78,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             range.surroundContents(span);
         } catch(err) {
             // Add annotation to the "club of missing velps"
-            /*
             var new_range = document.createRange();
             var el = range.startContainer;
             var start = range.startOffset;
@@ -87,7 +86,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             new_range.setStart(el, start);
             new_range.setEnd(el, end);
             $scope.addAnnotationToCoord(new_range, annotation, show);
-            */
+
         }
 
         $compile(span)($scope); // Gives error [$compile:nonassign]
@@ -110,6 +109,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
 
         annotationParents[0].outerHTML = savedHTML;
+
+        for (var a=0; a<$scope.annotations.length; a++){
+            if (id == $scope.annotations[a].id)
+                $scope.annotations.splice(a,1);
+        }
     };
 
     /**

@@ -60,8 +60,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         });
 
         $http.get('/{0}/annotations'.replace('{0}', doc_id)).success(function (data) {
-            $scope.annotations = data;
-            $scope.loadAnnotations();
+            $scope.annotations = [];
+            //$scope.loadAnnotations();
         });
 
         $http.get('/{0}/defaultvelpgroup'.replace('{0}', doc_id)).success(function (data){
@@ -198,8 +198,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             velp_groups: [default_velp_group]  // TODO: Change to default group, add choices where to add
         };
 
-        $scope.makePostRequest("/addvelp", velpToAdd, function (data) {
-            velpToAdd.id = data;
+        $scope.makePostRequest("/addvelp", velpToAdd, function (json) {
+            velpToAdd.id = parseInt(json.data);
             $scope.resetNewVelp();
             $scope.velps.push(velpToAdd);
             $scope.submitted = false;
@@ -235,7 +235,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     };
 
     $scope.selectVelpToEdit = function(velp){
-        $scope.deselectLabels();
+
 
         if (velp.id == $scope.velpToEdit.id){
             velp.edit = false;
@@ -254,11 +254,13 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         velp.edit = true;
         $scope.velpToEdit = Object.create(velp);
 
+        /*
         if (velp.labels !== undefined) {
             for (var i = 0; i < velp.labels.length; i++) {
                 $scope.toggleLabel($scope.getLabelById(velp.labels[i]));
             }
         }
+        */
     };
 
     $scope.editVelp = function(form){
