@@ -1,49 +1,76 @@
 <div class="answerBrowser" ng-cloak>
     <div class="error" ng-show="error" ng-bind="error"></div>
-    <select ng-show="$parent.teacherMode && users.length > 0" ng-model="user"
-            ng-options="(user.real_name + ' (' + user.name + ')') for user in users track by user.id"
-            ng-change="getAvailableAnswers()"></select>
-    <span ng-show="!hasUserChanged()" class="form-inline">
-    <span ng-show="answers.length > 0">
-    <button class="timButton" ng-click="previous()">&larr;</button>
-    <select class="form-control" ng-model="selectedAnswer"
-            ng-options="((filteredAnswers.length - idx) + '. ' + answer.answered_on) for (idx, answer) in filteredAnswers | orderBy:'answer.id' track by answer.id"
-            ng-change="changeAnswer()"></select>
-    <button class="timButton" ng-click="next()">&rarr;</button>
-    {{ filteredAnswers.length - indexOfSelected() }}/<a ng-click="setNewest()">{{ filteredAnswers.length }}</a>
-    </span>
-    <span ng-show="taskInfo.answerLimit">Tries left: {{ getTriesLeft() }}</span>
-    <span ng-show="answers.length > 0">
-    <label ng-show="anyInvalid"><input type="checkbox" ng-model="onlyValid">Show valid only</label> 
-    <span ng-show="showTeacher()" > | <a href="{{getLink()}}" ng-mousedown="getAllAnswers()" >All answers</a></span>
-    <br> 
-    <label ng-show="showTeacher() || giveCustomPoints">
-        Points:<input ng-model="points" type="text" size="1">
-    </label>
-    <span ng-show="!$parent.teacherMode && points !== null && !giveCustomPoints">Points: {{ points }}</span>
-    <span ng-show="taskInfo.maxPoints && points !== null">/ {{ taskInfo.maxPoints }}</span>
-    <span ng-show="!selectedAnswer.valid && points !== null">(invalid)</span>
-    <span ng-show="!$parent.teacherMode && allowCustomPoints()">
-        <label><input type="checkbox" ng-model="giveCustomPoints">Set custom points</label>
-        <span ng-show="giveCustomPoints" class="smallNote">(press Run or Save button to set points)</span> 
-    </span>    
-    <label ng-show="$parent.teacherMode && allowCustomPoints()">
-        <input type="checkbox" ng-model="giveCustomPoints">cp
-    </label>
-    <label ng-show="showTeacher()">
-        <input type="checkbox" ng-model="saveTeacher">Save teacher's fix
-    </label>
-    </span>
-    </span>
-    <span ng-show="taskInfo.starttime"><br>Start time: {{ taskInfo.starttime }}</span>
-    <span ng-show="taskInfo.deadline"><br>Deadline: {{ taskInfo.deadline }}</span>
-    <div ng-show="selectedAnswer.collaborators.length > 1 && !hasUserChanged()">
-        Collaborators:
-        <ul>
-            <li ng-repeat="c in selectedAnswer.collaborators">{{ c.real_name }}</li>
-        </ul>
+    <div class="row">
+        <div class="col-xs-6">
+            <select class="form-control input-sm" ng-show="$parent.teacherMode && users.length > 0"
+                    ng-model="user"
+                    ng-options="(user.real_name + ' (' + user.name + ')') for user in users track by user.id"
+                    ng-change="getAvailableAnswers()"></select>
+        </div>
     </div>
+    <div ng-show="!hasUserChanged()">
+        <div ng-show="answers.length > 0">
+            <div class="row">
+                <div class="col-xs-6">
+                    <div class="input-group input-group-sm">
+                <span class="input-group-btn">
+                    <button class="btn btn-primary" ng-click="previous()">&larr;</button>
+                </span>
+                        <select class="form-control" ng-model="selectedAnswer"
+                                ng-options="((filteredAnswers.length - idx) + '. ' + answer.answered_on) for (idx, answer) in filteredAnswers | orderBy:'answer.id' track by answer.id"
+                                ng-change="changeAnswer()"></select>
+                <span class="input-group-btn">
+                    <button class="btn btn-primary" ng-click="next()">&rarr;</button>
+                </span>
+                    </div>
+                </div>
+                <div class="col-xs-6">
+                    <span class="vcenter">{{ filteredAnswers.length - indexOfSelected() }}/<a
+                            ng-click="setNewest()">{{ filteredAnswers.length }}</a></span>
+                    <label class="checkbox-inline" ng-show="anyInvalid">
+                        <input type="checkbox" ng-model="onlyValid">Show valid only</label>
+                    <span class="vcenter" ng-show="showTeacher()"> | <a href="{{ getLink() }}"
+                                                        ng-mousedown="getAllAnswers()">All answers</a></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <span class="form-inline"><label ng-show="showTeacher() || giveCustomPoints">
+                        Points:<input class="form-control input-sm" ng-model="points" type="text" size="1">
+                    </label></span>
+                    <span ng-show="!$parent.teacherMode && points !== null && !giveCustomPoints">Points: {{ points }}</span>
+                    <span ng-show="taskInfo.maxPoints && points !== null">/ {{ taskInfo.maxPoints }}</span>
+                    <span ng-show="!selectedAnswer.valid && points !== null">(invalid)</span>
+                    <span ng-show="!$parent.teacherMode && allowCustomPoints()">
+                        <label class="checkbox-inline">
+                            <input type="checkbox"
+                                   ng-model="giveCustomPoints">Set custom points</label>
+                        <span ng-show="giveCustomPoints"
+                              class="smallNote">(press Run or Save button to set points)</span>
+                    </span>
+                    <label class="checkbox-inline" ng-show="$parent.teacherMode && allowCustomPoints()">
+                        <input type="checkbox" ng-model="giveCustomPoints">cp
+                    </label>
+                    <label class="checkbox-inline" ng-show="showTeacher()">
+                        <input type="checkbox" ng-model="saveTeacher">Save teacher's fix
+                    </label>
+                </div>
+            </div>
+            <div class="row" ng-show="selectedAnswer.collaborators.length > 1">
+                <div class="col-xs-12">
+                    Collaborators:
+                    <ul>
+                        <li ng-repeat="c in selectedAnswer.collaborators">{{ c.real_name }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <span ng-show="taskInfo.answerLimit">Tries left: {{ getTriesLeft() }}</span>
+        <span ng-show="answers.length == 0 && $parent.teacherMode">(no answers)</span>
+    </div>
+    <span ng-show="taskInfo.starttime || taskInfo.deadline">
+        Answering time: {{ taskInfo.starttime }} - {{ taskInfo.deadline }}
+    </span>
     <span ng-show="$parent.teacherMode && hasUserChanged() && !firstLoad">(hover/click to update)</span>
-    <span ng-show="!hasUserChanged() && answers.length == 0 && $parent.teacherMode">(no answers)</span>
     <!-- <img style="display: inline" src="/static/images/loading.gif" ng-show="loading"> -->
 </div>

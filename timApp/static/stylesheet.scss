@@ -13,6 +13,10 @@ body {
     border-bottom: $header-footer-border;
 }
 
+.vcenter {
+    vertical-align: middle;
+}
+
 // all document-related styles under .paragraphs selector!
 .paragraphs {
     .parContent {
