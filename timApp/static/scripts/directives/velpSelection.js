@@ -188,7 +188,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         form.$setPristine();
 
         var velpToAdd = {
-            labels: $scope.selectedLabels,
+            labels: $scope.selectedLabels.splice(0),
             used: 0,
             points: $scope.newVelp["points"],
             content: $scope.newVelp["content"],
@@ -324,9 +324,12 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
  * Filter for ordering velps
  */
 timApp.filter('filterByLabels', function () {
-    return function (velps, labels, lockedVelps) {
+    return function (velps, labels, lockedVelps, advancedOn) {
         var selectedVelps = {};
         var selectedLabels = [];
+
+        if (!advancedOn)
+            return velps;
 
         if (labels !== undefined) {
             for (var i = 0; i < labels.length; i++) {
@@ -338,9 +341,9 @@ timApp.filter('filterByLabels', function () {
         if (velps !== undefined) {
             for (var i = 0; i < velps.length; i++) {
                 // return all velps if velp is under edit
-                if (velps[i].edit){
+                /*if (velps[i].edit){
                     return lockedVelps;
-                }
+                }*/
 
                 for (var j = 0; j < selectedLabels.length; j++) {
                     if (typeof velps[i].labels != "undefined" && velps[i].labels.indexOf(selectedLabels[j]) != -1)

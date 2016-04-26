@@ -9,7 +9,7 @@
             <div class="velpArea">
 
                 <table class="velpTable">
-                    <tr ng-class="getAdvancedStyle()">
+                    <tr ng-show="advancedOn">
                         <td>
                             <label for="searchLabels">Filter labels </label>
                         </td>
@@ -32,7 +32,7 @@
                             </p -->
                                     </div>
                                 <div class="fulldiv" >
-                                    <form ng-class="getAdvancedStyle()" name="addLabelForm"
+                                    <!-- form ng-class="getAdvancedStyle()" name="addLabelForm"
                                           ng-submit="addLabel(addLabelForm)" novalidate>
                                         <table class="velpTable">
                                             <tr>
@@ -56,7 +56,7 @@
                                                 </td>
                                             </tr>
                                         </table>
-                                    </form>
+                                    </form -->
                                 </div>
                             </div>
                     <!--    </td>
@@ -119,7 +119,7 @@
                                     </div>
                                 </div>
                             {{ lockVelps(filteredVelps) }}
-                            <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByLabels: labels:lockedVelps)">
+                            <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByLabels: labels:lockedVelps:advancedOn)">
 
                                 <div class="velp" ng-dblclick="selectVelpToEdit(velp)" ng-click="useVelp(velp)"
                                      ng-style="{top: 2+$index*2 + 'em'}">
@@ -130,7 +130,7 @@
                                         <p ng-class="[{hide: velp.edit}]">
                                             <span>{{ velp.content }}&ensp;</span>
                                             <span class="points">{{ velp.points }}</span>
-                                            <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]" ng-repeat="label in velp.labels" ng-style="{ color: getColor(label) }"></span>
+                                            <span ng-show="advancedOn" ng-class="['glyphicon', 'glyphicon-tag']" ng-repeat="label in velp.labels" ng-style="{ color: getColor(label) }"></span>
                                         </p>
 
                                         <form ng-class="[{hide: !velp.edit}]" name="editVelpForm"
@@ -149,7 +149,6 @@
 
                                             <p><input id="addVelpPoints" type="number" ng-model="velpToEdit['points']"
                                                    placeholder="Points" value="0"></p>
-
                                             <p><input type="submit" value="Edit velp"/></p>
                                         </form>
                                     </div>

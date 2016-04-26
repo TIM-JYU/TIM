@@ -13,6 +13,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     $scope.annotationsAdded = false;
     $scope.selectedAnnotation = {"comments": [], "velp": "", "points": 0};
+    $scope.selectionParent = null;
 
     var username = $scope.$parent.users[0].name;
 
@@ -36,7 +37,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Loads used annotations into view
      */
     $scope.loadAnnotations = function() {
-        for (var i=0; i<$scope.annotations.length; i++){
+        for (var i=$scope.annotations.length -1; i>=0; i--){
             var placeInfo = $scope.annotations[i]["coord"];
 
             var parent = document.getElementById(placeInfo["start"]["par_id"]).querySelector(".parContent");
@@ -132,11 +133,32 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var sel = $window.getSelection();
 
         if (sel.toString().length > 0) {
-            console.log(sel.getRangeAt(0));
+            /*
+            if ($scope.selectedArea != null && $scope.selectionParent != null) {
+                console.log("hei");
+                $scope.selectedArea.startContainer.parentNode.replaceChild($scope.selectionParent, $scope.selectedArea.startContainer);
+            }
+            */
+            //console.log(sel);
+
             var range = sel.getRangeAt(0);
+            //$scope.selectionParent = range.startContainer.parentNode.cloneNode(true);
+            /*
+            var selection = document.createElement("span");
+            selection.classList.add("text-selection");
+            range.surroundContents(selection);
+            */
+            //$scope.getRealRange(range);
             $scope.selectedArea = range;
         } else {
             $scope.selectedArea = undefined;
+        }
+    };
+
+    $scope.getRealRange = function(currentRange){
+        var startparent = currentRange.startContainer.parentNode;
+        for (var i=0; i<startparent.childNodes.length; i++){
+            //console.log(startparent.childNodes[i])
         }
     };
 
