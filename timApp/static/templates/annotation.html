@@ -1,5 +1,4 @@
-<!-- Pop-over element
---><div ng-show="!show" ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
+<div ng-show="!show" ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
     <div class="fulldiv">
         <div class="div-90">
             <p><span><strong>{{ velp }}</strong></span>
@@ -17,11 +16,7 @@
 
     <textarea placeholder="Add comment" ng-model="newComment" autofocus></textarea>
     <button ng-click="addComment()">Add</button>
-    <!--<button class="float-right" ng-click="deleteAnnotation()"><span class="glyphicon glyphicon-trash"></span></button>-->
     <span title="Delete annotation" ng-class="['delAnnotation', 'float-right', 'glyphicon', 'glyphicon-trash', 'clickable-icon', {hide: comments.length > 1} ]" ng-click="deleteAnnotation()"></span>
     </div>
-</div><!--
-
-Surrounded text
---><span ng-click="toggleAnnotation()" ng-class="['highlighted', 'annotation', 'emphasise', 'default',
+</div><span ng-click="toggleAnnotation()" ng-class="['highlighted', 'annotation', 'emphasise', 'default',
 {neutral: points == 0, negative: points<0, positive: points > 0}]" ng-transclude></span>
