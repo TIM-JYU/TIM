@@ -22,13 +22,16 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
 
 #menuTabs {
     background: white;
-    max-height: calc(100vh - 30px);
-    overflow-y: auto;
 
     .glyphicon {
         font-size: xx-large;
         margin: -6px -10px;
     }
+}
+
+.tab-content {
+    overflow-y: auto;
+    max-height: calc(100vh - 81.5px);
 }
 
 /* For directory */
