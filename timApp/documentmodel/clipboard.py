@@ -29,6 +29,9 @@ class Clipboard:
             self.user_id = user_id
             self.path = os.path.join(parent.get_path(), str(self.user_id))
 
+        def get_metafilename(self) -> str:
+            return os.path.join(self.path, 'metadata')
+
         def get_clipfilename(self) -> str:
             return os.path.join(self.path, 'content')
 
@@ -48,6 +51,10 @@ class Clipboard:
                 if os.path.isfile(name):
                     os.remove(name)
 
+        def read_metadata(self) -> Dict[str, str]:
+            with open(self.get_metafilename(), 'rt', encoding='utf-8') as metafile:
+                return json.loads(metafile.read())
+
         def read(self, as_ref: Optional[bool] = False, force_parrefs: Optional[bool] = False)\
                 -> Optional[List[Dict[str, str]]]:
 
@@ -61,6 +68,12 @@ class Clipboard:
             with open(clipfilename, 'rt', encoding='utf-8') as clipfile:
                 content = clipfile.read()
             return DocumentParser(content).validate_structure(is_whole_document=False).get_blocks()
+
+        def write_metadata(self, area_name: Optional[str] = None):
+            os.makedirs(self.path, exist_ok=True)
+            metadata = {'area_name': area_name}
+            with open(self.get_metafilename(), 'wt', encoding='utf-8') as metafile:
+                metafile.write(json.dumps(metadata))
 
         def write(self, pars: List[Dict[str, Generic]]):
             os.makedirs(self.path, exist_ok=True)
@@ -129,6 +142,7 @@ class Clipboard:
             finally:
                 i.close()
 
+            self.write_metadata(area_name)
             self.write(pars)
             if disable_ref:
                 self.clear_refs()
@@ -141,6 +155,7 @@ class Clipboard:
             pars = self.read(as_ref)
             if pars is None:
                 return
+
             doc_pars = []
             par_before = par_id
             for par in reversed(pars):
