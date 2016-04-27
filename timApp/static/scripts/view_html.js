@@ -960,8 +960,6 @@ timApp.controller("ViewCtrl", [
             if (sc.pendingUpdatesCount() < 10) {
                 sc.updatePending();
             }
-            if (sc.lectureMode) { sc.getAndEditQuestions(); }
-
         };
 
         sc.updatePending = function () {
@@ -974,6 +972,7 @@ timApp.controller("ViewCtrl", [
                 }
             }
             sc.pendingUpdates = {};
+            if (sc.lectureMode) { sc.getAndEditQuestions(); }
         };
 
         sc.isReference = function ($par) {
@@ -1231,14 +1230,18 @@ timApp.controller("ViewCtrl", [
                 var questionParent = $(questions[i].parentNode);
                 var questionChildren = $(questionParent.children());
                 var questionNumber = $(questionChildren.find($('.questionNumber')));
+                var questionTitle = JSON.parse(questionParent.attr('attrs')).question;
+                if(questionTitle.length > 10) {
+                    questionTitle = questionTitle.substr(0, 10) + "\r\n...";
+                }
                 if (questionNumber.length > 0) {
-                    questionNumber[0].innerHTML = (i+1)+ ")\r\n1234567890";
+                    questionNumber[0].innerHTML = (i+1)+ ")\r\n" + questionTitle;
                 }
                 else {
                     var parContent = $(questionChildren[0]);
                     questionParent.addClass('questionPar');
                     parContent.addClass('questionParContent');
-                    var p = $("<p>", {class: "questionNumber", text: (i+1) + ")\r\n1234567890"});
+                    var p = $("<p>", {class: "questionNumber", text: (i+1) + ")\r\n" + questionTitle});
                     parContent.append(p);
                     var editLine = $(questionChildren[1]);
                     parContent.before(editLine);

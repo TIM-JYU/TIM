@@ -455,6 +455,7 @@ th:hover .matrixButtons, .matrixButtons:hover, th:hover .buttonsTop, .buttonsTop
 
 #questionName {
     margin-bottom: 10px;
+    margin-top: 10px;
 }
 
 #questionTiming {

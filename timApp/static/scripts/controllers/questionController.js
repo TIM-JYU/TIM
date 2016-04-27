@@ -582,6 +582,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             return scope.updatePoints();
         }
         scope.removeErrors();
+        scope.question.title = $('#qTitle').val();
         if (scope.question.question === undefined || scope.question.question.trim().length === 0 || scope.question.title === undefined || scope.question.title.trim().length === 0) {
             scope.errorize("questionName", "Both title and question are required for a question.");
         }
@@ -823,12 +824,13 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     };
 
     /**
-     * Changes the question field to match the title when question title changes
-     * @param title of question
+     * Changes the question title field to match the question if user hasn't defined title
      * @param question of question
      */
-    scope.questionTitleChanged = function (title) {
-        $('#question-textarea').val(title);
+    scope.changeQuestionTitle = function (question) {
+        if(!scope.question.title) {
+            $('#qTitle').val(question);
+        }
     };
 }])
 ;

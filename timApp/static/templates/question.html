@@ -1,16 +1,17 @@
 <div class="ng-scope" style="text-align:left" ng-controller="QuestionController">
     <div class="popUpWindow" id="questionWindow" ng-if="!asked_id">
         <form class="createQuestion" id="question-form">
+            <div id="question-textarea-div">
+                <div>Question:</div>
+                <textarea id="question-textarea" name="question" rows="3" ng-model="question.question" ng-change="changeQuestionTitle(question.question)"></textarea>
+            </div>
             <div id="questionName">
                 <label>
                     Question title:
-                    <input id="qTitle" name="question.title" type="text" ng-model="question.title" ng-change="questionTitleChanged(question.title)" />
+                    <input id="qTitle" name="question.title" type="text" ng-model="question.title" onfocus="this.select()" />
                 </label>
             </div>
-            <div id="question-textarea-div">
-                <div>Question:</div>
-                <textarea id="question-textarea" name="question" rows="3" ng-model="question.question" onfocus="this.select()"></textarea>
-            </div>
+
             <div id="qType">
                 <label>Question type:
                     <select name="question.type" ng-model="question.type" ng-dropdown required
