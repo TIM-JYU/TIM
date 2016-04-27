@@ -56,6 +56,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         scope.new_question = true;
         scope.par_id = "NEW_PAR";
         scope.par_id_next = data.par_id_next;
+        scope.titleChanged = false;
     });
 
     scope.$on("editQuestion", function (event, data) {
@@ -67,6 +68,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
             scope.asked_id = false;
             scope.new_question = false;
+            scope.titleChanged = false;
             if (id) {
                 scope.question.question_id = id;
             } else if (asked_id) {
@@ -77,6 +79,10 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             }
 
             if (json["TITLE"]) scope.question.title = scope.putBackQuotations(json["TITLE"]);
+            if (scope.question.title == "Untitled") {
+                scope.question.title = "";
+                scope.titleChanged = true;
+            }
             if (json["QUESTION"]) scope.question.question = scope.putBackQuotations(json["QUESTION"]);
             if (json["TYPE"]) scope.question.type = json["TYPE"];
             if (json["MATRIXTYPE"]) scope.question.matrixType = json["MATRIXTYPE"];
@@ -583,6 +589,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
         scope.removeErrors();
         scope.question.title = $('#qTitle').val();
+        if(scope.question.title == "") {
+            scope.question.title = "Untitled";
+        }
         if (scope.question.question === undefined || scope.question.question.trim().length === 0 || scope.question.title === undefined || scope.question.title.trim().length === 0) {
             scope.errorize("questionName", "Both title and question are required for a question.");
         }
@@ -633,6 +642,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
 
         if (scope.error_message !== "") {
+            if (scope.question.title == "Untitled") {
+                scope.question.title = "";
+            }
             return;
         }
         scope.removeErrors();
@@ -828,9 +840,13 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
      * @param question of question
      */
     scope.changeQuestionTitle = function (question) {
-        if(!scope.question.title) {
+        if(!scope.question.title && !scope.titleChanged) {
             $('#qTitle').val(question);
         }
+    };
+
+    scope.titleIsChanged = function () {
+        scope.titleChanged = true;
     };
 }])
 ;

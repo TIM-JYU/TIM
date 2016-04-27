@@ -1245,6 +1245,9 @@ timApp.controller("ViewCtrl", [
                 var questionChildren = $(questionParent.children());
                 var questionNumber = $(questionChildren.find($('.questionNumber')));
                 var questionTitle = JSON.parse(questionParent.attr('attrs')).question;
+                if (questionTitle == 'Untitled') {
+                    questionTitle = "";
+                }
                 if(questionTitle.length > 10) {
                     questionTitle = questionTitle.substr(0, 10) + "\r\n...";
                 }

@@ -8,7 +8,7 @@
             <div id="questionName">
                 <label>
                     Question title:
-                    <input id="qTitle" name="question.title" type="text" ng-model="question.title" onfocus="this.select()" />
+                    <input id="qTitle" name="question.title" type="text" ng-model="question.title" onfocus="this.select()" ng-change="titleIsChanged()" />
                 </label>
             </div>
 
