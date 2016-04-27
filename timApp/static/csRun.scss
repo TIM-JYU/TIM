@@ -29,51 +29,9 @@ p.stem {
   left: -0.5em;
 }
 
-.csRunPre, .csRunPost {
-  margin-left: 0;
-  border-style: none;
-  box-shadow: none;
-  padding: 0;
-  margin-bottom: 0;
-  margin-top: 0;
-  line-height: 1.1;
-
-}
-
 .csRunError {
   white-space: pre-wrap;
   text-align: left;
-}
-
-.csRunPre {
-  margin-bottom: 0;
-}
-
-.csRunPost {
-  margin-top: 0;
-}
-
-.csRunCode {
-  margin-left: 2em;
-  border-width: 1px;
-  padding: 4px;
-  margin-right: 0;
-  line-height: 1;
-  font-size: 1em;
-}
-
-.csRunArea {
-  font-family: $font-family-monospace;
-  margin: 0;
-  border-radius: 0;
-  padding: 1px;
-  line-height: 1.1;
-  font-size: 0.96em;
-  box-shadow: none;
-  width: calc(100% - 1.4em) !important;
-  white-space: pre;
-  border: 0 none;
-  border-left: thin solid #0066FF;
 }
 
 .showVideo {
@@ -94,12 +52,6 @@ p.stem {
 .taunoOhje {
   font-size: 0.7em;
   margin-bottom: 1em;
-}
-
-.csRunArea:focus {
-  border: 1px solid;
-  border-radius: 5px;
-  width: 100% !important;
 }
 
 .csRunMenu {
@@ -136,22 +88,59 @@ p.stem {
   margin: 0.3em 0 0.3em 0em;
   padding-bottom: 0.5em;
   width: calc(100% - 2px);
-}
 
-.csRunDiv h4 {
-  margin-top: 0.0em;
-  padding-top: 1em;
-  padding-left: 1em;
-  padding-bottom: 1em;
-  background-color: $csrundiv-color;
-  color: #FFF;
-  font-family: "Helvetica", Arial, sans-serif;
-}
+  .csRunPre, .csRunPost {
+    margin-left: 0;
+    border-style: none;
+    box-shadow: none;
+    padding: 0;
+    margin-bottom: 0;
+    margin-top: 0;
+    line-height: 1.1;
+  }
 
-.csRunPre, .csRunPost, .csRunArea {
-  margin-left: -1.5em;
-  box-shadow: none;
-  word-wrap: initial;
+  .csRunCode {
+    border-width: 1px;
+    padding: 4px;
+    margin-right: 0;
+    line-height: 1;
+    font-size: 1em;
+  }
+
+  h4 {
+    margin-top: 0.0em;
+    padding-top: 1em;
+    padding-left: 1em;
+    padding-bottom: 1em;
+    background-color: $csrundiv-color;
+    color: #FFF;
+    font-family: "Helvetica", Arial, sans-serif;
+  }
+
+  .csRunPre, .csRunPost, .csRunArea {
+    box-shadow: none;
+    word-wrap: initial;
+  }
+
+  .csRunArea {
+    font-family: $font-family-monospace;
+    margin: 0;
+    border-radius: 0;
+    padding: 1px;
+    line-height: 1.1;
+    font-size: 0.96em;
+    box-shadow: none;
+    width: calc(100% - 1.4em) !important;
+    white-space: pre;
+    border: 0 none;
+    border-left: thin solid #0066FF;
+
+    &:focus {
+      border: 1px solid;
+      border-radius: 5px;
+      width: 100% !important;
+    }
+  }
 }
 
 .stem {
