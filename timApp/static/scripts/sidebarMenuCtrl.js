@@ -255,6 +255,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
          */
         $scope.toggleParEditMode = function () {
             $scope.enable_par_edit();
+            $('.editmode').removeClass('editmode');
 
             if ($window.editMode === "par") {
                 $scope.parEditIconState = 'noClick';
@@ -266,6 +267,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
                 $scope.areaEditIconState = 'noClick';
                 $window.editMode = "par";
                 $scope.disable_area_edit();
+                $('.par').addClass('editmode');
             }
         };
 
@@ -274,6 +276,8 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
          * @memberof module:sidebarMenuCtrl
          */
         $scope.toggleAreaEditMode = function () {
+            $('.editmode').removeClass('editmode');
+
             if ($window.editMode === "area") {
                 $('.editline-disabled').removeClass('editline-disabled').addClass('editline');
                 $scope.parEditIconState = 'noClick';
@@ -288,6 +292,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
                 $window.editMode = "area";
                 $scope.disable_par_edit();
                 $scope.enable_area_edit_active();
+                $('.area').addClass('editmode');
             }
         };
 

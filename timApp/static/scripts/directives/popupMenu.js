@@ -19,6 +19,8 @@ timApp.directive('popupMenu', ['$http', '$window', '$filter', function ($http, $
             $scope.getContent($attrs['contenturl']);
             if ($attrs['save'])
                 $scope.storageAttribute = '$scope.$storage.' + $attrs['save'];
+            if ($attrs['onclose'])
+                $scope.onClose = eval('$scope.' + $attrs['onclose']);
         },
 
         controller: function ($scope, $element) {
@@ -34,6 +36,9 @@ timApp.directive('popupMenu', ['$http', '$window', '$filter', function ($http, $
             $scope.closePopup = function () {
                 $scope.$destroy();
                 $element.remove();
+
+                if ($scope.onClose)
+                    $scope.onClose($scope.$par);
             };
 
             /**
