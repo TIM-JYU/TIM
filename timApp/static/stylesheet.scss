@@ -799,7 +799,7 @@ p.docsettings {
   @extend .btn, .btn-primary, .btn-block;
 }
 
-.footer {
+body > .footer {
     padding-top: 19px;
     border-top: $header-footer-border;
     position: absolute;
