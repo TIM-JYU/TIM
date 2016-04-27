@@ -156,6 +156,12 @@ class Clipboard:
             if pars is None:
                 return
 
+            metadata = self.read_metadata()
+            if not as_ref and metadata['area_name'] is not None and doc.named_section_exists(metadata['area_name']):
+                new_area_name = metadata['area_name'] + '_' + random_id()
+                pars[0]['attrs']['area'] = new_area_name
+                pars[len(pars) - 1]['attrs']['area_end'] = new_area_name
+
             doc_pars = []
             par_before = par_id
             for par in reversed(pars):

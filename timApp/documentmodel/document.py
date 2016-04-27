@@ -696,6 +696,13 @@ class Document:
             raise TimDbException('Area not found: ' + section_name)
         return pars
 
+    def named_section_exists(self, section_name: str) -> bool:
+        with self.__iter__() as i:
+            for par in i:
+                if par.get_attr('area') == section_name:
+                    return True
+        return False
+
     def calculate_referenced_document_ids(self, ver: Optional[Tuple[int, int]]=None) -> Set[int]:
         """Gets all the document ids that are referenced from this document recursively.
         :return: The set of the document ids.
