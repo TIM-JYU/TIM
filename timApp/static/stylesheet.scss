@@ -19,6 +19,7 @@ body {
 
 // all document-related styles under .paragraphs selector!
 .paragraphs {
+    max-width: 52em;
     .parContent {
         text-align: justify;
         font-size: 15px;
