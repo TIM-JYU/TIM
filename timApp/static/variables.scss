@@ -42,6 +42,7 @@ $brand-primary: $basic-color;
 $text-color: black;
 $headings-font-weight: 700;
 $font-size-base: 14px; // this should probably not be changed from default 14px
+$font-size-h1: floor(($font-size-base * 2.29)); // default factor is 2.6
 $font-family-monospace: "Courier New", Courier, serif;
 $code-color: black;
 $code-bg: inherit;
