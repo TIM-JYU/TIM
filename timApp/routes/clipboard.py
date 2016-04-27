@@ -59,7 +59,7 @@ def paste_from_clipboard(doc_id):
 
     if clip.read(as_ref=False) is None:
         abort(400, 'The clipboard is empty.')
-    if as_ref and clip.read(as_ref=True) is None:
+    if as_ref and clip.read_metadata().get('disable_ref'):
         abort(400, 'The contents of the clipboard cannot be pasted as a reference.')
 
     if par_before is not None and par_after is None:
@@ -81,7 +81,7 @@ def delete_from_source(doc_id):
     timdb = getTimDb()
     doc = Document(doc_id)
     clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
-    pars = clip.read(as_ref=True)
+    pars = clip.read(as_ref=True, force_parrefs=True)
     if not pars:
         return jsonResponse({'doc_ver': doc.get_version(), 'pars': []})
 

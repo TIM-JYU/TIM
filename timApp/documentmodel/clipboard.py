@@ -69,11 +69,10 @@ class Clipboard:
                 content = clipfile.read()
             return DocumentParser(content).validate_structure(is_whole_document=False).get_blocks()
 
-        def write_metadata(self, area_name: Optional[str] = None):
+        def write_metadata(self, **kwargs):
             os.makedirs(self.path, exist_ok=True)
-            metadata = {'area_name': area_name}
             with open(self.get_metafilename(), 'wt', encoding='utf-8') as metafile:
-                metafile.write(json.dumps(metadata))
+                metafile.write(json.dumps(kwargs))
 
         def write(self, pars: List[Dict[str, Generic]]):
             os.makedirs(self.path, exist_ok=True)
@@ -142,12 +141,9 @@ class Clipboard:
             finally:
                 i.close()
 
-            self.write_metadata(area_name)
+            self.write_metadata(area_name=area_name, disable_ref=disable_ref)
             self.write(pars)
-            if disable_ref:
-                self.clear_refs()
-            else:
-                self.write_refs(par_objs, area_name)
+            self.write_refs(par_objs, area_name)
 
             return par_objs
 
