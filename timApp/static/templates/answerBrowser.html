@@ -11,7 +11,7 @@
     <div ng-show="!hasUserChanged()">
         <div ng-show="answers.length > 0">
             <div class="row">
-                <div class="col-xs-6">
+                <div class="col-xs-5">
                     <div class="input-group input-group-sm">
                 <span class="input-group-btn">
                     <button class="btn btn-primary" ng-click="previous()">&larr;</button>
@@ -24,8 +24,8 @@
                 </span>
                     </div>
                 </div>
-                <div class="col-xs-6">
-                    <span class="vcenter">{{ filteredAnswers.length - indexOfSelected() }}/<a
+                <div class="col-xs-7">
+                    <span class="vcenter nudge-left-25">{{ filteredAnswers.length - indexOfSelected() }}/<a
                             ng-click="setNewest()">{{ filteredAnswers.length }}</a></span>
                     <label class="checkbox-inline" ng-show="anyInvalid">
                         <input type="checkbox" ng-model="onlyValid">Show valid only</label>
