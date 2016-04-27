@@ -137,7 +137,7 @@ class Clipboard:
 
             return par_objs
 
-        def paste_before(self, doc: Document, par_id: Optional[str], as_ref: Optional[bool] = False) -> List[DocParagraph]:
+        def paste_before(self, doc: Document, par_id: str, as_ref: bool = False) -> List[DocParagraph]:
             pars = self.read(as_ref)
             if pars is None:
                 return
@@ -153,7 +153,7 @@ class Clipboard:
 
             return doc_pars
 
-        def paste_after(self, doc: Document, par_id: Optional[str], as_ref: Optional[bool] = False) -> List[DocParagraph]:
+        def paste_after(self, doc: Document, par_id: str, as_ref: bool = False) -> List[DocParagraph]:
             par_before = None
 
             # todo: make the iterator accept ranges
