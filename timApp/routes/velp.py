@@ -190,3 +190,37 @@ def add_label():
     label_id = timdb.velps.create_label(language_id, content)
 
     return jsonResponse(label_id)
+
+# TODO Better name needed here, just testing for now
+@velps.route("/velpabc", methods=["GET"])
+def velpabc():
+    timdb = getTimDb()
+    owner_group_id = 3  # Korppi users
+    root_path = "users/josalatt/testikansio"
+    velps_folder_path = root_path + "/velps"
+    folders = timdb.folders.get_folders(root_path)
+    velps_folder = False;
+    # Check if velps folder exist
+    for folder in folders:
+        if folder['name'] == "velps":
+            print("ASD")
+            velps_folder = True;
+    #
+    if velps_folder is False:
+        new_block = timdb.folders.create(velps_folder_path, owner_group_id)
+        print("Created new folder, id: " + str(new_block))
+
+
+    # TODO fix below, get_documents_in_folder is broken
+    velp_groups = timdb.documents.get_documents_in_folder(velps_folder_path)
+    if velp_groups is not None:
+        for dadada in velp_groups:
+            asd = 1
+        asd = 1
+    else:
+        default_group = velps_folder_path + "/" + "testi1" + "_default"
+        timdb.documents.create(default_group, owner_group_id)
+
+
+
+    return jsonResponse(velp_groups)
