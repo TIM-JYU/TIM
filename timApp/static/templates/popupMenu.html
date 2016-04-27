@@ -1,14 +1,19 @@
 <div class="actionButtons">
-    <span class="error" ng-show="notification" ng-bind="notification"></span>
-    <span class="actionButtonRow" ng-repeat="f in editorFunctions | filter:{show: true}">
-    <button style="width: 150px;" class="timButton" ng-bind="f.desc" ng-click="callFunc($event, f)">
-    </button>
-    <input ng-model="$parent.$parent.defaultAction"
-           ng-value="f"
-           class="defaultCheckbox"
-           type="radio"
-           ng-change="saveChoice()">
-    </span>
-    <button style="width: 150px;" class="timButton" ng-click="$parent.defaultAction = null">Clear default action
-    </button>
+    <div class="error" ng-show="notification" ng-bind="notification"></div>
+    <div class="row" ng-repeat="f in editorFunctions | filter:{show: true}">
+        <div class="col-xs-10">
+            <button class="wideButton" ng-bind="f.desc" ng-click="callFunc($event, f)">
+            </button>
+        </div>
+        <div class="col-xs-1">
+            <div class="radio">
+                <label>
+                    <input ng-model="$parent.$parent.defaultAction"
+                           ng-value="f"
+                           type="radio"
+                           ng-change="saveChoice()">
+                </label>
+            </div>
+        </div>
+    </div>
 </div>

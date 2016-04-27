@@ -518,11 +518,6 @@ input[type="file"] {
     text-align: right;
 }
 
-.defaultCheckbox {
-    vertical-align: middle;
-    margin-left: 2em;
-}
-
 .notes:hover, .speaker:hover {
     background-color: white;
     display: block;
@@ -575,7 +570,17 @@ input[type="file"] {
     direction: ltr;
 }
 
-.actionButtons, .menuButtons {
+.actionButtons {
+    @include container-fixed();
+    position: absolute;
+    white-space: nowrap;
+    border-radius: 3px;
+    background-color: #f8f8ff;
+    z-index: 100;
+    min-height: 50px;
+}
+
+.menuButtons {
     display: table;
     position: absolute;
     white-space: nowrap;
