@@ -8,7 +8,7 @@
                 <uib-tab-heading>
                     <i class="glyphicon glyphicon-book"></i>
                 </uib-tab-heading>
-                <h4>Index</h4>
+                <h5>Index</h5>
                 {% include 'content.html' %}
             </uib-tab>
         {% endif %}
@@ -17,14 +17,14 @@
             <uib-tab-heading>
                 <i class="glyphicon glyphicon-cog"></i>
             </uib-tab-heading>
-            <h4>Customize</h4>
+            <h5>Customize</h5>
             <a href="/settings">Customize TIM</a>
             {% if route and rights.manage %}
-                <h4>Document settings</h4>
+                <h5>Document settings</h5>
                 <button class="timButton" ng-click="editSettingsPars()">Edit settings</button>
             {% endif %}
             <div ng-show="lectureSettings.inLecture">
-                <h4>Lecture settings</h4>
+                <h5>Lecture settings</h5>
                 <ul>
                     <li>
                         <label> Show wall
@@ -55,7 +55,7 @@
                 <i class="glyphicon glyphicon-education"></i>
             </uib-tab-heading>
             {% raw %}
-            <h4>Current Lectures</h4>
+            <h5>Current Lectures</h5>
             <ul>
                 <li ng-repeat="lecture in currentLecturesList">
                     <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
@@ -65,14 +65,14 @@
                 </li>
                 <li ng-show="currentLecturesList.length == 0"><p>No current lectures</p></li>
             </ul>
-            <h4>Coming Lectures</h4>
+            <h5>Coming Lectures</h5>
             <ul>
                 <li ng-repeat="lecture in futureLecturesList">
                     <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                 </li>
                 <li ng-show="futureLecturesList.length == 0"><p>No coming lectures</p></li>
             </ul>
-            <h4>Past Lectures</h4>
+            <h5>Past Lectures</h5>
             <ul>
                 <li ng-repeat="lecture in pastLecturesList">
                     <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
@@ -87,7 +87,7 @@
                 <i class="glyphicon glyphicon-question-sign"></i>
             </uib-tab-heading>
             {% raw %}
-            <h4>Lecture questions</h4>
+            <h5>Lecture questions</h5>
             <ul>
                 <li ng-repeat="question in lectureQuestions">
                     <a ng-click="showQuestion(question.questionId)">{{
@@ -96,7 +96,7 @@
                 </li>
                 <li ng-show="lectureQuestions.length == 0"><p>No lecture questions</p></li>
             </ul>
-            <h4>Material questions</h4>
+            <h5>Material questions</h5>
             <ul>
                 <li ng-repeat="question in materialQuestions">
                     <a>{{ question.question }}</a>
@@ -117,8 +117,8 @@
             <uib-tab-heading>
                 <i class="glyphicon glyphicon-user"></i>
             </uib-tab-heading>
-            <h4>People logged-in: <span
-                    ng-bind="lecturerTable.length + studentTable.length">None</span></h4>
+            <h5>People logged-in: <span
+                    ng-bind="lecturerTable.length + studentTable.length">None</span></h5>
             {% raw %}
             <h5>Lecturer (<span ng-bind="lecturerTable.length">None</span>)</h5>
             <ul>
