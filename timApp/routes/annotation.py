@@ -90,7 +90,7 @@ def add_comment() -> str:
     return jsonResponse(new_id)
 
 
-# Todo maybe chech that the document in question actually exists and return on error if not.
+# Todo maybe check that the document in question actually exists and return on error if not.
 @annotations.route("/<document_id>/annotations", methods=['GET'])
 def get_annotations(document_id: int) -> str:
     timdb = getTimDb()
