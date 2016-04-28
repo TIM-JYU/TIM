@@ -19,7 +19,7 @@
                 <thead>
                 <tr>
                     <th></th>
-                    <th>Document name</th>
+                    <th>Name</th>
                     <th></th>
                     <th>Last modified</th>
                     <th>Owner</th>
@@ -29,10 +29,10 @@
                 <tr ng-show="parentfolder != null">
                     <td>
                         <a href="/view/{{ '{{ parentfolder | escape }}' }}">
-                            <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
+                            <span class="glyphicon glyphicon-level-up" aria-hidden="true"></span>
                         </a>
                     </td>
-                    <td><a href="/view/{{ '{{ parentfolder | escape }}' }}">..</a></td>
+                    <td><a href="/view/{{ '{{ parentfolder | escape }}' }}">Go to parent folder</a></td>
                     <td></td>
                     <td></td>
                     <td></td>
