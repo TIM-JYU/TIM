@@ -191,3 +191,16 @@ class VelpGroups(TimDbBase):
                        """, [velp_group_id, document_id]
                        )
         self.db.commit()
+
+# TODO Delete or update down below, not functional
+
+    def get_velp_groups_in_folders(self, root_path: str):
+        # Check help from tim.py and timApp.js
+        current_path = root_path
+        return
+
+    def create_velp_group_and_document(self, root_path: str, name: str, owner_group_id: int):
+        current_path = root_path
+
+
+        return

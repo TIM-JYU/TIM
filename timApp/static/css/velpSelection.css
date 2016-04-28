@@ -149,6 +149,7 @@
     line-height: 1.25em;
     font-weight: 600;
     cursor: pointer;
+    min-height: 10em;
     height: 10em;
     width: 18em;
 }
@@ -222,6 +223,13 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 .velpInfo textarea{
     background-color: transparent;
     border: none;
+}
+
+/* Text selection */
+
+.text-selection{
+    background: cornflowerblue;
+    color: white;
 }
 
 /* Annotation styles */
