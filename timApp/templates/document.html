@@ -2,13 +2,13 @@
 {% block itemlinks %}
     {{ super() }}
     {% if rights.teacher %}
-         <li role="presentation"><a id="headerTeacher" href="/teacher/{{ doc.fullname }}">Teacher view</a></li>
+         <li role="presentation" {{ active('view_page.teacher_view') }}><a id="headerTeacher" href="/teacher/{{ doc.fullname }}">Teacher view</a></li>
     {% endif %}
     {% if rights.see_answers %}
-         <li role="presentation"><a id="headerAnswers" href="/answers/{{ doc.fullname }}">Answers</a></li>
+         <li role="presentation" {{ active('view_page.see_answers_view') }}><a id="headerAnswers" href="/answers/{{ doc.fullname }}">Answers</a></li>
     {% endif %}
-     <li role="presentation"><a id="headerLecture" href="/lecture/{{ doc.fullname }}">Lecture view</a></li>
-     <li role="presentation"><a id="headerSlide" href="/slide/{{ doc.fullname }}">Slide view</a></li>
+     <li role="presentation" {{ active('view_page.lecture_view') }}><a id="headerLecture" href="/lecture/{{ doc.fullname }}">Lecture view</a></li>
+     <li role="presentation" {{ active('view_page.slide_document') }}><a id="headerSlide" href="/slide/{{ doc.fullname }}">Slide view</a></li>
     {% if translations %}
         <span style="float: right;">
                             {% for tr in translations %}
