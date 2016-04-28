@@ -59,7 +59,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             var range = document.createRange();
             range.setStart(el, placeInfo["start"]["offset"]);
             range.setEnd(el, placeInfo["end"]["offset"]);
-            $scope.addAnnotationToCoord(range, $scope.annotations[i], false);
+            addAnnotationToCoord(range, $scope.annotations[i], false);
         }
 
         $scope.annotationsAdded = true;
@@ -71,7 +71,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param annotation annotation info
      * @param show show by default
      */
-    $scope.addAnnotationToCoord = function(range, annotation, show){
+    var addAnnotationToCoord = function(range, annotation, show){
         var span = $scope.createPopOverElement(annotation, show);
         try {
             console.log(range);
@@ -85,7 +85,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             new_range.setStart(el, start);
             new_range.setEnd(el, end);
-            $scope.addAnnotationToCoord(new_range, annotation, show);
+            addAnnotationToCoord(new_range, annotation, show);
 
         }
 
@@ -135,8 +135,13 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.selectText = function () {
         var sel = $window.getSelection();
-
+        console.log(sel);
+        console.log(sel.toString());
         if (sel.toString().length > 0) {
+            var range = sel.getRangeAt(0);
+            console.log(range);
+
+
             /*
             if ($scope.selectedArea != null && $scope.selectionParent != null) {
                 console.log("hei");
@@ -145,7 +150,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             */
             //console.log(sel);
 
-            var range = sel.getRangeAt(0);
+
             //$scope.selectionParent = range.startContainer.parentNode.cloneNode(true);
             /*
             var selection = document.createElement("span");
@@ -200,15 +205,20 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.useVelp = function (velp) {
         if (typeof $scope.selectedArea != "undefined") {
+
             var parelement = $scope.selectedArea["commonAncestorContainer"].parentElement;
             var startElement = $scope.selectedArea["startContainer"].parentElement;
-            var startElementNum = null;
+
+            var innerDiv = document.createElement('div');
+            var cloned = $scope.selectedArea.cloneContents();
+            innerDiv.appendChild(cloned);
 
             while (!parelement.hasAttribute("id")) {
                 parelement = parelement.parentElement;
             }
 
             var element_path = getElementPositionInTree(startElement, []);
+
 
             var newMarking = {
                 id: $scope.annotations.length*(-1),
@@ -233,15 +243,17 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                    //{"content": "Pre-printed comment", "author": username}
                 ]
             };
+            var offsets = getRealStartOffset($scope.selectedArea["startContainer"], newMarking.coord.start.offset);
 
-            $scope.addAnnotationToCoord($scope.selectedArea, newMarking, true);
+            addAnnotationToCoord($scope.selectedArea, newMarking, true);
             $scope.annotations.push(newMarking);
 
-            var startnum = getNodeNumber($scope.selectedArea["startContainer"], newMarking.id);
-            console.log($scope.selectedArea["endContainer"]);
-            var endnum = getNodeNumber($scope.selectedArea["endContainer"], newMarking.id);
-            console.log("Element num: " + startnum);
-            console.log("Element num: " + endnum);
+            console.log(newMarking.coord.start.offset);
+
+            var nodeNums = getNodeNumbers($scope.selectedArea["startContainer"], newMarking.id, innerDiv);
+
+            console.log("Offsets: " + offsets);
+            console.log("Element num: " + nodeNums);
 
 
             $scope.selectedArea = undefined;
@@ -276,11 +288,37 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
 
-    var getRealOffset = function(offset, type){
+    var getRealStartOffset = function(el, startoffset){
 
+        var startType = el.nodeName;
+        var storedOffset = startoffset;
+
+        while (el.previousSibling != null){
+            el = el.previousSibling;
+            if (el.nodeName == "ANNOTATION"){
+
+                var innerElements = el.querySelectorAll(".highlighted > .ng-scope");
+
+                console.log("LAPSOSET!!");
+                console.log(innerElements[innerElements.length-1]);
+                storedOffset += innerElements.last;
+
+                if (innerElements.length > 1){
+                    return storedOffset;
+                }
+            }
+            else if (el.nodeName != startType){
+                return storedOffset;
+            } else {
+                console.log(el.length);
+                storedOffset += el.length;
+            }
+        }
+
+        return storedOffset;
     };
 
-    var getNodeNumber = function(el, aid){
+    var getNodeNumbers = function(el, aid, innerElement){
         var parent = el;
         var num = 0;
 
@@ -289,22 +327,26 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         for (var i = 0; i < parent.childNodes.length; i++) {
 
-            console.log(parent.childNodes[i]);
             if (parent.childNodes[i].nodeName == "ANNOTATION") {
 
                 if (parent.childNodes[i].getAttribute("aid") == aid) {
-                    console.log("AID FOUND");
-                    return num-1;
-                } else {
-                    var innerElement = parent.childNodes[i];
-                    console.log(innerElement);
+                    
+                    var startnum = num - 1;
                     num += innerElement.childNodes.length;
-
+                    
                     if (innerElement.firstChild.nodeName == prevNodeName) num--;
                     if (i < parent.childNodes.length - 1 && innerElement.lastChild.nodeName == parent.childNodes[i + 1].nodeName) num--;
+                    
+                    return [startnum, num];
+                    
+                } else {
+                    var innerEl = parent.childNodes[i].querySelectorAll(".highlighted .ng-scope")[0];
+                    num += innerEl.childNodes.length;
+                    if (innerEl.firstChild.nodeName == prevNodeName) num--;
+                    if (i < parent.childNodes.length - 1 && innerEl.lastChild.nodeName == parent.childNodes[i + 1].nodeName) num--;
+                    
+                    continue;
                 }
-
-                continue;
             }
 
             num++;
