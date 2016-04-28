@@ -82,7 +82,7 @@
 
     <div class="{{[t.cls|trim, t.is_plugin|trim]|join(' ')|trim}}"
          id="{{ t.id }}"
-     {% if not t.attrs.area and not t.attrs.area_end %}
+     {% if t.html != "" or (not t.attrs.area and not t.attrs.area_end) %}
          data-index="{{ par_index }}"
      {% endif %}
          t="{{ t.t }}"
