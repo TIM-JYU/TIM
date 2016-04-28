@@ -319,13 +319,17 @@ class Document:
         :param par_id: The paragraph id.
         :return: Boolean.
         """
-        with open(self.get_version_path(self.get_version()), 'r') as f:
-            while True:
-                line = f.readline()
-                if line == '':
-                    return False
-                if line.split('/', 1)[0].rstrip('\n') == par_id:
-                    return True
+        try:
+            with open(self.get_version_path(self.get_version()), 'r') as f:
+                while True:
+                    line = f.readline()
+                    if line == '':
+                        return False
+                    if line.split('/', 1)[0].rstrip('\n') == par_id:
+                        return True
+
+        except FileNotFoundError:
+            return False
 
     def get_paragraph(self, par_id: str) -> DocParagraph:
         return DocParagraph.get_latest(self, par_id, self.files_root)
