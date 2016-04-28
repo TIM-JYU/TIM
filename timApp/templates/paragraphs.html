@@ -82,7 +82,9 @@
 
     <div class="{{[t.cls|trim, t.is_plugin|trim]|join(' ')|trim}}"
          id="{{ t.id }}"
+     {% if not t.attrs.area and not t.attrs.area_end %}
          data-index="{{ par_index }}"
+     {% endif %}
          t="{{ t.t }}"
          attrs="{{ t.attrs_str }}"
      {% if t.ref_attrs and t.ref_attrs.classes and "deleted" in t.ref_attrs.classes %}

@@ -995,8 +995,6 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.extendSelection = function ($par, allowShrink) {
-            console.log('extendSelection');
-
             if (sc.selection.start === null) {
                 sc.selection.start = $par;
                 sc.selection.end = $par;
@@ -1006,15 +1004,11 @@ timApp.controller("ViewCtrl", [
                 var endIndex = $(sc.selection.pars[n - 1]).attr('data-index');
                 var areaLength = endIndex - startIndex + 1;
                 var newIndex = $par.attr('data-index');
-                console.log("startIndex = " + startIndex);
-                console.log("endIndex = " + endIndex);
 
                 if (newIndex < startIndex) {
                     sc.selection.start = $par;
-                    console.log('start');
                 } else if (newIndex > endIndex) {
                     sc.selection.end = $par;
-                    console.log('end');
                 } else if (allowShrink && areaLength > 1 && newIndex == startIndex) {
                     sc.selection.start = $(sc.selection.pars[1]);
                 } else if (allowShrink && areaLength > 1 && newIndex == endIndex) {
@@ -1519,16 +1513,51 @@ timApp.controller("ViewCtrl", [
             }
         });
 
+        sc.getPars = function($par_first, $par_last) {
+            var pars = [$par_first];
+            var $par = $par_first;
+            var $next = $par.next();
+            var i = 1000000;
+
+            while (i > 0) {
+                if ($next.length == 0) {
+                    $par = $par.parent();
+                    $next = $par.next();
+                    if ($par.prop("tagName").toLowerCase() == "html") {
+                        break;
+                    }
+
+                    continue;
+                }
+
+                if ($next.hasClass('area')) {
+                    $next = $next.children('.areaContent').children().first();
+                    continue;
+                }
+
+                if ($next.hasClass('par') && $next.attr('data-index') !== undefined) {
+                    pars.push($next);
+                    if ($next.is($par_last))
+                        break;
+                }
+
+                $par = $next;
+                $next = $par.next();
+                i -= 1;
+            }
+
+            return $(pars).map (function () {return this.toArray(); } );
+        };
+
         sc.$watchGroup(['selection.start', 'selection.end'], function (newValues, oldValues, scope) {
             $('.par.lightselect').removeClass('lightselect');
             $('.par.selected').removeClass('selected');
             $('.par.marked').removeClass('marked');
             if (sc.selection.start !== null) {
                 var $start = sc.selection.start;
-                if (sc.selection.end !== null && sc.selection.end !== sc.selection.start) {
+                if (sc.selection.end !== null && !sc.selection.end.is(sc.selection.start)) {
                     var $end = sc.selection.end;
-                    sc.selection.pars = $start.nextUntil($end);
-                    sc.selection.pars = sc.selection.pars.add($start).add($end);
+                    sc.selection.pars = sc.getPars($start, $end);
                 } else {
                     sc.selection.pars = $start;
                 }
