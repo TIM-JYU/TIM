@@ -994,7 +994,7 @@ timApp.controller("ViewCtrl", [
             return sc.markParRead($this, $this.parents('.par'));
         });
 
-        sc.extendSelection = function ($par) {
+        sc.extendSelection = function ($par, allowShrink) {
             console.log('extendSelection');
 
             if (sc.selection.start === null) {
@@ -1015,9 +1015,9 @@ timApp.controller("ViewCtrl", [
                 } else if (newIndex > endIndex) {
                     sc.selection.end = $par;
                     console.log('end');
-                } else if (areaLength > 1 && newIndex == startIndex) {
+                } else if (allowShrink && areaLength > 1 && newIndex == startIndex) {
                     sc.selection.start = $(sc.selection.pars[1]);
-                } else if (areaLength > 1 && newIndex == endIndex) {
+                } else if (allowShrink && areaLength > 1 && newIndex == endIndex) {
                     sc.selection.end = $(sc.selection.pars[n - 2]);
                 }
             }
@@ -1104,7 +1104,7 @@ timApp.controller("ViewCtrl", [
 
             var $par = $this.parent();
             if (sc.selection.start !== null) {
-                sc.extendSelection($par);
+                sc.extendSelection($par, true);
             }
             else {
                 var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
