@@ -28,11 +28,13 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
         font-size: xx-large;
         margin: -6px -10px;
     }
-}
 
-.tab-content {
-    overflow-y: auto;
-    max-height: calc(100vh - 51.2833px);
+    .tab-content {
+        overflow-x: hidden;
+        overflow-y: auto;
+        max-height: calc(100vh - 51.2833px);
+        padding-left: 3px;
+    }
 }
 
 /* For directory */
