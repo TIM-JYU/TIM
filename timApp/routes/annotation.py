@@ -10,22 +10,40 @@ annotations = Blueprint('annotations',
 @annotations.route("/addannotation", methods=['POST'])
 def add_annotation() -> str:
     json_data = request.get_json()
-    print (json_data)
+    print(json_data)
+    timdb = getTimDb()
+
     # first get the non-optional arguments and abort if there is missing data.
     try:
         velp_id = json_data['velp']
+        visible_to = timdb.annotations.AnnotationVisibility(json_data['visible_to'])
         document_id = json_data['doc_id']
         coordinates = json_data['coord']
         start = coordinates['start']
         end = coordinates['end']
 
         offset_start = start['offset']
-        element_path_start = str(start['el_path'])
+        element_path_start = start['el_path']
+        if type(element_path_start) is not list:
+            raise TypeError(str(element_path_start))
+        if any(type(i) is not int for i in element_path_start):
+            raise TypeError(str(element_path_start))
+        element_path_start = str(element_path_start)
 
         offset_end = end['offset']
-        element_path_end = str(end['el_path'])
-    except KeyError as e:
+        element_path_end = end['el_path']
+        if type(element_path_end) is not list:
+            raise TypeError(str(element_path_end))
+        if any(type(i) is not int for i in element_path_end):
+            raise TypeError(str(element_path_end))
+        element_path_end = str(element_path_end)
+
+    except KeyError as e: #one of the json_data['foo'] fails
         abort(400, "Missing data: " + e.args[0])
+    except TypeError as e: #one of the element paths is not a list of integers
+        abort(400, "Malformed element path. " + e.args[0])
+    except ValueError as e: #visible_to could not be casted to the enum used.
+        abort(400, e.args[0])
 
     # .get() returns None if there is no data instead of throwing.
     points = json_data.get('points')
@@ -53,12 +71,12 @@ def add_annotation() -> str:
         if some_paragraph_data_present:
             abort(400, "Both answer_id and paragraph data present.")
 
-    timdb = getTimDb()
     annotator_id = getCurrentUserId()
     velp_version = timdb.velps.get_latest_velp_version(velp_id)
-    new_id = timdb.annotations.create_annotation(velp_version, points, annotator_id, document_id, paragraph_id_start,
-                                                 paragraph_id_end, offset_start, offset_end, hash_start, hash_end,
-                                                 element_path_start, element_path_end, None, icon_id, answer_id)
+    new_id = timdb.annotations.create_annotation(velp_version, visible_to, points, annotator_id, document_id,
+                                                 paragraph_id_start, paragraph_id_end, offset_start, offset_end,
+                                                 hash_start, hash_end, element_path_start, element_path_end, None,
+                                                 icon_id, answer_id)
     return jsonResponse(new_id)
 
 
@@ -77,7 +95,7 @@ def add_comment() -> str:
     return jsonResponse(new_id)
 
 
-# Todo maybe chech that the document in question actually exists and return on error if not.
+# Todo maybe check that the document in question actually exists and return on error if not.
 @annotations.route("/<document_id>/annotations", methods=['GET'])
 def get_annotations(document_id: int) -> str:
     timdb = getTimDb()
@@ -87,7 +105,7 @@ def get_annotations(document_id: int) -> str:
 
 # TODO decide whether we should instead return comments for just one annotation, instead of returning everything at
 # once, like here.
-# Todo maybe chech that the document in question actually exists and return on error if not.
+# Todo maybe check that the document in question actually exists and return on error if not.
 @annotations.route("/<document_id>/comments", methods=['GET'])
 def get_comments(document_id: int) -> str:
     timdb = getTimDb()

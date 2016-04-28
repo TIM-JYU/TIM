@@ -1,5 +1,7 @@
 {
     "id": 0,
+    "doc_id": 7,
+    "visible_to": 3,
     "points": -1,
     "velp": 2,
     "coord": {
@@ -15,7 +17,5 @@
         "t": "LTB4M2JkMTBiMWQ=",
         "el_path": [0]
       }
-    },
-    "comments": [{"author": "vesal", "content": "Kyseessä oli siis Napoleon I"},
-                 {"author": "sevitarv", "content": "Ahaa"}]
+    }
 }

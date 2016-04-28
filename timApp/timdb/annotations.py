@@ -1,3 +1,4 @@
+from enum import Enum
 from sqlite3 import Connection
 from typing import Dict, List, Optional
 from timdb.timdbbase import TimDbBase
@@ -8,6 +9,13 @@ class Annotations(TimDbBase):
     """
     Used as an interface to query the database about annotations.
     """
+
+    class AnnotationVisibility(Enum):
+        """Enum for storing the visibility"""
+        myself = 1
+        owner = 2
+        teacher = 3
+        everyone = 4
 
     def __init__(self, db_path: Connection, files_root_path: str, type_name: str, current_user_name: str):
         """Initializes TimDB with the specified database and root path.
@@ -50,6 +58,8 @@ class Annotations(TimDbBase):
                        WHERE (Annotation.valid_until ISNULL OR
                              Annotation.valid_until >= CURRENT_TIMESTAMP) AND
                              Annotation.document_id = ?
+                       GROUP BY element_path_start
+                       ORDER BY offset_start
                        """, [document_id]
                        )
         results = self.resultAsDictionary(cursor)
@@ -99,16 +109,16 @@ class Annotations(TimDbBase):
                        )
         return self.resultAsDictionary(cursor)
 
-    def create_annotation(self, version_id: int, points: Optional[float], annotator_id: int,
-                          document_id: int, paragraph_id_start: Optional[str],
-                          paragraph_id_end: Optional[str], offset_start: int,
-                          offset_end: int, hash_start: Optional[str],
-                          hash_end: Optional[str], element_path_start: str,
-                          element_path_end: str, valid_until: Optional[str] = None,
+    def create_annotation(self, version_id: int, visible_to: AnnotationVisibility, points: Optional[float],
+                          annotator_id: int,
+                          document_id: int, paragraph_id_start: Optional[str], paragraph_id_end: Optional[str],
+                          offset_start: int, offset_end: int, hash_start: Optional[str], hash_end: Optional[str],
+                          element_path_start: str, element_path_end: str, valid_until: Optional[str] = None,
                           icon_id: Optional[int] = None, answer_id: Optional[int] = None) -> int:
         """Create a new annotation.
 
         :param version_id: Version of the velp that the annotation uses.
+        :param visible_to: visibility of the annotation.
         :param points: Points given, overrides velp's default and can be null.
         :param annotator_id: ID of user who left the annotation.
         :param document_id: ID of document in which annotation is located in.
@@ -142,12 +152,12 @@ class Annotations(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO
-                      Annotation(version_id, points, valid_until, icon_id, annotator_id,
+                      Annotation(version_id, visible_to, points, valid_until, icon_id, annotator_id,
                       document_id, answer_id, paragraph_id_start, paragraph_id_end,
                       offset_start, offset_end, hash_start, hash_end,
                       element_path_start, element_path_end)
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                      """, [version_id, points, valid_until, icon_id, annotator_id,
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                      """, [version_id, visible_to.value, points, valid_until, icon_id, annotator_id,
                             document_id, answer_id, paragraph_id_start, paragraph_id_end,
                             offset_start, offset_end, hash_start, hash_end,
                             element_path_start, element_path_end]
@@ -155,13 +165,15 @@ class Annotations(TimDbBase):
         self.db.commit()
         return cursor.lastrowid
 
-    def update_annotation(self, annotation_id: int, version_id: int, place_start: int, place_end: int,
+    def update_annotation(self, annotation_id: int, version_id: int, visible_to: AnnotationVisibility, place_start: int,
+                          place_end: int,
                           points: Optional[float],
                           element_number: Optional[int], icon_id: Optional[int] = None):
         """Changes an existing annotation.
 
         :param annotation_id annotation to be changed.
         :param version_id: version of the velp that the annotation uses
+        :param visible_to: visibility of the annotation
         :param place_start: start
         :param place_end: end
         :param points: Points given, overrides velp's default and can be null
@@ -174,13 +186,15 @@ class Annotations(TimDbBase):
                        UPDATE Annotation
                        SET
                          version_id     = ?,
+                         visible_to     = ?,
                          place_start    = ?,
                          place_end      = ?,
                          points         = ?,
                          element_number = ?,
                          icon_id        = ?
                        WHERE id = ?
-                      """, [version_id, place_start, place_end, points, element_number, icon_id, annotation_id]
+                      """, [version_id, int(visible_to), place_start, place_end, points, element_number, icon_id,
+                            annotation_id]
                        )
         self.db.commit()
         return
