@@ -71,13 +71,16 @@ class Questions(TimDbBase):
 
     @contract
     def add_asked_questions(self, lecture_id: 'int', doc_id: 'int', par_id: 'str|None', asked_time: 'str',
-                            points: 'str', asked_json_id: 'int', expl: 'str', commit: 'bool'=True) -> 'int':
+                            points: 'str|None', asked_json_id: 'int', expl: 'str|None', commit: 'bool'=True) -> 'int':
 
         """
         Creates a new asked questions
         :param lecture_id: Lecture where question was asked
         :param doc_id: Document, where the question belongs
         :param par_id: Paragraph, where the question belongs
+        :param asked_time: The of question
+        :param points: Points for answers to question
+        :param expl: Explanations to question
         :param asked_json_id: Json of asked question
         :param commit: Commit or not to commit
         :return: The id of the newly created asked question

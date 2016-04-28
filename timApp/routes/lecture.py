@@ -869,6 +869,8 @@ def ask_question():
             expl = json.dumps(expl)
             points = points
 
+        if not points:
+            points = "0:0"
         question_hash = hashfunc(question_json_str)
         asked_hash = timdb.questions.get_asked_json_by_hash(question_hash)
         if asked_hash:
