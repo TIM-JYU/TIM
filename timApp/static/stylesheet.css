@@ -333,7 +333,7 @@ ul ul ul, ol ol ol {
 .areaeditline {
     position: absolute;
     left: -1.2em;
-    z-index: 2;
+    /*z-index: 2;*/
     width: 3em;
     height: 100%;
     top: 0;

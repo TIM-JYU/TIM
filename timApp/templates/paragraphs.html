@@ -64,10 +64,12 @@
 {% endif %}
 
 {% set par_index = 0 %}
+{% set area_depth = 0 %}
 {% for t in text %}
     {% if t.attrs.area %}
-     <div class="area" id="area_{{t.attrs.area}}" data-name="{{t.attrs.area}}" data-doc-id="{{t.doc_id}}">
-     <div class="areaContent">
+        <div class="area" id="area_{{t.attrs.area}}" data-name="{{t.attrs.area}}" data-doc-id="{{t.doc_id}}">
+        <div class="areaContent">
+        {% set area_depth = area_depth + 1 %}
     {% endif %}
     {% if t.ref_attrs and t.ref_attrs.area %}
         {% if refcount %}
@@ -78,6 +80,7 @@
 
         <div class="area" id="area_{{t.ref_attrs.area}}_ref{{refcount}}" data-name="{{t.ref_attrs.area}}" data-doc-id="{{t.ref_doc_id}}">
         <div class="areaContent">
+        {% set area_depth = area_depth + 1 %}
     {% endif %}
 
     <div class="{{[t.cls|trim, t.is_plugin|trim]|join(' ')|trim}}"
@@ -187,9 +190,11 @@
     {% if t.attrs.area_end %}
         </div>
         {% if rights.editable or rights.can_comment %}
-            <div class="areaeditline" title="Click to edit this area ({{ t.attrs.area_end }})"></div>
+            <div class="areaeditline" title="Click to edit this area ({{ t.attrs.area_end }})"
+                 style="z-index: {{ area_depth }}"></div>
         {% endif %}
         </div>
+        {% set area_depth = area_depth - 1 %}
     {% endif %}
     {% if t.ref_attrs and t.ref_attrs.area_end %}
         </div>
@@ -197,6 +202,7 @@
             <div class="areaeditline" title="Click to edit this area reference ({{ t.ref_attrs.area_end }})"></div>
         {% endif %}
         </div>
+        {% set area_depth = area_depth - 1 %}
     {% endif %}
 
     {% set par_index = par_index + 1 %}
