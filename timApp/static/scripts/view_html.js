@@ -1649,6 +1649,9 @@ timApp.controller("ViewCtrl", [
                 http.post('/clipboard/cut/' + doc_id + '/' + area_start + '/' + area_end, {
                     area_name: area_name
                 }).success(function (data, status, headers, config) {
+                    sc.selection.start = null;
+                    sc.selection.end = null;
+
                     if (doc_id == sc.docId) {
                         var doc_ver = data['doc_ver'];
                         var pars = data['pars'];
@@ -1674,6 +1677,8 @@ timApp.controller("ViewCtrl", [
                     ref_doc_id: ref_doc_id,
                     area_name: area_name
                 }).success(function (data, status, headers, config) {
+                    sc.selection.start = null;
+                    sc.selection.end = null;
                     sc.allowPasteContent = true;
                     sc.allowPasteRef = true;
                 }).error(function (data, status, headers, config) {
