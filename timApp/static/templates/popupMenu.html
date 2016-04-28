@@ -2,18 +2,14 @@
     <div class="error" ng-show="notification" ng-bind="notification"></div>
     <div class="row" ng-repeat="f in editorFunctions | filter:{show: true}">
         <div class="col-xs-10">
-            <button class="wideButton" ng-bind="f.desc" ng-click="callFunc($event, f)">
+            <button class="wideButton btn-sm" ng-bind="f.desc" ng-click="callFunc($event, f)">
             </button>
         </div>
         <div class="col-xs-1">
-            <div class="radio">
-                <label>
-                    <input ng-model="$parent.$parent.defaultAction"
-                           ng-value="f"
-                           type="radio"
-                           ng-change="saveChoice()">
-                </label>
-            </div>
+            <input class="valign" ng-model="$parent.$parent.defaultAction"
+                   ng-value="f"
+                   type="radio"
+                   ng-change="saveChoice()">
         </div>
     </div>
 </div>
