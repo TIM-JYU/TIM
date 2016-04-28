@@ -1504,7 +1504,9 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.$watchGroup(['selection.start', 'selection.end'], function (newValues, oldValues, scope) {
+            $('.par.lightselect').removeClass('lightselect');
             $('.par.selected').removeClass('selected');
+            $('.par.marked').removeClass('marked');
             if (sc.selection.start !== null) {
                 var $start = sc.getElementByParId(sc.selection.start);
                 if (sc.selection.end !== null && sc.selection.end !== sc.selection.start) {
@@ -1521,7 +1523,7 @@ timApp.controller("ViewCtrl", [
                 } else {
                     sc.selection.pars = $start;
                 }
-                sc.selection.pars.addClass('selected');
+                sc.selection.pars.addClass('marked');
             }
         });
 

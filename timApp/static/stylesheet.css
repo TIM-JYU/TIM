@@ -207,12 +207,20 @@ ul ul ul, ol ol ol {
 .par.deleted.selected {
 }
 
+.par.deleted.marked {
+    background-color: #92D1CE;
+}
+
 .par.lightselect {
     background-color: #f7f7f7;
 }
 
 .par.selected {
     background-color: lightgray;
+}
+
+.par.marked {
+    background-color: rgba(134, 217, 209, 0.35);
 }
 
 .material img {
