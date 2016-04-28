@@ -55,7 +55,7 @@ CREATE TABLE Velp (
   ON UPDATE CASCADE
 );
 
-/* These might not needed. Remember to check on delete/update before use.
+/* These might not needed. Remember to check delete/update before use.
 CREATE TABLE VelpInVelpView (
   velp_view_id   INTEGER NOT NULL,
   velp_id        INTEGER NOT NULL,
@@ -159,23 +159,24 @@ CREATE TABLE VelpContent (
 
 
 CREATE TABLE Annotation (
-  id                  INTEGER  NOT NULL,
-  version_id          INTEGER  NOT NULL,
-  points              REAL,
-  creation_time       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  valid_until         DATETIME,
-  icon_id             INTEGER,
-  annotator_id        INTEGER  NOT NULL,
-  document_id         INTEGER  NOT NULL,
-  answer_id           INTEGER,
-  paragraph_id_start  TEXT,
-  paragraph_id_end    TEXT,
-  offset_start        INTEGER,
-  offset_end          INTEGER,
-  hash_start          TEXT,
-  hash_end            TEXT,
-  element_path_start  TEXT,
-  element_path_end    TEXT,
+  id                 INTEGER  NOT NULL,
+  version_id         INTEGER  NOT NULL,
+  points             REAL,
+  creation_time      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  valid_until        DATETIME,
+  icon_id            INTEGER,
+  annotator_id       INTEGER  NOT NULL,
+  visible_to         INTEGER  NOT NULL,
+  document_id        INTEGER  NOT NULL,
+  answer_id          INTEGER,
+  paragraph_id_start TEXT,
+  paragraph_id_end   TEXT,
+  offset_start       INTEGER,
+  offset_end         INTEGER,
+  hash_start         TEXT,
+  hash_end           TEXT,
+  element_path_start TEXT,
+  element_path_end   TEXT,
 
 
   CONSTRAINT Annotation_PK
@@ -193,16 +194,6 @@ CREATE TABLE Annotation (
   ON DELETE SET NULL
   ON UPDATE CASCADE
 );
-
--- NOT FINISHED THIS ONE DO SOMETHING ANYTHING I DON'T EVEN KNOW MY WORLD RIGHT NOW
-CREATE TABLE AnnotationVisibility (
-  annotation_id INTEGER NOT NULL,
-
-  CONSTRAINT Annotation_id
-  FOREIGN KEY (annotation_id)
-  REFERENCES Annotation (id)
-);
--- READ ABOVE THEN YOU CAN READ BELOW OR RIGHT OF LEFT OR WHEREVER YOU WANT UP TO YOU
 
 
 CREATE TABLE AnnotationComment (
@@ -228,7 +219,7 @@ CREATE TABLE VelpGroup (
   name          TEXT     NOT NULL,
   creation_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   valid_until   DATETIME,
-  document_def  BOOLEAN  NOT NULL DEFAULT 0,  -- sqlite doesn't have true/false boolean
+  document_def  BOOLEAN  NOT NULL DEFAULT 0, -- sqlite doesn't have true/false boolean
 
   CONSTRAINT VelpGroup_PK
   PRIMARY KEY (id)

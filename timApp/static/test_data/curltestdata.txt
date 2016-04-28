@@ -1,0 +1,21 @@
+{
+    "id": 0,
+    "doc_id": 7,
+    "visible_to": 3,
+    "points": -1,
+    "velp": 2,
+    "coord": {
+      "start":{
+        "par_id": "pnKujWTFQrZN",
+        "offset": 48,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [0]
+      },
+      "end":{
+        "par_id": "pnKujWTFQrZN",
+        "offset":62,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [0]
+      }
+    }
+}
