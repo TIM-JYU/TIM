@@ -5,6 +5,7 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
 .fixed-side {
     position: fixed;
     z-index: 4;
+    font-size: small;
 }
 
 .left-fixed-side {
