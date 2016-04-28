@@ -51,7 +51,7 @@ def paste_from_clipboard(doc_id):
     verify_doc_exists(doc_id)
     verify_edit_access(doc_id)
 
-    (par_before, par_after, as_ref) = verify_json_params('par_before', 'par_after', 'as_ref', require=False)
+    (par_before, par_after, as_ref) = verify_json_params('par_before', 'par_after', 'as_ref', require=False, default='')
 
     timdb = getTimDb()
     doc = Document(doc_id)
@@ -62,9 +62,9 @@ def paste_from_clipboard(doc_id):
     if as_ref and clip.read_metadata().get('disable_ref'):
         abort(400, 'The contents of the clipboard cannot be pasted as a reference.')
 
-    if par_before is not None and par_after is None:
+    if par_before != '' and par_after == '':
         pars = clip.paste_before(doc, par_before, as_ref)
-    elif par_before is None and par_after is not None:
+    elif par_before == '' and par_after != '':
         pars = clip.paste_after(doc, par_after, as_ref)
     else:
         abort(400, 'Missing required parameter in request: par_before or par_after (not both)')
