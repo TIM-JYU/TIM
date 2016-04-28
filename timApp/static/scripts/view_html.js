@@ -283,8 +283,8 @@ timApp.controller("ViewCtrl", [
                     url = '/postParagraph/';
                 }
 
-                area_start = options.area ? sc.selection.start : null;
-                area_end = options.area ? sc.selection.end : null;
+                area_start = options.area ? sc.getParId(sc.selection.start) : null;
+                area_end = options.area ? sc.getParId(sc.selection.end) : null;
             }
 
             var par_id = sc.getParId($par);
@@ -638,8 +638,8 @@ timApp.controller("ViewCtrl", [
             {
                 var start = pars[0];
                 var end = pars[pars.length - 1];
-                sc.selection.start = sc.getParId($(start));
-                sc.selection.end = sc.getParId($(end));
+                sc.selection.start = $(start);
+                sc.selection.end = $(end);
                 $(pars).addClass('selected');
                 sc.toggleParEditor($(pars), {showDelete: true, area: true});
                 $(pars).removeClass('selected');
@@ -995,30 +995,30 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.extendSelection = function ($par) {
-            var par_id = sc.getParId($par);
             console.log('extendSelection');
 
             if (sc.selection.start === null) {
-                sc.selection.start = par_id;
-                sc.selection.end = par_id;
+                sc.selection.start = $par;
+                sc.selection.end = $par;
             } else {
                 var n = sc.selection.pars.length;
                 var startIndex = $(sc.selection.pars[0]).attr('data-index');
                 var endIndex = $(sc.selection.pars[n - 1]).attr('data-index');
                 var areaLength = endIndex - startIndex + 1;
                 var newIndex = $par.attr('data-index');
-                console.log(areaLength);
+                console.log("startIndex = " + startIndex);
+                console.log("endIndex = " + endIndex);
 
                 if (newIndex < startIndex) {
-                    sc.selection.start = par_id;
+                    sc.selection.start = $par;
                     console.log('start');
                 } else if (newIndex > endIndex) {
-                    sc.selection.end = par_id;
+                    sc.selection.end = $par;
                     console.log('end');
                 } else if (areaLength > 1 && newIndex == startIndex) {
-                    sc.selection.start = sc.getParId($(sc.selection.pars[1]));
+                    sc.selection.start = $(sc.selection.pars[1]);
                 } else if (areaLength > 1 && newIndex == endIndex) {
-                    sc.selection.end = sc.getParId($(sc.selection.pars[n - 2]));
+                    sc.selection.end = $(sc.selection.pars[n - 2]);
                 }
             }
         };
@@ -1524,9 +1524,9 @@ timApp.controller("ViewCtrl", [
             $('.par.selected').removeClass('selected');
             $('.par.marked').removeClass('marked');
             if (sc.selection.start !== null) {
-                var $start = sc.getElementByParId(sc.selection.start);
+                var $start = sc.selection.start;
                 if (sc.selection.end !== null && sc.selection.end !== sc.selection.start) {
-                    var $end = sc.getElementByParId(sc.selection.end);
+                    var $end = sc.selection.end;
                     sc.selection.pars = $start.nextUntil($end);
                     sc.selection.pars = sc.selection.pars.add($start).add($end);
                 } else {
@@ -1648,8 +1648,8 @@ timApp.controller("ViewCtrl", [
             } else {
                 ref_doc_id = null;
                 area_name = null;
-                area_start = sc.selection.start;
-                area_end = sc.selection.end;
+                area_start = sc.getParId(sc.selection.start);
+                area_end = sc.getParId(sc.selection.end);
             }
 
             var doc_id = override_doc_id ? override_doc_id : sc.docId;
