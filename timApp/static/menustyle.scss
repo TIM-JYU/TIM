@@ -57,8 +57,8 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
 }
 
 .menuSection #largeMenu {
-    background-color: #3cc;
-    border: 1px solid #3cc;
+    background-color: $basic-color;
+    border: 1px solid $basic-color;
     border-radius: 5px;
     padding: 1px 10px 10px 10px;
     top: 0;
