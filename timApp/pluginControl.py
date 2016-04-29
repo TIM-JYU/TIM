@@ -65,7 +65,9 @@ def pluginify(doc,
               sanitize=True,
               do_lazy=False,
               edit_window=False,
-              load_states=True):
+              load_states=True,
+              plugin_params=None,
+              wrap_in_div=True):
     """ "Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding
         plugin route for each plugin paragraph.
 
@@ -180,7 +182,7 @@ def pluginify(doc,
 
         if 'multihtml' in reqs and reqs['multihtml']:
             try:
-                response = call_plugin_multihtml(plugin_name, [val for _, val in plugin_block_map.items()])
+                response = call_plugin_multihtml(plugin_name, [val for _, val in plugin_block_map.items()], plugin_params)
             except PluginException as e:
                 for idx in plugin_block_map.keys():
                     html_pars[idx]['html'] = get_error_html_plugin(plugin_name, str(e))
@@ -200,11 +202,11 @@ def pluginify(doc,
                 html_pars[idx]['html'] = ("<div id='{}' data-plugin='{}'>{}</div>"
                                           .format(markup['taskIDExt'],
                                                   plugin_url,
-                                                  html))
+                                                  html)) if wrap_in_div else html
         else:
             for idx, val in plugin_block_map.items():
                 try:
-                    html = call_plugin_html(plugin_name, val['markup'], val['state'], val['taskID'])
+                    html = call_plugin_html(plugin_name, val['markup'], val['state'], val['taskID'], plugin_params)
                 except PluginException as e:
                     html_pars[idx]['html'] = get_error_html_plugin(plugin_name, str(e))
                     continue
@@ -213,7 +215,7 @@ def pluginify(doc,
                 html_pars[idx]['needs_browser'] = needs_browser or is_lazy
                 html_pars[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
                                                                              plugin_url,
-                                                                             html)
+                                                                             html) if wrap_in_div else html
 
     return html_pars, js_paths, css_paths, modules
 

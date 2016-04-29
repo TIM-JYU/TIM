@@ -115,7 +115,7 @@ class PluginTest(TimRouteTest):
                                       'cats are '
                                       'black.&lt;/p&gt;&quot;,&quot;correct&quot;:false,&quot;reason&quot;:&quot;&lt;p&gt;No '
                                       'way.&lt;/p&gt;&quot;},{&quot;text&quot;:&quot;&lt;p&gt;Guess.&lt;/p&gt;&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;&lt;p&gt;No '
-                                      "reason.&lt;/p&gt;&quot;}]}}'></mmcq></div>"}, j)
+                                      "reason.&lt;/p&gt;&quot;}]}}'></mmcq></div>", 'reviewHtml': None}, j)
 
         timdb = self.get_db()
         timdb.users.grant_access(timdb.users.get_anon_group_id(), doc.doc_id, 'view')

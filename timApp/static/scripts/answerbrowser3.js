@@ -125,7 +125,8 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                             doc_id: $scope.$parent.docId,
                             par_id: par_id,
                             user_id: $scope.user.id,
-                            answer_id: $scope.selectedAnswer.id
+                            answer_id: $scope.selectedAnswer.id,
+                            review: $scope.review
                         }
                     }).success(function (data, status, headers, config) {
                         var newhtml = makeNotLazy(data.html);
@@ -133,6 +134,9 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                         plugin.html($compile(newhtml)($scope));
                         plugin.css('opacity', '1.0');
                         $scope.$parent.processAllMathDelayed(plugin);
+                        if ($scope.review) {
+                            $scope.element.find('.review').html(data.reviewHtml);
+                        }
                     }).error(function (data, status, headers, config) {
                         $scope.error = 'Error getting state: ' + data.error;
                     }).finally(function () {
@@ -385,6 +389,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                 $scope.taskInfo = null;
                 $scope.anyInvalid = false;
                 $scope.giveCustomPoints = false;
+                $scope.review = false;
 
                 $scope.updateFiltered = function (newValues, oldValues, scope) {
                     $scope.anyInvalid = false;
@@ -400,6 +405,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     }
                 };
 
+                $scope.$watch('review', $scope.changeAnswer);
                 $scope.$watchGroup(['onlyValid', 'answers'], $scope.updateFiltered);
 
                 // call checkUsers automatically for now; suitable only for lazy mode!
