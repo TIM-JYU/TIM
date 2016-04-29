@@ -268,13 +268,13 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             newMarking.coord.end.node = nodeNums[1];
 
             console.log(newMarking);
+
             $scope.makePostRequest("/addannotation", newMarking, function(json){
                 $scope.annotationids[newMarking.id] = json.data;
             });
 
             $scope.selectedArea = undefined;
             velp.used += 1;
-            //$scope.makePostRequest("/addannotation", newMarking, function (json) { });
         }
         $scope.annotationsAdded = true;
     };
@@ -289,20 +289,30 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     var getElementPositionInTree = function(start, array){
         var myparent = start.parentElement;
 
-        if (myparent.hasAttribute("id")) {
-            console.log(array.reverse());
+        if (myparent.hasAttribute("t")) {
             return array.reverse();
         }
 
+        var count = 0;
         for (var i = 0; i<myparent.children.length; i++){
-            if (myparent.children[i] == start){
-                array.push(i);
 
+            if (myparent.children[i] == start){
+                array.push(count);
                 return getElementPositionInTree(myparent, array)
             }
+
+            if (myparent.children[i].nodeName == "ANNOTATION"){
+                var innerElements = myparent.children[i].getElementsByClassName("highlighted")[0];
+                if (innerElements.children.length > 2){
+                    count += innerElements.children.length - 2;
+                }
+                continue;
+            }
+
+            count++;
         }
 
-        return null
+        throw "Element position in tree was not found";
     };
 
     /**
@@ -331,11 +341,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             else if (el.nodeName != startType){
                 return storedOffset;
             } else {
-                return storedOffset + el.length;
+                storedOffset += el.length;
             }
         }
 
-        return startoffset;
+        return storedOffset;
     };
 
     /**
