@@ -39,9 +39,9 @@ class Annotations(TimDbBase):
         # Todo choose velp language. Have fun.
         see_more_annotations_sql = ""
         if user_is_teacher:
-            see_more_annotations_sql = "Annotation.visible_to = " + str(Annotations.AnnotationVisibility.teacher.value) + "OR\n"
+            see_more_annotations_sql = "Annotation.visible_to = " + str(Annotations.AnnotationVisibility.teacher.value) + " OR\n"
         if user_is_owner:
-            see_more_annotations_sql = see_more_annotations_sql + "Annotation.visible_to = " + str(Annotations.AnnotationVisibility.owner.value) + "OR\n"
+            see_more_annotations_sql = see_more_annotations_sql + "Annotation.visible_to = " + str(Annotations.AnnotationVisibility.owner.value) + " OR\n"
         # Todo handle answers that are visible to the user also.
         cursor = self.db.cursor()
         cursor.execute("""

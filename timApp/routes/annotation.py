@@ -98,21 +98,34 @@ def add_comment() -> str:
 # Todo maybe check that the document in question actually exists and return on error if not.
 @annotations.route("/<document_id>/annotations", methods=['GET'])
 def get_annotations(document_id: int) -> str:
+    try:
+        document_id=int(document_id)
+    except ValueError as e:
+        abort(400, "Document_id is not a number.")
     timdb = getTimDb()
     user_id = getCurrentUserId()
-    if not timdb.users.has_view_access(user_id,document_id):
-        abort(403)
-    user_teacher = timdb.users.has_teacher_access(user_id,document_id)
-    user_owner = timdb.users.user_is_owner(user_id,document_id)
-    results = timdb.annotations.get_annotations_in_document(getCurrentUserId(), user_teacher, user_owner, int(document_id))
+    if not timdb.documents.exists(document_id):
+        abort(404, "No such document.")
+    if not timdb.users.has_view_access(user_id, document_id):
+        abort(403, "View access required.")
+    user_teacher = timdb.users.has_teacher_access(user_id, document_id)
+    user_owner = timdb.users.user_is_owner(user_id, document_id)
+
+    results = timdb.annotations.get_annotations_in_document(getCurrentUserId(), user_teacher, user_owner,
+                                                            int(document_id))
     return jsonResponse(results)
 
 
 # TODO decide whether we should instead return comments for just one annotation, instead of returning everything at
 # once, like here.
-# Todo maybe check that the document in question actually exists and return on error if not.
 @annotations.route("/<document_id>/comments", methods=['GET'])
 def get_comments(document_id: int) -> str:
     timdb = getTimDb()
+    try:
+        document_id=int(document_id)
+    except ValueError as e:
+        abort(400, "Document_id is not a number.")
+    if not timdb.documents.exists(document_id):
+        abort(404, "No such document.")
     results = timdb.annotations_comments.get_comments(int(document_id))
     return jsonResponse(results)
