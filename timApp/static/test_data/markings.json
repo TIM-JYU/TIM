@@ -31,23 +31,24 @@
     "coord": {
        "start":{
         "par_id": "pnKujWTFQrZN",
-        "offset": 105,
+        "offset": 0,
         "t": "LTB4M2JkMTBiMWQ=",
-        "el_path": [1],
+        "el_path": [2],
         "depth": 1,
         "node": 0
       },
       "end":{
         "par_id": "pnKujWTFQrZN",
-        "offset":140,
+        "offset":4,
         "t": "LTB4M2JkMTBiMWQ=",
-        "el_path": [1],
+        "el_path": [2],
         "depth": 1,
-        "node": 0
+        "node": 2
       }
     },
     "comments": [{"author": "vesal", "content": "Tämä on hieman epämääräisesti sanottu"}]
-  },
+  }
+  ,
   {
     "id": 2,
     "points": 0,
@@ -55,18 +56,42 @@
     "coord": {
        "start":{
         "par_id": "pnKujWTFQrZN",
-        "offset": 90,
+        "offset": 5,
         "t": "LTB4M2JkMTBiMWQ=",
-        "el_path": [1],
+        "el_path": [2],
          "depth": 1,
+        "node": 2
+      },
+      "end":{
+        "par_id": "pnKujWTFQrZN",
+        "offset": 16,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [2],
+        "depth": 1,
+        "node": 2
+      }
+    },
+    "comments": [{"author": "vesal", "content": "Tämä on hieman epämääräisesti sanottu"}]
+  },
+    {
+    "id": 3,
+    "points": 0,
+    "velp": 6,
+    "coord": {
+       "start":{
+        "par_id": "pnKujWTFQrZN",
+        "offset": 1,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [2,1],
+         "depth": 2,
         "node": 0
       },
       "end":{
         "par_id": "pnKujWTFQrZN",
-        "offset":100,
+        "offset": 5,
         "t": "LTB4M2JkMTBiMWQ=",
-        "el_path": [1],
-        "depth": 1,
+        "el_path": [2,1],
+        "depth": 2,
         "node": 0
       }
     },
