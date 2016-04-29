@@ -51,7 +51,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             console.log(elpath.length);
 
             for (var j=0; j<elpath.length; j++){
-                elements = elements.children.item(elpath[j]);
+                if (elements.children.item(elpath[j]) != null)
+                    elements = elements.children.item(elpath[j]);
             }
 
             var startel = elements.childNodes[placeInfo["start"]["node"]];
@@ -271,7 +272,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             $scope.selectedArea = undefined;
             velp.used += 1;
-
             //$scope.makePostRequest("/addannotation", newMarking, function (json) { });
         }
         $scope.annotationsAdded = true;
