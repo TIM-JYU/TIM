@@ -8,13 +8,17 @@
         "par_id": "pnKujWTFQrZN",
         "offset": 48,
         "t": "LTB4M2JkMTBiMWQ=",
-        "el_path": [0]
+        "el_path": [0],
+        "node": 0,
+        "depth": 1
       },
       "end":{
         "par_id": "pnKujWTFQrZN",
         "offset":62,
         "t": "LTB4M2JkMTBiMWQ=",
-        "el_path": [0]
+        "el_path": [0],
+        "depth": 1,
+        "node": 0
       }
     },
     "comments": [{"author": "vesal", "content": "Kyseessä oli siis Napoleon I"},
@@ -29,13 +33,17 @@
         "par_id": "pnKujWTFQrZN",
         "offset": 105,
         "t": "LTB4M2JkMTBiMWQ=",
-        "el_path": [1]
+        "el_path": [1],
+        "depth": 1,
+        "node": 0
       },
       "end":{
         "par_id": "pnKujWTFQrZN",
         "offset":140,
         "t": "LTB4M2JkMTBiMWQ=",
-        "el_path": [1]
+        "el_path": [1],
+        "depth": 1,
+        "node": 0
       }
     },
     "comments": [{"author": "vesal", "content": "Tämä on hieman epämääräisesti sanottu"}]
@@ -49,13 +57,17 @@
         "par_id": "pnKujWTFQrZN",
         "offset": 90,
         "t": "LTB4M2JkMTBiMWQ=",
-        "el_path": [1]
+        "el_path": [1],
+         "depth": 1,
+        "node": 0
       },
       "end":{
         "par_id": "pnKujWTFQrZN",
         "offset":100,
         "t": "LTB4M2JkMTBiMWQ=",
-        "el_path": [1]
+        "el_path": [1],
+        "depth": 1,
+        "node": 0
       }
     },
     "comments": [{"author": "vesal", "content": "Tämä on hieman epämääräisesti sanottu"}]

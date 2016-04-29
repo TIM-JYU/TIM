@@ -54,12 +54,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 elements = elements.children.item(elpath[j]);
             }
 
-            var el = elements.childNodes[0];
-            console.log(el);
+            var startel = elements.childNodes[placeInfo["start"]["node"]];
+            var endel = elements.childNodes[placeInfo["end"]["node"]];
 
             var range = document.createRange();
-            range.setStart(el, placeInfo["start"]["offset"]);
-            range.setEnd(el, placeInfo["end"]["offset"]);
+            range.setStart(startel, placeInfo["start"]["offset"]);
+            range.setEnd(endel, placeInfo["end"]["offset"]);
             addAnnotationToCoord(range, $scope.annotations[i], false);
         }
 

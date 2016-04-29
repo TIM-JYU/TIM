@@ -61,10 +61,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         $http.get('/{0}/annotations'.replace('{0}', doc_id)).success(function (data) {
 
-            //$scope.annotations = data;
-            //$scope.loadAnnotations();
+            $scope.annotations = data;
+            $scope.loadAnnotations();
 
-            $scope.annotations = [];
+            //$scope.annotations = [];
 
         });
 
