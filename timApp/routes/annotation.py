@@ -86,6 +86,23 @@ def add_annotation() -> str:
     return jsonResponse(new_id)
 
 
+@annotations.route("/updateannotation", methods=['POST'])
+def update_annotation() -> str:
+    user_id = getCurrentUserId()
+    json_data = request.get_json()
+    try:
+        annotation_id = json_data['annotation_id']
+    except KeyError as e:
+        abort(400, "Missing data: " + e.args[0])
+    timdb = getTimDb()
+    if not timdb.annotations.annotation_exists(annotation_id):
+        abort(404,"No such annotation.")
+    if not timdb.annotations.is_user_annotator(annotation_id, user_id):
+        abort(403, "You are not the annotator.")
+    #Todo, actually update the annotation.
+    return ""
+
+
 @annotations.route("/addannotationcomment", methods=['POST'])
 def add_comment() -> str:
     json_data = request.get_json()

@@ -231,7 +231,17 @@ class Annotations(TimDbBase):
                       FROM Annotation
                       WHERE id = ?
         """, [annotation_id])
-        cursor.fetchone()
+        return cursor.fetchone()[0] == user_id
+
+    def annotation_exists(self, annotation_id: int) -> bool:
+        cursor = self.db.cursor()
+        cursor.execute("""
+                       SELECT 1
+                       FROM Annotation
+                       WHERE id = ?;
+        """, [annotation_id])
+        #more than one result should not happen, since id is the key for this table.
+        return len(cursor.fetchall())==1
 
     def invalidate_annotation(self, annotation_id: int, valid_until: Optional[str] = None):
         cursor = self.db.cursor()
