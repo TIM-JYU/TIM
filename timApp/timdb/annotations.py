@@ -60,7 +60,11 @@ class Annotations(TimDbBase):
                          Annotation.paragraph_id_start,
                          Annotation.paragraph_id_end,
                          Annotation.offset_start,
+                         Annotation.node_start,
+                         Annotation.depth_start,
                          Annotation.offset_end,
+                         Annotation.node_end,
+                         Annotation.depth_end,
                          Annotation.hash_start,
                          Annotation.hash_end,
                          Annotation.element_path_start,
@@ -84,10 +88,11 @@ class Annotations(TimDbBase):
             end_path = [int(i) for i in result['element_path_end'][1:-1].split(',')]
 
             start = {'par_id': result['paragraph_id_start'], 'offset': result['offset_start'],
-                     't': result['hash_start'],
+                     'node': result['node_start'], 'depth': result['depth_start'], 't': result['hash_start'],
                      'el_path': start_path}
-            end = {'par_id': result['paragraph_id_end'], 'offset': result['offset_end'], 't': result['hash_end'],
-                   'el_path': result['element_path_end']}
+            end = {'par_id': result['paragraph_id_end'], 'offset': result['offset_end'],
+                   'node': result['node_end'], 'depth': result['depth_end'], 't': result['hash_end'],
+                   'el_path': end_path}
             coord = {'start': start, 'end': end}
             result['coord'] = coord
         return results
