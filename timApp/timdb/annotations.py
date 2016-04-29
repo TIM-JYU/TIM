@@ -79,7 +79,7 @@ class Annotations(TimDbBase):
                        see_more_annotations_sql
                        + """Annotation.visible_to = ?)
                        GROUP BY element_path_start
-                       ORDER BY depth_start DESC, offset_start DESC
+                       ORDER BY depth_start DESC, node_start DESC, offset_start DESC
                        """, [document_id, user_id, Annotations.AnnotationVisibility.everyone.value]
                        )
         results = self.resultAsDictionary(cursor)
@@ -223,6 +223,15 @@ class Annotations(TimDbBase):
                        )
         self.db.commit()
         return
+
+    def is_user_annotator(self, annotation_id: int, user_id: int) -> bool:
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT annotator_id
+                      FROM Annotation
+                      WHERE id = ?
+        """, [annotation_id])
+        cursor.fetchone()
 
     def invalidate_annotation(self, annotation_id: int, valid_until: Optional[str] = None):
         cursor = self.db.cursor()
