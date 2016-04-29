@@ -60,7 +60,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         });
 
         $http.get('/{0}/annotations'.replace('{0}', doc_id)).success(function (data) {
-            $scope.annotations = [];
+            $scope.annotations = data;
             //$scope.loadAnnotations();
         });
 
@@ -344,13 +344,13 @@ timApp.filter('filterByLabels', function () {
             for (var i = 0; i < velps.length; i++) {
                 // return all velps if velp is under edit
                 /*if (velps[i].edit){
-                    return lockedVelps;
-                }*/
+                 return lockedVelps;
+                 }*/
 
                 for (var j = 0; j < selectedLabels.length; j++) {
                     if (typeof velps[i].labels != "undefined" && velps[i].labels.indexOf(selectedLabels[j]) != -1)
                         if (!(i in selectedVelps))
-                            selectedVelps[i] = [velps[i],1];
+                            selectedVelps[i] = [velps[i], 1];
                         else
                             selectedVelps[i][1] += 1;
                 }
