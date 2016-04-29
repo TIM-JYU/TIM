@@ -38,9 +38,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Loads used annotations into view
      */
     $scope.loadAnnotations = function() {
-        for (var i=$scope.annotations.length -1; i>=0; i--){
-            var placeInfo = $scope.annotations[i]["coord"];
+        console.log($scope.annotations);
 
+        for (var i=0; i<$scope.annotations.length; i++){
+            var placeInfo = $scope.annotations[i]["coord"];
+            console.log(placeInfo);
             var parent = document.getElementById(placeInfo["start"]["par_id"]).querySelector(".parContent");
             var elements = parent;
 
@@ -286,13 +288,14 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     var getElementPositionInTree = function(start, array){
         var myparent = start.parentElement;
 
-        if (myparent.hasAttribute("id"))
+        if (myparent.hasAttribute("id")) {
             return array.reverse();
+        }
 
         for (var i = 0; i<myparent.children.length; i++){
             if (myparent.children[i] == start){
                 array.push(i);
-                console.log(array);
+
                 return getElementPositionInTree(myparent, array)
             }
         }
