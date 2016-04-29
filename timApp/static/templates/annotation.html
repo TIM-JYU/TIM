@@ -3,28 +3,22 @@
     <div class="fulldiv">
         <div class="div-90">
             <p><span><strong>{{ velp }}</strong></span>
-                <br/><label>Points: <input type="number" ng-model="points" ng-value="points"
-                                           ng-change="changePoints(points)"></label>
+            <br /><label>Points: <input type="number" ng-model="points" ng-value="points" ng-change="changePoints(points)"></label>
             </p>
         </div>
         <div class="div-10">
-                <span title="Close" class="float-right glyphicon glyphicon-remove clickable-icon"
-                      ng-click="toggleAnnotation()"></span>
+            <span title="Close" class="float-right glyphicon glyphicon-remove clickable-icon" ng-click="toggleAnnotation()"></span>
         </div>
     </div>
     <div class="fulldiv">
         <ul class="comments">
-            <li ng-repeat="comment in comments"><strong>{{ comment["author"] }}</strong>: {{ comment["content"] }}
-            </li>
+            <li ng-repeat="comment in comments"><strong>{{ comment["author"] }}</strong>: {{ comment["content"] }}</li>
         </ul>
 
-        <textarea placeholder="Add comment" ng-model="newComment" autofocus></textarea>
-        <button ng-click="addComment()">Save</button>
-            <span title="Delete annotation"
-                  ng-class="['delAnnotation', 'float-right', 'glyphicon', 'glyphicon-trash', 'clickable-icon', {hide: comments.length > 1} ]"
-                  ng-click="deleteAnnotation()"></span>
+    <textarea placeholder="Add comment" ng-model="newComment" autofocus></textarea>
+    <button ng-click="addComment()">Save</button>
+    <span title="Delete annotation" ng-class="['delAnnotation', 'float-right', 'glyphicon', 'glyphicon-trash', 'clickable-icon', {hide: comments.length > 1} ]" ng-click="deleteAnnotation()"></span>
     </div>
-
     <table id="annTable">
         <tr>
             <td><p>Visible to:</p></td>
@@ -39,9 +33,13 @@
             </td>
         </tr>
     </table>
+</div><span ng-click="toggleAnnotation()" ng-class="['highlighted', 'annotation', 'emphasise', 'default',
+{neutral: points == 0, negative: points<0, positive: points > 0}]" ng-transclude></span>
 
-    <!--alternative velp visible to student:
-    
+
+
+
+<!--
     <form action="">
         <input type="radio" name="visibleTo" value="all">Everyone
         <input type="radio" name="visibleTo" value="teachers">Authorised teachers<br>
@@ -49,8 +47,8 @@
         <input type="radio" name="visibleTo" value="myself">Myself
     </form-->
 
-
-    <!--div class="fulldiv">
+<!--alternative velp visible to student:
+    div class="fulldiv">
         <div class="div-90">
             <p><span><strong>{{ velp }}</strong></span>
             <br /><label>Points: <span type="number" ng-model="points" ng-value="points"></span></label>
@@ -68,4 +66,3 @@
     <button ng-click="addComment()">Save</button>
     </div-->
 
-</div>
