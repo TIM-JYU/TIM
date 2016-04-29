@@ -79,7 +79,7 @@ class Annotations(TimDbBase):
                        see_more_annotations_sql
                        + """Annotation.visible_to = ?)
                        GROUP BY element_path_start
-                       ORDER BY offset_start
+                       ORDER BY depth_start DESC, offset_start DESC
                        """, [document_id, user_id, Annotations.AnnotationVisibility.everyone.value]
                        )
         results = self.resultAsDictionary(cursor)
