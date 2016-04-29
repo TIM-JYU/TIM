@@ -46,7 +46,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
     var new_velp_id = 0; // get latest velp id
     var new_label_id = 0; // get latest label id
-
+    $scope.annotations = [];
     // $scope.filteredVelpCount = 0;
 
     // Get velp and annotation data
@@ -60,8 +60,12 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         });
 
         $http.get('/{0}/annotations'.replace('{0}', doc_id)).success(function (data) {
-            $scope.annotations = data;
+
+            //$scope.annotations = data;
             //$scope.loadAnnotations();
+
+            $scope.annotations = [];
+
         });
 
         $http.get('/{0}/defaultvelpgroup'.replace('{0}', doc_id)).success(function (data){

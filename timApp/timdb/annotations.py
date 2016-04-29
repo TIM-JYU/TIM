@@ -2,6 +2,7 @@ from enum import Enum
 from sqlite3 import Connection
 from typing import Dict, List, Optional
 from timdb.timdbbase import TimDbBase
+from timdb.users import Users
 from assessment_area import AssessmentArea
 
 
@@ -27,18 +28,27 @@ class Annotations(TimDbBase):
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
 
-    def get_annotations_in_document(self, document_id: int) -> List[Dict]:
+    def get_annotations_in_document(self, user_id, user_is_teacher, user_is_owner, document_id: int) -> List[Dict]:
         """Gets all annotations made in a document. Both in document and in answers.
+        :param user_id: user that is viewing annotations. Affects which annotations are returned.
+        :param user_is_teacher:
+        :param user_is_owner:
         :param document_id: The relevant document.
         :return: List of dictionaries, each dictionary representing a single annotation.
         """
-
         # Todo choose velp language. Have fun.
+        see_more_annotations_sql = ""
+        if user_is_teacher:
+            see_more_annotations_sql = "Annotation.visible_to = " + str(Annotations.AnnotationVisibility.teacher.value) + " OR\n"
+        if user_is_owner:
+            see_more_annotations_sql = see_more_annotations_sql + "Annotation.visible_to = " + str(Annotations.AnnotationVisibility.owner.value) + " OR\n"
+        # Todo handle answers that are visible to the user also.
         cursor = self.db.cursor()
         cursor.execute("""
                        SELECT
                          Annotation.id,
                          VelpVersion.velp_id AS velp,
+                         Annotation.visible_to,
                          Annotation.points,
                          Annotation.creation_time,
                          Annotation.valid_until,
@@ -57,10 +67,14 @@ class Annotations(TimDbBase):
                          INNER JOIN VelpVersion ON VelpVersion.id = Annotation.version_id
                        WHERE (Annotation.valid_until ISNULL OR
                              Annotation.valid_until >= CURRENT_TIMESTAMP) AND
-                             Annotation.document_id = ?
+                             Annotation.document_id = ? AND
+                             (Annotation.annotator_id = ? OR
+                       """ +
+                       see_more_annotations_sql
+                       + """Annotation.visible_to = ?)
                        GROUP BY element_path_start
                        ORDER BY offset_start
-                       """, [document_id]
+                       """, [document_id, user_id, Annotations.AnnotationVisibility.everyone.value]
                        )
         results = self.resultAsDictionary(cursor)
         for result in results:

@@ -295,6 +295,20 @@ annotation {
     resize: vertical;
 }
 
+#annTable {
+    margin-left: 0;
+    text-align: left;
+}
+
+#annTable td {
+    border: hidden;
+}
+
+#annqmark {
+    margin-left: 0.6em;
+    margin-top: 0.1em;
+}
+
 .emphasise.default {
     background: gainsboro;
 }

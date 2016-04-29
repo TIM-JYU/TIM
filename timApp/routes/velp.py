@@ -9,7 +9,13 @@ velps = Blueprint('velps',
 @velps.route("/<document_id>/defaultvelpgroup", methods=['GET'])
 def check_default_velp_group(document_id: int) -> str:
     timdb = getTimDb()
-    doc_id = int(document_id)  # Make sure document_id is int
+
+    # Make sure document_id is int
+    try:
+        doc_id = int(document_id)
+    except ValueError as e:
+        abort(400, "Document_id is not a number.")
+
     default_velp_group_id = timdb.velp_groups.check_default_group_exists(doc_id)
     if default_velp_group_id is None:
         default_group_name = timdb.documents.get_first_document_name(doc_id)
@@ -24,7 +30,11 @@ def check_default_velp_group(document_id: int) -> str:
 @velps.route("/<document_id>/<paragraph_id>/velps", methods=['GET'])
 def get_velps(document_id: int, paragraph_id: str) -> str:
     timdb = getTimDb()
-    doc_id = int(document_id)  # Make sure document_id is int
+    # Make sure document_id is int
+    try:
+        doc_id = int(document_id)
+    except ValueError as e:
+        abort(400, "Document_id is not a number.")
 
     # TODO Remove following block, use route above instead
     default_exists = timdb.velp_groups.check_default_group_exists(doc_id)
@@ -44,7 +54,10 @@ def get_velps(document_id: int, paragraph_id: str) -> str:
 @velps.route("/<document_id>/getvelpgrouplocations", methods=['GET'])
 def get_velp_group_locations(document_id: int) -> str:
     timdb = getTimDb()
-    doc_id = int(document_id)
+    try:
+        doc_id = int(document_id)
+    except ValueError as e:
+        abort(400, "Document_id is not a number.")
     location_data = timdb.velp_groups.get_velp_groups_in_assessment_area(doc_id)
     return jsonResponse(location_data)
 
@@ -69,8 +82,12 @@ def create_velp_group():
 @velps.route("/<document_id>/labels", methods=['GET'])
 def get_labels(document_id: int) -> 'str':
     timdb = getTimDb()
+    try:
+        doc_id = int(document_id)
+    except ValueError as e:
+        abort(400, "Document_id is not a number.")
     # Todo select language.
-    label_data = timdb.velps.get_document_velp_label_content(int(document_id))
+    label_data = timdb.velps.get_document_velp_label_content(doc_id)
     return jsonResponse(label_data)
 
 
@@ -104,7 +121,6 @@ def add_velp(velp_content: str = "MOIMOI", default_points: int = -5.0, language_
 @velps.route("/addvelp", methods=['POST'])
 def add_velp():
     json_data = request.get_json()
-    # .get returns null instead of throwing if data is missing.
     try:
         velp_content = json_data['content']
         velp_groups = json_data['velp_groups']
@@ -114,6 +130,7 @@ def add_velp():
         abort(400, "Empty content string.")
 
     # Optional stuff
+    # .get returns null instead of throwing if data is missing.
     default_points = json_data.get('points')
     language_id = json_data.get('language_id')
     icon_id = json_data.get('icon_id')

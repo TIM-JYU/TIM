@@ -10,6 +10,7 @@
 
                 <table class="velpTable">
                     <tr ng-show="advancedOn">
+
                         <td>
                             <label for="searchLabels">Filter labels </label>
                         </td>
@@ -84,20 +85,45 @@
                         </td>
                     </tr>
                 </table>
+                <input value="Create velp" type="button" ng-model="newVelp" ng-click="selectVelpToEdit(newVelp)">
+                    <div ng-class="['emphasise', 'new', { neutral: newVelp.points == 0, positive: newVelp.points > 0, negative: newVelp.points < 0,
+                            edit: newVelp.edit}]">
+                            <div ng-class="['content']">
+                                <p ng-class="[{hide: newVelp.edit}]">
+                                <!--span>Add velp!&ensp;</span-->
+                                <span class="points">{{ newVelp.points }}</span>
+                                </p>
+                                <form ng-class="[{hide: !newVelp.edit}]" name="addVelpForm" ng-submit="addVelp(addVelpForm)" novalidate>
+                                    <p><input name="velpName" type="text" ng-model="newVelp['content']" required placeholder="Text" autofocus>
+                                        <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]"
+                                              ng-repeat="label in filterByLabels"
+                                              ng-style="{ color: getColor(label) }">
+                                        </span>
+                                    </p>
+                                    <p ng-show="(addVelpForm.velpName.$invalid && !addVelpForm.velpName.$pristine) || (submitted && addVelpForm.velpName.$invalid)">
+                                                Velp content is required
+                                    </p>
+                                    <p><input id="addVelpPoints" type="number" ng-model="newVelp['points']" placeholder="Points" value="0"></p>
+                                    <p><input type="submit" value="Save"/></p>
+                                </form>
+                            </div>
+                    </div>
+                </input>
+
                  <!--   <tr>
                         <td colspan="4">-->
-                            <div class="stack">
-                                <div ng-model="newVelp" class="velp" ng-dblclick="selectVelpToEdit(newVelp)" ng-style="{top: 0}">
-                                    <div ng-class="['emphasise', 'new', { neutral: newVelp.points == 0, positive: newVelp.points > 0, negative: newVelp.points < 0,
-                                     edit: newVelp.edit}]">
+                <div class="stack">
+                    <!--div ng-model="newVelp" class="velp" ng-dblclick="selectVelpToEdit(newVelp)" ng-style="{top: 0}">
+                        <div ng-class="['emphasise', 'new', { neutral: newVelp.points == 0, positive: newVelp.points > 0, negative: newVelp.points < 0,
+                            edit: newVelp.edit}]">
 
-                                    <div ng-class="['content']">
-                                        <p ng-class="[{hide:  newVelp.edit}]">
-                                            <span>Add velp!&ensp;</span>
-                                            <span class="points">{{ newVelp.points }}</span>
-                                        </p>
-                                        <form ng-class="[{hide: !newVelp.edit}]" name="addVelpForm"
-                                              ng-submit="addVelp(addVelpForm)" novalidate>
+                            <div ng-class="['content']">
+                                <p ng-class="[{hide:  newVelp.edit}]">
+                                <span>Add velp!&ensp;</span>
+                                <span class="points">{{ newVelp.points }}</span>
+                                </p>
+                                <form ng-class="[{hide: !newVelp.edit}]" name="addVelpForm"
+                                ng-submit="addVelp(addVelpForm)" novalidate>
 
                                             <p><input name="velpName" type="text"
                                                    ng-model="newVelp['content']"
@@ -117,8 +143,8 @@
                                         </form>
                                     </div>
                                     </div>
-                                </div>
-                            {{ lockVelps(filteredVelps) }}
+                                </div-->
+
                             <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByLabels: labels:lockedVelps:advancedOn)">
 
                                 <div class="velp" ng-dblclick="selectVelpToEdit(velp)" ng-click="useVelp(velp)"
@@ -157,9 +183,8 @@
 
                                 <!-- div ng-class="['emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0}]" style="height: 2px;"></div -->
                             </span>
-
                             <p ng-hide="filteredVelps.length">No velps :'(</p>
-                                </div>
+                </div>
                       <!--  </td>
                     </tr>-->
             </div>
