@@ -16,7 +16,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.selectionParent = null;
 
     var username = $scope.$parent.users[0].name;
-    var annotationids = {};
+    $scope.annotationids = {0:0};
 
     /**
      * Makes post request to given url
@@ -116,7 +116,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 $scope.annotations.splice(a,1);
         }
 
-        if (id < 0) id = annotationids[id];
+        if (id < 0) id = $scope.annotationids[id];
 
         $scope.makePostRequest("/deleteannotation", id, function(){});
     };
@@ -227,12 +227,14 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             var endOffset =  $scope.selectedArea["endOffset"];
             if (innerDiv.childElementCount == 0)
                 endOffset = startoffset + innerDiv.childNodes[innerDiv.childNodes.length-1].length;
+            console.log(Object.keys($scope.annotationids).length);
 
             var newMarking = {
-                id: -annotationids.keys().length -1,
+                id: (Object.keys($scope.annotationids).length+1)*(-1),
                 velp: velp.id,
                 points: velp.points,
                 doc_id: $scope.docId,
+                visible_to: 4,
                 coord: {
                     start: {
                         par_id: parelement.id,
@@ -256,13 +258,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             addAnnotationToCoord($scope.selectedArea, newMarking, true);
             $scope.annotations.push(newMarking);
+            $scope.annotationids[newMarking.id] = newMarking.id;
 
             var nodeNums = getNodeNumbers($scope.selectedArea["startContainer"], newMarking.id, innerDiv);
-            newMarking.start.node = nodeNums[0];
-            newMarking.end.node = nodeNums[1];
+            newMarking.coord.start.node = nodeNums[0];
+            newMarking.coord.end.node = nodeNums[1];
 
+            console.log(newMarking);
             $scope.makePostRequest("/addannotation", newMarking, function(json){
-                annotationids[newMarking.id] = json.data;
+                $scope.annotationids[newMarking.id] = json.data;
             });
 
             $scope.selectedArea = undefined;

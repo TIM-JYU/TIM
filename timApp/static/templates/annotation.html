@@ -1,5 +1,5 @@
-<!-- Pop-over element-->
-<div ng-show="!show" ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
+<!-- Pop-over element
+--><div ng-show="!show" ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
     <div class="fulldiv">
         <div class="div-90">
             <p><span><strong>{{ velp }}</strong></span>
@@ -23,10 +23,10 @@
         <tr>
             <td><p>Visible to:</p></td>
             <td><select>
-                <option value="everyone">Everyone</option>
-                <option value="teachers">Teachers</option>
-                <option value="owner">Document owner</option>
-                <option value="justMe">Just me</option>
+                <option value="4">Everyone</option>
+                <option value="3">Teachers</option>
+                <option value="2">Document owner</option>
+                <option value="1">Just me</option>
             </select>
                 <span id="annqmark"
                       ng-class="['float-right', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"></span>
@@ -35,34 +35,3 @@
     </table>
 </div><span ng-click="toggleAnnotation()" ng-class="['highlighted', 'annotation', 'emphasise', 'default',
 {neutral: points == 0, negative: points<0, positive: points > 0}]" ng-transclude></span>
-
-
-
-
-<!--
-    <form action="">
-        <input type="radio" name="visibleTo" value="all">Everyone
-        <input type="radio" name="visibleTo" value="teachers">Authorised teachers<br>
-        <input type="radio" name="visibleTo" value="owner">Document owner
-        <input type="radio" name="visibleTo" value="myself">Myself
-    </form-->
-
-<!--alternative velp visible to student:
-    div class="fulldiv">
-        <div class="div-90">
-            <p><span><strong>{{ velp }}</strong></span>
-            <br /><label>Points: <span type="number" ng-model="points" ng-value="points"></span></label>
-            </p>
-        </div>
-        <div class="div-10">
-            <span title="Close" class="float-right glyphicon glyphicon-remove clickable-icon" ng-click="toggleAnnotation()"></span>
-        </div>
-    </div>
-    <div class="fulldiv">
-        <ul class="comments">
-            <li ng-repeat="comment in comments"><strong>{{ comment["author"] }}</strong>: {{ comment["content"] }}</li>
-        </ul>
-    <textarea placeholder="Add comment" ng-model="newComment" autofocus></textarea>
-    <button ng-click="addComment()">Save</button>
-    </div-->
-
