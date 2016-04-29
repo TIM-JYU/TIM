@@ -281,6 +281,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Gets array of element indexes from parent to start
+     * TODO: ignore annotations
      * @param start
      * @param array
      * @returns {*}
@@ -289,6 +290,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var myparent = start.parentElement;
 
         if (myparent.hasAttribute("id")) {
+            console.log(array.reverse());
             return array.reverse();
         }
 
