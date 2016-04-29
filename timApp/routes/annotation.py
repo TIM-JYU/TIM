@@ -23,6 +23,9 @@ def add_annotation() -> str:
         end = coordinates['end']
 
         offset_start = start['offset']
+        depth_start = start['depth']
+        node_start = start['node']
+
         element_path_start = start['el_path']
         if type(element_path_start) is not list:
             raise TypeError(str(element_path_start))
@@ -31,6 +34,9 @@ def add_annotation() -> str:
         element_path_start = str(element_path_start)
 
         offset_end = end['offset']
+        depth_end = end['depth']
+        node_end = end['node']
+
         element_path_end = end['el_path']
         if type(element_path_end) is not list:
             raise TypeError(str(element_path_end))
@@ -74,9 +80,9 @@ def add_annotation() -> str:
     annotator_id = getCurrentUserId()
     velp_version = timdb.velps.get_latest_velp_version(velp_id)
     new_id = timdb.annotations.create_annotation(velp_version, visible_to, points, annotator_id, document_id,
-                                                 paragraph_id_start, paragraph_id_end, offset_start, offset_end,
-                                                 hash_start, hash_end, element_path_start, element_path_end, None,
-                                                 icon_id, answer_id)
+                                                 paragraph_id_start, paragraph_id_end, offset_start, node_start,
+                                                 depth_start, offset_end, node_end, depth_end, hash_start, hash_end,
+                                                 element_path_start, element_path_end, None, icon_id, answer_id)
     return jsonResponse(new_id)
 
 
@@ -99,7 +105,7 @@ def add_comment() -> str:
 @annotations.route("/<document_id>/annotations", methods=['GET'])
 def get_annotations(document_id: int) -> str:
     try:
-        document_id=int(document_id)
+        document_id = int(document_id)
     except ValueError as e:
         abort(400, "Document_id is not a number.")
     timdb = getTimDb()
@@ -122,7 +128,7 @@ def get_annotations(document_id: int) -> str:
 def get_comments(document_id: int) -> str:
     timdb = getTimDb()
     try:
-        document_id=int(document_id)
+        document_id = int(document_id)
     except ValueError as e:
         abort(400, "Document_id is not a number.")
     if not timdb.documents.exists(document_id):

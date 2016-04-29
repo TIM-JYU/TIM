@@ -39,9 +39,11 @@ class Annotations(TimDbBase):
         # Todo choose velp language. Have fun.
         see_more_annotations_sql = ""
         if user_is_teacher:
-            see_more_annotations_sql = "Annotation.visible_to = " + str(Annotations.AnnotationVisibility.teacher.value) + " OR\n"
+            see_more_annotations_sql = "Annotation.visible_to = " + str(
+                Annotations.AnnotationVisibility.teacher.value) + " OR\n"
         if user_is_owner:
-            see_more_annotations_sql = see_more_annotations_sql + "Annotation.visible_to = " + str(Annotations.AnnotationVisibility.owner.value) + " OR\n"
+            see_more_annotations_sql = see_more_annotations_sql + "Annotation.visible_to = " + str(
+                Annotations.AnnotationVisibility.owner.value) + " OR\n"
         # Todo handle answers that are visible to the user also.
         cursor = self.db.cursor()
         cursor.execute("""
@@ -124,11 +126,12 @@ class Annotations(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     def create_annotation(self, version_id: int, visible_to: AnnotationVisibility, points: Optional[float],
-                          annotator_id: int,
-                          document_id: int, paragraph_id_start: Optional[str], paragraph_id_end: Optional[str],
-                          offset_start: int, offset_end: int, hash_start: Optional[str], hash_end: Optional[str],
-                          element_path_start: str, element_path_end: str, valid_until: Optional[str] = None,
-                          icon_id: Optional[int] = None, answer_id: Optional[int] = None) -> int:
+                          annotator_id: int, document_id: int, paragraph_id_start: Optional[str],
+                          paragraph_id_end: Optional[str], offset_start: int, node_start: int, depth_start: int,
+                          offset_end: int, node_end: int, depth_end: int, hash_start: Optional[str],
+                          hash_end: Optional[str], element_path_start: str, element_path_end: str,
+                          valid_until: Optional[str] = None, icon_id: Optional[int] = None,
+                          answer_id: Optional[int] = None) -> int:
         """Create a new annotation.
 
         :param version_id: Version of the velp that the annotation uses.
@@ -139,7 +142,11 @@ class Annotations(TimDbBase):
         :param paragraph_id_start: ID of paragraph where annotation starts.
         :param paragraph_id_end: ID of paragraph where annotation ends.
         :param offset_start: Character location where annotation starts.
+        :param node_start:
+        :param depth_start: depth of the element path
         :param offset_end: Character location where annotation ends.
+        :param node_end:
+        :param depth_end: depth of the element path
         :param hash_start: Hash code of paragraph where annotation starts.
         :param hash_end: Hash code of paragraph where annotation ends.
         :param element_path_start: List of elements as text (parsed in interface) connected to annotation start.
@@ -168,13 +175,12 @@ class Annotations(TimDbBase):
                       INSERT INTO
                       Annotation(version_id, visible_to, points, valid_until, icon_id, annotator_id,
                       document_id, answer_id, paragraph_id_start, paragraph_id_end,
-                      offset_start, offset_end, hash_start, hash_end,
+                      offset_start, node_start, depth_start, offset_end, node_end, depth_end, hash_start, hash_end,
                       element_path_start, element_path_end)
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                      """, [version_id, visible_to.value, points, valid_until, icon_id, annotator_id,
-                            document_id, answer_id, paragraph_id_start, paragraph_id_end,
-                            offset_start, offset_end, hash_start, hash_end,
-                            element_path_start, element_path_end]
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                      """, [version_id, visible_to.value, points, valid_until, icon_id, annotator_id, document_id,
+                            answer_id, paragraph_id_start, paragraph_id_end, offset_start, node_start, depth_start,
+                            offset_end, node_end, depth_end, hash_start, hash_end, element_path_start, element_path_end]
                        )
         self.db.commit()
         return cursor.lastrowid
