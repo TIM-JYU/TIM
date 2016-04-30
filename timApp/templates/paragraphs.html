@@ -87,6 +87,7 @@
          id="{{ t.id }}"
      {% if t.html != "" or (not t.attrs.area and not t.attrs.area_end) %}
          data-index="{{ par_index }}"
+         {% set par_index = par_index + 1 %}
      {% endif %}
          t="{{ t.t }}"
          attrs="{{ t.attrs_str }}"
@@ -204,7 +205,4 @@
         </div>
         {% set area_depth = area_depth - 1 %}
     {% endif %}
-
-    {% set par_index = par_index + 1 %}
-
 {% endfor %}
