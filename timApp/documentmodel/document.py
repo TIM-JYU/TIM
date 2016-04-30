@@ -436,7 +436,8 @@ class Document:
                         f.write(line)
 
     def insert_paragraph(self, text: str,
-                         insert_before_id: Optional[str],
+                         insert_before_id: Optional[str] = '',
+                         insert_after_id: Optional[str] = '',
                          attrs: Optional[dict]=None, properties: Optional[dict]=None,
                          par_id: Optional[str]=None) -> DocParagraph:
         """
@@ -445,10 +446,11 @@ class Document:
         :param attrs: The attributes for the paragraph.
         :param text: New paragraph text.
         :param insert_before_id: Id of the paragraph to insert before, or None if last.
+        :param insert_after_id: Id of the paragraph to insert after, or None if first.
         :return: The inserted paragraph object.
         """
-        if insert_before_id is None:
-            return self.add_paragraph(text=text, par_id=par_id, attrs=attrs, properties=properties)
+        if insert_before_id == '' and insert_after_id == '':
+            raise TimDbException('insert_paragraph: missing argument insert_before_id or insert_after_id')
 
         p = DocParagraph.create(
             doc=self,
@@ -458,9 +460,15 @@ class Document:
             props=properties,
             files_root=self.files_root
         )
-        return self.insert_paragraph_obj(p, insert_before_id=insert_before_id)
+        return self.insert_paragraph_obj(p, insert_before_id=insert_before_id, insert_after_id=insert_after_id)
 
-    def insert_paragraph_obj(self, p: DocParagraph, insert_before_id: Optional[str]) -> DocParagraph:
+    def insert_paragraph_obj(self, p: DocParagraph,
+                             insert_before_id: Optional[str] = '',
+                             insert_after_id: Optional[str] = '') -> DocParagraph:
+
+        if insert_before_id == '' and insert_after_id == '':
+            raise TimDbException('insert_paragraph_obj: missing argument insert_before_id or insert_after_id')
+
         if insert_before_id is None:
             return self.add_paragraph_obj(p)
 
@@ -471,16 +479,23 @@ class Document:
                                            op_params={'before_id': insert_before_id})
         self.__update_metadata([p], old_ver, new_ver)
 
+        new_line = p.get_id() + '/' + p.get_hash() + '\n'
+        line = None
         with open(self.get_version_path(old_ver), 'r') as f_src:
             with open(self.get_version_path(new_ver), 'w') as f:
                 while True:
+                    if line is None and insert_before_id is None:
+                        f.write(new_line)
+
                     line = f_src.readline()
                     if not line:
                         return p
-                    if line.startswith(insert_before_id):
-                        f.write(p.get_id() + '/' + p.get_hash())
-                        f.write('\n')
+
+                    if insert_before_id and line.startswith(insert_before_id):
+                        f.write(new_line)
                     f.write(line)
+                    if insert_after_id and line.startswith(insert_after_id):
+                        f.write(new_line)
 
     def modify_paragraph(self, par_id: str, new_text: str, new_attrs: Optional[dict]=None, new_properties: Optional[dict]=None) -> DocParagraph:
         """

@@ -1662,6 +1662,25 @@ timApp.controller("ViewCtrl", [
             sc.selection.end = null;
         };
 
+        sc.nameArea = function (e, $par) {
+            // todo: replace this with an html control
+            var areaName = $window.prompt('Enter a name for the new area');
+            if (!areaName)
+                return;
+
+            http.post('/name_area/' + sc.docId + '/' + areaName, {
+                "area_start" : sc.getFirstParId(sc.selection.start),
+                "area_end" : sc.getLastParId(sc.selection.end)
+            }).success(function(data, status, headers, config) {
+                // todo: do this without reload
+                $window.location.reload();
+
+            }).error(function(data, status, headers, config) {
+                $window.alert(data.error);
+            });
+        };
+
+
         sc.cutArea = function (e, $par_or_area, cut) {
             sc.copyArea(e, $par_or_area, sc.docId, true);
         };
@@ -1757,6 +1776,7 @@ timApp.controller("ViewCtrl", [
                         desc: 'Edit area',
                         show: true
                     },
+                    {func: sc.nameArea, desc: 'Name area', show: true},
                     {func: sc.cutArea, desc: 'Cut area', show: true},
                     {func: sc.copyArea, desc: 'Copy area', show: true},
                     {func: sc.cancelArea, desc: 'Cancel area', show: true},

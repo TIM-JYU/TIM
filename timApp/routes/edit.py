@@ -561,3 +561,19 @@ def get_updated_pars(doc_id):
     """
     verify_view_access(doc_id)
     return par_response([], Document(doc_id), update_cache=True)
+
+
+@edit_page.route("/name_area/<int:doc_id>/<area_name>", methods=["POST"])
+def name_area(doc_id, area_name):
+    area_start, area_end = verify_json_params('area_start', 'area_end', require=True)
+    verify_doc_exists(doc_id)
+    verify_edit_access(doc_id)
+    if not area_name or ' ' in area_name or '´' in area_name:
+        abort(400, 'Invalid area name')
+
+    doc = get_newest_document(doc_id)
+    start_par = doc.insert_paragraph('', insert_before_id=area_start, attrs={'area': area_name})
+    end_par = doc.insert_paragraph('', insert_after_id=area_end, attrs={'area_end': area_name})
+
+    return par_response([start_par, end_par], Document(doc_id), update_cache=True)
+
