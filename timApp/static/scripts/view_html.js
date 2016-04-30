@@ -1155,7 +1155,7 @@ timApp.controller("ViewCtrl", [
             }
 
             //console.log(e.target);
-            return true;
+            return false;
 
         }, true);
 
