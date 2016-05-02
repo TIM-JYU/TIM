@@ -21,10 +21,11 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
         $scope.lectureQuestions = [];
         $scope.materialQuestions = [];
 
-        $scope.active = -1;
+        $scope.active = null;
         if ($window.showIndex) {
             $scope.active = 0;
         }
+        $scope.lastTab = $scope.active;
 
         /**
          * FILL WITH SUITABLE TEXT
@@ -33,9 +34,21 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
         $scope.showSidebar = function () {
             var tabs = $("#menuTabs");
             if (tabs.is(":visible")) {
-                tabs.attr("class", "hidden");
+                if ($scope.active !== null) {
+                    $scope.lastTab = $scope.active;
+                    $scope.active = -1; // this will set the value to null and remove the "selected" state from tab
+                    if ($('.device-xs').is(':visible') || $('.device-sm').is(':visible')) {
+                        tabs.hide();
+                    }
+                } else {
+                    $scope.active = $scope.lastTab;
+                }
             } else {
+                tabs.show();
                 tabs.attr("class", "");
+                if ($scope.active === null) {
+                    $scope.active = $scope.lastTab || 0;
+                }
             }
         };
 
