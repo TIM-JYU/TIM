@@ -121,7 +121,6 @@ input[type="number"] {
     font-family: verdana;
     font-size: 18px;
     padding: 0;
-    color: #3cc;
     text-align: left;
     margin-top: 0;
     margin-bottom: 0;
@@ -132,7 +131,7 @@ input[type="number"] {
 
 .createLecture input[type="text"], .createLecture input[type="date"],
 .createLecture select, .createQuestion input, .createQuestion textarea {
-    border: 1px solid #3cc;
+    border: 1px solid $basic-color;
     color: #505050;
     outline: 0 none;
     font-size: 12px;
@@ -143,7 +142,7 @@ input[type="number"] {
 }
 
 .createQuestion select {
-    border: 1px solid #3cc;
+    border: 1px solid $basic-color;
     color: #505050;
     margin: 2px 6px 10px 2px;
     outline: 0 none;
@@ -234,7 +233,7 @@ input[type="number"] {
 
 .createLecture button, .buttons button {
     margin-top: 5px;
-    background: #3CC;
+    background: $basic-color;
     border: 0;
     border-radius: 3px;
     color: #FFF;
