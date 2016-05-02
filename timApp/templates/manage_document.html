@@ -13,47 +13,47 @@
             </tr>
             <tr ng-repeat="alias in aliases">
                 <td>
-                    <div class="input-group">
+                    <div class="input-group input-group-sm">
                         <span ng-click="aliasPublicClicked(alias)" class="input-group-addon">
                        <input type="checkbox" ng-checked="alias.public">
                        </span>
                         <input class="form-control" type="text" ng-model="alias.location"/>
                     <span class="input-group-btn">
-                    <a class="timButton btn-sm" href="{{ '/view/{{alias.location}}' }}">View</a>
+                    <a class="timButton" href="{{ '/view/{{alias.location}}' }}">View</a>
                     </span>
                     </div>
                 </td>
                 <td>
-                    <div class="input-group">
+                    <div class="input-group input-group-sm">
                         <input class="form-control" type="text" ng-model="alias.name" placeholder="Document name"/>
                         <span class="input-group-btn">
-                    <a class="timButton btn-sm" href="{{ '/view/{{alias.fullname}}' }}">View</a>
+                    <a class="timButton" href="{{ '/view/{{alias.fullname}}' }}">View</a>
                             </span>
                     </div>
                 </td>
                 <td>
                     <div class="row">
                         <div class="col-md-6">
-                            <button class="wideButton" ng-click="updateAlias(alias)"
+                            <button class="wideButton btn-sm" ng-click="updateAlias(alias)"
                                     ng-disabled="!aliasChanged(alias)">
                                 Update
                             </button>
                         </div>
                         <div class="col-md-6">
-                            <button class="wideButton" ng-click="removeAlias(alias)">Remove</button>
+                            <button class="wideButton btn-sm" ng-click="removeAlias(alias)">Remove</button>
                         </div>
                     </div>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <div class="input-group">
+                    <div class="input-group input-group-sm">
                         <span ng-click="aliasPublicClicked(newAlias)" class="input-group-addon">
                        <input type="checkbox" ng-checked="newAlias.public">
                        </span>
                         <input class="form-control" type="text" ng-model="newAlias.location"/>
                     <span class="input-group-btn">
-                    <a class="timButton btn-sm" href="{{ '/view/{{alias.location}}' }}">View</a>
+                    <a class="timButton" href="{{ '/view/{{alias.location}}' }}">View</a>
                     </span>
                     </div>
                 </td>
@@ -61,7 +61,7 @@
                     <input class="form-control" type="text" ng-model="newAlias.name" placeholder="Click to add"/>
                 </td>
                 <td>
-                    <button class="wideButton" ng-click="addAlias(newAlias)" ng-disabled="!newAlias.name">Add
+                    <button class="wideButton btn-sm" ng-click="addAlias(newAlias)" ng-disabled="!newAlias.name">Add
                     </button>
                 </td>
             </tr>
