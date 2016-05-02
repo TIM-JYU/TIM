@@ -80,7 +80,7 @@ def create_velp_group():
     valid_until = None
     root_path = "users/josalatt/testikansio"
     doc_id = 89
-    personal_group = False
+    personal_group = True
     timdb = getTimDb()
 
     doc_name_info = timdb.documents.get_names(doc_id)
@@ -92,7 +92,17 @@ def create_velp_group():
         print(user_group_id)
         user_velp_path = timdb.folders.check_personal_velp_folder(user, user_group_id)
         print(user_velp_path)
-        return "asd"
+        new_group_path = user_velp_path + "/" + velp_group_name
+        group_exists = timdb.documents.resolve_doc_id_name(new_group_path)
+        if group_exists is None:
+            new_group = timdb.documents.create(new_group_path, user_group_id)
+            new_group_id = new_group.doc_id
+            velp_group_id = timdb.velp_groups.create_velp_group2(velp_group_name, user_group_id, new_group_id, valid_until)
+        else:
+            abort(400, "Velp group with same name and location exists already.")
+
+        return jsonResponse(velp_group_id)
+
 
     velps_folder_path = timdb.folders.check_velp_group_folder_path(root_path, owner_group_id, doc_name)
 
@@ -106,6 +116,7 @@ def create_velp_group():
         timdb.velp_groups.insert_group_to_document(velp_group_id, doc_id)
     else:
         abort(400, "Velp group with same name and location exists already.")
+
     return jsonResponse(velp_group_id)
 
 
