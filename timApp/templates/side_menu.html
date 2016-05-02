@@ -25,28 +25,26 @@
             {% endif %}
             <div ng-show="lectureSettings.inLecture">
                 <h5>Lecture settings</h5>
-                <ul>
-                    <li>
-                        <label> Show wall
-                            <input type="checkbox" ng-model="lectureSettings.useWall">
-                        </label>
-                    </li>
-                    <li ng-show="!isLecturer">
-                        <label> Show questions
-                            <input type="checkbox" ng-model="lectureSettings.useQuestions">
-                        </label>
-                    </li>
-                    <li ng-show="isLecturer">
-                        <label> Show answers
-                            <input type="checkbox" ng-model="lectureSettings.useAnswers">
-                        </label>
-                    </li>
-                    <li ng-show="isLecturer">
-                        <label> Show 'not polling' dialog
-                            <input type="checkbox" ng-model="lectureSettings.useNotPollingDialog">
-                        </label>
-                    </li>
-                </ul>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="lectureSettings.useWall"> Show wall
+                    </label>
+                </div>
+                <div ng-show="!isLecturer" class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="lectureSettings.useQuestions"> Show questions
+                    </label>
+                </div>
+                <div ng-show="isLecturer" class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="lectureSettings.useAnswers"> Show answers
+                    </label>
+                </div>
+                <div ng-show="isLecturer" class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="lectureSettings.useNotPollingDialog"> Show 'not polling' dialog
+                    </label>
+                </div>
             </div>
         </uib-tab>
 
