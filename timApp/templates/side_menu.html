@@ -118,7 +118,7 @@
             <h5>People logged-in: <span
                     ng-bind="lecturerTable.length + studentTable.length">None</span></h5>
             {% raw %}
-            <h5>Lecturer (<span ng-bind="lecturerTable.length">None</span>)</h5>
+            <h5>Lecturers (<span ng-bind="lecturerTable.length">None</span>)</h5>
             <ul>
                 <li ng-repeat="lecturer in lecturerTable">
                     {{ lecturer.name }} > {{ lecturer.active }}
