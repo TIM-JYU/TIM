@@ -1,6 +1,6 @@
 <link rel="stylesheet" href="/static/css/velpSelection.css"/>
 <div class="velpMenu">
-<label id="advView">
+    <label id="advView">
         <input type="checkbox" ng-model="advancedOn"/> Advanced view
     </label>
     <uib-tabset active="active">
@@ -19,49 +19,49 @@
                         </td>
                     </tr>
                 </table>
-                 <!--   <tr>
-                        <td colspan="4">-->
-                            <div ng-class="getAdvancedStyle()">
-                                <div class="fulldiv">
-                                <p ng-repeat="label in filteredLabels = ( labels | filter:{content:filterLabel} )"
-                                   class="label tag-{{ label.selected }}"
-                                   style="background-color: {{ getColor(label.id) }}"
-                                   ng-click="toggleLabel(label)" ng-model="test" value="{{ label.id }}">
-                                    {{ label.content }}
-                                </p><!-- p ng-click="selectLabelToEdit()" ng-class="['label', 'tag-false']" style="background: blue;">
+                <!--   <tr>
+                       <td colspan="4">-->
+                <div ng-class="getAdvancedStyle()">
+                    <div class="fulldiv">
+                        <p ng-repeat="label in filteredLabels = ( labels | filter:{content:filterLabel} )"
+                           class="label tag-{{ label.selected }}"
+                           style="background-color: {{ getColor(label.id) }}"
+                           ng-click="toggleLabel(label)" ng-model="test" value="{{ label.id }}">
+                            {{ label.content }}
+                        </p><!-- p ng-click="selectLabelToEdit()" ng-class="['label', 'tag-false']" style="background: blue;">
                                 <span class="glyphicon glyphicon-plus"></span> Add label
                             </p -->
-                                    </div>
-                                <div class="fulldiv" >
-                                    <form ng-class="getAdvancedStyle()" name="addLabelForm"
-                                          ng-submit="addLabel(addLabelForm)" novalidate>
-                                        <table class="velpTable">
-                                            <tr>
-                                                <td>
-                                                    <label for="newLabel">Label text</label>
-                                                </td>
-                                                <td>
-                                                    <input id="newLabel" name="labelContent"
-                                                           ng-model="newLabel['content']"
-                                                           placeholder="Label text" required>
-                                                </td>
-                                            </tr>
-                                            <tr ng-show="(labelAdded && addLabelForm.labelContent.$invalid) || (addLabelForm.labelContent.$invalid && !addLabelForm.labelContent.$pristine)">
-                                                <td colspan="2">
-                                                    <p>Label content is too short</p>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="2">
-                                                    <input type="submit" value="Add label">
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </form>
-                                </div>
-                            </div>
-                    <!--    </td>
-                    </tr>-->
+                    </div>
+                    <div class="fulldiv">
+                        <form ng-class="getAdvancedStyle()" name="addLabelForm"
+                              ng-submit="addLabel(addLabelForm)" novalidate>
+                            <table class="velpTable">
+                                <tr>
+                                    <td>
+                                        <label for="newLabel">Label text</label>
+                                    </td>
+                                    <td>
+                                        <input id="newLabel" name="labelContent"
+                                               ng-model="newLabel['content']"
+                                               placeholder="Label text" required>
+                                    </td>
+                                </tr>
+                                <tr ng-show="(labelAdded && addLabelForm.labelContent.$invalid) || (addLabelForm.labelContent.$invalid && !addLabelForm.labelContent.$pristine)">
+                                    <td colspan="2">
+                                        <p>Label content is too short</p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <input type="submit" value="Add label">
+                                    </td>
+                                </tr>
+                            </table>
+                        </form>
+                    </div>
+                </div>
+                <!--    </td>
+                </tr>-->
                 <table class="velpTable">
                     <tr>
                         <td>
@@ -86,32 +86,37 @@
                     </tr>
                 </table>
                 <input value="Create velp" type="button" ng-model="newVelp" ng-click="selectVelpToEdit(newVelp)">
-                    <div ng-class="['emphasise', 'new', { neutral: newVelp.points == 0, positive: newVelp.points > 0, negative: newVelp.points < 0,
+
+                <div ng-class="['emphasise', 'new', { neutral: newVelp.points == 0, positive: newVelp.points > 0, negative: newVelp.points < 0,
                             edit: newVelp.edit}]">
-                            <div ng-class="['content']">
-                                <p ng-class="[{hide: newVelp.edit}]">
-                                <!--span>Add velp!&ensp;</span-->
-                                <span class="points">{{ newVelp.points }}</span>
-                                </p>
-                                <form ng-class="[{hide: !newVelp.edit}]" name="addVelpForm" ng-submit="addVelp(addVelpForm)" novalidate>
-                                    <p><input name="velpName" type="text" ng-model="newVelp['content']" required placeholder="Text" autofocus>
+
+                    <div ng-class="['content']">
+                        <p ng-class="[{hide: newVelp.edit}]">
+                            <!--span>Add velp!&ensp;</span-->
+                            <span class="points">{{ newVelp.points }}</span>
+                        </p>
+                        <form ng-class="[{hide: !newVelp.edit}]" name="addVelpForm" ng-submit="addVelp(addVelpForm)"
+                              novalidate>
+                            <p><input name="velpName" type="text" ng-model="newVelp['content']" required
+                                      placeholder="Text" autofocus>
                                         <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]"
                                               ng-repeat="label in filterByLabels"
                                               ng-style="{ color: getColor(label) }">
                                         </span>
-                                    </p>
-                                    <p ng-show="(addVelpForm.velpName.$invalid && !addVelpForm.velpName.$pristine) || (submitted && addVelpForm.velpName.$invalid)">
-                                                Velp content is required
-                                    </p>
-                                    <p><input id="addVelpPoints" type="number" ng-model="newVelp['points']" placeholder="Points" value="0"></p>
-                                    <p><input type="submit" value="Save"/></p>
-                                </form>
-                            </div>
+                            </p>
+                            <p ng-show="(addVelpForm.velpName.$invalid && !addVelpForm.velpName.$pristine) || (submitted && addVelpForm.velpName.$invalid)">
+                                Velp content is required
+                            </p>
+                            <p><input id="addVelpPoints" type="number" ng-model="newVelp['points']" placeholder="Points"
+                                      value="0"></p>
+                            <p><input type="submit" value="Save"/></p>
+                        </form>
                     </div>
-                </input>
+                </div>
 
-                 <!--   <tr>
-                        <td colspan="4">-->
+
+                <!--   <tr>
+                       <td colspan="4">-->
                 <div class="stack">
                     <!--div ng-model="newVelp" class="velp" ng-dblclick="selectVelpToEdit(newVelp)" ng-style="{top: 0}">
                         <div ng-class="['emphasise', 'new', { neutral: newVelp.points == 0, positive: newVelp.points > 0, negative: newVelp.points < 0,
@@ -152,85 +157,88 @@
                                     <div ng-class="['emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0,
                                     edit: velp.edit}]">
 
-                                    <div ng-class="['content']">
-                                        <p ng-class="[{hide: velp.edit}]">
-                                            <span>{{ velp.content }}&ensp;</span>
-                                            <span class="points">{{ velp.points }}</span>
-                                            <span ng-show="advancedOn" ng-class="['glyphicon', 'glyphicon-tag']" ng-repeat="label in velp.labels" ng-style="{ color: getColor(label) }"></span>
-                                        </p>
+                                        <div ng-class="['content']">
+                                            <p ng-class="[{hide: velp.edit}]">
+                                                <span>{{ velp.content }}&ensp;</span>
+                                                <span class="points">{{ velp.points }}</span>
+                                                <span ng-show="advancedOn" ng-class="['glyphicon', 'glyphicon-tag']"
+                                                      ng-repeat="label in velp.labels"
+                                                      ng-style="{ color: getColor(label) }"></span>
+                                            </p>
 
-                                        <form ng-class="[{hide: !velp.edit}]" name="editVelpForm"
-                                              ng-submit="editVelp(editVelpForm)" novalidate>
+                                            <form ng-class="[{hide: !velp.edit}]" name="editVelpForm"
+                                                  ng-submit="editVelp(editVelpForm)" novalidate>
 
-                                            <p><input name="velpName" type="text"
-                                                   ng-model="velpToEdit['content']"
-                                                   required placeholder="Edit velp!">
+                                                <p><input name="velpName" type="text"
+                                                          ng-model="velpToEdit['content']"
+                                                          required placeholder="Edit velp!">
                                             <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]"
                                                   ng-repeat="l in velpToEdit.labels"
                                                   ng-style="{ color: getColor(l) }"></span></p>
 
-                                            <p ng-show="(editVelpForm.velpName.$invalid && !editVelpForm.velpName.$pristine) || (submitted && editVelpForm.velpName.$invalid)">
-                                                Velp content is required
-                                            </p>
+                                                <p ng-show="(editVelpForm.velpName.$invalid && !editVelpForm.velpName.$pristine) || (submitted && editVelpForm.velpName.$invalid)">
+                                                    Velp content is required
+                                                </p>
 
-                                            <p><input id="addVelpPoints" type="number" ng-model="velpToEdit['points']"
-                                                   placeholder="Points" value="0"></p>
-                                            <p><input type="submit" value="Edit velp"/></p>
-                                        </form>
+                                                <p><input id="addVelpPoints" type="number"
+                                                          ng-model="velpToEdit['points']"
+                                                          placeholder="Points" value="0"></p>
+                                                <p><input type="submit" value="Edit velp"/></p>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
-                                    </div>
 
                                 <!-- div ng-class="['emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0}]" style="height: 2px;"></div -->
                             </span>
-                            <p ng-hide="filteredVelps.length">No velps :'(</p>
+                    <p ng-hide="filteredVelps.length">No velps :'(</p>
                 </div>
-                      <!--  </td>
-                    </tr>-->
+                <!--  </td>
+              </tr>-->
             </div>
         </uib-tab>
 
         <!-- ADD VELP TAB -->
-  <!--      <uib-tab index="1" heading="Add velp">
+        <!--      <uib-tab index="1" heading="Add velp">
 
-            <div class="velpArea">
-                <form name="addVelpForm" ng-submit="addVelp(addVelpForm)" novalidate>
-                    <table class="velpTable">
-                        <tr>
-                            <td>
-                                <label for="addVelpName">Velp name</label>
-                            </td>
-                            <td>
-                                <input id="addVelpName" name="velpName" type="text" ng-model="newVelp['content']"
-                                       required>
-                            </td>
-                        </tr>
-                        <tr ng-show="(addVelpForm.velpName.$invalid && !addVelpForm.velpName.$pristine) || (submitted && addVelpForm.velpName.$invalid)">
-                            <td colspan="2">
-                                <p>Velp content is required</p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label for="addVelpPoints">Points</label>
-                            </td>
-                            <td>
-                                <input id="addVelpPoints" type="number" ng-model="newVelp['points']"
-                                       value="0">
-                            </td>
-                        </tr>
-                        <tr ng-class="getAdvancedStyle()">
-                            <td>
-                                <label for="searchLabels">Filter labels </label>
-                            </td>
-                            <td>
-                                <input id="searchLabels" ng-model="filterLabel" placeholder="filter labels">
-                            </td>
-                        </tr>
-                    </table>-->
-                      <!--  <tr>
-                            <td colspan="2">-->
-                            <!--    <div ng-class="getAdvancedStyle()">
+                  <div class="velpArea">
+                      <form name="addVelpForm" ng-submit="addVelp(addVelpForm)" novalidate>
+                          <table class="velpTable">
+                              <tr>
+                                  <td>
+                                      <label for="addVelpName">Velp name</label>
+                                  </td>
+                                  <td>
+                                      <input id="addVelpName" name="velpName" type="text" ng-model="newVelp['content']"
+                                             required>
+                                  </td>
+                              </tr>
+                              <tr ng-show="(addVelpForm.velpName.$invalid && !addVelpForm.velpName.$pristine) || (submitted && addVelpForm.velpName.$invalid)">
+                                  <td colspan="2">
+                                      <p>Velp content is required</p>
+                                  </td>
+                              </tr>
+                              <tr>
+                                  <td>
+                                      <label for="addVelpPoints">Points</label>
+                                  </td>
+                                  <td>
+                                      <input id="addVelpPoints" type="number" ng-model="newVelp['points']"
+                                             value="0">
+                                  </td>
+                              </tr>
+                              <tr ng-class="getAdvancedStyle()">
+                                  <td>
+                                      <label for="searchLabels">Filter labels </label>
+                                  </td>
+                                  <td>
+                                      <input id="searchLabels" ng-model="filterLabel" placeholder="filter labels">
+                                  </td>
+                              </tr>
+                          </table>-->
+        <!--  <tr>
+              <td colspan="2">-->
+        <!--    <div ng-class="getAdvancedStyle()">
                                     <p ng-repeat="label in labels | filter:{content:filterLabel}"
                                        class="label tag-{{ label.selected }}"
                                        style="background-color: {{ getColor(label.id) }}"
@@ -238,47 +246,47 @@
                                         {{ label.content }}
                                     </p>
                                 </div>-->
-                        <!--    </td>
-                        </tr>-->
-                <!--    <table class="velpTable">
-                        <tr>
-                            <td colspan="2">
-                                <input type="submit" value="Add velp"/>
-                            </td>
-                        </tr>
-                    </table>
-                </form>
-                <form ng-class="getAdvancedStyle()" name="addLabelForm" ng-submit="addLabel(addLabelForm)" novalidate>
+        <!--    </td>
+        </tr>-->
+        <!--    <table class="velpTable">
+                <tr>
+                    <td colspan="2">
+                        <input type="submit" value="Add velp"/>
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <form ng-class="getAdvancedStyle()" name="addLabelForm" ng-submit="addLabel(addLabelForm)" novalidate>
 
-                    <table class="velpTable">
-                        <tr>
-                            <td colspan="2">
-                                <label>Add new label (optional):</label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label for="newLabel">Label text</label>
-                            </td>
-                            <td>
-                                <input id="newLabel" name="labelContent" ng-model="newLabel['content']"
-                                       placeholder="Label text" required>
-                            </td>
-                        </tr>
-                        <tr ng-show="(labelAdded && addLabelForm.labelContent.$invalid) || (addLabelForm.labelContent.$invalid && !addLabelForm.labelContent.$pristine)">
-                            <td colspan="2">
-                                <p>Label content is too short</p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2">
-                                <input type="submit" value="Add label">
-                            </td>
-                        </tr>
-                    </table>
-                </form>
-            </div>
-        </uib-tab>-->
+            <table class="velpTable">
+                <tr>
+                    <td colspan="2">
+                        <label>Add new label (optional):</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="newLabel">Label text</label>
+                    </td>
+                    <td>
+                        <input id="newLabel" name="labelContent" ng-model="newLabel['content']"
+                               placeholder="Label text" required>
+                    </td>
+                </tr>
+                <tr ng-show="(labelAdded && addLabelForm.labelContent.$invalid) || (addLabelForm.labelContent.$invalid && !addLabelForm.labelContent.$pristine)">
+                    <td colspan="2">
+                        <p>Label content is too short</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <input type="submit" value="Add label">
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</uib-tab>-->
         <uib-tab index="1" heading="Manage velps">
             <div class="velpArea">
                 <table class="velpTable">
@@ -314,27 +322,25 @@
         </uib-tab>
         <uib-tab index="2" heading="Summary">
             <div class="velpArea">
-               <div class="velpSummary">
-             <!--    <span id="summaryHeader">Summary:</span>-->
-                <table>
-                    <tr>
-            <th>Velp</th>
-            <th>Points</th>
-        </tr>
-        <tr ng-repeat="a in annotations">
-            <td>
-                <input type="checkbox">
-               <span>{{ getVelpById(a.velp).content }}</span>
-            </td>
-            <td id="summaryColumn">
-                <span>{{ a.points }}</span>
-            </td>
-        </tr>
-                    <tr>
-                        <th>Points total</th>
-                        <th>{{ getTotalPoints() }}</th>
-                    </tr>
-    </table>
+                <div class="velpSummary">
+                    <!--    <span id="summaryHeader">Summary:</span>-->
+                    <table>
+                        <tr>
+                            <th class="summCheckbox"><input type="checkbox"></th>
+                            <th class="summSecColumn">Velp</th>
+                            <th class="summThiColumn">Points</th>
+                        </tr>
+                        <tr ng-repeat="a in annotations">
+                            <td class="summCheckbox"><input type="checkbox"></td>
+                            <td class="summSecColumn"><span>{{ getVelpById(a.velp).content }}</span></td>
+                            <td class="summThiColumn"><span>{{ a.points }}</span></td>
+                        </tr>
+                        <tr>
+                            <th class="summCheckbox"></th>
+                            <th class="summSecColumn">Points total</th>
+                            <th class="summThiColumn"><span>{{ getTotalPoints() }}</span></th>
+                        </tr>
+                    </table>
                 </div>
             </div>
         </uib-tab>
