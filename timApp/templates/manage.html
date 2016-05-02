@@ -29,7 +29,7 @@
         {% endif %}
 
         <div class="margin rights-list" ng-repeat="type in accessTypes">
-            <a ng-click="showAddRightFn(type)">{{ '{{ type.name }}' }} right</a>:
+            <a ng-click="showAddRightFn(type)" title="Click to add {{ '{{ type.name }}' }} right to some usergroup">{{ '{{ type.name }}' }} right</a>:
             <span ng-show="filtered.length == 0">none</span>
 
             <ul>
