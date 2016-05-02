@@ -19,7 +19,7 @@ def check_default_velp_group(document_id: int) -> str:
     default_velp_group_id = timdb.velp_groups.check_default_group_exists(doc_id)
     if default_velp_group_id is None:
         default_group_name = timdb.documents.get_first_document_name(doc_id)
-        default_velp_group_id = timdb.velp_groups.create_default_velp_group(default_group_name, 1, None)
+        default_velp_group_id = timdb.velp_groups.create_default_velp_group(default_group_name, 1)
         timdb.velp_groups.insert_group_to_document(int(default_velp_group_id), doc_id)
         print("Created a new default velp group, ID: " + str(default_velp_group_id) \
               + ", name: " + default_group_name + ", document ID: " + document_id)
@@ -40,7 +40,7 @@ def get_velps(document_id: int, paragraph_id: str) -> str:
     default_exists = timdb.velp_groups.check_default_group_exists(doc_id)
     if default_exists is None:  # Create new default velp group if one does not exist yet
         default_group_name = timdb.documents.get_first_document_name(doc_id)
-        new_default_id = timdb.velp_groups.create_default_velp_group(default_group_name, 1, None)
+        new_default_id = timdb.velp_groups.create_default_velp_group(default_group_name, 1)
         timdb.velp_groups.insert_group_to_document(int(new_default_id), doc_id)
         print("Created a new default velp group, ID: " + str(new_default_id) \
               + ", name: " + default_group_name + ", document ID: " + document_id)
@@ -62,20 +62,50 @@ def get_velp_group_locations(document_id: int) -> str:
     return jsonResponse(location_data)
 
 
-@velps.route("/createvelpgroup", methods=['POST'])
+@velps.route("/createvelpgroup", methods=['GET'])
 def create_velp_group():
+    '''
     json_data = request.get_json()
     # .get returns null instead of throwing if data is missing.
     velp_group_name = json_data.get('name')
     owner_group_id = json_data.get('owner')
+    root_path = json_data.get('root_path')
     valid_until = json_data.get('valid_until')
+    doc_id = json_data.get('doc_id')
+    personal_group = json_data.get('personal_group')
+    '''
 
     velp_group_name = "Kana"
-    owner_group_id = 1
+    owner_group_id = 3
     valid_until = None
+    root_path = "users/josalatt/testikansio"
+    doc_id = 89
+    personal_group = False
     timdb = getTimDb()
-    velp_group_id = timdb.velp_groups.create_velp_group(velp_group_name, owner_group_id, valid_until)
-    timdb.velp_groups.insert_group_to_document(velp_group_id, 1)
+
+    doc_name_info = timdb.documents.get_names(doc_id)
+    doc_name = doc_name_info[0]['name']
+
+    if personal_group is True:
+        user = getCurrentUserName()
+        user_group_id = getCurrentUserGroup()
+        print(user_group_id)
+        user_velp_path = timdb.folders.check_personal_velp_folder(user, user_group_id)
+        print(user_velp_path)
+        return "asd"
+
+    velps_folder_path = timdb.folders.check_velp_group_folder_path(root_path, owner_group_id, doc_name)
+
+    new_group_path = velps_folder_path + "/" + velp_group_name
+    group_exists = timdb.documents.resolve_doc_id_name(new_group_path)
+    if group_exists is None:
+        new_group = timdb.documents.create(new_group_path, owner_group_id)
+        new_group_id = new_group.doc_id
+        velp_group_id = timdb.velp_groups.create_velp_group2(velp_group_name, owner_group_id, new_group_id, valid_until)
+
+        timdb.velp_groups.insert_group_to_document(velp_group_id, doc_id)
+    else:
+        abort(400, "Velp group with same name and location exists already.")
     return jsonResponse(velp_group_id)
 
 
@@ -91,6 +121,7 @@ def get_labels(document_id: int) -> 'str':
     return jsonResponse(label_data)
 
 
+## TODO: Delete this?
 @velps.route("/copygrupa", methods=['GET'])
 def copy_velp_group():
     timdb = getTimDb()
@@ -195,29 +226,26 @@ def velpabc():
     timdb = getTimDb()
     owner_group_id = 3  # Korppi users
     root_path = "users/josalatt/testikansio"
-    velps_folder_path = root_path + "/velps"
-    folders = timdb.folders.get_folders(root_path)
-    velps_folder = False;
-    # Check if velps folder exist
-    for folder in folders:
-        if folder['name'] == "velps":
-            print("ASD")
-            velps_folder = True;
-    #
-    if velps_folder is False:
-        new_block = timdb.folders.create(velps_folder_path, owner_group_id)
-        print("Created new folder, id: " + str(new_block))
+    doc_name = "test1"
+    velps_folder_path = timdb.folders.check_velp_group_folder_path(root_path, owner_group_id, doc_name)
 
-
-    # TODO fix below, get_documents_in_folder is broken
     velp_groups = timdb.documents.get_documents_in_folder(velps_folder_path)
+    default_velp_group = False
+    default_group_name = "testi1_default"
     if velp_groups is not None:
-        for dadada in velp_groups:
-            asd = 1
-        asd = 1
-    else:
-        default_group = velps_folder_path + "/" + "testi1" + "_default"
-        timdb.documents.create(default_group, owner_group_id)
+        for group in velp_groups:
+            print(group)
+            if group['name'] == velps_folder_path + "/" + default_group_name:
+                default_velp_group = True
+
+    if default_velp_group is False:
+        default_group_path = velps_folder_path + "/" + default_group_name
+        new_group = timdb.documents.create(default_group_path, owner_group_id)
+        new_group_id = new_group.doc_id
+        doc_id = timdb.velp_groups.create_default_velp_group2(default_group_name, owner_group_id, new_group_id)
+        velp_groups = timdb.documents.get_documents_in_folder(velps_folder_path)
+        print("Default group didn't exist, created one with id: " + str(new_group_id))
+
 
 
 
