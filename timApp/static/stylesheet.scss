@@ -47,6 +47,7 @@ body {
 
 // all document-related styles under .paragraphs selector!
 .paragraphs {
+    @include center-block();
     max-width: 52em;
     .parContent {
         text-align: justify;
