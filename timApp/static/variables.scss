@@ -39,8 +39,12 @@ $left-side-columns: 2;
 $right-side-columns: 4;
 
 // Bootstrap variable overrides:
+$gray-base: #000;
+$gray: lighten($gray-base, 33.5%);
 $brand-primary: $basic-color;
 $text-color: black;
+$input-color: black;
+$input-color-placeholder: $gray;
 $headings-font-weight: 700;
 $font-size-base: 14px; // this should probably not be changed from default 14px
 $font-size-h1: floor(($font-size-base * 2.29)); // default factor is 2.6
