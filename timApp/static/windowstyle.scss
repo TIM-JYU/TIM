@@ -20,26 +20,6 @@
     margin-bottom: 10px;
 }
 
-/* Chrome etc. */
-input:enabled::-webkit-input-placeholder {
-    color: #3CC;
-}
-
-input:enabled:-moz-placeholder {
-    /* FF 4-18 */
-    color: #3CC;
-}
-
-input:enabled::-moz-placeholder {
-    /* FF 19+ */
-    color: #3CC;
-}
-
-input:enabled:-ms-input-placeholder {
-    /* IE 10+ */
-    color: #3CC;
-}
-
 input:disabled::-webkit-input-placeholder {
     /* WebKit browsers */
     display: none;
