@@ -34,6 +34,15 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
         overflow-y: auto;
         max-height: calc(100vh - 51.2833px);
         padding-left: 3px;
+
+        ul {
+            padding-left: 13px;
+
+            &.subexp {
+                display: block;
+                padding-left: 20px;
+            }
+        }
     }
 }
 
@@ -145,11 +154,6 @@ li.basic, li.basic_active {
 
 .sub {
     display: none;
-}
-
-.subexp {
-    display: block;
-    padding-left: 20px;
 }
 
 li.exp {
