@@ -324,14 +324,14 @@
             <div class="velpArea">
                 <div class="velpSummary">
                     <!--    <span id="summaryHeader">Summary:</span>-->
-                    <table>
+                    <table> <!--ng-controller="checkboxController"-->
                         <tr>
-                            <th class="summCheckbox"><input type="checkbox"></th>
+                            <th class="summCheckbox"><input type="checkbox"> <!--ng-model="selectedAll" ng-click="checkAll()"--></th>
                             <th class="summSecColumn">Velp</th>
                             <th class="summThiColumn">Points</th>
                         </tr>
                         <tr ng-repeat="a in annotations">
-                            <td class="summCheckbox"><input type="checkbox"></td>
+                            <td class="summCheckbox"><input type="checkbox"> <!--ng-model="a.Selected"--></td>
                             <td class="summSecColumn"><span>{{ getVelpById(a.velp).content }}</span></td>
                             <td class="summThiColumn"><span>{{ a.points }}</span></td>
                         </tr>
