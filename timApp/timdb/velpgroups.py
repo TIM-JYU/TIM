@@ -238,6 +238,11 @@ class VelpGroups(TimDbBase):
                        )
         self.db.commit()
 
+    def get_velp_group_name(self, velp_group_id: int) -> str:
+        cursor = self.db.cursor()
+        cursor.execute('SELECT name FROM VelpGroup WHERE id = ?'), [velp_group_id]
+        result = cursor.fetchone()
+        return result[0] if result is not None else None
 
     # TODO: Delete of find out fix
     def check_velp_group_folder_path(self, root_path: str, owner_group_id: int):

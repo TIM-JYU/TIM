@@ -5,6 +5,9 @@ velps = Blueprint('velps',
                   __name__,
                   url_prefix='')
 
+# TODO: Add document handling for all velp group related stuff
+# TODO: Done create velp, get velp groups from folders (get_velp_groups),
+# TODO: make default velp group and necessary folder (velpabc)
 
 @velps.route("/<document_id>/defaultvelpgroup", methods=['GET'])
 def check_default_velp_group(document_id: int) -> str:
@@ -64,6 +67,8 @@ def get_velp_group_locations(document_id: int) -> str:
 
 @velps.route("/createvelpgroup", methods=['GET'])
 def create_velp_group():
+    # TODO: Remove comments, kill test data from below
+    # TODO: method back to POST
     '''
     json_data = request.get_json()
     # .get returns null instead of throwing if data is missing.
@@ -86,6 +91,7 @@ def create_velp_group():
     doc_name_info = timdb.documents.get_names(doc_id)
     doc_name = doc_name_info[0]['name']
 
+    # Create a new velp group / document in users/username/velp groups folder
     if personal_group is True:
         user = getCurrentUserName()
         user_group_id = getCurrentUserGroup()
@@ -104,15 +110,15 @@ def create_velp_group():
         return jsonResponse(velp_group_id)
 
 
+    # Gives path to either velp groups or velp groups/document name folder
     velps_folder_path = timdb.folders.check_velp_group_folder_path(root_path, owner_group_id, doc_name)
-
     new_group_path = velps_folder_path + "/" + velp_group_name
-    group_exists = timdb.documents.resolve_doc_id_name(new_group_path)
+
+    group_exists = timdb.documents.resolve_doc_id_name(new_group_path) # Check name so no duplicates are made
     if group_exists is None:
         new_group = timdb.documents.create(new_group_path, owner_group_id)
         new_group_id = new_group.doc_id
         velp_group_id = timdb.velp_groups.create_velp_group2(velp_group_name, owner_group_id, new_group_id, valid_until)
-
         timdb.velp_groups.insert_group_to_document(velp_group_id, doc_id)
     else:
         abort(400, "Velp group with same name and location exists already.")
@@ -130,16 +136,6 @@ def get_labels(document_id: int) -> 'str':
     # Todo select language.
     label_data = timdb.velps.get_document_velp_label_content(doc_id)
     return jsonResponse(label_data)
-
-
-## TODO: Delete this?
-@velps.route("/copygrupa", methods=['GET'])
-def copy_velp_group():
-    timdb = getTimDb()
-    # Todo select language.
-    timdb.velp_groups.copy_velp_group(1, 4)
-    return "ASDASD"
-
 
 @velps.route("/addvelp", methods=['POST'])
 def add_velp():
@@ -170,6 +166,10 @@ def add_velp():
     timdb = getTimDb()
     current_user_id = getCurrentUserId()
 
+    for group in velp_groups:
+        if timdb.users.has_edit_access(current_user_id, group) is False:
+            abort(400, "No edit access for velp group: " + timdb.velp_groups.get_velp_group_name(group))
+
     new_velp_id = timdb.velps.create_new_velp(current_user_id, velp_content, default_points,
                                               icon_id, valid_until, language_id)
 
@@ -193,6 +193,7 @@ def update_velp():
         velp_id = json_data.get('id')
         new_content = json_data.get('content')
         language_id = json_data.get('language_id')
+        velp_groups = json_data['velp_groups']
     except KeyError as e:
         abort(400, "Missing data " + e.args[0])
     if not new_content:
@@ -202,6 +203,17 @@ def update_velp():
     icon_id = json_data.get('icon_id')
     new_labels = json_data.get('labels')
     timdb = getTimDb()
+    current_user_id = getCurrentUserId()
+    edit_access = False
+
+    # Check
+    for group in velp_groups:
+        if timdb.users.has_edit_access(current_user_id, group) is True:
+            edit_access = True
+            break
+    if edit_access is False:
+        abort(400, "No edit access to velp via any velp group.")
+
     old_content = timdb.velps.get_latest_velp_version(velp_id, language_id)
     old_labels = timdb.velps.get_velp_label_ids(velp_id)
     if old_content != new_content:
@@ -231,24 +243,33 @@ def add_label():
 
     return jsonResponse(label_id)
 
-# TODO Better name needed here, just testing for now
-@velps.route("/velpabc", methods=["GET"])
-def velpabc():
+
+@velps.route("/create_default_velp_group", methods=["GET"])
+def create_default_velp_group():
+    """
+
+    :return:
+    """
+
     timdb = getTimDb()
     owner_group_id = 3  # Korppi users
     root_path = "users/josalatt/testikansio"
-    doc_name = "test1"
+    doc_name = "test2"
+
+    # Get velp group folder path and if necessary, creates those folders
     velps_folder_path = timdb.folders.check_velp_group_folder_path(root_path, owner_group_id, doc_name)
 
     velp_groups = timdb.documents.get_documents_in_folder(velps_folder_path)
     default_velp_group = False
-    default_group_name = "testi1_default"
+    default_group_name = doc_name + "_default"
+    # Check through all documents in velp group folder to check if default group exists
     if velp_groups is not None:
         for group in velp_groups:
             print(group)
             if group['name'] == velps_folder_path + "/" + default_group_name:
                 default_velp_group = True
 
+    # If default didn't exists yet (or there were no documents / velp groups to start with), create one
     if default_velp_group is False:
         default_group_path = velps_folder_path + "/" + default_group_name
         new_group = timdb.documents.create(default_group_path, owner_group_id)
@@ -257,7 +278,60 @@ def velpabc():
         velp_groups = timdb.documents.get_documents_in_folder(velps_folder_path)
         print("Default group didn't exist, created one with id: " + str(new_group_id))
 
-
-
-
     return jsonResponse(velp_groups)
+
+
+@velps.route("/get_velp_groups")
+def get_velp_groups():
+    """Returns all velp groups found from tree from document to root and from users own velp folder
+
+    Checks document's own velp group folder first, then default velp group folders going up all the
+    way to root. Doesn't branch side ways or down, only checks parents. After root has been reached,
+    finally checks users own velp group folder.
+
+    Checks that user has minimum of view right for velp groups.
+    :return: List of document / velp group information of found hits.
+    """
+    json_data = request.get_json()
+    '''
+    current_path = json_data.get('root_path')
+
+    '''
+    current_path = "users/josalatt/testikansio"
+    username = getCurrentUserName()
+    doc_name = "testi1"
+    personal_velps_path = "users/" + username + "/velp groups"
+    timdb = getTimDb()
+    velp_groups = []
+
+    found_velp_groups = timdb.documents.get_documents_in_folder(current_path + "/velp groups/" + doc_name)
+    print(found_velp_groups)
+    print(current_path + "/velp groups/" + doc_name)
+    for v in found_velp_groups:
+        if timdb.users.has_view_access(getCurrentUserId(), timdb.documents.get_document_id(v['name'])):
+                velp_groups.append(v)
+
+    while True:
+        if current_path != '':
+            found_velp_groups = timdb.documents.get_documents_in_folder(current_path + '/velp groups')
+        else:
+            found_templates = timdb.documents.get_documents_in_folder('velp groups')
+        print(found_velp_groups)
+        print(current_path)
+        for v in found_velp_groups:
+            if timdb.users.has_view_access(getCurrentUserId(), timdb.documents.get_document_id(v['name'])):
+                velp_groups.append(v)
+        if current_path == '':
+            break
+        current_path, _ = timdb.folders.split_location(current_path)
+
+    found_velp_groups = timdb.documents.get_documents_in_folder(personal_velps_path)
+    print(found_velp_groups)
+    print(personal_velps_path)
+    for v in found_velp_groups:
+        if timdb.users.has_view_access(getCurrentUserId(), timdb.documents.get_document_id(v['name'])):
+                velp_groups.append(v)
+
+    result = [dict(t) for t in set(tuple(d.items()) for d in velp_groups)] # Remove possible doubles
+
+    return jsonResponse(result)
