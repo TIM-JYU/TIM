@@ -427,20 +427,4 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         return element;
     };
-    /* tentative method for summary checkboxes
-
-    angular.module("CheckAllModule", [])
-        .controller("checkboxController", function checkboxController($scope) {
-
-            $scope.checkAll = function () {
-                if ($scope.selectedAll) {
-                    $scope.selectedAll = true;
-                } else {
-                    $scope.selectedAll = false;
-                }
-                angular.forEach($scope.annotations, function (a) {
-                    a.Selected = $scope.selectedAll;
-                });
-            };
-        });*/
 }]);

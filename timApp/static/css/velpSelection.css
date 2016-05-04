@@ -244,6 +244,8 @@ annotation {
 }
 
 .annotation-info{
+    line-height: 20px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     font-size: 1.4rem;
     color: black;
     font-style: normal;
@@ -251,6 +253,7 @@ annotation {
     text-decoration: none;
     text-align: left;
     word-wrap: break-word;
+    white-space: normal;
     width: 18em;
     position: absolute;
     display: inline-block;
@@ -391,4 +394,8 @@ annotation {
 
 .summThiColumn {
     text-align: center;
+}
+
+.paragraphs pre {
+    overflow: visible;
 }
