@@ -238,7 +238,7 @@ class Annotations(TimDbBase):
         cursor.execute("""
                        SELECT 1
                        FROM Annotation
-                       WHERE id = ?;
+                       WHERE id = ?
         """, [annotation_id])
         #more than one result should not happen, since id is the key for this table.
         return len(cursor.fetchall())==1
