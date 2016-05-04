@@ -166,9 +166,16 @@ def add_velp():
     timdb = getTimDb()
     current_user_id = getCurrentUserId()
 
+    velp_groups_rights = []
+
+    # Check where user has edit rights and only add new velp to those
     for group in velp_groups:
-        if timdb.users.has_edit_access(current_user_id, group) is False:
-            abort(400, "No edit access for velp group: " + timdb.velp_groups.get_velp_group_name(group))
+        if timdb.users.has_edit_access(current_user_id, group) is True:
+            velp_groups_rights.append(group)
+        else:
+            print("No edit access for velp group: " + timdb.velp_groups.get_velp_group_name(group))
+
+    velp_groups = velp_groups_rights
 
     new_velp_id = timdb.velps.create_new_velp(current_user_id, velp_content, default_points,
                                               icon_id, valid_until, language_id)
@@ -184,7 +191,6 @@ def add_velp():
         timdb.velp_groups.add_velp_to_group(new_velp_id, 1)
     # Todo write logic that decides where the velp should go.
     return jsonResponse(new_velp_id)
-
 
 @velps.route("/updatevelp", methods=['POST'])
 def update_velp():
@@ -251,6 +257,8 @@ def create_default_velp_group():
     :return:
     """
 
+    # TODO: Add JSON
+
     timdb = getTimDb()
     owner_group_id = 3  # Korppi users
     root_path = "users/josalatt/testikansio"
@@ -304,6 +312,7 @@ def get_velp_groups():
     timdb = getTimDb()
     velp_groups = []
 
+    # Document's own velp group
     found_velp_groups = timdb.documents.get_documents_in_folder(current_path + "/velp groups/" + doc_name)
     print(found_velp_groups)
     print(current_path + "/velp groups/" + doc_name)
@@ -311,6 +320,7 @@ def get_velp_groups():
         if timdb.users.has_view_access(getCurrentUserId(), timdb.documents.get_document_id(v['name'])):
                 velp_groups.append(v)
 
+    # Velp group folder when going towards root in tree
     while True:
         if current_path != '':
             found_velp_groups = timdb.documents.get_documents_in_folder(current_path + '/velp groups')
@@ -325,6 +335,7 @@ def get_velp_groups():
             break
         current_path, _ = timdb.folders.split_location(current_path)
 
+    # User's own velp groups
     found_velp_groups = timdb.documents.get_documents_in_folder(personal_velps_path)
     print(found_velp_groups)
     print(personal_velps_path)
@@ -332,6 +343,10 @@ def get_velp_groups():
         if timdb.users.has_view_access(getCurrentUserId(), timdb.documents.get_document_id(v['name'])):
                 velp_groups.append(v)
 
-    result = [dict(t) for t in set(tuple(d.items()) for d in velp_groups)] # Remove possible doubles
+    results = [dict(t) for t in set(tuple(d.items()) for d in velp_groups)] # Remove possible doubles
 
-    return jsonResponse(result)
+    # TODO: Make non velp group documents velp groups
+    for result in results:
+        timdb.velp_groups.is_id_velp_group(result)
+
+    return jsonResponse(results)

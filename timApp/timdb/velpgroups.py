@@ -1,6 +1,6 @@
 from typing import Optional, List
 
-from timdb.folders import *
+# from timdb.folders import *
 
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 
@@ -280,3 +280,9 @@ class VelpGroups(TimDbBase):
 
 
         return
+
+    def is_id_velp_group(self, doc_id: int) -> bool:
+        cursor = self.db.cursor()
+        cursor.execute('SELECT id FROM VelpGroup WHERE id = ?'), [doc_id]
+        result = cursor.fetchone()
+        return True if result is not None else False
