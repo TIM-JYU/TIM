@@ -190,19 +190,14 @@ class Annotations(TimDbBase):
         self.db.commit()
         return cursor.lastrowid
 
-    def update_annotation(self, annotation_id: int, version_id: int, visible_to: AnnotationVisibility, place_start: int,
-                          place_end: int,
-                          points: Optional[float],
-                          element_number: Optional[int], icon_id: Optional[int] = None):
+    def update_annotation(self, annotation_id: int, version_id: Optional[int], visible_to: AnnotationVisibility,
+                          points: Optional[float], icon_id: Optional[int]):
         """Changes an existing annotation.
 
         :param annotation_id annotation to be changed.
         :param version_id: version of the velp that the annotation uses
         :param visible_to: visibility of the annotation
-        :param place_start: start
-        :param place_end: end
         :param points: Points given, overrides velp's default and can be null
-        :param element_number: Number of the html element from which we start counting.
         :param icon_id: Icon id, can be null
         :return:
         """
@@ -212,36 +207,28 @@ class Annotations(TimDbBase):
                        SET
                          version_id     = ?,
                          visible_to     = ?,
-                         place_start    = ?,
-                         place_end      = ?,
                          points         = ?,
-                         element_number = ?,
                          icon_id        = ?
                        WHERE id = ?
-                      """, [version_id, int(visible_to), place_start, place_end, points, element_number, icon_id,
-                            annotation_id]
+                      """, [version_id, int(visible_to), points, icon_id, annotation_id]
                        )
         self.db.commit()
         return
 
-    def is_user_annotator(self, annotation_id: int, user_id: int) -> bool:
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      SELECT annotator_id
-                      FROM Annotation
-                      WHERE id = ?
-        """, [annotation_id])
-        return cursor.fetchone()[0] == user_id
 
-    def annotation_exists(self, annotation_id: int) -> bool:
+    def get_annotation(self, annotation_id: int) -> List[Dict]:
+        """Gets an annotation.
+
+        :param annotation_id:
+        :return: A list of dictionaries with the fields of individual annotations. List is empty if nothing is found and has several rows if there are duplicate ids(not good).
+        """
         cursor = self.db.cursor()
         cursor.execute("""
-                       SELECT 1
+                       SELECT *
                        FROM Annotation
-                       WHERE id = ?
+                       WHERE Annotation.id = ?
         """, [annotation_id])
-        #more than one result should not happen, since id is the key for this table.
-        return len(cursor.fetchall())==1
+        return self.resultAsDictionary(cursor)
 
     def invalidate_annotation(self, annotation_id: int, valid_until: Optional[str] = None):
         cursor = self.db.cursor()
