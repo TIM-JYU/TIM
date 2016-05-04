@@ -229,8 +229,8 @@ class Velps(TimDbBase):
                     label_dict2[velp_id] = copy.deepcopy(list_help2)
             for i in range(len(velp_data)):
                 search_id = velp_data[i]['id']
-                if search_id in label_dict:
-                    velp_data[i]['velp_groups'] = label_dict[search_id]
+                if search_id in label_dict2:
+                    velp_data[i]['velp_groups'] = label_dict2[search_id]
 
         return velp_data
 

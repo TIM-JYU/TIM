@@ -36,6 +36,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.selectedLabels = [];
     $scope.previouslySelectedLabels = [];
     $scope.lockedVelps = [];
+    $scope.settings = {selectedAll: false};
 
 
     // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
@@ -59,8 +60,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
                 v.labels = [];
         });
 
-        $http.get('/static/test_data/markings.json').success(function (data) {
-        //$http.get('/{0}/annotations'.replace('{0}', doc_id)).success(function (data) {
+
+        //$http.get('/static/test_data/markings.json').success(function (data) {  // ANNOTATION TEST DATA
+        $http.get('/{0}/annotations'.replace('{0}', doc_id)).success(function (data) { // ROUTE TO DB
 
             $scope.annotations = data;
             $scope.loadAnnotations();
@@ -324,7 +326,13 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.resetLabels = function() {
         for (var i=0;i<$scope.labels.length; i++)
             $scope.labels[i].selected = false;
-    }
+    };
+
+    $scope.checkAll = function () {
+        angular.forEach($scope.annotations, function (a) {
+            a.selected = $scope.settings.selectedAll;
+        });
+    };
 }]);
 
 /**

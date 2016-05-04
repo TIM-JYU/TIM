@@ -244,6 +244,8 @@ annotation {
 }
 
 .annotation-info{
+    line-height: 20px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     font-size: 1.4rem;
     color: black;
     font-style: normal;
@@ -251,6 +253,7 @@ annotation {
     text-decoration: none;
     text-align: left;
     word-wrap: break-word;
+    white-space: normal;
     width: 18em;
     position: absolute;
     display: inline-block;
@@ -373,11 +376,6 @@ annotation {
     border-bottom-left-radius: 8px;*/
 }
 
-#summaryHeader {
-    font-size: 1.3em;
-    font-weight: bold;
-}
-
 .velpSummary table {
     margin-top: 1.3em;
     margin-bottom: 2em;
@@ -386,31 +384,18 @@ annotation {
   /*  border: 1px solid gainsboro;*/
 }
 
-.velpSummary table th {
+.summCheckbox {
+    border-right: 0;
+}
+
+.summSecColumn {
+    border-left: 0;
+}
+
+.summThiColumn {
     text-align: center;
 }
 
-#summaryColumn {
-    text-align: center;
-}
-
-#summaryComment {
-    font-size: 1.1em;
-    font-weight: bold;
-}
-
-.velpSummary textarea {
-    width: 98%;
-    height: 12em;
-}
-
-#lowerTextarea {
-    margin-top: 0.5em;
-    width: 98%;
-    height: 5em;
-    color: grey;
-}
-
-.velpSummary input {
-    margin-top: 0.5em;
+.paragraphs pre {
+    overflow: visible;
 }
