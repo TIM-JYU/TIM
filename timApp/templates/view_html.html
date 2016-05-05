@@ -87,9 +87,8 @@
 
 {% block rightside %}
     {% if teacher_mode %}
-        <div ng-controller="UserListController" id="users" class="userlist" tim-draggable-fixed caption="Users">
+        <div ng-controller="UserListController" id="users" class="userlist" tim-draggable-fixed caption="Users with answers ({{ plugin_users|length }})">
             {% if plugin_users %}
-                Users with answers ({{ plugin_users|length }}):<br>
                 {% raw %}
                 <table ng-table="tableParams" show-filter="true" class="table table-condensed ng-table-rowselected"
                        export-csv="csv" export-korppi="expkorppi">
