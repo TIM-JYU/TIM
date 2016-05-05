@@ -95,10 +95,10 @@
                     <tr ng-repeat="user in $data"
                         ng-click="changeUser(user)"
                         ng-class="{'active': user == selectedUser}">
-                        <td data-title="'Full name'" sortable="'real_name'" filter="{ 'real_name': 'text' }">
+                        <td ng-attr-title="{{user.real_name}}" data-title="'Full name'" sortable="'real_name'" filter="{ 'real_name': 'text' }">
                             {{user.real_name}}
                         </td>
-                        <td data-title="'User name'" sortable="'name'" filter="{ 'name': 'text' }">
+                        <td ng-attr-title="{{user.name}}" data-title="'User name'" sortable="'name'" filter="{ 'name': 'text' }">
                             {{user.name}}
                         </td>
                         <td data-title="'Tasks'" sortable="'task_count'" filter="{ 'task_count': 'text' }">
