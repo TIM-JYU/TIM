@@ -75,6 +75,10 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
     top: 0;
     height: auto;
     display: flex;
+
+    p {
+        color: set-text-color($basic-color);
+    }
 }
 
 #largeMenu .lectureSection {
@@ -107,7 +111,7 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
 
 .menuSection .lectureSection h1 {
     font-family: verdana;
-    color: white;
+    color: set-text-color($basic-color);
     text-align: left;
     margin: 0 0 10px 0;
     line-height: 1;
@@ -115,7 +119,7 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
 
 .lectureSection h2 {
     font-family: verdana;
-    color: white;
+    color: set-text-color($basic-color);
     font-size: 70%;
     text-align: right;
 }
@@ -203,9 +207,9 @@ li.basic_active {
     }
 
     .smallMenu {
-        border: 1px solid #3cc;
+        border: 1px solid $basic-color;
         border-radius: 5px;
-        background-color: #3cc;
+        background-color: $basic-color;
         display: -webkit-flex;
         display: flex;
         color: white;
@@ -262,7 +266,7 @@ li.basic_active {
         padding: 5px;
         display: block;
         margin: 5px;
-        background: #3cc;
+        background: $basic-color;
         text-decoration: none;
         color: white;
         width: 90%;

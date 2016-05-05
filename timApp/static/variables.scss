@@ -1,6 +1,7 @@
 @charset "UTF-8";
 
 $basic-color: #3CC;
+$basic-color-inverse: invert($basic-color);
 $button-bg-color: $basic-color;
 $editline-bg-color: $basic-color;
 $areacollapse-color: $basic-color;

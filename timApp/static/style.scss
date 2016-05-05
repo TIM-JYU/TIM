@@ -78,21 +78,28 @@ table.timppa {
 }
 
 .wall-footer {
-    background-color: #3cc;
+    background-color: $basic-color;
     width: 100%;
     position: absolute;
     bottom: 0;
     height: 45px;
     max-height: 45px;
+
+    label {
+        color: set-text-color($basic-color);
+    }
 }
+
+$buttons-width: 75%;
+
 .wall-buttons {
-    width: 80%;
+    width: $buttons-width;
     float:left
 }
 
 .wall-info-buttons {
     float: left;
-    width: 20%;
+    width: 100% - $buttons-width;
     font-size: 12px;
 }
 
@@ -173,7 +180,7 @@ table.timppa {
 }
 
 .answerSheet th {
-    background-color: #3cc;
+    background-color: $basic-color;
     border: none;
     height: auto;
     width: auto;
