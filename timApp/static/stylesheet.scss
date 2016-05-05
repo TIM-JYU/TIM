@@ -564,9 +564,12 @@ input[type="file"] {
 
 /* For user list in teacher view ================================*/
 .userlist {
+    $list-max-height: 95vh;
+    $first-column-width: 55%;
     overflow: auto;
     overflow-x: hidden;
-    max-height: 90vh;
+    max-height: $list-max-height;
+
     position: relative;
     background-color: #e6e6e6;
     padding: 2px;
@@ -580,11 +583,33 @@ input[type="file"] {
     }
 
     td, th {
-        max-width: 100px;
+        width: (100% - $first-column-width) / 3;
+        max-width: (100% - $first-column-width) / 3;
+    }
+
+    td {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     td:first-child, th:first-child {
-        max-width: 200px;
+        width: $first-column-width;
+        max-width: $first-column-width;
+    }
+
+    thead, tbody {
+        display: block;
+    }
+
+    tbody {
+        max-height: calc(#{$list-max-height} - 240px); //TODO how to compute the 240 automatically
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .ng-table-pager {
+        display: none;
     }
 }
 
@@ -853,4 +878,12 @@ body > .footer {
     bottom: 0;
     width: 100%;
     height: $footer-height;
+}
+
+.table-alias td:first-child {
+    text-align: right;
+}
+
+.table-borderless tbody tr td, .table-borderless tbody tr th, .table-borderless thead tr th {
+    border: none;
 }
