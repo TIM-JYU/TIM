@@ -72,7 +72,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     }));
                 }
                 htmlSheet.append($('<h2>', {text: $scope.json.QUESTION}));
-                var table = $('<table>', {id: 'answer-sheet-table'});
+                var table = $('<table>', {id: 'answer-sheet-table', class: 'table table-borderless'});
 
                 if ($scope.json.TYPE === "true-false") {
                     $scope.json.DATA.HEADERS[0] = {"type": "header", "id": 0, "text": "True"};
