@@ -5,13 +5,25 @@
         <div class="panel-heading">Names</div>
 <div class="panel-body">
     <form class="form form-group-sm">
-        <table class="table">
+        <table class="table table-borderless table-alias">
+            <colgroup>
+                <col class="col-md-1">
+                <col class="col-md-3">
+                <col class="col-md-3">
+                <col class="col-md-1">
+            </colgroup>
             <tr>
+                <th></th>
                 <th>Visible in index, location</th>
                 <th>Name</th>
-                <th>Actions</th>
+                <th></th>
             </tr>
             <tr ng-repeat="alias in aliases">
+                <td>
+                    <button title="Remove this alias" class="btn btn-danger btn-sm" ng-click="removeAlias(alias)">
+                        <span class="glyphicon glyphicon-remove"></span>
+                    </button>
+                </td>
                 <td>
                     <div class="input-group input-group-sm">
                         <span ng-click="aliasPublicClicked(alias)" class="input-group-addon">
@@ -32,20 +44,13 @@
                     </div>
                 </td>
                 <td>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <button class="wideButton btn-sm" ng-click="updateAlias(alias)"
-                                    ng-disabled="!aliasChanged(alias)">
-                                Update
-                            </button>
-                        </div>
-                        <div class="col-md-6">
-                            <button class="wideButton btn-sm" ng-click="removeAlias(alias)">Remove</button>
-                        </div>
-                    </div>
+                    <button class="timButton btn-sm" ng-click="updateAlias(alias)"
+                            ng-disabled="!aliasChanged(alias)"><span class="glyphicon glyphicon-ok"></span>
+                    </button>
                 </td>
             </tr>
             <tr>
+                <td></td>
                 <td>
                     <div class="input-group input-group-sm">
                         <span ng-click="aliasPublicClicked(newAlias)" class="input-group-addon">
@@ -61,7 +66,8 @@
                     <input class="form-control" type="text" ng-model="newAlias.name" placeholder="Click to add"/>
                 </td>
                 <td>
-                    <button class="wideButton btn-sm" ng-click="addAlias(newAlias)" ng-disabled="!newAlias.name">Add
+                    <button class="timButton btn-sm" ng-click="addAlias(newAlias)" ng-disabled="!newAlias.name">
+                        <span class="glyphicon glyphicon-plus"></span>
                     </button>
                 </td>
             </tr>
