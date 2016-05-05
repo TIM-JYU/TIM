@@ -565,7 +565,7 @@ input[type="file"] {
 /* For user list in teacher view ================================*/
 .userlist {
     $list-max-height: 95vh;
-    $first-column-width: 55%;
+
     overflow: auto;
     overflow-x: hidden;
     max-height: $list-max-height;
@@ -582,20 +582,40 @@ input[type="file"] {
         cursor: pointer;
     }
 
-    td, th {
-        width: (100% - $first-column-width) / 3;
-        max-width: (100% - $first-column-width) / 3;
+    @mixin cells($table-max-width, $first-col-width, $small-col-width) {
+        td, th {
+            width: $small-col-width;
+            max-width: $small-col-width;
+        }
+
+        td:first-child, th:first-child {
+            width: $first-col-width;
+            max-width: $first-col-width;
+        }
+
+        td:nth-child(2), th:nth-child(2) {
+            width: $table-max-width - 2*$small-col-width - $first-col-width;
+            max-width: $table-max-width - 2*$small-col-width - $first-col-width;
+        }
+    }
+
+    @media(max-width: $screen-xs-max) {
+        @include cells(200px, 50px, 50px);
+    }
+    @media(min-width: $screen-sm-min) {
+        @include cells(200px, 50px, 50px);
+    }
+    @media(min-width: $screen-md-min) {
+        @include cells(300px, 90px, 60px);
+    }
+    @media(min-width: $screen-lg-min) {
+        @include cells(423px, 200px, 70px);
     }
 
     td {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-    }
-
-    td:first-child, th:first-child {
-        width: $first-column-width;
-        max-width: $first-column-width;
     }
 
     thead, tbody {
