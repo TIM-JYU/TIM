@@ -112,13 +112,13 @@
                 </table>
                 <form>
                     <div class="form-group">
-                        <a class="timButton" ng-mousedown="csv.generate()" ng-href="{{ csv.link() }}"
+                        <a class="timButton btn-sm" ng-mousedown="csv.generate()" ng-href="{{ csv.link() }}"
                            download="users_{{ doc.id }}.csv">Export
                             to CSV</a>
                     </div>
 
                     <div class="form-group">
-                        <div class="input-group">
+                        <div class="input-group input-group-sm">
                             <input placeholder="Korppi field name" class="form-control" type="text" size="5"
                                    name="korppiExportId" ng-model="expkorppi.korppiExportId">
                   <span class="input-group-btn">
