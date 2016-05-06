@@ -3,8 +3,9 @@ from typing import Optional, List
 # from timdb.folders import *
 
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
+from timdb.documents import *
 
-class VelpGroups(TimDbBase):
+class VelpGroups(Documents):
     def create_default_velp_group(self, name: str, owner_group_id: int, velp_group_id: Optional[int] = None):
         """Creates default velp group where all velps used in document are stored.
 
@@ -46,7 +47,7 @@ class VelpGroups(TimDbBase):
         self.db.commit()
         return velp_group_id
 
-    def create_default_velp_group2(self, name: str, owner_group_id: int, velp_group_id: int):
+    def create_default_velp_group2(self, name: str, owner_group_id: int, default_group_path: str):
         """Creates default velp group where all velps used in document are stored.
 
         Make sure you have made a new document (needed for rights management) and use its id as velp_group_id
@@ -56,29 +57,52 @@ class VelpGroups(TimDbBase):
         :return:
         """
         cursor = self.db.cursor()
-
+        new_group = self.create(default_group_path, owner_group_id)
+        new_group_id = new_group.doc_id
 
         valid_until = None
         cursor.execute("""
                       INSERT INTO
                       VelpGroup(id, name, valid_until, document_def)
                       VALUES (?, ?, ?, ?)
-                      """, [velp_group_id, name, valid_until, 1]
+                      """, [new_group_id, name, valid_until, 1]
                        )
         self.db.commit()
-        return velp_group_id
+        return new_group_id
 
-    def create_velp_group2(self, name: str, owner_group_id: int, velp_group_id: int, valid_until: Optional[str] = None):
+    def create_velp_group2(self, name: str, owner_group_id: int, new_group_path: str, valid_until: Optional[str] = None):
         """Create a velp group
 
         Make sure you have made a new document (needed for rights management) and use its id as velp_group_id
         :param name: Name of the created group.
         :param owner_group_id: The id of the owner group.
-        :param velp_group_id: ID
         :param valid_until: How long velp group is valid (None is forever).
         :return:
         """
         cursor = self.db.cursor()
+        new_group = self.create(new_group_path, owner_group_id)
+        new_group_id = new_group.doc_id
+
+        cursor.execute("""
+                      INSERT INTO
+                      VelpGroup(id, name, valid_until)
+                      VALUES (?, ?, ?)
+                      """, [new_group_id, name, valid_until]
+                       )
+        self.db.commit()
+        return new_group_id
+
+    def make_document_a_velp_group(self, name: str, owner_group_id: int, velp_group_id: int, valid_until: Optional[str] = None):
+        """Create a velp group
+
+        Make sure you have made a new document (needed for rights management) and use its id as velp_group_id
+        :param name: Name of the created group.
+        :param owner_group_id: The id of the owner group.
+        :param valid_until: How long velp group is valid (None is forever).
+        :return:
+        """
+        cursor = self.db.cursor()
+
         cursor.execute("""
                       INSERT INTO
                       VelpGroup(id, name, valid_until)
@@ -185,6 +209,12 @@ class VelpGroups(TimDbBase):
                        )
         return self.resultAsDictionary(cursor)
 
+    def get_velps_from_groups(self, velp_groups: [int]):
+        results = []
+        for group in velp_groups:
+            results.append(self.get_velps_from_group(group))
+        return results
+
     def check_default_group_exists(self, document_id) -> Optional[int]:
         """Checks whether document has default velp group attached.
 
@@ -240,7 +270,7 @@ class VelpGroups(TimDbBase):
 
     def get_velp_group_name(self, velp_group_id: int) -> str:
         cursor = self.db.cursor()
-        cursor.execute('SELECT name FROM VelpGroup WHERE id = ?'), [velp_group_id]
+        cursor.execute('SELECT name FROM VelpGroup WHERE id = ?', [velp_group_id])
         result = cursor.fetchone()
         return result[0] if result is not None else None
 
@@ -268,21 +298,15 @@ class VelpGroups(TimDbBase):
 
         return velps_folder_path
 
-# TODO Delete or update down below, not functional
-
-    def get_velp_groups_in_folders(self, root_path: str):
-        # Check help from tim.py and timApp.js
-        current_path = root_path
-        return
-
-    def create_velp_group_and_document(self, root_path: str, name: str, owner_group_id: int):
-        current_path = root_path
-
-
-        return
 
     def is_id_velp_group(self, doc_id: int) -> bool:
+        """ Checks whether given document id can also be found from VelpGroup table
+
+        :param doc_id: ID of document
+        :return: True if part of VelpGroup table, else False
+        """
+        print(doc_id)
         cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM VelpGroup WHERE id = ?'), [doc_id]
+        cursor.execute('SELECT name FROM VelpGroup WHERE id = ?', [doc_id])
         result = cursor.fetchone()
         return True if result is not None else False

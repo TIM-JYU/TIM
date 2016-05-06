@@ -176,6 +176,34 @@ class Velps(TimDbBase):
         results = self.resultAsDictionary(cursor)
         return results
 
+    def get_velps_from_group(self, velp_group_id: int, language_id: str = 'FI'):
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT Velp.id AS id, Velp.default_points AS points, Velp.icon_id AS icon_id,
+                      y.content AS content, y.language_id AS language_id
+                      FROM Velp
+                      INNER JOIN(
+                        SELECT x.velp_id, VelpContent.content, VelpContent.language_id
+                        FROM VelpContent
+                        INNER JOIN (
+                          SELECT VelpVersion.velp_id, max(VelpVersion.id) AS latest_version
+                          FROM VelpVersion GROUP BY VelpVersion.velp_id
+                          ) AS x ON VelpContent.version_id = x.latest_version
+                      ) AS y ON y.velp_id = velp.id
+                      WHERE y.language_id = ? AND velp_id IN (
+                        SELECT Velp.id
+                        FROM Velp
+                          WHERE (Velp.valid_until >= current_timestamp OR Velp.valid_until ISNULL) AND Velp.id IN (
+                          SELECT VelpInGroup.velp_id
+                            FROM VelpInGroup
+                            WHERE VelpInGroup.velp_group_id = ?
+                          )
+                      )
+                      """, [language_id, velp_group_id]
+                      )
+        results = self.resultAsDictionary(cursor)
+        return results
+
     def get_document_velps(self, doc_id: int, language_id: str = 'FI') -> List[Dict]:
         """Gets velps that are linked to the document. Also gets labels for the velps.
 

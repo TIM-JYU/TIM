@@ -70,11 +70,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             //$scope.annotations = [];
 
         });
-
+/*
         $http.get('/{0}/defaultvelpgroup'.replace('{0}', doc_id)).success(function (data){
             console.log(data[0].id);
             default_velp_group = data[0].id;
-        });
+        });*/
     });
 
     // Get label data
