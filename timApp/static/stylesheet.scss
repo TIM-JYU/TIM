@@ -50,7 +50,7 @@ body {
     @include center-block();
     max-width: 52em;
     .parContent {
-        text-align: justify;
+        text-align: $body-text-align;
         font-size: 16px;
 
         & > h1 {
