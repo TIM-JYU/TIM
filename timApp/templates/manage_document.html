@@ -204,7 +204,7 @@
         <div class="panel-body">
     <form>
         <div>
-            <textarea class="form-control" ng-model="fulltext" rows="50"></textarea>
+            <textarea id="doctext" class="form-control" ng-model="fulltext" rows="50"></textarea>
             <button class="timButton" ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument()">Save</button>
             <span ng-show="saving">Saving...</span>
         </div>
