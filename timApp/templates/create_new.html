@@ -34,7 +34,7 @@
                             {{ session.user_name }}
                         </td>
                         <td>
-                            <button ng-click="createDocument('{{ newItem }}')" type="button">Create
+                            <button class="timButton" ng-click="createDocument('{{ newItem }}')" type="button">Create
                             </button>
                         </td>
                     </tr>
@@ -61,7 +61,7 @@
                             </label>
                         </td>
                         <td>
-                            <button ng-disabled="!folderOwner"
+                            <button class="timButton" ng-disabled="!folderOwner"
                                     ng-click="createFolder('{{ newItem }}', folderOwner.id)" type="button">Create
                             </button>
                         </td>

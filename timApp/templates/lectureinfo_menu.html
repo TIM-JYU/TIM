@@ -89,7 +89,7 @@
                 <ul>
                     <li ng-show="currentLecturesList.length > 0" ng-repeat="lecture in currentLecturesList">
                         <p ng-click="selectCurrentLecture()">{{ lecture.lecture_code }}
-                            <button style="margin-left: 5px;" value="Join"
+                            <button class="timButton" value="Join"
                                    ng-click="joinLecture(lecture.lecture_code,lecture.is_access_code)">Join</button>
                         </p>
                     </li>
@@ -105,7 +105,7 @@
                 <ul>
                     <li ng-repeat="lecture in futureLecturesList">
                         <p> {{ lecture.lecture_code }}
-                            <button ng-show="isLecturer" value="Start">Start</button>
+                            <button class="timButton" ng-show="isLecturer" value="Start">Start</button>
                         </p>
                     </li>
                     <li ng-show="futureLecturesList.length == 0">

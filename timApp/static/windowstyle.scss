@@ -211,36 +211,8 @@ input[type="number"] {
 }
 
 .buttons {
-    border: none;
     margin: 5px;
-    color: #FFF;
-    border-radius: 3px;
-    text-shadow: 1px 1px 1px #9E3F3F;
-    cursor: pointer;
-    display: inline-block;
-    font-size: 11px;
-    line-height: normal;
-    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
     float: right;
-}
-
-.createLecture button, .buttons button {
-    margin-top: 5px;
-    background: $basic-color;
-    border: 0;
-    border-radius: 3px;
-    color: #FFF;
-    display: inline-block;
-    font-size: 11px;
-    cursor: pointer;
-    line-height: normal;
-    padding: 5px 10px;
-    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
-.createLecture button:disabled, .createLecture input[type="button"]:disabled {
-    cursor: default;
-    background-color: #DCDCDC;
 }
 
 .createLecture input[type="text"]:disabled, .createQuestion input[type="text"]:disabled {
