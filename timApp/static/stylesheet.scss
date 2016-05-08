@@ -606,10 +606,10 @@ input[type="file"] {
         @include cells(200px, 50px, 50px);
     }
     @media(min-width: $screen-md-min) {
-        @include cells(300px, 90px, 60px);
+        @include cells(300px, 90px, 70px);
     }
     @media(min-width: $screen-lg-min) {
-        @include cells(423px, 200px, 70px);
+        @include cells(423px, 120px, 105px);
     }
 
     td {
