@@ -5,6 +5,7 @@ from flask import Blueprint
 
 import containerLink
 import documentmodel.document
+from options import get_option
 from plugin import Plugin, PluginException
 from .common import *
 
@@ -252,6 +253,11 @@ def get_state():
                                                      'par_id',
                                                      'user_id',
                                                      'answer_id', types=[int, str, int, int])
+    plugin_params = {}
+    review = get_option(request, 'review', False)
+    if review:
+        plugin_params['review'] = True
+
     if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
     user = timdb.users.get_user(user_id)
@@ -287,7 +293,16 @@ def get_state():
                                                                   user,
                                                                   timdb.answers,
                                                                   custom_state=answer['content'])
-    return jsonResponse({'html': texts[0]['html']})
+
+    [reviewhtml], _, _, _ = pluginControl.pluginify(doc,
+                                                    [block],
+                                                    user,
+                                                    timdb.answers,
+                                                    custom_state=answer['content'],
+                                                    plugin_params=plugin_params,
+                                                    wrap_in_div=False) if review else ([None], None, None, None)
+
+    return jsonResponse({'html': texts[0]['html'], 'reviewHtml': reviewhtml['html'] if review else None})
 
 
 @answers.route("/getTaskUsers/<task_id>")

@@ -67,6 +67,9 @@
          id="{{ t.id }}"
          t="{{ t.t }}"
          attrs="{{ t.attrs_str }}"
+     {% if t.ref_attrs and t.ref_attrs.classes and "deleted" in t.ref_attrs.classes %}
+         title="This paragraph has been deleted from the source document."
+     {% endif %}
      {% if t.attrs.area %}
          data-area-start="{{ t.attrs.area|safe }}"
      {% endif %}
@@ -96,7 +99,12 @@
         {{ t.html|safe }}
     </div>
     {% if t.attrs.rl == 'force' or not (not t.attrs.rd or t.attrs.rl == 'no') %}
-        <a class="parlink"
+        <a
+        {% if t.ref_attrs and t.ref_attrs.classes and "deleted" in t.ref_attrs.classes %}
+            class="parlink deleted"
+        {% else %}
+            class="parlink"
+        {% endif %}
            href="/view/{{ t.ref_doc_id }}#{{ t.ref_id }}"
            data-docid="{{ t.ref_doc_id }}" data-parid="{{ t.ref_id }}">
             <sup>[*]</sup></a>

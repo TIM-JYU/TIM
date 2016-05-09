@@ -56,31 +56,39 @@ else:
     }
 
 
-def call_plugin_generic(plugin, method, route, data=None, headers=None):
+def call_plugin_generic(plugin, method, route, data=None, headers=None, params=None):
     plug = get_plugin(plugin)
     try:
-        request = requests.request(method, plug['host'] + route + "/", data=data, timeout=15, headers=headers)
+        request = requests.request(method, plug['host'] + route + "/", data=data, timeout=15, headers=headers, params=params)
         request.encoding = 'utf-8'
         return request.text
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
         raise PluginException("Could not connect to plugin.")
 
 
-def call_plugin_html(plugin, info, state, task_id=None):
-    plugin_data = json.dumps({"markup": info, "state": state, "taskID": task_id}, cls=DocParagraphEncoder)
+def call_plugin_html(plugin, info, state, task_id=None, params=None):
+    data_dict = {"markup": info, "state": state, "taskID": task_id}
+    data_dict.update(params or {})
+    plugin_data = json.dumps(data_dict,
+                             cls=DocParagraphEncoder)
     return call_plugin_generic(plugin,
                                'post',
                                'html',
                                data=plugin_data,
-                               headers={'Content-type': 'application/json'})
+                               headers={'Content-type': 'application/json'},
+                               params=params)
 
 
-def call_plugin_multihtml(plugin, plugin_data):
+def call_plugin_multihtml(plugin, plugin_data, params=None):
+    if params is not None:
+        for p in plugin_data:
+            p.update(params)
     return call_plugin_generic(plugin,
                                'post',
                                'multihtml',
                                data=json.dumps(plugin_data, cls=DocParagraphEncoder),
-                               headers={'Content-type': 'application/json'})
+                               headers={'Content-type': 'application/json'},
+                               params=params)
 
 
 def call_plugin_resource(plugin, filename):

@@ -33,8 +33,14 @@
     <label ng-show="showTeacher()">
         <input type="checkbox" ng-model="saveTeacher">Save teacher's fix
     </label>
+    <label>
+        <input type="checkbox" ng-model="review">Velps
+    </label>
     </span>
     </span>
+    <div ng-show="review" class="review">
+
+    </div>
     <span ng-show="taskInfo.starttime"><br>Start time: {{ taskInfo.starttime }}</span>
     <span ng-show="taskInfo.deadline"><br>Deadline: {{ taskInfo.deadline }}</span>
     <div ng-show="selectedAnswer.collaborators.length > 1 && !hasUserChanged()">
