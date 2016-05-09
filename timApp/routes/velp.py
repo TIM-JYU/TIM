@@ -34,6 +34,7 @@ def check_default_velp_group(document_id: int) -> str:
 @velps.route("/<document_id>/<paragraph_id>/velps", methods=['GET'])
 def get_velps(document_id: int, paragraph_id: str) -> str:
     timdb = getTimDb()
+
     # Make sure document_id is int
     try:
         doc_id = int(document_id)
@@ -175,7 +176,7 @@ def add_velp():
         if timdb.users.has_edit_access(current_user_id, group) is True:
             velp_groups_rights.append(group)
         else:
-            print("No edit access for velp group: " + timdb.velp_groups.get_velp_group_name(group))
+            print("No edit access for velp group: ") # + timdb.velp_groups.get_velp_group_name(group))
 
     velp_groups = velp_groups_rights
 

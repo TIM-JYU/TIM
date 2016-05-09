@@ -280,6 +280,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         $scope.annotationsAdded = true;
     };
 
+    var getAnswerInfo = function (start){
+        var myparent = start.parentElement;
+        if (myparent.tagname == "ANSWERBROWSER") {
+            return true;
+        }
+
+
+    };
+
     /**
      * Gets array of element indexes from parent to start
      * @param start
@@ -298,7 +307,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             if (myparent.children[i] == start) {
                 array.push(count);
-                return getElementPositionInTree(myparent, array)
+                return getElementPositionInTree(myparent, array);
             }
 
             if (myparent.children[i].nodeName == "ANNOTATION") {

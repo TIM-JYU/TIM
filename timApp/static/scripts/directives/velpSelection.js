@@ -43,7 +43,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
     var doc_id = $scope.docId;
     var par = 0;
-    var default_velp_group = 0; // TODO Use route to add this information
+    var default_velp_group = 1; // TODO Use route to add this information
 
     var new_velp_id = 0; // get latest velp id
     var new_label_id = 0; // get latest label id
