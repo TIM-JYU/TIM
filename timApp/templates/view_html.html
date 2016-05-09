@@ -21,6 +21,7 @@
     {% endfor %}
 {% endblock %}
 
+{% set velp_mode = route == "velp" %}
 {% set teacher_mode = route in ("teacher", "answers") %}
 {% set lecture_mode = route == "lecture" %}
 {% set slide_mode = route == "slide" %}
@@ -178,10 +179,13 @@
                 <iframe id="slideFrame" src="/show_slide/{{ doc.fullname }}" allowfullscreen></iframe>
                 <a id="showSlidesLink" href="/show_slide/{{ doc.fullname }}">Show slides only</a>
             </div>
-        {% else %}
+        {% endif %}
+        {% if velp_mode %}
             <div ng-controller="ReviewController">
                 {% include 'velp_view.html' %}
             </div>
+        {% else %}
+            {% include 'view_content.html' %}
         {% endif %}
     </div>
     <p id="test"></p>

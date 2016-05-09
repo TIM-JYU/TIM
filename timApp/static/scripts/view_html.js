@@ -81,6 +81,7 @@ timApp.controller("ViewCtrl", [
         sc.users = $window.users;
         sc.group = $window.group;
         sc.teacherMode = $window.teacherMode;
+        sc.velpMode = $window.velpMode;
         sc.sidebarState = 'autohidden';
         sc.lectureMode = $window.lectureMode;
         if (sc.users.length > 0) {

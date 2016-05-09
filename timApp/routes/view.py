@@ -69,6 +69,12 @@ def teacher_view(doc_name):
     return view(doc_name, 'view_html.html', usergroup=usergroup, route="teacher")
 
 
+@view_page.route("/velp/<path:doc_name>")
+def velp_view(doc_name):
+    usergroup = request.args.get('group')
+    return view(doc_name, 'view_html.html', usergroup=usergroup, route="velp")
+
+
 @view_page.route("/answers/<path:doc_name>")
 def see_answers_view(doc_name):
     usergroup = request.args.get('group')
