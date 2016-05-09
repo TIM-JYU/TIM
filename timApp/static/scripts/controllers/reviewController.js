@@ -208,7 +208,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Uses selected velp, if area is selected.
-     * TODO: When annotations can cross taglines, change end coordinate according to end element
+     * TODO: When annotations can cross HTML-tags, change end coordinate according to end element
      * @param velp velp selected in velpSelection directive
      */
     $scope.useVelp = function (velp) {
@@ -282,7 +282,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Gets array of element indexes from parent to start
-     * TODO: ignore annotations
      * @param start
      * @param array
      * @returns {*}
