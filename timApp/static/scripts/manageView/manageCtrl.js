@@ -635,7 +635,7 @@ text = '\n'.join(a)
         sc.documentName = $window.doc.name;
 
         //sc.newName = sc.getJustDocName(doc.name);
-        //sc.newFolderName = sc.getFolderName(doc.name);
+        sc.newFolderName = sc.getFolderName(doc.fullname);
         //sc.oldName = sc.newName;
         //sc.oldFolderName = sc.newFolderName;
         sc.newAlias = {location: sc.newFolderName};
