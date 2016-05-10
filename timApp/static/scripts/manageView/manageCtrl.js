@@ -251,9 +251,9 @@ PermApp.controller("PermCtrl", [
             });
         };
 
-        sc.deleteDocument = function (doc) {
+        sc.deleteDocument = function (docId) {
             if (confirm('Are you sure you want to delete this document?')) {
-                $http.delete('/documents/' + doc)
+                $http.delete('/documents/' + docId)
                     .success(function (data, status, headers, config) {
                         location.replace('/view/');
                     }).error(function (data, status, headers, config) {
@@ -262,9 +262,9 @@ PermApp.controller("PermCtrl", [
             }
         };
 
-        sc.deleteFolder = function (folder) {
+        sc.deleteFolder = function (folderId) {
             if (confirm('Are you sure you want to delete this folder?')) {
-                $http.delete('/folders/' + folder)
+                $http.delete('/folders/' + folderId)
                     .success(function (data, status, headers, config) {
                         location.replace('/view/');
                     }).error(function (data, status, headers, config) {
