@@ -1,37 +1,45 @@
-<!-- Pop-over element
---><div ng-show="!show" ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
+<!-- Pop-over element -->
+<div ng-show="!show"
+     ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
     <div class="fulldiv">
         <div class="div-90">
             <p><span><strong>{{ velp }}</strong></span>
-            <br /><label>Points: <input type="number" ng-model="points" ng-value="points" ng-change="changePoints(points)"></label>
+                <br/><label>Points: <input type="number" ng-model="points" ng-value="points"
+                                           ng-change="changePoints(points)"></label>
             </p>
         </div>
         <div class="div-10">
-            <span title="Close" class="float-right glyphicon glyphicon-remove clickable-icon" ng-click="toggleAnnotation()"></span>
+            <span title="Close" id="closeAnn" class="float-right glyphicon glyphicon-remove clickable-icon"
+                  ng-click="toggleAnnotation()"></span>
         </div>
     </div>
     <div class="fulldiv">
         <ul class="comments">
             <li ng-repeat="comment in comments"><strong>{{ comment["author"] }}</strong>: {{ comment["content"] }}</li>
         </ul>
-
-    <textarea placeholder="Add comment" ng-model="newComment" autofocus></textarea>
-    <button ng-click="addComment()">Save</button>
-    <span title="Delete annotation" ng-class="['delAnnotation', 'float-right', 'glyphicon', 'glyphicon-trash', 'clickable-icon', {hide: comments.length > 1} ]" ng-click="deleteAnnotation()"></span>
+        <textarea placeholder="Add comment" ng-model="newComment" autofocus></textarea>
     </div>
+
     <table id="annTable">
         <tr>
-            <td><p>Visible to:</p></td>
+            <td>
+                <p>Visible to:</p>
+            </td>
             <td><select>
                 <option value="4">Everyone</option>
                 <option value="3">Teachers</option>
                 <option value="2">Document owner</option>
                 <option value="1">Just me</option>
             </select>
-                <span id="annqmark"
-                      ng-class="['float-right', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"></span>
+                <span id="annqmark" ng-class="['float-right', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"></span>
             </td>
         </tr>
     </table>
+    <div>
+        <button class="saveChanges">Save changes</button>
+    </div>
+    <span class="annDelAnnotation" title="Delete annotation"
+                  ng-class="['delAnnotation', 'float-right', 'glyphicon', 'glyphicon-trash', 'clickable-icon', {hide: comments.length > 1} ]"
+                  ng-click="deleteAnnotation()"></span>
 </div><span ng-click="toggleAnnotation()" ng-class="['highlighted', 'annotation', 'emphasise', 'default',
-{neutral: points == 0, negative: points<0, positive: points > 0}]" ng-transclude></span>
+{neutral: points == 0, negative: points < 0, positive: points > 0}]" ng-transclude></span>
