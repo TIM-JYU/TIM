@@ -21,35 +21,40 @@
         });
     </script>
 
-    <div class="viewLogin">
-        <form method="POST" action="/altlogin">
-            <p class="loginwelcome">
-                {% if not hide_require_text %}
-                    Login is required for this document.
-                {% endif %}
-                You can either login with Korppi
-            </p>
+    <div class="row">
+        <div class="col-sm-6 col-sm-offset-3">
+            <form class="form-horizontal" method="POST" action="/altlogin">
+                <p class="text-center">
+                    {% if not hide_require_text %}
+                        Login is required for this document.
+                    {% endif %}
+                    You can either login with Korppi
+                </p>
 
-            <div class="loginButtonDiv">
-                <button class="timButton" type="button" onclick="korppiLogin()">Login with Korppi</button>
-            </div>
-            <p class="loginwelcome">
-                or with your email address if you have a TIM email account.
-            </p>
+                <button class="timButton center-block" type="button" onclick="korppiLogin()">Login with Korppi</button>
+                <p class="text-center">
+                    or with your email address if you have a TIM email account.
+                </p>
 
-            <div class="loginFieldDiv">
                 <input type="hidden" name="came_from" value="{{ came_from or '' }}">
                 <input id="anchor" type="hidden" name="anchor" value="">
-                <label for="email" class="loginFieldLabel">Email</label>
-                <input name="email" class="loginFieldInput" type="email" value="{{ session.email }}">
-            </div>
-            <div class="loginFieldDiv">
-                <label for="password" class="loginFieldLabel">Password</label>
-                <input name="password" class="loginFieldInput" type="password">
-            </div>
-            <div class="loginButtonDiv">
-                <button class="timButton" type="submit">Login</button>
-            </div>
-        </form>
+
+                <div class="form-group">
+                    <label for="email" class="control-label col-sm-4">Email</label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="email" name="email" type="email" value="{{ session.email }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="col-sm-4 control-label">Password</label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="password" name="password" type="password">
+                    </div>
+                </div>
+
+                <button class="center-block timButton" type="submit">Login</button>
+            </form>
+        </div>
     </div>
 {% endblock %}

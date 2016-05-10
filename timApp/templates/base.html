@@ -110,7 +110,13 @@
                         </a>
                         <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
                              src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
-                        {% include 'loginlogout.html' %}
+                        <div class="logintext">
+                            {% if session.user_id %}
+                                <a href="/">Logged in as: {{ session.real_name }} ({{ session.user_name }})</a>
+                            {% else %}
+                                <a href="/login">Log in</a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 <div class="col-lg-{{ col_3_lg }}

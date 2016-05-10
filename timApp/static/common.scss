@@ -1,66 +1,6 @@
-.viewLogin {
-    min-width: 160px;
-    padding: 10px 5px 0 5px;
-    display: table;
-    text-align: center;
-    margin-left: auto;
-    margin-right: auto;
-    color: $basic-color;
-}
-
-.viewLogin a {
-    font-size: 11px;
-    color: $viewlogin-link-color;
-}
-
-.viewLogin a:hover {
-    color: #4dd;
-    text-align: right;
-    text-decoration: none;
-}
-
-.viewLogin .loginButton:hover {
-    width: auto;
-}
-
-.viewLogin .loginFieldDiv {
-    font-size: 12px;
-    margin-bottom: 1.5em;
-    line-height: 2em;
-    text-align: left;
-}
-
-.viewLogin .loginFieldLabel {
-    float: left;
-    width: 120px;
-    text-align: right;
-    margin-right: 10px;
-}
-
-.viewLogin .loginFieldInput {
-    width: 250px;
-}
-
-.viewLogin .loginFieldStatic {
-    width: 120px;
-}
-
-.viewLogin .loginButton {
-    background: $basic-color;
-    border: 0;
-    border-radius: 3px;
-    color: #FFF;
-    display: inline-block;
-    font-size: 11px;
-    font-weight: bold;
-    cursor: pointer;
-    line-height: normal;
-    padding: 8px 10px;
-    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
-.viewLogin form {
-    display: inline;
+.logintext {
+    @extend .text-center, .small;
+    margin-top: 13px;
 }
 
 .draghandle {

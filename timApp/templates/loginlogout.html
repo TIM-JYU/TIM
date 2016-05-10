@@ -1,7 +1,0 @@
-<div class="viewLogin">
-{% if session.user_id %}
-    <a class="loggedintext" href="/">Logged in as: {{ session.real_name }} ({{ session.user_name }})</a>
-    {% else %}
-        <a class="loggedintext" href="/login">Log in</a>
-    {% endif %}
-</div>
