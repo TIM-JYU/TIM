@@ -436,7 +436,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.createPopOverElement = function (marking, show) {
         var element = document.createElement('annotation');
 
-        element.setAttribute("velp", marking.content);
+        var velp_content = String($scope.getVelpById(marking.velp).content);
+        element.setAttribute("velp", velp_content);
+
         element.setAttribute("points", marking.points);
         element.setAttribute("aid", marking.id);
         element.setAttribute("user", username);
