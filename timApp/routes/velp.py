@@ -300,9 +300,25 @@ def create_default_velp_group():
 
     return jsonResponse(velp_groups)
 
+@velps.route("/<document_id>/get_velps")
+def get_velps2(document_id: int):
+    doc_id = int(document_id)
+    timdb = getTimDb()
+    velp_groups = get_velp_groups(doc_id)
+    print(velp_groups)
+    print("ASDASDF")
 
-@velps.route("/get_velp_groups")
-def get_velp_groups():
+    velp_content = timdb.velps.get_velp_content(velp_groups)
+
+    return jsonResponse(velp_content)
+
+@velps.route("/<document_id>/get_velp_groups")
+def get_velp_groups2(document_id: int):
+    doc_id = int(document_id)
+    groups = get_velp_groups(doc_id)
+    return jsonResponse(groups)
+
+def get_velp_groups(document_id: int):
     """Returns all velp groups found from tree from document to root and from users own velp folder
 
     Checks document's own velp group folder first, then default velp group folders going up all the
@@ -312,20 +328,22 @@ def get_velp_groups():
     Checks that user has minimum of view right for velp groups.
     :return: List of document / velp group information of found hits.
     """
-    json_data = request.get_json()
-    '''
-    current_path = json_data.get('root_path')
 
-    '''
-    doc_name = "testi1"
-    current_path = "users/josalatt/testikansio"
+    doc_id = int(document_id)
+    timdb = getTimDb()
+    full_path = timdb.documents.get_first_document_name(doc_id)
+    doc_name = os.path.basename(full_path)
+    doc_path = full_path[:len(full_path) - len(doc_name) - 1]
+
+    # doc_name = "testi1"
+    # current_path = "users/josalatt/testikansio"
+    current_path = doc_path
     velp_groups_path = current_path + "/velp groups"
     doc_velp_path = velp_groups_path + "/" + doc_name
     username = getCurrentUserName()
     personal_velps_path = "users/" + username + "/velp groups"
     owner_group_id = 3
 
-    timdb = getTimDb()
     velp_groups = []
 
     # Velp groups for areas, plugins etc
@@ -384,7 +402,7 @@ def get_velp_groups():
             timdb.velp_groups.make_document_a_velp_group(group_name, owner_group_id, id_number)
 
 
-    return jsonResponse(results)
+    return results
 
 @velps.route("/qwerty", methods=["GET"])
 def qwerty():

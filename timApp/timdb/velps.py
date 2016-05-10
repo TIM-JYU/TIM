@@ -204,6 +204,92 @@ class Velps(TimDbBase):
         results = self.resultAsDictionary(cursor)
         return results
 
+    def get_velps_from_groups(self, velp_group_ids: List[int], language_id: str = 'FI'):
+        velp_groups = ", ".join(str(x) for x in velp_group_ids) + ", 1"
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT Velp.id AS id, Velp.default_points AS points, Velp.icon_id AS icon_id,
+                      y.content AS content, y.language_id AS language_id
+                      FROM Velp
+                      INNER JOIN(
+                        SELECT x.velp_id, VelpContent.content, VelpContent.language_id
+                        FROM VelpContent
+                        INNER JOIN (
+                          SELECT VelpVersion.velp_id, max(VelpVersion.id) AS latest_version
+                          FROM VelpVersion GROUP BY VelpVersion.velp_id
+                          ) AS x ON VelpContent.version_id = x.latest_version
+                      ) AS y ON y.velp_id = velp.id
+                      WHERE y.language_id = ? AND velp_id IN (
+                        SELECT Velp.id
+                        FROM Velp
+                          WHERE (Velp.valid_until >= current_timestamp OR Velp.valid_until ISNULL) AND Velp.id IN (
+                          SELECT VelpInGroup.velp_id
+                            FROM VelpInGroup
+                            WHERE VelpInGroup.velp_group_id IN (""" + velp_groups + """)
+                          )
+                      )
+                      """, [language_id]
+                      )
+        results = self.resultAsDictionary(cursor)   # TODO: Create safe way to add list of velp group ids
+        return results
+
+    def get_velp_content(self, velp_groups: Dict):
+
+        velp_group_ids = []
+        for group in velp_groups:
+            velp_group_ids.append(group["id"])
+        velp_data = self.get_velps_from_groups(velp_group_ids)
+        group_data = self.get_velp_ids_for_velp_groups(velp_group_ids)
+
+        velp_ids = []
+        for velp in velp_data:
+            velp_ids.append(velp["id"])
+        label_data = self.get_label_ids_for_velps(velp_ids)
+
+        # Sort velp label data as lists and link them to velp data
+        if velp_data and label_data:
+            velp_id = label_data[0]['velp_id']
+            list_help = []
+            label_dict = {}
+            for i in range(len(label_data)):
+                next_id = label_data[i]['velp_id']
+                if next_id != velp_id:
+                    label_dict[velp_id] = copy.deepcopy(list_help)
+                    velp_id = next_id
+                    del list_help[:]
+                    list_help.append(label_data[i]['labels'])
+                else:
+                    list_help.append(label_data[i]['labels'])
+                if i == len(label_data) - 1:
+                    label_dict[velp_id] = copy.deepcopy(list_help)
+            for i in range(len(velp_data)):
+                search_id = velp_data[i]['id']
+                if search_id in label_dict:
+                    velp_data[i]['labels'] = label_dict[search_id]
+
+        # Sort velp group data as lists and link them to velp data
+        if velp_data and group_data:
+            velp_id = group_data[0]['velp_id']
+            list_help2 = []
+            label_dict2 = {}
+            for i in range(len(group_data)):
+                next_id = group_data[i]['velp_id']
+                if next_id != velp_id:
+                    label_dict2[velp_id] = copy.deepcopy(list_help2)
+                    velp_id = next_id
+                    del list_help2[:]
+                    list_help2.append(group_data[i]['velp_groups'])
+                else:
+                    list_help2.append(group_data[i]['velp_groups'])
+                if i == len(group_data) - 1:
+                    label_dict2[velp_id] = copy.deepcopy(list_help2)
+            for i in range(len(velp_data)):
+                search_id = velp_data[i]['id']
+                if search_id in label_dict2:
+                    velp_data[i]['velp_groups'] = label_dict2[search_id]
+
+        return velp_data
+
     def get_document_velps(self, doc_id: int, language_id: str = 'FI') -> List[Dict]:
         """Gets velps that are linked to the document. Also gets labels for the velps.
 
@@ -215,6 +301,8 @@ class Velps(TimDbBase):
         velp_data = self.get_velps(assessment_area, language_id)
         label_data = self.get_assessment_area_velp_label_ids(assessment_area)
         group_data = self.get_assessment_area_velp_group_ids(assessment_area)
+        print(velp_data)
+        print(len(velp_data))
         print(label_data)
         print(group_data)
 
@@ -330,6 +418,24 @@ class Velps(TimDbBase):
                        )
         return self.resultAsDictionary(cursor)
 
+    def get_label_ids_for_velps(self, velp_ids: List[int]):
+        velps = ", ".join(str(x) for x in velp_ids)
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT
+                        LabelInVelp.velp_id,
+                        LabelInVelp.label_id AS labels
+                      FROM LabelInVelp
+                      WHERE velp_id IN (
+                      """ + velps +
+                      """
+                      )
+                      ORDER BY velp_id ASC
+                      """
+                      )
+        results = self.resultAsDictionary(cursor)
+        return results
+
     def add_labels_to_velp(self, velp_id: int, labels: List[int]):
         """Associates a set of labels to a velp. (Appends to existing labels)
 
@@ -362,6 +468,25 @@ class Velps(TimDbBase):
         self.db.commit()
         # Then add the new ones.
         self.add_labels_to_velp(velp_id, labels)
+
+    def get_velp_ids_for_velp_groups(self, velp_group_ids: List[int]):
+        velp_groups = ", ".join(str(x) for x in velp_group_ids) + ", 1, 2, 3"
+        cursor = self.db.cursor()
+        cursor.execute("""
+                       SELECT
+                         velp_id,
+                         velp_group_id AS velp_groups
+                       FROM VelpInGroup
+                       WHERE velp_group_id IN (
+                       """ +
+                       velp_groups
+                       + """
+                       )
+                       ORDER BY velp_id ASC
+                       """
+                       )
+        results = self.resultAsDictionary(cursor)
+        return results
 
     def get_assessment_area_velp_label_ids(self, assessment_area: AssessmentArea) -> List[Dict]:
         """Get labels for velps that are linked to an assessment area.
