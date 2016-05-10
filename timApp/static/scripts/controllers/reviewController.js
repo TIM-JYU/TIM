@@ -42,6 +42,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         for (var i = 0; i < $scope.annotations.length; i++) {
             var placeInfo = $scope.annotations[i]["coord"];
+            $scope.annotations[i].comments = [];
             console.log(placeInfo);
             var parent = document.getElementById(placeInfo["start"]["par_id"]).querySelector(".parContent");
             var elements = parent;
@@ -230,12 +231,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             }
 
             var element_path = getElementPositionInTree(startElement, []);
+            var answer_id = getAnswerInfo(startElement);
 
             var startoffset = getRealStartOffset($scope.selectedArea["startContainer"], $scope.selectedArea["startOffset"]);
             var endOffset = $scope.selectedArea["endOffset"];
             if (innerDiv.childElementCount == 0)
                 endOffset = startoffset + innerDiv.childNodes[innerDiv.childNodes.length - 1].length;
-            console.log(Object.keys($scope.annotationids).length);
 
             var newMarking = {
                 id: (Object.keys($scope.annotationids).length + 1) * (-1),
@@ -264,6 +265,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 ]
             };
 
+            if (answer_id !== null)
+                newMarking.answer_id = answer_id.selectedAnswer.id;
+
             addAnnotationToCoord($scope.selectedArea, newMarking, true);
             $scope.annotations.push(newMarking);
             $scope.annotationids[newMarking.id] = newMarking.id;
@@ -284,14 +288,20 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         $scope.annotationsAdded = true;
     };
 
+    /**
+     * Gets answer info of element. Returns null if no answer found.
+     * @param start
+     * @returns {*}
+     */
     var getAnswerInfo = function (start){
         var myparent = start.parentElement;
-        if (myparent.tagname == "ANSWERBROWSER") {
-            return true;
+
+        if (myparent.tagName == "ANSWERBROWSER") {
+            return angular.element(myparent).isolateScope();
         }
 
         if (myparent.hasAttribute("t"))
-            return false;
+            return null;
 
         return getAnswerInfo(myparent);
     };
@@ -306,10 +316,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var myparent = start.parentElement;
 
         if (myparent.hasAttribute("t")) {
-            return array.reverse();
-        }
-
-        if (myparent.tagName == "ANSWERBROWSER") {
             return array.reverse();
         }
 
