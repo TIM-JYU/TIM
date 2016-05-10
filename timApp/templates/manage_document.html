@@ -14,9 +14,9 @@
                 <td class="checkbox-td" ng-click="aliasPublicClicked(alias)"><input type="checkbox"
                                                                                     ng-checked="alias.public"/></td>
                 <td><input type="text" ng-model="alias.location"/><a
-                        href="{{ '/view/{{alias.location}}' }}">View</a></td>
+                        href="{{ '/view/{{alias.location | escape}}' }}">View</a></td>
                 <td><input type="text" ng-model="alias.name" placeholder="Document name"/><a
-                        href="{{ '/view/{{alias.fullname}}' }}">View</a></td>
+                        href="{{ '/view/{{alias.fullname | escape}}' }}">View</a></td>
                 <td>
                     <button ng-click="updateAlias(alias)" ng-disabled="!aliasChanged(alias)">Update</button>
                     <button ng-click="removeAlias(alias)">Remove</button>

@@ -220,7 +220,7 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.addAlias = function(newAlias) {
-            $http.put('/alias/' + sc.doc.id + '/' + sc.combine(newAlias.location, newAlias.name), {
+            $http.put('/alias/' + sc.doc.id + '/' + $window.encodeURIComponent(sc.combine(newAlias.location, newAlias.name)), {
                 'public': Boolean(newAlias.public)
             }).success(function (data, status, headers, config) {
                 sc.getAliases();
@@ -232,7 +232,7 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.removeAlias = function(alias) {
-            $http.delete('/alias/' + sc.doc.id + '/' + alias.fullname, {
+            $http.delete('/alias/' + sc.doc.id + '/' + $window.encodeURIComponent(alias.fullname), {
             }).success(function (data, status, headers, config) {
                 sc.getAliases();
             }).error(function (data, status, headers, config) {
@@ -241,7 +241,7 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.updateAlias = function(alias) {
-            $http.post('/alias/' + sc.doc.id + '/' + alias.fullname, {
+            $http.post('/alias/' + sc.doc.id + '/' + $window.encodeURIComponent(alias.fullname), {
                 'public': Boolean(alias.public),
                 'new_name': sc.combine(alias.location, alias.name)
             }).success(function (data, status, headers, config) {
