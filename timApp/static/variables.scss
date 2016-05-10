@@ -46,6 +46,7 @@ $headings-font-weight: 700;
 $font-size-base: 14px; // this should probably not be changed from default 14px
 $font-size-h1: floor(($font-size-base * 2.29)); // default factor is 2.6
 $font-size-h2: floor(($font-size-base * 1.72)); // default factor is 2.15
+$font-size-h3: floor(($font-size-base * 1.5)); // default factor is 1.7
 $font-family-monospace: "Courier New", Courier, serif;
 $code-color: black;
 $code-bg: inherit;
