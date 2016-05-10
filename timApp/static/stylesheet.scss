@@ -407,6 +407,28 @@ p.caption {
     &.selected {
         background-color: lightgray;
     }
+
+    &.editmode.deleted {
+        background-color: #ffc7c7;
+    }
+
+    &.editmode.deleted.lightselect {
+        background-color: #ffb5b3;
+    }
+
+    &.editmode.deleted.selected {
+        background-color: #ffa594;
+    }
+
+    &.deleted {
+        background-color: #fff7f7;
+    }
+
+    &.deleted.lightselect {
+    }
+
+    &.deleted.selected {
+    }
 }
 
 .parlink {
@@ -414,6 +436,10 @@ p.caption {
     position: absolute;
     top: 0;
     right: -15px;
+
+    &.deleted {
+        color: red;
+    }
 }
 
 a {
@@ -910,4 +936,29 @@ body > .footer {
 
 #doctext {
     font-family: $font-family-monospace;
+}
+
+.pluginRenameObject {
+    display: inline-block;
+    margin: 5px;
+    min-width: 80px;
+}
+
+#pluginRenameForm {
+    height: 100%;
+    padding-bottom: 15px;
+}
+
+.pluginRenameForm {
+    overflow: auto;
+    width: 100%;
+    position: absolute;
+    background: #e0e0e0;
+    z-index: 110;
+    border-radius: 3px;
+}
+
+.pluginRenameInner {
+    margin-left: 15px;
+    margin-top: 15px;
 }

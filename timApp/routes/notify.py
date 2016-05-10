@@ -7,7 +7,7 @@ from decorators import async
 from routes.common import *
 from routes.logger import log_message
 from tim_app import app
-from typing import Union
+from typing import Optional
 
 
 FUNNEL_HOST = "funnel"
@@ -36,7 +36,7 @@ def set_notify_settings(doc_id):
 
 
 @async
-def send_email(rcpt: str, subject: str, msg: str, reply_to: Union[str, None] = None):
+def send_email(rcpt: str, subject: str, msg: str, mail_from: Optional[str] = None, reply_to: Optional[str] = None):
     with app.app_context():
         conn = None
         try:
@@ -48,6 +48,8 @@ def send_email(rcpt: str, subject: str, msg: str, reply_to: Union[str, None] = N
                 "Subject": subject,
                 "Rcpt-To": rcpt}
 
+            if mail_from:
+                headers['From'] = mail_from
             if reply_to:
                 headers['Reply-To'] = reply_to
 
@@ -67,7 +69,7 @@ def send_email(rcpt: str, subject: str, msg: str, reply_to: Union[str, None] = N
                 conn.close()
 
 
-def replace_macros(msg: str, doc_id: int, par_id: Union[str, None]) -> str:
+def replace_macros(msg: str, doc_id: int, par_id: Optional[str]) -> str:
     timdb = getTimDb()
     new_msg = msg
     if '[user_name]' in msg:
@@ -88,6 +90,7 @@ def notify_doc_owner(doc_id, subject, msg, setting=None, par_id=None):
     owner_group = timdb.documents.get_owner(doc_id)
     macro_subject = replace_macros(subject, doc_id, par_id)
     macro_msg = replace_macros(msg, doc_id, par_id)
+    macro_msg += '\n\n--\This message was automatically sent by TIM'
 
     for user in timdb.users.get_users_in_group(owner_group):
         if user['id'] != me['id'] and user['email']:
@@ -96,5 +99,5 @@ def notify_doc_owner(doc_id, subject, msg, setting=None, par_id=None):
                 if not settings['email_' + setting]:
                     continue
 
-            send_email(user['email'], macro_subject, macro_msg, me['email'])
+            send_email(user['email'], macro_subject, macro_msg, mail_from=me['email'])
 

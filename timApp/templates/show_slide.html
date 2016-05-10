@@ -23,7 +23,6 @@
             <section>
                 {% if text %}
                     {{ text[0].html|safe }}
-                    {% set ignore=False %}
                     {% for t in text[1:] %}
                         {% if t.md.startswith('---') and t.md.endswith('---') %}
                             </section>
@@ -37,7 +36,7 @@
                         {% endif %}
                     {% endfor %}
                 {% endif %}
-                </section>
+            </section>
         </div>
     </div>
     <script src="{{ url_for('static', filename='scripts/reveal/lib/js/head.min.js') }}"></script>

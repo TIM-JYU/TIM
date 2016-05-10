@@ -115,14 +115,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 $scope.adjustPreview = function () {
                     window.setTimeout(function () {
                         var $editor = $('.editorArea');
-                        var editorMaxHeight = $editor.cssUnit('max-height')[0];
                         var $previewContent = $('.previewcontent');
-                        /*var newHeight = $scope.calculateEditorSize($editor);
-                        if (newHeight < editorMaxHeight) {
-                            $editor.innerHeight(newHeight);
-                        } else {
-                            $editor.innerHeight(newHeight);
-                        }*/
                         var previewDiv = $('#previewDiv');
                         if ($scope.previewReleased) {
                             var previewOffset = previewDiv.offset();
@@ -132,14 +125,6 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             if (previewOffset.left < 0) {
                                 previewDiv.offset({'top': previewDiv.offset().top, 'left': 0 });
                             }
-                        }
-                        else {
-                            //previewDiv.css('max-height', $editor.cssUnit('height')[0] - (previewDiv.offset().top - $editor.offset().top));
-                            //$previewContent.css('max-height', previewDiv.cssUnit('height')[0] - 78);
-                            //$previewContent.css('position', 'absolute');
-                            //previewDiv.css('height', '100%');
-                            //$previewContent.css('max-height', previewDiv.height() - $('#releaseButton').height() - 100);
-                            //$previewContent.css('max-height', $previewContent.height());
                         }
                         var editorOffset = $editor.offset();
                         if (editorOffset.top < 0) {
@@ -152,27 +137,6 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     }, 25);
 
                 };
-
-                /*
-                // Calculates what the size of the editor should be
-                $scope.calculateEditorSize = function($editor) {
-                    var children = $editor.children();
-                    for (var i = 0; i < children.length; i++) {
-                        newHeight += children[i].offsetHeight;
-                    }
-                    newHeight += $editor.marginHeight;
-                    if (!$scope.previewReleased) {
-                        return newHeight;
-                    }
-                    var newHeight = $('#pareditor').outerHeight();
-                    if (!$scope.previewReleased) {
-                        return newHeight;
-                    }
-                    if ($scope.previewReleased) {
-                        return newHeight + 10;
-                    }
-                };
-                */
 
                 $scope.createAce = function (editor, text) {
                     if (!$scope.minSizeSet) {
@@ -685,20 +649,62 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     }
                 };
 
-                $scope.saveClicked = function () {
-                    if ($scope.previewReleased) {
-                        $scope.savePreviewData(true);
-                    } else $scope.savePreviewData(false);
-                    var text = $scope.getEditorText();
-                    $http.post($scope.saveUrl, angular.extend({
-                        text: text
-                    }, $scope.extraData)).success(function (data, status, headers, config) {
-                        $scope.afterSave({
-                            extraData: $scope.extraData,
-                            saveData: data
-                        });
+                $scope.renameTaskNamesClicked = function (inputs, duplicates, renameDuplicates) {
+                    // A list of duplicate task names and possible new names
+                    if (typeof renameDuplicates === 'undefined' || renameDuplicates === false) {
+                        $scope.renameFormShowing = false;
                         if ($scope.options.destroyAfterSave) {
+                            $scope.afterSave({
+                                extraData: $scope.extraData,
+                                saveData: $scope.data
+                            });
                             $element.remove();
+                            return;
+                        }
+                    }
+                    var duplicateData = [];
+                    var duplicate;
+
+                    // if duplicates are to be renamed automatically
+                    if (typeof inputs === 'undefined') {
+                        if (renameDuplicates) {
+                            if (duplicates.length > 0) {
+                                for (var i = 0; i < duplicates.length; i++) {
+                                    duplicate = [];
+                                    duplicate.push(duplicates[i][0]);
+                                    duplicate.push("");
+                                    duplicate.push(duplicates[i][1]);
+                                    duplicateData.push(duplicate);
+                                }
+                            }
+                        }
+                    } else {
+                        // use given names from the input fields
+                        for (var i = 0; i < duplicates.length; i++) {
+                            duplicate = [];
+                            duplicate.push(duplicates[i][0]);
+                            duplicate.push(inputs[i][0].value);
+                            duplicate.push(duplicates[i][1]);
+                            duplicateData.push(duplicate);
+                        }
+                    }
+                    $http.post('/postNewTaskNames/', angular.extend({
+                        duplicates: duplicateData,
+                        renameDuplicates: renameDuplicates
+                    }, $scope.extraData)).success(function (data, status, headers, config) {
+                        if(data.duplicates.length <= 0) {
+                            $scope.renameFormShowing = false;
+                            $scope.afterSave({
+                                extraData: $scope.extraData,
+                                saveData: $scope.data
+                            });
+                            if ($scope.options.destroyAfterSave) {
+                                $element.remove();
+                            }
+                        }
+                        if(data.duplicates.length > 0) {
+                            $element.find("#pluginRenameForm").get(0).remove();
+                            $scope.createPluginRenameForm(data);
                         }
                         if (angular.isDefined($scope.extraData.access)) {
                             $scope.$storage.noteAccess = $scope.extraData.access;
@@ -707,6 +713,107 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $window.alert("Failed to save: " + data.error);
                     });
                     if ($scope.options.touchDevice) $scope.changeMeta();
+                };
+
+                $scope.saveClicked = function () {
+                    if ($scope.previewReleased) {
+                        $scope.savePreviewData(true);
+                    } else $scope.savePreviewData(false);
+                    var text = $scope.getEditorText();
+                    $http.post($scope.saveUrl, angular.extend({
+                        text: text
+                    }, $scope.extraData)).success(function (data, status, headers, config) {
+                        if (data.duplicates.length > 0) {
+                            $scope.data = data;
+                            $scope.createPluginRenameForm(data);
+                        }
+                        if (data.duplicates.length <= 0) {
+                            $scope.afterSave({
+                                extraData: $scope.extraData,
+                                saveData: data
+                            });
+                            if ($scope.options.destroyAfterSave) {
+                                $element.remove();
+                            }
+                        }
+                        if (angular.isDefined($scope.extraData.access)) {
+                            $scope.$storage.noteAccess = $scope.extraData.access;
+                        }
+                    }).error(function (data, status, headers, config) {
+                        $window.alert("Failed to save: " + data.error);
+                    });
+                    if ($scope.options.touchDevice) $scope.changeMeta();
+                };
+
+                $scope.createPluginRenameForm = function (data) {
+                    $scope.renameFormShowing = true;
+                    $scope.duplicates = data.duplicates;
+                    var $editorTop = $('.editorArea');
+                    var $actionDiv = $("<div>", {class: "pluginRenameForm", id: "pluginRenameForm"});
+                    $actionDiv.css("position", "relative");
+                    $actionDiv.append($("<strong>", {
+                        text: 'Warning!'
+                    }));
+                    $actionDiv.append($("<p>", {
+                        text: 'There are multiple objects with the same task name in this document.'
+                    }));
+                    $actionDiv.append($("<p>", {
+                        text: 'Plugins with duplicate task names might not work properly.'
+                    }));
+                    $actionDiv.append($("<p>", {
+                        text: 'Rename the duplicates by writing new names in the field(s) below and click "Save",'
+                    }));
+                    $actionDiv.append($("<p>", {
+                        text: 'choose "Rename automatically" or "Ignore" to proceed without renaming.'
+                    }));
+                    $actionDiv.append($("<strong>", {
+                        text: 'Rename duplicates:'
+                    }));
+                    var $form = $("<form>");
+                    $scope.inputs = [];
+                    var input;
+                    var span;
+                    for(var i = 0; i < data.duplicates.length; i++) {
+                        span = $("<span>");
+                        span.css('display', 'block');
+                        span.append($("<label>", {
+                            class: "pluginRenameObject",
+                            text: data.duplicates[i][0],
+                            for: "newName" + i,
+                        }));
+                        input = $("<input>", {
+                            class: "pluginRenameObject",
+                            type: "text",
+                            id: data.duplicates[i][1],
+                        });
+                        $scope.inputs.push(input);
+                        span.append(input);
+                        $form.append(span);
+                    }
+                    var $buttonDiv = $("<div>");
+                    $buttonDiv.append($("<button>", {
+                        class: 'timButton, pluginRenameObject',
+                        text: "Save",
+                        title: "Rename task names with given names",
+                        'ng-click': "renameTaskNamesClicked(inputs, duplicates, true)",
+                    }));
+                    $buttonDiv.append($("<button>", {
+                        class: 'timButton, pluginRenameObject',
+                        text: "Rename Automatically",
+                        title: "Rename duplicate task names automatically",
+                        'ng-click': "renameTaskNamesClicked(undefined, duplicates, true)",
+                    }));
+                    $buttonDiv.append($("<button>", {
+                        class: 'timButton, pluginRenameObject',
+                        text: "Ignore",
+                        title: "Proceed without renaming",
+                        'ng-click': "renameTaskNamesClicked(undefined, undefined, false)",
+                    }));
+                    $actionDiv.append($form);
+                    $actionDiv.append($buttonDiv);
+                    $actionDiv = $compile($actionDiv)($scope);
+                    $editorTop.append($actionDiv);
+                    $scope.wrapFn();
                 };
 
                 $scope.selectLine = function (select) {
@@ -989,7 +1096,14 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                     $scope.insertTemplate = function (text) {
                         $scope.closeMenu(null, close);
+                        var pluginnamehere = "PLUGINNAMEHERE";
+                        var searchEndIndex = $scope.editor.getSelection().start;
                         $scope.editor.replaceSelectedText(text);
+                        var searchStartIndex = $scope.editor.getSelection().start;
+                        var index = $scope.editor.val().lastIndexOf(pluginnamehere, searchStartIndex);
+                        if (index > searchEndIndex) {
+                            $scope.editor.setSelection(index, index + pluginnamehere.length);
+                        }
                         $scope.wrapFn();
                     };
 
@@ -1009,6 +1123,18 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     $scope.commentClicked = function () {
                         var editor = $scope.editor.get(0);
                         // If text is selected surround selected text with comment brackets
+                        if (editor.selectionEnd - editor.selectionStart == 0) {
+                            var pos = editor.selectionEnd;
+                            var endOfLastLine = editor.value.lastIndexOf('\n', pos-1);
+                            // If the cursor is in the beginning of a line, make the whole line a comment
+                            if (pos - endOfLastLine == 1) {
+                                $scope.selectLine(true);
+                            }
+                        }
+                        $scope.surroundClicked('{!!!', '!!!}');
+                        /*
+                        var editor = $scope.editor.get(0);
+                        // If text is selected surround selected text with comment brackets
                         if (editor.selectionEnd - editor.selectionStart > 0) {
                             $scope.editor.replaceSelectedText("{!!!" + $scope.editor.getSelection().text + "!!!}");
                         }
@@ -1026,7 +1152,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                                 $scope.editor.replaceSelectedText("{!!!!!!}");
                                 $scope.editor.setSelection(pos+4, pos+4);
                             }
-                        }
+                        }*/
                     };
 
                     $scope.endLineClicked = function () {
@@ -1287,7 +1413,18 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                     $scope.insertTemplate = function (text) {
                         $scope.closeMenu(null, close);
+                        var range = $scope.editor.getSelectionRange();
+                        var start = range.start;
                         $scope.snippetManager.insertSnippet($scope.editor, text);
+                        var line = $scope.editor.session.getLine(start.row);
+                        var pluginnamehere = "PLUGINNAMEHERE";
+                        var index = line.lastIndexOf(pluginnamehere);
+                        if (index > -1) {
+                            range.start.column = index;
+                            range.end.row = start.row;
+                            range.end.column = index + pluginnamehere.length;
+                            $scope.editor.selection.setRange(range);
+                        }
                         $scope.wrapFn();
                     };
 
@@ -1301,6 +1438,27 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                      */
                     $scope.commentClicked = function () {
                         var selection = $scope.editor.getSelection();
+                        var range = selection.getRange();
+                        var pos = $scope.editor.getCursorPosition();
+                        // If cursor is at the start of a line and there is no selection
+                        if (pos.column == 0 && (range.start.row == range.end.row && range.start.column == range.end.column)) {
+                            $scope.editor.selection.selectLine(true);
+                        }
+                        else {
+                            // If there is nothing but a comment block in line erase it
+                            range.start.column -= 4;
+                            range.end.column += 4;
+                            var text = $scope.editor.session.getTextRange(range);
+                            if (text == "{!!!!!!}") {
+                                $scope.editor.selection.setRange(range);
+                                $scope.snippetManager.insertSnippet($scope.editor, "");
+                                return $scope.wrapFn();
+                            }
+                        }
+                        $scope.surroundClicked('{!!!', '!!!}');
+                        $scope.wrapFn();
+                        /*
+
                         if (!selection.isEmpty()) {
                             $scope.editor.insert("{!!!" + $scope.editor.getSelectedText() + "!!!}");
                             //$scope.snippetManager.insertSnippet($scope.editor, "{!!!${0:$SELECTION}!!!}");
@@ -1323,7 +1481,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                                 $scope.editor.moveCursorToPosition(pos);
                                 $scope.wrapFn();
                             }
-                        }
+                        }*/
                     };
 
                     //Insert

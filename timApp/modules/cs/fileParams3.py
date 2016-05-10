@@ -1,4 +1,5 @@
 # -*- coding:utf-8 -*-
+from multiprocessing import resource_sharer
 from urllib.request import urlopen
 import re
 import html
@@ -117,6 +118,15 @@ def check(matcher, line):
         return False
     match = matcher.search(line)
     return match
+
+
+def get_json_eparam(jso, key1, key2, default):
+    result = get_json_param(jso, key1, key2, default)
+    if ( result == None ): return None
+    if type(result) != type(''):
+        # print("Ei ollut string: ", result, jso)
+        result = '' + str(result)
+    return html.escape(result)
 
 
 def get_json_param(jso, key1, key2, default):
@@ -1069,3 +1079,8 @@ def replace_template_param(query, template: str, cond_itemname: str, default="")
 
     return result
 
+
+def is_review(query):
+    # print(query)
+    result = get_param(query, "review", False)
+    return result

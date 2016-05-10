@@ -394,6 +394,14 @@ class DocParagraph(DocParagraphBase):
     def has_class(self, class_name):
         return class_name in self.__data.get('attrs', {}).get('classes', {})
 
+    def add_class(self, class_name):
+        if not self.has_class(class_name):
+            if not 'attrs' in self.__data:
+                self.__data['attrs'] = {}
+            if not 'classes' in self.__data['attrs']:
+                self.__data['attrs']['classes'] = []
+            self.__data['attrs']['classes'].append(class_name)
+
     def get_auto_macro_values(self, macros, macro_delim, auto_macro_cache, heading_cache):
         """Gets the auto macros values for the current paragraph.
         Auto macros include things like current heading/table/figure numbers.
@@ -695,10 +703,15 @@ class DocParagraph(DocParagraphBase):
             raise TimDbException('The referenced document does not exist.')
 
         if self.is_par_reference():
-            if not ref_doc.has_paragraph(attrs['rp']):
+            try:
+                ref_par = DocParagraph.get_latest(ref_doc, attrs['rp'], ref_doc.files_root)
+                if not ref_doc.has_paragraph(attrs['rp']):
+                    #ref_par.set_attr('deleted', 'True')
+                    ref_par.add_class('deleted')
+
+            except TimDbException:
                 raise TimDbException('The referenced paragraph does not exist.')
 
-            ref_par = DocParagraph.get_latest(ref_doc, attrs['rp'], ref_doc.files_root)
             if ref_par.is_reference():
                 ref_pars = ref_par.get_referenced_pars(edit_window=edit_window,
                                                        set_html=set_html,

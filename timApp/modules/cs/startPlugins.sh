@@ -4,7 +4,8 @@
 # option p for pure start (no wget for files)
 dockername="csPlugin"
 dockerOptions="--name $dockername --net=timnet -p 56000:5000 -v /lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu:ro -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/bin/docker -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash"
-# dockerOptions="--name $dockername --net=timnet -p 56000:5000 -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/bin/docker -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash"
+# dockerOptions="--name $dockername --net=timnet -p 56000:5000                                                 -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/bin/docker -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash"
+# dockerOptions="--name $dockername --net=timnet -p 56000:5000  -v /lib/x86_64-linux-gnu/libdevmapper.so.1.02.1:/lib/x86_64-linux-gnu/libdevmapper.so.1.02.1   -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/bin/docker -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash"
 
 docker stop $dockername > /dev/null 2>&1
 docker rm $dockername > /dev/null 2>&1
@@ -67,6 +68,8 @@ fi
 
 cd /opt/cs
 sudo chmod 777 r
+
+echo $dockerOptions 
 
 if [ "$1" = "i" ]
 then

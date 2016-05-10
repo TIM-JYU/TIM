@@ -202,13 +202,13 @@
     <div class="panel panel-default">
         <div class="panel-heading">Edit the full document</div>
         <div class="panel-body">
-    <form>
-        <div>
-            <textarea id="doctext" class="form-control" ng-model="fulltext" rows="50"></textarea>
-            <button class="timButton" ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument()">Save</button>
+    <form id="fullDocumentEditor">
+        <div id="documentEditorDiv">
+            <textarea id="doctext" class="form-control" ng-model="fulltext" rows="50" ng-hide="renameFormShowing"></textarea>
+            <button id="documentEditorSaveButton" class="timButton" ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument()" ng-hide="renameFormShowing">Save</button>
             <span ng-show="saving">Saving...</span>
         </div>
-        <div>
+        <div id="tracWikiDiv" ng-hide="renameFormShowing">
             <label>Import TracWiki <input type="checkbox" ng-model="showTracWiki"></label>
             <div ng-hide="!showTracWiki">
                 <p>Write the wiki root address to replace "wiki:" from URL's and then copy paste
