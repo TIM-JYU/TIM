@@ -13,7 +13,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     $scope.annotationsAdded = false;
     $scope.selectedAnnotation = {"comments": [], "velp": "", "points": 0};
-    $scope.selectionParent = null;
+    //$scope.selectionParent = null;
 
     var username = $scope.$parent.users[0].name;
     $scope.annotationids = {0: 0};
@@ -67,6 +67,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
 
         $scope.annotationsAdded = true;
+    };
+
+    $scope.loadPluginAnnotations = function() {
+
     };
 
     /**
@@ -286,7 +290,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             return true;
         }
 
+        if (myparent.hasAttribute("t"))
+            return false;
 
+        return getAnswerInfo(myparent);
     };
 
     /**
@@ -299,6 +306,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var myparent = start.parentElement;
 
         if (myparent.hasAttribute("t")) {
+            return array.reverse();
+        }
+
+        if (myparent.tagName == "ANSWERBROWSER") {
             return array.reverse();
         }
 
