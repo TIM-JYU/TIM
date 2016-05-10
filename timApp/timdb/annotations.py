@@ -37,6 +37,7 @@ class Annotations(TimDbBase):
         :return: List of dictionaries, each dictionary representing a single annotation.
         """
         # Todo choose velp language. Have fun.
+        language_id = 'FI'
         see_more_annotations_sql = ""
         if user_is_teacher:
             see_more_annotations_sql = "Annotation.visible_to = " + str(
@@ -50,6 +51,7 @@ class Annotations(TimDbBase):
                        SELECT
                          Annotation.id,
                          VelpVersion.velp_id AS velp,
+                         VelpContent.content AS content,
                          Annotation.visible_to,
                          Annotation.points,
                          Annotation.creation_time,
@@ -71,8 +73,10 @@ class Annotations(TimDbBase):
                          Annotation.element_path_end
                        FROM Annotation
                          INNER JOIN VelpVersion ON VelpVersion.id = Annotation.version_id
-                       WHERE (Annotation.valid_until ISNULL OR
-                             Annotation.valid_until >= CURRENT_TIMESTAMP) AND
+                         INNER JOIN VelpContent ON VelpContent.version_id = Annotation.version_id
+                       WHERE VelpContent.language_id = ? AND
+                             (Annotation.valid_until ISNULL OR
+                                Annotation.valid_until >= CURRENT_TIMESTAMP) AND
                              Annotation.document_id = ? AND
                              (Annotation.annotator_id = ? OR
                        """ +
@@ -80,7 +84,7 @@ class Annotations(TimDbBase):
                        + """Annotation.visible_to = ?)
 
                        ORDER BY depth_start DESC, node_start DESC, offset_start DESC
-                       """, [document_id, user_id, Annotations.AnnotationVisibility.everyone.value]
+                       """, [language_id, document_id, user_id, Annotations.AnnotationVisibility.everyone.value]
                        )
         results = self.resultAsDictionary(cursor)
         for result in results:
@@ -214,7 +218,6 @@ class Annotations(TimDbBase):
                        )
         self.db.commit()
         return
-
 
     def get_annotation(self, annotation_id: int) -> List[Dict]:
         """Gets an annotation.
