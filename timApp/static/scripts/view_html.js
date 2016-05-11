@@ -234,16 +234,22 @@ timApp.controller("ViewCtrl", [
             if ($par_or_area.hasClass('area')) {
                 return $par_or_area.find('.par').first();
             }
+            if ($par_or_area.hasClass('par')) {
+                return $par_or_area;
+            }
 
-            return $par_or_area;
+            return null;
         };
 
         sc.getLastPar = function ($par_or_area) {
             if ($par_or_area.hasClass('area')) {
                 return $par_or_area.find('.par').last();
             }
+            if ($par_or_area.hasClass('par')) {
+                return $par_or_area;
+            }
 
-            return $par_or_area;
+            return null;
         };
 
         sc.getFirstParId = function ($par_or_area) {

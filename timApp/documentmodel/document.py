@@ -103,11 +103,18 @@ class Document:
         if self.par_map is None:
             self.load_pars()
         prev = self.par_map.get(par.get_id())
+        result = None
         if prev:
-            return prev['p']
+            result = prev['p']
         if get_last_if_no_prev:
-            return self.par_cache[-1] if self.par_cache else None
-        return None
+            result = self.par_cache[-1] if self.par_cache else None
+
+        if result is not None and result.get_id() == par.get_id():
+            print('WARNING: get_previous_par({}, {}) returning reference to self, returning None instead'.format(
+                self.doc_id, par.get_id()))
+            return None
+
+        return result
 
     def get_pars_till(self, par):
         pars = []
