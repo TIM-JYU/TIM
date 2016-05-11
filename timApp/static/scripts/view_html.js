@@ -1039,19 +1039,20 @@ timApp.controller("ViewCtrl", [
                 sc.extendSelection($par);
             }
             var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
-            return sc.showOptionsWindow(e, $par, coords);
+
+            // We need the timeout so we don't trigger the ng-clicks on the buttons
+            $timeout( function() {sc.showOptionsWindow(e, $par, coords);}, 80);
+            return false;
         });
 
         sc.onClick(".areaeditline", function ($this, e) {
             sc.closeOptionsWindow();
             var $area = $this.parent().filter('.area');
-            //var $pars = $area.find('.par');
-            //var $first_par = $pars.first();
-            //var $last_par = $pars.last();
             var coords = {left: e.pageX - $area.offset().left, top: e.pageY - $area.offset().top};
-            //sc.selection.start = sc.getParId($first_par);
-            //sc.selection.end = sc.getParId($last_par);
-            return sc.showOptionsWindow(e, $area, coords);
+
+            // We need the timeout so we don't trigger the ng-clicks on the buttons
+            $timeout( function() {sc.showOptionsWindow(e, $area, coords);}, 80);
+            return false;
         });
 
         sc.setAreaAttr = function(area, attr, value) {
