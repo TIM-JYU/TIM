@@ -149,6 +149,15 @@
     border-bottom: solid 4px darkblue;
 }
 
+#addLabelButton {
+    margin-left: 0.4em;
+    margin-bottom: 2em;
+}
+
+#createVelpButton {
+    margin-left: 0.4em;
+}
+
 .velp {
     position: absolute;
     line-height: 1.25em;
