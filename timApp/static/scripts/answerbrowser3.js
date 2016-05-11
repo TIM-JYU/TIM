@@ -136,12 +136,16 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                         $scope.$parent.processAllMathDelayed(plugin);
                         if ($scope.review) {
                             $scope.element.find('.review').html(data.reviewHtml);
+                            $scope.$parent.loadDocumentAnnotations($scope.$parent.getAnnotationsByAnswerId($scope.selectedAnswer.id), true);
                         }
+
                     }).error(function (data, status, headers, config) {
                         $scope.error = 'Error getting state: ' + data.error;
                     }).finally(function () {
                         $scope.loading--;
                     });
+
+
                 };
 
                 $scope.next = function () {

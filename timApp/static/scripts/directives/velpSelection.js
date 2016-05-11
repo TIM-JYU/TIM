@@ -62,15 +62,22 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
 
         //$http.get('/static/test_data/markings.json').success(function (data) {  // ANNOTATION TEST DATA
+
+        // TODO: Get annotation comments
         $http.get('/{0}/annotations'.replace('{0}', doc_id)).success(function (data) { // ROUTE TO DB
 
             $scope.annotations = data;
-            $scope.loadAnnotations();
+
+            angular.forEach($scope.annotations, function (a) {
+                a.comments = [];
+            });
+
+            $scope.loadDocumentAnnotations();
 
             //$scope.annotations = [];
 
         });
-/*
+        /*
         $http.get('/{0}/defaultvelpgroup'.replace('{0}', doc_id)).success(function (data){
             console.log(data[0].id);
             default_velp_group = data[0].id;

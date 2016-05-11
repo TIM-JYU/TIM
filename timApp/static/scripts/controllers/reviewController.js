@@ -34,24 +34,23 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         });
     };
 
+
     /**
-     * Loads used annotations into view
+     * Loads document annotations into view
      */
-    $scope.loadAnnotations = function () {
-        console.log($scope.annotations);
+    $scope.loadDocumentAnnotations = function () {
 
         for (var i = 0; i < $scope.annotations.length; i++) {
+
+            if ($scope.annotations[i].answer_id !== null)
+                continue;
+
             var placeInfo = $scope.annotations[i]["coord"];
-            $scope.annotations[i].comments = [];
-            console.log(placeInfo);
-            var parent = document.getElementById(placeInfo["start"]["par_id"]).querySelector(".parContent");
-            var elements = parent;
+
+            var elements = document.getElementById(placeInfo["start"]["par_id"]).querySelector(".parContent");
 
             // Find element
             var elpath = placeInfo["start"]["el_path"];
-
-            console.log(elpath);
-            console.log(elpath.length);
 
             for (var j = 0; j < elpath.length; j++) {
                 if (elements.children.item(elpath[j]) != null)
@@ -70,8 +69,36 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         $scope.annotationsAdded = true;
     };
 
-    $scope.loadPluginAnnotations = function() {
+    /**
+     * Loads annotations to given answer
+     * @param answer_id
+     */
+    $scope.loadAnnotationsToAnswer = function(answer_id, par_id){
+        var annotations = $scope.getAnnotationsByAnswerId(answer_id);
 
+        for (var i = 0; i < annotations.length; i++) {
+            var placeInfo = annotations[i]["coord"];
+
+            var elements = document.getElementById(placeInfo["start"]["par_id"]).getElementsByTagName("ANSWERBROWSER");
+
+            for (var j = 0; j < elements.length; j++) {
+                
+            }
+
+            var startel = elements;
+            var endel = elements;
+
+        }
+    };
+
+    $scope.getAnnotationsByAnswerId = function(id) {
+        var annotations = [];
+        angular.forEach($scope.annotations, function(a){
+            console.log(a);
+            if (a.answer_id !== null && a.answer_id === id)
+                annotations.push(a);
+        });
+        return annotations;
     };
 
     /**
@@ -86,7 +113,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             console.log(range);
             range.surroundContents(span);
         } catch (err) {
-            // Add annotation to the "club of missing velps"
+            // TODO: Add annotation to the "club of missing velps"
             var new_range = document.createRange();
             var el = range.startContainer;
             var start = range.startOffset;
@@ -169,7 +196,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
              selection.classList.add("text-selection");
              range.surroundContents(selection);
              */
-            //$scope.getRealRange(range);
 
             $scope.selectedArea = range;
         } else {
@@ -177,12 +203,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
     };
 
-    $scope.getRealRange = function (currentRange) {
-        var startparent = currentRange.startContainer.parentNode;
-        for (var i = 0; i < startparent.childNodes.length; i++) {
-            //console.log(startparent.childNodes[i])
-        }
-    };
 
     /**
      * Get velp by its id
@@ -226,7 +246,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             var cloned = $scope.selectedArea.cloneContents();
             innerDiv.appendChild(cloned);
 
-            while (!parelement.hasAttribute("id")) {
+            while (!parelement.hasAttribute("t")) {
                 parelement = parelement.parentElement;
             }
 
