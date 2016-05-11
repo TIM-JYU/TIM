@@ -1499,12 +1499,13 @@ timApp.controller("ViewCtrl", [
         sc.processAllMathDelayed($('body'));
 
         sc.getEditMode = function() { return $window.editMode; };
+        sc.getAllowMove = function() { return $window.allowMove; };
 
         sc.defaultAction = {func: sc.showOptionsWindow, desc: 'Show options window'};
         timLogTime("VieCtrl end","view");
         sc.selection = {start: null, end: null};
         sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end', 'editing', 'getEditMode()',
-                        'allowPasteContent', 'allowPasteRef'], function (newValues, oldValues, scope) {
+                        'allowPasteContent', 'allowPasteRef', 'getAllowMove()'], function (newValues, oldValues, scope) {
             sc.editorFunctions = sc.getEditorFunctions();
             if (sc.editing) {
                 sc.notification = "Editor is already open.";
@@ -1791,7 +1792,7 @@ timApp.controller("ViewCtrl", [
                     {func: sc.cutArea, desc: 'Cut area', show: $window.editMode === 'area'},
                     {func: sc.copyArea, desc: 'Copy area', show: $window.editMode === 'area'},
                     {func: sc.showPasteMenu, desc: 'Paste...', show: $window.editMode && (sc.allowPasteRef || sc.allowPasteContent)},
-                    {func: sc.showMoveMenu, desc: 'Move here...', show: $window.editMode && sc.allowPasteContent && sc.allowPasteRef},
+                    {func: sc.showMoveMenu, desc: 'Move here...', show: $window.allowMove},
                     {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
                     {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
                     {
@@ -1841,6 +1842,7 @@ timApp.controller("ViewCtrl", [
 
         sc.allowPasteContent = true;
         sc.allowPasteRef = true;
+        $window.allowMove = false;
 
         sc.$storage = $localStorage.$default({
             defaultAction: "Show options window",
