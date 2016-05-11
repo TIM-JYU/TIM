@@ -136,7 +136,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                         $scope.$parent.processAllMathDelayed(plugin);
                         if ($scope.review) {
                             $scope.element.find('.review').html(data.reviewHtml);
-                            $scope.$parent.loadDocumentAnnotations($scope.$parent.getAnnotationsByAnswerId($scope.selectedAnswer.id), true);
+                            $scope.$parent.loadAnnotationsToAnswer($scope.selectedAnswer.id, par_id);
                         }
 
                     }).error(function (data, status, headers, config) {

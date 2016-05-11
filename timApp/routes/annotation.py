@@ -74,8 +74,8 @@ def add_annotation() -> str:
         some_paragraph_data_present = hash_start is not None or some_paragraph_data_present
         some_paragraph_data_present = paragraph_id_end is not None or some_paragraph_data_present
         some_paragraph_data_present = hash_end is not None or some_paragraph_data_present
-        if some_paragraph_data_present:
-            abort(400, "Both answer_id and paragraph data present.")
+        #if some_paragraph_data_present:
+        #    abort(400, "Both answer_id and paragraph data present.")
 
     annotator_id = getCurrentUserId()
     velp_version = timdb.velps.get_latest_velp_version(velp_id)

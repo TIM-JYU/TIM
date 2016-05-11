@@ -75,19 +75,16 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.loadAnnotationsToAnswer = function(answer_id, par_id){
         var annotations = $scope.getAnnotationsByAnswerId(answer_id);
-
+        console.log(answer_id);
         for (var i = 0; i < annotations.length; i++) {
             var placeInfo = annotations[i]["coord"];
 
-            var elements = document.getElementById(placeInfo["start"]["par_id"]).getElementsByTagName("ANSWERBROWSER");
-
-            for (var j = 0; j < elements.length; j++) {
-                
-            }
-
-            var startel = elements;
-            var endel = elements;
-
+            var element = document.getElementById(par_id).getElementsByTagName("PRE")[0].firstChild;
+            console.log(element);
+            var range = document.createRange();
+            range.setStart(element, placeInfo["start"]["offset"]);
+            range.setEnd(element, placeInfo["end"]["offset"]);
+            addAnnotationToCoord(range, annotations[i], false);
         }
     };
 

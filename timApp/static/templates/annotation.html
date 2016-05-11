@@ -1,5 +1,4 @@
-<!-- Pop-over element -->
-<div ng-show="!show"
+<!-- Pop-over element --><div ng-show="!show"
      ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
     <div class="fulldiv">
         <div class="div-90">
@@ -36,7 +35,7 @@
         </tr>
     </table>
     <div>
-        <button class="saveChanges">Save changes</button>
+        <button class="saveChanges" ng-click="addComment()">Save changes</button>
     </div>
     <span class="annDelAnnotation" title="Delete annotation"
                   ng-class="['delAnnotation', 'float-right', 'glyphicon', 'glyphicon-trash', 'clickable-icon', {hide: comments.length > 1} ]"
