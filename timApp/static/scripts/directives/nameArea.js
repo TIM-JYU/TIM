@@ -49,6 +49,14 @@ timApp.directive('nameArea', ['$http', '$window', '$filter', function ($http, $w
                     $scope.onCancel($scope.$area);
             };
 
+            $scope.toggleCollapsible = function () {
+                if ($scope.options.collapsible) {
+                    $('#collapsible-options').removeClass('hidden');
+                } else {
+                    $('#collapsible-options').addClass('hidden');
+                }
+            };
+
             $scope.areaName = "";
             $scope.options = {};
             $element.css('position', 'absolute'); // IE needs this

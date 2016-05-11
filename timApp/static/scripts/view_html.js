@@ -585,8 +585,6 @@ timApp.controller("ViewCtrl", [
                     // Moved too far away, cancel the event
                     downEvent = null;
                 }
-
-                console.log(e);
             });
             $document.on('touchcancel', className, function (e) {
                 downEvent = null;
@@ -597,7 +595,6 @@ timApp.controller("ViewCtrl", [
                         e.preventDefault();
                     }
                     downEvent = null;
-                    console.log(e);
                 }
             });
         };

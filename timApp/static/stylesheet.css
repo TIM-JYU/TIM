@@ -613,7 +613,7 @@ br {
     font-size: 14px;
 }
 
-.extraButtonArea.hidden {
+.extraButtonArea.hidden, .hidden {
     display: none;
 }
 

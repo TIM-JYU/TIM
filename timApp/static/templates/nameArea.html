@@ -8,18 +8,22 @@
 
     <div class="nameArea-options">
         <div>
-            <input id="collapsible" type="checkbox" ng-model="options.collapsible" />
+            <input id="collapsible" type="checkbox" ng-model="options.collapsible" ng-click="toggleCollapsible()" />
             <label for="collapsible">Collapsible</label>
         </div>
 
-        <div class="nameArea-inner">
-            <label for="areatitle">Area title:</label>
-            <input id="areatitle" type="text" ng-model="options.title" title="Optional" />
-        </div>
+        <div id="collapsible-options" class="nameArea-inner hidden">
+            <div>
+                <label for="areatitle">Area title:</label>
+                <input id="areatitle" type="text" ng-model="options.title" title="Optional" />
+            </div>
 
-        <div>
-            <input id="collapse" type="checkbox" ng-disabled="!options.collapsible" ng-model="options.collapse" />
-            <label for="collapse">Collapsed by default</label>
+            <div>
+                <input id="collapse" type="checkbox" checked="checked"
+                       ng-disabled="!options.collapsible" ng-model="options.collapse" />
+
+                <label for="collapse">Collapsed by default</label>
+            </div>
         </div>
     </div>
 
