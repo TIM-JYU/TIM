@@ -152,7 +152,7 @@
 
                             <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByLabels: labels:lockedVelps:advancedOn)">
 
-                                <div class="velp" ng-dblclick="selectVelpToEdit(velp)" ng-click="useVelp(velp)"
+                                <div class="velp"  ng-click="useVelp(velp)"
                                      ng-style="{top: 2+$index*2 + 'em'}">
                                     <div ng-class="['emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0,
                                     edit: velp.edit}]">
@@ -164,6 +164,8 @@
                                                 <span ng-show="advancedOn" ng-class="['glyphicon', 'glyphicon-tag']"
                                                       ng-repeat="label in velp.labels"
                                                       ng-style="{ color: getColor(label) }"></span>
+                                                <span class="velpPencil" ng-click="selectVelpToEdit(velp)"
+                                                      ng-class="['glyphicon', 'glyphicon-pencil']"></span>
                                             </p>
 
                                             <form ng-class="[{hide: !velp.edit}]" name="editVelpForm"
@@ -174,7 +176,10 @@
                                                           required placeholder="Edit velp!">
                                             <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]"
                                                   ng-repeat="l in velpToEdit.labels"
-                                                  ng-style="{ color: getColor(l) }"></span></p>
+                                                  ng-style="{ color: getColor(l) }"></span>
+                                                    <span class="velpPencil" ng-click="selectVelpToEdit(velp)"
+                                                          ng-class="['glyphicon', 'glyphicon-pencil']"></span>
+                                                </p>
 
                                                 <p ng-show="(editVelpForm.velpName.$invalid && !editVelpForm.velpName.$pristine) || (submitted && editVelpForm.velpName.$invalid)">
                                                     Velp content is required
@@ -183,7 +188,7 @@
                                                 <p><input id="addVelpPoints" type="number"
                                                           ng-model="velpToEdit['points']"
                                                           placeholder="Points" value="0"></p>
-                                                <p><input type="submit" value="Edit velp"/></p>
+                                                <p><input type="submit" value="Save changes"/></p>
                                             </form>
                                         </div>
                                     </div>
@@ -325,7 +330,8 @@
                 <div class="velpSummary">
                     <table>
                         <tr>
-                            <th class="summCheckbox"><input type="checkbox" ng-model="settings.selectedAll" ng-change="checkAll()"></th>
+                            <th class="summCheckbox"><input type="checkbox" ng-model="settings.selectedAll"
+                                                            ng-change="checkAll()"></th>
                             <th class="summSecColumn">Velp</th>
                             <th class="summThiColumn">Points</th>
                         </tr>
