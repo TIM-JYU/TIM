@@ -255,10 +255,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             if (innerDiv.childElementCount == 0)
                 endOffset = startoffset + innerDiv.childNodes[innerDiv.childNodes.length - 1].length;
 
-            var newMarking = {
-                id: (Object.keys($scope.annotationids).length + 1) * (-1),
+            var newAnnotation = {
+                id: -($scope.annotations.length + 1),
                 velp: velp.id,
-                points: velp.points,
+                points: parseInt(velp.points),
                 doc_id: $scope.docId,
                 visible_to: 4,
                 coord: {
@@ -283,20 +283,20 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             };
 
             if (answer_id !== null)
-                newMarking.answer_id = answer_id.selectedAnswer.id;
+                newAnnotation.answer_id = answer_id.selectedAnswer.id;
 
-            addAnnotationToCoord($scope.selectedArea, newMarking, true);
-            $scope.annotations.push(newMarking);
-            $scope.annotationids[newMarking.id] = newMarking.id;
+            addAnnotationToCoord($scope.selectedArea, newAnnotation, true);
+            $scope.annotations.push(newAnnotation);
+            $scope.annotationids[newAnnotation.id] = newAnnotation.id;
 
-            var nodeNums = getNodeNumbers($scope.selectedArea["startContainer"], newMarking.id, innerDiv);
-            newMarking.coord.start.node = nodeNums[0];
-            newMarking.coord.end.node = nodeNums[1];
+            var nodeNums = getNodeNumbers($scope.selectedArea["startContainer"], newAnnotation.id, innerDiv);
+            newAnnotation.coord.start.node = nodeNums[0];
+            newAnnotation.coord.end.node = nodeNums[1];
 
-            console.log(newMarking);
+            console.log(newAnnotation);
 
-            $scope.makePostRequest("/addannotation", newMarking, function (json) {
-                $scope.annotationids[newMarking.id] = json.data;
+            $scope.makePostRequest("/addannotation", newAnnotation, function (json) {
+                $scope.annotationids[newAnnotation.id] = json.data;
             });
 
             $scope.selectedArea = undefined;
@@ -410,7 +410,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             if (parent.childNodes[i].nodeName == "ANNOTATION") {
 
-                if (parent.childNodes[i].getAttribute("aid") == aid) {
+                if (parseInt(parent.childNodes[i].getAttribute("aid")) === aid) {
 
                     var startnum = num - 1;
                     num += innerElement.childNodes.length;
@@ -452,21 +452,21 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Create pop over marking element
-     * @param marking marking info
+     * @param annotation marking info
      * @param show wether to show marking or not
      * @returns {Element}
      */
-    $scope.createPopOverElement = function (marking, show) {
+    $scope.createPopOverElement = function (annotation, show) {
         var element = document.createElement('annotation');
 
-        var velp_content = String($scope.getVelpById(marking.velp).content);
+        var velp_content = String($scope.getVelpById(annotation.velp).content);
         element.setAttribute("velp", velp_content);
 
-        element.setAttribute("points", marking.points);
-        element.setAttribute("aid", marking.id);
+        element.setAttribute("points", annotation.points);
+        element.setAttribute("aid", annotation.id);
         element.setAttribute("user", username);
         element.setAttribute("show", show);
-        element.setAttribute("comments", JSON.stringify(marking.comments));
+        element.setAttribute("comments", JSON.stringify(annotation.comments));
 
         return element;
     };

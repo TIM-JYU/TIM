@@ -13,7 +13,7 @@ timApp.directive("annotation", function() {
             // locked, selected ?
             show: '=',
             velp: '@',
-            points: '@',
+            points: '=',
             //evalAsync: '@',
             user: '@',
             comments: '=',
@@ -62,9 +62,6 @@ timApp.controller('AnnotationController', ['$scope', '$timeout', function ($scop
         }
     };
 
-    $timeout(function () {
-        $scope.toggleAnnotation();
-    }, 1);
-    $scope.toggleAnnotation();
+
 
 }]);

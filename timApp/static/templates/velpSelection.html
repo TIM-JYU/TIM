@@ -25,7 +25,7 @@
                     <div class="fulldiv">
                         <p ng-repeat="label in filteredLabels = ( labels | filter:{content:filterLabel} )"
                            class="label tag-{{ label.selected }}"
-                           style="background-color: {{ getColor(label.id) }}"
+                           ng-style="{ backgroundColor: getColor(label.id) };"
                            ng-click="toggleLabel(label)" ng-model="test" value="{{ label.id }}">
                             {{ label.content }}
                         </p><!-- p ng-click="selectLabelToEdit()" ng-class="['label', 'tag-false']" style="background: blue;">
