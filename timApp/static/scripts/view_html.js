@@ -557,14 +557,23 @@ timApp.controller("ViewCtrl", [
         sc.onClick = function (className, func, overrideModalCheck) {
             var downEvent = null;
             var downCoords = null;
+            var lastDownEvent = null;
+            var lastclicktime = -1;
 
             $document.on('mousedown touchstart', className, function (e) {
                 if (!overrideModalCheck && $(".actionButtons").length > 0 || $(EDITOR_CLASS_DOT).length > 0) {
                     // Disable while there are modal gui elements
                     return;
                 }
+                if (lastDownEvent && lastDownEvent.type != e.type && new Date().getTime() - lastclicktime < 500)
+                    // This is to prevent chaotic behavior from both mouseDown and touchStart
+                    // events happening at the same coordinates
+                    return;
+
                 downEvent = sc.fixPageCoords(e);
+                lastDownEvent = downEvent;
                 downCoords = {left: downEvent.pageX, top: downEvent.pageY};
+                lastclicktime = new Date().getTime();
             });
             $document.on('mousemove touchmove', className, function (e) {
                 if (downEvent === null) {
@@ -576,6 +585,8 @@ timApp.controller("ViewCtrl", [
                     // Moved too far away, cancel the event
                     downEvent = null;
                 }
+
+                console.log(e);
             });
             $document.on('touchcancel', className, function (e) {
                 downEvent = null;
@@ -586,6 +597,7 @@ timApp.controller("ViewCtrl", [
                         e.preventDefault();
                     }
                     downEvent = null;
+                    console.log(e);
                 }
             });
         };
@@ -1149,7 +1161,8 @@ timApp.controller("ViewCtrl", [
             // Clicking anywhere
             var tagName = e.target.tagName.toLowerCase();
             var ignoreTags = ['button', 'input'];
-            if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || $(e.target).hasClass("menu-icon")) {
+            if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || $(e.target).hasClass("menu-icon")
+                || $(e.target).hasClass("editline") || $(e.target).hasClass("areaeditline")) {
                 return false;
             }
 
