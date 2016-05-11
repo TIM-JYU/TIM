@@ -19,6 +19,11 @@ timApp.directive('nameArea', ['$http', '$window', '$filter', function ($http, $w
                 $scope.onOk = eval('$scope.' + $attrs['onok']);
             if ($attrs['oncancel'])
                 $scope.onCancel = eval('$scope.' + $attrs['oncancel']);
+
+            $('#areaname').keypress(function (e) {
+                if (e.which == 13)
+                    $scope.addArea();
+            });
         },
 
         controller: function ($scope, $element) {
@@ -47,6 +52,8 @@ timApp.directive('nameArea', ['$http', '$window', '$filter', function ($http, $w
             $scope.areaName = "";
             $scope.options = {};
             $element.css('position', 'absolute'); // IE needs this
+
+            $('#areaname').focus();
         }
     };
 }]);

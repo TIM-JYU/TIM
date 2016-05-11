@@ -3,7 +3,7 @@
 
     <div>
             <label for="areaname">Area name:</label>
-            <input id="areaname" type="text" ng-model="areaName" title="No spaces allowed" />
+            <input id="areaname" type="text" ng-model="areaName" title="No spaces allowed" autofocus />
     </div>
 
     <div class="nameArea-options">
@@ -24,7 +24,7 @@
     </div>
 
     <div>
-        <button class="timButton" ng-click="addArea()" ng-disabled="!areaName">Add</button>
-        <button class="timButton" ng-click="cancelAdd()">Cancel</button>
+        <button id="add" class="timButton" ng-click="addArea()" ng-disabled="!areaName">Add</button>
+        <button id="cancel" class="timButton" ng-click="cancelAdd()">Cancel</button>
     </div>
 </div>
