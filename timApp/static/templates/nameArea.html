@@ -2,21 +2,28 @@
     <span class="error" ng-show="notification" ng-bind="notification"></span>
 
     <div>
-        <label for="areaname">Area name:</label>
-        <input id="areaname" type="text" ng-model="areaName" />
+            <label for="areaname">Area name:</label>
+            <input id="areaname" type="text" ng-model="areaName" title="No spaces allowed" />
     </div>
 
-<!--
+    <div class="nameArea-options">
+        <div>
+            <input id="collapsible" type="checkbox" ng-model="options.collapsible" />
+            <label for="collapsible">Collapsible</label>
+        </div>
+
+        <div class="nameArea-inner">
+            <label for="areatitle">Area title:</label>
+            <input id="areatitle" type="text" ng-model="options.title" title="Optional" />
+        </div>
+
+        <div>
+            <input id="collapse" type="checkbox" ng-disabled="!options.collapsible" ng-model="options.collapse" />
+            <label for="collapse">Collapsed by default</label>
+        </div>
+    </div>
+
     <div>
-        <input id="collapsible" type="checkbox" ng-model="collapsible" />
-        <label for="collapsible">Collapsible</label>
-
-        <input id="collapse" type="checkbox" ng-disabled="!collapsible" ng-bind="collapse" />
-        <label for="collapse">Collapsed by default</label>
-    </div>
--->
-
-    <div class="nameAreaButtons">
         <button class="timButton" ng-click="addArea()" ng-disabled="!areaName">Add</button>
         <button class="timButton" ng-click="cancelAdd()">Cancel</button>
     </div>

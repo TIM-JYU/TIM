@@ -34,7 +34,7 @@ timApp.directive('nameArea', ['$http', '$window', '$filter', function ($http, $w
                 $scope.closePopup();
 
                 if ($scope.onOk)
-                    $scope.onOk($scope.$area, $scope.areaName);
+                    $scope.onOk($scope.$area, $scope.areaName, $scope.options);
             };
 
             $scope.cancelAdd = function () {
@@ -45,6 +45,7 @@ timApp.directive('nameArea', ['$http', '$window', '$filter', function ($http, $w
             };
 
             $scope.areaName = "";
+            $scope.options = {};
             $element.css('position', 'absolute'); // IE needs this
         }
     };

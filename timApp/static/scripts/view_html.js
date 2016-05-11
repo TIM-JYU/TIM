@@ -1679,19 +1679,23 @@ timApp.controller("ViewCtrl", [
             $compile($popup[0])(sc);
         };
         
-        sc.nameAreaOk = function ($area, areaName) {
+        sc.nameAreaOk = function ($area, areaName, options) {
             $area.attr("data-name", areaName);
 
             http.post('/name_area/' + sc.docId + '/' + areaName, {
                 "area_start" : sc.getFirstParId($area.first()),
-                "area_end" : sc.getLastParId($area.last())
+                "area_end" : sc.getLastParId($area.last()),
+                "options" : options
             }).success(function(data, status, headers, config) {
                 $area.children().wrapAll('<div class="areaContent">');
                 $area.append('<div class="areaeditline">');
 
+                if (options.collapsible)
+                    $window.location.reload();
+
             }).error(function(data, status, headers, config) {
                 $window.alert(data.error);
-                sc.nameAreaCancel();
+                sc.nameAreaCancel($area);
             });
         };
 

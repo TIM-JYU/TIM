@@ -566,14 +566,22 @@ def get_updated_pars(doc_id):
 @edit_page.route("/name_area/<int:doc_id>/<area_name>", methods=["POST"])
 def name_area(doc_id, area_name):
     area_start, area_end = verify_json_params('area_start', 'area_end', require=True)
+    (options,) = verify_json_params('options', require=True)
+
     verify_doc_exists(doc_id)
     verify_edit_access(doc_id)
     if not area_name or ' ' in area_name or '´' in area_name:
         abort(400, 'Invalid area name')
 
     doc = get_newest_document(doc_id)
-    start_par = doc.insert_paragraph('', insert_before_id=area_start, attrs={'area': area_name})
-    end_par = doc.insert_paragraph('', insert_after_id=area_end, attrs={'area_end': area_name})
+    area_attrs = {'area': area_name}
+    if options.get('collapsible'):
+        area_attrs['collapse'] = 'true' if options.get('collapse') else 'false'
 
-    return par_response([start_par, end_par], Document(doc_id), update_cache=True)
+    area_title = '### ' + options['title'] if 'title' in options else ''
 
+    doc.insert_paragraph(area_title, insert_before_id=area_start, attrs=area_attrs)
+    doc.insert_paragraph('', insert_after_id=area_end, attrs={'area_end': area_name})
+    print(options)
+
+    return okJsonResponse()

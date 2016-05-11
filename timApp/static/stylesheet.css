@@ -997,8 +997,13 @@ pre {
     min-height: 50px;
 }
 
-.nameAreaButtons {
+.nameArea-inner {
+    margin-left: 40px;
+}
+
+.nameArea-options {
     margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 .actionButtonContent {
