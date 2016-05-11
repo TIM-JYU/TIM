@@ -13,6 +13,7 @@ from werkzeug.contrib.profiler import ProfilerMiddleware
 
 import containerLink
 from ReverseProxied import ReverseProxied
+from documentmodel.documentversion import DocumentVersion
 from plugin import PluginException
 from routes.answer import answers
 from routes.cache import cache
@@ -123,11 +124,30 @@ def not_found(error):
 
 @app.route('/download/<int:doc_id>')
 def download_document(doc_id):
-    timdb = getTimDb()
-    if not timdb.documents.exists(doc_id):
-        abort(404)
+    verify_doc_existence(doc_id)
     verify_edit_access(doc_id, "Sorry, you don't have permission to download this document.")
     return Response(Document(doc_id).export_markdown(), mimetype="text/plain")
+
+
+@app.route('/download/<int:doc_id>/<major>/<minor>')
+def download_document_version(doc_id, major, minor):
+    verify_edit_access(doc_id)
+    doc = DocumentVersion(doc_id, (major, minor))
+    if not doc.exists():
+        abort(404, "This document version does not exist.")
+    return Response(doc.export_markdown(), mimetype="text/plain")
+
+
+@app.route('/diff/<int:doc_id>/<major1>/<minor1>/<major2>/<minor2>')
+def diff_document(doc_id, major1, minor1, major2, minor2):
+    verify_edit_access(doc_id)
+    doc1 = DocumentVersion(doc_id, (major1, minor1))
+    doc2 = DocumentVersion(doc_id, (major2, minor2))
+    if not doc1.exists():
+        abort(404, "The document version {} does not exist.".format((major1, minor1)))
+    if not doc2.exists():
+        abort(404, "The document version {} does not exist.".format((major2, minor2)))
+    return Response(DocumentVersion.get_diff(doc1, doc2), mimetype="text/html")
 
 
 @app.route('/images/<int:image_id>/<image_filename>')
