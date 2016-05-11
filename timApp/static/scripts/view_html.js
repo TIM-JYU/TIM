@@ -1161,6 +1161,7 @@ timApp.controller("ViewCtrl", [
 
         sc.showOptionsWindow = function (e, $par_or_area, coords) {
             $par_or_area.children('.editline').addClass('menuopen');
+            $par_or_area.children('.areaeditline').addClass('menuopen');
             sc.showPopupMenu(e, $par_or_area, coords,
                 {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'});
         };
@@ -1173,7 +1174,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.optionsWindowClosed = function ($par_or_area) {
-            var $editline = $par_or_area.find('.editline');
+            var $editline = $par_or_area.find('.menuopen');
             $editline.removeClass('menuopen');
         };
 

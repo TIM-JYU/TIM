@@ -124,7 +124,7 @@ td p {
     background: #3CC; /* rgb(236,103,27); */
 }
 
-.areaeditline:hover {
+.areaeditline:hover, .areaeditline.menuopen {
     opacity: 0.5;
     background: #d874ff; /* rgb(236,103,27); */
 }
