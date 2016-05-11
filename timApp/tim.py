@@ -129,7 +129,7 @@ def download_document(doc_id):
     return Response(Document(doc_id).export_markdown(), mimetype="text/plain")
 
 
-@app.route('/download/<int:doc_id>/<major>/<minor>')
+@app.route('/download/<int:doc_id>/<int:major>/<int:minor>')
 def download_document_version(doc_id, major, minor):
     verify_edit_access(doc_id)
     doc = DocumentVersion(doc_id, (major, minor))
@@ -138,7 +138,7 @@ def download_document_version(doc_id, major, minor):
     return Response(doc.export_markdown(), mimetype="text/plain")
 
 
-@app.route('/diff/<int:doc_id>/<major1>/<minor1>/<major2>/<minor2>')
+@app.route('/diff/<int:doc_id>/<int:major1>/<int:minor1>/<int:major2>/<int:minor2>')
 def diff_document(doc_id, major1, minor1, major2, minor2):
     verify_edit_access(doc_id)
     doc1 = DocumentVersion(doc_id, (major1, minor1))
