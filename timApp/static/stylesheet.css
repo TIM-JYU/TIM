@@ -985,7 +985,7 @@ pre {
     margin: auto auto 5px;
 }
 
-.actionButtons, .menuButtons {
+.actionButtons, .menuButtons, .nameArea {
     display: table;
     position: absolute;
     white-space: nowrap;
@@ -995,6 +995,10 @@ pre {
     background-color: #f8f8ff;
     z-index: 100;
     min-height: 50px;
+}
+
+.nameAreaButtons {
+    margin-top: 20px;
 }
 
 .actionButtonContent {

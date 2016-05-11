@@ -1,0 +1,23 @@
+<div class="nameArea">
+    <span class="error" ng-show="notification" ng-bind="notification"></span>
+
+    <div>
+        <label for="areaname">Area name:</label>
+        <input id="areaname" type="text" ng-model="areaName" />
+    </div>
+
+<!--
+    <div>
+        <input id="collapsible" type="checkbox" ng-model="collapsible" />
+        <label for="collapsible">Collapsible</label>
+
+        <input id="collapse" type="checkbox" ng-disabled="!collapsible" ng-bind="collapse" />
+        <label for="collapse">Collapsed by default</label>
+    </div>
+-->
+
+    <div class="nameAreaButtons">
+        <button class="timButton" ng-click="addArea()" ng-disabled="!areaName">Add</button>
+        <button class="timButton" ng-click="cancelAdd()">Cancel</button>
+    </div>
+</div>

@@ -1665,23 +1665,39 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.nameArea = function (e, $par) {
-            // todo: replace this with an html control
-            var areaName = $window.prompt('Enter a name for the new area');
-            if (!areaName)
-                return;
+            var $newArea = $('<div class="area" id="newarea" />')
+            $newArea.attr('data-doc-id', sc.docId);
+            sc.selection.pars.wrapAll($newArea);
+
+            $newArea = $('#newarea');
+            var $popup = $('<name-area>');
+            $popup.attr('tim-draggable-fixed', '');
+            $popup.attr('onok', 'nameAreaOk');
+            $popup.attr('oncancel', 'nameAreaCancel');
+            $newArea.prepend($popup);
+
+            $compile($popup[0])(sc);
+        };
+        
+        sc.nameAreaOk = function ($area, areaName) {
+            $area.attr("data-name", areaName);
 
             http.post('/name_area/' + sc.docId + '/' + areaName, {
-                "area_start" : sc.getFirstParId(sc.selection.start),
-                "area_end" : sc.getLastParId(sc.selection.end)
+                "area_start" : sc.getFirstParId($area.first()),
+                "area_end" : sc.getLastParId($area.last())
             }).success(function(data, status, headers, config) {
-                // todo: do this without reload
-                $window.location.reload();
+                $area.children().wrapAll('<div class="areaContent">');
+                $area.append('<div class="areaeditline">');
 
             }).error(function(data, status, headers, config) {
                 $window.alert(data.error);
+                sc.nameAreaCancel();
             });
         };
 
+        sc.nameAreaCancel = function ($area) {
+            $area.children().unwrap();
+        };
 
         sc.cutArea = function (e, $par_or_area, cut) {
             sc.copyArea(e, $par_or_area, sc.docId, true);
