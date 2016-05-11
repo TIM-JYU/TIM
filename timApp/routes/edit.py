@@ -582,6 +582,5 @@ def name_area(doc_id, area_name):
 
     doc.insert_paragraph(area_title, insert_before_id=area_start, attrs=area_attrs)
     doc.insert_paragraph('', insert_after_id=area_end, attrs={'area_end': area_name})
-    print(options)
 
     return okJsonResponse()
