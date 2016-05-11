@@ -58,7 +58,7 @@ timApp.directive('nameArea', ['$http', '$window', '$filter', function ($http, $w
             };
 
             $scope.areaName = "";
-            $scope.options = {};
+            $scope.options = {collapse: true};
             $element.css('position', 'absolute'); // IE needs this
 
             $('#areaname').focus();
