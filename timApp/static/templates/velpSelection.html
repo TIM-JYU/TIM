@@ -51,12 +51,8 @@
                                         <p>Label content is too short</p>
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td colspan="2">
-                                        <input type="submit" value="Add label">
-                                    </td>
-                                </tr>
                             </table>
+                            <input id="addLabelButton" type="submit" value="Add label">
                         </form>
                     </div>
                 </div>
@@ -85,7 +81,7 @@
                         </td>
                     </tr>
                 </table>
-                <input value="Create velp" type="button" ng-model="newVelp" ng-click="selectVelpToEdit(newVelp)">
+                <input id="createVelpButton" value="Create velp" type="button" ng-model="newVelp" ng-click="selectVelpToEdit(newVelp)">
 
                 <div ng-class="['emphasise', 'new', { neutral: newVelp.points == 0, positive: newVelp.points > 0, negative: newVelp.points < 0,
                             edit: newVelp.edit}]">
@@ -305,24 +301,6 @@
                     </tr>
                 </table>
                 <input value="Import group" type="submit"></input>
-                <table class="velpTable">
-                    <tr>
-                        <td>
-                            <label>Search velps</label>
-                        </td>
-                        <td>
-                            <input placeholder="Enter text..."></input>
-                        </td>
-                    </tr>
-                </table>
-                <input value="Import velp" type="submit"></input>
-                <table class="velpTable">
-                    <tr>
-                        <td>
-                            <label>Attach velp to a group</label>
-                        </td>
-                    </tr>
-                </table>
             </div>
         </uib-tab>
         <uib-tab index="2" heading="Summary">
