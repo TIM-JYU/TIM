@@ -30,8 +30,6 @@ timApp.controller('AnnotationController', ['$scope', '$timeout', function ($scop
      * Toggle annotation visibility
      */
     $scope.toggleAnnotation = function() {
-        // TODO: This gives error:
-        // Expression 'false' used with directive 'annotation' is non-assignable!
         $scope.show = !$scope.show;
     };
 
