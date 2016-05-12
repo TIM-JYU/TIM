@@ -51,7 +51,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     // $scope.filteredVelpCount = 0;
 
     // Get velp and annotation data
-    $http.get('/{0}/{1}/velps'.replace('{0}', doc_id).replace('{1}', par), {cache: false}).success(function (data) {
+    $http.get('/{0}/{1}/velps'.replace('{0}', doc_id).replace('{1}', par)).success(function (data) {
         $scope.velps = data;
         $scope.velps.forEach(function (v) {
             v.used = 0;

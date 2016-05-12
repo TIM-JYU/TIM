@@ -53,7 +53,6 @@ def get_velps(document_id: int, paragraph_id: str) -> str:
     # Todo Somehow communicate the language string for the get_document_velps function.
 
     velp_data = timdb.velps.get_document_velps(doc_id)
-    # print(velp_data) # TODO Just for checking, delete later
     response=jsonResponse(velp_data)
     response.headers['Cache-Control']='no-store, no-cache, must-revalidate'
     return response
@@ -140,7 +139,9 @@ def get_labels(document_id: int) -> 'str':
         abort(400, "Document_id is not a number.")
     # Todo select language.
     label_data = timdb.velps.get_document_velp_label_content(doc_id)
-    return jsonResponse(label_data)
+    response=jsonResponse(label_data)
+    response.headers['Cache-Control']='no-store, no-cache, must-revalidate'
+    return response
 
 @velps.route("/addvelp", methods=['POST'])
 def add_velp():
