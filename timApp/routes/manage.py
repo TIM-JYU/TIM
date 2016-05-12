@@ -32,7 +32,7 @@ def manage(path):
             if isFolder:
                 return redirect('/view/' + str(block_id))
             session['message'] = "Did someone give you a wrong link? Showing normal view instead of manage view."
-            return redirect('/view/' + block_id)
+            return redirect('/view/' + str(block_id))
 
     possible_groups = timdb.users.get_usergroups_printable(getCurrentUserId())
     grouprights = timdb.users.get_rights_holders(block_id)

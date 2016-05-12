@@ -1,13 +1,5 @@
 var timApp = angular.module('timApp');
 
-// Filter to make string URL friendly
-timApp.filter('escape', function () {
-    "use strict";
-    return function (str) {
-        return encodeURIComponent(str).replace(/%2F/g, '/');
-    };
-});
-
 // Controller used in document index and folders
 var angular, folder, crumbs, groups;
 timApp.controller("IndexCtrl", [ '$scope', '$controller', '$http', '$q', 'Upload', '$window', '$timeout',
