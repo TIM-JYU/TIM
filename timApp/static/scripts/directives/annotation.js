@@ -1,5 +1,8 @@
 /**
  * Created by localadmin on 4.4.2016.
+ *
+ * Annotations uses attribute as a directive declaration, because IE does not support
+ * custom elements reliably.
  */
 
 'use strict';

@@ -503,9 +503,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @returns {Element}
      */
     $scope.createPopOverElement = function (annotation, show) {
-        var element = document.createElement('span');
+        var element = document.createElement("span");
         element.setAttribute("annotation", "");
-        element.classList.add("annotationElement");
         var velp_data = $scope.getVelpById(annotation.velp);
         var velp_content;
 
