@@ -85,7 +85,9 @@ timApp.controller("ViewCtrl", [
         } else {
             sc.selectedUser = null;
         }
-
+        if (sc.lectureMode) {
+            sc.noQuestionAutoNumbering = $window.noQuestionAutoNumbering;
+        }
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
 
@@ -1239,6 +1241,8 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getAndEditQuestions = function () {
+            console.log(sc.settings);
+            console.log($window.settings);
             var questions = $('.editlineQuestion');
             for (var i = 0; i < questions.length; i++) {
                 var questionParent = $(questions[i].parentNode);
@@ -1258,7 +1262,13 @@ timApp.controller("ViewCtrl", [
                     var parContent = $(questionChildren[0]);
                     questionParent.addClass('questionPar');
                     parContent.addClass('questionParContent');
-                    var p = $("<p>", {class: "questionNumber", text: (i+1) + ")\r\n" + questionTitle});
+                    var questionTitleText;
+                    if (sc.noQuestionAutoNumbering) {
+                        questionTitleText = questionTitle;
+                    } else {
+                        questionTitleText = (i+1) + ")\r\n" + questionTitle;
+                    }
+                    var p = $("<p>", {class: "questionNumber", text: questionTitleText});
                     parContent.append(p);
                     var editLine = $(questionChildren[1]);
                     parContent.before(editLine);

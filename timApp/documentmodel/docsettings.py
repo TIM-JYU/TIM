@@ -10,10 +10,11 @@ class DocSettings:
     css_key = 'css'
     macros_key = 'macros'
     macro_delimiter_key = 'macro_delimiter'
-    source_document_key = "source_document"
+    source_document_key = 'source_document'
     auto_number_headings_key = 'auto_number_headings'
     heading_format_key = 'heading_format'
     show_task_summary_key = 'show_task_summary'
+    no_question_auto_numbering_key = 'no_question_auto_numbering'
 
     @classmethod
     def is_valid_paragraph(cls, par):
@@ -90,6 +91,10 @@ class DocSettings:
     @contract
     def get_macro_delimiter(self) -> 'str':
         return self.__dict.get(self.macro_delimiter_key, '%%')
+
+    @contract
+    def auto_number_questions(self) -> 'bool':
+        return self.__dict.get(self.no_question_auto_numbering_key, False)
 
     @contract
     def get_source_document(self) -> 'int|None':

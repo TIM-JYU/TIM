@@ -271,8 +271,10 @@ def view(doc_path, template_name, usergroup=None, route="view"):
         do_lazy = get_option(request, "lazy", True)
 
     show_questions = False
+    no_question_auto_numbering = None
     if route == 'lecture' and has_edit_access(doc_id):
         show_questions = True
+        no_question_auto_numbering = doc_settings.auto_number_questions()
 
     texts, jsPaths, cssPaths, modules = post_process_pars(doc,
                                                           xs,
@@ -323,6 +325,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                              reqs=pluginControl.get_all_reqs(),
                              settings=settings,
                              no_browser=hide_answers,
+                             no_question_auto_numbering=no_question_auto_numbering,
                              message=message,
                              task_info={'total_points': total_points,
                                         'tasks_done': tasks_done,
