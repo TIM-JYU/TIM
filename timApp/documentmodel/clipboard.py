@@ -52,8 +52,11 @@ class Clipboard:
                     os.remove(name)
 
         def read_metadata(self) -> Dict[str, str]:
-            with open(self.get_metafilename(), 'rt', encoding='utf-8') as metafile:
-                return json.loads(metafile.read())
+            try:
+                with open(self.get_metafilename(), 'rt', encoding='utf-8') as metafile:
+                    return json.loads(metafile.read())
+            except FileNotFoundError:
+                return {}
 
         def read(self, as_ref: Optional[bool] = False, force_parrefs: Optional[bool] = False)\
                 -> Optional[List[Dict[str, str]]]:
@@ -153,7 +156,7 @@ class Clipboard:
                 return
 
             metadata = self.read_metadata()
-            if not as_ref and metadata['area_name'] is not None and doc.named_section_exists(metadata['area_name']):
+            if not as_ref and metadata.get('area_name') is not None and doc.named_section_exists(metadata['area_name']):
                 new_area_name = metadata['area_name'] + '_' + random_id()
                 pars[0]['attrs']['area'] = new_area_name
                 pars[len(pars) - 1]['attrs']['area_end'] = new_area_name
@@ -163,7 +166,7 @@ class Clipboard:
             for par in reversed(pars):
                 # We need to reverse the sequence because we're inserting before, not after
                 new_par_id = par['id'] if not doc.has_paragraph(par['id']) else random_id()
-                new_par = doc.insert_paragraph(par['md'], par_before, par_id=new_par_id,
+                new_par = doc.insert_paragraph(par['md'], insert_before_id=par_before, par_id=new_par_id,
                                                attrs=par.get('attrs'), properties=par.get('properties'))
                 doc_pars = [new_par] + doc_pars
                 par_before = new_par.get_id()

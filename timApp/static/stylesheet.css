@@ -124,7 +124,7 @@ td p {
     background: #3CC; /* rgb(236,103,27); */
 }
 
-.areaeditline:hover {
+.areaeditline:hover, .areaeditline.menuopen {
     opacity: 0.5;
     background: #d874ff; /* rgb(236,103,27); */
 }
@@ -207,12 +207,20 @@ ul ul ul, ol ol ol {
 .par.deleted.selected {
 }
 
+.par.deleted.marked {
+    background-color: #92D1CE;
+}
+
 .par.lightselect {
     background-color: #f7f7f7;
 }
 
 .par.selected {
     background-color: lightgray;
+}
+
+.par.marked {
+    background-color: rgba(134, 217, 209, 0.35);
 }
 
 .material img {
@@ -325,7 +333,7 @@ ul ul ul, ol ol ol {
 .areaeditline {
     position: absolute;
     left: -1.2em;
-    z-index: 2;
+    /*z-index: 2;*/
     width: 3em;
     height: 100%;
     top: 0;
@@ -605,7 +613,7 @@ br {
     font-size: 14px;
 }
 
-.extraButtonArea.hidden {
+.extraButtonArea.hidden, .hidden {
     display: none;
 }
 
@@ -977,7 +985,7 @@ pre {
     margin: auto auto 5px;
 }
 
-.actionButtons, .menuButtons {
+.actionButtons, .menuButtons, .nameArea {
     display: table;
     position: absolute;
     white-space: nowrap;
@@ -987,6 +995,15 @@ pre {
     background-color: #f8f8ff;
     z-index: 100;
     min-height: 50px;
+}
+
+.nameArea-inner {
+    margin-left: 40px;
+}
+
+.nameArea-options {
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 .actionButtonContent {

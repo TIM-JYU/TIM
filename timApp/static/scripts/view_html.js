@@ -236,16 +236,22 @@ timApp.controller("ViewCtrl", [
             if ($par_or_area.hasClass('area')) {
                 return $par_or_area.find('.par').first();
             }
+            if ($par_or_area.hasClass('par')) {
+                return $par_or_area;
+            }
 
-            return $par_or_area;
+            return null;
         };
 
         sc.getLastPar = function ($par_or_area) {
             if ($par_or_area.hasClass('area')) {
                 return $par_or_area.find('.par').last();
             }
+            if ($par_or_area.hasClass('par')) {
+                return $par_or_area;
+            }
 
-            return $par_or_area;
+            return null;
         };
 
         sc.getFirstParId = function ($par_or_area) {
@@ -262,14 +268,6 @@ timApp.controller("ViewCtrl", [
 
         sc.getElementByParHash = function(t) {
             return $("[t='" + t + "']");
-        };
-
-        sc.getAreaStart = function() {
-            return sc.selection.reversed ? sc.selection.end : sc.selection.start;
-        };
-
-        sc.getAreaEnd = function() {
-            return sc.selection.reversed ? sc.selection.start : sc.selection.end;
         };
 
         sc.toggleParEditor = function ($par_or_area, options) {
@@ -293,8 +291,8 @@ timApp.controller("ViewCtrl", [
                     url = '/postParagraph/';
                 }
 
-                area_start = options.area ? sc.getAreaStart() : null;
-                area_end = options.area ? sc.getAreaEnd() : null;
+                area_start = options.area ? sc.getParId(sc.selection.start) : null;
+                area_end = options.area ? sc.getParId(sc.selection.end) : null;
             }
 
             var par_id = sc.getParId($par);
@@ -561,14 +559,23 @@ timApp.controller("ViewCtrl", [
         sc.onClick = function (className, func, overrideModalCheck) {
             var downEvent = null;
             var downCoords = null;
+            var lastDownEvent = null;
+            var lastclicktime = -1;
 
             $document.on('mousedown touchstart', className, function (e) {
                 if (!overrideModalCheck && $(".actionButtons").length > 0 || $(EDITOR_CLASS_DOT).length > 0) {
                     // Disable while there are modal gui elements
                     return;
                 }
+                if (lastDownEvent && lastDownEvent.type != e.type && new Date().getTime() - lastclicktime < 500)
+                    // This is to prevent chaotic behavior from both mouseDown and touchStart
+                    // events happening at the same coordinates
+                    return;
+
                 downEvent = sc.fixPageCoords(e);
+                lastDownEvent = downEvent;
                 downCoords = {left: downEvent.pageX, top: downEvent.pageY};
+                lastclicktime = new Date().getTime();
             });
             $document.on('mousemove touchmove', className, function (e) {
                 if (downEvent === null) {
@@ -648,9 +655,8 @@ timApp.controller("ViewCtrl", [
             {
                 var start = pars[0];
                 var end = pars[pars.length - 1];
-                sc.selection.start = sc.getParId($(start));
-                sc.selection.end = sc.getParId($(end));
-                sc.selection.reversed = false;
+                sc.selection.start = $(start);
+                sc.selection.end = $(end);
                 $(pars).addClass('selected');
                 sc.toggleParEditor($(pars), {showDelete: true, area: true});
                 $(pars).removeClass('selected');
@@ -1005,30 +1011,50 @@ timApp.controller("ViewCtrl", [
             return sc.markParRead($this, $this.parents('.par'));
         });
 
-        sc.isParWithinArea = function ($par) {
-            return sc.selection.pars.filter($par).length > 0;
+        sc.extendSelection = function ($par, allowShrink) {
+            if (sc.selection.start === null) {
+                sc.selection.start = $par;
+                sc.selection.end = $par;
+            } else {
+                var n = sc.selection.pars.length;
+                var startIndex = $(sc.selection.pars[0]).attr('data-index');
+                var endIndex = $(sc.selection.pars[n - 1]).attr('data-index');
+                var areaLength = endIndex - startIndex + 1;
+                var newIndex = $par.attr('data-index');
+
+                if (newIndex < startIndex) {
+                    sc.selection.start = $par;
+                } else if (newIndex > endIndex) {
+                    sc.selection.end = $par;
+                } else if (allowShrink && areaLength > 1 && newIndex == startIndex) {
+                    sc.selection.start = $(sc.selection.pars[1]);
+                } else if (allowShrink && areaLength > 1 && newIndex == endIndex) {
+                    sc.selection.end = $(sc.selection.pars[n - 2]);
+                }
+            }
         };
 
         sc.onClick(".editline, .editlineQuestion", function ($this, e) {
             sc.closeOptionsWindow();
             var $par = $this.parent().filter('.par');
-            if (sc.selection.start !== null && (sc.selection.end === null || !sc.isParWithinArea($par))) {
-                sc.selection.end = sc.getParId($par);
+            if (sc.selection.start !== null) {
+                sc.extendSelection($par);
             }
             var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
-            return sc.showOptionsWindow(e, $par, coords);
+
+            // We need the timeout so we don't trigger the ng-clicks on the buttons
+            $timeout( function() {sc.showOptionsWindow(e, $par, coords);}, 80);
+            return false;
         });
 
         sc.onClick(".areaeditline", function ($this, e) {
             sc.closeOptionsWindow();
             var $area = $this.parent().filter('.area');
-            //var $pars = $area.find('.par');
-            //var $first_par = $pars.first();
-            //var $last_par = $pars.last();
             var coords = {left: e.pageX - $area.offset().left, top: e.pageY - $area.offset().top};
-            //sc.selection.start = sc.getParId($first_par);
-            //sc.selection.end = sc.getParId($last_par);
-            return sc.showOptionsWindow(e, $area, coords);
+
+            // We need the timeout so we don't trigger the ng-clicks on the buttons
+            $timeout( function() {sc.showOptionsWindow(e, $area, coords);}, 80);
+            return false;
         });
 
         sc.setAreaAttr = function(area, attr, value) {
@@ -1090,7 +1116,7 @@ timApp.controller("ViewCtrl", [
 
             var $par = $this.parent();
             if (sc.selection.start !== null) {
-                sc.selection.end = sc.getParId($par);
+                sc.extendSelection($par, true);
             }
             else {
                 var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
@@ -1135,7 +1161,8 @@ timApp.controller("ViewCtrl", [
             // Clicking anywhere
             var tagName = e.target.tagName.toLowerCase();
             var ignoreTags = ['button', 'input'];
-            if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || $(e.target).hasClass("menu-icon")) {
+            if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || $(e.target).hasClass("menu-icon")
+                || $(e.target).hasClass("editline") || $(e.target).hasClass("areaeditline")) {
                 return false;
             }
 
@@ -1147,12 +1174,13 @@ timApp.controller("ViewCtrl", [
             }
 
             //console.log(e.target);
-            return true;
+            return false;
 
         }, true);
 
         sc.showOptionsWindow = function (e, $par_or_area, coords) {
             $par_or_area.children('.editline').addClass('menuopen');
+            $par_or_area.children('.areaeditline').addClass('menuopen');
             sc.showPopupMenu(e, $par_or_area, coords,
                 {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'});
         };
@@ -1165,7 +1193,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.optionsWindowClosed = function ($par_or_area) {
-            var $editline = $par_or_area.find('.editline');
+            var $editline = $par_or_area.find('.menuopen');
             $editline.removeClass('menuopen');
         };
 
@@ -1499,12 +1527,13 @@ timApp.controller("ViewCtrl", [
         sc.processAllMathDelayed($('body'));
 
         sc.getEditMode = function() { return $window.editMode; };
+        sc.getAllowMove = function() { return $window.allowMove; };
 
         sc.defaultAction = {func: sc.showOptionsWindow, desc: 'Show options window'};
         timLogTime("VieCtrl end","view");
         sc.selection = {start: null, end: null};
         sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end', 'editing', 'getEditMode()',
-                        'allowPasteContent', 'allowPasteRef'], function (newValues, oldValues, scope) {
+                        'allowPasteContent', 'allowPasteRef', 'getAllowMove()'], function (newValues, oldValues, scope) {
             sc.editorFunctions = sc.getEditorFunctions();
             if (sc.editing) {
                 sc.notification = "Editor is already open.";
@@ -1513,25 +1542,55 @@ timApp.controller("ViewCtrl", [
             }
         });
 
-        sc.$watchGroup(['selection.start', 'selection.end'], function (newValues, oldValues, scope) {
-            $('.par.selected').removeClass('selected');
-            if (sc.selection.start !== null) {
-                var $start = sc.getElementByParId(sc.selection.start);
-                if (sc.selection.end !== null && sc.selection.end !== sc.selection.start) {
-                    var $end = sc.getElementByParId(sc.selection.end);
-                    if ($end.prevAll().filter($start).length !== 0) {
-                        sc.selection.reversed = false;
-                        sc.selection.pars = $start.nextUntil($end);
+        sc.getPars = function($par_first, $par_last) {
+            var pars = [$par_first];
+            var $par = $par_first;
+            var $next = $par.next();
+            var i = 1000000;
 
-                    } else {
-                        sc.selection.reversed = true;
-                        sc.selection.pars = $start.prevUntil($end);
+            while (i > 0) {
+                if ($next.length == 0) {
+                    $par = $par.parent();
+                    $next = $par.next();
+                    if ($par.prop("tagName").toLowerCase() == "html") {
+                        break;
                     }
-                    sc.selection.pars = sc.selection.pars.add($start).add($end);
+
+                    continue;
+                }
+
+                if ($next.hasClass('area')) {
+                    $next = $next.children('.areaContent').children().first();
+                    continue;
+                }
+
+                if ($next.hasClass('par') && $next.attr('data-index') !== undefined) {
+                    pars.push($next);
+                    if ($next.is($par_last))
+                        break;
+                }
+
+                $par = $next;
+                $next = $par.next();
+                i -= 1;
+            }
+
+            return $(pars).map (function () {return this.toArray(); } );
+        };
+
+        sc.$watchGroup(['selection.start', 'selection.end'], function (newValues, oldValues, scope) {
+            $('.par.lightselect').removeClass('lightselect');
+            $('.par.selected').removeClass('selected');
+            $('.par.marked').removeClass('marked');
+            if (sc.selection.start !== null) {
+                var $start = sc.selection.start;
+                if (sc.selection.end !== null && !sc.selection.end.is(sc.selection.start)) {
+                    var $end = sc.selection.end;
+                    sc.selection.pars = sc.getPars($start, $end);
                 } else {
                     sc.selection.pars = $start;
                 }
-                sc.selection.pars.addClass('selected');
+                sc.selection.pars.addClass('marked');
             }
         });
 
@@ -1624,12 +1683,51 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.startArea = function (e, $par) {
-            sc.selection.start = sc.getFirstParId($par);
+            sc.extendSelection($par);
         };
 
         sc.cancelArea = function (e, $par) {
             sc.selection.start = null;
             sc.selection.end = null;
+        };
+
+        sc.nameArea = function (e, $par) {
+            var $newArea = $('<div class="area" id="newarea" />')
+            $newArea.attr('data-doc-id', sc.docId);
+            sc.selection.pars.wrapAll($newArea);
+
+            $newArea = $('#newarea');
+            var $popup = $('<name-area>');
+            $popup.attr('tim-draggable-fixed', '');
+            $popup.attr('onok', 'nameAreaOk');
+            $popup.attr('oncancel', 'nameAreaCancel');
+            $newArea.prepend($popup);
+
+            $compile($popup[0])(sc);
+        };
+        
+        sc.nameAreaOk = function ($area, areaName, options) {
+            $area.attr("data-name", areaName);
+
+            http.post('/name_area/' + sc.docId + '/' + areaName, {
+                "area_start" : sc.getFirstParId($area.first()),
+                "area_end" : sc.getLastParId($area.last()),
+                "options" : options
+            }).success(function(data, status, headers, config) {
+                $area.children().wrapAll('<div class="areaContent">');
+                $area.append('<div class="areaeditline">');
+
+                if (options.collapsible)
+                    $window.location.reload();
+
+            }).error(function(data, status, headers, config) {
+                $window.alert(data.error);
+                sc.nameAreaCancel($area);
+            });
+        };
+
+        sc.nameAreaCancel = function ($area) {
+            $area.children().unwrap();
         };
 
         sc.cutArea = function (e, $par_or_area, cut) {
@@ -1647,8 +1745,8 @@ timApp.controller("ViewCtrl", [
             } else {
                 ref_doc_id = null;
                 area_name = null;
-                area_start = sc.getAreaStart();
-                area_end = sc.getAreaEnd();
+                area_start = sc.getParId(sc.selection.start);
+                area_end = sc.getParId(sc.selection.end);
             }
 
             var doc_id = override_doc_id ? override_doc_id : sc.docId;
@@ -1657,6 +1755,9 @@ timApp.controller("ViewCtrl", [
                 http.post('/clipboard/cut/' + doc_id + '/' + area_start + '/' + area_end, {
                     area_name: area_name
                 }).success(function (data, status, headers, config) {
+                    sc.selection.start = null;
+                    sc.selection.end = null;
+
                     if (doc_id == sc.docId) {
                         var doc_ver = data['doc_ver'];
                         var pars = data['pars'];
@@ -1682,6 +1783,8 @@ timApp.controller("ViewCtrl", [
                     ref_doc_id: ref_doc_id,
                     area_name: area_name
                 }).success(function (data, status, headers, config) {
+                    sc.selection.start = null;
+                    sc.selection.end = null;
                     sc.allowPasteContent = true;
                     sc.allowPasteRef = true;
                 }).error(function (data, status, headers, config) {
@@ -1722,6 +1825,7 @@ timApp.controller("ViewCtrl", [
                         desc: 'Edit area',
                         show: true
                     },
+                    {func: sc.nameArea, desc: 'Name area', show: true},
                     {func: sc.cutArea, desc: 'Cut area', show: true},
                     {func: sc.copyArea, desc: 'Copy area', show: true},
                     {func: sc.cancelArea, desc: 'Cancel area', show: true},
@@ -1736,7 +1840,7 @@ timApp.controller("ViewCtrl", [
                     {func: sc.cutArea, desc: 'Cut area', show: $window.editMode === 'area'},
                     {func: sc.copyArea, desc: 'Copy area', show: $window.editMode === 'area'},
                     {func: sc.showPasteMenu, desc: 'Paste...', show: $window.editMode && (sc.allowPasteRef || sc.allowPasteContent)},
-                    {func: sc.showMoveMenu, desc: 'Move here...', show: $window.editMode && sc.allowPasteContent && sc.allowPasteRef},
+                    {func: sc.showMoveMenu, desc: 'Move here...', show: $window.allowMove},
                     {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
                     {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
                     {
@@ -1786,6 +1890,7 @@ timApp.controller("ViewCtrl", [
 
         sc.allowPasteContent = true;
         sc.allowPasteRef = true;
+        $window.allowMove = false;
 
         sc.$storage = $localStorage.$default({
             defaultAction: "Show options window",
