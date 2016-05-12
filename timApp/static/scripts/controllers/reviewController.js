@@ -53,8 +53,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             var elpath = placeInfo["start"]["el_path"];
 
             for (var j = 0; j < elpath.length; j++) {
-                if (elements.children.item(elpath[j]) != null)
-                    elements = elements.children.item(elpath[j]);
+                var elementChildren = getElementChildren(elements);
+                console.log(typeof elpath[j]);
+                if (elementChildren[elpath[j]] != null)
+                    elements = elementChildren[elpath[j]];
             }
 
             var startel = elements.childNodes[placeInfo["start"]["node"]];
@@ -67,6 +69,43 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
 
         $scope.annotationsAdded = true;
+    };
+
+    var getElementChildren = function(element){
+        /*if (typeof element.children !== "undefined")
+            return element.children;
+        */
+        var children = [];
+        for (var i=0; i<element.childNodes.length; i++){
+            console.log(element.childNodes[i].tagName);
+            if (typeof element.childNodes[i].tagName !== "undefined"){
+                children.push(element.childNodes[i]);
+            }
+        }
+        return children;
+    };
+
+    var getElementParent = function(element){
+        /*
+        if (typeof element.parentElement !== "undefined")
+            return element.parentElement;
+        */
+        var parent = element.parentNode;
+        if (typeof parent.tagName !== "undefined"){
+            return parent;
+        }
+
+        getElementParent(parent);
+    };
+
+    var checkIfAnnotation = function(element){
+        if (element.nodeName == "SPAN"){
+            console.log(element);
+            console.log(element.hasAttribute("annotation"));
+            return element.hasAttribute("annotation");
+        }
+
+        return false;
     };
 
     /**
@@ -236,15 +275,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.useVelp = function (velp) {
         if (typeof $scope.selectedArea != "undefined") {
 
-            var parelement = $scope.selectedArea["commonAncestorContainer"].parentElement;
-            var startElement = $scope.selectedArea["startContainer"].parentElement;
+            var parelement = getElementParent($scope.selectedArea["commonAncestorContainer"]);
+            var startElement = getElementParent($scope.selectedArea["startContainer"]);
 
             var innerDiv = document.createElement('div');
             var cloned = $scope.selectedArea.cloneContents();
             innerDiv.appendChild(cloned);
 
             while (!parelement.hasAttribute("t")) {
-                parelement = parelement.parentElement;
+                parelement = getElementParent(parelement);
             }
 
             var element_path = getElementPositionInTree(startElement, []);
@@ -311,7 +350,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @returns {*}
      */
     var getAnswerInfo = function (start){
-        var myparent = start.parentElement;
+        var myparent = getElementParent(start);
 
         if (myparent.tagName == "ANSWERBROWSER") {
             return angular.element(myparent).isolateScope();
@@ -330,24 +369,27 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @returns {*}
      */
     var getElementPositionInTree = function (start, array) {
-        var myparent = start.parentElement;
+        var myparent = getElementParent(start);
 
         if (myparent.hasAttribute("t")) {
             return array.reverse();
         }
 
         var count = 0;
-        for (var i = 0; i < myparent.children.length; i++) {
 
-            if (myparent.children[i] == start) {
+        var children = getElementChildren(myparent);
+        for (var i = 0; i < children.length; i++) {
+
+            if (children[i] == start) {
                 array.push(count);
                 return getElementPositionInTree(myparent, array);
             }
 
-            if (myparent.children[i].nodeName == "ANNOTATION") {
-                var innerElements = myparent.children[i].getElementsByClassName("highlighted")[0];
-                if (innerElements.children.length > 2) {
-                    count += innerElements.children.length - 2;
+            if (checkIfAnnotation(children[i])) {
+                var innerElements = children[i].getElementsByClassName("highlighted")[0];
+                var innerChildren = getElementChildren(innerElements);
+                if (innerChildren.length > 2) {
+                    count += innerChildren.length - 2;
                 }
                 continue;
             }
@@ -372,7 +414,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         while (el.previousSibling != null) {
             el = el.previousSibling;
-            if (el.nodeName == "ANNOTATION") {
+            if (checkIfAnnotation(el)) {
 
                 var innerElements = el.getElementsByClassName("highlighted")[0];
                 storedOffset += innerElements.lastChild.innerHTML.length;
@@ -401,6 +443,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     var getNodeNumbers = function (el, aid, innerElement) {
         var parent = el;
+        while(parent.nodeName == "#text"){
+            parent = parent.parentNode;
+        }
         var num = 0;
 
         var prevNodeName = parent.childNodes[0].nodeName;
@@ -408,7 +453,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         for (var i = 0; i < parent.childNodes.length; i++) {
 
-            if (parent.childNodes[i].nodeName == "ANNOTATION") {
+            if (checkIfAnnotation(parent.childNodes[i])) {
 
                 if (parseInt(parent.childNodes[i].getAttribute("aid")) === aid) {
 
@@ -418,6 +463,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                     if (innerElement.firstChild.nodeName == prevNodeName) num--;
                     if (i < parent.childNodes.length - 1 && innerElement.lastChild.nodeName == parent.childNodes[i + 1].nodeName) num--;
 
+                    if (startnum < 0) startnum = 0;
                     return [startnum, num];
 
                 } else {
@@ -457,9 +503,18 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @returns {Element}
      */
     $scope.createPopOverElement = function (annotation, show) {
-        var element = document.createElement('annotation');
+        var element = document.createElement('span');
+        element.setAttribute("annotation", "");
+        element.classList.add("annotationElement");
+        var velp_data = $scope.getVelpById(annotation.velp);
+        var velp_content;
 
-        var velp_content = String($scope.getVelpById(annotation.velp).content);
+        if (velp_data !== null){
+            velp_content = velp_data.content;
+        } else {
+            velp_content = annotation.content;
+        }
+
         element.setAttribute("velp", velp_content);
 
         element.setAttribute("points", annotation.points);

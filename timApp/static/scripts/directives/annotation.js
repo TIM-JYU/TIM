@@ -23,8 +23,14 @@ timApp.directive("annotation", function() {
     }
 });
 
-timApp.controller('AnnotationController', ['$scope', '$timeout', function ($scope, $timeout){
+timApp.controller('AnnotationController', ['$scope', '$element', function ($scope, $element){
     $scope.newComment = "";
+
+    $scope.$watch('show', function () {
+        $element.hide();
+        $element.show();
+    });
+
 
     /**
      * Toggle annotation visibility

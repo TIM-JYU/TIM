@@ -252,7 +252,7 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 
 /* Annotation styles */
 
-annotation {
+.annotationElement {
     position: relative;
     display: inline;
 }
@@ -316,21 +316,21 @@ annotation {
     resize: vertical;
 }
 
-#annTable {
+.annTable {
     margin-left: 0;
     text-align: left;
 }
 
-#annTable td {
+.annTable td {
     border: hidden;
 }
 
-#annqmark {
+.annqmark {
     margin-left: 0.6em;
     margin-top: 0.1em;
 }
 
-#closeAnn {
+.closeAnn {
     float: right;
 }
 
