@@ -1,4 +1,4 @@
-<div ng-controller="QuestionPreviewController" class="popUpWindow">
+<div ng-controller="QuestionPreviewController" class="popUpWindow questionPopUp">
     <div class="questionPreview">
         <div id="questionTypeAndTimeLimit">
             <span>Time limit:</span>
@@ -9,9 +9,9 @@
         <dynamic-answer-sheet preview="true" control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
     </div>
     <div class="buttons">
+        <button ng-click='deleteQuestion()' class="timButton questionButton deleteButton">Delete</button>
         <button ng-show='inLecture' ng-click='ask()' class='timButton questionButton'>Ask</button>
         <button ng-click='editQuestion()' class='timButton questionButton'>Edit</button>
-        <!--        <button ng-click='deleteQuestion()' class="timButton questionButton">Delete</button> -->
         <button ng-click='close()' class='timButton questionButton'>Close</button>
     </div>
 </div>

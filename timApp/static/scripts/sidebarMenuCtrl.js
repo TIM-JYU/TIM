@@ -30,6 +30,8 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 		$scope.questionIconState = 'noClick';
 		$scope.peopleIconState = 'noClick';
 		$scope.settingsIconState = 'noClick';
+        $scope.parEditIconState = $window.editMode === 'par' ? 'clicked': 'noClick';
+        $scope.areaEditIconState = $window.editMode === 'area' ? 'clicked': 'noClick';
 
         /**
          * FILL WITH SUITABLE TEXT
@@ -64,6 +66,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 			$scope.questionIconState = 'noClick';
 			$scope.peopleIconState = 'noClick';
 			$scope.settingsIconState = 'noClick';
+            $scope.parEditIconState = 'noClick';
         });
 
         /**
@@ -86,6 +89,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 				$scope.questionIconState = 'noClick';
 				$scope.peopleIconState = 'noClick';
 				$scope.settingsIconState = 'noClick';
+                $scope.parEditIconState = 'noClick';
             }
         };
 
@@ -110,6 +114,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 				$scope.questionIconState = 'noClick';
 				$scope.peopleIconState = 'noClick';
 				$scope.settingsIconState = 'noClick';
+                $scope.parEditIconState = 'noClick';
 
                 $http({
                     url: '/getAllLecturesFromDocument',
@@ -152,6 +157,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 				$scope.questionIconState = 'clicked';
 				$scope.peopleIconState = 'noClick';
 				$scope.settingsIconState = 'noClick';
+                $scope.parEditIconState = 'noClick';
 
                 $http({
                     url: '/questions/' + $scope.docId,
@@ -193,6 +199,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 				$scope.questionIconState = 'noClick';
 				$scope.peopleIconState = 'clicked';
 				$scope.settingsIconState = 'noClick';
+                $scope.parEditIconState = 'noClick';
             }
         };
 
@@ -216,6 +223,76 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 				$scope.questionIconState = 'noClick';
 				$scope.peopleIconState = 'noClick';
 				$scope.settingsIconState = 'clicked';
+            }
+        };
+
+        $scope.enable_par_edit = function () {
+            $('.editline-disabled').removeClass('editline-disabled').addClass('editline');
+        };
+
+        $scope.disable_par_edit = function () {
+            $('.editline').removeClass('editline').addClass('editline-disabled');
+        };
+
+        $scope.enable_area_edit_active = function () {
+            $('.areaeditline-disabled').removeClass('areaeditline-disabled').addClass('areaeditline');
+            $('.areaeditline').addClass('areaeditline-show');
+        };
+
+        $scope.enable_area_edit_passive = function () {
+            $('.areaeditline-disabled').removeClass('areaeditline-disabled').addClass('areaeditline');
+            $('.areaeditline-show').removeClass('areaeditline-show');
+        };
+
+        $scope.disable_area_edit = function () {
+            $('.areaeditline').removeClass('areaeditline').addClass('areaeditline-disabled');
+            $('.areaeditline-show').removeClass('areaeditline-show');
+        };
+
+        /**
+         * Changes into or out of paragraph edit mode.
+         * @memberof module:sidebarMenuCtrl
+         */
+        $scope.toggleParEditMode = function () {
+            $scope.enable_par_edit();
+            $('.editmode').removeClass('editmode');
+
+            if ($window.editMode === "par") {
+                $scope.parEditIconState = 'noClick';
+                $scope.areaEditIconState = 'noClick';
+                $window.editMode = null;
+                $scope.enable_area_edit_passive();
+            } else {
+                $scope.parEditIconState = 'clicked';
+                $scope.areaEditIconState = 'noClick';
+                $window.editMode = "par";
+                $scope.disable_area_edit();
+                $('.par').addClass('editmode');
+            }
+        };
+
+        /**
+         * Changes into or out of area edit mode.
+         * @memberof module:sidebarMenuCtrl
+         */
+        $scope.toggleAreaEditMode = function () {
+            $('.editmode').removeClass('editmode');
+
+            if ($window.editMode === "area") {
+                $('.editline-disabled').removeClass('editline-disabled').addClass('editline');
+                $scope.parEditIconState = 'noClick';
+                $scope.areaEditIconState = 'noClick';
+                $window.editMode = null;
+                $scope.enable_par_edit();
+                $scope.enable_area_edit_passive();
+            } else {
+                $('.editline').removeClass('editline').addClass('editline-disabled');
+                $scope.parEditIconState = 'noClick';
+                $scope.areaEditIconState = 'clicked';
+                $window.editMode = "area";
+                $scope.disable_par_edit();
+                $scope.enable_area_edit_active();
+                $('.area').addClass('editmode');
             }
         };
 

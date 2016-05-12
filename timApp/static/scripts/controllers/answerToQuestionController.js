@@ -27,6 +27,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
         $scope.previousAnswer = args.answer;
         $scope.askedId = args.askedId;
         $scope.questionId = args.questionId;
+        $scope.questionParId = args.questionParId;
         $scope.isLecturer = args.isLecturer;
         $scope.json = args.questionJson;
         $scope.questionTitle = args.questionJson.TITLE;
@@ -141,6 +142,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
         $scope.$emit('askQuestion', {
             "lecture_id": $scope.lectureId,
             "asked_id": $scope.askedId,
+            "par_id": $scope.questionParId,
             "question_id": $scope.questionId,
             "doc_id": $scope.docId,
             "json": $scope.json,
@@ -152,6 +154,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
         $scope.$emit('askQuestion', {
             "lecture_id": $scope.lectureId,
             "question_id": $scope.questionId,
+            "par_id": $scope.questionParId,
             "doc_id": $scope.docId,
             "json": $scope.json,
             "expl": $scope.expl
