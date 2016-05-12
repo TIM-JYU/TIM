@@ -54,7 +54,9 @@ def get_velps(document_id: int, paragraph_id: str) -> str:
 
     velp_data = timdb.velps.get_document_velps(doc_id)
     # print(velp_data) # TODO Just for checking, delete later
-    return jsonResponse(velp_data)
+    response=jsonResponse(velp_data)
+    response.headers['Cache-Control']='no-store, no-cache, must-revalidate'
+    return response
 
 
 @velps.route("/<document_id>/getvelpgrouplocations", methods=['GET'])
