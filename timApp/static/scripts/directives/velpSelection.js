@@ -14,7 +14,7 @@ var colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "cornflowerb
  * Angular directive for velp selection
  */
 timApp.directive('velpSelection', function () {
-    return{
+    return {
         templateUrl: "/static/templates/velpSelection.html",
         controller: 'VelpSelectionController'
     }
@@ -29,8 +29,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     // Data
     $scope.orderVelp = 'label';
     $scope.advancedOn = false;
-    $scope.newVelp = {content: "", points: "", labels: [], edit: false, id:-2};
-    $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id:-1};
+    $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2};
+    $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};
     $scope.newLabel = {content: "", selected: true, edit: false};
     $scope.labelToEdit = {content: "", selected: false, edit: false};
     $scope.selectedLabels = [];
@@ -51,7 +51,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     // $scope.filteredVelpCount = 0;
 
     // Get velp and annotation data
-    $http.get('/{0}/{1}/velps'.replace('{0}',doc_id).replace('{1}', par)).success(function (data) {
+    $http.get('/{0}/{1}/velps'.replace('{0}', doc_id).replace('{1}', par)).success(function (data) {
         $scope.velps = data;
         $scope.velps.forEach(function (v) {
             v.used = 0;
@@ -78,14 +78,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         });
         /*
-        $http.get('/{0}/defaultvelpgroup'.replace('{0}', doc_id)).success(function (data){
-            console.log(data[0].id);
-            default_velp_group = data[0].id;
-        });*/
+         $http.get('/{0}/defaultvelpgroup'.replace('{0}', doc_id)).success(function (data){
+         console.log(data[0].id);
+         default_velp_group = data[0].id;
+         });*/
     });
 
     // Get label data
-    $http.get('/{0}/labels'.replace('{0}',doc_id)).success(function (data) {
+    $http.get('/{0}/labels'.replace('{0}', doc_id)).success(function (data) {
         $scope.labels = data;
         $scope.labels.forEach(function (l) {
             l.edit = false;
@@ -127,12 +127,12 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.toggleLabel = function (label) {
         label.selected = !label.selected;
         var labelIndex = $scope.selectedLabels.indexOf(label.id);
-        if (labelIndex < 0){
+        if (labelIndex < 0) {
             $scope.selectedLabels.push(label.id);
         } else {
             $scope.selectedLabels.splice(labelIndex, 1);
         }
-        if ($scope.velpToEdit.edit){
+        if ($scope.velpToEdit.edit) {
             $scope.velpToEdit.labels = $scope.selectedLabels;
         }
     };
@@ -141,8 +141,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
      * lock velps in list
      * @param velps velps to lock
      */
-    $scope.lockVelps = function(velps) {
-        if (!$scope.velpToEdit.edit){
+    $scope.lockVelps = function (velps) {
+        if (!$scope.velpToEdit.edit) {
             $scope.lockedVelps = velps;
         }
     };
@@ -158,7 +158,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
      * Get correct CSS-style for advanced view
      * @returns {*}
      */
-    $scope.getAdvancedStyle = function(){
+    $scope.getAdvancedStyle = function () {
         if (!$scope.advancedOn)
             return "hide";
         return "";
@@ -168,7 +168,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
      * Adds new label
      * @param form form information
      */
-    $scope.addLabel = function(form){
+    $scope.addLabel = function (form) {
         var valid = form.$valid;
         $scope.labelAdded = true;
         if (!valid) return;
@@ -193,7 +193,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
      * Adds new velp on form submit
      * @param form form information
      */
-    $scope.addVelp = function(form) {
+    $scope.addVelp = function (form) {
         var valid = form.$valid;
         $scope.submitted = true;
         if (!valid) return;
@@ -222,7 +222,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     };
 
 
-    $scope.deselectLabels = function(){
+    $scope.deselectLabels = function () {
         for (var i = 0; i < $scope.labels.length; i++) {
             if ($scope.labels[i].selected) {
                 $scope.toggleLabel($scope.labels[i]);
@@ -230,8 +230,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         }
     };
 
-    $scope.selectLabelToEdit = function(label){
-        if (label.id == $scope.labelToEdit.id){
+    $scope.selectLabelToEdit = function (label) {
+        if (label.id == $scope.labelToEdit.id) {
             label.edit = false;
             $scope.labelToEdit = {content: "", selected: false, edit: false};
             return;
@@ -239,8 +239,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         if ($scope.labelToEdit.edit) {
             $scope.labelTo.edit = false;
-            for (var i=0; i<$scope.labels.length; i++){
-               $scope.labels[i].edit = false;
+            for (var i = 0; i < $scope.labels.length; i++) {
+                $scope.labels[i].edit = false;
             }
         }
 
@@ -248,10 +248,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         $scope.labelToEdit = Object.create(label);
     };
 
-    $scope.selectVelpToEdit = function(velp){
+    $scope.selectVelpToEdit = function (velp) {
 
 
-        if (velp.id == $scope.velpToEdit.id){
+        if (velp.id == $scope.velpToEdit.id) {
             velp.edit = false;
             $scope.velpToEdit = {content: "", points: "", labels: [], edit: false};
             return
@@ -259,8 +259,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         if ($scope.velpToEdit.edit) {
             $scope.velpToEdit.edit = false;
-            for (var i=0; i<$scope.velps.length; i++){
-               $scope.velps[i].edit = false;
+            for (var i = 0; i < $scope.velps.length; i++) {
+                $scope.velps[i].edit = false;
             }
             $scope.newVelp.edit = false;
         }
@@ -269,15 +269,15 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         $scope.velpToEdit = Object.create(velp);
 
         /*
-        if (velp.labels !== undefined) {
-            for (var i = 0; i < velp.labels.length; i++) {
-                $scope.toggleLabel($scope.getLabelById(velp.labels[i]));
-            }
-        }
-        */
+         if (velp.labels !== undefined) {
+         for (var i = 0; i < velp.labels.length; i++) {
+         $scope.toggleLabel($scope.getLabelById(velp.labels[i]));
+         }
+         }
+         */
     };
 
-    $scope.editVelp = function(form){
+    $scope.editVelp = function (form) {
         var valid = form.$valid;
         $scope.submitted = true;
         if (!valid) return;
@@ -285,8 +285,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         // Form is valid
         form.$setPristine();
 
-        for (var i=0; i<$scope.velps.length; i++){
-            if ($scope.velps[i].id == $scope.velpToEdit.id){
+        for (var i = 0; i < $scope.velps.length; i++) {
+            if ($scope.velps[i].id == $scope.velpToEdit.id) {
                 $scope.velps[i] = $scope.velpToEdit;
                 $scope.velps[i].edit = false;
                 $scope.velps[i].labels = $scope.selectedLabels.slice(0);
@@ -294,9 +294,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             }
         }
         /*
-        $scope.makePostRequest("/editvelp", form, function () {
-        });
-        */
+         $scope.makePostRequest("/editvelp", form, function () {
+         });
+         */
         $scope.deselectLabels();
     };
 
@@ -305,8 +305,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
      * @param id velp to find
      * @returns velp or undefined
      */
-    $scope.getLabelById = function(id){
-        for (var i=0; i<$scope.labels.length; i++)
+    $scope.getLabelById = function (id) {
+        for (var i = 0; i < $scope.labels.length; i++)
             if ($scope.labels[i].id == id)
                 return $scope.labels[i];
 
@@ -316,22 +316,22 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     /**
      * Reset new velp information
      */
-    $scope.resetNewVelp = function(){
-        $scope.newVelp = {content: "", points: "", labels: [], edit: false, id:-2};
+    $scope.resetNewVelp = function () {
+        $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2};
     };
 
     /**
      * Reset new label information
      */
-    $scope.resetNewLabel = function(){
+    $scope.resetNewLabel = function () {
         $scope.newLabel = {"content": "", "selected": true};
     };
 
     /**
      * Set all labels not selected
      */
-    $scope.resetLabels = function() {
-        for (var i=0;i<$scope.labels.length; i++)
+    $scope.resetLabels = function () {
+        for (var i = 0; i < $scope.labels.length; i++)
             $scope.labels[i].selected = false;
     };
 
@@ -384,14 +384,16 @@ timApp.filter('filterByLabels', function () {
         var selectedArray = [];
         var returnVelps = [];
 
-        for (var sv in selectedVelps){
+        for (var sv in selectedVelps) {
             if (selectedVelps.hasOwnProperty(sv))
                 selectedArray.push(selectedVelps[sv]);
         }
 
-        selectedArray.sort(function(a, b) {return b[1] - a[1]});
+        selectedArray.sort(function (a, b) {
+            return b[1] - a[1]
+        });
 
-        for (var i=0; i<selectedArray.length; i++)
+        for (var i = 0; i < selectedArray.length; i++)
             returnVelps.push(selectedArray[i][0]);
 
         return returnVelps;

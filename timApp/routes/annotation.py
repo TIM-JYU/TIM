@@ -54,28 +54,15 @@ def add_annotation() -> str:
     # .get() returns None if there is no data instead of throwing.
     points = json_data.get('points')
     icon_id = json_data.get('icon_id')
-
-    # Now ensure that the data is good for either an answer or a paragraph target.
     answer_id = json_data.get('answer_id')
-    if answer_id is None:
-        try:
-            paragraph_id_start = start['par_id']
-            hash_start = start['t']
-            paragraph_id_end = end['par_id']
-            hash_end = end['t']
-        except KeyError as e:
-            abort(400, "Missing data: " + e.args[0])
-    else:
-        paragraph_id_start = start.get('par_id')
-        hash_start = start.get('t')
-        paragraph_id_end = end.get('par_id')
-        hash_end = start.get('t')
-        some_paragraph_data_present = paragraph_id_start is not None
-        some_paragraph_data_present = hash_start is not None or some_paragraph_data_present
-        some_paragraph_data_present = paragraph_id_end is not None or some_paragraph_data_present
-        some_paragraph_data_present = hash_end is not None or some_paragraph_data_present
-        #if some_paragraph_data_present:
-        #    abort(400, "Both answer_id and paragraph data present.")
+
+    try:
+        paragraph_id_start = start['par_id']
+        hash_start = start['t']
+        paragraph_id_end = end['par_id']
+        hash_end = end['t']
+    except KeyError as e:
+        abort(400, "Missing data: " + e.args[0])
 
     annotator_id = getCurrentUserId()
     velp_version = timdb.velps.get_latest_velp_version(velp_id)
@@ -147,7 +134,9 @@ def get_annotations(document_id: int) -> str:
 
     results = timdb.annotations.get_annotations_in_document(getCurrentUserId(), user_teacher, user_owner,
                                                             int(document_id))
-    return jsonResponse(results)
+    response=jsonResponse(results)
+    response.headers['Cache-Control']='no-store, no-cache, must-revalidate'
+    return response
 
 
 # TODO decide whether we should instead return comments for just one annotation, instead of returning everything at
