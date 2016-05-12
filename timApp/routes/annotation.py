@@ -134,7 +134,9 @@ def get_annotations(document_id: int) -> str:
 
     results = timdb.annotations.get_annotations_in_document(getCurrentUserId(), user_teacher, user_owner,
                                                             int(document_id))
-    return jsonResponse(results)
+    response=jsonResponse(results)
+    response.headers['Cache-Control']='no-store, no-cache, must-revalidate'
+    return response
 
 
 # TODO decide whether we should instead return comments for just one annotation, instead of returning everything at
