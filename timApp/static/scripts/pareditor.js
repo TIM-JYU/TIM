@@ -649,6 +649,20 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     }
                 };
 
+                $scope.cancelPluginRenameClicked = function () {
+                    $http.post('/cancelChanges/', angular.extend({
+                        newPars: $scope.newPars,
+                        originalPar: $scope.originalPar,
+                        docId: $scope.extraData.docId,
+                        parId: $scope.extraData.par
+                    }, $scope.extraData)).success(function (data, status, headers, config) {
+                        $element.find("#pluginRenameForm").get(0).remove();
+                        $scope.renameFormShowing = false;
+                    }).error(function (data, status, headers, config) {
+                        $window.alert("Failed to cancel save: " + data.error);
+                    });
+                };
+
                 $scope.renameTaskNamesClicked = function (inputs, duplicates, renameDuplicates) {
                     // A list of duplicate task names and possible new names
                     if (typeof renameDuplicates === 'undefined' || renameDuplicates === false) {
@@ -716,6 +730,9 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 };
 
                 $scope.saveClicked = function () {
+                    if ($scope.renameFormShowing) {
+                        $scope.renameTaskNamesClicked($scope.inputs, $scope.duplicates, true);
+                    }
                     if ($scope.previewReleased) {
                         $scope.savePreviewData(true);
                     } else $scope.savePreviewData(false);
@@ -726,6 +743,12 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         if (data.duplicates.length > 0) {
                             $scope.data = data;
                             $scope.createPluginRenameForm(data);
+                            if (data.original_par !== 'undefined') {
+                                $scope.originalPar = data.original_par;
+                            }
+                            if (data.new_par_ids !== 'undefined') {
+                                $scope.newPars = data.new_par_ids;
+                            }
                         }
                         if (data.duplicates.length <= 0) {
                             $scope.afterSave({
@@ -776,6 +799,15 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     for(var i = 0; i < data.duplicates.length; i++) {
                         span = $("<span>");
                         span.css('display', 'block');
+                        var $warningSpan = $("<span>", {
+                            class: "pluginRenameExclamation",
+                            text: "!",
+                            title: "There are answers related to this task. Those answers might be lost upon renaming this task."
+                        });
+                        if (data.duplicates[i][2] != 'hasAnswers') {
+                            $warningSpan.css('visibility', 'hidden');
+                        }
+                        span.append($warningSpan);
                         span.append($("<label>", {
                             class: "pluginRenameObject",
                             text: data.duplicates[i][0],
@@ -794,7 +826,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     $buttonDiv.append($("<button>", {
                         class: 'timButton, pluginRenameObject',
                         text: "Save",
-                        title: "Rename task names with given names",
+                        title: "Rename task names with given names (Ctrl + S)",
                         'ng-click': "renameTaskNamesClicked(inputs, duplicates, true)",
                     }));
                     $buttonDiv.append($("<button>", {
@@ -809,11 +841,26 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         title: "Proceed without renaming",
                         'ng-click': "renameTaskNamesClicked(undefined, undefined, false)",
                     }));
+                    $buttonDiv.append($("<button>", {
+                        class: 'timButton, pluginRenameObject',
+                        text: "Cancel",
+                        title: "Return to editor",
+                        'ng-click': "cancelPluginRenameClicked()",
+                    }));
                     $actionDiv.append($form);
                     $actionDiv.append($buttonDiv);
                     $actionDiv = $compile($actionDiv)($scope);
                     $editorTop.append($actionDiv);
-                    $scope.wrapFn();
+                    $scope.inputs[0].focus();
+                    $scope.pluginRenameForm = $actionDiv;
+                    $scope.pluginRenameForm.keydown( function(e) {
+                        if (e.ctrlKey) {
+                            if (e.keyCode === 83) {
+                                $scope.renameTaskNamesClicked($scope.inputs, $scope.duplicates, true);
+                                e.preventDefault();
+                            }
+                        }
+                    });
                 };
 
                 $scope.selectLine = function (select) {

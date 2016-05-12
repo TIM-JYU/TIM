@@ -82,7 +82,7 @@ def update_document(doc_id):
                                                      new_properties=old_pars[i].get_properties())
             i += 1
         doc = get_newest_document(doc_id)
-        duplicates = check_duplicates(doc.get_paragraphs(), doc)
+        duplicates = check_duplicates(doc.get_paragraphs(), doc, timdb)
 
     except ValidationWarning as e:
         return jsonResponse({'error': str(e), 'is_warning': True}, status_code=400)
@@ -155,7 +155,7 @@ def rename_task_ids():
                             update_cache=current_app.config['IMMEDIATE_PRELOAD'])
     else:
         doc = get_newest_document(doc_id)
-        duplicates = check_duplicates(pars, doc)
+        duplicates = check_duplicates(pars, doc, timdb)
         chg = doc.get_changelog()
         for ver in chg:
             ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
@@ -192,6 +192,7 @@ def modify_paragraph():
         return abort(400, str(e))
 
     editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
+    new_par_ids = []
 
     if editing_area:
         try:
@@ -210,6 +211,7 @@ def modify_paragraph():
         is_multi_block = len(separate_pars) > 1
         has_headers = None
         if is_multi_block:
+            new_par_ids = []
             for separate_par in separate_pars:
                 if separate_par['type'] == 'header':
                     has_headers = True
@@ -239,6 +241,7 @@ def modify_paragraph():
             [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs(),
                                                      properties=properties)
             pars.append(par)
+            new_par_ids.append(par.get_id())
 
         updated_md = doc.export_section(pars[0].get_id(), pars[len(pars) - 1].get_id())
 
@@ -255,6 +258,8 @@ def modify_paragraph():
 
     return par_response(pars,
                         doc,
+                        original_par,
+                        new_par_ids,
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'])
 
 
@@ -292,7 +297,7 @@ def preview(doc_id):
         return jsonResponse({'texts': md_to_html(text), 'js': [], 'css': []})
 
 
-def par_response(blocks, doc, edit_window=False, update_cache=False, context_par=None):
+def par_response(blocks, doc, original_par=None, new_par_ids=None, edit_window=False, update_cache=False, context_par=None):
     if update_cache:
         changed_pars = DocParagraph.preload_htmls(doc.get_paragraphs(),
                                                   doc.get_settings(),
@@ -301,7 +306,11 @@ def par_response(blocks, doc, edit_window=False, update_cache=False, context_par
         changed_pars = []
         DocParagraph.preload_htmls(blocks, doc.get_settings(), context_par=context_par, persist=update_cache)
 
-    duplicates = check_duplicates(blocks, doc)
+    # Do not check for duplicates for preview because the operation is heavy
+    if not edit_window:
+        duplicates = check_duplicates(blocks, doc, getTimDb())
+    else:
+        duplicates = None
 
     current_user = get_current_user()
     pars, js_paths, css_paths, modules = post_process_pars(doc, blocks, current_user, edit_window=edit_window)
@@ -321,7 +330,10 @@ def par_response(blocks, doc, edit_window=False, update_cache=False, context_par
                                                                    rights=get_rights(doc.doc_id)) for p in
                                           changed_pars},
                          'version': doc.get_version(),
-                         'duplicates': duplicates})
+                         'duplicates': duplicates,
+                         'original_par': original_par,
+                         'new_par_ids': new_par_ids
+                         })
 
 
 def get_pars_from_editor_text(doc, text, break_on_elements=False):
@@ -438,7 +450,7 @@ def check_and_rename_pluginnamehere(blocks, doc):
 
 
 # Check new paragraphs with plugins for duplicate task ids
-def check_duplicates(pars, doc):
+def check_duplicates(pars, doc, timdb):
     duplicates = []
     all_pars = doc.get_paragraphs()
     for paragraph in all_pars:
@@ -457,6 +469,9 @@ def check_duplicates(pars, doc):
                         if count_of_same_task_ids > 1:
                             duplicate.append(task_id)
                             duplicate.append(par.get_id())
+                            task_id_to_check = str(doc.doc_id) + "." + task_id
+                            if timdb.answers.check_if_plugin_has_answers(task_id_to_check) == 1:
+                                duplicate.append('hasAnswers')
                             duplicates.append(duplicate)
                             break
                     j += 1
@@ -476,6 +491,28 @@ def mark_pars_as_read_if_chosen(pars, doc):
     if mark_read:
         for p in pars:
             timdb.readings.setAsRead(getCurrentUserGroup(), doc, p)
+
+
+@edit_page.route("/cancelChanges/", methods=["POST"])
+def cancel_save_paragraphs():
+    timdb = getTimDb()
+    doc_id, original_par, new_pars, par_id = verify_json_params('docId', 'originalPar', 'newPars', 'parId')
+    verify_edit_access(doc_id)
+    doc = get_newest_document(doc_id)
+    if len(new_pars) > 0:
+        for new_par in new_pars:
+            if not doc.has_paragraph(new_par):
+                continue
+            else:
+                timdb.documents.delete_paragraph(doc, new_par)
+    if original_par:
+        timdb.documents.modify_paragraph(doc=doc,
+                                         par_id=par_id,
+                                         new_content=original_par.get('md'),
+                                         new_attrs=original_par.get('attrs'),
+                                         new_properties=original_par.get('props'))
+
+    return jsonResponse({"status": "cancel"})
 
 
 @edit_page.route("/newParagraph/", methods=["POST"])
@@ -499,6 +536,7 @@ def add_paragraph():
     separate_pars = DocumentParser(md).get_blocks()
     is_multi_block = len(separate_pars) > 1
     has_headers = None
+    new_par_ids = []
     if is_multi_block:
         for separate_par in separate_pars:
             if separate_par['type'] == 'header':
@@ -513,6 +551,7 @@ def add_paragraph():
         [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs(),
                                                  properties=properties)
         pars.append(par)
+        new_par_ids.append(par.get_id())
     mark_pars_as_read_if_chosen(pars, doc)
 
     notify_doc_owner(doc_id,
@@ -520,7 +559,7 @@ def add_paragraph():
                      '[user_name] has added a new paragraph on your document [doc_url]\n\n{}'.format(md),
                      setting="doc_modify", par_id=pars[0].get_id() if len(pars) > 0 else None)
 
-    return par_response(pars, doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'])
+    return par_response(pars, doc, None, new_par_ids, update_cache=current_app.config['IMMEDIATE_PRELOAD'])
 
 
 @edit_page.route("/deleteParagraph/<int:doc_id>", methods=["POST"])

@@ -102,6 +102,17 @@ p.caption {
     margin-top: 15px;
 }
 
+.pluginRenameExclamation {
+    background-color: #cc0000;
+    border: 2px solid #00001a;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: bold;
+    display: inline-block;
+    min-width: 1.5em;
+    max-height: 1.4em;
+}
+
 table th {
     background-color: #dedede;
 }
