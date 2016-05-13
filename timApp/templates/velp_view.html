@@ -1,9 +1,12 @@
 <link rel="stylesheet" href="/static/stylesheets/velpSelection.css"/>
 
-<div id="pars" ng-click="selectText()" class="col-sm-9">
+<div id="pars" ng-click="selectText()">
     {% include 'paragraphs.html' %}
+    {% if rights.editable %}
+        <div class="addBottomContainer">
+            <button class="addBottom timButton">Add paragraph</button>
+        </div>
+    {% endif %}
 </div>
-<div class="col-sm-3">
 <velp-selection id="velpMenu"></velp-selection>
 <!-- velp-summary></velp-summary -->
-</div>

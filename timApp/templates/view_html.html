@@ -185,7 +185,9 @@
                 {% include 'velp_view.html' %}
             </div>
         {% else %}
-            {% include 'view_content.html' %}
+            <div ng-controller="ReviewController">
+                {% include 'view_content.html' %}
+            </div>
         {% endif %}
     </div>
     <p id="test"></p>

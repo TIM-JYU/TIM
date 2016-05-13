@@ -42,12 +42,19 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         for (var i = 0; i < $scope.annotations.length; i++) {
 
-            if ($scope.annotations[i].answer_id !== null)
-                continue;
-
             var placeInfo = $scope.annotations[i]["coord"];
+            var parent = document.getElementById(placeInfo["start"]["par_id"]);
 
-            var elements = document.getElementById(placeInfo["start"]["par_id"]).querySelector(".parContent");
+            if ($scope.annotations[i].answer_id !== null){
+                if (!parent.classList.contains("has-annotation")){
+                    parent.classList.add("has-annotation");
+                    console.log("added v");
+                }
+                continue;
+            }
+
+
+            var elements = parent.querySelector(".parContent");
 
             // Find element
             var elpath = placeInfo["start"]["el_path"];
@@ -132,12 +139,13 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param answer_id
      */
     $scope.loadAnnotationsToAnswer = function(answer_id, par_id){
+        var par = document.getElementById(par_id);
         var annotations = $scope.getAnnotationsByAnswerId(answer_id);
-        console.log(answer_id);
+
         for (var i = 0; i < annotations.length; i++) {
             var placeInfo = annotations[i]["coord"];
 
-            var element = document.getElementById(par_id).getElementsByTagName("PRE")[0].firstChild;
+            var element = par.getElementsByTagName("PRE")[0].firstChild;
             console.log(element);
             var range = document.createRange();
             range.setStart(element, placeInfo["start"]["offset"]);
@@ -153,6 +161,13 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             if (a.answer_id !== null && a.answer_id === id)
                 annotations.push(a);
         });
+
+        annotations.sort(function (a, b) {
+            console.log(b);
+            console.log(a);
+            return b.coord.start.offset - a.coord.start.offset;
+        });
+
         return annotations;
     };
 
@@ -165,11 +180,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     var addAnnotationToCoord = function (range, annotation, show) {
         var span = $scope.createPopOverElement(annotation, show);
         try {
-            console.log(range);
             range.surroundContents(span);
         } catch (err) {
             // TODO: Add annotation to the "club of missing velps"
+            console.log(err);
             var new_range = document.createRange();
+
             var el = range.startContainer;
             var start = range.startOffset;
             var end = range.startContainer.parentNode.innerHTML.length - 1;
@@ -177,7 +193,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             new_range.setStart(el, start);
             new_range.setEnd(el, end);
             addAnnotationToCoord(new_range, annotation, show);
-
         }
 
         $compile(span)($scope); // Gives error [$compile:nonassign]
@@ -316,7 +331,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             var newAnnotation = {
                 id: -($scope.annotations.length + 1),
                 velp: velp.id,
-                points: parseInt(velp.points),
+                points: velp.points,
                 doc_id: $scope.docId,
                 visible_to: 4,
                 coord: {
