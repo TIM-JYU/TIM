@@ -97,7 +97,7 @@ def update_annotation() -> str:
         try:
             visible_to=Annotations.AnnotationVisibility(visible_to)
         except ValueError as e:
-            abort(400, "Visibility should be 1, 2 ,3 or 4.")
+            abort(400, "Visibility should be 1, 2, 3 or 4.")
         new_values['visible_to'] = visible_to
     new_values['points'] = points
     timdb.annotations.update_annotation(new_values['id'], new_values['version_id'], new_values['visible_to'],
