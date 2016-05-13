@@ -254,6 +254,7 @@ class Annotations(TimDbBase):
                           WHERE Annotation.id = ?
                           """, [valid_until, annotation_id]
                            )
+        self.db.commit()
 
     def add_comment(self, annotation_id: int, commenter_id: int, content: str) -> int:
         """Adds new comment to an annotation
@@ -280,6 +281,7 @@ class Annotations(TimDbBase):
         :param document_id: Id of the document.
         :return: a list of dictionaries, each dictionary representing a single comment
         """
+        # TODO check that the user can actually see the annotations where the comments belong.
         cursor = self.db.cursor()
         cursor.execute("""
                        SELECT

@@ -84,7 +84,7 @@ def update_annotation() -> str:
     visible_to = json_data.get('visible_to')
     points = json_data.get('points')
     timdb = getTimDb()
-    #Get values from the database to fill in unchanged new values.
+    # Get values from the database to fill in unchanged new values.
     new_values = timdb.annotations.get_annotation(annotation_id)
     if not new_values:
         abort(404, "No such annotation.")
@@ -98,6 +98,25 @@ def update_annotation() -> str:
         new_values['points'] = points
     timdb.annotations.update_annotation(new_values['id'], new_values['version_id'], new_values['visible_to'],
                                         new_values['points'], new_values['icon_id'])
+    return ""
+
+
+@annotations.route("/invalidateannotation", methods=['POST'])
+def invalidate_annotation() -> str:
+    json_data=request.get_json()
+    try:
+        annotation_id=json_data['annotation_id']
+    except KeyError as e:
+        abort(400, "Missing data: "+e.args[0])
+    timdb=getTimDb()
+    annotation=timdb.annotations.get_annotation(annotation_id)
+    if not annotation:
+        abort(404, "No such annotation.")
+    annotation=annotation[0]
+    user_id=getCurrentUserId()
+    if not annotation['annotator_id']== user_id:
+        abort(403, "You are not the annotator.")
+    timdb.annotations.invalidate_annotation(annotation_id)
     return ""
 
 
@@ -134,8 +153,8 @@ def get_annotations(document_id: int) -> str:
 
     results = timdb.annotations.get_annotations_in_document(getCurrentUserId(), user_teacher, user_owner,
                                                             int(document_id))
-    response=jsonResponse(results)
-    response.headers['Cache-Control']='no-store, no-cache, must-revalidate'
+    response = jsonResponse(results)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     return response
 
 
@@ -150,5 +169,5 @@ def get_comments(document_id: int) -> str:
         abort(400, "Document_id is not a number.")
     if not timdb.documents.exists(document_id):
         abort(404, "No such document.")
-    results = timdb.annotations_comments.get_comments(int(document_id))
+    results = timdb.annotations.get_comments_in_document(document_id)
     return jsonResponse(results)
