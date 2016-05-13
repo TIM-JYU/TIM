@@ -26,14 +26,8 @@ timApp.directive("annotation", function() {
     }
 });
 
-timApp.controller('AnnotationController', ['$scope', '$element', function ($scope, $element){
+timApp.controller('AnnotationController', ['$scope', function ($scope){
     $scope.newComment = "";
-
-    $scope.$watch('show', function () {
-        $element.hide();
-        $element.show();
-    });
-
 
     /**
      * Toggle annotation visibility
@@ -68,7 +62,9 @@ timApp.controller('AnnotationController', ['$scope', '$element', function ($scop
             $scope.newComment = "";
         }
     };
-
-
+    /*
+    $scope.toggleAnnotation();
+    $scope.toggleAnnotation();
+    */
 
 }]);

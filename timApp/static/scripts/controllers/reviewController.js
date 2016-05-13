@@ -71,6 +71,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         $scope.annotationsAdded = true;
     };
 
+    /**
+     * Get children (not childNodes) of the element.
+     *
+     * @param element
+     * @returns {Array}
+     */
     var getElementChildren = function(element){
         /*if (typeof element.children !== "undefined")
             return element.children;
@@ -85,6 +91,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         return children;
     };
 
+    /**
+     * Get parent element of the given element
+     * @param element
+     * @returns {*}
+     */
     var getElementParent = function(element){
         /*
         if (typeof element.parentElement !== "undefined")
@@ -98,7 +109,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         getElementParent(parent);
     };
 
+    /**
+     * Checks if given element is an annotation
+     * @param element element to check
+     * @returns boolean
+     */
     var checkIfAnnotation = function(element){
+        if (element.nodeName == "ANNOTATION")
+            return true;
+
         if (element.nodeName == "SPAN"){
             console.log(element);
             console.log(element.hasAttribute("annotation"));
@@ -505,7 +524,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.createPopOverElement = function (annotation, show) {
         var element = document.createElement("span");
         element.setAttribute("annotation", "");
+        //element.classList.add("annotation-element");
         var velp_data = $scope.getVelpById(annotation.velp);
+
         var velp_content;
 
         if (velp_data !== null){
@@ -515,7 +536,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
 
         element.setAttribute("velp", velp_content);
-
         element.setAttribute("points", annotation.points);
         element.setAttribute("aid", annotation.id);
         element.setAttribute("user", username);

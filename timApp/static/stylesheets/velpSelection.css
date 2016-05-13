@@ -252,13 +252,9 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 
 /* Annotation styles */
 
-span {
-    display:inline;
-}
-
-.annotationElement {
-    position: relative;
+.annotation-element {
     display: inline;
+    position: relative;
 }
 
 .annotation {
