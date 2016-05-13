@@ -183,6 +183,7 @@ def modify_paragraph():
     if not doc.has_paragraph(par_id):
         abort(400, 'Paragraph not found: ' + par_id)
 
+    original_par = None
     area_start = request.get_json().get('area_start')
     area_end = request.get_json().get('area_end')
     editing_area = area_start and area_end
