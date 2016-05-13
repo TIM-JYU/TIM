@@ -623,3 +623,25 @@ def name_area(doc_id, area_name):
     doc.insert_paragraph('', insert_after_id=area_end, attrs={'area_end': area_name})
 
     return okJsonResponse()
+
+
+@edit_page.route("/unwrap_area/<int:doc_id>/<area_name>", methods=["POST"])
+def unwrap_area(doc_id, area_name):
+    verify_doc_exists(doc_id)
+    verify_edit_access(doc_id)
+    if not area_name or ' ' in area_name or '´' in area_name:
+        abort(400, 'Invalid area name')
+
+    try:
+        doc = get_newest_document(doc_id)
+        area_pars = doc.get_named_section(area_name)
+
+        # Remove the starting and ending paragraphs of the area
+        doc.delete_paragraph(area_pars[0].get_id())
+        doc.delete_paragraph(area_pars[len(area_pars) - 1].get_id())
+
+    except TimDbException as e:
+        abort(400, str(e))
+
+    return okJsonResponse()
+

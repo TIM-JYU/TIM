@@ -567,10 +567,13 @@ timApp.controller("ViewCtrl", [
                     // Disable while there are modal gui elements
                     return;
                 }
-                if (lastDownEvent && lastDownEvent.type != e.type && new Date().getTime() - lastclicktime < 500)
+                if (lastDownEvent && lastDownEvent.type != e.type && new Date().getTime() - lastclicktime < 500) {
                     // This is to prevent chaotic behavior from both mouseDown and touchStart
                     // events happening at the same coordinates
+                    console.log("Ignoring event:");
+                    console.log(e);
                     return;
+                }
 
                 downEvent = sc.fixPageCoords(e);
                 lastDownEvent = downEvent;
@@ -1793,6 +1796,25 @@ timApp.controller("ViewCtrl", [
             }
         };
 
+        sc.removeAreaMarking = function (e, $area) {
+            var area_name = sc.getAreaId($area);
+            if (!area_name) {
+                $window.alert("Could not get area name");
+            }
+
+            http.post('/unwrap_area/' + sc.docId + '/' + area_name, {
+            }).success(function (data, status, headers, config) {
+                $area.children('.areaeditline').remove();
+                $area.children().find('.areapartline').remove();
+                var $areaContent = $area.children('.areaContent');
+                $areaContent.children('[data-area-start]').remove();
+                $areaContent.unwrap();
+                $areaContent.children().unwrap();
+            }).error(function (data, status, headers, config) {
+                $window.alert(data.error);
+            });
+        };
+
         sc.nothing = function () {
         };
 
@@ -1841,6 +1863,7 @@ timApp.controller("ViewCtrl", [
                     {func: sc.copyArea, desc: 'Copy area', show: $window.editMode === 'area'},
                     {func: sc.showPasteMenu, desc: 'Paste...', show: $window.editMode && (sc.allowPasteRef || sc.allowPasteContent)},
                     {func: sc.showMoveMenu, desc: 'Move here...', show: $window.allowMove},
+                    {func: sc.removeAreaMarking, desc: 'Remove area marking', show: $window.editMode === 'area'},
                     {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
                     {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
                     {
