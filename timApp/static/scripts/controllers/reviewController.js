@@ -202,7 +202,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             return $scope.annotationids[id];
         }
         return id;
-    }
+    };
 
     /**
      * Delete annotation
@@ -227,9 +227,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 $scope.annotations.splice(a, 1);
         }
 
-        id = $scope.getRealAnnotationId($scope.annotationids[id]);
+        var current_id = $scope.getRealAnnotationId(id);
 
-        $scope.makePostRequest("/deleteannotation", id, function (json) {
+        $scope.makePostRequest("/invalidateannotation", {annotation_id: current_id}, function (json) {
             console.log(json);
         });
     };
