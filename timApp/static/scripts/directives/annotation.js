@@ -85,15 +85,17 @@ timApp.controller('AnnotationController', ['$scope', '$http', function ($scope, 
         }
         $scope.newComment = "";
 
-        var newData = {
+        $scope.original = {
             points: $scope.points,
             annotation_id: id,
-            visible_to: $scope.visible_options.value
+            visible_to: $scope.visible_options.value,
+            velp: $scope.velp,
+            comment: $scope.newComment
         };
 
-        $scope.$parent.makePostRequest("/updateannotation", newData, function(json){console.log(json);});
+        $scope.$parent.makePostRequest("/updateannotation", $scope.original, function(json){console.log(json);});
 
-        $scope.original = newData;
+
     };
 
     $scope.checkIfChanged = function(){
