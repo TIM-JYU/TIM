@@ -216,6 +216,17 @@ timApp.controller("ViewCtrl", [
             return $par.attr("id");
         };
 
+        sc.dereferencePar = function ($par) {
+            if ($par.length === 0 || !$par.hasClass('par')) {
+                return null;
+            }
+            if ($par.attr('ref-id') && $par.attr('ref-doc-id')) {
+                return [$par.attr('ref-doc-id'), $par.attr('ref-id')];
+            }
+
+            return [sc.docId, $par.attr('id')];
+        };
+
         sc.getAreaDocId = function ($area) {
             if (!$area.hasClass('area')) {
                 return null;
@@ -1654,9 +1665,9 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.cutPar = function (e, $par) {
-            var par_id = sc.getParId($par);
+            var doc_par_id = sc.dereferencePar($par);
 
-            http.post('/clipboard/cut/' + sc.docId + '/' + par_id + '/' + par_id, {
+            http.post('/clipboard/cut/' + doc_par_id[0] + '/' + doc_par_id[1] + '/' + doc_par_id[1], {
                 }).success(function(data, status, headers, config) {
                     var doc_ver = data['doc_ver'];
                     var pars = data['pars'];
@@ -1674,9 +1685,9 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.copyPar = function (e, $par) {
-            var par_id = sc.getParId($par);
+            var doc_par_id = sc.dereferencePar($par);
 
-            http.post('/clipboard/copy/' + sc.docId + '/' + par_id + '/' + par_id, {
+            http.post('/clipboard/copy/' + doc_par_id[0] + '/' + doc_par_id[1] + '/' + doc_par_id[1], {
                 }).success(function(data, status, headers, config) {
                     sc.allowPasteContent = true;
                     sc.allowPasteRef = true;
