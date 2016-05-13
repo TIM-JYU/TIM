@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, unique
 from sqlite3 import Connection
 from typing import Dict, List, Optional
 from timdb.timdbbase import TimDbBase
@@ -11,6 +11,7 @@ class Annotations(TimDbBase):
     Used as an interface to query the database about annotations.
     """
 
+    @unique
     class AnnotationVisibility(Enum):
         """Enum for storing the visibility"""
         myself = 1

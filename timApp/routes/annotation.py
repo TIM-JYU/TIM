@@ -1,5 +1,6 @@
 from flask import Blueprint
 from .common import *
+from timdb.annotations import Annotations
 
 annotations = Blueprint('annotations',
                         __name__,
@@ -93,9 +94,12 @@ def update_annotation() -> str:
     if not new_values['annotator_id'] == user_id:
         abort(403, "You are not the annotator.")
     if visible_to:
+        try:
+            visible_to=Annotations.AnnotationVisibility(visible_to)
+        except ValueError as e:
+            abort(400, "Visibility should be 1, 2 ,3 or 4.")
         new_values['visible_to'] = visible_to
-    if points:
-        new_values['points'] = points
+    new_values['points'] = points
     timdb.annotations.update_annotation(new_values['id'], new_values['version_id'], new_values['visible_to'],
                                         new_values['points'], new_values['icon_id'])
     return ""
