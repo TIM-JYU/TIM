@@ -556,11 +556,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         } else {
             velp_content = annotation.content;
         }
-
+        console.log(annotation);
         element.setAttribute("velp", velp_content);
         element.setAttribute("points", annotation.points);
         element.setAttribute("aid", annotation.id);
         element.setAttribute("user", username);
+        element.setAttribute("visibleto", annotation.visible_to);
         element.setAttribute("show", show);
         element.setAttribute("comments", JSON.stringify(annotation.comments));
 

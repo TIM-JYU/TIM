@@ -382,13 +382,6 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 
 .clickable {
     cursor: pointer;
-    color: darkblue;
-}
-
-.clickable:hover {
-    cursor: pointer;
-    color: blue;
-    text-decoration: underline;
 }
 
 /** Editor styles **/

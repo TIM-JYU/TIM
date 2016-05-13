@@ -13,14 +13,13 @@ timApp.directive("annotation", function() {
         templateUrl: "/static/templates/annotation.html",
         transclude: true,
         scope: {
-            // locked, selected ?
             show: '=',
-            velp: '@',
             points: '=',
-            //evalAsync: '@',
-            user: '@',
+            visibleto: '=',
             comments: '=',
-            aid: '='
+            aid: '=',
+            user: '@',
+            velp: '@'
         },
         controller: 'AnnotationController'
     }
@@ -28,6 +27,24 @@ timApp.directive("annotation", function() {
 
 timApp.controller('AnnotationController', ['$scope', '$http', function ($scope, $http){
     $scope.newComment = "";
+    console.log($scope);
+    $scope.visible_options = {
+        "type": "select",
+        "value": $scope.visibleto,
+        "values": [1, 2, 3, 4] ,
+        "names": ["Just me", "Document owner", "Teachers", "Everyone"]
+    };
+
+    // Original visibility, or visibility in session
+
+    // TODO: origin visibility
+    $scope.original = {
+        points: $scope.points,
+        velp: $scope.velp,
+        visible_to: $scope.visibleto,
+        comment: $scope.newComment,
+        annotation_id: $scope.aid
+    };
 
     /**
      * Toggle annotation visibility
@@ -50,22 +67,45 @@ timApp.controller('AnnotationController', ['$scope', '$http', function ($scope, 
      * Changes points of selected annotation. Queries parent scope.
      */
     $scope.changePoints = function(){
+        console.log($scope.points);
         $scope.$parent.changeAnnotationPoints($scope.aid, $scope.points);
     };
 
     /**
-     * Add comment to annotation
+     * Save changes to annotation
      */
-    $scope.addComment = function() {
+    $scope.saveChanges = function() {
+        var id = $scope.$parent.getRealAnnotationId($scope.aid);
+
+        // Add comment
         if ($scope.newComment.length > 0) {
             $scope.comments.push({author: $scope.user, content: $scope.newComment});
-            var id = $scope.$parent.getRealAnnotationId($scope.aid);
             var data = {annotation_id: id, content: $scope.newComment};
-
             $scope.$parent.makePostRequest("/addannotationcomment", data, function(json){console.log(json);});
-
         }
         $scope.newComment = "";
+
+        var newData = {
+            points: $scope.points,
+            annotation_id: id,
+            visible_to: $scope.visible_options.value
+        };
+
+        $scope.$parent.makePostRequest("/updateannotation", newData, function(json){console.log(json);});
+
+        $scope.original = newData;
+    };
+
+    $scope.checkIfChanged = function(){
+        if ($scope.original.points !== $scope.points)
+            return true;
+        if ($scope.original.comment !== $scope.newComment)
+            return true;
+        if ($scope.original.visible_to != $scope.visible_options.value)
+            return true;
+        if ($scope.original.velp !== $scope.velp)
+            return true;
+        return false;
     };
     /*
     $scope.toggleAnnotation();
