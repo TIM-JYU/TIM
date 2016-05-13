@@ -20,13 +20,13 @@ timApp.directive("annotation", function() {
             //evalAsync: '@',
             user: '@',
             comments: '=',
-            aid: '@'
+            aid: '='
         },
         controller: 'AnnotationController'
     }
 });
 
-timApp.controller('AnnotationController', ['$scope', function ($scope){
+timApp.controller('AnnotationController', ['$scope', '$http', function ($scope, $http){
     $scope.newComment = "";
 
     /**
@@ -59,8 +59,13 @@ timApp.controller('AnnotationController', ['$scope', function ($scope){
     $scope.addComment = function() {
         if ($scope.newComment.length > 0) {
             $scope.comments.push({author: $scope.user, content: $scope.newComment});
-            $scope.newComment = "";
+            var id = $scope.$parent.getRealAnnotationId($scope.aid);
+            var data = {annotation_id: id, content: $scope.newComment};
+
+            $scope.$parent.makePostRequest("/addannotationcomment", data, function(json){console.log(json);});
+
         }
+        $scope.newComment = "";
     };
     /*
     $scope.toggleAnnotation();

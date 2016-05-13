@@ -57,13 +57,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             var elements = parent.querySelector(".parContent");
 
             // Find element
-            var elpath = placeInfo["start"]["el_path"];
+            var start_elpath = placeInfo["start"]["el_path"];
 
-            for (var j = 0; j < elpath.length; j++) {
+            for (var j = 0; j < start_elpath.length; j++) {
                 var elementChildren = getElementChildren(elements);
-                console.log(typeof elpath[j]);
-                if (elementChildren[elpath[j]] != null)
-                    elements = elementChildren[elpath[j]];
+                if (elementChildren[start_elpath[j]] != null)
+                    elements = elementChildren[start_elpath[j]];
             }
 
             var startel = elements.childNodes[placeInfo["start"]["node"]];
@@ -198,6 +197,13 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         $compile(span)($scope); // Gives error [$compile:nonassign]
     };
 
+    $scope.getRealAnnotationId = function(id){
+        if (id < 0){
+            return $scope.annotationids[id];
+        }
+        return id;
+    }
+
     /**
      * Delete annotation
      * TODO: Make query to database
@@ -221,9 +227,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 $scope.annotations.splice(a, 1);
         }
 
-        if (id < 0) id = $scope.annotationids[id];
+        id = $scope.getRealAnnotationId($scope.annotationids[id]);
 
-        $scope.makePostRequest("/deleteannotation", id, function () {
+        $scope.makePostRequest("/deleteannotation", id, function (json) {
+            console.log(json);
         });
     };
 
