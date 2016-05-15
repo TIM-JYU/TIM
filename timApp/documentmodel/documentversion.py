@@ -1,3 +1,5 @@
+from difflib import HtmlDiff
+
 from contracts import contract, new_contract
 from documentmodel.document import Document, DocParagraphIter
 from documentmodel.docparagraph import DocParagraph
@@ -129,3 +131,11 @@ class DocumentVersion(Document):
     @contract
     def delete_section(self, area_start: str, area_end: str):
         assert False, "Called DocumentVersion.delete_section"
+
+    @staticmethod
+    def get_diff(d1, d2):
+        differ = HtmlDiff()
+        return differ.make_file(d1.export_markdown().splitlines(),
+                                d2.export_markdown().splitlines(),
+                                context=True,
+                                numlines=5)

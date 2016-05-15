@@ -14,9 +14,9 @@
                 <td class="checkbox-td" ng-click="aliasPublicClicked(alias)"><input type="checkbox"
                                                                                     ng-checked="alias.public"/></td>
                 <td><input type="text" ng-model="alias.location"/><a
-                        href="{{ '/view/{{alias.location}}' }}">View</a></td>
+                        href="{{ '/view/{{alias.location | escape}}' }}">View</a></td>
                 <td><input type="text" ng-model="alias.name" placeholder="Document name"/><a
-                        href="{{ '/view/{{alias.fullname}}' }}">View</a></td>
+                        href="{{ '/view/{{alias.fullname | escape}}' }}">View</a></td>
                 <td>
                     <button ng-click="updateAlias(alias)" ng-disabled="!aliasChanged(alias)">Update</button>
                     <button ng-click="removeAlias(alias)">Remove</button>
@@ -123,14 +123,14 @@
         </div>
     </form>
 
-    <form class="uploadForm">
+    <form class="uploadForm" id="fullDocumentEditor">
         Edit the full document
-        <div>
-            <textarea class="docEditor" ng-model="fulltext"></textarea>
-            <button ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument()">Save</button>
+        <div id="documentEditorDiv">
+            <textarea class="docEditor" ng-model="fulltext" ng-hide="renameFormShowing"></textarea>
+            <button id="documentEditorSaveButton" ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument()" ng-hide="renameFormShowing">Save</button>
             <span ng-show="saving">Saving...</span>
         </div>
-        <div><p>Import TracWiki <input type="checkbox" ng-model="showTracWiki"></p>
+        <div id="tracWikiDiv" ng-hide="renameFormShowing"><p>Import TracWiki <input type="checkbox" ng-model="showTracWiki"></p>
             <div ng-hide="!showTracWiki">
                 <p>Write the wiki root address to replace "wiki:" from URL's and then copy paste
                     TracWiki page below and then press "Convert TracWiki" button to get the text converted
@@ -158,9 +158,6 @@
         <table>
             <thead>
             <tr>
-                <!--<td>Time</td>
-                <td>User</td>
-                <td>Difference</td>-->
                 <td>Time</td>
                 <td>User / group</td>
                 <td>Paragraph</td>
@@ -168,13 +165,15 @@
             </tr>
             </thead>
             <tr ng-repeat="version in doc.versions">
-                <td>{{ '{{ version.time }}' }}</td>
-                <td>{{ '{{ version.group }}' }}</td>
-                <td>{{ '{{ version.par_id }}' }}</td>
-                <td>{{ '{{ version.op }}' }}</td>
-                <!--<td><a href="/download/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.timestamp }}' }}</a></td>
-                <td>{{ '{{ version.user }}' }}</td>
-                <td><a href="/diff/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.message }}' }}</a></td>-->
+                {% raw %}
+                <td><a href="/download/{{ doc.id }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{ version.time }}</a></td>
+                <td>{{ version.group }}</td>
+                <td>{{ version.par_id }}</td>
+                <td>
+                    <a ng-if="!$last" href="/diff/{{ doc.id }}/{{ doc.versions[$index+1].ver[0] }}/{{ doc.versions[$index+1].ver[1] }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{ version.op }}</a>
+                    <span ng-if="$last">{{ version.op }}</span>
+                </td>
+                {% endraw %}
             </tr>
         </table>
     </div>

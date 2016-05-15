@@ -53,6 +53,14 @@
                     return $delegate;
                 }]);
             }]);
+
+            // Filter to make string URL friendly
+            timApp.filter('escape', function () {
+                "use strict";
+                return function (str) {
+                    return encodeURIComponent(str).replace(/%2F/g, '/');
+                };
+            });
         </script>
         <!-- HTML5 shiv and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>

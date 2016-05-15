@@ -25,7 +25,8 @@ PermApp.controller("PermCtrl", [
     'Upload',
     '$window',
     '$timeout',
-    function (sc, $http, Upload, $window, $timeout) {
+    '$compile',
+    function (sc, $http, Upload, $window, $timeout, $compile) {
         sc.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/"; // Todo: replace something remembers users last choice
         $http.defaults.headers.common.Version = function() {
             if ('versions' in sc.doc && sc.doc.versions.length > 0 && 'hash' in sc.doc.versions[0]) {
@@ -219,7 +220,7 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.addAlias = function(newAlias) {
-            $http.put('/alias/' + sc.doc.id + '/' + sc.combine(newAlias.location, newAlias.name), {
+            $http.put('/alias/' + sc.doc.id + '/' + $window.encodeURIComponent(sc.combine(newAlias.location, newAlias.name)), {
                 'public': Boolean(newAlias.public)
             }).success(function (data, status, headers, config) {
                 sc.getAliases();
@@ -231,7 +232,7 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.removeAlias = function(alias) {
-            $http.delete('/alias/' + sc.doc.id + '/' + alias.fullname, {
+            $http.delete('/alias/' + sc.doc.id + '/' + $window.encodeURIComponent(alias.fullname), {
             }).success(function (data, status, headers, config) {
                 sc.getAliases();
             }).error(function (data, status, headers, config) {
@@ -240,7 +241,7 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.updateAlias = function(alias) {
-            $http.post('/alias/' + sc.doc.id + '/' + alias.fullname, {
+            $http.post('/alias/' + sc.doc.id + '/' + $window.encodeURIComponent(alias.fullname), {
                 'public': Boolean(alias.public),
                 'new_name': sc.combine(alias.location, alias.name)
             }).success(function (data, status, headers, config) {
@@ -250,9 +251,9 @@ PermApp.controller("PermCtrl", [
             });
         };
 
-        sc.deleteDocument = function (doc) {
+        sc.deleteDocument = function (docId) {
             if (confirm('Are you sure you want to delete this document?')) {
-                $http.delete('/documents/' + doc)
+                $http.delete('/documents/' + docId)
                     .success(function (data, status, headers, config) {
                         location.replace('/view/');
                     }).error(function (data, status, headers, config) {
@@ -261,9 +262,9 @@ PermApp.controller("PermCtrl", [
             }
         };
 
-        sc.deleteFolder = function (folder) {
+        sc.deleteFolder = function (folderId) {
             if (confirm('Are you sure you want to delete this folder?')) {
-                $http.delete('/folders/' + folder)
+                $http.delete('/folders/' + folderId)
                     .success(function (data, status, headers, config) {
                         location.replace('/view/');
                     }).error(function (data, status, headers, config) {
@@ -366,6 +367,118 @@ text = '\n'.join(a)
             sc.fulltext = text;
         };
 
+        sc.renameTaskNamesClicked = function (duplicates, renameDuplicates, data) {
+            // A list of duplicate task names and possible new names
+            if (typeof renameDuplicates === 'undefined' || renameDuplicates === false) {
+                $('#pluginRenameForm').remove();
+                sc.renameFormShowing = false;
+                //$element.find("#pluginRenameForm").get(0).remove();
+                return;
+            }
+            var duplicateData = [];
+            var duplicate;
+            // use given names from the input fields
+            for(var i = 0; i < duplicates.length; i++) {
+                duplicate = [];
+                duplicate.push(duplicates[i][0]);
+                duplicate.push($('#'+duplicates[i][1]).prop('value'));
+                duplicate.push(duplicates[i][1]);
+                duplicateData.push(duplicate);
+            }
+            $http.post('/postNewTaskNames/', angular.extend({
+                duplicates: duplicateData,
+                renameDuplicates: renameDuplicates,
+                manageView: true,
+                docId: sc.doc.id
+            })).success(function (data, status, headers, config) {
+                sc.renameFormShowing = false;
+                sc.fulltext = data.fulltext;
+                sc.doc.fulltext = sc.fulltext;
+                sc.doc.versions = data.versions;
+                $("#pluginRenameForm").remove();
+                if(data.duplicates.length > 0) {
+                    sc.createPluginRenameForm(data);
+                }
+            }).error(function (data, status, headers, config) {
+                $window.alert("Failed to save: " + data.error);
+            });
+        };
+
+
+        sc.createPluginRenameForm = function (data) {
+            sc.renameFormShowing = true;
+            sc.duplicates = data.duplicates;
+            sc.data = data;
+            var $editorTop = $('.docEditor');
+            //var coords = {left: $editorTop.position().left, top: $editorTop.position().top};
+            var $actionDiv = $("<div>", {class: "pluginRenameForm", id: "pluginRenameForm"});
+            $actionDiv.css("position", "relative");
+            var $innerTextDiv = $("<div>", {class: "pluginRenameInner"});
+            $innerTextDiv.append($("<strong>", {
+                text: 'Warning!'
+            }));
+            $innerTextDiv.append($("<p>", {
+                text: 'There are multiple objects with the same task name in this document.'
+            }));
+            $innerTextDiv.append($("<p>", {
+                text: 'Plugins with duplicate task names might not work properly.'
+            }));
+            $innerTextDiv.append($("<p>", {
+                text: 'Rename the duplicates by writing new names in the field(s) below and click "Save",'
+            }));
+            $innerTextDiv.append($("<p>", {
+                text: 'choose "Rename automatically" or "Ignore" to proceed without renaming.'
+            }));
+            $innerTextDiv.append($("<strong>", {
+                text: 'Rename duplicates:'
+            }));
+            $actionDiv.append($innerTextDiv);
+            var $form = $("<form>", {class: "pluginRenameInner"});
+            sc.inputs = [];
+            var input;
+            var span;
+            for(var i = 0; i < data.duplicates.length; i++) {
+                span = $("<span>");
+                span.css('display', 'block');
+                span.append($("<label>", {
+                    class: "pluginRenameObject",
+                    text: data.duplicates[i][0],
+                    for: "newName" + i,
+                }));
+                input = $("<input>", {
+                    class: "pluginRenameObject",
+                    type: "text",
+                    id: data.duplicates[i][1],
+                });
+                sc.inputs.push(input);
+                span.append(input);
+                $form.append(span);
+            }
+            var $buttonDiv = $("<div>", {class: "pluginRenameInner"});
+            $buttonDiv.append($("<button>", {
+                class: 'timButton, pluginRenameObject',
+                text: "Save",
+                title: "Rename task names with given names",
+                'ng-click': "renameTaskNamesClicked(duplicates, true, data)",
+            }));
+            $buttonDiv.append($("<button>", {
+                class: 'timButton, pluginRenameObject',
+                text: "Rename Automatically",
+                title: "Rename duplicate task names automatically",
+                'ng-click': "renameTaskNamesClicked(duplicates, true, data)",
+            }));
+            $buttonDiv.append($("<button>", {
+                class: 'timButton, pluginRenameObject',
+                text: "Ignore",
+                title: "Proceed without renaming",
+                'ng-click': "renameTaskNamesClicked(undefined, false, data)",
+            }));
+            $actionDiv.append($form);
+            $actionDiv.append($buttonDiv);
+            $actionDiv = $compile($actionDiv)(sc);
+            $editorTop.parent().prepend($actionDiv);
+        };
+
         
         sc.saveDocument = function () {
             sc.saving = true;
@@ -376,6 +489,9 @@ text = '\n'.join(a)
                     'version': sc.doc.versions[0]
                 }).success(
                 function (data, status, headers, config) {
+                    if(data.duplicates.length > 0) {
+                        sc.createPluginRenameForm(data);
+                    }
                     sc.fulltext = data.fulltext;
                     sc.doc.fulltext = sc.fulltext;
                     sc.doc.versions = data.versions;
@@ -519,7 +635,7 @@ text = '\n'.join(a)
         sc.documentName = $window.doc.name;
 
         //sc.newName = sc.getJustDocName(doc.name);
-        //sc.newFolderName = sc.getFolderName(doc.name);
+        sc.newFolderName = sc.getFolderName(doc.fullname);
         //sc.oldName = sc.newName;
         //sc.oldFolderName = sc.newFolderName;
         sc.newAlias = {location: sc.newFolderName};
