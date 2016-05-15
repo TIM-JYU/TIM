@@ -32,7 +32,7 @@ export DISPLAY=:1
 #wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar
 
 cd /cs
-export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar:/cs/java/fxgui.jar
+export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar:/cs/java/fxgui.jar:/cs/java/gui.jar
 export MONO_PATH=/cs/jypeli
 
 # Run the server

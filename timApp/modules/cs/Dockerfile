@@ -126,6 +126,8 @@ run rm scala-2.11.7.deb
 
 run apt-get install -y doxygen
 
+run apt-get install -y valgrind
+
 # Lisätään käyttäjä `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.
 # run useradd -M agent 

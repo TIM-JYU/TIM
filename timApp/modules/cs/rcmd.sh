@@ -14,7 +14,7 @@ fi
 # Copy Jypeli dll's to temp directory
 # cp /cs/jypeli/* /tmp/
 
-export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar:/cs/java/fxgui.jar
+export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar:/cs/java/fxgui.jar:/cs/java/gui.jar
 export MONO_PATH=/cs/jypeli
 
 #if ! [ -f ".bashrc" ]; then
