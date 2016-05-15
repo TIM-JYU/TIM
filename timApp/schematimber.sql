@@ -20,6 +20,10 @@ DROP TABLE IF EXISTS VelpGroup;
 
 DROP TABLE IF EXISTS VelpInGroup;
 
+DROP TABLE IF EXISTS VelpGroupSelection;
+
+DROP TABLE IF EXISTS ImportedVelpGroups;
+
 DROP TABLE IF EXISTS VelpGroupInDocument;
 
 DROP TABLE IF EXISTS VelpGroupInParagraph;
@@ -252,6 +256,31 @@ CREATE TABLE VelpInGroup (
 );
 
 
+CREATE TABLE VelpGroupSelection (
+  user_id       INTEGER NOT NULL,
+  doc_id        INTEGER NOT NULL,
+  target_type   INTEGER NOT NULL,   -- 0 = document, 1 = paragraph, 2 = area
+  target_id     TEXT NOT NULL,
+  selected      BOOLEAN DEFAULT FALSE,
+  velp_group_id INTEGER NOT NULL,
+
+  CONSTRAINT VelpGroupSelection_PK
+  PRIMARY KEY (user_id, doc_id, target_id, velp_group_id)
+);
+
+
+CREATE TABLE ImportedVelpGroups (
+  owner_group   INTEGER NOT NULL,
+  doc_id        INTEGER NOT NULL,
+  target_type   INTEGER NOT NULL,   -- 0 = document, 1 = paragraph, 2 = area
+  target_id     TEXT NOT NULL,
+  velp_group_id INTEGER NOT NULL,
+
+  CONSTRAINT ImportedVelpGroups_PK
+  PRIMARY KEY (owner_group, doc_id, target_id, velp_group_id)
+);
+
+
 CREATE TABLE VelpGroupInDocument (
   velp_group_id INTEGER NOT NULL,
   document_id   INTEGER NOT NULL,
@@ -441,6 +470,15 @@ INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (2, 3);
 INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (2, 5);
 INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (3, 4);
 INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (3, 6);
+
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 1);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 2);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 3);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 4);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 5);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 6);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 7);
+INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 8);
 
 INSERT INTO VelpGroupInDocument (velp_group_id, document_id) VALUES (1, 1);
 INSERT INTO VelpGroupInDocument (velp_group_id, document_id) VALUES (2, 1);

@@ -145,94 +145,323 @@ class Velps(TimDbBase):
         velp_version = cursor.fetchone()[0]
         return velp_version
 
-    def get_velps(self, assessment_area: AssessmentArea, language_id: str = 'FI') -> List[Dict]:
-        """Get velps that are linked to an assessment area.
 
-        :param assessment_area: the relevant assessment area
-        :param language_id The id of the language. 'EN', for example.
-        :return: A list of dictionaries, each describing a different velp.
+
+    def get_velp_content_for_document(self, doc_id: int, user_id: int, language_id: str = 'FI'):
+
+        velp_data = self.get_velps_for_document(doc_id, user_id, language_id)
+        label_data = self.get_velp_label_ids_for_document(doc_id, user_id)
+        group_data = self.get_velp_group_ids_for_document(doc_id, user_id)
+
+        print(velp_data)
+        print("--")
+        print(label_data)
+        print("00")
+        print(group_data)
+
+        # Sort velp label data as lists and link them to velp data
+        if velp_data and label_data:
+            velp_id = label_data[0]['velp_id']
+            list_help = []
+            label_dict = {}
+            for i in range(len(label_data)):
+                next_id = label_data[i]['velp_id']
+                if next_id != velp_id:
+                    label_dict[velp_id] = copy.deepcopy(list_help)
+                    velp_id = next_id
+                    del list_help[:]
+                    list_help.append(label_data[i]['labels'])
+                else:
+                    list_help.append(label_data[i]['labels'])
+                if i == len(label_data) - 1:
+                    label_dict[velp_id] = copy.deepcopy(list_help)
+            for i in range(len(velp_data)):
+                search_id = velp_data[i]['id']
+                if search_id in label_dict:
+                    velp_data[i]['labels'] = label_dict[search_id]
+
+        # Sort velp group data as lists and link them to velp data
+        if velp_data and group_data:
+            velp_id = group_data[0]['velp_id']
+            list_help2 = []
+            label_dict2 = {}
+            for i in range(len(group_data)):
+                next_id = group_data[i]['velp_id']
+                if next_id != velp_id:
+                    label_dict2[velp_id] = copy.deepcopy(list_help2)
+                    velp_id = next_id
+                    del list_help2[:]
+                    list_help2.append(group_data[i]['velp_groups'])
+                else:
+                    list_help2.append(group_data[i]['velp_groups'])
+                if i == len(group_data) - 1:
+                    label_dict2[velp_id] = copy.deepcopy(list_help2)
+            for i in range(len(velp_data)):
+                search_id = velp_data[i]['id']
+                if search_id in label_dict2:
+                    velp_data[i]['velp_groups'] = label_dict2[search_id]
+
+        return velp_data
+
+    def get_velps_for_document(self, doc_id: int, user_id: int, language_id: str = 'FI'):
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT Velp.id AS id, Velp.default_points AS points, Velp.icon_id AS icon_id,
+                      y.content AS content, y.language_id AS language_id
+                      FROM Velp
+                      INNER JOIN(
+                        SELECT x.velp_id, VelpContent.content, VelpContent.language_id
+                        FROM VelpContent
+                        INNER JOIN (
+                          SELECT VelpVersion.velp_id, max(VelpVersion.id) AS latest_version
+                          FROM VelpVersion GROUP BY VelpVersion.velp_id
+                          ) AS x ON VelpContent.version_id = x.latest_version
+                      ) AS y ON y.velp_id = velp.id
+                      WHERE y.language_id = ? AND velp_id IN (
+                        SELECT Velp.id
+                        FROM Velp
+                        WHERE (Velp.valid_until >= current_timestamp OR Velp.valid_until ISNULL) AND Velp.id IN (
+                          SELECT VelpInGroup.velp_id
+                          FROM VelpInGroup
+                          WHERE VelpInGroup.velp_group_id IN (
+                            SELECT velp_group_id
+                            FROM VelpGroupSelection
+                            WHERE user_id = ? AND doc_id = ?
+                          )
+                        )
+                      )
+
+                      """, [language_id, user_id, doc_id]
+                      )
+        results = self.resultAsDictionary(cursor)
+        return results
+
+
+    # Methods concerning velp labels
+
+    def create_velp_label(self, language_id: str, content: str) -> int:
         """
-
+        Creates a new label
+        :param language_id: Language chosen
+        :param content: Label content
+        :return: id of the new label
+        """
         cursor = self.db.cursor()
         cursor.execute("""
-                       SELECT Velp.id AS id, Velp.default_points AS points, Velp.icon_id AS icon_id,
-                       y.content AS content, y.language_id AS language_id
-                       FROM Velp
-                       INNER JOIN(
-                         SELECT x.velp_id, VelpContent.content, VelpContent.language_id
-                         FROM VelpContent
-                         INNER JOIN (
-                           SELECT VelpVersion.velp_id, max(VelpVersion.id) AS latest_version
-                           FROM VelpVersion GROUP BY VelpVersion.velp_id
-                           ) AS x ON VelpContent.version_id = x.latest_version
-                       ) AS y ON y.velp_id = velp.id
-                       WHERE y.language_id = ? AND velp_id IN (
-                       """ +
-                       assessment_area.get_sql_for_velp_ids()
-                       + """
+                      INSERT INTO
+                      Label(language_id, content, id)
+                      VALUES (?, ?, (SELECT
+                      MAX(Label.id)+1
+                      FROM Label))
+                      """, [language_id, content]
                        )
-                       """, [language_id] + assessment_area.get_parameters_for_velp_ids()
+        self.db.commit()
+        label_id = cursor.lastrowid
+        return label_id
+
+    def add_velp_label_translation(self, label_id: int, language_id: str, content: str):
+        """
+        Adds new translation to an existing label
+        :param label_id: Label id
+        :param language_id: Language chosen
+        :param content: New translation
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      INSERT INTO
+                      Label(id, language_id, content)
+                      VALUES (?, ?, ?)
+                      """, [label_id, language_id, content]
+                       )
+        self.db.commit()
+
+    def update_velp_label(self, label_id: int, language_id: str, content: str):
+        """
+        Updates content of label in specific language
+        :param label_id: Label id
+        :param language_id: Language chosen
+        :param content: Updated content
+        :return:
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      UPDATE Label
+                      SET content = ?
+                      WHERE id = ? AND language_id = ?
+                      """, [content, label_id, language_id]
+                       )
+        self.db.commit()
+
+    def delete_velp_label(self, label_id: int):
+        """
+        Deletes label (use with extreme caution)
+        :param label_id: Label ID
+        :return:
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      DELETE
+                      FROM Label
+                      WHERE id = ?
+                      """, [label_id]
+                       )
+        self.db.commit()
+
+    def get_velp_label_ids_for_document(self, doc_id: int, user_id: int):
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT
+                        LabelInVelp.velp_id,
+                        LabelInVelp.label_id AS labels
+                      FROM LabelInVelp
+                      WHERE velp_id IN (
+                        SELECT Velp.id
+                        FROM Velp
+                        WHERE (Velp.valid_until >= current_timestamp OR Velp.valid_until ISNULL) AND Velp.id IN (
+                          SELECT VelpInGroup.velp_id
+                          FROM VelpInGroup
+                          WHERE VelpInGroup.velp_group_id IN (
+                            SELECT velp_group_id
+                            FROM VelpGroupSelection
+                            WHERE doc_id = ? AND user_id = ?
+                          )
+                        )
+                      )
+                      ORDER BY velp_id ASC
+                      """, [doc_id, user_id]
+                      )
+        results = self.resultAsDictionary(cursor)
+        return results
+
+    def get_velp_label_content_for_document(self, doc_id: int, user_id: int, language_id: str = 'FI'):
+        cursor = self.db.cursor()
+        cursor.execute("""
+                       SELECT Label.id, Label.content
+                       FROM Label
+                       WHERE label.language_id = ? AND label.id IN (
+                         SELECT DISTINCT LabelInVelp.label_id
+                         FROM LabelInVelp
+                         WHERE LabelInVelp.velp_id IN (
+                          SELECT Velp.id
+                          FROM Velp
+                            WHERE (Velp.valid_until >= current_timestamp OR Velp.valid_until ISNULL) AND Velp.id IN (
+                              SELECT VelpInGroup.velp_id
+                              FROM VelpInGroup
+                              WHERE VelpInGroup.velp_group_id IN (
+                                SELECT velp_group_id
+                                FROM VelpGroupSelection
+                                WHERE doc_id = ? AND user_id = ?
+                              )
+                            )
+                          )
+                       )
+                       """, [language_id, doc_id, user_id]
                        )
         results = self.resultAsDictionary(cursor)
         return results
 
-    def get_velps_from_group(self, velp_group_id: int, language_id: str = 'FI'):
+
+
+    def get_velp_label_ids(self, velp_id: int):
+        """Gets labels for one velp.
+
+        :param velp_id: ID of velp
+        :return: List of labels represented by their ids associated with the velp.
+        """
         cursor = self.db.cursor()
         cursor.execute("""
-                      SELECT Velp.id AS id, Velp.default_points AS points, Velp.icon_id AS icon_id,
-                      y.content AS content, y.language_id AS language_id
-                      FROM Velp
-                      INNER JOIN(
-                        SELECT x.velp_id, VelpContent.content, VelpContent.language_id
-                        FROM VelpContent
-                        INNER JOIN (
-                          SELECT VelpVersion.velp_id, max(VelpVersion.id) AS latest_version
-                          FROM VelpVersion GROUP BY VelpVersion.velp_id
-                          ) AS x ON VelpContent.version_id = x.latest_version
-                      ) AS y ON y.velp_id = velp.id
-                      WHERE y.language_id = ? AND velp_id IN (
-                        SELECT Velp.id
-                        FROM Velp
-                          WHERE (Velp.valid_until >= current_timestamp OR Velp.valid_until ISNULL) AND Velp.id IN (
-                          SELECT VelpInGroup.velp_id
-                            FROM VelpInGroup
-                            WHERE VelpInGroup.velp_group_id = ?
-                          )
+                      SELECT LabelInVelp.label_id
+                      FROM LabelInVelp
+                      WHERE LabelInVelp.velp_id = ?
+                      """, [velp_id]
+                       )
+        return self.resultAsDictionary(cursor)
+
+    def get_label_ids_for_velps(self, velp_ids: List[int]):
+        velps = ", ".join(str(x) for x in velp_ids)
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT
+                        LabelInVelp.velp_id,
+                        LabelInVelp.label_id AS labels
+                      FROM LabelInVelp
+                      WHERE velp_id IN (
+                      """ + velps +
+                      """
                       )
-                      """, [language_id, velp_group_id]
+                      ORDER BY velp_id ASC
+                      """
                       )
         results = self.resultAsDictionary(cursor)
         return results
 
-    def get_velps_from_groups(self, velp_group_ids: List[int], language_id: str = 'FI'):
-        velp_groups = ", ".join(str(x) for x in velp_group_ids) + ", 1"
+    def add_labels_to_velp(self, velp_id: int, labels: List[int]):
+        """Associates a set of labels to a velp. (Appends to existing labels)
+
+        :param velp_id: id of the velp that
+        :param labels: list of label ids.
+        :return: None
+        """
+        cursor = self.db.cursor()
+        for label_id in labels:
+            cursor.execute("""
+                           INSERT INTO LabelInVelp(label_id, velp_id)
+                           VALUES (?, ?)
+                           """, [label_id, velp_id]
+                           )
+        self.db.commit()
+
+    def update_velp_labels(self, velp_id: int, labels: List[int]):
+        """Replaces the labels of a velp with new ones.
+
+        :param velp_id:
+        :param labels: list of label ids.
+        """
+        cursor = self.db.cursor()
+        # First nuke existing labels.
+        cursor.execute("""
+                       DELETE FROM LabelInVelp
+                       WHERE velp_id=?
+                       """, [velp_id]
+                       )
+        self.db.commit()
+        # Then add the new ones.
+        self.add_labels_to_velp(velp_id, labels)
+
+
+    def get_velp_group_ids_for_document(self, doc_id: int, user_id: int):
         cursor = self.db.cursor()
         cursor.execute("""
-                      SELECT Velp.id AS id, Velp.default_points AS points, Velp.icon_id AS icon_id,
-                      y.content AS content, y.language_id AS language_id
-                      FROM Velp
-                      INNER JOIN(
-                        SELECT x.velp_id, VelpContent.content, VelpContent.language_id
-                        FROM VelpContent
-                        INNER JOIN (
-                          SELECT VelpVersion.velp_id, max(VelpVersion.id) AS latest_version
-                          FROM VelpVersion GROUP BY VelpVersion.velp_id
-                          ) AS x ON VelpContent.version_id = x.latest_version
-                      ) AS y ON y.velp_id = velp.id
-                      WHERE y.language_id = ? AND velp_id IN (
+                      SELECT
+                        velp_id,
+                        velp_group_id AS velp_groups
+                      FROM VelpInGroup
+                      WHERE velp_id IN (
                         SELECT Velp.id
                         FROM Velp
-                          WHERE (Velp.valid_until >= current_timestamp OR Velp.valid_until ISNULL) AND Velp.id IN (
+                        WHERE (Velp.valid_until >= current_timestamp OR Velp.valid_until ISNULL) AND Velp.id IN (
                           SELECT VelpInGroup.velp_id
-                            FROM VelpInGroup
-                            WHERE VelpInGroup.velp_group_id IN (""" + velp_groups + """)
+                          FROM VelpInGroup
+                          WHERE VelpInGroup.velp_group_id IN (
+                            SELECT velp_group_id
+                            FROM VelpGroupSelection
+                            WHERE doc_id = ? AND user_id = ?
                           )
+                        )
                       )
-                      """, [language_id]
+                      ORDER BY velp_id ASC
+                      """, [doc_id, user_id]
                       )
-        results = self.resultAsDictionary(cursor)   # TODO: Create safe way to add list of velp group ids
+        results = self.resultAsDictionary(cursor)
         return results
 
+
+
+
+
+
+
+    # TODO: Outdated methods?
     def get_velp_content(self, velp_groups: Dict):
 
         velp_group_ids = []
@@ -350,140 +579,33 @@ class Velps(TimDbBase):
 
         return velp_data
 
-    def create_label(self, language_id: str, content: str) -> int:
+    def get_velps(self, assessment_area: AssessmentArea, language_id: str = 'FI') -> List[Dict]:
+        """Get velps that are linked to an assessment area.
+
+        :param assessment_area: the relevant assessment area
+        :param language_id The id of the language. 'EN', for example.
+        :return: A list of dictionaries, each describing a different velp.
         """
-        Creates a new label
-        :param language_id: Language chosen
-        :param content: Label content
-        :return: id of the new label
-        """
+
         cursor = self.db.cursor()
         cursor.execute("""
-                      INSERT INTO
-                      Label(language_id, content, id)
-                      VALUES (?, ?, (SELECT
-                      MAX(Label.id)+1
-                      FROM Label))
-                      """, [language_id, content]
-                       )
-        self.db.commit()
-        label_id = cursor.lastrowid
-        return label_id
-
-    def add_label_translation(self, label_id: int, language_id: str, content: str):
-        """
-        Adds new translation to an existing label
-        :param label_id: Label id
-        :param language_id: Language chosen
-        :param content: New translation
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      INSERT INTO
-                      Label(id, language_id, content)
-                      VALUES (?, ?, ?)
-                      """, [label_id, language_id, content]
-                       )
-        self.db.commit()
-
-    def update_label(self, label_id: int, language_id: str, content: str):
-        """
-        Updates content of label in specific language
-        :param label_id: Label id
-        :param language_id: Language chosen
-        :param content: Updated content
-        :return:
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      UPDATE Label
-                      SET content = ?
-                      WHERE id = ? AND language_id = ?
-                      """, [content, label_id, language_id]
-                       )
-        self.db.commit()
-
-    def get_velp_label_ids(self, velp_id: int):
-        """Gets labels for one velp.
-
-        :param velp_id: ID of velp
-        :return: List of labels represented by their ids associated with the velp.
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      SELECT LabelInVelp.label_id
-                      FROM LabelInVelp
-                      WHERE LabelInVelp.velp_id = ?
-                      """, [velp_id]
-                       )
-        return self.resultAsDictionary(cursor)
-
-    def get_label_ids_for_velps(self, velp_ids: List[int]):
-        velps = ", ".join(str(x) for x in velp_ids)
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      SELECT
-                        LabelInVelp.velp_id,
-                        LabelInVelp.label_id AS labels
-                      FROM LabelInVelp
-                      WHERE velp_id IN (
-                      """ + velps +
-                      """
-                      )
-                      ORDER BY velp_id ASC
-                      """
-                      )
-        results = self.resultAsDictionary(cursor)
-        return results
-
-    def add_labels_to_velp(self, velp_id: int, labels: List[int]):
-        """Associates a set of labels to a velp. (Appends to existing labels)
-
-        :param velp_id: id of the velp that
-        :param labels: list of label ids.
-        :return: None
-        """
-        cursor = self.db.cursor()
-        for label_id in labels:
-            cursor.execute("""
-                           INSERT INTO LabelInVelp(label_id, velp_id)
-                           VALUES (?, ?)
-                           """, [label_id, velp_id]
-                           )
-        self.db.commit()
-
-    def update_velp_labels(self, velp_id: int, labels: List[int]):
-        """Replaces the labels of a velp with new ones.
-
-        :param velp_id:
-        :param labels: list of label ids.
-        """
-        cursor = self.db.cursor()
-        # First nuke existing labels.
-        cursor.execute("""
-                       DELETE FROM LabelInVelp
-                       WHERE velp_id=?
-                       """, [velp_id]
-                       )
-        self.db.commit()
-        # Then add the new ones.
-        self.add_labels_to_velp(velp_id, labels)
-
-    def get_velp_ids_for_velp_groups(self, velp_group_ids: List[int]):
-        velp_groups = ", ".join(str(x) for x in velp_group_ids) + ", 1, 2, 3"
-        cursor = self.db.cursor()
-        cursor.execute("""
-                       SELECT
-                         velp_id,
-                         velp_group_id AS velp_groups
-                       FROM VelpInGroup
-                       WHERE velp_group_id IN (
+                       SELECT Velp.id AS id, Velp.default_points AS points, Velp.icon_id AS icon_id,
+                       y.content AS content, y.language_id AS language_id
+                       FROM Velp
+                       INNER JOIN(
+                         SELECT x.velp_id, VelpContent.content, VelpContent.language_id
+                         FROM VelpContent
+                         INNER JOIN (
+                           SELECT VelpVersion.velp_id, max(VelpVersion.id) AS latest_version
+                           FROM VelpVersion GROUP BY VelpVersion.velp_id
+                           ) AS x ON VelpContent.version_id = x.latest_version
+                       ) AS y ON y.velp_id = velp.id
+                       WHERE y.language_id = ? AND velp_id IN (
                        """ +
-                       velp_groups
+                       assessment_area.get_sql_for_velp_ids()
                        + """
                        )
-                       ORDER BY velp_id ASC
-                       """
+                       """, [language_id] + assessment_area.get_parameters_for_velp_ids()
                        )
         results = self.resultAsDictionary(cursor)
         return results
@@ -534,6 +656,15 @@ class Velps(TimDbBase):
         results = self.resultAsDictionary(cursor)
         return results
 
+    def get_document_velp_label_content(self, document_id: int, language_id: str = 'FI') -> List[Dict]:
+        """Get label content for labels that are linked to a document.
+
+        :param document_id: ID for the document.
+        :param language_id: Optional, Id of the requested language. Default is 'FI'.
+        :return: List of labels, each label represented by a dictionary
+        """
+        return self.get_velp_label_content(assessment_area_from_document(document_id), language_id)
+
     def get_document_velp_label_ids(self, document_id: int) -> List[Dict]:
         """Get labels for velps that are linked to a document.
 
@@ -567,26 +698,80 @@ class Velps(TimDbBase):
         results = self.resultAsDictionary(cursor)
         return results
 
-    def get_document_velp_label_content(self, document_id: int, language_id: str = 'FI') -> List[Dict]:
-        """Get label content for labels that are linked to a document.
 
-        :param document_id: ID for the document.
-        :param language_id: Optional, Id of the requested language. Default is 'FI'.
-        :return: List of labels, each label represented by a dictionary
-        """
-        return self.get_velp_label_content(assessment_area_from_document(document_id), language_id)
-
-    def delete_label(self, label_id: int):
-        """
-        Deletes label (use with extreme caution)
-        :param label_id: Label ID
-        :return:
-        """
+    def get_velps_from_group(self, velp_group_id: int, language_id: str = 'FI'):
         cursor = self.db.cursor()
         cursor.execute("""
-                      DELETE
-                      FROM Label
-                      WHERE id = ?
-                      """, [label_id]
+                      SELECT Velp.id AS id, Velp.default_points AS points, Velp.icon_id AS icon_id,
+                      y.content AS content, y.language_id AS language_id
+                      FROM Velp
+                      INNER JOIN(
+                        SELECT x.velp_id, VelpContent.content, VelpContent.language_id
+                        FROM VelpContent
+                        INNER JOIN (
+                          SELECT VelpVersion.velp_id, max(VelpVersion.id) AS latest_version
+                          FROM VelpVersion GROUP BY VelpVersion.velp_id
+                          ) AS x ON VelpContent.version_id = x.latest_version
+                      ) AS y ON y.velp_id = velp.id
+                      WHERE y.language_id = ? AND velp_id IN (
+                        SELECT Velp.id
+                        FROM Velp
+                          WHERE (Velp.valid_until >= current_timestamp OR Velp.valid_until ISNULL) AND Velp.id IN (
+                          SELECT VelpInGroup.velp_id
+                            FROM VelpInGroup
+                            WHERE VelpInGroup.velp_group_id = ?
+                          )
+                      )
+                      """, [language_id, velp_group_id]
+                      )
+        results = self.resultAsDictionary(cursor)
+        return results
+
+    def get_velps_from_groups(self, velp_group_ids: List[int], language_id: str = 'FI'):
+        velp_groups = ", ".join(str(x) for x in velp_group_ids) + ", 1"
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT Velp.id AS id, Velp.default_points AS points, Velp.icon_id AS icon_id,
+                      y.content AS content, y.language_id AS language_id
+                      FROM Velp
+                      INNER JOIN(
+                        SELECT x.velp_id, VelpContent.content, VelpContent.language_id
+                        FROM VelpContent
+                        INNER JOIN (
+                          SELECT VelpVersion.velp_id, max(VelpVersion.id) AS latest_version
+                          FROM VelpVersion GROUP BY VelpVersion.velp_id
+                          ) AS x ON VelpContent.version_id = x.latest_version
+                      ) AS y ON y.velp_id = velp.id
+                      WHERE y.language_id = ? AND velp_id IN (
+                        SELECT Velp.id
+                        FROM Velp
+                          WHERE (Velp.valid_until >= current_timestamp OR Velp.valid_until ISNULL) AND Velp.id IN (
+                          SELECT VelpInGroup.velp_id
+                            FROM VelpInGroup
+                            WHERE VelpInGroup.velp_group_id IN (""" + velp_groups + """)
+                          )
+                      )
+                      """, [language_id]
+                      )
+        results = self.resultAsDictionary(cursor)   # TODO: Create safe way to add list of velp group ids
+        return results
+
+    def get_velp_ids_for_velp_groups(self, velp_group_ids: List[int]):
+        velp_groups = ", ".join(str(x) for x in velp_group_ids) + ", 1, 2, 3"
+        cursor = self.db.cursor()
+        cursor.execute("""
+                       SELECT
+                         velp_id,
+                         velp_group_id AS velp_groups
+                       FROM VelpInGroup
+                       WHERE velp_group_id IN (
+                       """ +
+                       velp_groups
+                       + """
                        )
-        self.db.commit()
+                       ORDER BY velp_id ASC
+                       """
+                       )
+        results = self.resultAsDictionary(cursor)
+        return results
+

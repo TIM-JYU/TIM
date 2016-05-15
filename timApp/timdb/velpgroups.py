@@ -305,8 +305,23 @@ class VelpGroups(Documents):
         :param doc_id: ID of document
         :return: True if part of VelpGroup table, else False
         """
-        print(doc_id)
         cursor = self.db.cursor()
         cursor.execute('SELECT name FROM VelpGroup WHERE id = ?', [doc_id])
         result = cursor.fetchone()
         return True if result is not None else False
+
+
+    def add_groups_to_selection_table(self, velp_groups: dict, doc_id: int, user_id: int):
+        cursor = self.db.cursor()
+        for velp_group in velp_groups:
+            target_type = velp_group["target_type"]
+            target_id = velp_group["target_id"]
+            selected = 1
+            velp_group_id = velp_group["id"]
+            cursor.execute("""
+                          INSERT OR IGNORE INTO
+                          VelpGroupSelection(user_id, doc_id, target_type, target_id, selected, velp_group_id)
+                          VALUES (?, ?, ?, ?, ?, ?)
+                          """, [user_id, doc_id, target_type, target_id, selected, velp_group_id]
+                           )
+            self.db.commit()
