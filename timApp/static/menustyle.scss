@@ -13,6 +13,10 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
     max-width: calc(#{$left-ratio} - #{$grid-gutter-per2});
     min-width: 12em;
     margin-left: -$grid-gutter-per2;
+
+    @media (max-width: $screen-xs-max) {
+        margin-left: 0;
+    }
 }
 
 .right-fixed-side {
