@@ -64,7 +64,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         //$http.get('/static/test_data/markings.json').success(function (data) {  // ANNOTATION TEST DATA
 
         // TODO: Get annotation comments
-        $http.get('/{0}/annotations'.replace('{0}', doc_id)).success(function (data) { // ROUTE TO DB
+        $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) { // ROUTE TO DB
 
             $scope.annotations = data;
 

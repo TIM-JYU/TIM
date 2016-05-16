@@ -27,7 +27,7 @@ def get_velps(document_id: int):
 
     return jsonResponse(velp_content)
 
-@velps.route("/<document_id>/getvelpgrouplocations", methods=['GET'])
+@velps.route("/<document_id>/get_velp_group_locations", methods=['GET'])
 def get_velp_group_locations(document_id: int) -> str:
     timdb = getTimDb()
     try:
@@ -38,7 +38,7 @@ def get_velp_group_locations(document_id: int) -> str:
     return jsonResponse(location_data)
 
 
-@velps.route("/createvelpgroup", methods=['GET'])
+@velps.route("/create_velp_group", methods=['GET'])
 def create_velp_group():
     # TODO: Remove comments, kill test data from below
     # TODO: method back to POST
@@ -335,13 +335,6 @@ def get_velp_groups2(document_id: int):
     doc_id = int(document_id)
     groups = get_velp_groups(doc_id)
     return jsonResponse(groups)
-
-@velps.route("/<document_id>/get_comments")
-def get_comments(document_id: int):
-    timdb = getTimDb()
-    doc_id = int(document_id)
-    comments = timdb.annotations.get_annotations_with_comments_in_document(doc_id)
-    return jsonResponse(comments)
 
 def get_velp_groups(document_id: int):
     """Returns all velp groups found from tree from document to root and from users own velp folder

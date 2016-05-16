@@ -229,7 +229,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         var current_id = $scope.getRealAnnotationId(id);
 
-        $scope.makePostRequest("/invalidateannotation", {annotation_id: current_id}, function (json) {
+        $scope.makePostRequest("/invalidate_annotation", {annotation_id: current_id}, function (json) {
             console.log(json);
         });
     };
@@ -375,7 +375,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             console.log(newAnnotation);
 
-            $scope.makePostRequest("/addannotation", newAnnotation, function (json) {
+            $scope.makePostRequest("/add_annotation", newAnnotation, function (json) {
                 $scope.annotationids[newAnnotation.id] = json.data;
             });
 

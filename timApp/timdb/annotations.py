@@ -277,8 +277,8 @@ class Annotations(TimDbBase):
         return cursor.lastrowid
 
 
-    def get_annotations_with_comments_in_document(self, document_id: int):
-        annotations = self.get_annotations_in_document(1, True, True, document_id)
+    def get_annotations_with_comments_in_document(self, user_id: int, user_is_teacher: bool, user_is_owner: bool, document_id: int):
+        annotations = self.get_annotations_in_document(user_id, user_is_teacher, user_is_owner, document_id)
         annotation_ids = []
         for annotation in annotations:
             annotation_ids.append(annotation['id'])
@@ -319,12 +319,11 @@ class Annotations(TimDbBase):
 
         for annotation in annotations:
             annotation_id = annotation['id']
-            print("---")
-            print(comment_dict[annotation_id])
-            if comment_dict[annotation_id] is None:
-                print("HAHAA")
-            else:
+            if annotation_id in comment_dict:
                 annotation['comments'] = copy.deepcopy(comment_dict[annotation_id])
+            else:
+                annotation['comments'] = []
+                print("No comments for annotation id: " + str(annotation_id))
 
         return annotations
 
