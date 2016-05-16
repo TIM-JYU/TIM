@@ -53,7 +53,7 @@
             <div class="margin">
                 <form ng-submit="changeOwner()">
                     <label>{{ obj_name|capitalize }} owner: <input type="text" ng-model="newOwner"></label>
-                    <button ng-disabled="doc.owner.name === newOwner" class="timButton" ng-click="changeOwner()">
+                    <button ng-disabled="doc.owner.name === newOwner" class="timButton">
                         Update
                     </button>
                     <span ng-show="ownerUpdating">Updating...</span>
