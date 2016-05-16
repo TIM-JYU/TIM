@@ -215,9 +215,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         $scope.makePostRequest("/addvelp", velpToAdd, function (json) {
             velpToAdd.id = parseInt(json.data);
             $scope.resetNewVelp();
+            $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};
             $scope.velps.push(velpToAdd);
             $scope.submitted = false;
-            $scope.resetLabels();
+            //$scope.resetLabels();
         });
     };
 
@@ -287,16 +288,16 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         for (var i = 0; i < $scope.velps.length; i++) {
             if ($scope.velps[i].id == $scope.velpToEdit.id) {
+                $scope.velpToEdit.edit = false;
                 $scope.velps[i] = $scope.velpToEdit;
-                $scope.velps[i].edit = false;
                 $scope.velps[i].labels = $scope.selectedLabels.slice(0);
                 break;
             }
         }
-        /*
+
          $scope.makePostRequest("/editvelp", form, function () {
          });
-         */
+
         $scope.deselectLabels();
     };
 

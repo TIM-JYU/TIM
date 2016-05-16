@@ -81,15 +81,15 @@
                         </td>
                     </tr>
                 </table>
-                <input id="createVelpButton" value="Create velp" type="button" ng-model="newVelp" ng-click="selectVelpToEdit(newVelp)">
-
+                <!-- input id="createVelpButton" value="Create velp" type="button" ng-model="newVelp" ng-click="selectVelpToEdit(newVelp)">
+                <div class="stack">
                 <div ng-class="['emphasise', 'new', { neutral: newVelp.points == 0, positive: newVelp.points > 0, negative: newVelp.points < 0,
                             edit: newVelp.edit}]">
 
                     <div ng-class="['content']">
                         <p ng-class="[{hide: newVelp.edit}]">
                             <!--span>Add velp!&ensp;</span-->
-                            <span class="points">{{ newVelp.points }}</span>
+                            <!-- span class="points">{{ newVelp.points }}</span>
                         </p>
                         <form ng-class="[{hide: !newVelp.edit}]" name="addVelpForm" ng-submit="addVelp(addVelpForm)"
                               novalidate>
@@ -108,13 +108,10 @@
                             <p><input type="submit" value="Save"/></p>
                         </form>
                     </div>
-                </div>
-
-
-                <!--   <tr>
-                       <td colspan="4">-->
+                </div-->
+                <input type="button" ng-click="selectVelpToEdit(newVelp)" value="Create velp">
                 <div class="stack">
-                    <!--div ng-model="newVelp" class="velp" ng-dblclick="selectVelpToEdit(newVelp)" ng-style="{top: 0}">
+                    <div ng-model="newVelp" class="velp" ng-style="{top: 0}" ng-hide="!newVelp.edit">
                         <div ng-class="['emphasise', 'new', { neutral: newVelp.points == 0, positive: newVelp.points > 0, negative: newVelp.points < 0,
                             edit: newVelp.edit}]">
 
@@ -144,7 +141,7 @@
                                         </form>
                                     </div>
                                     </div>
-                                </div-->
+                                </div>
 
                             <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByLabels: labels:lockedVelps:advancedOn)">
 
@@ -160,8 +157,8 @@
                                                 <span ng-show="advancedOn" ng-class="['glyphicon', 'glyphicon-tag']"
                                                       ng-repeat="label in velp.labels"
                                                       ng-style="{ color: getColor(label) }"></span>
-                                                <span class="velpPencil" ng-click="selectVelpToEdit(velp)"
-                                                      ng-class="['glyphicon', 'glyphicon-pencil']"></span>
+                                                <span class="float-right" ng-click="selectVelpToEdit(velp)"
+                                                      ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
                                             </p>
 
                                             <form ng-class="[{hide: !velp.edit}]" name="editVelpForm"
@@ -173,8 +170,8 @@
                                             <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]"
                                                   ng-repeat="l in velpToEdit.labels"
                                                   ng-style="{ color: getColor(l) }"></span>
-                                                    <span class="velpPencil" ng-click="selectVelpToEdit(velp)"
-                                                          ng-class="['glyphicon', 'glyphicon-pencil']"></span>
+                                                    <span class="float-right" ng-click="selectVelpToEdit(velp)"
+                                                          ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
                                                 </p>
 
                                                 <p ng-show="(editVelpForm.velpName.$invalid && !editVelpForm.velpName.$pristine) || (submitted && editVelpForm.velpName.$invalid)">
@@ -192,11 +189,12 @@
 
                                 <!-- div ng-class="['emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0}]" style="height: 2px;"></div -->
                             </span>
-                    <p ng-hide="filteredVelps.length">No velps :'(</p>
+                    </div>
+                    <!--p ng-hide="filteredVelps.length">No velps :'(</p -->
                 </div>
                 <!--  </td>
               </tr>-->
-            </div>
+
         </uib-tab>
 
         <!-- ADD VELP TAB -->
@@ -296,11 +294,11 @@
                             <label>Search velp groups</label>
                         </td>
                         <td>
-                            <input placeholder="Enter text..."></input>
+                            <input placeholder="Enter text...">
                         </td>
                     </tr>
                 </table>
-                <input value="Import group" type="submit"></input>
+                <input value="Import group" type="submit">
             </div>
         </uib-tab>
         <uib-tab index="2" heading="Summary">

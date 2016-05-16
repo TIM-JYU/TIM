@@ -358,7 +358,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                     }
                 },
                 comments: [
-                    //{"content": "Pre-printed comment", "author": username}
+                    //{"content": "", "author": username}
                 ]
             };
 

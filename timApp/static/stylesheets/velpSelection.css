@@ -48,7 +48,8 @@
 /** Velp area styles **/
 .velpMenu {
     position: fixed;
-    max-width: 20em;
+    min-width: 19em;
+    max-width: 21em;
     word-wrap: break-word;
     right: 0;
     top: 50px;
