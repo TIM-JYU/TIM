@@ -115,7 +115,7 @@ class Annotations(TimDbBase):
         self.db.commit()
         return
 
-    def get_annotations_in_document(self, user_id, user_is_teacher, user_is_owner, document_id: int) -> List[Dict]:
+    def get_annotations_in_document(self, user_id: int, user_is_teacher: bool, user_is_owner: bool, document_id: int) -> List[Dict]:
         """Gets all annotations made in a document. Both in document and in answers.
         :param user_id: user that is viewing annotations. Affects which annotations are returned.
         :param user_is_teacher:
