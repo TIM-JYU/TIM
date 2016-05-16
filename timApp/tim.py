@@ -89,6 +89,12 @@ def inject_custom_css() -> dict:
     return dict(custom_css=custom_css, custom_css_files=custom_css_files)
 
 
+@app.context_processor
+def inject_user() -> dict:
+    """"Injects the user object to all templates."""
+    return dict(current_user=get_current_user())
+
+
 @app.errorhandler(400)
 def bad_request(error):
     return error_generic(error, 400)
@@ -368,9 +374,12 @@ def create_citation_doc(docid, newname):
 def create_folder():
     jsondata = request.get_json()
     folder_name = jsondata['name']
-    owner_id = jsondata['owner']
+    owner_group_name = jsondata['owner']
     timdb = getTimDb()
-    return create_item(folder_name, 'folder', timdb.folders.create, owner_id)
+    owner_group_id = timdb.users.get_usergroup_by_name(owner_group_name)
+    if owner_group_id is None:
+        abort(404, 'Non-existent usergroup.')
+    return create_item(folder_name, 'folder', timdb.folders.create, owner_group_id)
 
 
 @app.route("/getBlock/<int:doc_id>/<par_id>")

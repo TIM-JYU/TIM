@@ -138,11 +138,10 @@
                         </label>
                         <label>
                             Owner:
-                            <select ng-model="folderOwner"
-                                    ng-options="group.name for group in userGroups track by group.id"></select>
+                            <input type="text" ng-model="folderOwner">
                         </label>
                         <button ng-disabled="!folderName || !folderOwner"
-                                ng-click="createFolder(folderName, folderOwner.id)" type="button">Create
+                                ng-click="createFolder(folderName, folderOwner)" type="button">Create
                         </button>
                         <button ng-click="showCreateFolder = false" type="button">Cancel</button>
                     </div>

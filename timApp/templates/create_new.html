@@ -79,13 +79,12 @@
                         </td>
                         <td>
                             <label>
-                                <select ng-model="folderOwner"
-                                        ng-options="group.name for group in userGroups track by group.id"></select>
+                                <input type="text" ng-model="folderOwner">
                             </label>
                         </td>
                         <td>
                             <button ng-disabled="!folderOwner"
-                                    ng-click="createFolder('{{ newItem }}', folderOwner.id)" type="button">Create
+                                    ng-click="createFolder('{{ newItem }}', folderOwner)" type="button">Create
                             </button>
                         </td>
                     </tr>
