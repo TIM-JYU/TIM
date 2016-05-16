@@ -154,12 +154,16 @@ def get_annotations(document_id: int) -> str:
     user_teacher = timdb.users.has_teacher_access(user_id, document_id)
     user_owner = timdb.users.user_is_owner(user_id, document_id)
 
-    results = timdb.annotations.get_annotations_with_comments_in_document(getCurrentUserId(), user_teacher, user_owner, document_id)
+    results = timdb.annotations.get_annotations_with_comments_in_document(getCurrentUserId(), user_teacher, user_owner,
+                                                                          document_id)
 
     response = jsonResponse(results)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     return response
 
+
+
+# TODO Remove everything down below?
 
 # TODO decide whether we should instead return comments for just one annotation, instead of returning everything at
 # once, like here.
@@ -175,12 +179,8 @@ def get_comments(document_id: int) -> str:
     results = timdb.annotations.get_comments_in_document(document_id)
     return jsonResponse(results)
 
-
-
-
-
 @annotations.route("/<document_id>/get_comments")
-def get_comments(document_id: int):
+def get_comments2(document_id: int):
     timdb = getTimDb()
     doc_id = int(document_id)
     comments = timdb.annotations.get_annotations_with_comments_in_document(doc_id)

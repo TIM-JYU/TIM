@@ -179,7 +179,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             language_id: "FI", // TODO: Change to user lang
             selected: false
         };
-        $scope.makePostRequest("/addlabel", labelToAdd, function (json) {
+        $scope.makePostRequest("/add_label", labelToAdd, function (json) {
             labelToAdd.id = parseInt(json.data);
             console.log(labelToAdd);
             $scope.resetNewLabel();
@@ -212,7 +212,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             velp_groups: [default_velp_group]  // TODO: Change to default group, add choices where to add
         };
 
-        $scope.makePostRequest("/addvelp", velpToAdd, function (json) {
+        $scope.makePostRequest("/add_velp", velpToAdd, function (json) {
             velpToAdd.id = parseInt(json.data);
             $scope.resetNewVelp();
             $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};
