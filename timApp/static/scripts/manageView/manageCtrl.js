@@ -36,12 +36,12 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.getJustDocName = function(fullName) {
-            i = fullName.lastIndexOf('/');
+            var i = fullName.lastIndexOf('/');
             return i < 0 ? fullName : fullName.substr(i + 1);
         };
 
         sc.getFolderName = function(fullName) {
-            i = fullName.lastIndexOf('/');
+            var i = fullName.lastIndexOf('/');
             return i < 0 ? '' : fullName.substring(0, fullName.lastIndexOf('/'));
         };
 
