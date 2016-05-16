@@ -68,7 +68,7 @@ body {
         @mixin heading-base($outdent) {
             text-align: left;
             margin-left: $outdent;
-            @media (max-width: $screen-sm) {
+            @media (max-width: $screen-sm + 6) {
                 margin-left: $outdent * 0.5;
             }
             @media (max-width: $screen-xs-max) {
