@@ -23,6 +23,7 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
     @extend .fixed-side;
     max-width: calc(#{$right-ratio} - #{$grid-gutter-per2});
     min-width: 10em;
+    right: 0;
 }
 
 #menuTabs {
