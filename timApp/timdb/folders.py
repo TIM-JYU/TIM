@@ -187,7 +187,10 @@ class Folders(TimDbBase):
         :return: Path for velp group folder
         """
         group_folder_name = "velp groups"   # Name of the folder all velp groups end up in
-        velps_folder_path = root_path + "/" + group_folder_name
+        if root_path != "":
+            velps_folder_path = root_path + "/" + group_folder_name
+        else:
+            velps_folder_path = group_folder_name
         doc_folder_path = velps_folder_path + "/" + doc_name
         velps_folder = False
         doc_velp_folder = False

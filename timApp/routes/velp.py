@@ -272,32 +272,30 @@ def create_default_velp_group():
 
     return jsonResponse(velp_groups)
 
-@velps.route("/document_id/create_default_velp_group2", methods=["GET"])
-def create_default_velp_group2():
+@velps.route("/<document_id>/create_default_velp_group2", methods=['GET'])
+def create_default_velp_group2(document_id: int):
     """
 
     :return:
     """
-    """
-    json_data = request.get_json()
+
     try:
-        velp_id = json_data.get('id')
-        new_content = json_data.get('content')
-        language_id = json_data.get('language_id')
-        velp_groups = json_data['velp_groups']
-    except KeyError as e:
-        abort(400, "Missing data " + e.args[0])
-    if not new_content:
-        abort(400, "Empty content string.")
-    """
+        doc_id = int(document_id)
+    except ValueError as e:
+        abort(400, "Document_id is not a number.")
 
     timdb = getTimDb()
     owner_group_id = 3  # Korppi users
-    root_path = "users/josalatt/testikansio"
-    doc_name = "testi1"
+    full_path = timdb.documents.get_first_document_name(doc_id)
+    doc_name = os.path.basename(full_path)
+
+    if len(full_path) - len(doc_name) - 1 < len(doc_name):
+        doc_path = ""
+    else:
+        doc_path = full_path[:len(full_path) - len(doc_name) - 1]
 
     # Get velp group folder path and if necessary, creates those folders
-    velps_folder_path = timdb.folders.check_velp_group_folder_path(root_path, owner_group_id, doc_name)
+    velps_folder_path = timdb.folders.check_velp_group_folder_path(doc_path, owner_group_id, doc_name)
 
     velp_groups = timdb.documents.get_documents_in_folder(velps_folder_path)
     default_velp_group = False
@@ -337,6 +335,13 @@ def get_velp_groups2(document_id: int):
     doc_id = int(document_id)
     groups = get_velp_groups(doc_id)
     return jsonResponse(groups)
+
+@velps.route("/<document_id>/get_comments")
+def get_comments(document_id: int):
+    timdb = getTimDb()
+    doc_id = int(document_id)
+    comments = timdb.annotations.get_annotations_with_comments_in_document(doc_id)
+    return jsonResponse(comments)
 
 def get_velp_groups(document_id: int):
     """Returns all velp groups found from tree from document to root and from users own velp folder
@@ -422,7 +427,7 @@ def get_velp_groups(document_id: int):
     return results
 
 
-# TODO: Outdated
+# TODO: Outdated eventually
 
 @velps.route("/<document_id>/defaultvelpgroup", methods=['GET'])
 def check_default_velp_group(document_id: int) -> str:

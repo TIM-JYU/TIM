@@ -110,7 +110,7 @@ class Annotations(TimDbBase):
                          points         = ?,
                          icon_id        = ?
                        WHERE id = ?
-                      """, [version_id, int(visible_to), points, icon_id, annotation_id]
+                      """, [version_id, visible_to.value, points, icon_id, annotation_id]
                        )
         self.db.commit()
         return
@@ -276,6 +276,59 @@ class Annotations(TimDbBase):
         self.db.commit()
         return cursor.lastrowid
 
+
+    def get_annotations_with_comments_in_document(self, document_id: int):
+        annotations = self.get_annotations_in_document(1, True, True, document_id)
+        annotation_ids = []
+        for annotation in annotations:
+            annotation_ids.append(annotation['id'])
+
+        comment_data = self.get_comments_for_annotations(annotation_ids)
+
+        comment_dict = {}
+
+        if comment_data:
+            annotation_id = comment_data[0]['annotation_id']
+            list_help = []
+            dict_help = {}
+            # comment_list = []
+            for i in range(len(comment_data)):
+                next_id = comment_data[i]['annotation_id']
+                if next_id != annotation_id:
+                    # comment_dict['id'] = annotation_id
+                    comment_dict[annotation_id] = copy.deepcopy(list_help)
+                    # comment_list.append(copy.deepcopy(comment_dict))
+                    annotation_id = next_id
+                    dict_help.clear()
+                    del list_help[:]
+                    dict_help['comment_time'] = comment_data[i]['comment_time']
+                    dict_help['commenter_id'] = comment_data[i]['commenter_id']
+                    dict_help['content'] = comment_data[i]['content']
+                    list_help.append(copy.deepcopy(dict_help))
+                else:
+                    dict_help['comment_time'] = comment_data[i]['comment_time']
+                    dict_help['commenter_id'] = comment_data[i]['commenter_id']
+                    dict_help['content'] = comment_data[i]['content']
+                    list_help.append(copy.deepcopy(dict_help))
+                if i == len(comment_data) - 1:
+                    # comment_dict['id'] = annotation_id
+                    comment_dict[annotation_id] = copy.deepcopy(list_help)
+                    # comment_list.append(copy.deepcopy(comment_dict))
+                    annotation_id = next_id
+                    dict_help.clear()
+
+        for annotation in annotations:
+            annotation_id = annotation['id']
+            print("---")
+            print(comment_dict[annotation_id])
+            if comment_dict[annotation_id] is None:
+                print("HAHAA")
+            else:
+                annotation['comments'] = copy.deepcopy(comment_dict[annotation_id])
+
+        return annotations
+
+
     # Todo write support for answer_id.
     def get_comments_in_document(self, document_id: int) -> List[Dict]:
         """Gets all the comments in annotations in this document.
@@ -301,22 +354,7 @@ class Annotations(TimDbBase):
                        )
         return self.resultAsDictionary(cursor)
 
-    def get_annotations_with_comments_in_document(self, document_id: int):
-        annotations = self.get_annotations_in_document(document_id)
-        annotation_ids = []
-        for annotation in annotations:
-            annotation_ids.append(annotation['id'])
-
-        comments = self.get_comments_from_annotations(annotation_ids)
-
-        for annotation in annotations:
-            for comment in comments:
-                if annotation['id'] == comment['id']:
-                    annotation.update(comment)
-
-        return annotations
-
-    def get_comments_from_annotations(self, annotation_ids: List[int]) -> List[dict]:
+    def get_comments_for_annotations(self, annotation_ids: List[int]) -> List[dict]:
         ids = ", ".join(str(x) for x in annotation_ids)
         cursor = self.db.cursor()
         cursor.execute("""
@@ -335,28 +373,4 @@ class Annotations(TimDbBase):
                     )
         comment_data = self.resultAsDictionary(cursor)
 
-        if comment_data:
-            annotation_id = comment_data[0]['annotation_id']
-            list_help = []
-            dict_help = {}
-            comment_dict = {}
-            for i in range(len(comment_data)):
-                next_id = comment_data[i]['annotation_id']
-                if next_id != annotation_id:
-                    comment_dict[annotation_id] = copy.deepcopy(list_help)
-                    annotation_id = next_id
-                    del list_help[:]
-                    dict_help['comment_time'] = comment_data[i]['comment_time']
-                    dict_help['commenter_id'] = comment_data[i]['commenter_id']
-                    dict_help['content'] = comment_data[i]['content']
-                    list_help.append(copy.deepcopy(dict_help))
-                else:
-                    dict_help['comment_time'] = comment_data[i]['comment_time']
-                    dict_help['commenter_id'] = comment_data[i]['commenter_id']
-                    dict_help['content'] = comment_data[i]['content']
-                    list_help.append(copy.deepcopy(dict_help))
-                if i == len(comment_data) - 1:
-                    comment_dict[annotation_id] = copy.deepcopy(list_help)
-
-
-        return comment_dict
+        return comment_data
