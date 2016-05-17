@@ -243,6 +243,14 @@ timApp.controller("ViewCtrl", [
             return $area.attr("data-name");
         };
 
+        sc.getAreaById = function (area_name) {
+            if (!area_name) {
+                return null;
+            }
+
+            return $('.area.area_' + area_name).children('.areaContent').children();
+        };
+
         sc.getFirstPar = function ($par_or_area) {
             if ($par_or_area.hasClass('area')) {
                 return $par_or_area.find('.par').first();
@@ -1083,15 +1091,32 @@ timApp.controller("ViewCtrl", [
             return false;
         });
 
-        sc.onClick(".areaeditline", function ($this, e) {
+        sc.onClick(".areaeditline1", function ($this, e) {
+            return sc.onAreaEditClicked($this, e, ".areaeditline1");
+        });
+
+        sc.onClick(".areaeditline2", function ($this, e) {
+            return sc.onAreaEditClicked($this, e, ".areaeditline2");
+        });
+
+        sc.onClick(".areaeditline3", function ($this, e) {
+            return sc.onAreaEditClicked($this, e, ".areaeditline3");
+        });
+
+        sc.onAreaEditClicked = function($this, e, className) {
             sc.closeOptionsWindow();
-            var $area = $this.parent().filter('.area');
-            var coords = {left: e.pageX - $area.offset().left, top: e.pageY - $area.offset().top};
+            var areaName = $this.attr('data-area');
+            var $area = sc.getAreaById(areaName);
+            var $area_part = $this.parent().filter('.area');
+            console.log($area_part);
+            var coords = {left: e.pageX - $area_part.offset().left, top: e.pageY - $area_part.offset().top};
+
+            $('.area.area_' + areaName).children(className).addClass('menuopen');
 
             // We need the timeout so we don't trigger the ng-clicks on the buttons
             $timeout( function() {sc.showOptionsWindow(e, $area, coords);}, 80);
             return false;
-        });
+        };
 
         sc.setAreaAttr = function(area, attr, value) {
             var area_selector = "[data-area=" + area + "]";
@@ -1198,7 +1223,8 @@ timApp.controller("ViewCtrl", [
             var tagName = e.target.tagName.toLowerCase();
             var ignoreTags = ['button', 'input'];
             if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || $(e.target).hasClass("menu-icon")
-                || $(e.target).hasClass("editline") || $(e.target).hasClass("areaeditline")) {
+                || $(e.target).hasClass("editline") || $(e.target).hasClass("areaeditline1") ||
+                   $(e.target).hasClass("areaeditline2") || $(e.target).hasClass("areaeditline3")) {
                 return false;
             }
 
@@ -1214,10 +1240,15 @@ timApp.controller("ViewCtrl", [
 
         }, true);
 
-        sc.showOptionsWindow = function (e, $par_or_area, coords) {
-            $par_or_area.children('.editline').addClass('menuopen');
-            $par_or_area.children('.areaeditline').addClass('menuopen');
-            sc.showPopupMenu(e, $par_or_area, coords,
+        sc.showOptionsWindow = function (e, $pars, coords) {
+            /*if ($pars.length > 1) {
+                //$pars.children('.editline').addClass('menuopen');
+                $pars.parent().parent().children('.areaeditline1, areaeditline2, areaeditline3').addClass('menuopen');
+            } else {
+                $pars.children('.editline').addClass('menuopen');
+                //$pars.children('.areaeditline1').addClass('menuopen');
+            }*/
+            sc.showPopupMenu(e, $pars, coords,
                 {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'});
         };
 
@@ -1229,7 +1260,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.optionsWindowClosed = function ($par_or_area) {
-            var $editline = $par_or_area.find('.menuopen');
+            var $editline = $('.menuopen');
             $editline.removeClass('menuopen');
         };
 
@@ -1751,7 +1782,7 @@ timApp.controller("ViewCtrl", [
                 "options" : options
             }).success(function(data, status, headers, config) {
                 $area.children().wrapAll('<div class="areaContent">');
-                $area.append('<div class="areaeditline">');
+                $area.append('<div class="areaeditline1">');
 
                 if (options.collapsible)
                     $window.location.reload();
@@ -1837,7 +1868,7 @@ timApp.controller("ViewCtrl", [
 
             http.post('/unwrap_area/' + sc.docId + '/' + area_name, {
             }).success(function (data, status, headers, config) {
-                $area.children('.areaeditline').remove();
+                $area.children('.areaeditline1, .areaeditline2, .areaeditline3').remove();
                 $area.children().find('.areapartline').remove();
                 var $areaContent = $area.children('.areaContent');
                 $areaContent.children('[data-area-start]').remove();

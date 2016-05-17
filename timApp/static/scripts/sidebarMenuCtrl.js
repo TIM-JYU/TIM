@@ -235,17 +235,23 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
         };
 
         $scope.enable_area_edit_active = function () {
-            $('.areaeditline-disabled').removeClass('areaeditline-disabled').addClass('areaeditline');
-            $('.areaeditline').addClass('areaeditline-show');
+            $('.areaeditline1-disabled').removeClass('areaeditline1-disabled').addClass('areaeditline1');
+            $('.areaeditline2-disabled').removeClass('areaeditline2-disabled').addClass('areaeditline2');
+            $('.areaeditline3-disabled').removeClass('areaeditline3-disabled').addClass('areaeditline3');
+            $('.areaeditline1, .areaeditline2, .areaeditline3').addClass('areaeditline-show');
         };
 
         $scope.enable_area_edit_passive = function () {
-            $('.areaeditline-disabled').removeClass('areaeditline-disabled').addClass('areaeditline');
+            $('.areaeditline1-disabled').removeClass('areaeditline1-disabled').addClass('areaeditline1');
+            $('.areaeditline2-disabled').removeClass('areaeditline2-disabled').addClass('areaeditline2');
+            $('.areaeditline3-disabled').removeClass('areaeditline3-disabled').addClass('areaeditline3');
             $('.areaeditline-show').removeClass('areaeditline-show');
         };
 
         $scope.disable_area_edit = function () {
-            $('.areaeditline').removeClass('areaeditline').addClass('areaeditline-disabled');
+            $('.areaeditline1').removeClass('areaeditline1').addClass('areaeditline1-disabled');
+            $('.areaeditline2').removeClass('areaeditline2').addClass('areaeditline2-disabled');
+            $('.areaeditline3').removeClass('areaeditline3').addClass('areaeditline3-disabled');
             $('.areaeditline-show').removeClass('areaeditline-show');
         };
 

@@ -33,6 +33,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432
 app.jinja_env.filters['map_format'] = map_format
 app.jinja_env.filters['datestr_to_relative'] = datestr_to_relative
 
+app.jinja_env.add_extension('jinja2.ext.do')
+
 # IMPORTANT: We want to disable contracts (if requested) as early as possible
 # before any @contract decorator is encountered.
 

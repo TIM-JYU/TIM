@@ -64,17 +64,25 @@
 {% endif %}
 
 {% set areas = [] %}
+{% set open_areas = {} %}
 
 {% macro start_area(doc_id, areas) %}
-    <div class="area" id="area_{{areas|join('_')}}" data-name="{{areas|join('_')}}" data-doc-id="{{doc_id}}">
+    <div class="area area_{{areas|join(' area_')}}" id="area_{{areas|join('_')}}" data-name="_{{areas|join('_')}}_" data-doc-id="{{doc_id}}">
         <div class="areaContent">
             {{ caller() }}
 {% endmacro %}
 
-{% macro end_area(area_name) %}
+{% macro end_area(open_areas) %}
     </div>
     {% if rights.editable or rights.can_comment %}
-        <div class="areaeditline" title="Click to edit this area reference ({{ area_name }})"></div>
+        {% for area in open_areas %}
+            {% if open_areas[area] <= 3 %}
+                <div class="areaeditline{{ open_areas[area] }}"
+                     title="Click to edit this area reference ({{ area }})"
+                     data-area="{{ area }}">
+                </div>
+            {% endif %}
+        {% endfor %}
     {% endif %}
     </div>
     {{ caller() }}
@@ -83,14 +91,15 @@
 
 {% for t in text %}
     {% if t.attrs.area %}
-        {% if areas|length > 0 %}
-            {% call end_area(areas|join(', ')) %}
+        {% if open_areas|length > 0 %}
+            {% call end_area(open_areas) %}
             {% endcall %}
         {% endif %}
 
         {% set areas = areas + [t.attrs.area] %}
+        {% do open_areas.__setitem__(t.attrs.area, open_areas|length + 1) %}
 
-        {% call start_area(t.doc_id, areas) %}
+        {% call start_area(t.doc_id, open_areas) %}
         {% endcall %}
     {% endif %}
     {% if t.ref_attrs and t.ref_attrs.area %}
@@ -100,14 +109,15 @@
             {% set refcount = 0 %}
         {% endif %}
 
-        {% if areas|length > 0 %}
-            {% call end_area(areas|join(', ')) %}
+        {% if open_areas|length > 0 %}
+            {% call end_area(open_areas) %}
             {% endcall %}
         {% endif %}
 
         {% set areas = areas + [t.ref_attrs.area] %}
+        {% do open_areas.__setitem__(t.attrs.area, areas|length) %}
 
-        {% call start_area(t.doc_id, areas) %}
+        {% call start_area(t.doc_id, open_areas) %}
         {% endcall %}
     {% endif %}
 
@@ -212,26 +222,26 @@
     {% endif %}
     </div>
 
-    {% if areas|length > 0 %}
+    {% if open_areas|length > 0 %}
         {% if t.attrs.area_end %}
-            {% call end_area(areas|join(', ')) %}
+            {% call end_area(open_areas) %}
             {% endcall %}
 
-            {% set areas = areas|reject("equalto", t.attrs.area_end)|list  %}
+            {% do open_areas.pop(t.attrs.area_end, None) %}
 
-            {% if areas|length > 0 %}
-                {% call start_area(t.doc_id, areas) %}
+            {% if open_areas|length > 0 %}
+                {% call start_area(t.doc_id, open_areas) %}
                 {% endcall %}
             {% endif %}
         {% endif %}
         {% if t.ref_attrs and t.ref_attrs.area_end %}
-            {% call end_area(areas|join(', ')) %}
+            {% call end_area(open_areas) %}
             {% endcall %}
 
-            {% set areas = areas|reject("equalto", t.ref_attrs.area_end)|list  %}
+            {% do open_areas.pop(t.ref_attrs.area_end, None) %}
 
             {% if areas|length > 0 %}
-                {% call start_area(t.doc_id, areas) %}
+                {% call start_area(t.doc_id, open_areas) %}
                 {% endcall %}
             {% endif %}
         {% endif %}

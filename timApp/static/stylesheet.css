@@ -135,9 +135,19 @@ td p {
     background: #3CC; /* rgb(236,103,27); */
 }
 
-.areaeditline:hover, .areaeditline.menuopen {
+.areaeditline1:hover, .areaeditline1.menuopen {
     opacity: 0.5;
-    background: #d874ff; /* rgb(236,103,27); */
+    /*background: #d874ff; /* rgb(236,103,27); */
+}
+
+.areaeditline2:hover, .areaeditline2.menuopen {
+    opacity: 0.5;
+    /*background: #b2aaff; /* rgb(236,103,27); */
+}
+
+.areaeditline2:hover, .areaeditline2.menuopen {
+    opacity: 0.5;
+    /*background: #ff9851; /* rgb(236,103,27); */
 }
 
 .readline.read {
@@ -285,7 +295,7 @@ ul ul ul, ol ol ol {
     background: inherit;
 }
 
-#previewDiv .editline, #previewDiv .readline, #previewDiv .arealine .csrunPreview .editline .areaeditline, .csrunPreview .readline {
+#previewDiv .editline, #previewDiv .readline, #previewDiv .arealine .csrunPreview .editline .areaeditline1 .areaeditline2 .areaeditline3, .csrunPreview .readline {
     display: none;
 }
 
@@ -341,18 +351,38 @@ ul ul ul, ol ol ol {
     top: 0;
 }
 
-.areaeditline {
+.areaeditline1 {
+    opacity: 0;
+    background: #d874ff; /* rgb(236,103,27); */
+    position: absolute;
+    left: 0.8em;
+    width: 1em;
+    height: 100%;
+    top: 0;
+}
+
+.areaeditline2 {
+    opacity: 0;
+    background: #b2aaff; /* rgb(236,103,27); */
+    position: absolute;
+    left: -0.2em;
+    width: 1em;
+    height: 100%;
+    top: 0;
+}
+
+.areaeditline3 {
+    opacity: 0;
+    background: #ff9851; /* rgb(236,103,27); */
     position: absolute;
     left: -1.2em;
-    /*z-index: 2;*/
-    width: 3em;
+    width: 1em;
     height: 100%;
     top: 0;
 }
 
 .areaeditline-show {
     opacity: 0.2;
-    background: #d874ff; /* rgb(236,103,27); */
 }
 
 .areacollapse::before {
