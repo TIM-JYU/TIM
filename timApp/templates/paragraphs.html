@@ -63,7 +63,6 @@
     </div>
 {% endif %}
 
-{% set area_depth = 0 %}
 {% set areas = [] %}
 
 {% macro start_area(doc_id, areas) %}
@@ -72,10 +71,10 @@
             {{ caller() }}
 {% endmacro %}
 
-{% macro end_area(area_name, area_depth) %}
+{% macro end_area(area_name) %}
     </div>
     {% if rights.editable or rights.can_comment %}
-        <div class="areaeditline" title="Click to edit this area reference ({{ area_name }})" style="z-index: {{ area_depth }}"></div>
+        <div class="areaeditline" title="Click to edit this area reference ({{ area_name }})"></div>
     {% endif %}
     </div>
     {{ caller() }}
@@ -85,11 +84,10 @@
 {% for t in text %}
     {% if t.attrs.area %}
         {% if areas|length > 0 %}
-            {% call end_area(t.attrs.area_end, area_depth) %}
+            {% call end_area(t.attrs.area_end) %}
             {% endcall %}
         {% endif %}
 
-        {% set area_depth = area_depth + 1 %}
         {% set areas = areas + [t.attrs.area] %}
 
         {% call start_area(t.doc_id, areas) %}
@@ -106,7 +104,6 @@
             </div>
         {% endif %}
 
-        {% set area_depth = area_depth + 1 %}
         {% set areas = areas + [t.ref_attrs.area] %}
 
         {% call start_area(t.doc_id, areas) %}
@@ -214,12 +211,11 @@
     {% endif %}
     </div>
 
-    {% if area_depth > 0 %}
+    {% if areas|length > 0 %}
         {% if t.attrs.area_end %}
-            {% call end_area(t.attrs.area_end, area_depth) %}
+            {% call end_area(t.attrs.area_end) %}
             {% endcall %}
 
-            {% set area_depth = area_depth - 1 %}
             {% set areas = areas|reject("equalto", t.attrs.area_end)|list  %}
 
             {% if areas|length > 0 %}
@@ -228,10 +224,9 @@
             {% endif %}
         {% endif %}
         {% if t.ref_attrs and t.ref_attrs.area_end %}
-            {% call end_area(t.ref_attrs.area_end, area_depth) %}
+            {% call end_area(t.ref_attrs.area_end) %}
             {% endcall %}
 
-            {% set area_depth = area_depth - 1 %}
             {% set areas = areas|reject("equalto", t.ref_attrs.area_end)|list  %}
 
             {% if areas|length > 0 %}
