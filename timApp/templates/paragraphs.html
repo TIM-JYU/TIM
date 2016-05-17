@@ -84,7 +84,7 @@
 {% for t in text %}
     {% if t.attrs.area %}
         {% if areas|length > 0 %}
-            {% call end_area(t.attrs.area_end) %}
+            {% call end_area(areas|join(', ')) %}
             {% endcall %}
         {% endif %}
 
@@ -101,7 +101,8 @@
         {% endif %}
 
         {% if areas|length > 0 %}
-            </div>
+            {% call end_area(areas|join(', ')) %}
+            {% endcall %}
         {% endif %}
 
         {% set areas = areas + [t.ref_attrs.area] %}
@@ -213,7 +214,7 @@
 
     {% if areas|length > 0 %}
         {% if t.attrs.area_end %}
-            {% call end_area(t.attrs.area_end) %}
+            {% call end_area(areas|join(', ')) %}
             {% endcall %}
 
             {% set areas = areas|reject("equalto", t.attrs.area_end)|list  %}
@@ -224,7 +225,7 @@
             {% endif %}
         {% endif %}
         {% if t.ref_attrs and t.ref_attrs.area_end %}
-            {% call end_area(t.ref_attrs.area_end) %}
+            {% call end_area(areas|join(', ')) %}
             {% endcall %}
 
             {% set areas = areas|reject("equalto", t.ref_attrs.area_end)|list  %}
