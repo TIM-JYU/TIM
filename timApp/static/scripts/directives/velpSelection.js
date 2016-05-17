@@ -68,10 +68,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
             $scope.annotations = data;
 
+            /*
             angular.forEach($scope.annotations, function (a) {
-                a.comments = [];
+                a.comments = $scope.annotations.comments;
             });
-
+            */
             $scope.loadDocumentAnnotations();
 
             //$scope.annotations = [];
