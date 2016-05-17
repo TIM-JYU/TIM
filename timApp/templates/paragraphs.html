@@ -64,11 +64,14 @@
 {% endif %}
 
 {% set area_depth = 0 %}
+{% set areas = [] %}
+
 {% for t in text %}
     {% if t.attrs.area %}
         <div class="area" id="area_{{t.attrs.area}}" data-name="{{t.attrs.area}}" data-doc-id="{{t.doc_id}}">
         <div class="areaContent">
         {% set area_depth = area_depth + 1 %}
+        {% set areas = areas + [t.attrs.area] %}
     {% endif %}
     {% if t.ref_attrs and t.ref_attrs.area %}
         {% if refcount %}
@@ -80,6 +83,7 @@
         <div class="area" id="area_{{t.ref_attrs.area}}_ref{{refcount}}" data-name="{{t.ref_attrs.area}}" data-doc-id="{{t.ref_doc_id}}">
         <div class="areaContent">
         {% set area_depth = area_depth + 1 %}
+        {% set areas = areas + [t.ref_attrs.area] %}
     {% endif %}
 
     <div class="{{[t.cls|trim, t.is_plugin|trim]|join(' ')|trim}}"
@@ -192,6 +196,7 @@
             {% endif %}
             </div>
             {% set area_depth = area_depth - 1 %}
+            {% set areas = areas|reject("equalto", t.attrs.area)|list  %}
         {% endif %}
         {% if t.ref_attrs and t.ref_attrs.area_end %}
             </div>
@@ -200,6 +205,7 @@
             {% endif %}
             </div>
             {% set area_depth = area_depth - 1 %}
+            {% set areas = areas|reject("equalto", t.ref_attrs.area)|list  %}
         {% endif %}
     {% endif %}
 {% endfor %}
