@@ -63,7 +63,6 @@
     </div>
 {% endif %}
 
-{% set par_index = 0 %}
 {% set area_depth = 0 %}
 {% for t in text %}
     {% if t.attrs.area %}
@@ -85,10 +84,6 @@
 
     <div class="{{[t.cls|trim, t.is_plugin|trim]|join(' ')|trim}}"
          id="{{ t.id }}"
-     {% if t.html != "" or (not t.attrs.area and not t.attrs.area_end) %}
-         data-index="{{ par_index }}"
-         {% set par_index = par_index + 1 %}
-     {% endif %}
          t="{{ t.t }}"
          attrs="{{ t.attrs_str }}"
      {% if t.ref_attrs and t.ref_attrs.classes and "deleted" in t.ref_attrs.classes %}

@@ -1025,16 +1025,38 @@ timApp.controller("ViewCtrl", [
             return sc.markParRead($this, $this.parents('.par'));
         });
 
+        sc.getParIndex = function($par) {
+            var par_id = sc.getParId($par);
+            var $pars = $('.par');
+            var realIndex = 0;
+
+            if ($par.find('.parContent').not(':empty').length === 0)
+                return null;
+
+            for (var i = 0; i < $pars.length; i++) {
+                var $node = $pars.eq(i);
+                if ($node.find('.parContent').not(':empty').length === 0)
+                    continue;
+
+                if (sc.getParId($node) == par_id) {
+                    console.log('sc.getParIndex(' + par_id + ') = ' + realIndex);
+                    return realIndex;
+                }
+
+                realIndex++;
+            }
+        };
+
         sc.extendSelection = function ($par, allowShrink) {
             if (sc.selection.start === null) {
                 sc.selection.start = $par;
                 sc.selection.end = $par;
             } else {
                 var n = sc.selection.pars.length;
-                var startIndex = $(sc.selection.pars[0]).attr('data-index');
-                var endIndex = $(sc.selection.pars[n - 1]).attr('data-index');
+                var startIndex = sc.getParIndex(sc.selection.pars.eq(0));
+                var endIndex = sc.getParIndex(sc.selection.pars.eq(n - 1));
                 var areaLength = endIndex - startIndex + 1;
-                var newIndex = $par.attr('data-index');
+                var newIndex = sc.getParIndex($par);
 
                 if (newIndex < startIndex) {
                     sc.selection.start = $par;
@@ -1578,7 +1600,7 @@ timApp.controller("ViewCtrl", [
                     continue;
                 }
 
-                if ($next.hasClass('par') && $next.attr('data-index') !== undefined) {
+                if ($next.hasClass('par') && sc.getParIndex($next) !== null) {
                     pars.push($next);
                     if ($next.is($par_last))
                         break;
