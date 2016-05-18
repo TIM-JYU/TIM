@@ -861,6 +861,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             }
                         }
                     });
+                    $('html, body').scrollTop($editorTop.offset().top);
                 };
 
                 $scope.selectLine = function (select) {
