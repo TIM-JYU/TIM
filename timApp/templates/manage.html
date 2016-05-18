@@ -18,12 +18,20 @@
     <div class="panel-heading">{{ obj_name|capitalize }} permissions</div>
 <div class="panel-body">
     {% if rights['owner'] %}
-            <div class="form-group">
-                <label>{{ obj_name|capitalize }} owner: <select class="form-control" ng-model="doc.owner"
-                                    ng-options="group.name for group in userGroups | orderBy:'name' track by group.id"
-                                    ng-change="changeOwner()"></select></label>
-                <span ng-show="ownerUpdating">Updating...</span>
-            </div>
+            <form ng-submit="changeOwner()">
+                <div class="form-group">
+                    <label for="newOwnerInput">{{ obj_name|capitalize }} owner:</label>
+                    <div class="input-group">
+                        <input id="newOwnerInput" class="form-control" type="text" ng-model="newOwner">
+                        <span class="input-group-btn">
+                            <button ng-disabled="doc.owner.name === newOwner" class="timButton">
+                                Update
+                            </button>
+                        </span>
+                    </div>
+                    <span ng-show="ownerUpdating">Updating...</span>
+                </div>
+            </form>
         {% else %}
             {{ obj_name|capitalize }} owner: {{ doc.owner.name }}
         {% endif %}

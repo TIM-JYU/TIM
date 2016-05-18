@@ -3,8 +3,9 @@
 # run with option i to get interactive mode
 # option p for pure start (no wget for files)
 dockername="csPlugin"
-dockerOptions="--name $dockername --net=timnet -p 56000:5000 -v /lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu:ro -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/bin/docker -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash"
+# dockerOptions="--name $dockername --net=timnet -p 56000:5000 -v /lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu:ro -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/bin/docker -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash"
 # dockerOptions="--name $dockername --net=timnet -p 56000:5000                                                 -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/bin/docker -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash"
+dockerOptions="--name $dockername --net=timnet -p 56000:5000                                                 -v /var/run/docker.sock:/var/run/docker.sock                                -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash"
 # dockerOptions="--name $dockername --net=timnet -p 56000:5000  -v /lib/x86_64-linux-gnu/libdevmapper.so.1.02.1:/lib/x86_64-linux-gnu/libdevmapper.so.1.02.1   -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/bin/docker -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash"
 
 docker stop $dockername > /dev/null 2>&1
@@ -12,7 +13,7 @@ docker rm $dockername > /dev/null 2>&1
 
 if [ "$2" != "p" ]
 then
-
+sudo apt-get install acl
 sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp
 
 
@@ -57,6 +58,7 @@ wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar -O co
 wget https://svn.cc.jyu.fi/srv/svn/ohj1/graphics/trunk/Graphics.jar -O Graphics.jar -nv
 wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar -O Ali.jar -nv
 wget https://svn.cc.jyu.fi/srv/svn/ohj2/FXExamples/trunk/FXGui/fxgui.jar -O fxgui.jar -nv
+wget https://svn.cc.jyu.fi/srv/svn/ohj2/gui/gui.jar -O gui.jar -nv
 
 
 sudo mkdir -p cs

@@ -16,6 +16,7 @@ from werkzeug.contrib.profiler import ProfilerMiddleware
 
 import containerLink
 from ReverseProxied import ReverseProxied
+from documentmodel.documentversion import DocumentVersion
 from plugin import PluginException
 from routes.answer import answers
 from routes.cache import cache
@@ -86,6 +87,12 @@ def inject_custom_css() -> dict:
     return dict(prefs=prefs)
 
 
+@app.context_processor
+def inject_user() -> dict:
+    """"Injects the user object to all templates."""
+    return dict(current_user=get_current_user())
+
+
 @app.errorhandler(400)
 def bad_request(error):
     return error_generic(error, 400)
@@ -140,11 +147,30 @@ def reset_css():
 
 @app.route('/download/<int:doc_id>')
 def download_document(doc_id):
-    timdb = getTimDb()
-    if not timdb.documents.exists(doc_id):
-        abort(404)
+    verify_doc_existence(doc_id)
     verify_edit_access(doc_id, "Sorry, you don't have permission to download this document.")
     return Response(Document(doc_id).export_markdown(), mimetype="text/plain")
+
+
+@app.route('/download/<int:doc_id>/<int:major>/<int:minor>')
+def download_document_version(doc_id, major, minor):
+    verify_edit_access(doc_id)
+    doc = DocumentVersion(doc_id, (major, minor))
+    if not doc.exists():
+        abort(404, "This document version does not exist.")
+    return Response(doc.export_markdown(), mimetype="text/plain")
+
+
+@app.route('/diff/<int:doc_id>/<int:major1>/<int:minor1>/<int:major2>/<int:minor2>')
+def diff_document(doc_id, major1, minor1, major2, minor2):
+    verify_edit_access(doc_id)
+    doc1 = DocumentVersion(doc_id, (major1, minor1))
+    doc2 = DocumentVersion(doc_id, (major2, minor2))
+    if not doc1.exists():
+        abort(404, "The document version {} does not exist.".format((major1, minor1)))
+    if not doc2.exists():
+        abort(404, "The document version {} does not exist.".format((major2, minor2)))
+    return Response(DocumentVersion.get_diff(doc1, doc2), mimetype="text/html")
 
 
 @app.route('/images/<int:image_id>/<image_filename>')
@@ -365,9 +391,12 @@ def create_citation_doc(docid, newname):
 def create_folder():
     jsondata = request.get_json()
     folder_name = jsondata['name']
-    owner_id = jsondata['owner']
+    owner_group_name = jsondata['owner']
     timdb = getTimDb()
-    return create_item(folder_name, 'folder', timdb.folders.create, owner_id)
+    owner_group_id = timdb.users.get_usergroup_by_name(owner_group_name)
+    if owner_group_id is None:
+        abort(404, 'Non-existent usergroup.')
+    return create_item(folder_name, 'folder', timdb.folders.create, owner_group_id)
 
 
 @app.route("/getBlock/<int:doc_id>/<par_id>")

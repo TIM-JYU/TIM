@@ -74,6 +74,12 @@ def has_edit_access(block_id):
     return timdb.users.has_edit_access(getCurrentUserId(), block_id)
 
 
+def verify_doc_existence(doc_id):
+    timdb = getTimDb()
+    if not timdb.documents.exists(doc_id):
+        abort(404)
+
+
 def verify_view_access(block_id, require=True):
     return verify_access(getTimDb().users.has_view_access(getCurrentUserId(), block_id), require)
 

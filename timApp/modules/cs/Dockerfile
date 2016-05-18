@@ -1,5 +1,5 @@
 # Aloitetaan ubuntun imagesta
-from ubuntu
+from ubuntu:14.04
 maintainer vesal "vesal@jyu.fi"
 
 # Workaround PAM: system error -messagelle
@@ -73,7 +73,6 @@ RUN apt-get install -y libxtst6
 
 RUN apt-get install -y inotify-tools
 
-run apt-get update
 run apt-get install -y graphviz
 
 # Configure timezone and locale
@@ -86,45 +85,27 @@ env LC_ALL en_US.UTF-8
 env LANG en_US.UTF-8
 env LANGUAGE en_US.UTF-8
 
-# Let's start with some basic stuff.
-RUN apt-get update -qq && apt-get install -qqy \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    lxc \
-    iptables
-
 RUN apt-get install -y postgresql-client    
     
-run apt-get update
-RUN apt-get install -y r-base    
+RUN apt-get install -y r-base
 
 #
 # Scala 
 #
 run apt-get remove scala-library scala
-run wget http://downloads.typesafe.com/scala/2.11.7/scala-2.11.7.deb
+run wget -q http://downloads.typesafe.com/scala/2.11.7/scala-2.11.7.deb
 run dpkg -i scala-2.11.7.deb
-run apt-get update
-run apt-get install scala    
+run apt-get install scala
 run rm scala-2.11.7.deb
-# Install Docker from Docker Inc. repositories.
-
-
-
-#RUN curl -sSL https://get.docker.com/ubuntu/ | sh
-
-# Install the magic wrapper.
-#ADD ./wrapdocker /usr/local/bin/wrapdocker
-#RUN chmod u+s /usr/local/bin/wrapdocker
-#RUN chmod +x /usr/local/bin/wrapdocker
-
-# Define additional metadata for our image.
-#VOLUME /var/lib/docker
-#CMD ["sudo","wrapdocker"]
-# RUN sudo /usr/local/bin/wrapdocker
 
 run apt-get install -y doxygen
+
+run apt-get install -y valgrind
+
+# Install Docker client binary
+run wget -q https://get.docker.com/builds/Linux/x86_64/docker-1.10.2.tgz && \
+    tar -xzvf docker-1.10.2.tgz && \
+    rm docker-1.10.2.tgz
 
 # Lisätään käyttäjä `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.

@@ -31,7 +31,7 @@
                        </span>
                         <input class="form-control" type="text" ng-model="alias.location"/>
                     <span class="input-group-btn">
-                    <a class="timButton" href="{{ '/view/{{alias.location}}' }}">View</a>
+                    <a class="timButton" href="{{ '/view/{{alias.location | escape}}' }}">View</a>
                     </span>
                     </div>
                 </td>
@@ -39,7 +39,7 @@
                     <div class="input-group input-group-sm">
                         <input class="form-control" type="text" ng-model="alias.name" placeholder="Document name"/>
                         <span class="input-group-btn">
-                    <a class="timButton" href="{{ '/view/{{alias.fullname}}' }}">View</a>
+                    <a class="timButton" href="{{ '/view/{{alias.fullname | escape}}' }}">View</a>
                             </span>
                     </div>
                 </td>
@@ -58,7 +58,7 @@
                        </span>
                         <input class="form-control" type="text" ng-model="newAlias.location"/>
                     <span class="input-group-btn">
-                    <a class="timButton" href="{{ '/view/{{alias.location}}' }}">View</a>
+                    <a class="timButton" href="{{ '/view/{{alias.location | escape}}' }}">View</a>
                     </span>
                     </div>
                 </td>
@@ -244,9 +244,6 @@
         <table class="table table-condensed">
             <thead>
             <tr>
-                <!--<td>Time</td>
-                <td>User</td>
-                <td>Difference</td>-->
                 <th>Time</th>
                 <th>User / group</th>
                 <th>Paragraph</th>
@@ -254,13 +251,15 @@
             </tr>
             </thead>
             <tr ng-repeat="version in doc.versions">
-                <td>{{ '{{ version.time }}' }}</td>
-                <td>{{ '{{ version.group }}' }}</td>
-                <td>{{ '{{ version.par_id }}' }}</td>
-                <td>{{ '{{ version.op }}' }}</td>
-                <!--<td><a href="/download/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.timestamp }}' }}</a></td>
-                <td>{{ '{{ version.user }}' }}</td>
-                <td><a href="/diff/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.message }}' }}</a></td>-->
+                {% raw %}
+                <td><a href="/download/{{ doc.id }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{ version.time }}</a></td>
+                <td>{{ version.group }}</td>
+                <td>{{ version.par_id }}</td>
+                <td>
+                    <a ng-if="!$last" href="/diff/{{ doc.id }}/{{ doc.versions[$index+1].ver[0] }}/{{ doc.versions[$index+1].ver[1] }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{ version.op }}</a>
+                    <span ng-if="$last">{{ version.op }}</span>
+                </td>
+                {% endraw %}
             </tr>
         </table>
         </div>

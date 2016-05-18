@@ -95,12 +95,10 @@
                             <input class="form-control" ng-model="folderName" type="text">
                         </label></div>
                         <div class="form-group"><label>
-                            Owner:
-                            <select class="form-control" ng-model="folderOwner"
-                                    ng-options="group.name for group in userGroups track by group.id"></select>
+                            Owner: <input class="form-control" type="text" ng-model="folderOwner">
                         </label></div>
                         <button class="timButton" ng-disabled="!folderName || !folderOwner"
-                                ng-click="createFolder(folderName, folderOwner.id)" type="button">Create
+                                ng-click="createFolder(folderName, folderOwner)" type="button">Create
                         </button>
                     </uib-tab>
                 </uib-tabset>
