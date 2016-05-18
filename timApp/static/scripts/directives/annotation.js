@@ -27,7 +27,6 @@ timApp.directive("annotation", function() {
 
 timApp.controller('AnnotationController', ['$scope', '$http', function ($scope, $http){
     $scope.newComment = "";
-    console.log($scope);
     $scope.visible_options = {
         "type": "select",
         "value": $scope.visibleto,
