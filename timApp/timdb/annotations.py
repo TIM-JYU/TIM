@@ -115,27 +115,33 @@ class Annotations(TimDbBase):
         self.db.commit()
         return
 
-    def get_annotations_in_document(self, user_id: int, user_is_teacher: bool, user_is_owner: bool, document_id: int) -> List[Dict]:
+    def get_annotations_in_document(self, user_id: int, user_has_see_answers, user_has_teacher: bool,
+                                    user_has_owner: bool, document_id: int) -> List[Dict]:
         """Gets all annotations made in a document. Both in document and in answers.
+        :param user_has_see_answers:
         :param user_id: user that is viewing annotations. Affects which annotations are returned.
-        :param user_is_teacher:
-        :param user_is_owner:
+        :param user_has_teacher:
+        :param user_has_owner:
         :param document_id: The relevant document.
         :return: List of dictionaries, each dictionary representing a single annotation.
         """
         # Todo choose velp language. Have fun.
         language_id = 'FI'
-        see_more_annotations_sql = ""
-        if user_is_teacher:
-            see_more_annotations_sql = "Annotation.visible_to = " + str(
-                Annotations.AnnotationVisibility.teacher.value) + " OR\n"
-        if user_is_owner:
-            see_more_annotations_sql = see_more_annotations_sql + "Annotation.visible_to = " + str(
-                Annotations.AnnotationVisibility.owner.value) + " OR\n"
-        # Todo handle answers that are visible to the user also.
+        check_annotation_access_right_sql = "Annotation.visible_to = ?"
+        annotation_access_levels = [Annotations.AnnotationVisibility.everyone.value]
+        if user_has_teacher:
+            check_annotation_access_right_sql += "OR\nAnnotation.visible_to = ?"
+            annotation_access_levels = annotation_access_levels + [Annotations.AnnotationVisibility.teacher.value]
+        if user_has_owner:
+            check_annotation_access_right_sql += "OR\nAnnotation.visible_to = ?"
+            annotation_access_levels = annotation_access_levels + [Annotations.AnnotationVisibility.owner.value]
+        check_annotation_access_right_sql += "\n"
+
         cursor = self.db.cursor()
+        # Distinct is necessary, because we get several identical rows if there are several users contributing in the
+        # same answer.
         cursor.execute("""
-                       SELECT
+                       SELECT DISTINCT
                          Annotation.id,
                          VelpVersion.velp_id AS velp,
                          VelpContent.content AS content,
@@ -161,18 +167,18 @@ class Annotations(TimDbBase):
                        FROM Annotation
                          INNER JOIN VelpVersion ON VelpVersion.id = Annotation.version_id
                          INNER JOIN VelpContent ON VelpContent.version_id = Annotation.version_id
+                         INNER JOIN UserAnswer ON UserAnswer.answer_id = Annotation.answer_id
                        WHERE VelpContent.language_id = ? AND
                              (Annotation.valid_until ISNULL OR
                                 Annotation.valid_until >= CURRENT_TIMESTAMP) AND
-                             Annotation.document_id = ? AND
-                             (Annotation.annotator_id = ? OR
-                       """ +
-                       see_more_annotations_sql
-                       + """Annotation.visible_to = ?)
-
-                       ORDER BY depth_start DESC, node_start DESC, offset_start DESC
-                       """, [language_id, document_id, user_id, Annotations.AnnotationVisibility.everyone.value]
-                       )
+                             Annotation.document_id = ? AND (
+                                Annotation.annotator_id = ? OR (
+                                   """ + check_annotation_access_right_sql +
+                                """ AND (? OR UserAnswer.user_id = ?)
+                             )
+                          )
+           ORDER BY depth_start DESC, node_start DESC, offset_start DESC""",
+                       [language_id, document_id, user_id] + annotation_access_levels + [user_has_see_answers, user_id])
         results = self.resultAsDictionary(cursor)
         for result in results:
             start_path = [int(i) for i in result['element_path_start'][1:-1].split(',')]
@@ -276,9 +282,10 @@ class Annotations(TimDbBase):
         self.db.commit()
         return cursor.lastrowid
 
-
-    def get_annotations_with_comments_in_document(self, user_id: int, user_is_teacher: bool, user_is_owner: bool, document_id: int):
-        annotations = self.get_annotations_in_document(user_id, user_is_teacher, user_is_owner, document_id)
+    def get_annotations_with_comments_in_document(self, user_id: int, user_has_see_answers: bool, user_has_teacher: bool,
+                                                  user_has_owner: bool, document_id: int):
+        annotations = self.get_annotations_in_document(user_id, user_has_see_answers, user_has_teacher, user_has_owner,
+                                                       document_id)
         annotation_ids = []
         for annotation in annotations:
             annotation_ids.append(annotation['id'])
@@ -327,7 +334,6 @@ class Annotations(TimDbBase):
 
         return annotations
 
-
     # Todo write support for answer_id.
     def get_comments_in_document(self, document_id: int) -> List[Dict]:
         """Gets all the comments in annotations in this document.
@@ -365,11 +371,11 @@ class Annotations(TimDbBase):
                       FROM AnnotationComment
                       WHERE AnnotationComment.annotation_id IN (
                       """ + ids +
-                      """
-                      )
-                      ORDER BY AnnotationComment.annotation_id ASC;
-                    """
-                    )
+                       """
+                       )
+                       ORDER BY AnnotationComment.annotation_id ASC;
+                     """
+                       )
         comment_data = self.resultAsDictionary(cursor)
 
         return comment_data
