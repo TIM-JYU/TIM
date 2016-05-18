@@ -8,7 +8,7 @@ annotations = Blueprint('annotations',
 
 
 # TODO connect the routes in this file to the ui.
-@annotations.route("/addannotation", methods=['POST'])
+@annotations.route("/add_annotation", methods=['POST'])
 def add_annotation() -> str:
     json_data = request.get_json()
     print(json_data)
@@ -74,7 +74,7 @@ def add_annotation() -> str:
     return jsonResponse(new_id)
 
 
-@annotations.route("/updateannotation", methods=['POST'])
+@annotations.route("/update_annotation", methods=['POST'])
 def update_annotation() -> str:
     user_id = getCurrentUserId()
     json_data = request.get_json()
@@ -95,7 +95,7 @@ def update_annotation() -> str:
         abort(403, "You are not the annotator.")
     if visible_to:
         try:
-            visible_to=Annotations.AnnotationVisibility(visible_to)
+            visible_to = Annotations.AnnotationVisibility(visible_to)
         except ValueError as e:
             abort(400, "Visibility should be 1, 2, 3 or 4.")
         new_values['visible_to'] = visible_to
@@ -105,26 +105,26 @@ def update_annotation() -> str:
     return ""
 
 
-@annotations.route("/invalidateannotation", methods=['POST'])
+@annotations.route("/invalidate_annotation", methods=['POST'])
 def invalidate_annotation() -> str:
-    json_data=request.get_json()
+    json_data = request.get_json()
     try:
-        annotation_id=json_data['annotation_id']
+        annotation_id = json_data['annotation_id']
     except KeyError as e:
-        abort(400, "Missing data: "+e.args[0])
-    timdb=getTimDb()
-    annotation=timdb.annotations.get_annotation(annotation_id)
+        abort(400, "Missing data: " + e.args[0])
+    timdb = getTimDb()
+    annotation = timdb.annotations.get_annotation(annotation_id)
     if not annotation:
         abort(404, "No such annotation.")
-    annotation=annotation[0]
-    user_id=getCurrentUserId()
-    if not annotation['annotator_id']== user_id:
+    annotation = annotation[0]
+    user_id = getCurrentUserId()
+    if not annotation['annotator_id'] == user_id:
         abort(403, "You are not the annotator.")
     timdb.annotations.invalidate_annotation(annotation_id)
     return ""
 
 
-@annotations.route("/addannotationcomment", methods=['POST'])
+@annotations.route("/add_annotation_comment", methods=['POST'])
 def add_comment() -> str:
     json_data = request.get_json()
     try:
@@ -139,8 +139,7 @@ def add_comment() -> str:
     return jsonResponse(new_id)
 
 
-# Todo maybe check that the document in question actually exists and return on error if not.
-@annotations.route("/<document_id>/annotations", methods=['GET'])
+@annotations.route("/<document_id>/get_annotations", methods=['GET'])
 def get_annotations(document_id: int) -> str:
     try:
         document_id = int(document_id)
@@ -152,16 +151,18 @@ def get_annotations(document_id: int) -> str:
         abort(404, "No such document.")
     if not timdb.users.has_view_access(user_id, document_id):
         abort(403, "View access required.")
-    user_has_see_answers = timdb.users.has_seeanswers_access(user_id,document_id)
+    user_has_see_answers = timdb.users.has_seeanswers_access(user_id, document_id)
     user_has_teacher = timdb.users.has_teacher_access(user_id, document_id)
     user_has_owner = timdb.users.user_is_owner(user_id, document_id)
 
-    results = timdb.annotations.get_annotations_in_document(getCurrentUserId(), user_has_see_answers, user_has_teacher, user_has_owner,
-                                                            int(document_id))
+    results = timdb.annotations.get_annotations_with_comments_in_document(getCurrentUserId(), user_has_see_answers,
+                                                                          user_has_teacher, user_has_owner, document_id)
     response = jsonResponse(results)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     return response
 
+
+# TODO Remove everything down below?
 
 # TODO decide whether we should instead return comments for just one annotation, instead of returning everything at
 # once, like here.
@@ -176,3 +177,34 @@ def get_comments(document_id: int) -> str:
         abort(404, "No such document.")
     results = timdb.annotations.get_comments_in_document(document_id)
     return jsonResponse(results)
+
+
+@annotations.route("/<document_id>/get_comments")
+def get_comments2(document_id: int):
+    timdb = getTimDb()
+    doc_id = int(document_id)
+    comments = timdb.annotations.get_annotations_with_comments_in_document(doc_id)
+    return jsonResponse(comments)
+
+
+# Todo maybe check that the document in question actually exists and return on error if not.
+@annotations.route("/<document_id>/annotationsorig", methods=['GET'])
+def get_annotationsorig(document_id: int) -> str:
+    try:
+        document_id = int(document_id)
+    except ValueError as e:
+        abort(400, "Document_id is not a number.")
+    timdb = getTimDb()
+    user_id = getCurrentUserId()
+    if not timdb.documents.exists(document_id):
+        abort(404, "No such document.")
+    if not timdb.users.has_view_access(user_id, document_id):
+        abort(403, "View access required.")
+    user_teacher = timdb.users.has_teacher_access(user_id, document_id)
+    user_owner = timdb.users.user_is_owner(user_id, document_id)
+
+    results = timdb.annotations.get_annotations_in_document(getCurrentUserId(), user_teacher, user_owner,
+                                                            int(document_id))
+    response = jsonResponse(results)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response

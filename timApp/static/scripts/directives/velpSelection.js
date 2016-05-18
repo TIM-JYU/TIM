@@ -64,14 +64,15 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         //$http.get('/static/test_data/markings.json').success(function (data) {  // ANNOTATION TEST DATA
 
         // TODO: Get annotation comments
-        $http.get('/{0}/annotations'.replace('{0}', doc_id)).success(function (data) { // ROUTE TO DB
+        $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) { // ROUTE TO DB
 
             $scope.annotations = data;
 
+            /*
             angular.forEach($scope.annotations, function (a) {
-                a.comments = [];
+                a.comments = $scope.annotations.comments;
             });
-
+            */
             $scope.loadDocumentAnnotations();
 
             //$scope.annotations = [];
@@ -179,7 +180,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             language_id: "FI", // TODO: Change to user lang
             selected: false
         };
-        $scope.makePostRequest("/addlabel", labelToAdd, function (json) {
+        $scope.makePostRequest("/add_label", labelToAdd, function (json) {
             labelToAdd.id = parseInt(json.data);
             console.log(labelToAdd);
             $scope.resetNewLabel();
@@ -212,7 +213,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             velp_groups: [default_velp_group]  // TODO: Change to default group, add choices where to add
         };
 
-        $scope.makePostRequest("/addvelp", velpToAdd, function (json) {
+        $scope.makePostRequest("/add_velp", velpToAdd, function (json) {
             velpToAdd.id = parseInt(json.data);
             $scope.resetNewVelp();
             $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};

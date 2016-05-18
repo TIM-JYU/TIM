@@ -229,7 +229,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         var current_id = $scope.getRealAnnotationId(id);
 
-        $scope.makePostRequest("/invalidateannotation", {annotation_id: current_id}, function (json) {
+        $scope.makePostRequest("/invalidate_annotation", {annotation_id: current_id}, function (json) {
             console.log(json);
         });
     };
@@ -252,31 +252,23 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Select text range
      */
     $scope.selectText = function () {
-        var sel = $window.getSelection();
-        console.log(sel);
-        console.log(sel.toString());
-        if (sel.toString().length > 0) {
-            var range = sel.getRangeAt(0);
-            console.log(range);
 
-            /*
-             if ($scope.selectedArea != null && $scope.selectionParent != null) {
-             console.log("hei");
-             $scope.selectedArea.startContainer.parentNode.replaceChild($scope.selectionParent, $scope.selectedArea.startContainer);
-             }
-             */
-            //console.log(sel);
+        try {
+            var range;
+            if ($window.getSelection) {
+                range = $window.getSelection();
+            } else {
+                range = document.getSelection();
+            }
+            console.log(range.toString());
+            if (range.toString().length > 0){
+                $scope.selectedArea = range.getRangeAt(0);
+            } else {
+                $scope.selectedArea = undefined;
+            }
 
-            //$scope.selectionParent = range.startContainer.parentNode.cloneNode(true);
-            /*
-             var selection = document.createElement("span");
-             selection.classList.add("text-selection");
-             range.surroundContents(selection);
-             */
-
-            $scope.selectedArea = range;
-        } else {
-            $scope.selectedArea = undefined;
+        } catch (err) {
+            console.log(err);
         }
     };
 
@@ -375,7 +367,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             console.log(newAnnotation);
 
-            $scope.makePostRequest("/addannotation", newAnnotation, function (json) {
+            $scope.makePostRequest("/add_annotation", newAnnotation, function (json) {
                 $scope.annotationids[newAnnotation.id] = json.data;
             });
 

@@ -174,10 +174,10 @@ class Annotations(TimDbBase):
                              Annotation.document_id = ? AND (
                                 Annotation.annotator_id = ? OR (
                                    """ + check_annotation_access_right_sql +
-                                   """ AND (? OR UserAnswer.user_id = ?)
-                                )
+                                """ AND (? OR UserAnswer.user_id = ?)
                              )
-                       ORDER BY depth_start DESC, node_start DESC, offset_start DESC""",
+                          )
+           ORDER BY depth_start DESC, node_start DESC, offset_start DESC""",
                        [language_id, document_id, user_id] + annotation_access_levels + [user_has_see_answers, user_id])
         results = self.resultAsDictionary(cursor)
         for result in results:
@@ -282,8 +282,10 @@ class Annotations(TimDbBase):
         self.db.commit()
         return cursor.lastrowid
 
-    def get_annotations_with_comments_in_document(self, document_id: int):
-        annotations = self.get_annotations_in_document(1, True, True, True, document_id)
+    def get_annotations_with_comments_in_document(self, user_id: int, user_has_see_answers: bool, user_has_teacher: bool,
+                                                  user_has_owner: bool, document_id: int):
+        annotations = self.get_annotations_in_document(user_id, user_has_see_answers, user_has_teacher, user_has_owner,
+                                                       document_id)
         annotation_ids = []
         for annotation in annotations:
             annotation_ids.append(annotation['id'])
@@ -324,12 +326,11 @@ class Annotations(TimDbBase):
 
         for annotation in annotations:
             annotation_id = annotation['id']
-            print("---")
-            print(comment_dict[annotation_id])
-            if comment_dict[annotation_id] is None:
-                print("HAHAA")
-            else:
+            if annotation_id in comment_dict:
                 annotation['comments'] = copy.deepcopy(comment_dict[annotation_id])
+            else:
+                annotation['comments'] = []
+                print("No comments for annotation id: " + str(annotation_id))
 
         return annotations
 
