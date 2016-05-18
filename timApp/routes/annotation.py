@@ -152,10 +152,11 @@ def get_annotations(document_id: int) -> str:
         abort(404, "No such document.")
     if not timdb.users.has_view_access(user_id, document_id):
         abort(403, "View access required.")
-    user_teacher = timdb.users.has_teacher_access(user_id, document_id)
-    user_owner = timdb.users.user_is_owner(user_id, document_id)
+    user_has_see_answers = timdb.users.has_seeanswers_access(user_id,document_id)
+    user_has_teacher = timdb.users.has_teacher_access(user_id, document_id)
+    user_has_owner = timdb.users.user_is_owner(user_id, document_id)
 
-    results = timdb.annotations.get_annotations_in_document(getCurrentUserId(), user_teacher, user_owner,
+    results = timdb.annotations.get_annotations_in_document(getCurrentUserId(), user_has_see_answers, user_has_teacher, user_has_owner,
                                                             int(document_id))
     response = jsonResponse(results)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
