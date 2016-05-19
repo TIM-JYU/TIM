@@ -1,6 +1,12 @@
 from typing import Optional, List
 
-# from timdb.folders import *
+from contracts import contract, new_contract
+from typing import Optional
+
+import hashlib
+import sqlite3
+
+new_contract('row', sqlite3.Row)
 
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 from timdb.documents import *
@@ -274,30 +280,6 @@ class VelpGroups(Documents):
         result = cursor.fetchone()
         return result[0] if result is not None else None
 
-    # TODO: Delete of find out fix
-    def check_velp_group_folder_path(self, root_path: str, owner_group_id: int):
-        """ Checks if velp group folder path exists and if not, creates it
-
-        :param root_path: Root path where method was called from
-        :param owner_group_id: Owner group ID for the new folder if one is to be created
-        :return: Path for velp group folder
-        """
-        group_folder_name = "velp groups"
-        velps_folder_path = root_path + "/" + group_folder_name
-        folders = Folders.get_folders(root_path)
-        velps_folder = False
-        # Check if velps folder exist
-        for folder in folders:
-            if folder['name'] == group_folder_name:
-                print("ASD")
-                velps_folder = True
-        #
-        if velps_folder is False:
-            new_block = self.Folders.create(velps_folder_path, owner_group_id)
-            print("Created new folder, id: " + str(new_block))
-
-        return velps_folder_path
-
 
     def is_id_velp_group(self, doc_id: int) -> bool:
         """ Checks whether given document id can also be found from VelpGroup table
@@ -310,6 +292,30 @@ class VelpGroups(Documents):
         result = cursor.fetchone()
         return True if result is not None else False
 
+    def add_group_to_imported_table(self, user_group: int, doc_id: int, target_type: int, target_id: int,
+                                    velp_group_id: int):
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      INSERT OR IGNORE INTO
+                      ImportedVelpGroups(user_group, doc_id, target_type, target_id, velp_group_id)
+                      VALUES (?, ?, ?, ?, ?)
+                      """, [user_group, doc_id, target_type, target_id, velp_group_id]
+                      )
+        self.db.commit()
+
+        return
+
+
+    def get_groups_from_imported_table(self, user_groups: [int], doc_id: int):
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT user_group, doc_id, target_type, target_id, velp_group_id as id
+                      FROM ImportedVelpGroups
+                      WHERE doc_id = ? AND user_group IN ({})
+                      """.format(self.get_sql_template(user_groups)), [doc_id] + user_groups
+                      )
+        results = self.resultAsDictionary(cursor)
+        return results
 
     def add_groups_to_selection_table(self, velp_groups: dict, doc_id: int, user_id: int):
         cursor = self.db.cursor()
@@ -324,4 +330,4 @@ class VelpGroups(Documents):
                           VALUES (?, ?, ?, ?, ?, ?)
                           """, [user_id, doc_id, target_type, target_id, selected, velp_group_id]
                            )
-            self.db.commit()
+        self.db.commit()

@@ -23,8 +23,17 @@ def get_velps(document_id: int):
     except ValueError as e:
         abort(400, "Document_id is not a number.")
     velp_groups = get_velp_groups(doc_id)
-    timdb.velp_groups.add_groups_to_selection_table(velp_groups, doc_id, getCurrentUserId())
-    velp_content = timdb.velps.get_velp_content_for_document(doc_id, getCurrentUserId())
+    user_id = getCurrentUserId()
+    timdb.velp_groups.add_groups_to_selection_table(velp_groups, doc_id, user_id)
+
+    user_groups = timdb.users.get_user_groups(user_id)
+    user_group_list = []
+    for group in user_groups:
+        user_group_list.append(group['id'])
+    imported_groups = timdb.velp_groups.get_groups_from_imported_table(user_group_list, doc_id)
+    print("    ---  " + str(imported_groups))
+    timdb.velp_groups.add_groups_to_selection_table(imported_groups, doc_id, user_id)
+    velp_content = timdb.velps.get_velp_content_for_document(doc_id, user_id)
     print(velp_content)
 
     return jsonResponse(velp_content)
