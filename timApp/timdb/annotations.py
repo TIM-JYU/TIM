@@ -295,6 +295,8 @@ class Annotations(TimDbBase):
         comment_dict = {}
 
         if comment_data:
+            user_dict = {}
+            user_info = {}
             annotation_id = comment_data[0]['annotation_id']
             list_help = []
             dict_help = {}
@@ -311,11 +313,17 @@ class Annotations(TimDbBase):
                     dict_help['comment_time'] = comment_data[i]['comment_time']
                     dict_help['commenter_id'] = comment_data[i]['commenter_id']
                     dict_help['content'] = comment_data[i]['content']
+                    dict_help['commenter_username'] = comment_data[i]['username']
+                    dict_help['commenter_real_name'] = comment_data[i]['real_name']
+                    dict_help['commenter_email'] = comment_data[i]['user_email']
                     list_help.append(copy.deepcopy(dict_help))
                 else:
                     dict_help['comment_time'] = comment_data[i]['comment_time']
                     dict_help['commenter_id'] = comment_data[i]['commenter_id']
                     dict_help['content'] = comment_data[i]['content']
+                    dict_help['commenter_username'] = comment_data[i]['username']
+                    dict_help['commenter_real_name'] = comment_data[i]['real_name']
+                    dict_help['commenter_email'] = comment_data[i]['user_email']
                     list_help.append(copy.deepcopy(dict_help))
                 if i == len(comment_data) - 1:
                     # comment_dict['id'] = annotation_id
@@ -333,6 +341,35 @@ class Annotations(TimDbBase):
                 print("No comments for annotation id: " + str(annotation_id))
 
         return annotations
+
+
+    def get_comments_for_annotations(self, annotation_ids: List[int]) -> List[dict]:
+        """
+
+        :param annotation_ids:
+        :return:
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT
+                        AnnotationComment.annotation_id,
+                        AnnotationComment.comment_time,
+                        AnnotationComment.commenter_id,
+                        AnnotationComment.content,
+                        User.name as username, User.real_name,
+                        User.email as user_email
+                      FROM AnnotationComment
+                      JOIN User ON AnnotationComment.commenter_id = User.id
+                      WHERE AnnotationComment.annotation_id IN ({})
+                      ORDER BY AnnotationComment.annotation_id ASC;
+                      """.format(self.get_sql_template(annotation_ids)), annotation_ids
+                      )
+        comment_data = self.resultAsDictionary(cursor)
+
+        return comment_data
+
+
+
 
     # Todo write support for answer_id.
     def get_comments_in_document(self, document_id: int) -> List[Dict]:
@@ -357,25 +394,5 @@ class Annotations(TimDbBase):
                        ) ORDER BY AnnotationComment.annotation_id ASC;
                        """, [document_id]
                        )
+
         return self.resultAsDictionary(cursor)
-
-    def get_comments_for_annotations(self, annotation_ids: List[int]) -> List[dict]:
-        ids = ", ".join(str(x) for x in annotation_ids)
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      SELECT
-                        AnnotationComment.annotation_id,
-                        AnnotationComment.comment_time,
-                        AnnotationComment.commenter_id,
-                        AnnotationComment.content
-                      FROM AnnotationComment
-                      WHERE AnnotationComment.annotation_id IN (
-                      """ + ids +
-                       """
-                       )
-                       ORDER BY AnnotationComment.annotation_id ASC;
-                     """
-                       )
-        comment_data = self.resultAsDictionary(cursor)
-
-        return comment_data
