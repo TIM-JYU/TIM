@@ -395,6 +395,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             $scope.makePostRequest("/add_annotation", newAnnotation, function (json) {
                 $scope.annotationids[newAnnotation.id] = json.data;
+                console.log("Annotation");
+                console.log(json);
             });
 
             $scope.selectedArea = undefined;

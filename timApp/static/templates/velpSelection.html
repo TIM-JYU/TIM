@@ -164,7 +164,7 @@
                                                           placeholder="Points" value="0"></p>
                                                 <p>
                                                     <span ng-repeat="l in labels">
-                                                        <input type="checkbox" ng-value="l.id" ng-checked="isLabelInVelp(velpToEdit, l)"> {{ l.content }}<br>
+                                                        <input type="checkbox" ng-click="updateVelpToEditLabels(l)" ng-checked="isLabelInVelp(velpToEdit, l)"> {{ l.content }}<br>
                                                     </span>
                                                 </p>
                                                 <p><input type="submit" value="Save changes"/></p>

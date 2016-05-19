@@ -71,6 +71,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
                 a.comments = $scope.annotations.comments;
             });
             */
+
             $scope.loadDocumentAnnotations();
 
             //$scope.annotations = [];
@@ -131,9 +132,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         } else {
             $scope.selectedLabels.splice(labelIndex, 1);
         }
-        if ($scope.velpToEdit.edit) {
-            $scope.velpToEdit.labels = $scope.selectedLabels;
-        }
+
     };
 
     $scope.toggleLabelToEdit = function(label){
@@ -147,15 +146,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         $scope.advancedOn = !$scope.advancedOn;
     };
 
-    /**
-     * Get correct CSS-style for advanced view
-     * @returns {*}
-     */
-    $scope.getAdvancedStyle = function () {
-        if (!$scope.advancedOn)
-            return "hide";
-        return "";
-    };
 
     /**
      * Adds new label
@@ -245,6 +235,17 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         $scope.labelToEdit = Object.create(label);
     };
 
+    $scope.updateVelpToEditLabels = function(label){
+
+        var index = $scope.velpToEdit.labels.indexOf(label.id);
+        if (index < 0){
+            $scope.velpToEdit.labels.push(label.id);
+        }
+        else if (index >= 0){
+            $scope.velpToEdit.labels.splice(index, 1);
+        }
+    };
+
     $scope.selectVelpToEdit = function (velp) {
 
         if (velp.id == $scope.velpToEdit.id) {
@@ -281,16 +282,19 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         // Form is valid
         form.$setPristine();
 
+        console.log($scope.velpToEdit);
+
         for (var i = 0; i < $scope.velps.length; i++) {
             if ($scope.velps[i].id == $scope.velpToEdit.id) {
                 $scope.velpToEdit.edit = false;
                 $scope.velps[i] = $scope.velpToEdit;
-                $scope.velps[i].labels = $scope.selectedLabels.slice(0);
                 break;
             }
         }
 
-         $scope.makePostRequest("/editvelp", form, function () {
+
+         $scope.makePostRequest("/update_velp", $scope.velpToEdit, function (json) {
+             console.log(json);
          });
 
         $scope.deselectLabels();
