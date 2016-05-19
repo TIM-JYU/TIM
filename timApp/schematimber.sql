@@ -471,7 +471,8 @@ INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (2, 5);
 INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (3, 4);
 INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (3, 6);
 
-INSERT INTO ImportedVelpGroups (user_group, doc_id, target_type, target_id, velp_group_id) VALUES (3, 162, 0, 0, 2);
+INSERT INTO ImportedVelpGroups (user_group, doc_id, target_type, target_id, velp_group_id) VALUES (3, 7, 0, 0, 1);
+INSERT INTO ImportedVelpGroups (user_group, doc_id, target_type, target_id, velp_group_id) VALUES (3, 162, 0, 0, 1);
 
 --INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 1);
 --INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 2);
