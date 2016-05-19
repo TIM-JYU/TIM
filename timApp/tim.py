@@ -3,11 +3,14 @@
 import http.client
 import imghdr
 import io
+import os
 import time
 
+import shutil
 from flask import Blueprint
 from flask import render_template
 from flask import stream_with_context
+from flask.ext.assets import Environment
 from flask.helpers import send_file
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
@@ -19,7 +22,6 @@ from routes.answer import answers
 from routes.cache import cache
 from routes.clipboard import clipboard
 from routes.common import *
-from routes.common import get_user_settings
 from routes.edit import edit_page
 from routes.groups import groups
 from routes.lecture import getTempDb, user_in_lecture, lecture_routes
@@ -64,6 +66,8 @@ app.register_blueprint(Blueprint('bower',
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 
+assets = Environment(app)
+
 print('Debug mode: {}'.format(app.config['DEBUG']))
 print('Profiling: {}'.format(app.config['PROFILE']))
 
@@ -80,15 +84,15 @@ def error_generic(error, code):
 
 @app.context_processor
 def inject_custom_css() -> dict:
-    """Injects the custom_css and custom_css_files variables to all templates."""
-    if not logged_in():
-        return {}
-    prefs = getTimDb().users.get_preferences(getCurrentUserId())
-    custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
-    custom_css_files = json.loads(prefs).get('css_files', {}) if prefs is not None else {}
-    if custom_css_files:
-        custom_css_files = {key: value for key, value in custom_css_files.items() if value}
-    return dict(custom_css=custom_css, custom_css_files=custom_css_files)
+    """Injects the user prefs variable to all templates."""
+    prefs = get_preferences()
+    return dict(prefs=prefs)
+
+
+@app.context_processor
+def inject_user() -> dict:
+    """"Injects the user object to all templates."""
+    return dict(current_user=get_current_user())
 
 
 @app.errorhandler(400)
@@ -122,6 +126,25 @@ def entity_too_large(error):
 @app.errorhandler(404)
 def not_found(error):
     return error_generic(error, 404)
+
+
+@app.route('/resetcss')
+def reset_css():
+    """
+    Removes CSS cache directories and thereby forces SASS to regenerate them the next time
+    they are needed.
+
+    Requires admin privilege.
+    :return: okJsonResponse
+    """
+    verify_admin()
+    assets_dir = os.path.join('static', '.webassets-cache')
+    if os.path.exists(assets_dir):
+        shutil.rmtree(assets_dir)
+    gen_dir = os.path.join('static', 'gen')
+    if os.path.exists(gen_dir):
+        shutil.rmtree(gen_dir)
+    return okJsonResponse()
 
 
 @app.route('/download/<int:doc_id>')
@@ -370,9 +393,12 @@ def create_citation_doc(docid, newname):
 def create_folder():
     jsondata = request.get_json()
     folder_name = jsondata['name']
-    owner_id = jsondata['owner']
+    owner_group_name = jsondata['owner']
     timdb = getTimDb()
-    return create_item(folder_name, 'folder', timdb.folders.create, owner_id)
+    owner_group_id = timdb.users.get_usergroup_by_name(owner_group_name)
+    if owner_group_id is None:
+        abort(404, 'Non-existent usergroup.')
+    return create_item(folder_name, 'folder', timdb.folders.create, owner_group_id)
 
 
 @app.route("/getBlock/<int:doc_id>/<par_id>")
@@ -438,10 +464,8 @@ def get_server_time():
 @app.route("/")
 def start_page():
     in_lecture = user_in_lecture()
-    settings = get_user_settings()
     return render_template('start.html',
-                           in_lecture=in_lecture,
-                           settings=settings)
+                           in_lecture=in_lecture)
 
 
 @app.route("/view/")
@@ -450,13 +474,11 @@ def index_page():
     current_user = getCurrentUserId()
     in_lecture = user_in_lecture()
     possible_groups = timdb.users.get_usergroups_printable(current_user)
-    settings = get_user_settings()
     return render_template('index.html',
                            userName=getCurrentUserName(),
                            userId=current_user,
                            userGroups=possible_groups,
                            in_lecture=in_lecture,
-                           settings=settings,
                            doc={'id': -1, 'fullname': ''},
                            rights={})
 

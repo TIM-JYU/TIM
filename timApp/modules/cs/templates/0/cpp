@@ -1,0 +1,17 @@
+C++
+Empty C++ template with Valgrind
+``` {plugin="csPlugin" #PLUGINNAMEHERE}
+type: c++
+filename: PLUGINNAMEHERE
+opt: -g
+cmds: valgrind -q --leak-check=full {0}
+path: user
+program: |!!
+//
+!!
+replace: REPLACE
+byCode: |!!
+//
+
+!!
+```

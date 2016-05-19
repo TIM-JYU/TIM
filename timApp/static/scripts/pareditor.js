@@ -53,7 +53,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     $scope.newAttr = '';
                 };
 
-                $scope.settings = $window.settings;
+                $scope.settings = $window.sessionsettings;
                 var $plugintab;
                 $scope.pluginButtonList = {};
 

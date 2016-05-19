@@ -100,6 +100,8 @@ run rm scala-2.11.7.deb
 
 run apt-get install -y doxygen
 
+run apt-get install -y valgrind
+
 # Install Docker client binary
 run wget -q https://get.docker.com/builds/Linux/x86_64/docker-1.10.2.tgz && \
     tar -xzvf docker-1.10.2.tgz && \

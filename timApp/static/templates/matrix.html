@@ -1,6 +1,6 @@
 <div id="matrix" class="matrix">
     <div class="questionTable">
-        <table id="question-table">
+        <table class="table" id="question-table">
             <thead>
             <tr ng-show="question.type == 'matrix' || question.type == 'true-false'">
                 <th class="emptyBlock"></th>
@@ -17,13 +17,13 @@
                         <br/>
                     </div>
                     <div class="buttonsTop">
-                        <button tabindex="-1" ng-click="addCol($index)">+</button>
-                        <button tabindex="-1" class="negative" ng-click="delCol($index)" style="margin-left: 28px;">-</button>
+                        <button class="timButton btn-xs" tabindex="-1" ng-click="addCol($index)"><span class="glyphicon glyphicon-plus"></span></button>
+                        <button class="timButton btn-xs btn-danger" tabindex="-1" ng-click="delCol($index)"><span class="glyphicon glyphicon-minus"></span></button>
                     </div>
                     </div>
                 </th>
                 <th ng-if="question.type == 'matrix' && !asked_id">
-                    <button style="width: 50px; height: 50px;" ng-click="addCol(-1)">+</button>
+                    <button class="wideButton" ng-click="addCol(-1)"><span class="glyphicon glyphicon-plus"></span></button>
                 </th>
 
             </tr>
@@ -35,8 +35,8 @@
                     <div style="position: relative" ng-if="asked_id === false">
                     <textarea class="rowHeading" ng-model="row.text" form="question-form" rows="1"></textarea>
                     <div class="matrixButtons">
-                        <button tabindex="-1" ng-click="addRow($index)" style="clear:both; display: block;">+</button>
-                        <button tabindex="-1" ng-click="delRow($index)" class="negative" style="display: block; margin-top: 20px;">-</button>
+                        <button class="timButton btn-xs btn-block" tabindex="-1" ng-click="addRow($index)"><span class="glyphicon glyphicon-plus"></span></button>
+                        <button class="btn btn-danger btn-xs btn-block" tabindex="-1" ng-click="delRow($index)" style="margin-top: 13px;"><span class="glyphicon glyphicon-minus"></span></button>
                     </div>
                     </div>
                 </th>
@@ -96,7 +96,7 @@
             <tr ng-if="asked_id === false">
                 <th>
                     <div>
-                        <button id="addRow" ng-click="addRow(-1)">+</button>
+                        <button class="wideButton" ng-click="addRow(-1)"><span class="glyphicon glyphicon-plus"></span></button>
                     </div>
                 </th>
             </tr>

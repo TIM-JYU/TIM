@@ -1,28 +1,37 @@
 {% extends 'manage.html' %}
 {% set obj_name = 'folder' %}
 {% block managecontent %}
-    Name and location
-    <table class="borderless">
-        <form ng-submit="renameFolder(newName)">
-            <tr>
-                <td>Folder name:</td>
-                <td><input type="text" ng-model="newName"></td>
-                <td>
-                    <button ng-disabled="newName === oldName">Update</button>
-                </td>
-            </tr>
-        </form>
-        <form ng-submit="moveFolder(newFolderName)">
-            <tr>
-                <td>Location:</td>
-                <td><input type="text" ng-model="newFolderName"></td>
-                <td>
-                    <button ng-disabled="newFolderName === oldFolderName">Update</button>
-                </td>
-            </tr>
-        </form>
-    </table>
+    <div class="panel panel-default">
+        <div class="panel-heading">Name and location</div>
+        <div class="panel-body">
+            <form>
+                <div class="form-group">
+                    <label for="newName" class="control-label">Folder name:</label>
+                    <div class="input-group">
+                        <input class="form-control" id="newName" type="text" ng-model="newName">
+                        <span class="input-group-btn">
+                            <button ng-click="renameFolder(newName)" class="timButton" ng-disabled="newName === oldName">
+                            Update
+                        </button>
+                        </span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="newFolderName" class="control-label">Location:</label>
+                    <div class="input-group">
+                        <input class="form-control" id="newFolderName" type="text"
+                                                  ng-model="newFolderName">
+                        <span class="input-group-btn">
+                            <button ng-click="moveFolder(newFolderName)" class="timButton"
+                                ng-disabled="newFolderName === oldFolderName">Update
+                        </button>
+                        </span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
     <div class="margin">
-        <button ng-click="deleteFolder(doc.id)">Delete folder</button>
+        <button class="timButton" ng-click="deleteFolder(doc.id)">Delete folder</button>
     </div>
 {% endblock %}
