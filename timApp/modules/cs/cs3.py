@@ -18,6 +18,7 @@ from fileParams3 import *
 # from requests import Request, Session
 import datetime
 import cgi
+import logging
 
 # cs3.py: WWW-palvelin portista 5000 (ulospäin 56000) joka palvelee csPlugin pyyntöjä
 #
@@ -141,7 +142,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     """
     s_in = ""
     pwd = ""
-    if not ulimit: ulimit = "ulimit -f 100 -t 5 -s 100 "  # -v 2000 -s 100 -u 10
+    if not ulimit: ulimit = "ulimit -f 100 -t 10 -s 100 "  # -v 2000 -s 100 -u 10
     if uargs and len(uargs): args.extend(shlex.split(uargs))
     if stdin: s_in = " <" + stdin
     mkdirs(cwd + "/run")
@@ -435,6 +436,25 @@ def log(self):
     return
 
 
+def check_code(out, err, compiler_output, ttype):
+    err = err.decode("utf-8") + compiler_output
+    if ttype == "fs":
+        err = err.replace(
+            "F# Compiler for F# 3.0 (Open Source Edition)\nFreely distributed under the Apache 2.0 Open Source License\n",
+            "")
+
+    if type('') != type(err): err = err.decode()
+    # if type(out) != type(''): out = out.decode()
+    # noinspection PyBroadException
+    try:
+        if out and out[0] in [254, 255]:
+            out = out.decode('UTF16')
+        elif type('') != type(out):
+            out = out.decode('utf-8-sig')
+    except:
+        out = out.decode('iso-8859-1')
+    return out, err
+    
 def give_points(points_rule, rule, default=0):
     if not points_rule: return
     if rule in points_rule or default != 0: 
@@ -514,8 +534,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         log(self)
         # print(querys)
 
+        get_query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
+
         global_anonymous = False
         for query in querys:
+            query.get_query = get_query
+            for f in query.get_query:
+                query.query[f] = [query.get_query[f][0]]
             ga = get_param(query, "GlobalAnonymous", None)
             if ga: global_anonymous = True
             if global_anonymous: query.query["anonymous"] = [True]
@@ -558,7 +583,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
     # see: http://stackoverflow.com/questions/366682/how-to-limit-execution-time-of-a-function-call-in-python        
     def signal_handler(self, signum, frame):
-        raise Exception("Timed out!")
+        print("Timed out1!")
+        raise Exception("Timed out1!")
 
     def do_all(self, query):
         try:
@@ -569,7 +595,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         try:
             self.do_all_t(query)
         except Exception  as e:
-            print("Timed out!", e)
+            print("Timed out2!", e)
+            logging.exception("Timed out 2 trace")
         
         
     def do_all_t(self, query):
@@ -1429,7 +1456,26 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     give_points(points_rule, "test")
 
             else:
-                if ttype == "java":
+                runcommand = get_param(query, "cmd", "");
+                if runcommand or get_param(query, "cmds", ""):
+                    print("runcommand: ", runcommand)
+                    # code, out, err, pwd = run2([runcommand], cwd=prgpath, timeout=10, env=env, stdin=stdin,
+                    #                               uargs=get_param(query, "runargs", "") + " " + userargs)
+                    cmd = shlex.split(runcommand)
+                    extra = get_param(query, "cmds", "").format(pure_exename)
+                    if extra != "": cmd = []
+                    print("run: ", cmd, extra, pure_exename, csfname)
+                    try:
+                        code, out, err, pwd = run2(cmd, cwd=prgpath, timeout=10, env=env, stdin=stdin, 
+                                                   uargs=get_param(query, "runargs", "") + " " + userargs,
+                                                   extra=extra)
+                    except Exception as e:
+                        print(e)
+                        code, out, err = (-1, "", str(e).encode())
+                    if code == -9:
+                        out = "Runtime exceeded, maybe loop forever\n" + out
+                    # out, err = check_code(out, err, compiler_output, ttype)    
+                elif ttype == "java":
                     print("java: ", javaclassname)
                     # code, out, err = run2(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
                     code, out, err, pwd = run2(["java", "-cp", classpath, javaclassname], cwd=prgpath, timeout=10,

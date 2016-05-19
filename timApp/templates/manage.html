@@ -51,12 +51,13 @@
     <div ng-controller="PermCtrl">
         {% if rights['owner'] %}
             <div class="margin">
-                {{ obj_name|capitalize }} owner: <select ng-model="doc.owner"
-                                    ng-options="group.name for group in userGroups | orderBy:'name' track by group.id"
-                                    ng-change="changeOwner()">
-
-            </select>
-                <span ng-show="ownerUpdating">Updating...</span>
+                <form ng-submit="changeOwner()">
+                    <label>{{ obj_name|capitalize }} owner: <input type="text" ng-model="newOwner"></label>
+                    <button ng-disabled="doc.owner.name === newOwner" class="timButton">
+                        Update
+                    </button>
+                    <span ng-show="ownerUpdating">Updating...</span>
+                </form>
             </div>
         {% else %}
             {{ obj_name|capitalize }} owner: {{ doc.owner.name }}

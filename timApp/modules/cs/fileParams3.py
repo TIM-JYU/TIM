@@ -55,6 +55,8 @@ def get_param(query, key, default):
         return dvalue
     value = query.get_query[key][0]
     if value == 'undefined': return dvalue
+    if value == 'False': value = False
+    if value == 'false': value = False
     return value
 
 

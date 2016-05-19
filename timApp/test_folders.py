@@ -12,14 +12,14 @@ class FolderTest(TimRouteTest):
         personal_group_id = db.users.get_personal_usergroup_by_id(session['user_id'])
         resp = self.json_post('/createFolder',
                               {"name": fname,
-                               "owner": personal_group_id})
+                               "owner": session['user_name']})
         j = self.assertResponseStatus(resp, return_json=True)
         self.assertEqual(fname, j['name'])
         self.assertIsInstance(j['id'], int)
         self.assertDictResponse({'error': 'Item with a same name already exists.'},
                                 self.json_post('/createFolder',
                                                {"name": fname,
-                                                "owner": personal_group_id}),
+                                                "owner": session['user_name']}),
                                 expect_status=403)
         new_name = fname + '1'
         resp = self.json_put('/rename/{}'.format(j['id']), {"new_name": new_name})
@@ -34,7 +34,7 @@ class FolderTest(TimRouteTest):
         fname2 = "{}/{}".format(user_folder, 'testing2')
         resp = self.json_post('/createFolder',
                               {"name": fname2,
-                               "owner": personal_group_id})
+                               "owner": session['user_name']})
         j3 = self.assertResponseStatus(resp, return_json=True)
         db.users.grant_access(db.users.get_anon_group_id(), j3['id'], 'view')
 
@@ -66,16 +66,16 @@ class FolderTest(TimRouteTest):
         self.assertDictResponse({'error': 'The folder name cannot have empty parts.'},
                                 self.json_post('/createFolder',
                                                {"name": invalid,
-                                                "owner": personal_group_id}),
+                                                "owner": session['user_name']}),
                                 expect_status=400)
         self.assertDictResponse({'error': 'You cannot create folders in this folder. Try users/{} '
                                           'instead.'.format(session['user_name'])},
                                 self.json_post('/createFolder',
                                                {"name": invalid2,
-                                                "owner": personal_group_id}),
+                                                "owner": session['user_name']}),
                                 expect_status=403)
         self.assertDictResponse({'error': 'The folder name can not be a number to avoid confusion with document id.'},
                                 self.json_post('/createFolder',
                                                {"name": invalid3,
-                                                "owner": personal_group_id}),
+                                                "owner": session['user_name']}),
                                 expect_status=400)
