@@ -13,7 +13,7 @@ timApp.directive('popupMenu', ['$http', '$window', '$filter', function ($http, $
         replace: true,
 
         link: function ($scope, $element, $attrs) {
-            $scope.$par = $element.parents('#' + $attrs['srcid']);
+            $scope.$pars = $($attrs['srcid']);
             $scope.actions = eval('$scope.' + $attrs['actions']);
             $scope.actionsAttr = $attrs['actions'];
             $scope.getContent($attrs['contenturl']);
@@ -38,7 +38,7 @@ timApp.directive('popupMenu', ['$http', '$window', '$filter', function ($http, $
                 $element.remove();
 
                 if ($scope.onClose)
-                    $scope.onClose($scope.$par);
+                    $scope.onClose($scope.$pars);
             };
 
             /**
@@ -47,7 +47,7 @@ timApp.directive('popupMenu', ['$http', '$window', '$filter', function ($http, $
              * @param f The function to call
              */
             $scope.callFunc = function (e, f) {
-                f.func(e, $scope.$par);
+                f.func(e, $scope.$pars);
                 $scope.closePopup();
             };
 

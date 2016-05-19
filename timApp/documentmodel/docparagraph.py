@@ -3,32 +3,22 @@ import shelve
 from collections import defaultdict
 from copy import copy
 
-from contracts import contract, new_contract
-
+from contracts import new_contract
 from documentmodel.documentparser import DocumentParser
 from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
 from htmlSanitize import sanitize_html
-from markdownconverter import md_to_html, par_list_to_html_list, expand_macros
+from markdownconverter import par_list_to_html_list, expand_macros
 from timdb.timdbbase import TimDbException
-from typing import Optional
+from typing import Generic, Optional, Dict, List, Tuple
 from utils import count_chars, get_error_html
 from .randutils import *
 
 
-class DocParagraphBase:
-    pass
-
-
-# This is so the DocParagraph contract can be used in the class itself
-new_contract('DocParagraph', DocParagraphBase)
-
-
-class DocParagraph(DocParagraphBase):
+class DocParagraph:
     default_files_root = 'tim_files'
 
-    @contract
-    def __init__(self, doc, files_root: 'str|None'=None):
+    def __init__(self, doc, files_root: Optional[str] = None):
         self.doc = doc
         self.original = None
         self.files_root = self.get_default_files_root() if files_root is None else files_root
@@ -38,16 +28,15 @@ class DocParagraph(DocParagraphBase):
         self.ref_pars = None
 
     @classmethod
-    @contract
     def create(cls,
                doc,
-               par_id: 'str|None' = None,
-               md: 'str' = '',
-               t: 'str|None' = None,
-               html: 'str|None' = None,
-               attrs: 'dict|None' = None,
-               props: 'dict|None' = None,
-               files_root: 'str|None' = None) -> 'DocParagraph':
+               par_id: Optional[str] = None,
+               md: str = '',
+               t: Optional[str] = None,
+               html: Optional[str] = None,
+               attrs: Optional[Dict] = None,
+               props: Optional[Dict] = None,
+               files_root: Optional[str] = None) -> 'DocParagraph':
 
         par = DocParagraph(doc, files_root)
         par.html = html
@@ -62,8 +51,7 @@ class DocParagraph(DocParagraphBase):
         par._cache_props()
         return par
 
-    @contract
-    def create_reference(self, doc, r: 'str|None' = None, add_rd: 'bool' = True) -> 'DocParagraph':
+    def create_reference(self, doc, r: Optional[str] = None, add_rd: bool = True) -> 'DocParagraph':
         if 'r' == 'tr':
             par = DocParagraph.create(doc, files_root=self.files_root, md=self.get_markdown(),
                                       attrs=self.get_attrs(), props=self.get_properties())
@@ -92,16 +80,14 @@ class DocParagraph(DocParagraphBase):
         return par
 
     @classmethod
-    @contract
-    def from_dict(cls, doc, d: 'dict', files_root: 'str|None' = None) -> 'DocParagraph':
+    def from_dict(cls, doc, d: Dict, files_root: Optional[str] = None) -> 'DocParagraph':
         par = DocParagraph(doc, files_root)
         par.__data = dict(d)
         par._cache_props()
         return par
 
     @classmethod
-    @contract
-    def get_latest(cls, doc, par_id: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
+    def get_latest(cls, doc, par_id: str, files_root: Optional[str] = None) -> 'DocParagraph':
         froot = cls.get_default_files_root() if files_root is None else files_root
         try:
             t = os.readlink(cls._get_path(doc, par_id, 'current', froot))
@@ -110,8 +96,7 @@ class DocParagraph(DocParagraphBase):
             raise TimDbException('Document {}: Paragraph not found: {}'.format(doc.doc_id, par_id))
 
     @classmethod
-    @contract
-    def get(cls, doc, par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
+    def get(cls, doc, par_id: str, t: str, files_root: Optional[str] = None) -> 'DocParagraph':
         try:
             """Loads a paragraph from file system based on given parameters.
             """
@@ -128,19 +113,16 @@ class DocParagraph(DocParagraphBase):
         return cls.default_files_root
 
     @classmethod
-    @contract
-    def _get_path(cls, doc, par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'str':
+    def _get_path(cls, doc, par_id: str, t: str, files_root: Optional[str] = None) -> str:
         froot = cls.get_default_files_root() if files_root is None else files_root
         return os.path.join(froot, 'pars', str(doc.doc_id), par_id, t)
 
     @classmethod
-    @contract
-    def _get_base_path(cls, doc_id: 'int', par_id: 'str', files_root: 'str|None' = None) -> 'str':
+    def _get_base_path(cls, doc_id: int, par_id: str, files_root: Optional[str] = None) -> str:
         froot = cls.get_default_files_root() if files_root is None else files_root
         return os.path.join(froot, 'pars', str(doc_id), par_id)
 
-    @contract
-    def dict(self) -> 'dict':
+    def dict(self) -> Dict:
         return self.__data
 
     def _mkhtmldata(self, from_preview: 'bool' = True):
@@ -177,23 +159,22 @@ class DocParagraph(DocParagraphBase):
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
         self.__is_setting = 'settings' in self.get_attrs()
 
-    @contract
-    def html_dict(self) -> 'dict':
+    def html_dict(self) -> Dict:
         self._mkhtmldata()
         return self.__htmldata
 
-    @contract
-    def get_doc_id(self) -> 'int':
+    def get_doc_id(self) -> int:
         return self.doc.doc_id
 
-    @contract
-    def get_id(self) -> 'str':
+    def get_id(self) -> str:
         return self.__data['id']
 
-    @contract
-    def get_rd(self) -> 'int|str|None':
+    def get_rd(self) -> Optional[int]:
         if 'rd' in self.__data['attrs']:
-            return self.get_attr('rd')
+            try:
+                return int(self.get_attr('rd'))
+            except ValueError:
+                return None
 
         default_rd = self.doc.get_settings().get_source_document()
         if default_rd is not None:
@@ -201,20 +182,16 @@ class DocParagraph(DocParagraphBase):
 
         return None
 
-    @contract
-    def is_different_from(self, par) -> 'bool':
+    def is_different_from(self, par: 'DocParagraph') -> bool:
         return self.get_hash() != par.get_hash() or self.get_attrs() != par.get_attrs()
 
-    @contract
-    def get_hash(self) -> 'str':
+    def get_hash(self) -> str:
         return self.__data['t']
 
-    @contract
-    def get_markdown(self) -> 'str':
+    def get_markdown(self) -> str:
         return self.__data['md']
 
-    @contract
-    def get_title(self) -> 'str|None':
+    def get_title(self) -> Optional[str]:
         md = self.__data['md']
         if len(md) < 3 or md[0] != '#' or md[1] == '-':
             return None
@@ -222,8 +199,7 @@ class DocParagraph(DocParagraphBase):
         attr_index = md.find('{')
         return md[2:attr_index].strip() if attr_index > 0 else md[2:].strip()
 
-    @contract
-    def get_exported_markdown(self) -> 'str':
+    def get_exported_markdown(self) -> str:
         if self.is_par_reference() and self.is_translation():
             # This gives a default translation based on the source paragraph
             # todo: same for area reference
@@ -234,8 +210,7 @@ class DocParagraph(DocParagraphBase):
                               export_hashes=False,
                               export_ids=False).get_text(DocumentParserOptions.single_paragraph())
 
-    @contract
-    def __get_setting_html(self) -> 'str':
+    def __get_setting_html(self) -> str:
         from documentmodel.docsettings import DocSettings
 
         if DocSettings.is_valid_paragraph(self):
@@ -243,8 +218,7 @@ class DocParagraph(DocParagraphBase):
         else:
             return '<div class="pluginError">Invalid settings paragraph detected</div>'
 
-    @contract
-    def get_html(self, from_preview: 'bool' = True) -> 'str':
+    def get_html(self, from_preview: bool = True) -> str:
         """
         Gets the html for the paragraph.
         :param from_preview: Whether this is called from a preview window or not.
@@ -270,8 +244,8 @@ class DocParagraph(DocParagraphBase):
         return self.html
 
     @classmethod
-    @contract
-    def preload_htmls(cls, pars: 'list(DocParagraph)', settings, clear_cache=False, context_par=None, persist=True):
+    def preload_htmls(cls, pars: List['DocParagraph'], settings,
+                      clear_cache: bool = False, context_par: Optional['DocParagraph'] = None, persist: bool = True):
         """
         Loads the HTML for each paragraph in the given list.
         :param context_par: The context paragraph. Required only for previewing for now.
@@ -474,27 +448,23 @@ class DocParagraph(DocParagraphBase):
         new_html = sanitize_html(self.html)
         self.__set_html(new_html, True)
 
-    @contract
-    def __set_html(self, new_html: 'str', sanitized=False) -> 'str':
+    def __set_html(self, new_html: str, sanitized: bool = False) -> str:
         self.html = new_html
         if self.__htmldata is not None:
             self.__htmldata['html'] = new_html
         self.html_sanitized = sanitized
         return self.html
 
-    @contract
-    def get_links(self) -> 'list(str)':
+    def get_links(self) -> List[str]:
         return self.__data['links']
 
-    @contract
-    def get_attr(self, attr_name: 'str', default_value=None, dereference=False):
+    def get_attr(self, attr_name: str, default_value: Generic = None, dereference: bool = False) -> Generic:
         if dereference and self.original:
             return self.original.get_attr(attr_name, default_value, True)
 
         return self.__data['attrs'].get(attr_name, default_value)
 
-    @contract
-    def set_attr(self, attr_name: 'str', attr_val, dereference=False):
+    def set_attr(self, attr_name: str, attr_val: Generic, dereference: bool = False):
         if dereference and self.original:
             self.original.set_attr(attr_name, attr_val, True)
         elif attr_val is None:
@@ -510,8 +480,7 @@ class DocParagraph(DocParagraphBase):
             self.__is_ref = self.is_par_reference() or self.is_area_reference()
 
     @classmethod
-    @contract
-    def __combine_md(cls, base_md: 'str|None', over_md: 'str') -> 'str':
+    def __combine_md(cls, base_md: Optional[str], over_md: str) -> str:
         if base_md is None:
             return over_md
 
@@ -519,8 +488,7 @@ class DocParagraph(DocParagraphBase):
         return base_md if over_md == '' else over_md
 
     @classmethod
-    @contract
-    def __combine_dict(cls, base_dict: 'dict|None', over_dict: 'dict') -> 'dict':
+    def __combine_dict(cls, base_dict: Optional[Dict], over_dict: Dict) -> Dict:
         if base_dict is None:
             return over_dict
         new_dict = dict(base_dict)
@@ -528,47 +496,39 @@ class DocParagraph(DocParagraphBase):
             new_dict[key] = over_dict[key]
         return new_dict
 
-    @contract
-    def get_attrs(self, base_attrs: 'dict|None' = None) -> 'dict':
+    def get_attrs(self, base_attrs: Optional[Dict] = None) -> Dict:
         return DocParagraph.__combine_dict(base_attrs, self.__data['attrs'])
 
-    @contract
-    def get_properties(self, base_props: 'dict|None' = None) -> 'dict':
+    def get_properties(self, base_props: Optional[Dict] = None) -> Dict:
         return DocParagraph.__combine_dict(base_props, self.__data.get('props', {}))
 
-    @contract
-    def is_multi_block(self) -> 'bool':
+    def is_multi_block(self) -> bool:
         properties = self.get_properties()
         is_multi_block = False
         if 'multi_block' in properties:
             is_multi_block = properties['multi_block']
         return is_multi_block
 
-    @contract
-    def has_headers(self) -> 'bool':
+    def has_headers(self) -> bool:
         properties = self.get_properties()
         has_headers = False
         if 'has_headers' in properties:
             has_headers = properties['has_headers']
         return has_headers
 
-    @contract
-    def get_attrs_str(self) -> 'str':
+    def get_attrs_str(self) -> str:
         return json.dumps(self.__data['attrs'])
 
-    @contract
-    def get_class_str(self) -> 'str':
+    def get_class_str(self) -> str:
         return ' '.join(self.get_attr('classes', []))
 
-    @contract
-    def get_base_path(self) -> 'str':
+    def get_base_path(self) -> str:
         return self._get_base_path(self.get_doc_id(), self.get_id(), files_root=self.files_root)
 
-    @contract
-    def get_path(self) -> 'str':
+    def get_path(self) -> str:
         return self._get_path(self.doc, self.__data['id'], self.__data['t'], files_root=self.files_root)
 
-    def __read(self):
+    def __read(self) -> bool:
         if not os.path.isfile(self.get_path()):
             return False
         with open(self.get_path(), 'r') as f:
@@ -612,8 +572,7 @@ class DocParagraph(DocParagraphBase):
             os.unlink(linkpath)
         os.symlink(self.get_hash(), linkpath)
 
-    @contract
-    def add_link(self, doc_id: 'int'):
+    def add_link(self, doc_id: int):
         #self.__read()
         self.__data['links'].append(str(doc_id))
         self.__write()
@@ -621,8 +580,7 @@ class DocParagraph(DocParagraphBase):
         # Clear cached referenced paragraphs because this was modified
         self.ref_pars = None
 
-    @contract
-    def remove_link(self, doc_id: 'int'):
+    def remove_link(self, doc_id: int):
         self.__read()
         if str(doc_id) in self.__data['links']:
             self.__data['links'].remove(str(doc_id))
@@ -637,27 +595,28 @@ class DocParagraph(DocParagraphBase):
         self.__read()
         self.__write()
 
-    def is_reference(self):
+    def is_reference(self) -> bool:
         return self.__is_ref
 
-    def is_par_reference(self):
+    def is_par_reference(self) -> bool:
         return self.get_attr('rp') is not None
 
-    def is_area_reference(self):
+    def is_area_reference(self) -> bool:
         return self.get_attr('ra') is not None
 
-    def is_translation(self):
+    def is_translation(self) -> bool:
         return self.get_attr('r') == 'tr'
 
     def __repr__(self):
         return self.__data.__repr__()
 
     @classmethod
-    def __rrepl(cls, s, old, new):
+    def __rrepl(cls, s: str, old: str, new: str) -> str:
         rindex = s.rfind(old)
         return s[:rindex] + new + s[rindex + len(old):] if rindex >= 0 else s
 
-    def get_referenced_pars(self, edit_window=False, set_html=True, source_doc=None, tr_get_one=True, cycle=None):
+    def get_referenced_pars(self, edit_window: bool = False, set_html: bool = True, source_doc: bool = None,
+                            tr_get_one: bool = True, cycle: Optional[List[Tuple[int, str]]] = None):
         if self.ref_pars is not None:
             return self.ref_pars
         if cycle is None:
@@ -758,31 +717,31 @@ class DocParagraph(DocParagraphBase):
         self.ref_pars = [reference_par(ref_par) for ref_par in ref_pars]
         return self.ref_pars
 
-    def set_original(self, orig):
+    def set_original(self, orig: 'DocParagraph'):
         self.original = orig
         self._cache_props()
         self.__htmldata = None
 
-    def get_original(self):
+    def get_original(self) -> 'DocParagraph':
         return self.original
 
-    def is_dynamic(self):
+    def is_dynamic(self) -> bool:
         return self.__is_plugin \
                or (self.__is_ref and self.__data.get('attrs', {}).get('r', '') != 'tr')\
                or self.__is_setting
 
-    def is_plugin(self):
+    def is_plugin(self) -> bool:
         return self.__is_plugin
 
-    def is_question(self):
+    def is_question(self) -> bool:
         is_question = self.__is_question
         return is_question
 
-    def is_setting(self):
+    def is_setting(self) -> bool:
         return self.__is_setting
 
     @classmethod
-    def __get_macro_info(cls, doc):
+    def __get_macro_info(cls, doc) -> Tuple[Dict, str]:
         if doc is None:
             return None, None
         settings = doc.get_settings()
@@ -790,6 +749,8 @@ class DocParagraph(DocParagraphBase):
             return None, None
         return settings.get_macros(), settings.get_macro_delimiter()
 
-    @contract
-    def set_id(self, par_id: 'str'):
+    def set_id(self, par_id: str):
         self.__data['id'] = par_id
+
+
+new_contract('DocParagraph', DocParagraph)
