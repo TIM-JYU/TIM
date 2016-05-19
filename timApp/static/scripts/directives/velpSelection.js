@@ -31,7 +31,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.advancedOn = false;
     $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2};
     $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};
-    $scope.newLabel = {content: "", selected: false, edit: false};
+    $scope.newLabel = {content: "", selected: false, edit: false, valid: true};
     $scope.labelToEdit = {content: "", selected: false, edit: false};
     $scope.selectedLabels = [];
     $scope.settings = {selectedAll: false};
@@ -151,14 +151,19 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
      * Adds new label
      * @param form form information
      */
-    $scope.addLabel = function (form) {
-        var valid = form.$valid;
+    $scope.addLabel = function () {
+        /*var valid = form.$valid;
         $scope.labelAdded = true;
-        if (!valid) return;
+        if (!valid) return;*/
 
-        form.$setPristine();
+        //form.$setPristine();
+        if ($scope.newLabel.content.length < 1){
+            $scope.newLabel.valid = false;
+            return;
+        }
+
         var labelToAdd = {
-            content: $scope.newLabel["content"],
+            content: $scope.newLabel.content,
             language_id: "FI", // TODO: Change to user lang
             selected: false
         };
@@ -169,6 +174,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             $scope.labels.push(labelToAdd);
             $scope.labelAdded = false;
         });
+
+        // TODO: add label to edited or new velp
     };
 
     $scope.isLabelInVelp = function(velp, label){
@@ -188,7 +195,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         form.$setPristine();
 
         var velpToAdd = {
-            labels: $scope.selectedLabels.splice(0),
+            labels: $scope.newVelp["labels"],
             used: 0,
             points: $scope.newVelp["points"],
             content: $scope.newVelp["content"],
@@ -233,6 +240,18 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         label.edit = true;
         $scope.labelToEdit = Object.create(label);
+    };
+
+
+    $scope.updateVelpToAddLabels = function(label){
+
+        var index = $scope.newVelp.labels.indexOf(label.id);
+        if (index < 0){
+            $scope.newVelp.labels.push(label.id);
+        }
+        else if (index >= 0){
+            $scope.newVelp.labels.splice(index, 1);
+        }
     };
 
     $scope.updateVelpToEditLabels = function(label){
@@ -322,7 +341,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
      * Reset new label information
      */
     $scope.resetNewLabel = function () {
-        $scope.newLabel = {"content": "", "selected": true};
+        $scope.newLabel = {content: "", selected: true, valid: true};
     };
 
     /**
