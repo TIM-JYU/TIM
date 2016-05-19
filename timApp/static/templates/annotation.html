@@ -13,7 +13,7 @@
     </div>
     <div class="fulldiv">
         <ul class="comments">
-            <li ng-repeat="comment in comments"><strong>{{ comment["author"] }}</strong>: {{ comment["content"] }}</li>
+            <li ng-repeat="comment in comments"><strong>{{ comment["commenter_username"] }}</strong>: {{ comment["content"] }}</li>
         </ul>
         <textarea placeholder="Add comment" ng-model="newComment" autofocus></textarea>
     </div>

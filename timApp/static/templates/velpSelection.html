@@ -33,8 +33,9 @@
                         </p><!-- p ng-click="selectLabelToEdit()" ng-class="['label', 'tag-false']" style="background: blue;">
                                 <span class="glyphicon glyphicon-plus"></span> Add label
                             </p -->
+                        <hr />
                     </div>
-                    <div class="fulldiv" >
+                    <!-- div class="fulldiv" >
                         <br >
                         <input type="button" value="Create label" ng-click="toggleLabelToEdit(newLabel)">
                         <form name="addLabelForm" ng-show="newLabel['edit']"
@@ -58,8 +59,8 @@
                             </table>
                             <input id="addLabelButton" type="submit" value="Add label">
                         </form>
-                        <hr />
-                    </div>
+
+                    </div -->
                 </div>
                     </div>
                 <!--    </td>
@@ -109,15 +110,26 @@
                                                   ng-repeat="label in filterByLabels"
                                                   ng-style="{ color: getColor(label) }"></span></p>
 
-                                            <p ng-show="(addVelpForm.velpName.$invalid && !addVelpForm.velpName.$pristine) || (submitted && addVelpForm.velpName.$invalid)">
-                                                Velp content is required
-                                            </p>
+                                    <p class="error" ng-show="(addVelpForm.velpName.$invalid && !addVelpForm.velpName.$pristine) || (submitted && addVelpForm.velpName.$invalid)">
+                                        Velp content is required
+                                    </p>
 
-                                            <p><input id="addVelpPoints" type="number" ng-model="newVelp['points']"
-                                                   placeholder="Points" value="0"></p>
+                                    <p><input id="addVelpPoints" type="number" ng-model="newVelp['points']"
+                                              placeholder="Points" value="0"></p>
 
-                                            <p><input type="submit" value="Add velp"/></p>
-                                        </form>
+                                    <p ng-show="advancedOn">
+                                                    <span ng-repeat="l in labels">
+                                                        <label><input type="checkbox" ng-click="updateVelpToAddLabels(l)" id="{l.id}"
+                                                               ng-checked="isLabelInVelp(newVelp, l)"> {{ l.content }}</label><br>
+                                                    </span>
+                                        <input placeholder="Add label" ng-model="newLabel['content']">
+                                        <input type="button" value="Add" ng-click="addLabel()">
+                                        <span ng-hide="newLabel['valid']" class="error">Label content too short</span>
+                                    </p>
+
+                                    <p><input type="submit" value="Add velp"/></p>
+
+                                </form>
                                     </div>
                                     </div>
                                 </div>
@@ -131,18 +143,20 @@
 
                                         <div ng-class="['content']">
                                             <div ng-hide="velp.edit">
-                                            <p ng-hide=>
-                                                <span>{{ velp.content }}&ensp;</span>
-                                                <span class="points">{{ velp.points }}</span>
-                                                <span ng-show="advancedOn" ng-class="['glyphicon', 'glyphicon-tag']"
-                                                      ng-repeat="label in velp.labels"
-                                                      ng-style="{ color: getColor(label) }"></span>
-                                                <span class="float-right" ng-click="selectVelpToEdit(velp)"
-                                                      ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
+                                                <p ng-hide=>
+                                                    <span>{{ velp.content }}&ensp;</span>
+                                                    <span class="points">{{ velp.points }}</span>
+                                                    <span ng-show="advancedOn" ng-class="['glyphicon', 'glyphicon-tag']"
+                                                          ng-repeat="label in velp.labels"
+                                                          ng-style="{ color: getColor(label) }"></span>
+                                                    <span class="float-right" ng-click="selectVelpToEdit(velp)"
+                                                          ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
 
-                                            </p>
-                                            <div class="bottom-part"></div>
+                                                </p>
+                                                <!-- Adds post-it style to the bottom of velp -->
+                                                <div class="bottom-part"></div>
                                             </div>
+                                            <!-- Add Velp -->
                                             <form ng-class="[{hide: !velp.edit}]" name="editVelpForm"
                                                   ng-submit="editVelp(editVelpForm)" novalidate>
 
@@ -164,8 +178,11 @@
                                                           placeholder="Points" value="0"></p>
                                                 <p ng-show="advancedOn">
                                                     <span ng-repeat="l in labels">
-                                                        <input type="checkbox" ng-click="updateVelpToEditLabels(l)" ng-checked="isLabelInVelp(velpToEdit, l)"> {{ l.content }}<br>
+                                                        <label><input type="checkbox" ng-click="updateVelpToEditLabels(l)" ng-checked="isLabelInVelp(velpToEdit, l)" > {{ l.content }}</label><br>
                                                     </span>
+                                                    <input placeholder="Add label" ng-model="newLabel['content']">
+                                                    <input type="button" value="Add" ng-click="addLabel()">
+                                                    <span ng-hide="newLabel['valid']" class="error">Label content too short</span>
                                                 </p>
                                                 <p><input type="submit" value="Save changes"/></p>
                                             </form>

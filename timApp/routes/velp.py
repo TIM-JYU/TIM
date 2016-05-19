@@ -210,6 +210,7 @@ def update_velp():
     if old_labels != new_labels:
         timdb.velps.update_velp_labels(velp_id, new_labels)
     timdb.velps.update_velp(velp_id, default_points, icon_id)
+    return "" #TODO: return something more informative
 
 @velps.route("/add_label", methods=["POST"])
 def add_label():
