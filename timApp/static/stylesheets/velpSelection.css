@@ -166,8 +166,10 @@
     font-weight: 600;
     cursor: pointer;
     min-height: 10em;
-    height: 10em;
     width: 18em;
+}
+.velp-data {
+    position: relative;
 }
 
 .velp:hover .emphasise{
@@ -178,12 +180,11 @@
 }
 
 .velp .emphasise{
-    position: absolute;
+    position: relative;
     top:0;
     left:0;
     bottom:0;
     right:0;
-    height: 100%;
     width: 100%;
     z-index: 0;
     background: gainsboro;
@@ -191,6 +192,11 @@
 -webkit-box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 -moz-box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
+}
+
+.bottom-part{
+    padding-top: 8em;
+    width: 100%;
 }
 
 .velpPencil {

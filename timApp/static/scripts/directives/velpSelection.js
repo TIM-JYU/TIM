@@ -31,11 +31,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.advancedOn = false;
     $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2};
     $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};
-    $scope.newLabel = {content: "", selected: true, edit: false};
+    $scope.newLabel = {content: "", selected: false, edit: false};
     $scope.labelToEdit = {content: "", selected: false, edit: false};
     $scope.selectedLabels = [];
-    $scope.previouslySelectedLabels = [];
-    $scope.lockedVelps = [];
     $scope.settings = {selectedAll: false};
 
 
@@ -138,14 +136,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         }
     };
 
-    /**
-     * lock velps in list
-     * @param velps velps to lock
-     */
-    $scope.lockVelps = function (velps) {
-        if (!$scope.velpToEdit.edit) {
-            $scope.lockedVelps = velps;
-        }
+    $scope.toggleLabelToEdit = function(label){
+        label.edit = !label.edit;
     };
 
     /**
@@ -189,6 +181,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         });
     };
 
+    $scope.isLabelInVelp = function(velp, label){
+        return velp.labels.indexOf(label.id) >= 0;
+    };
 
     /**
      * Adds new velp on form submit
@@ -251,7 +246,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     };
 
     $scope.selectVelpToEdit = function (velp) {
-
 
         if (velp.id == $scope.velpToEdit.id) {
             velp.edit = false;
@@ -348,7 +342,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
  * Filter for ordering velps
  */
 timApp.filter('filterByLabels', function () {
-    return function (velps, labels, lockedVelps, advancedOn) {
+    return function (velps, labels, advancedOn) {
         var selectedVelps = {};
         var selectedLabels = [];
 
