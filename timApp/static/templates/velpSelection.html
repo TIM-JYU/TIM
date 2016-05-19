@@ -183,95 +183,7 @@
 
         </uib-tab>
 
-        <!-- ADD VELP TAB -->
-        <!--      <uib-tab index="1" heading="Add velp">
-
-                  <div class="velpArea">
-                      <form name="addVelpForm" ng-submit="addVelp(addVelpForm)" novalidate>
-                          <table class="velpTable">
-                              <tr>
-                                  <td>
-                                      <label for="addVelpName">Velp name</label>
-                                  </td>
-                                  <td>
-                                      <input id="addVelpName" name="velpName" type="text" ng-model="newVelp['content']"
-                                             required>
-                                  </td>
-                              </tr>
-                              <tr ng-show="(addVelpForm.velpName.$invalid && !addVelpForm.velpName.$pristine) || (submitted && addVelpForm.velpName.$invalid)">
-                                  <td colspan="2">
-                                      <p>Velp content is required</p>
-                                  </td>
-                              </tr>
-                              <tr>
-                                  <td>
-                                      <label for="addVelpPoints">Points</label>
-                                  </td>
-                                  <td>
-                                      <input id="addVelpPoints" type="number" ng-model="newVelp['points']"
-                                             value="0">
-                                  </td>
-                              </tr>
-                              <tr ng-class="getAdvancedStyle()">
-                                  <td>
-                                      <label for="searchLabels">Filter labels </label>
-                                  </td>
-                                  <td>
-                                      <input id="searchLabels" ng-model="filterLabel" placeholder="filter labels">
-                                  </td>
-                              </tr>
-                          </table>-->
-        <!--  <tr>
-              <td colspan="2">-->
-        <!--    <div ng-class="getAdvancedStyle()">
-                                    <p ng-repeat="label in labels | filter:{content:filterLabel}"
-                                       class="label tag-{{ label.selected }}"
-                                       style="background-color: {{ getColor(label.id) }}"
-                                       ng-click="toggleLabel(label)" ng-model="test" value="{{ label.id }}">
-                                        {{ label.content }}
-                                    </p>
-                                </div>-->
-        <!--    </td>
-        </tr>-->
-        <!--    <table class="velpTable">
-                <tr>
-                    <td colspan="2">
-                        <input type="submit" value="Add velp"/>
-                    </td>
-                </tr>
-            </table>
-        </form>
-        <form ng-class="getAdvancedStyle()" name="addLabelForm" ng-submit="addLabel(addLabelForm)" novalidate>
-
-            <table class="velpTable">
-                <tr>
-                    <td colspan="2">
-                        <label>Add new label (optional):</label>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label for="newLabel">Label text</label>
-                    </td>
-                    <td>
-                        <input id="newLabel" name="labelContent" ng-model="newLabel['content']"
-                               placeholder="Label text" required>
-                    </td>
-                </tr>
-                <tr ng-show="(labelAdded && addLabelForm.labelContent.$invalid) || (addLabelForm.labelContent.$invalid && !addLabelForm.labelContent.$pristine)">
-                    <td colspan="2">
-                        <p>Label content is too short</p>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2">
-                        <input type="submit" value="Add label">
-                    </td>
-                </tr>
-            </table>
-        </form>
-    </div>
-</uib-tab>-->
+        <!-- MANAGE VELPS -->
         <uib-tab index="1" heading="Manage velps">
             <div class="velpArea">
                 <table class="velpTable">
@@ -287,6 +199,8 @@
                 <input value="Import group" type="submit">
             </div>
         </uib-tab>
+
+        <!-- SUMMARY -->
         <uib-tab index="2" heading="Summary">
             <div class="velpArea">
                 <div class="velpSummary">

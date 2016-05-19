@@ -263,7 +263,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         }
 
         velp.edit = true;
-        $scope.velpToEdit = Object.create(velp);
+
+        $scope.velpToEdit = JSON.parse(JSON.stringify(velp));
 
         /*
          if (velp.labels !== undefined) {
