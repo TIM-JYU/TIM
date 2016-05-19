@@ -162,7 +162,7 @@
                                                 <p><input id="addVelpPoints" type="number"
                                                           ng-model="velpToEdit['points']"
                                                           placeholder="Points" value="0"></p>
-                                                <p>
+                                                <p ng-show="advancedOn">
                                                     <span ng-repeat="l in labels">
                                                         <input type="checkbox" ng-click="updateVelpToEditLabels(l)" ng-checked="isLabelInVelp(velpToEdit, l)"> {{ l.content }}<br>
                                                     </span>

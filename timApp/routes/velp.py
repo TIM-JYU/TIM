@@ -180,6 +180,7 @@ def add_velp():
 
 @velps.route("/update_velp", methods=['POST'])
 def update_velp():
+
     try:
         json_data = request.get_json()
         velp_id = json_data.get('id')

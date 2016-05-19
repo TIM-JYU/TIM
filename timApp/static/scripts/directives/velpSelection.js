@@ -264,7 +264,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         velp.edit = true;
 
-        $scope.velpToEdit = JSON.parse(JSON.stringify(velp));
+        $scope.velpToEdit = (JSON.parse(JSON.stringify(velp)));
 
         /*
          if (velp.labels !== undefined) {
@@ -284,6 +284,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         form.$setPristine();
 
         console.log($scope.velpToEdit);
+        $scope.makePostRequest("/update_velp", $scope.velpToEdit, function (json) {
+            console.log(json);
+        });
 
         for (var i = 0; i < $scope.velps.length; i++) {
             if ($scope.velps[i].id == $scope.velpToEdit.id) {
@@ -293,12 +296,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             }
         }
 
-
-         $scope.makePostRequest("/update_velp", $scope.velpToEdit, function (json) {
-             console.log(json);
-         });
-
-        $scope.deselectLabels();
     };
 
     /**
