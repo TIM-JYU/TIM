@@ -69,7 +69,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
         $scope.clockOffset = 0;
         $scope.current_question_id = false;
         $scope.current_points_id = false;
-        $scope.settings = $window.settings;
+        $scope.settings = $window.sessionsettings;
 
         //TODO: Move all lecture settings to lectureSettings object, so they will work as ng-model
         $scope.lectureSettings = {
