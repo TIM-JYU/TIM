@@ -48,30 +48,31 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             if ($scope.annotations[i].answer_id !== null){
                 if (!parent.classList.contains("has-annotation")){
                     parent.classList.add("has-annotation");
-                    console.log("added v");
                 }
                 continue;
             }
 
+            if (parent.getAttribute("t") == placeInfo["start"]["t"]) {
+                var elements = parent.querySelector(".parContent");
 
-            var elements = parent.querySelector(".parContent");
+                var start_elpath = placeInfo["start"]["el_path"];
 
-            // Find element
-            var start_elpath = placeInfo["start"]["el_path"];
+                for (var j = 0; j < start_elpath.length; j++) {
+                    var elementChildren = getElementChildren(elements);
+                    if (elementChildren[start_elpath[j]] != null)
+                        elements = elementChildren[start_elpath[j]];
+                }
 
-            for (var j = 0; j < start_elpath.length; j++) {
-                var elementChildren = getElementChildren(elements);
-                if (elementChildren[start_elpath[j]] != null)
-                    elements = elementChildren[start_elpath[j]];
+                var startel = elements.childNodes[placeInfo["start"]["node"]];
+                var endel = elements.childNodes[placeInfo["end"]["node"]];
+
+                var range = document.createRange();
+                range.setStart(startel, placeInfo["start"]["offset"]);
+                range.setEnd(endel, placeInfo["end"]["offset"]);
+                addAnnotationToCoord(range, $scope.annotations[i], false);
+            } else {
+                addAnnotationToElement(parent, $scope.annotations[i], false, "Paragraph has been modified");
             }
-
-            var startel = elements.childNodes[placeInfo["start"]["node"]];
-            var endel = elements.childNodes[placeInfo["end"]["node"]];
-
-            var range = document.createRange();
-            range.setStart(startel, placeInfo["start"]["offset"]);
-            range.setEnd(endel, placeInfo["end"]["offset"]);
-            addAnnotationToCoord(range, $scope.annotations[i], false);
         }
 
         $scope.annotationsAdded = true;
@@ -89,7 +90,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         */
         var children = [];
         for (var i=0; i<element.childNodes.length; i++){
-            console.log(element.childNodes[i].tagName);
             if (typeof element.childNodes[i].tagName !== "undefined"){
                 children.push(element.childNodes[i]);
             }
@@ -194,6 +194,32 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             addAnnotationToCoord(new_range, annotation, show);
         }
 
+        $compile(span)($scope); // Gives error [$compile:nonassign]
+    };
+
+    /**
+     * Adds annotation to given element. Puts annotation on the "club of missing velps".
+     * @param id element id
+     * @param annotation annotation info
+     * @param show show by default
+     * @param reason why annotation is put to here
+     */
+    var addAnnotationToElement = function (el, annotation, show, reason){
+        var span = $scope.createPopOverElement(annotation, show);
+        var text = document.createTextNode("\u00A0"+annotation.content+"\u00A0");
+        span.appendChild(text);
+
+        var container = el.getElementsByClassName("missing-velps");
+        if (container.length > 0){
+            container[0].appendChild(span);
+        } else {
+            container = document.createElement("div");
+            container.classList.add("missing-velps");
+            container.appendChild(span);
+            el.appendChild(container);
+        }
+
+        console.log(reason);
         $compile(span)($scope); // Gives error [$compile:nonassign]
     };
 

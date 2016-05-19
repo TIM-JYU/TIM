@@ -245,6 +245,18 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
     border: none;
 }
 
+.missing-velps{
+    position: absolute;
+    left: 102%;
+    width: 17em;
+    top: 0;
+}
+
+.missing-velps span{
+    display: block;
+    margin-bottom: 0.25em;
+}
+
 /* Text selection */
 
 .text-selection{
@@ -385,15 +397,6 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
     cursor: pointer;
 }
 
-/** Editor styles **/
-.previewcontent{
-    overflow-y:visible;
-    max-height: none;
-}
-
-#previewDiv{
-    overflow: visible;
-}
 .velpSummary {
   /*  position: fixed;
     max-width: 20em;*/
