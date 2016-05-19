@@ -120,7 +120,8 @@
 .menu-icon.clicked {
     z-index: 501;
     opacity: 0.99;
-    background: #e6e6e6;
+    /*background: #e6e6e6;*/
+    background: #d0d0d0;
 }
 
 /* Sisällysluetteloa varten */
