@@ -153,12 +153,6 @@ class Velps(TimDbBase):
         label_data = self.get_velp_label_ids_for_document(doc_id, user_id)
         group_data = self.get_velp_group_ids_for_document(doc_id, user_id)
 
-        print(velp_data)
-        print("--")
-        print(label_data)
-        print("00")
-        print(group_data)
-
         # Sort velp label data as lists and link them to velp data
         if velp_data and label_data:
             velp_id = label_data[0]['velp_id']

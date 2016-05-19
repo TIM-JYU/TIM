@@ -12,48 +12,8 @@ from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 from timdb.documents import *
 
 class VelpGroups(Documents):
-    def create_default_velp_group(self, name: str, owner_group_id: int, velp_group_id: Optional[int] = None):
-        """Creates default velp group where all velps used in document are stored.
 
-        :param name: Name of the new default velp group.
-        :param owner_group_id: The id of the owner group.
-        :param valid_until: Valid forever, thus None.
-        :return:
-        """
-        cursor = self.db.cursor()
-        # Velp groups are stored as documents as well, if this changes, change the block type
-        velp_group_id = self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
-        valid_until = None
-        cursor.execute("""
-                      INSERT INTO
-                      VelpGroup(id, name, valid_until, document_def)
-                      VALUES (?, ?, ?, ?)
-                      """, [velp_group_id, name, valid_until, 1]
-                       )
-        self.db.commit()
-        return velp_group_id
-
-    def create_velp_group(self, name: str, owner_group_id: int, valid_until: Optional[str] = None, velp_group_id: int = None):
-        """Create a velp group
-
-        :param name: Name of the created group.
-        :param owner_group_id: The id of the owner group.
-        :param valid_until: How long velp group is valid (None is forever).
-        :return:
-        """
-        cursor = self.db.cursor()
-        # Velp groups are stored as documents as well, if this changes, change the block type
-        velp_group_id = self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
-        cursor.execute("""
-                      INSERT INTO
-                      VelpGroup(id, name, valid_until)
-                      VALUES (?, ?, ?)
-                      """, [velp_group_id, name, valid_until]
-                       )
-        self.db.commit()
-        return velp_group_id
-
-    def create_default_velp_group2(self, name: str, owner_group_id: int, default_group_path: str):
+    def create_default_velp_group(self, name: str, owner_group_id: int, default_group_path: str):
         """Creates default velp group where all velps used in document are stored.
 
         Make sure you have made a new document (needed for rights management) and use its id as velp_group_id
@@ -76,7 +36,7 @@ class VelpGroups(Documents):
         self.db.commit()
         return new_group_id
 
-    def create_velp_group2(self, name: str, owner_group_id: int, new_group_path: str, valid_until: Optional[str] = None):
+    def create_velp_group(self, name: str, owner_group_id: int, new_group_path: str, valid_until: Optional[str] = None):
         """Create a velp group
 
         Make sure you have made a new document (needed for rights management) and use its id as velp_group_id
@@ -244,26 +204,6 @@ class VelpGroups(Documents):
         else:
             return result
 
-    def get_velp_groups_in_assessment_area(self, document_id: int = None, paragraph_id: str = None,
-                                           area_id: str = None, folder_id: int = None) -> List[int]:
-        """Get all velp groups linked to this assessment area. Any and even all of the parameters can be null.
-
-        :param document_id: Id of the document.
-        :param paragraph_id: Id of the paragraph.
-        :param area_id: Id of the area.
-        :param folder_id: Id of the folder.
-        :return: List of velp group ids together with their location info.
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                       SELECT DISTINCT velp_group_id, document_id, paragraph_id, area_id, folder_id
-                       FROM VelpGroupInAssessmentArea
-                       WHERE document_id = ? OR (document_id = ? AND paragraph_id = ?) OR area_id = ? OR folder_id = ?
-                       """, [document_id, document_id, paragraph_id, area_id, folder_id]
-                       )
-        results = self.resultAsDictionary(cursor)
-        return results
-
     def insert_group_to_document(self, velp_group_id: int, document_id: int):
         cursor = self.db.cursor()
         cursor.execute("""
@@ -309,7 +249,8 @@ class VelpGroups(Documents):
     def get_groups_from_imported_table(self, user_groups: [int], doc_id: int):
         cursor = self.db.cursor()
         cursor.execute("""
-                      SELECT user_group, doc_id, target_type, target_id, velp_group_id as id
+                      SELECT
+                      user_group, doc_id, target_type, target_id, velp_group_id as id
                       FROM ImportedVelpGroups
                       WHERE doc_id = ? AND user_group IN ({})
                       """.format(self.get_sql_template(user_groups)), [doc_id] + user_groups
@@ -331,3 +272,86 @@ class VelpGroups(Documents):
                           """, [user_id, doc_id, target_type, target_id, selected, velp_group_id]
                            )
         self.db.commit()
+
+    def get_groups_from_selection_table(self, doc_id: int, user_id: int):
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT
+                      target_type, target_id, velp_group_id as id,
+                      VelpGroup.name, DocEntry.name AS location
+                      FROM VelpGroupSelection
+                      JOIN VelpGroup ON VelpGroup.id = VelpGroupSelection.velp_group_id
+                      JOIN DocEntry ON DocEntry.id = VelpGroupSelection.velp_group_id
+                      WHERE doc_id = ? AND user_id = ?
+                      """, [doc_id, user_id]
+                      )
+        results = self.resultAsDictionary(cursor)
+        return results
+
+
+
+
+
+    # TODO Outdated methods?
+
+    def create_default_velp_group_orig(self, name: str, owner_group_id: int, velp_group_id: Optional[int] = None):
+        """Creates default velp group where all velps used in document are stored.
+
+        :param name: Name of the new default velp group.
+        :param owner_group_id: The id of the owner group.
+        :param valid_until: Valid forever, thus None.
+        :return:
+        """
+        cursor = self.db.cursor()
+        # Velp groups are stored as documents as well, if this changes, change the block type
+        velp_group_id = self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
+        valid_until = None
+        cursor.execute("""
+                      INSERT INTO
+                      VelpGroup(id, name, valid_until, document_def)
+                      VALUES (?, ?, ?, ?)
+                      """, [velp_group_id, name, valid_until, 1]
+                       )
+        self.db.commit()
+        return velp_group_id
+
+    def create_velp_group_orig(self, name: str, owner_group_id: int, valid_until: Optional[str] = None, velp_group_id: int = None):
+        """Create a velp group
+
+        :param name: Name of the created group.
+        :param owner_group_id: The id of the owner group.
+        :param valid_until: How long velp group is valid (None is forever).
+        :return:
+        """
+        cursor = self.db.cursor()
+        # Velp groups are stored as documents as well, if this changes, change the block type
+        velp_group_id = self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
+        cursor.execute("""
+                      INSERT INTO
+                      VelpGroup(id, name, valid_until)
+                      VALUES (?, ?, ?)
+                      """, [velp_group_id, name, valid_until]
+                       )
+        self.db.commit()
+        return velp_group_id
+
+
+    def get_velp_groups_in_assessment_area(self, document_id: int = None, paragraph_id: str = None,
+                                           area_id: str = None, folder_id: int = None) -> List[int]:
+        """Get all velp groups linked to this assessment area. Any and even all of the parameters can be null.
+
+        :param document_id: Id of the document.
+        :param paragraph_id: Id of the paragraph.
+        :param area_id: Id of the area.
+        :param folder_id: Id of the folder.
+        :return: List of velp group ids together with their location info.
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                       SELECT DISTINCT velp_group_id, document_id, paragraph_id, area_id, folder_id
+                       FROM VelpGroupInAssessmentArea
+                       WHERE document_id = ? OR (document_id = ? AND paragraph_id = ?) OR area_id = ? OR folder_id = ?
+                       """, [document_id, document_id, paragraph_id, area_id, folder_id]
+                       )
+        results = self.resultAsDictionary(cursor)
+        return results
