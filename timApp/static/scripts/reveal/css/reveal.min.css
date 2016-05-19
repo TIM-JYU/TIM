@@ -15,7 +15,7 @@ html, body, .reveal div, .reveal span, .reveal applet, .reveal object, .reveal i
   font-size: 100%;
   font: inherit;
   vertical-align: baseline;
-  background-color: white;
+  background-color: inherit;
 }
 
 .reveal article, .reveal aside, .reveal details, .reveal figcaption, .reveal figure, .reveal footer, .reveal header, .reveal hgroup, .reveal menu, .reveal nav, .reveal section {
