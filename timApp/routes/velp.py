@@ -28,6 +28,14 @@ def get_default_velp_group(document_id: int):
     full_path = timdb.documents.get_first_document_name(doc_id)
     doc_name = os.path.basename(full_path)
 
+
+    if "velp groups/" in full_path:
+        timdb.velp_groups.make_document_a_velp_group(doc_name, doc_id)
+        velp_group = [{'target_type': '0', 'target_id': 0, 'id': doc_id}]
+        timdb.velp_groups.add_groups_to_selection_table(velp_group, doc_id, user_id)
+        print("Document is a velp group, made default velp group to point itself")
+        return jsonResponse({"id": doc_id, "name": "Default"})
+
     # Problems arise if document is located in [root] folder, this check fixes that
     if len(full_path) - len(doc_name) - 1 < len(doc_name):
         doc_path = ""
@@ -52,7 +60,7 @@ def get_default_velp_group(document_id: int):
     if default_velp_group is False:
         # Check that current user is owner for the document as well
         if timdb.users.user_is_owner(user_id, doc_id) is False:
-            return 0
+            abort(400, "User is not owner of the document, can't create default velp group")
         default_group_path = velps_folder_path + "/" + default_group_name
         #new_group = timdb.documents.create(default_group_path, owner_group_id)
         #new_group_id = new_group.doc_id
@@ -365,13 +373,13 @@ def get_velp_groups_from_tree(document_id: int):
         is_velp_group = timdb.velp_groups.is_id_velp_group(id_number)
         if is_velp_group is False:
             group_name = os.path.basename(timdb.documents.get_first_document_name(id_number))
-            timdb.velp_groups.make_document_a_velp_group(group_name, owner_group_id, id_number)
+            timdb.velp_groups.make_document_a_velp_group(group_name, id_number)
 
 
     return results
 
 
-# TODO: Outdated eventually
+# TODO: Outdated routes / methods
 
 @velps.route("/<document_id>/defaultvelpgroup", methods=['GET'])
 def check_default_velp_group(document_id: int) -> str:
