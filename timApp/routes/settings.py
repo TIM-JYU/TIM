@@ -1,7 +1,6 @@
 """Routes for settings view."""
 import os
-import cssutils
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template
 from jinja2 import TemplateNotFound
 from .common import *
 
@@ -10,31 +9,32 @@ settings_page = Blueprint('settings_page',
                           url_prefix='/settings')
 
 
+def get_custom_style_files():
+    return [file[:-5] for file in os.listdir('static/css') if file.endswith('.scss')]
+
+
 @settings_page.route('/')
 def show():
     verifyLoggedIn()
-    timdb = getTimDb()
-    prefs = timdb.users.get_preferences(getCurrentUserId())
-    prefs = json.loads(prefs) if prefs is not None else {}
-    css_file_names = [file[:-4] for file in os.listdir('static/css') if file.endswith('.css')]
+    css_file_names = get_custom_style_files()
     css_file_descriptions = []
-    parser = cssutils.CSSParser()
     for file_name in css_file_names:
-        sheet = parser.parseFile(os.path.join('static/css', file_name + '.css'), 'utf-8')
-        comment = 'No description.'
-        for rule in sheet.cssRules:
-            if isinstance(rule, cssutils.css.CSSComment):
-                comment = rule.cssText[2:-2].strip()
-                break
+        default_comment = 'No description.'
+        with open(os.path.join('static/css', file_name + '.scss'), 'r', encoding='utf-8') as f:
+            comment = f.readline()
+            if comment.startswith('@charset'):
+                comment = f.readline()
+        m = re.match(r'/\* ([^*]+) \*/', comment)
+        if m is not None:
+            comment = m.groups()[0]
+        else:
+            comment = default_comment
         css_file_descriptions.append(comment)
-
-    # Remove non-existent CSS files from preferences
-    prefs['css_files'] = {key: prefs.get('css_files', {}).get(key, False) for key in css_file_names}
 
     available_css_files = [{'name': name, 'desc': desc} for name, desc in zip(css_file_names, css_file_descriptions)]
 
     try:
-        return render_template('settings.html', css_files=available_css_files, settings=prefs)
+        return render_template('settings.html', css_files=available_css_files)
     except TemplateNotFound:
         abort(404)
 
@@ -45,4 +45,5 @@ def save_settings():
     timdb = getTimDb()
     prefs = request.get_json()
     timdb.users.set_preferences(getCurrentUserId(), json.dumps(prefs))
-    return okJsonResponse()
+    show()  # Regenerate CSS
+    return jsonResponse(get_preferences())

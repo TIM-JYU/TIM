@@ -20,73 +20,35 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
         $scope.pastLecturesList = [];
         $scope.lectureQuestions = [];
         $scope.materialQuestions = [];
-        $scope.indexSidebarState = 'autohidden';
-        $scope.lecturesSidebarState = 'autohidden';
-        $scope.questionSidebarState = 'autohidden';
-        $scope.peopleSidebarState = 'autohidden';
-        $scope.settingsSidebarState = 'autohidden';
-		$scope.indexIconState = 'noClick';
-		$scope.lectureIconState = 'noClick';
-		$scope.questionIconState = 'noClick';
-		$scope.peopleIconState = 'noClick';
-		$scope.settingsIconState = 'noClick';
-        $scope.parEditIconState = $window.editMode === 'par' ? 'clicked': 'noClick';
+
+        $scope.active = null;
+        if ($window.showIndex) {
+            $scope.active = 0;
+        }
+        $scope.lastTab = $scope.active;
 
         /**
          * FILL WITH SUITABLE TEXT
          * @memberof module:sidebarMenuCtrl
          */
         $scope.showSidebar = function () {
-            $('.menu').slideToggle();
-            $('.sideMenu').slideToggle();
-            $('#futureList').hide();
-            $('#currentList').hide();
-            $scope.indexSidebarState = 'hidden';
-            $scope.lecturesSidebarState = 'hidden';
-            $scope.questionSidebarState = 'hidden';
-            $scope.peopleSidebarState = 'hidden';
-            $scope.settingsSidebarState = 'hidden';
-        };
-
-        var w = angular.element($window);
-
-        /**
-         * FILL WITH SUITABLE TEXT
-         * @memberof module:sidebarMenuCtrl
-         */
-        w.bind('resize', function () {
-            $scope.indexSidebarState = 'hidden';
-            $scope.lecturesSidebarState = 'hidden';
-            $scope.questionSidebarState = 'hidden';
-            $scope.peopleSidebarState = 'hidden';
-            $scope.settingsSidebarState = 'hidden';
-			$scope.indexIconState = 'noClick';
-			$scope.lectureIconState = 'noClick';
-			$scope.questionIconState = 'noClick';
-			$scope.peopleIconState = 'noClick';
-			$scope.settingsIconState = 'noClick';
-        });
-
-        /**
-         * FILL WITH SUITABLE TEXT
-         * @memberof module:sidebarMenuCtrl
-         */
-        $scope.toggleIndex = function () {
-            var visible = angular.element('.index-sidebar').is(":visible");
-            if (visible) {
-                $scope.indexSidebarState = 'hidden';
-				$scope.indexIconState = 'noClick';
+            var tabs = $("#menuTabs");
+            if (tabs.is(":visible")) {
+                if ($scope.active !== null) {
+                    $scope.lastTab = $scope.active;
+                    $scope.active = -1; // this will set the value to null and remove the "selected" state from tab
+                    if ($('.device-xs').is(':visible') || $('.device-sm').is(':visible')) {
+                        tabs.hide();
+                    }
+                } else {
+                    $scope.active = $scope.lastTab;
+                }
             } else {
-                $scope.indexSidebarState = 'open';
-                $scope.lecturesSidebarState = 'hidden';
-                $scope.questionSidebarState = 'hidden';
-                $scope.peopleSidebarState = 'hidden';
-                $scope.settingsSidebarState = 'hidden';
-				$scope.indexIconState = 'clicked';
-				$scope.lectureIconState = 'noClick';
-				$scope.questionIconState = 'noClick';
-				$scope.peopleIconState = 'noClick';
-				$scope.settingsIconState = 'noClick';
+                tabs.show();
+                tabs.attr("class", "");
+                if ($scope.active === null) {
+                    $scope.active = $scope.lastTab || 0;
+                }
             }
         };
 
@@ -95,39 +57,19 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
          * @memberof module:sidebarMenuCtrl
          */
         $scope.toggleLectures = function () {
-            var visible = angular.element('.lectures-sidebar').is(":visible");
-            if (visible) {
-                $scope.lecturesSidebarState = 'hidden';
-				$scope.lectureIconState = 'noClick';
-
-            } else {
-                $scope.indexSidebarState = 'hidden';
-                $scope.lecturesSidebarState = 'open';
-                $scope.questionSidebarState = 'hidden';
-                $scope.peopleSidebarState = 'hidden';
-                $scope.settingsSidebarState = 'hidden';
-				$scope.indexIconState = 'noClick';
-				$scope.lectureIconState = 'clicked';
-				$scope.questionIconState = 'noClick';
-				$scope.peopleIconState = 'noClick';
-				$scope.settingsIconState = 'noClick';
-
-                $http({
-                    url: '/getAllLecturesFromDocument',
-                    method: 'GET',
-                    params: {'doc_id': $scope.docId}
+            $http({
+                url: '/getAllLecturesFromDocument',
+                method: 'GET',
+                params: {'doc_id': $scope.docId}
+            })
+                .success(function (lectures) {
+                    $scope.currentLecturesList = lectures.currentLectures;
+                    $scope.futureLecturesList = lectures.futureLectures;
+                    $scope.pastLecturesList = lectures.pastLectures;
                 })
-                    .success(function (lectures) {
-                        $scope.currentLecturesList = lectures.currentLectures;
-                        $scope.futureLecturesList = lectures.futureLectures;
-                        $scope.pastLecturesList = lectures.pastLectures;
-                    })
-                    .error(function () {
-                        console.log("Couldn't fetch the lectures");
-                    })
-
-
-            }
+                .error(function () {
+                    console.log("Couldn't fetch the lectures");
+                });
         };
 
         /**
@@ -135,89 +77,23 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
          * @memberof module:sidebarMenuCtrl
          */
         $scope.toggleQuestions = function () {
-            var visible = angular.element('.questions-sidebar').is(":visible");
-
             $scope.lectureQuestions = [];
-            if (visible) {
-                $scope.questionSidebarState = 'hidden';
-				$scope.questionIconState = 'noClick';
-
-            } else {
-                $scope.indexSidebarState = 'hidden';
-                $scope.lecturesSidebarState = 'hidden';
-                $scope.questionSidebarState = 'open';
-                $scope.peopleSidebarState = 'hidden';
-                $scope.settingsSidebarState = 'hidden';
-				$scope.indexIconState = 'noClick';
-				$scope.lectureIconState = 'noClick';
-				$scope.questionIconState = 'clicked';
-				$scope.peopleIconState = 'noClick';
-				$scope.settingsIconState = 'noClick';
-
-                $http({
-                    url: '/questions/' + $scope.docId,
-                    method: 'GET'
+            $http({
+                url: '/questions/' + $scope.docId,
+                method: 'GET'
+            })
+                .success(function (questions) {
+                    for (var i = 0; i < questions.length; i++) {
+                        var question = {
+                            "questionId": questions[i].question_id,
+                            "questionTitle": (JSON.parse(questions[i].questionJson)).TITLE
+                        };
+                        $scope.lectureQuestions.push(question);
+                    }
                 })
-                    .success(function (questions) {
-                        for (var i = 0; i < questions.length; i++) {
-                            var question = {
-                                "questionId": questions[i].question_id,
-                                "questionTitle": (JSON.parse(questions[i].questionJson)).TITLE
-                            };
-                            $scope.lectureQuestions.push(question);
-                        }
-                    })
-                    .error(function () {
-                        console.log("Couldn't fetch the questions");
-                    })
-            }
-        };
-
-        /**
-         * FILL WITH SUITABLE TEXT
-         * @memberof module:sidebarMenuCtrl
-         */
-        $scope.togglePeople = function () {
-            var visible = angular.element('.people-sidebar').is(":visible");
-            if (visible) {
-                $scope.peopleSidebarState = 'hidden';
-				$scope.peopleIconState = 'noClick';
-
-            } else {
-                $scope.indexSidebarState = 'hidden';
-                $scope.lecturesSidebarState = 'hidden';
-                $scope.questionSidebarState = 'hidden';
-                $scope.peopleSidebarState = 'open';
-                $scope.settingsSidebarState = 'hidden';
-				$scope.indexIconState = 'noClick';
-				$scope.lectureIconState = 'noClick';
-				$scope.questionIconState = 'noClick';
-				$scope.peopleIconState = 'clicked';
-				$scope.settingsIconState = 'noClick';
-            }
-        };
-
-        /**
-         * FILL WITH SUITABLE TEXT
-         * @memberof module:sidebarMenuCtrl
-         */
-        $scope.toggleSettings = function () {
-            var visible = angular.element('.settings-sidebar').is(":visible");
-            if (visible) {
-                $scope.settingsSidebarState = 'hidden';
-				$scope.settingsIconState = 'noClick';
-            } else {
-                $scope.indexSidebarState = 'hidden';
-                $scope.lecturesSidebarState = 'hidden';
-                $scope.questionSidebarState = 'hidden';
-                $scope.peopleSidebarState = 'hidden';
-                $scope.settingsSidebarState = 'open';
-				$scope.indexIconState = 'noClick';
-				$scope.lectureIconState = 'noClick';
-				$scope.questionIconState = 'noClick';
-				$scope.peopleIconState = 'noClick';
-				$scope.settingsIconState = 'clicked';
-            }
+                .error(function () {
+                    console.log("Couldn't fetch the questions");
+                });
         };
 
         $scope.enable_par_edit = function () {
@@ -237,49 +113,30 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
         $scope.disable_area_edit = function () {
         };
 
-        /**
-         * Changes into or out of paragraph edit mode.
-         * @memberof module:sidebarMenuCtrl
-         */
-        $scope.toggleParEditMode = function () {
-            $scope.enable_par_edit();
+        $scope.model = {editState: $window.editMode};
+
+        $scope.$watch('model.editState', function (newVal, oldVal, scope) {
+            $window.editMode = newVal;
             $('.editmode').removeClass('editmode');
 
-            if ($window.editMode === "par") {
-                $scope.parEditIconState = 'noClick';
-                $scope.areaEditIconState = 'noClick';
-                $window.editMode = null;
+            if (oldVal === "par" && newVal === null) {
+                $scope.enable_par_edit();
                 $scope.enable_area_edit_passive();
-            } else {
-                $scope.parEditIconState = 'clicked';
-                $scope.areaEditIconState = 'noClick';
-                $window.editMode = "par";
+            } else if (newVal === "par") {
+                $scope.enable_par_edit();
                 $scope.disable_area_edit();
                 $('.par').addClass('editmode');
+            } else if (newVal === "area") {
+                $('.editline').removeClass('editline').addClass('editline-disabled');
+                $scope.disable_par_edit();
+                $scope.enable_area_edit_active();
+                $('.area').addClass('editmode');
+            } else if (oldVal === "area" && newVal === null) {
+                $('.editline-disabled').removeClass('editline-disabled').addClass('editline');
+                $scope.enable_par_edit();
+                $scope.enable_area_edit_passive();
             }
-        };
-
-        /**
-         * FILL WITH SUITABLE TEXT
-         * @memberof module:sidebarMenuCtrl
-         */
-        $scope.autoHideSidebar = function () {
-            if ($scope.indexSidebarState === 'open') {
-                $scope.indexSidebarState = 'autohidden';
-            }
-            if ($scope.lecturesSidebarState === 'open') {
-                $scope.lecturesSidebarState = 'autohidden';
-            }
-            if ($scope.questionSidebarState === 'open') {
-                $scope.questionSidebarState = 'autohidden';
-            }
-            if ($scope.peopleSidebarState === 'open') {
-                $scope.peopleSidebarState = 'autohidden';
-            }
-            if ($scope.settingsSidebarState === 'open') {
-                $scope.settingsSidebarState = 'autohidden';
-            }
-        };
+        });
     }
 ])
 ;

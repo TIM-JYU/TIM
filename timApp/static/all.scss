@@ -1,0 +1,20 @@
+@charset "UTF-8";
+
+@function set-text-color($color) {
+  @if (lightness($color) > 50) {
+    @return #000000;
+  } @else {
+    @return #ffffff;
+  }
+}
+
+@import "bootstrap";
+@import "bootstrap-print";
+@import "stylesheet";
+@import "common";
+@import "lectureInfo";
+@import "menustyle";
+@import "popUp";
+@import "style";
+@import "windowstyle";
+@import "progressbarstyle";

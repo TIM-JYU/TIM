@@ -1,3 +1,9 @@
+{% macro scss(name) -%}
+    {% assets filters="libsass", output="{}.css".format(name), name + ".scss" %}
+        <link rel="stylesheet" href="{{ ASSET_URL }}">
+    {% endassets %}
+{%- endmacro %}
+{% set lecture_assets = in_lecture or lecture_mode or request.endpoint == 'lecture.show_lecture_info' %}
 <!DOCTYPE html>
 <html lang="en" ng-app="timApp">
 <head>
@@ -17,31 +23,28 @@
         <script>timLogInit({{ request.query_string|string|tojson }});</script>
 
         {% block stylesheet %}
-            <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
+            {{ scss('gen/' + prefs.css_combined) }}
         {% endblock %}
-        <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
-        <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.css') }}">
+        <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.min.css') }}">
 
         {% block customcss %}
-            {% for cssFile in custom_css_files %}
-                <link rel="stylesheet" href="{{ url_for('static', filename='css/' + cssFile + '.css') }}">
-            {% endfor %}
-
             <style type="text/css">
-                {{ custom_css }}
+                {{ prefs.custom_css }}
             </style>
         {% endblock %}
 
         <script src="{{ url_for('bower.static', filename='jquery/dist/jquery.min.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='jquery-ui/jquery-ui.min.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='angular/angular.min.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular-bootstrap/ui-bootstrap-tpls.min.js') }}"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
         {% block ngscripts %}
             <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.min.js') }}"></script>
         {% endblock %}
 
         <script>
-            var timApp = angular.module('timApp', [{% block ngmodules %}'ngSanitize',{% endblock %}]);
+            var timApp = angular.module('timApp', [{% block ngmodules %}'ngSanitize', 'ui.bootstrap', {% endblock %}]);
             // disable Angular URL manipulation when using ng-include; from http://stackoverflow.com/a/19825756
             timApp.config(['$provide', function ($provide) {
                 $provide.decorator('$browser', ['$delegate', function ($delegate) {
@@ -68,48 +71,139 @@
         <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
         <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
-
+        {% include 'common_head.html' %}
+        {% if lecture_assets %}
+            {% include 'lecture_head.html' %}
+        {% endif %}
         <title>{% block title %}{% endblock %} - TIM</title>
     {% endblock %}
 </head>
 <body>
+
+{# Set default column widths if they are not defined in a child template #}
+{% if col_1_lg is not defined %}
+    {% set col_1_lg = 2 %}
+    {% set col_2_lg = 8 %}
+    {% set col_3_lg = 2 %}
+
+    {% set col_1_md = 2 %}
+    {% set col_2_md = 8 %}
+    {% set col_3_md = 2 %}
+
+    {% set col_1_sm = 2 %}
+    {% set col_2_sm = 10 %}
+    {% set col_3_sm = 0 %}
+
+    {% set col_1_xs = 0 %}
+    {% set col_2_xs = 12 %}
+    {% set col_3_xs = 0 %}
+{% endif %}
+
 {% block body %}
-<div class="container">
-    <div class="header clearfix">
-        <a href="/">
-            <img alt="TIM - The Interactive Material." class="pull-left"
-                 src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"/>
-        </a>
-        <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
-             src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
-        {% include 'loginlogout.html' %}
+    <div class="container-fluid" {% block mainctrl %}{% endblock %}>
+        <div {% if lecture_assets %}ng-controller="LectureController"{% endif %}>
+            <div class="row hidden-print">
+                <div class="col-lg-{{ col_1_lg }}
+                            col-md-{{ col_1_md }}
+                            col-xs-{{ col_1_xs }}
+                            col-sm-{{ col_1_sm }}">
+                    <div class="left-fixed-side">
+                        {% include 'side_menu.html' %}
+                    </div>
+                </div>
+                <div class="col-lg-{{ col_2_lg }}
+                            col-md-{{ col_2_md }}
+                            col-xs-{{ col_2_xs }}
+                            col-sm-{{ col_2_sm }}">
+                    <div class="siteheader">
+                        <a href="/">
+                            <img alt="TIM - The Interactive Material." class="pull-left"
+                                 src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"/>
+                        </a>
+                        <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
+                             src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
+                        <div class="logintext">
+                            {% if session.user_id %}
+                                <a href="/">Logged in as: {{ session.real_name }} ({{ session.user_name }})</a>
+                            {% else %}
+                                <a href="/login">Log in</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-{{ col_3_lg }}
+                            col-md-{{ col_3_md }}
+                            col-xs-{{ col_3_xs }}
+                            col-sm-{{ col_3_sm }}">
+                    <div class="right-fixed-side">
+                        {% block rightside %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-{{ col_2_lg }} col-lg-offset-{{ col_1_lg }}
+                            col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
+                            col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
+                            col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <ul class="flashes">
+                                {% for message in messages %}
+                                    <li>{{ message }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-{{ col_2_lg }} col-lg-offset-{{ col_1_lg }}
+                            col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
+                            col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
+                            col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
+                    <div id="header" class="hidden-print">
+                        {% block header %}
+                        {% endblock %}
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-{{ col_2_lg }} col-lg-offset-{{ col_1_lg }}
+                            col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
+                            col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
+                            col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
+                    <div class="material">
+                        {% if lecture_assets %}
+                            {% include 'lectureinfo_menu.html' %}
+                        {% endif %}
+                        {% block content %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul class="flashes">
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
-
-    <div id="header">
-        {% block header %}
-        {% endblock %}
-    </div>
-
-    <div class="material">
-        {% block content %}{% endblock %}
-    </div>
-
-    <footer class="footer">
-        {% block footer %}
-        {% endblock %}
+    <footer class="footer hidden-print">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-{{ col_2_lg }} col-lg-offset-{{ col_1_lg }}
+                            col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
+                            col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
+                            col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
+                    {% block footer %}
+                        <div class="row">
+                            <p class="col-xs-6">&copy; Jyväskylän yliopisto</p>
+                            <a class="col-xs-6 text-right" href="/view/tim/Rekisteriseloste">Rekisteriseloste</a>
+                        </div>
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
     </footer>
-</div>
-<script>timLogTime("Document end","base");</script>
+    <script>timLogTime("Document end", "base");</script>
 {% endblock %}
+<div class="device-xs visible-xs-block"></div>
+<div class="device-sm visible-sm-block"></div>
+<div class="device-md visible-md-block"></div>
+<div class="device-lg visible-lg-block"></div>
 </body>
 </html>

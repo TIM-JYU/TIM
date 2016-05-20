@@ -36,27 +36,18 @@
     <script src="{{ url_for('static', filename='scripts/marktree.js') }}"></script>
 
     {% include 'view_head.html' %}
-    {% include 'common_head.html' %}
 
     {% if teacher_mode %}
         <script src="{{ url_for('static', filename='scripts/userlistController.js') }}"></script>
-    {% endif %}
-
-    {% if in_lecture or lecture_mode %}
-        {% include 'lecture_head.html' %}
     {% endif %}
 
     {% for cssFile in cssFiles %}
         <link rel="stylesheet" href="{{ cssFile }}">
     {% endfor %}
 
-    {% for cssFile in custom_css_files %}
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/' + cssFile + '.css') }}">
-    {% endfor %}
-
     {{ (doc_css | safe ) if doc_css }}
     <style type="text/css">
-        {{ custom_css }}
+        {{ prefs.custom_css }}
     </style>
     <script>
         var noBrowser = {{ no_browser|tojson }};
@@ -78,27 +69,97 @@
         {% endif %}
     </script>
 {% endblock %}
+
+{% set col_1_lg = 2 %}
+{% set col_2_lg = 7 %}
+{% set col_3_lg = 3 %}
+
+{% set col_1_md = 2 %}
+{% set col_2_md = 7 %}
+{% set col_3_md = 3 %}
+
+{% set col_1_sm = 0 %}
+{% set col_2_sm = 12 %}
+{% set col_3_sm = 0 %}
+
+{% set col_1_xs = 0 %}
+{% set col_2_xs = 12 %}
+{% set col_3_xs = 0 %}
+
+{% block mainctrl %}ng-controller="ViewCtrl"{% endblock %}
+
+{% block rightside %}
+    {% if teacher_mode %}
+        <div ng-controller="UserListController" id="users" class="userlist" tim-draggable-fixed caption="Users with answers ({{ plugin_users|length }})">
+            {% if plugin_users %}
+                {% raw %}
+                <table ng-table="tableParams" show-filter="true" class="table table-condensed ng-table-rowselected"
+                       export-csv="csv" export-korppi="expkorppi">
+                    <tr ng-repeat="user in $data"
+                        ng-click="changeUser(user)"
+                        ng-class="{'active': user == selectedUser}">
+                        <td ng-attr-title="{{user.real_name}}" data-title="'Full name'" sortable="'real_name'" filter="{ 'real_name': 'text' }">
+                            {{user.real_name}}
+                        </td>
+                        <td ng-attr-title="{{user.name}}" data-title="'User name'" sortable="'name'" filter="{ 'name': 'text' }">
+                            {{user.name}}
+                        </td>
+                        <td data-title="'Tasks'" sortable="'task_count'" filter="{ 'task_count': 'text' }">
+                            {{user.task_count}}
+                        </td>
+                        <td data-title="'Total points'" sortable="'total_points'"
+                            filter="{ 'total_points': 'text' }">
+                            {{user.total_points}}
+                        </td>
+                    </tr>
+                </table>
+                <form>
+                    <div class="form-group">
+                        <a class="timButton btn-sm" ng-mousedown="csv.generate()" ng-href="{{ csv.link() }}"
+                           download="users_{{ doc.id }}.csv">Export
+                            to CSV</a>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-group input-group-sm">
+                            <input placeholder="Korppi field name" class="form-control" type="text" size="5"
+                                   name="korppiExportId" ng-model="expkorppi.korppiExportId">
+                  <span class="input-group-btn">
+                    <a class="timButton" ng-mousedown="expkorppi.generate()" ng-href="{{ expkorppi.link() }}"
+                       download="{{ expkorppi.korppiExportId }}.txt">Export to Korppi</a>
+                </span>
+                        </div>
+                    </div>
+                </form>
+                {% endraw %}
+            {% else %}
+                No answerers.
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}
+
 {% block content %}
     <form name="ignore_me">
         <input type="hidden" id="page_is_dirty" name="page_is_dirty" value="0"/>
     </form>
-    <div class="paragraphs" ng-controller="ViewCtrl">
+    <div class="paragraphs">
         <div ng-cloak="" class="dialog" caption="Refresh the page?" tim-draggable-fixed="" ng-show="isPageDirty() && !hideRefresh">
             <p>The page has been modified since the last reload. Refresh now?</p>
-            <button ng-click="reload()">Refresh</button>
-            <button ng-click="closeRefreshDlg()">No</button>
+            <button class="timButton" ng-click="reload()">Refresh</button>
+            <button class="timButton" ng-click="closeRefreshDlg()">No</button>
         </div>
         {% if message %}
             <div ng-cloak="" class="dialog" caption="" tim-draggable-fixed="" ng-show="!hideMessage">
                 <p>{{ message }}</p>
-                <button ng-click="closeMessageDlg()">Ok</button>
+                <button class="timButton" ng-click="closeMessageDlg()">Ok</button>
             </div>
         {% endif %}
         {% raw %}
         <div ng-cloak="" class="dialog" caption="Updates pending" tim-draggable-fixed="" ng-show="showUpdateDialog()">
             <p>There are {{ pendingUpdatesCount() }} pending paragraph updates.</p>
-            <button ng-click="updatePending()">Update</button>
-            <button ng-click="hidePending = true">Dismiss</button>
+            <button class="timButton" ng-click="updatePending()">Update</button>
+            <button class="timButton" ng-click="hidePending = true">Dismiss</button>
         </div>
         {% endraw %}
         {% if task_info and task_info.total_points %}
@@ -111,49 +172,6 @@
                 <span class="smallNote" ng-click="reload()">Refresh (F5) to recount</span>
             </div>
             <div class="taskSmallSummary"><p>{{ task_info.total_points }} p</p></div>
-        {% endif %}
-
-        {% if lecture_mode or in_lecture %}
-            {% include 'lecture.html' %}
-        {% else %}
-            {% include 'side_menu.html' %}
-        {% endif %}
-
-        {% if teacher_mode %}
-            <div ng-controller="UserListController" id="users" class="userlist" tim-draggable-fixed caption="Users">
-                {% if plugin_users %}
-                    Users with answers ({{ plugin_users|length }}):<br>
-                    {% raw %}
-                    <table ng-table="tableParams" show-filter="true" class="table ng-table-rowselected"
-                           export-csv="csv" export-korppi="expkorppi">
-                        <tr ng-repeat="user in $data"
-                            ng-click="changeUser(user)"
-                            ng-class="{'active': user == selectedUser}">
-                            <td data-title="'Full name'" sortable="'real_name'" filter="{ 'real_name': 'text' }">
-                                {{user.real_name}}
-                            </td>
-                            <td data-title="'User name'" sortable="'name'" filter="{ 'name': 'text' }">
-                                {{user.name}}
-                            </td>
-                            <td data-title="'Tasks'" sortable="'task_count'" filter="{ 'task_count': 'text' }">
-                                {{user.task_count}}
-                            </td>
-                            <td data-title="'Total points'" sortable="'total_points'"
-                                filter="{ 'total_points': 'text' }">
-                                {{user.total_points}}
-                            </td>
-                        </tr>
-                    </table>
-                    <a ng-mousedown="csv.generate()" ng-href="{{ csv.link() }}" download="users_{{ doc.id }}.csv">Export
-                        to CSV</a>
-                    &nbsp;&nbsp;
-                    <input type="text" size="5" name="korppiExportId" ng-model="expkorppi.korppiExportId">
-                    <a ng-mousedown="expkorppi.generate()" ng-href="{{ expkorppi.link() }}" download="{{ expkorppi.korppiExportId }}.txt">Korppi</a>
-                    {% endraw %}
-                {% else %}
-                    No answerers.
-                {% endif %}
-            </div>
         {% endif %}
         {% if slide_mode %}
             <div class="paragraphs">
