@@ -38,7 +38,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
 
     // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
-
     var doc_id = $scope.docId;
     var par = 0;
     var default_velp_group = 1; // TODO Use route to add this information
@@ -60,23 +59,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
 
         //$http.get('/static/test_data/markings.json').success(function (data) {  // ANNOTATION TEST DATA
-
-        // TODO: Get annotation comments
         $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) { // ROUTE TO DB
-
             $scope.annotations = data;
-
-            /*
-            angular.forEach($scope.annotations, function (a) {
-                a.comments = $scope.annotations.comments;
-            });
-            */
-
             $scope.loadDocumentAnnotations();
-
-            //$scope.annotations = [];
-
         });
+
         /*
          $http.get('/{0}/defaultvelpgroup'.replace('{0}', doc_id)).success(function (data){
          console.log(data[0].id);
@@ -91,6 +78,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             l.edit = false;
             l.selected = false;
         });
+
+    });
+
+    // Get default velpgroup data
+    $http.get('/{0}/get_default_velp_group'.replace('{0}', doc_id)).success(function (data) {
+        console.log("Test");
+        default_velp_group = data;
+        console.log(default_velp_group);
     });
 
 
@@ -149,14 +144,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
     /**
      * Adds new label
-     * @param form form information
+     * @param velp velp where label is added
      */
-    $scope.addLabel = function () {
-        /*var valid = form.$valid;
-        $scope.labelAdded = true;
-        if (!valid) return;*/
+    $scope.addLabel = function (velp) {
 
-        //form.$setPristine();
         if ($scope.newLabel.content.length < 1){
             $scope.newLabel.valid = false;
             return;
@@ -167,12 +158,17 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             language_id: "FI", // TODO: Change to user lang
             selected: false
         };
+
         $scope.makePostRequest("/add_label", labelToAdd, function (json) {
             labelToAdd.id = parseInt(json.data);
+            console.log(labelToAdd.id);
             console.log(labelToAdd);
             $scope.resetNewLabel();
             $scope.labels.push(labelToAdd);
             $scope.labelAdded = false;
+
+            console.log(velp);
+            velp.labels.push(labelToAdd.id);
         });
 
         // TODO: add label to edited or new velp
@@ -202,11 +198,12 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             language_id: "FI",
             icon_id: null,
             valid_until: null,
-            velp_groups: [default_velp_group]  // TODO: Change to default group, add choices where to add
+            velp_groups: [default_velp_group.id]  // TODO: Change to default group, add choices where to add
         };
 
         $scope.makePostRequest("/add_velp", velpToAdd, function (json) {
             velpToAdd.id = parseInt(json.data);
+            console.log(velpToAdd);
             $scope.resetNewVelp();
             $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};
             $scope.velps.push(velpToAdd);
@@ -243,25 +240,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     };
 
 
-    $scope.updateVelpToAddLabels = function(label){
+    $scope.updateVelpLabels = function(velp, label){
 
-        var index = $scope.newVelp.labels.indexOf(label.id);
+        var index = velp.labels.indexOf(label.id);
         if (index < 0){
-            $scope.newVelp.labels.push(label.id);
+            velp.labels.push(label.id);
         }
         else if (index >= 0){
-            $scope.newVelp.labels.splice(index, 1);
-        }
-    };
-
-    $scope.updateVelpToEditLabels = function(label){
-
-        var index = $scope.velpToEdit.labels.indexOf(label.id);
-        if (index < 0){
-            $scope.velpToEdit.labels.push(label.id);
-        }
-        else if (index >= 0){
-            $scope.velpToEdit.labels.splice(index, 1);
+            velp.labels.splice(index, 1);
         }
     };
 

@@ -107,7 +107,7 @@
                                                    ng-model="newVelp['content']"
                                                    required placeholder="Add velp!" autofocus>
                                             <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]"
-                                                  ng-repeat="label in filterByLabels"
+                                                  ng-repeat="label in newVelp.labels"
                                                   ng-style="{ color: getColor(label) }"></span></p>
 
                                     <p class="error" ng-show="(addVelpForm.velpName.$invalid && !addVelpForm.velpName.$pristine) || (submitted && addVelpForm.velpName.$invalid)">
@@ -119,11 +119,11 @@
 
                                     <p ng-show="advancedOn">
                                                     <span ng-repeat="l in labels">
-                                                        <label><input type="checkbox" ng-click="updateVelpToAddLabels(l)" id="{l.id}"
+                                                        <label><input type="checkbox" ng-click="updateVelpLabels(newVelp, l)"
                                                                ng-checked="isLabelInVelp(newVelp, l)"> {{ l.content }}</label><br>
                                                     </span>
                                         <input placeholder="Add label" ng-model="newLabel['content']">
-                                        <input type="button" value="Add" ng-click="addLabel()">
+                                        <input type="button" value="Add" ng-click="addLabel(newVelp)">
                                         <span ng-hide="newLabel['valid']" class="error">Label content too short</span>
                                     </p>
 
@@ -147,7 +147,7 @@
                                                     <span>{{ velp.content }}&ensp;</span>
                                                     <span class="points">{{ velp.points }}</span>
                                                     <span ng-show="advancedOn" ng-class="['glyphicon', 'glyphicon-tag']"
-                                                          ng-repeat="label in velp.labels"
+                                                          ng-repeat="label in velp.labels" title="label.content"
                                                           ng-style="{ color: getColor(label) }"></span>
                                                     <span class="float-right" ng-click="selectVelpToEdit(velp)"
                                                           ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
@@ -178,10 +178,10 @@
                                                           placeholder="Points" value="0"></p>
                                                 <p ng-show="advancedOn">
                                                     <span ng-repeat="l in labels">
-                                                        <label><input type="checkbox" ng-click="updateVelpToEditLabels(l)" ng-checked="isLabelInVelp(velpToEdit, l)" > {{ l.content }}</label><br>
+                                                        <label><input type="checkbox" ng-click="updateVelpLabels(velpToEdit, l)" ng-checked="isLabelInVelp(velpToEdit, l)" > {{ l.content }}</label><br>
                                                     </span>
                                                     <input placeholder="Add label" ng-model="newLabel['content']">
-                                                    <input type="button" value="Add" ng-click="addLabel()">
+                                                    <input type="button" value="Add" ng-click="addLabel(velpToEdit)">
                                                     <span ng-hide="newLabel['valid']" class="error">Label content too short</span>
                                                 </p>
                                                 <p><input type="submit" value="Save changes"/></p>

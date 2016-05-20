@@ -16,7 +16,6 @@ def get_default_velp_group(document_id: int):
 
     :return:
     """
-
     try:
         doc_id = int(document_id)
     except ValueError as e:
@@ -60,7 +59,7 @@ def get_default_velp_group(document_id: int):
         doc_id = timdb.velp_groups.create_default_velp_group(default_group_name, owner_group_id, default_group_path)
         print("Default group didn't exist, created one with id: " + str(doc_id))
 
-    return doc_id
+    return jsonResponse({"id": doc_id, "name": "Default"})
 
 @velps.route("/<document_id>/get_velps", methods=['GET'])
 def get_velps(document_id: int):
