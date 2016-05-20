@@ -137,12 +137,6 @@ class Annotations(TimDbBase):
             annotation_access_levels = annotation_access_levels + [Annotations.AnnotationVisibility.owner.value]
         check_annotation_access_right_sql += "\n"
 
-        # TODO OMGOMG poistetut rivit:
-        # TODO INNER JOIN UserAnswer ON UserAnswer.answer_id = Annotation.answer_id
-        # TODO """ AND (? OR UserAnswer.user_id = ?)
-        # TODO [language_id, document_id, user_id] + annotation_access_levels + [user_has_see_answers, user_id])
-
-
         cursor = self.db.cursor()
         # Distinct is necessary, because we get several identical rows if there are several users contributing in the
         # same answer.
@@ -173,17 +167,18 @@ class Annotations(TimDbBase):
                        FROM Annotation
                          INNER JOIN VelpVersion ON VelpVersion.id = Annotation.version_id
                          INNER JOIN VelpContent ON VelpContent.version_id = Annotation.version_id
+                         LEFT JOIN UserAnswer ON UserAnswer.answer_id = Annotation.answer_id
                        WHERE VelpContent.language_id = ? AND
                              (Annotation.valid_until ISNULL OR
                                 Annotation.valid_until >= CURRENT_TIMESTAMP) AND
                              Annotation.document_id = ? AND (
                                 Annotation.annotator_id = ? OR (
-                                   """ + check_annotation_access_right_sql +
-                                """
+                                """ + check_annotation_access_right_sql +
+                                """ AND (? OR UserAnswer.user_id = ? OR UserAnswer.user_id ISNULL)
                              )
                           )
            ORDER BY depth_start DESC, node_start DESC, offset_start DESC""",
-                       [language_id, document_id, user_id] + annotation_access_levels)
+                       [language_id, document_id, user_id] + annotation_access_levels + [user_has_see_answers, user_id])
         results = self.resultAsDictionary(cursor)
         for result in results:
             start_path = [int(i) for i in result['element_path_start'][1:-1].split(',')]
