@@ -267,8 +267,9 @@ input[type="number"] {
 }
 
 .buttons {
-    margin: 5px;
-    float: right;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    text-align: right;
 }
 
 .createLecture input[type="text"]:disabled, .createQuestion input[type="text"]:disabled {
