@@ -4,41 +4,6 @@
 {% block head %}
     {{ super() }}
     <script src="{{ url_for('static', filename='scripts/manageView/manageCtrl.js') }}"></script>
-
-    <style type="text/css">
-        table {
-            margin: 1em;
-        }
-
-        thead {
-            font-weight: bold;
-        }
-
-        table td {
-            padding: 0.2em;
-        }
-
-        .flashes li {
-            list-style-type: none;
-            border: 1px solid black;
-            border-radius: 3px;
-            padding: 0.5em;
-        }
-
-        .uploadForm {
-            border: 1px solid black;
-            padding: 1em;
-        }
-
-        .material {
-            padding: 1em;
-        }
-
-        .margin {
-            margin-top: 1em;
-            margin-bottom: 1em;
-        }
-    </style>
     <script>
         var isFolder = {{is_folder|tojson}};
         var doc = {{doc|tojson}};
@@ -48,50 +13,67 @@
     </script>
 {% endblock %}
 {% block content %}
-    <div ng-controller="PermCtrl">
-        {% if rights['owner'] %}
-            <div class="margin">
-                <form ng-submit="changeOwner()">
-                    <label>{{ obj_name|capitalize }} owner: <input type="text" ng-model="newOwner"></label>
-                    <button ng-disabled="doc.owner.name === newOwner" class="timButton">
-                        Update
-                    </button>
+    <div ng-controller="PermCtrl" class="manage">
+    <div class="panel panel-default">
+    <div class="panel-heading">{{ obj_name|capitalize }} permissions</div>
+<div class="panel-body">
+    {% if rights['owner'] %}
+            <form ng-submit="changeOwner()">
+                <div class="form-group">
+                    <label for="newOwnerInput">{{ obj_name|capitalize }} owner:</label>
+                    <div class="input-group">
+                        <input id="newOwnerInput" class="form-control" type="text" ng-model="newOwner">
+                        <span class="input-group-btn">
+                            <button ng-disabled="doc.owner.name === newOwner" class="timButton">
+                                Update
+                            </button>
+                        </span>
+                    </div>
                     <span ng-show="ownerUpdating">Updating...</span>
-                </form>
-            </div>
+                </div>
+            </form>
         {% else %}
             {{ obj_name|capitalize }} owner: {{ doc.owner.name }}
         {% endif %}
 
         <div class="margin rights-list" ng-repeat="type in accessTypes">
-            <a ng-click="showAddRightFn(type)">{{ '{{ type.name }}' }} right</a>:
+            <a ng-click="showAddRightFn(type)" title="Click to add {{ '{{ type.name }}' }} right to some usergroup">{{ '{{ type.name }}' }} right</a>:
             <span ng-show="filtered.length == 0">none</span>
 
             <ul>
                 <li ng-repeat="group in filtered = (grouprights | filter: {access_type: type.id}:true)">{{ '{{group.name}}' }}
-                    (<a ng-click="removeConfirm(group, type.name)">remove</a>)
+                    <a class="btn btn-default btn-xs" ng-click="removeConfirm(group, type.name)">remove</a>
                 </li>
             </ul>
         </div>
-        <div class="margin">
-            <a ng-show="!showAddRight" ng-click="showAddRight = true; focusEditor = true">Add right</a>
+
+            <button class="timButton" ng-show="!showAddRight" ng-click="showAddRight = true; focusEditor = true">Add right</button>
             <div ng-show="showAddRight" class="rights-list">
                 <form ng-submit="addPermission(groupName, accessType)">
-                    <label>Right: <select ng-model="accessType"
-                                          ng-options="access.name for access in accessTypes track by access.id"></select></label>
-                    <label>name: <input type="text" ng-model="groupName" focus-me="focusEditor"
-                                        placeholder='enter userid or group name'></label>
-                    <button type="submit" ng-disabled="!groupName">Add</button>
-                    <button type="button" ng-click="showAddRight = false">Cancel</button>
+                    <div class="row">
+                        <div class="form-group col-md-6 input-group-sm">
+                            <label for="groupName">Name: </label>
+                            <input id="groupName" class="form-control" type="text" ng-model="groupName"
+                                   focus-me="focusEditor"
+                                   placeholder='enter userid or group name'>
+                        </div>
+                        <div class="form-group col-md-6 input-group-sm">
+                            <label for="accessType">Right:</label>
+                            <select id="accessType" class="form-control" ng-model="accessType"
+                                    ng-options="access.name for access in accessTypes track by access.id"></select>
+                        </div>
+                    </div>
+                    <button class="timButton" type="submit" ng-disabled="!groupName">Add</button>
+                    <button class="timButton" type="button" ng-click="showAddRight = false">Cancel</button>
 
-                    <button type="button" ng-click="addPermission('Korppi users', accessType)">Add Korppi users</button>
-                    <button type="button" ng-click="addPermission('Logged-in users', accessType)">Add logged-in users
+                    <button class="timButton" type="button" ng-click="addPermission('Korppi users', accessType)">Add Korppi users</button>
+                    <button class="timButton" type="button" ng-click="addPermission('Logged-in users', accessType)">Add logged-in users
                     </button>
-                    <button type="button" ng-click="addPermission('Anonymous users', accessType)">Add anonymous users
+                    <button class="timButton" type="button" ng-click="addPermission('Anonymous users', accessType)">Add anonymous users
                     </button>
 
                 </form>
-            </div>
+            </div></div>
         </div>
     {% block managecontent %}{% endblock %}
     </div>

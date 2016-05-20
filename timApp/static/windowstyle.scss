@@ -1,3 +1,4 @@
+@charset "UTF-8";
 .createLecture, .showAnswersWindow, .questioninfoWindow, .questionAskedWindow, .joinLecture, .createQuestion, .joinLectureOptions,
 .questionAskedWindow, .statisticsWindow, .questionPreview, .extendLectureOptions {
     display: block;
@@ -5,7 +6,6 @@
     height: 100%;
     background: #F0F0F0;
     padding: 10px;
-    font: 12px Georgia;
     color: #505050;
     text-shadow: 1px 1px 1px #FFF;
     border: 1px solid #E4E4E4;
@@ -17,11 +17,6 @@
 
 .startingTime, .endingTime, #infoFields div {
     margin-bottom: 10px;
-}
-
-.deleteButton {
-    float: left;
-    margin-right: 30px;
 }
 
 .questionAddedNew {
@@ -80,26 +75,6 @@
     top: 0.3em;
 }
 
-/* Chrome etc. */
-input:enabled::-webkit-input-placeholder {
-    color: #3CC;
-}
-
-input:enabled:-moz-placeholder {
-    /* FF 4-18 */
-    color: #3CC;
-}
-
-input:enabled::-moz-placeholder {
-    /* FF 19+ */
-    color: #3CC;
-}
-
-input:enabled:-ms-input-placeholder {
-    /* IE 10+ */
-    color: #3CC;
-}
-
 input:disabled::-webkit-input-placeholder {
     /* WebKit browsers */
     display: none;
@@ -156,10 +131,6 @@ input[type="number"] {
     width: 30px;
 }
 
-.questionTable .negative {
-    background: #c12e2a;
-}
-
 .questionTable textarea {
     width: 100% !important;
     box-sizing: border-box;
@@ -169,7 +140,6 @@ input[type="number"] {
 
 #infoFields label, .linkLabel {
     display: inline-block;
-    width: 150px;
 }
 
 .linkLabelWide {
@@ -201,7 +171,6 @@ input[type="number"] {
     font-family: verdana;
     font-size: 18px;
     padding: 0;
-    color: #3cc;
     text-align: left;
     margin-top: 0;
     margin-bottom: 0;
@@ -212,7 +181,7 @@ input[type="number"] {
 
 .createLecture input[type="text"], .createLecture input[type="date"],
 .createLecture select, .createQuestion input, .createQuestion textarea {
-    border: 1px solid #3cc;
+    border: 1px solid $basic-color;
     color: #505050;
     outline: 0 none;
     font-size: 12px;
@@ -223,7 +192,7 @@ input[type="number"] {
 }
 
 .createQuestion select {
-    border: 1px solid #3cc;
+    border: 1px solid $basic-color;
     color: #505050;
     margin: 2px 6px 10px 2px;
     outline: 0 none;
@@ -269,11 +238,6 @@ input[type="number"] {
     text-align: center;
 }
 
-#addRow {
-    width: 100%;
-    height: 50px;
-}
-
 #answer-sheet-table {
     background: white;
     width: auto;
@@ -287,6 +251,10 @@ input[type="number"] {
 
 .answer-button2 {
     text-align: left;
+
+    input[type=checkbox] {
+        margin-right: 5px;
+    }
 }
 
 .explanation {
@@ -299,36 +267,9 @@ input[type="number"] {
 }
 
 .buttons {
-    border: none;
-    margin: 5px;
-    color: #FFF;
-    border-radius: 3px;
-    text-shadow: 1px 1px 1px #9E3F3F;
-    cursor: pointer;
-    display: inline-block;
-    font-size: 11px;
-    line-height: normal;
-    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    float: right;
-}
-
-.createLecture button, .buttons button {
     margin-top: 5px;
-    background: #3CC;
-    border: 0;
-    border-radius: 3px;
-    color: #FFF;
-    display: inline-block;
-    font-size: 11px;
-    cursor: pointer;
-    line-height: normal;
-    padding: 5px 10px;
-    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
-.createLecture button:disabled, .createLecture input[type="button"]:disabled {
-    cursor: default;
-    background-color: #DCDCDC;
+    margin-bottom: 5px;
+    text-align: right;
 }
 
 .createLecture input[type="text"]:disabled, .createQuestion input[type="text"]:disabled {
@@ -425,15 +366,21 @@ input[type="number"] {
 
 .buttonsTop {
     top: -25px;
-    left: -21px;
+    width: 100%;
+
+    button:first-child {
+        position: absolute;
+        left: -21px;
+    }
+
+    button:nth-child(2) {
+        position: relative;
+        left: 0;
+    }
 }
 
 th:hover .matrixButtons, .matrixButtons:hover, th:hover .buttonsTop, .buttonsTop:hover {
     opacity: 1;
-}
-
-.negative button {
-    background: #c12e2a;
 }
 
 #questionStartTime, #questionTimer, #questionStart {

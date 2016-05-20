@@ -4,9 +4,6 @@
     {{ super() }}
 
     <script src="{{ url_for('static', filename='scripts/controllers/lectureInfoController.js') }}"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='lectureInfo.css') }}">
-    {% include 'common_head.html' %}
-    {% include 'lecture_head.html' %}
 
     <script>
         var lectureId = {{lectureId|tojson}};
@@ -19,53 +16,56 @@
 {% endblock %}
 {% block content %}
     <div ng-controller="LectureInfoController">
-        {% if in_lecture %}
-            {% include 'lecture.html' %}
-        {% endif %}
         <pop-up-dialog show="showLectureForm" caption="'Edit lecture'">
             <ng-include
                     src="'{{ url_for('static', filename='templates/start_lecture.html') }}'"></ng-include>
         </pop-up-dialog>
-        <h1 ng-bind="lectureCode"></h1>
+        <div class="panel panel-default">
+            <div class="panel-heading">Lecture info</div>
+            <div class="panel-body">
+                <strong>Lecture code:</strong>
 
-        <h3>Lecture info</h3>
+                <p ng-bind="code"></p>
 
-        <div>
-            <strong>Start time:</strong>
+                <strong>Start time:</strong>
 
-            <p ng-bind="lectureStartTime"></p>
+                <p ng-bind="lectureStartTime"></p>
 
-            <strong>End time:</strong>
+                <strong>End time:</strong>
 
-            <p ng-bind="lectureEndTime"></p>
+                <p ng-bind="lectureEndTime"></p>
 
-            <div ng-show="isLecturer">
-                <!--TODO: Preview questions. Needs directive from the question preview and then just use it.-->
-                <strong>Questions asked:</strong>
-                <ul>
-                    <li ng-repeat="question in questions">
-                        <a ng-click="editPoints(question.asked_id)">{{ "{{ question.json.TITLE }}" }}</a>
-                    </li>
-                </ul>
+                <div ng-show="isLecturer">
+                    <!--TODO: Preview questions. Needs directive from the question preview and then just use it.-->
+                    <strong>Questions asked:</strong>
+                    <ul>
+                        <li ng-repeat="question in questions">
+                            <a ng-click="editPoints(question.asked_id)">{{ "{{ question.json.TITLE }}" }}</a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
 
-        <h3>Lecture wall</h3>
-        <label>
-            <textarea data-ng-model="msg" readonly id="lectureInfoWall"></textarea>
-        </label>
+        <div class="panel panel-default">
+            <div class="panel-heading">Lecture wall</div>
+            <div class="panel-body">
+                <textarea class="form-control" data-ng-model="msg" readonly id="lectureInfoWall"></textarea>
+            </div>
+        </div>
 
-        <div>
-            <h3>Find answers <span ng-show="!isLecturer" ng-bind="selectedUser.user_name"></span></h3>
-            <label ng-show="isLecturer">UserName
-                <select ng-model="selectedUser" ng-options="user.user_name for user in answerers track by user.user_id">
-                </select>
-            </label>
+        <div class="panel panel-default">
+            <div class="panel-heading">Find answers <span ng-show="!isLecturer" ng-bind="selectedUser.user_name"></span>
+            </div>
+            <div class="panel-body">
+                <label ng-show="isLecturer">User name
+                    <select class="form-control" ng-model="selectedUser"
+                            ng-options="user.user_name for user in answerers track by user.user_id">
+                    </select>
+                </label>
+                <button class="timButton" ng-click="drawCharts(selectedUser)">Show answers</button>
+                <button class="timButton" ng-show="isLecturer" ng-click="drawCharts()">Show all</button>
 
-            <button ng-click="drawCharts(selectedUser)">Show answers</button>
-            <button ng-show="isLecturer" ng-click="drawCharts()">Show all</button>
-
-            <div>
                 <div ng-repeat="question in questions" style="margin-bottom: 2em">
                     <p class="bold" ng-show="showPoints"
                        ng-bind-html="question.json.TITLE">{{ "{{question.json.TITLE}}" }}</p>
@@ -77,16 +77,19 @@
                     <canvas id='answerChart{{ "{{question.asked_id }}" }}' width='400' height='300'></canvas>
                     <p ng-show="showPoints">Points: <span ng-bind="points[$index]"> </span></p>
                 </div>
-            </div>
 
-            <div id="answersDiv">
                 <p id="infoBox"></p>
             </div>
         </div>
-        <div ng-show="isLecturer">
-            <h3>Delete lecture</h3>
-            <button ng-click="deleteLecture()">Delete lecture</button>
-            <button title="Edit this lecture" ng-click="editLecture(lectureName)">Edit</button>
+
+        <div ng-show="isLecturer" class="panel panel-default">
+            <div class="panel-heading">
+                Actions
+            </div>
+            <div class="panel-body">
+                <button class="timButton" ng-click="editLecture(lectureName)">Edit lecture</button>
+                <button class="btn btn-danger" ng-click="deleteLecture()">Delete lecture</button>
+            </div>
         </div>
     </div>
 {% endblock %}

@@ -1,4 +1,9 @@
 {% extends 'base.html' %}
+{%- macro active(endpoint) -%}
+    {%- if request.endpoint == endpoint -%}
+        class="active"
+    {%- endif -%}
+{%- endmacro -%}
 {% block ngmodules %}
     {{ super() }}
     {{ ['ngFileUpload']|map('map_format', "'%s'")|join(', ')|safe }},
@@ -18,11 +23,11 @@
 {% endblock %}
 {% block header %}
     {{ super() }}
-    {% block itemlinks %}
-        <a id="headerView" href="/view/{{ doc.fullname }}">View</a>
+    <div class="nav nav-tabs">    {% block itemlinks %}
+        <li role="presentation" {{ active('view_page.view_document') }}><a id="headerView" href="/view/{{ doc.fullname }}">View</a></li>
         {% if rights.manage %}
-            | <a id="headerManage" href="/manage/{{ doc.fullname }}">Manage</a>
+             <li role="presentation" {{ active('manage_page.manage') }}><a id="headerManage" href="/manage/{{ doc.fullname }}">Manage</a></li>
         {% endif %}
-    {% endblock %}
+    {% endblock %}</div>
     {% include 'breadcrumbs.html' %}
 {% endblock %}
