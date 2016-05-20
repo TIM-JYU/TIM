@@ -132,8 +132,10 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
             $('.editmode').removeClass('editmode');
 
             if (oldVal === "par" && newVal === null) {
+                $scope.enable_par_edit();
                 $scope.enable_area_edit_passive();
             } else if (newVal === "par") {
+                $scope.enable_par_edit();
                 $scope.disable_area_edit();
                 $('.par').addClass('editmode');
             } else if (newVal === "area") {
