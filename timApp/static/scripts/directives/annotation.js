@@ -19,7 +19,7 @@ timApp.directive("annotation", function() {
             comments: '=',
             aid: '=',
             user: '@',
-            velp: '@'
+            velp: '@',
         },
         controller: 'AnnotationController'
     }

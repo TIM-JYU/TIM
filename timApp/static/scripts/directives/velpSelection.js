@@ -47,6 +47,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.annotations = [];
     // $scope.filteredVelpCount = 0;
 
+    // Get default velpgroup data
+    $http.get('/{0}/get_default_velp_group'.replace('{0}', doc_id)).success(function (data) {
+        console.log("Test");
+        default_velp_group = data;
+        console.log(default_velp_group);
+    });
+
+
     // Get velp and annotation data
     $http.get('/{0}/get_velps'.replace('{0}', doc_id)).success(function (data) {
         $scope.velps = data;
@@ -71,40 +79,23 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
          });*/
     });
 
+    // Get velpgroup data
+    $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id)).success(function (data) {
+        $scope.velpGroups = data;
+        console.log($scope.velpGroups);
+    });
+
     // Get label data
-    $http.get('/{0}/labels'.replace('{0}', doc_id)).success(function (data) {
+    $http.get('/{0}/get_velp_labels'.replace('{0}', doc_id)).success(function (data) {
         $scope.labels = data;
         $scope.labels.forEach(function (l) {
             l.edit = false;
             l.selected = false;
         });
-
-    });
-
-    // Get default velpgroup data
-    $http.get('/{0}/get_default_velp_group'.replace('{0}', doc_id)).success(function (data) {
-        console.log("Test");
-        default_velp_group = data;
-        console.log(default_velp_group);
     });
 
 
     // Methods
-
-    /**
-     * Get total number of points
-     * @returns {number}
-     */
-    $scope.getTotalPoints = function () {
-        var p = 0;
-        if ($scope.annotations === undefined)
-            return p;
-
-        for (var i = 0; i < $scope.annotations.length; i++) {
-            p += $scope.annotations[i].points;
-        }
-        return p;
-    };
 
     /**
      * Get color for object.
@@ -140,7 +131,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.toggleAdvancedShow = function () {
         $scope.advancedOn = !$scope.advancedOn;
     };
-
 
     /**
      * Adds new label
@@ -336,12 +326,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.resetLabels = function () {
         for (var i = 0; i < $scope.labels.length; i++)
             $scope.labels[i].selected = false;
-    };
-
-    $scope.checkAll = function () {
-        angular.forEach($scope.annotations, function (a) {
-            a.selected = $scope.settings.selectedAll;
-        });
     };
 }]);
 

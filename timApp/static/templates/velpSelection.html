@@ -202,45 +202,41 @@
 
         <!-- MANAGE VELPS -->
         <uib-tab index="1" heading="Manage velps">
+
             <div class="velpArea">
-                <table class="velpTable">
-                    <tr>
-                        <td>
-                            <label>Search velp groups</label>
-                        </td>
-                        <td>
-                            <input placeholder="Enter text...">
-                        </td>
-                    </tr>
-                </table>
-                <input value="Import group" type="submit">
+                <div class="velpSummary">
+                    <!-- table class="velpTable">
+                        <tr>
+                            <td>
+                                <label>Search velp groups</label>
+                            </td>
+                            <td>
+                                <input placeholder="Enter text...">
+                            </td>
+                        </tr>
+                    </table -->
+
+                    <table class="fulldiv">
+                        <tr>
+                            <th>Show</th>
+                            <th>Group name</th>
+                        </tr>
+                        <tr ng-repeat="group in velpGroups">
+                            <td>
+                                <input type="checkbox" ng-checked="true">
+                            </td>
+                            <td>
+                                {{ group.name }}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
             </div>
         </uib-tab>
 
         <!-- SUMMARY -->
         <uib-tab index="2" heading="Summary">
-            <div class="velpArea">
-                <div class="velpSummary">
-                    <table>
-                        <tr>
-                            <th class="summCheckbox"><input type="checkbox" ng-model="settings.selectedAll"
-                                                            ng-change="checkAll()"></th>
-                            <th class="summSecColumn">Velp</th>
-                            <th class="summThiColumn">Points</th>
-                        </tr>
-                        <tr ng-repeat="a in annotations">
-                            <td class="summCheckbox"><input type="checkbox" ng-model="a.selected"></td>
-                            <td class="summSecColumn"><span>{{ getVelpById(a.velp).content }}</span></td>
-                            <td class="summThiColumn"><span>{{ a.points }}</span></td>
-                        </tr>
-                        <tr>
-                            <th class="summCheckbox"></th>
-                            <th class="summSecColumn">Points total</th>
-                            <th class="summThiColumn"><span>{{ getTotalPoints() }}</span></th>
-                        </tr>
-                    </table>
-                </div>
-            </div>
+            <div velp-summary="" annotations="annotations"></div>
         </uib-tab>
     </uib-tabset>
 </div>

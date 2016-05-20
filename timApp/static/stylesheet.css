@@ -470,7 +470,7 @@ body {
 
 :link, a {
     text-decoration: none;
-    font-size: 0.8em;
+    /*font-size: 0.8em; Miksi pienennettäisiin kaikki linkit?*/
 }
 
 a:active {
