@@ -1341,7 +1341,7 @@ timApp.controller("ViewCtrl", [
 
         sc.getAndEditQuestions = function () {
             console.log(sc.settings);
-            console.log($window.settings);
+            console.log($window.sessionsettings);
             var questions = $('.editlineQuestion');
             for (var i = 0; i < questions.length; i++) {
                 var questionParent = $(questions[i].parentNode);
