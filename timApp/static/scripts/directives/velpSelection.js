@@ -151,13 +151,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         $scope.makePostRequest("/add_label", labelToAdd, function (json) {
             labelToAdd.id = parseInt(json.data);
-            console.log(labelToAdd.id);
-            console.log(labelToAdd);
             $scope.resetNewLabel();
             $scope.labels.push(labelToAdd);
             $scope.labelAdded = false;
-
-            console.log(velp);
             velp.labels.push(labelToAdd.id);
         });
 
@@ -219,7 +215,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         }
 
         if ($scope.labelToEdit.edit) {
-            $scope.labelTo.edit = false;
+            $scope.labelToEdit.edit = false;
             for (var i = 0; i < $scope.labels.length; i++) {
                 $scope.labels[i].edit = false;
             }
@@ -290,7 +286,23 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
                 break;
             }
         }
+    };
 
+    $scope.editLabel = function (){
+        if ($scope.labelToEdit.content.length < 1){
+            $scope.labelToEdit.edit = false;
+            return;
+        }
+
+        for (var i=0; i<$scope.labels.length; i++){
+            if ($scope.labels[i].id == $scope.labelToEdit.id){
+                $scope.labelToEdit.edit = false;
+                $scope.labels[i].content = $scope.labelToEdit.content;
+                $scope.labels[i].edit = false;
+            }
+        }
+
+        // TODO: post request
     };
 
     /**

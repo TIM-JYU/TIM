@@ -359,6 +359,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 points: velp.points,
                 doc_id: $scope.docId,
                 visible_to: 4,
+                content: velp.content,
                 coord: {
                     start: {
                         par_id: parelement.id,
@@ -591,14 +592,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.toggleAnnotation = function(annotation) {
         var parent = document.getElementById(annotation.coord.start.par_id);
 
-        if (annotation.answer_id == null) {
+        try {
             var annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
             angular.element(annotationElement).isolateScope().toggleAnnotation();
-        } else {
+        } catch (err){
+
             // Find answer browser and isolate its scope
             // go to nextAnswer until answerid = annotation.answer_id
             // query selector element -> toggle annotation
-            console.log("Annotation is in answer...");
+            console.log(err);
         }
     };
 
