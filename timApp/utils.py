@@ -9,6 +9,7 @@ from typing import List
 from yaml import CLoader
 
 from htmlSanitize import sanitize_html
+from theme import Theme
 
 
 def datestr_to_relative(dstr):
@@ -154,7 +155,11 @@ def del_content(directory, onerror=None):
             print(e)
 
 
-def generate_theme_scss(themes: List[str], css_dir: str, gen_dir: str) -> None:
+class ThemeNotFoundException(Exception):
+    pass
+
+
+def generate_theme_scss(themes: List[Theme], gen_dir: str) -> None:
     """
     Generates an SCSS file based on the given theme names.
 
@@ -173,14 +178,12 @@ def generate_theme_scss(themes: List[str], css_dir: str, gen_dir: str) -> None:
       1. Include the theme mixin in root scope. This trick allows the theme file to override any
          generic CSS.
 
-    :param themes: The list of theme names without .scss extension.
-    :param css_dir: The directory where the theme files are located.
+    :param themes: The list of themes.
     :param gen_dir: The directory where the SCSS file should be generated.
     """
-    themes.sort()
     for t in themes:
-        if not os.path.exists(os.path.join(css_dir, t + '.scss')):
-            raise Exception("Theme file not found: {}".format(t))
+        if not t.exists():
+            raise ThemeNotFoundException(t.filename)
     combined = get_combined_css_filename(themes)
     if os.path.exists(os.path.join(gen_dir, combined + '.scss')):
         return
@@ -190,17 +193,17 @@ def generate_theme_scss(themes: List[str], css_dir: str, gen_dir: str) -> None:
         f.write('@charset "UTF-8";\n')
         f.write('@import "../variables";\n')
         for t in themes:
-            f.write('@mixin {} {{}}\n'.format(t))
-            f.write('@import "../css/{}";\n'.format(t))
+            f.write('@mixin {} {{}}\n'.format(t.filename))
+            f.write('@import "../css/{}";\n'.format(t.filename))
         f.write('@import "../all";\n')
         for t in themes:
-            f.write('@include {};\n'.format(t))
+            f.write('@include {};\n'.format(t.filename))
 
 
-def get_combined_css_filename(themes: List[str]):
+def get_combined_css_filename(themes: List[Theme]):
     """
     Returns the combined file name based on the given list of theme names.
-    :param themes: The list of theme names without .scss extension.
+    :param themes: The list of themes.
     :return: The combined file name based on the themes. If the list is empty, 'default' is returned.
     """
-    return '-'.join(themes) or 'default'
+    return '-'.join(t.filename for t in themes) or 'default'
