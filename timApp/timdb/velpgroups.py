@@ -58,19 +58,18 @@ class VelpGroups(Documents):
         self.db.commit()
         return new_group_id
 
-    def make_document_a_velp_group(self, name: str, owner_group_id: int, velp_group_id: int, valid_until: Optional[str] = None):
+    def make_document_a_velp_group(self, name: str, velp_group_id: int, valid_until: Optional[str] = None):
         """Create a velp group
 
         Make sure you have made a new document (needed for rights management) and use its id as velp_group_id
         :param name: Name of the created group.
-        :param owner_group_id: The id of the owner group.
         :param valid_until: How long velp group is valid (None is forever).
         :return:
         """
         cursor = self.db.cursor()
 
         cursor.execute("""
-                      INSERT INTO
+                      INSERT OR IGNORE INTO
                       VelpGroup(id, name, valid_until)
                       VALUES (?, ?, ?)
                       """, [velp_group_id, name, valid_until]
@@ -261,10 +260,10 @@ class VelpGroups(Documents):
     def add_groups_to_selection_table(self, velp_groups: dict, doc_id: int, user_id: int):
         cursor = self.db.cursor()
         for velp_group in velp_groups:
-            target_type = velp_group["target_type"]
-            target_id = velp_group["target_id"]
+            target_type = velp_group['target_type']
+            target_id = velp_group['target_id']
             selected = 1
-            velp_group_id = velp_group["id"]
+            velp_group_id = velp_group['id']
             cursor.execute("""
                           INSERT OR IGNORE INTO
                           VelpGroupSelection(user_id, doc_id, target_type, target_id, selected, velp_group_id)

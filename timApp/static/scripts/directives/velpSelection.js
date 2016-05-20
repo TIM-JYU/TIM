@@ -72,7 +72,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     });
 
     // Get label data
-    $http.get('/{0}/labels'.replace('{0}', doc_id)).success(function (data) {
+    $http.get('/{0}/get_velp_labels'.replace('{0}', doc_id)).success(function (data) {
         $scope.labels = data;
         $scope.labels.forEach(function (l) {
             l.edit = false;
