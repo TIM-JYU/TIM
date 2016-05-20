@@ -137,12 +137,6 @@ class Annotations(TimDbBase):
             annotation_access_levels = annotation_access_levels + [Annotations.AnnotationVisibility.owner.value]
         check_annotation_access_right_sql += "\n"
 
-        # TODO OMGOMG poistetut rivit:
-        # TODO INNER JOIN UserAnswer ON UserAnswer.answer_id = Annotation.answer_id
-        # TODO """ AND (? OR UserAnswer.user_id = ?)
-        # TODO [language_id, document_id, user_id] + annotation_access_levels + [user_has_see_answers, user_id])
-
-
         cursor = self.db.cursor()
         # Distinct is necessary, because we get several identical rows if there are several users contributing in the
         # same answer.
