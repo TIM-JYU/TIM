@@ -62,6 +62,12 @@ def verify_admin():
         abort(403, 'This action requires administrative rights.')
 
 
+def verify_doc_exists(doc_id, message="Sorry, the document does not exist."):
+    timdb = getTimDb()
+    if not timdb.documents.exists(doc_id):
+        abort(404, message)
+
+
 def verify_edit_access(block_id, message="Sorry, you don't have permission to edit this resource."):
     timdb = getTimDb()
     if not timdb.users.has_edit_access(getCurrentUserId(), block_id):

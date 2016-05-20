@@ -17,6 +17,7 @@ from documentmodel.documentversion import DocumentVersion
 from plugin import PluginException
 from routes.answer import answers
 from routes.cache import cache
+from routes.clipboard import clipboard
 from routes.common import *
 from routes.common import get_user_settings
 from routes.edit import edit_page
@@ -54,6 +55,7 @@ app.register_blueprint(upload)
 app.register_blueprint(notes)
 app.register_blueprint(readings)
 app.register_blueprint(lecture_routes)
+app.register_blueprint(clipboard)
 app.register_blueprint(notify)
 app.register_blueprint(Blueprint('bower',
                                  __name__,
