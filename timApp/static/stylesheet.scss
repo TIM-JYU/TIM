@@ -356,53 +356,40 @@ p.caption {
      background: $editline-bg-color;
 }
 
-.areaeditline1 {
+.areaeditline {
     opacity: 0;
-    background: #d874ff; /* rgb(236,103,27); */
     position: absolute;
-    left: 0.8em;
-    width: 1em;
+    left: -$areaeditline-width;
+    width: $areaeditline-width;
     height: 100%;
     top: 0;
+
+    &.show {
+        opacity: 0.2;
+    }
+
+    &:hover, &.menuopen, &.show.menuopen {
+        opacity: 0.5;
+    }
+}
+
+.areaeditline1 {
+    @extend .areaeditline;
+    background: #d874ff; /* rgb(236,103,27); */
 }
 
 .areaeditline2 {
-    opacity: 0;
+    @extend .areaeditline;
     background: #b2aaff; /* rgb(236,103,27); */
-    position: absolute;
-    left: -0.2em;
-    width: 1em;
-    height: 100%;
-    top: 0;
+    left: -2 * $areaeditline-width;
+    width: $areaeditline-width;
 }
 
 .areaeditline3 {
-    opacity: 0;
+    @extend .areaeditline;
+    left: -3 * $areaeditline-width;
+    width: $areaeditline-width;
     background: #ff9851; /* rgb(236,103,27); */
-    position: absolute;
-    left: -1.2em;
-    width: 1em;
-    height: 100%;
-    top: 0;
-}
-
-.areaeditline-show {
-    opacity: 0.2;
-}
-
-.areaeditline1:hover, .areaeditline1.menuopen {
-    opacity: 0.5;
-    /*background: #d874ff; /* rgb(236,103,27); */
-}
-
-.areaeditline2:hover, .areaeditline2.menuopen {
-    opacity: 0.5;
-    /*background: #b2aaff; /* rgb(236,103,27); */
-}
-
-.areaeditline2:hover, .areaeditline2.menuopen {
-    opacity: 0.5;
-    /*background: #ff9851; /* rgb(236,103,27); */
 }
 
 .area {

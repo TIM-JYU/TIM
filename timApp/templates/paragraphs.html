@@ -65,7 +65,7 @@
     {% if rights.editable or rights.can_comment %}
         {% for area in open_areas %}
             {% if open_areas[area] <= 3 %}
-                <div class="areaeditline{{ open_areas[area] }}"
+                <div class="areaeditline areaeditline{{ open_areas[area] }}"
                      title="Click to edit this area reference ({{ area }})"
                      data-area="{{ area }}">
                 </div>
