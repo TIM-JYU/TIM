@@ -1059,7 +1059,7 @@ timApp.controller("ViewCtrl", [
                     continue;
 
                 if (sc.getParId($node) == par_id) {
-                    console.log('sc.getParIndex(' + par_id + ') = ' + realIndex);
+                    //console.log('sc.getParIndex(' + par_id + ') = ' + realIndex);
                     return realIndex;
                 }
 
@@ -1232,10 +1232,12 @@ timApp.controller("ViewCtrl", [
         sc.onClick("html.ng-scope", function ($this, e) {
             // Clicking anywhere
             var tagName = e.target.tagName.toLowerCase();
-            var ignoreTags = ['button', 'input'];
+            var ignoreTags = ['button', 'input', 'label'];
             if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || $(e.target).hasClass("menu-icon")
-                || $(e.target).hasClass("editline") || $(e.target).hasClass("areaeditline1") ||
-                   $(e.target).hasClass("areaeditline2") || $(e.target).hasClass("areaeditline3")) {
+                || $(e.target).hasClass("editline") || $(e.target).hasClass("areaeditline1")
+                ||   $(e.target).hasClass("areaeditline2") || $(e.target).hasClass("areaeditline3")
+                ||   $(e.target).attr('position') == 'absolute')
+            {
                 return false;
             }
 
@@ -1762,7 +1764,7 @@ timApp.controller("ViewCtrl", [
             sc.selection.end = null;
         };
 
-        sc.nameArea = function (e, $par) {
+        sc.nameArea = function (e, $pars) {
             var $newArea = $('<div class="area" id="newarea" />')
             $newArea.attr('data-doc-id', sc.docId);
             sc.selection.pars.wrapAll($newArea);
@@ -1785,10 +1787,10 @@ timApp.controller("ViewCtrl", [
                 "area_end" : sc.getLastParId($area.last()),
                 "options" : options
             }).success(function(data, status, headers, config) {
-                $area.children().wrapAll('<div class="areaContent">');
-                $area.append('<div class="areaeditline1">');
+                //$area.children().wrapAll('<div class="areaContent">');
+                //$area.append('<div class="areaeditline1">');
 
-                if (options.collapsible)
+                //if (options.collapsible)
                     $window.location.reload();
 
             }).error(function(data, status, headers, config) {
