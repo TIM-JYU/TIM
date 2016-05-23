@@ -36,12 +36,12 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.getJustDocName = function(fullName) {
-            i = fullName.lastIndexOf('/');
+            var i = fullName.lastIndexOf('/');
             return i < 0 ? fullName : fullName.substr(i + 1);
         };
 
         sc.getFolderName = function(fullName) {
-            i = fullName.lastIndexOf('/');
+            var i = fullName.lastIndexOf('/');
             return i < 0 ? '' : fullName.substring(0, fullName.lastIndexOf('/'));
         };
 
@@ -134,12 +134,12 @@ PermApp.controller("PermCtrl", [
 
         sc.changeOwner = function() {
             sc.ownerUpdating = true;
-            $http.put('/changeOwner/' + sc.doc.id + '/' + sc.doc.owner.id).success(
+            $http.put('/changeOwner/' + sc.doc.id + '/' + sc.newOwner).success(
                 function (data, status, headers, config) {
-
+                     sc.doc.owner.name = sc.newOwner;
                 }).error(function (data, status, headers, config) {
                     alert(data.error);
-                }).then(function () {
+                }).finally(function () {
                     sc.ownerUpdating = false;
                 });
         };
@@ -639,6 +639,7 @@ text = '\n'.join(a)
         //sc.oldName = sc.newName;
         //sc.oldFolderName = sc.newFolderName;
         sc.newAlias = {location: sc.newFolderName};
+        sc.newOwner = sc.doc.owner.name;
         doc.fulltext = doc.fulltext.trim();
         sc.fulltext = doc.fulltext;
         sc.aliases = sc.getAliases();

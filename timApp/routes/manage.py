@@ -70,12 +70,15 @@ def manage(path):
                            rights=get_rights(block_id))
 
 
-@manage_page.route("/changeOwner/<int:doc_id>/<int:new_owner>", methods=["PUT"])
-def changeOwner(doc_id, new_owner):
+@manage_page.route("/changeOwner/<int:doc_id>/<new_owner_name>", methods=["PUT"])
+def changeOwner(doc_id, new_owner_name):
     timdb = getTimDb()
     if not timdb.documents.exists(doc_id) and not timdb.folders.exists(doc_id):
         abort(404)
     verify_ownership(doc_id)
+    new_owner = timdb.users.get_usergroup_by_name(new_owner_name)
+    if new_owner is None:
+        abort(404, 'Non-existent usergroup.')
     possible_groups = timdb.users.get_user_groups(getCurrentUserId())
     if new_owner not in [group['id'] for group in possible_groups]:
         abort(403, "You must belong to the new usergroup.")

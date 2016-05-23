@@ -1,0 +1,307 @@
+$grid-gutter-per2: ($grid-gutter-width/2);
+$left-ratio: 100% * ($left-side-columns/$grid-columns);
+$right-ratio: 100% * ($right-side-columns/$grid-columns);
+
+.fixed-side {
+    position: fixed;
+    z-index: 4;
+    font-size: small;
+}
+
+.left-fixed-side {
+    @extend .fixed-side;
+    max-width: calc(#{$left-ratio} - #{$grid-gutter-per2});
+    min-width: 12em;
+    margin-left: -$grid-gutter-per2;
+
+    @media (max-width: $screen-xs-max) {
+        margin-left: 0;
+    }
+}
+
+.right-fixed-side {
+    @extend .fixed-side;
+    max-width: calc(#{$right-ratio} - #{$grid-gutter-per2});
+    min-width: 10em;
+    right: 0;
+}
+
+#menuTabs {
+    background: white;
+
+    .glyphicon {
+        font-size: xx-large;
+        margin: -6px -10px;
+    }
+
+    .tab-content {
+        overflow-x: hidden;
+        overflow-y: auto;
+        max-height: calc(100vh - 51.2833px);
+        padding-left: 3px;
+
+        ul {
+            padding-left: 13px;
+
+            &.subexp {
+                display: block;
+                padding-left: 20px;
+            }
+        }
+    }
+}
+
+/* For directory */
+.smallMenu {
+    display: none;
+}
+
+.lecturesList {
+    display: block;
+}
+
+#currentList {
+    display: none;
+}
+
+#futureList {
+    display: none;
+}
+
+.menuSection {
+    margin-top: 1em;
+}
+
+.menuSection #largeMenu {
+    background-color: $basic-color;
+    border: 1px solid $basic-color;
+    border-radius: 5px;
+    padding: 1px 10px 10px 10px;
+    top: 0;
+    height: auto;
+    display: flex;
+
+    p {
+        color: set-text-color($basic-color);
+    }
+}
+
+#largeMenu .lectureSection {
+    display: block;
+}
+
+.menuSection p {
+    line-height: 100%;
+    display: block;
+    width: 100%
+}
+
+.iconSection .icon {
+    display: inline;
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
+}
+
+.iconSection {
+    display: inline-block;
+    clear: both;
+}
+
+.lectureSection {
+    line-height: 70%;
+    width: 100%;
+    display: inline-block;
+}
+
+.menuSection .lectureSection h1 {
+    font-family: verdana;
+    color: set-text-color($basic-color);
+    text-align: left;
+    margin: 0 0 10px 0;
+    line-height: 1;
+}
+
+.lectureSection h2 {
+    font-family: verdana;
+    color: set-text-color($basic-color);
+    font-size: 70%;
+    text-align: right;
+}
+
+.lectureSection p {
+    float: left;
+    margin: 0;
+    text-align: left;
+}
+
+.lectureArea input {
+    width: 50%;
+    max-width: 50%;
+    margin-bottom: 0.15em;
+    display: block;
+}
+
+.lectureArea select {
+    width: 50%;
+    max-width: 50%;
+    margin-bottom: 0.15em;
+    display: block;
+}
+
+.autohidden {
+    display: none;
+}
+
+.col ul {
+    padding-left: 10px !important;
+}
+
+li.basic, li.basic_active {
+    list-style: none;
+}
+
+.sub {
+    display: none;
+}
+
+li.exp {
+    list-style-image: url("#{$asset-path}/images/plus.png");
+    cursor: pointer;
+}
+
+li.col {
+    list-style-image: url("#{$asset-path}/images/minus.png");
+    cursor: pointer;
+}
+
+li.exp_active {
+    list-style-image: url("#{$asset-path}/images/plus.png");
+    background-color: #eeeeff;
+    cursor: pointer;
+}
+
+li.col_active {
+    list-style-image: url("#{$asset-path}/images/minus.png");
+    background-color: #eeeeff;
+    cursor: pointer; /* if not included, bullets are not shown right in moz*/
+}
+
+li.basic_active {
+    background-color: #eeeeff;
+}
+
+/*Pienet resoluutiot*/
+@media only screen and (max-width: 1200px) {
+    .menuSection #largeMenu {
+        display: none;
+    }
+
+    .lecturesList {
+        display: block;
+    }
+
+    .sidebar.autohidden {
+        display: none;
+    }
+
+    .menu, .sideMenu {
+        display: none;
+        top: 46px;
+        margin-top: 3px;
+    }
+
+    .smallMenu {
+        border: 1px solid $basic-color;
+        border-radius: 5px;
+        background-color: $basic-color;
+        display: -webkit-flex;
+        display: flex;
+        color: white;
+        font-size: 0.7em;
+        padding: 0 10px 0 10px;
+        min-width: 230px;
+        margin-top: auto;
+    }
+
+    .smallMenu p {
+        font-size: 0.9em;
+        color: black;
+    }
+
+    .smallMenu h1 {
+        color: white;
+        border: 2px groove;
+        padding: 0;
+        font-size: 1.5em;
+        text-align: center;
+        font-weight: normal;
+        margin: 0;
+        max-width: 100px;
+        min-width: 65px;
+    }
+
+    .smallMenu h1:hover {
+        cursor: pointer;
+    }
+
+    .smallMenu div {
+        display: inline-block;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .lecturesList div {
+        margin-left: auto;
+        margin-right: auto;
+        width: 80%;
+    }
+
+    .lecturesList div ul {
+        display: block;
+    }
+
+    .lecturesList div ul li {
+        display: block;
+    }
+
+    .lecturesList div ul li p {
+        font-family: verdana;
+        font-size: 0.8em;
+        padding: 5px;
+        display: block;
+        margin: 5px;
+        background: $basic-color;
+        text-decoration: none;
+        color: white;
+        width: 90%;
+    }
+
+    .currently p {
+        color: black;
+        font-family: verdana;
+        font-size: 15px;
+        margin: 0;
+    }
+
+    .currently h2 {
+        color: white;
+        font-family: verdana;
+        font-size: 20px;
+        margin: 0;
+    }
+
+    #addLecture1, #addLecture2 {
+        cursor: pointer;
+    }
+
+    .smallIconSection img {
+        display: inline;
+    }
+}
+
+@media only screen and (min-width: 1201px) {
+    .menu, .sideMenu {
+        display: block !important;
+    }
+}

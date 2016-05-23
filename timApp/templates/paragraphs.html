@@ -12,18 +12,6 @@
         var noIndex = true;
     </script>
     <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
-    <style type="text/css">
-        table {
-            margin: 0em;
-            border: none;
-            font-size: 13pt;
-        }
-
-        table td {
-            padding:  0.1em 0.5em 0.1em 0.5em;
-            border: none;
-        }
-    </style>
     <div class="par"
          id="null"
          t=""
@@ -32,7 +20,7 @@
             <p>Click left side to edit. You can get help with editing from editor's Help tab.</p>
             <p>This is an automatically added help paragraph. It will disappear when you add content.</p>
         </div>
-        <div ng-controller="IndexCtrl">
+        <div ng-controller="IndexCtrl" class="index">
             <div ng-if="templateList.length">
                 <div class="parContent">
                     <p>You may also choose to use one of the templates below.</p>
@@ -52,7 +40,7 @@
                             {{ '{{ template.name }}' }}
                         </td>
                         <td>
-                            <button ng-click="copyDocument({{ doc.id }}, template.fullname)">Load</button>
+                            <button class="timButton" ng-click="copyDocument({{ doc.id }}, template.fullname)">Load</button>
                         </td>
                     </tr>
                 </table>
@@ -87,14 +75,14 @@
      {% endif %}
     {% if not t.is_plugin %}ng-non-bindable{% endif %}>
     {% set task_id = (t.ref_attrs or t.attrs)['taskId'] %}
-    {% if task_id and not preview %}
-        <a href="#{{ task_id }}" title="Permlink" class="headerlink">#</a>
-    {% endif %}
             {% if t.is_plugin and t.needs_browser and not preview %}
                     <answerbrowserlazy
                             task-id="{{ (t.ref_doc_id or t.doc_id) }}.{{ task_id }}">
                     </answerbrowserlazy>
             {% endif %}
+    {% if task_id and not preview %}
+        <a href="#{{ task_id }}" title="Permlink" class="headerlink">#</a>
+    {% endif %}
     <div class="parContent"{% if task_id %} id="{{ task_id }}"{% endif %}>
         {{ t.html|safe }}
     </div>

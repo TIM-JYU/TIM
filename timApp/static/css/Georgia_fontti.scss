@@ -1,0 +1,8 @@
+@charset "UTF-8";
+/* Fontiksi Georgia, harvempi riviväli */
+$line-height-base: 1.75;
+$font-family-base: Georgia, Times, serif, serif;
+$font-size-base: 15px;
+$font-size-h1: floor(($font-size-base * 2.29));
+$font-size-h2: floor(($font-size-base * 1.72));
+$font-size-h3: floor(($font-size-base * 1.5));
