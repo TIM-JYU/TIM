@@ -274,6 +274,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         // Form is valid
         form.$setPristine();
 
+        // TODO: Make velpGroups to [{'id':1, 'selected':'True'}]
         console.log($scope.velpToEdit);
         $scope.makePostRequest("/update_velp", $scope.velpToEdit, function (json) {
             console.log(json);

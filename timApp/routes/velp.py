@@ -215,7 +215,7 @@ def update_velp():
 
     # Check that user has edit access to velp via any velp group in database
     for group in all_velp_groups:
-        if timdb.users.has_edit_access(current_user_id, group) is True:
+        if timdb.users.has_edit_access(current_user_id, group['id']) is True:
             edit_access = True
             break
     if edit_access is False:
@@ -225,6 +225,8 @@ def update_velp():
     edit_access = False
     groups_to_add = []
     groups_to_remove = []
+    print("asdasdasder5e343")
+    print(velp_groups)
     for group in velp_groups:
         if timdb.users.has_edit_access(current_user_id, group['id']) is True:
             edit_access = True
@@ -294,6 +296,27 @@ def update_velp_label():
     # TODO: Add some check so a random person can't use the route?
     timdb.velps.update_velp_label(velp_label_id, language_id, content)
 
+@velps.route("/<document_id>/change_selection", methods=["POST"])
+def change_selection(document_id: int):
+    """Change selection for velp group in users VelpGroupSelection in current document
+
+    :param document_id:
+    :return:
+    """
+    try:
+        doc_id = int(document_id)
+    except ValueError as e:
+        abort(400, "Document_id is not a number.")
+
+    json_data = request.get_json()
+    try:
+        velp_group_id = json_data['id']
+        selection = json_data['selection']
+    except KeyError as e:
+        abort(400, "Missing data: " + e.args[0])
+    user_id = getCurrentUserId()
+    timdb = getTimDb()
+    timdb.velp_groups.change_selection(doc_id, velp_group_id, user_id, selection)
 
 @velps.route("/create_velp_group", methods=['POST'])
 def create_velp_group():

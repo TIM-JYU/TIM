@@ -150,7 +150,7 @@ class VelpGroups(Documents):
 
     def get_groups_for_velp(self, velp_id):
         cursor = self.db.cursor()
-        cursor.execute('SELECT velp_group_id FROM VelpInGroup WHERE velp_id = ?', [velp_id])
+        cursor.execute('SELECT velp_group_id AS id FROM VelpInGroup WHERE velp_id = ?', [velp_id])
         result = cursor.fetchall()
         return result
 
@@ -249,6 +249,24 @@ class VelpGroups(Documents):
                       )
         results = self.resultAsDictionary(cursor)
         return results
+
+    def change_selection(self, doc_id: int, velp_group_id: int, user_id: int, selected: bool):
+        """Changes selection for velp group in VelpGroupSelection for specific user / document combo
+
+        :param doc_id: ID of document
+        :param velp_group_id: ID of velp group
+        :param user_id: ID of user
+        :param selected: Boolean whether group is selected or not
+        :return:
+        """
+        cursor = self.db.cursor()
+        if selected is True:
+            cursor.execute("""
+                          UPDATE VelpGroupSelection
+                            SET selected = ?
+                            WHERE user_id = ? AND doc_id
+                            """, [selected, user_id, doc_id]
+                          )
 
 
     # Unused methods
