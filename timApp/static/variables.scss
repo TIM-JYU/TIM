@@ -41,6 +41,7 @@ $gray: lighten($gray-base, 33.5%);
 $brand-primary: $basic-color;
 $text-color: black;
 $input-color: black;
+$link-color: darken($brand-primary, 5%);
 $input-color-placeholder: $gray;
 $headings-font-weight: 700;
 $font-size-base: 14px; // this should probably not be changed from default 14px
