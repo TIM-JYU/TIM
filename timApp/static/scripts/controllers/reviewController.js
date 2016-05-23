@@ -146,6 +146,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             var element = par.getElementsByTagName("PRE")[0].firstChild;
             console.log(element);
+            console.log(annotations[i]);
+
             var range = document.createRange();
             range.setStart(element, placeInfo["start"]["offset"]);
             range.setEnd(element, placeInfo["end"]["offset"]);
@@ -596,12 +598,34 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             var annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
             angular.element(annotationElement).isolateScope().showAnnotation();
             scrollToElement(annotationElement);
-        } catch (e){
+        } catch (e) {
             // Find answer browser and isolate its scope
-            // go to nextAnswer until answerid = annotation.answer_id
+            // set answer id -> change answer to that
             // query selector element -> toggle annotation
-            if (e.name == "TypeError"){
-                scrollToElement(parent);
+            if (e.name == "TypeError" && annotation.answer_id != null) {
+                //var abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
+                var ab = parent.getElementsByTagName("ANSWERBROWSER")[0];
+
+                if (typeof ab === "undefined") {
+                    var abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
+                    abl.isolateScope().loadAnswerBrowser();
+                    //abl.isolateScope().$apply();
+                }
+
+                setTimeout(function () {
+                    ab = angular.element(parent.getElementsByTagName("ANSWERBROWSER")[0]);
+                    var abscope = ab.isolateScope();
+                    abscope.review = true;
+                    abscope.setAnswerById(annotation.answer_id);
+
+                    setTimeout(function () {
+                        var annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
+                        angular.element(annotationElement).isolateScope().showAnnotation();
+                        $scope.$apply();
+                        scrollToElement(annotationElement);
+                        console.log(ab);
+                    }, 500);
+                }, 100);
             }
         }
     };
