@@ -32,7 +32,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2};
     $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};
     $scope.newLabel = {content: "", selected: false, edit: false, valid: true};
-    $scope.labelToEdit = {content: "", selected: false, edit: false};
+    $scope.labelToEdit = {content: "", selected: false, edit: false, id: -3};
     $scope.selectedLabels = [];
     $scope.settings = {selectedAll: false};
 
@@ -296,9 +296,17 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         for (var i=0; i<$scope.labels.length; i++){
             if ($scope.labels[i].id == $scope.labelToEdit.id){
-                $scope.labelToEdit.edit = false;
-                $scope.labels[i].content = $scope.labelToEdit.content;
-                $scope.labels[i].edit = false;
+                // TODO: This works yet not
+                console.log("lolol");
+                console.log($scope.labelToEdit.id);
+                console.log($scope.labelToEdit.content);
+                console.log("asdasd");
+                console.log($scope.labelToEdit);
+                $scope.makePostRequest("/update_velp_label", $scope.labelToEdit, function (json){
+                    $scope.labelToEdit.edit = false;
+                    $scope.labels[i].content = $scope.labelToEdit.content;
+                    $scope.labels[i].edit = false;
+                });
             }
         }
 

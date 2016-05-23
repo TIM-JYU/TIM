@@ -47,6 +47,7 @@ CREATE TABLE Velp (
   creation_time  DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP,
   default_points REAL,
   icon_id        INTEGER,
+  valid_from     DATETIME DEFAULT CURRENT_TIMESTAMP,
   valid_until    DATETIME,
 
   CONSTRAINT Velp_PK
@@ -164,9 +165,10 @@ CREATE TABLE VelpContent (
 
 CREATE TABLE Annotation (
   id                 INTEGER  NOT NULL,
-  version_id         INTEGER  NOT NULL,
+  velp_version_id    INTEGER  NOT NULL,
   points             REAL,
   creation_time      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  valid_from         DATETIME DEFAULT CURRENT_TIMESTAMP,
   valid_until        DATETIME,
   icon_id            INTEGER,
   annotator_id       INTEGER  NOT NULL,
@@ -190,8 +192,8 @@ CREATE TABLE Annotation (
   CONSTRAINT Annotation_PK
   PRIMARY KEY (id),
 
-  CONSTRAINT Version_id
-  FOREIGN KEY (version_id)
+  CONSTRAINT Velp_version_id
+  FOREIGN KEY (velp_version_id)
   REFERENCES VelpVersion (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE,
@@ -226,6 +228,7 @@ CREATE TABLE VelpGroup (
   id            INTEGER  NOT NULL,
   name          TEXT     NOT NULL,
   creation_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  valid_from    DATETIME DEFAULT CURRENT_TIMESTAMP,
   valid_until   DATETIME,
   document_def  BOOLEAN  NOT NULL DEFAULT 0, -- sqlite doesn't have true/false boolean
 

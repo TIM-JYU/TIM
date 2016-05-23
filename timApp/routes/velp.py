@@ -12,9 +12,9 @@ velps = Blueprint('velps',
 
 @velps.route("/<document_id>/get_default_velp_group", methods=['GET'])
 def get_default_velp_group(document_id: int):
-    """
+    """Get default velp group id and if default velp group doesn't exist yet, create one
 
-    :return:
+    :return: Doc id
     """
     try:
         doc_id = int(document_id)
@@ -28,7 +28,7 @@ def get_default_velp_group(document_id: int):
     full_path = timdb.documents.get_first_document_name(doc_id)
     doc_name = os.path.basename(full_path)
 
-
+    # Check if document's path contains velp groups folder and if it does, make document its own default velp group
     if "velp groups/" in full_path:
         timdb.velp_groups.make_document_a_velp_group(doc_name, doc_id)
         velp_group = [{'target_type': '0', 'target_id': 0, 'id': doc_id}]
@@ -92,12 +92,16 @@ def get_velps(document_id: int):
     imported_groups = timdb.velp_groups.get_groups_from_imported_table(user_group_list, doc_id)
     timdb.velp_groups.add_groups_to_selection_table(imported_groups, doc_id, user_id)
     velp_content = timdb.velps.get_velp_content_for_document(doc_id, user_id)
-    print(velp_content)
 
     return jsonResponse(velp_content)
 
 @velps.route("/<document_id>/get_velp_groups", methods=['GET'])
 def get_velp_groups(document_id: int):
+    """Gets all velp groups for document user has access to by using VelpGroupSelection table
+
+    :param document_id: ID of document
+    :return:
+    """
     timdb = getTimDb()
     try:
         doc_id = int(document_id)
@@ -110,6 +114,11 @@ def get_velp_groups(document_id: int):
 
 @velps.route("/<document_id>/get_velp_labels", methods=['GET'])
 def get_velp_labels(document_id: int) -> 'str':
+    """Gets all velp labels for document user has access to by using VelpGroupSelection table
+
+    :param document_id: ID of document
+    :return:
+    """
     timdb = getTimDb()
     try:
         doc_id = int(document_id)
@@ -124,6 +133,10 @@ def get_velp_labels(document_id: int) -> 'str':
 
 @velps.route("/add_velp", methods=['POST'])
 def add_velp():
+    """Creates a new velp and adds it to velp groups user chose
+
+    :return: ID of new velp
+    """
     json_data = request.get_json()
     try:
         velp_content = json_data['content']
@@ -140,10 +153,6 @@ def add_velp():
     icon_id = json_data.get('icon_id')
     valid_until = json_data.get('valid_until')
     velp_labels = json_data.get('labels')
-
-    print(velp_content)
-    print(velp_labels)
-    print(velp_groups)
 
     default_points = float(default_points) if default_points is not None else None
     icon_id = int(icon_id) if icon_id is not None else None
@@ -179,6 +188,10 @@ def add_velp():
 
 @velps.route("/update_velp", methods=['POST'])
 def update_velp():
+    """
+
+    :return:
+    """
 
     try:
         json_data = request.get_json()
@@ -221,7 +234,10 @@ def update_velp():
 
 @velps.route("/add_velp_label", methods=["POST"])
 def add_label():
-    # language_id = request.args.get('language_id')
+    """
+
+    :return:
+    """
     json_data = request.get_json()
     try:
         content = json_data['content']
@@ -238,9 +254,12 @@ def add_label():
 @velps.route("/update_velp_label", methods=["POST"])
 def update_velp_label():
     json_data = request.get_json()
+    print(json_data)
     try:
         content = json_data['content']
+        print(content)
         velp_label_id = json_data['id']
+        print(velp_label_id)
     except KeyError as e:
         abort(400, "Missing data: " + e.args[0])
     language_id = json_data.get('language_id')
