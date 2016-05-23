@@ -604,13 +604,24 @@ function alustaSage(scope,firstTime) {
 // TODO: kielien valinnan tallentaminen
 // TODO: kielien valinta kunnolla float.  
 // ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst  
+    if ( scope.sagecellInfo ) {
+        scope.sagecellInfo.editor = "textarea";
+        //scope.sagecellInfo.inputLocation = null;
+        //scope.sagecellInfo.outputLocation = null;
+        //sagecell.deleteSagecell(scope.sagecellInfo);
+        //scope.sagecellInfo = null;
+    }        
     var types = scope.type.split("/");
     var languages = sagecell.allLanguages;
     if ( types.length > 1 ) languages = types.slice(1); 
     if ( scope.sagecellInfo ) {
         var outputLocation = $(scope.sageOutput);
         outputLocation.find(".sagecell_output_elements").hide();
-        scope.sagecellInfo.code = scope.usercode;
+        // scope.sagecellInfo.code = scope.usercode;
+        scope.sagecellInfo.code = scope.getReplacedCode();
+        scope.sagecellInfo.session.code = scope.sagecellInfo.code;
+        // scope.sagecellInfo.inputLocation.innerText = scope.sagecellInfo.code;
+        scope.sagecellInfo.inputLocation.children[0].children[0].children[0].value = scope.sagecellInfo.code;
         return;
     }    
     scope.sageArea = scope.element0.getElementsByClassName('computeSage')[0];                    
@@ -619,19 +630,26 @@ function alustaSage(scope,firstTime) {
     
     scope.sagecellInfo = sagecell.makeSagecell({
         inputLocation: scope.sageArea,
-        // inputLocation: scope.editArea,
+        replaceOutput: true,
+        //inputLocation: scope.editArea,
         editor: "textarea",
+        // hide: ["evalButton"],
         hide: ["editor","evalButton"],
         outputLocation: scope.sageOutput,
         requires_tos: false,
-        code: scope.usercode,
-        getCode: function() { return scope.getCode(); },
+        // code: scope.usercode,
+        code: scope.getReplacedCode(),
+        getCode: function() { 
+          return scope.getReplacedCode(); 
+        },
         autoeval: scope.attrs.autorun || firstTime,
         callback: function() {
             scope.sageButton = scope.sageArea.getElementsByClassName("sagecell_evalButton")[0]; // .button();     
             
             scope.sageButton.onclick = function() {
                 // scope.checkSageSave();
+                scope.sagecellInfo.code = scope.getReplacedCode();
+                scope.sagecellInfo.session.code = scope.sagecellInfo.code;
             };
             var sagecellOptions = scope.element0.getElementsByClassName('sagecell_options')[0];  
             var csRunMenuArea = scope.element0.getElementsByClassName('csRunMenuArea')[0];
@@ -865,8 +883,9 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         $scope.closeDocument();
         // alert("moi");
         
+        if ( $scope.isSage ) alustaSage($scope,true);
         if ( $scope.sageButton ) $scope.sageButton.click();
-        if ( $scope.isSage && !$scope.sagecellInfo ) alustaSage($scope,true);
+        // if ( $scope.isSage && !$scope.sagecellInfo ) alustaSage($scope,true);
         
         if ( $scope.simcir ) {
             $scope.usercode = $scope.getCircuitData();
@@ -1270,6 +1289,33 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         $scope.carretPos = start; // seuraava tapahtuma nappaa tämän ja siirtää vain kursorin.
     };
 		
+	$scope.getReplacedCode = function() {
+		// $scope.code = $scope.localcode;
+		if ( !$scope.attrs.program ) { $scope.code = $scope.usercode; return $scope.code; }
+		var st = $scope.attrs.program.split("\n");
+		var r = "";
+		var rp = ["",""]; // alkuosa, loppuosa
+		var step = 0;
+		var nl = "";
+		var nls = "";
+        var needReplace = !!$scope.replace;
+        var regexp = new RegExp($scope.replace);
+		for (var i in st) if ( st.hasOwnProperty(i) ) {
+			var s = st[i];
+			// if ( s.indexOf($scope.replace) >= 0 ) {
+            if ( needReplace && regexp.test(s) ) {
+				r += nl + $scope.usercode;
+				if ( step === 0 ) { step++; nls = ""; continue; }
+			} else { 
+				r += nl + s;
+				rp[step] += nls + s;
+			}
+			nl = nls = "\n";
+		}
+		$scope.code = r;
+        return $scope.code;
+    }
+        
 	$scope.showCodeLocal = function() {
 		// $scope.code = $scope.localcode;
 		if ( $scope.localcode === "" ) { $scope.code = $scope.usercode; return; }

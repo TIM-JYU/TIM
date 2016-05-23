@@ -534,13 +534,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         log(self)
         # print(querys)
 
-        get_query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
-
         global_anonymous = False
         for query in querys:
-            query.get_query = get_query
-            for f in query.get_query:
-                query.query[f] = [query.get_query[f][0]]
             ga = get_param(query, "GlobalAnonymous", None)
             if ga: global_anonymous = True
             if global_anonymous: query.query["anonymous"] = [True]
@@ -701,13 +696,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                   "/static/scripts/jquery.ui.touch-punch.min.js",
                                   "/cs/cs-parsons/csparsons.js",
                                   #"https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
-                                  "/cs/js/embedded_sagecell.js"],
+                                  "https://sagecell.sagemath.org/static/embedded_sagecell.js"],
+                                  #"/cs/js/embedded_sagecell.js"],
                            "angularModule": ["csApp", "csConsoleApp"],
                            "css": ["/cs/css/cs.css"], "multihtml": True}
             if is_parsons:
                 result_json = {"js": ["/cs/js/dir.js",
                                       # "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
-                                      "/cs/js/embedded_sagecell.js",
+                                      "https://sagecell.sagemath.org/static/embedded_sagecell.js",
+                                      # "/cs/js/embedded_sagecell.js",
                                       "/static/scripts/jquery.ui.touch-punch.min.js",
                                       "/cs/cs-parsons/csparsons.js",
                                       "/cs/js-parsons/lib/underscore-min.js",
@@ -866,6 +863,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 exename = csfname
                 pure_exename = "./%s.py" % filename
                 fileext = "py"
+                pngname = "/csimages/%s.png" % rndname
+                bmpname = get_param(query, "bmpname", "")
 
             if ttype == "alloy":
                 csfname = "/tmp/%s/%s.als" % (basename, filename)
@@ -1548,6 +1547,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     print("py: ", exename)
                     code, out, err, pwd = run2(["python3", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                                uargs=userargs)
+                    if bmpname and pngname:
+                        image_ok, e = copy_file(filepath + "/" + bmpname, pngname, True, is_optional_image)
+                        if e: err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
+                        # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
+                        print(is_optional_image, image_ok)
+                        if image_ok: web["image"] = "/csimages/cs/" + rndname + ".png"
+                        
                 elif ttype == "clisp":
                     print("clips: ", exename)
                     code, out, err, pwd = run2(["sbcl", "--script", pure_exename], cwd=prgpath, timeout=10, env=env,
