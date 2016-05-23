@@ -300,7 +300,7 @@ def update_velp_label():
 def change_selection(document_id: int):
     """Change selection for velp group in users VelpGroupSelection in current document
 
-    :param document_id:
+    :param document_id: ID of document
     :return:
     """
     try:
@@ -310,7 +310,7 @@ def change_selection(document_id: int):
 
     json_data = request.get_json()
     try:
-        velp_group_id = json_data['id']
+        velp_group_id = json_data['velp_group_id']
         selection = json_data['selection']
     except KeyError as e:
         abort(400, "Missing data: " + e.args[0])

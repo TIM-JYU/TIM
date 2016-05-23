@@ -260,13 +260,12 @@ class VelpGroups(Documents):
         :return:
         """
         cursor = self.db.cursor()
-        if selected is True:
-            cursor.execute("""
-                          UPDATE VelpGroupSelection
-                            SET selected = ?
-                            WHERE user_id = ? AND doc_id
-                            """, [selected, user_id, doc_id]
-                          )
+        cursor.execute("""
+                      UPDATE VelpGroupSelection
+                        SET selected = ?
+                        WHERE user_id = ? AND doc_id = ? AND velp_group_id = ?
+                        """, [selected, user_id, doc_id, velp_group_id]
+                      )
 
 
     # Unused methods
