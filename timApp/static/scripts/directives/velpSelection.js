@@ -208,7 +208,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     };
 
     $scope.selectLabelToEdit = function (label) {
-        if (label.id == $scope.labelToEdit.id) {
+        if (label.id == $scope.labelToEdit.id && label.edit) {
             label.edit = false;
             $scope.labelToEdit = {content: "", selected: false, edit: false};
             return;
@@ -239,10 +239,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
     $scope.selectVelpToEdit = function (velp) {
 
-        if (velp.id == $scope.velpToEdit.id) {
+        if (velp.id == $scope.velpToEdit.id && velp.edit) {
             velp.edit = false;
             $scope.velpToEdit = {content: "", points: "", labels: [], edit: false};
-            return
+            return;
         }
 
         if ($scope.velpToEdit.edit) {
@@ -330,14 +330,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
      */
     $scope.resetNewLabel = function () {
         $scope.newLabel = {content: "", selected: true, valid: true};
-    };
-
-    /**
-     * Set all labels not selected
-     */
-    $scope.resetLabels = function () {
-        for (var i = 0; i < $scope.labels.length; i++)
-            $scope.labels[i].selected = false;
     };
 }]);
 

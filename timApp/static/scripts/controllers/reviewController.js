@@ -594,14 +594,22 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         try {
             var annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
-            angular.element(annotationElement).isolateScope().toggleAnnotation();
-        } catch (err){
-
+            angular.element(annotationElement).isolateScope().showAnnotation();
+            scrollToElement(annotationElement);
+        } catch (e){
             // Find answer browser and isolate its scope
             // go to nextAnswer until answerid = annotation.answer_id
             // query selector element -> toggle annotation
-            console.log(err);
+            if (e.name == "TypeError"){
+                scrollToElement(parent);
+            }
         }
     };
 
+
+    var scrollToElement = function (element) {
+        if (!!element && element.scrollIntoView) {
+            element.scrollIntoView();
+        }
+    }
 }]);

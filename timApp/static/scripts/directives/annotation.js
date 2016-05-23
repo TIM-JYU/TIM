@@ -53,6 +53,13 @@ timApp.controller('AnnotationController', ['$scope', '$http', function ($scope, 
     };
 
     /**
+     * Show annotation, used in summary
+     */
+    $scope.showAnnotation = function() {
+        $scope.show = true;
+    };
+
+    /**
      * Delete selected annotation. Queries parent scope.
      */
     $scope.deleteAnnotation = function(){
