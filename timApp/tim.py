@@ -38,6 +38,7 @@ from routes.view import view_page
 from tim_app import app
 
 # db.engine.pool.use_threadlocal = True # This may be needless
+from utils import datestr_to_relative
 
 cache.init_app(app)
 
@@ -260,6 +261,7 @@ def get_documents(folder):
         doc['canEdit'] = timdb.users.has_edit_access(uid, doc['id'])
         doc['isOwner'] = timdb.users.user_is_owner(getCurrentUserId(), doc['id']) or timdb.users.has_admin_access(uid)
         doc['owner'] = timdb.users.get_owner_group(doc['id'])
+        doc['modified'] = datestr_to_relative(doc['modified'])
         final_docs.append(doc)
 
     final_docs.sort(key=lambda d: d['name'].lower())
