@@ -89,15 +89,15 @@ class Annotations(TimDbBase):
         """
         cursor = self.db.cursor()
         cursor.execute("""
-                       UPDATE Annotation
-                       SET
-                         velp_version_id = ?,
-                         visible_to      = ?,
-                         points          = ?,
-                         icon_id         = ?
-                       WHERE id = ?
+                      UPDATE Annotation
+                      SET
+                        velp_version_id = ?,
+                        visible_to      = ?,
+                        points          = ?,
+                        icon_id         = ?
+                      WHERE id = ?
                       """, [version_id, visible_to.value, points, icon_id, annotation_id]
-                       )
+                      )
         self.db.commit()
         return
 

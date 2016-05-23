@@ -188,7 +188,7 @@ def add_velp():
 
 @velps.route("/update_velp", methods=['POST'])
 def update_velp():
-    """
+    """Updates velp data
 
     :return:
     """
@@ -211,13 +211,34 @@ def update_velp():
     current_user_id = getCurrentUserId()
     edit_access = False
 
-    # Check
-    for group in velp_groups:
+    all_velp_groups = timdb.velp_groups.get_groups_for_velp(velp_id)
+
+    # Check that user has edit access to velp via any velp group in database
+    for group in all_velp_groups:
         if timdb.users.has_edit_access(current_user_id, group) is True:
             edit_access = True
             break
     if edit_access is False:
         abort(400, "No edit access to velp via any velp group.")
+
+    # Check which velp groups velp should belong to after update
+    edit_access = False
+    groups_to_add = []
+    groups_to_remove = []
+    for group in velp_groups:
+        if timdb.users.has_edit_access(current_user_id, group['id']) is True:
+            edit_access = True
+            if group['selected'] is True:
+                groups_to_add.append(group['id'])
+            else:
+                groups_to_remove.append(group['id'])
+        else:
+            print("No edit access to group " + group)
+
+    # Add and remove velp from velp groups
+    if edit_access is True:
+        timdb.velp_groups.add_velp_to_groups(velp_id, groups_to_add)
+        timdb.velp_groups.remove_velp_from_groups(velp_id, groups_to_remove)
 
     old_content = timdb.velps.get_latest_velp_version(velp_id, language_id)
     old_labels = timdb.velps.get_velp_label_ids_for_velp(velp_id)
@@ -234,9 +255,9 @@ def update_velp():
 
 @velps.route("/add_velp_label", methods=["POST"])
 def add_label():
-    """
+    """Creates new velp label
 
-    :return:
+    :return: ID of new velp label
     """
     json_data = request.get_json()
     try:
@@ -253,6 +274,10 @@ def add_label():
 
 @velps.route("/update_velp_label", methods=["POST"])
 def update_velp_label():
+    """Updates velp label content
+
+    :return:
+    """
     json_data = request.get_json()
     print(json_data)
     try:

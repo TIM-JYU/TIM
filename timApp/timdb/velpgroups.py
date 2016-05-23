@@ -93,11 +93,66 @@ class VelpGroups(Documents):
                        )
         self.db.commit()
 
+    def add_velp_to_groups(self, velp_id: int, velp_group_ids: [int]):
+        """Adds a velp to specific groups
+
+        :param velp_id: ID of velp
+        :param velp_group_ids: List of velp group IDs
+        :return:
+        """
+        cursor = self.db.cursor()
+        for velp_group in velp_group_ids:
+            cursor.execute("""
+                          INSERT INTO
+                          VelpInGroup(velp_group_id, velp_id)
+                          VALUES (?, ?)
+                          """, [velp_group, velp_id]
+                          )
+        self.db.commit()
+
+    def remove_velp_from_group(self, velp_id: int, velp_group_id: int):
+        """Removes a velp from a specific group
+
+        :param velp_id: Velp id
+        :param velp_group_id: Velp group id
+        :return:
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      DELETE
+                      FROM VelpInGroup
+                      WHERE velp_id = ? AND velp_group_id = ?
+                      """, [velp_id, velp_group_id]
+                      )
+        self.db.commit()
+
+    def remove_velp_from_groups(self, velp_id: int, velp_group_ids: [int]):
+        """Removes a velp from specific groups
+
+        :param velp_id: ID of velp
+        :param velp_group_ids: List of velp group IDs
+        :return:
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      DELETE
+                      FROM VelpInGroup
+                      WHERE velp_id = ? AND velp_group_id = ({})
+                      """.format(self.get_sql_template(velp_group_ids)), [velp_id] + velp_group_ids
+                      )
+        self.db.commit()
+
     def get_velp_group_name(self, velp_group_id: int) -> str:
         cursor = self.db.cursor()
         cursor.execute('SELECT name FROM VelpGroup WHERE id = ?', [velp_group_id])
         result = cursor.fetchone()
         return result[0] if result is not None else None
+
+    def get_groups_for_velp(self, velp_id):
+        cursor = self.db.cursor()
+        cursor.execute('SELECT velp_group_id FROM VelpInGroup WHERE velp_id = ?', [velp_id])
+        result = cursor.fetchall()
+        return result
 
     def is_id_velp_group(self, doc_id: int) -> bool:
         """ Checks whether given document id can also be found from VelpGroup table
@@ -197,22 +252,6 @@ class VelpGroups(Documents):
 
 
     # Unused methods
-
-    def remove_velp_from_group(self, velp_id: int, velp_group_id: int):
-        """
-        Removes a velp from a specific group
-        :param velp_id: Velp id
-        :param velp_group_id: Velp group id
-        :return:
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      DELETE
-                      FROM VelpInGroup
-                      WHERE velp_id = ? AND velp_group_id = ?
-                      """, [velp_id, velp_group_id]
-                       )
-        self.db.commit()
 
     def update_velp_group(self, velp_group_id: int, name: str, valid_until: Optional[str]):
         """Updates name and/or valid until time of velp group
