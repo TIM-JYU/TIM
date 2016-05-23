@@ -8,64 +8,31 @@
         var folder = "{{doc.fullname if doc else ''}}";
     </script>
     <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
-    <style type="text/css">
-        table {
-            margin: 1em;
-            border: none;
-        }
-
-        thead {
-            font-weight: bold;
-            border: none;
-        }
-
-        table td {
-            padding: 0.2em;
-            border: none;
-        }
-
-        .uploadForm {
-            border: 1px solid black;
-            padding: 1em;
-        }
-    </style>
-    {% if session.user_id %}
-        {% include 'common_head.html' %}
-        {% if in_lecture %}
-            {% include 'lecture_head.html' %}
-        {% endif %}
-    {% endif %}
 {% endblock %}
 {% block content %}
-    <div ng-controller="IndexCtrl">
-        {% if in_lecture %}
-            {% include 'lecture.html' %}
-        {% elif session.user_id %}
-            {% include 'side_menu.html' %}
-        {% endif %}
-
+    <div ng-controller="IndexCtrl" class="index">
         <span ng-show="displayIndex">Welcome! Start by choosing a document to view: </span> <img
             src="{{ url_for('static', filename='images/loading.gif') }}" ng-show="!displayIndex">
 
         <div ng-show="displayIndex >= 2">
-            <table ng-show="documentList.length > 0 || folderList.length > 0 || parentfolder != null">
+            <table class="table" ng-show="documentList.length > 0 || folderList.length > 0 || parentfolder != null">
                 <thead>
                 <tr>
-                    <td></td>
-                    <td>Document name</td>
-                    <td></td>
-                    <td>Last modified</td>
-                    <td>Owner</td>
-                    <td>Rights</td>
+                    <th></th>
+                    <th>Name</th>
+                    <th></th>
+                    <th>Last modified</th>
+                    <th>Owner</th>
+                    <th>Rights</th>
                 </tr>
                 </thead>
                 <tr ng-show="parentfolder != null">
                     <td>
                         <a href="/view/{{ '{{ parentfolder | escape }}' }}">
-                            <img src="{{ url_for('static', filename='images/folder.png') }}"/>
+                            <span class="glyphicon glyphicon-level-up" aria-hidden="true"></span>
                         </a>
                     </td>
-                    <td><a href="/view/{{ '{{ parentfolder | escape }}' }}">..</a></td>
+                    <td><a href="/view/{{ '{{ parentfolder | escape }}' }}">Go to parent folder</a></td>
                     <td></td>
                     <td></td>
                     <td></td>
@@ -74,7 +41,7 @@
                 <tr ng-repeat="doc in folderList">
                     <td>
                         <a href="/view/{{ '{{ doc.fullname | escape }}' }}">
-                            <img src="{{ url_for('static', filename='images/folder.png') }}"/>
+                            <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
                         </a>
                     </td>
                     <td>
@@ -84,7 +51,7 @@
                     <td>{{ '{{ doc.modified }}' }}</td>
                     <td>{{ '{{ doc.owner.name }}' }}</td>
                     <td>
-                        <a ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}">Manage</a>
+                        <a title="Manage" ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}" class="glyphicon glyphicon-cog"></a>
                     </td>
                 </tr>
                 <tr ng-repeat="doc in documentList">
@@ -96,57 +63,45 @@
                     <td>{{ '{{ doc.modified }}' }}</td>
                     <td>{{ '{{ doc.owner.name }}' }}</td>
                     <td>
-                        <a ng-show="doc.canEdit" href="/view/{{ '{{ doc.id }}' }}">Edit</a>
-                        <a ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}">Manage</a>
-                        <a ng-show="doc.isOwner" href="/teacher/{{ '{{ doc.fullname | escape }}' }}">Teacher</a>
+                        <a title="Edit" ng-show="doc.canEdit" href="/view/{{ '{{ doc.id }}' }}" class="glyphicon glyphicon-pencil"></a>
+                        <a title="Manage" ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}" class="glyphicon glyphicon-cog"></a>
+                        <a title="Teacher" ng-show="doc.isOwner" href="/teacher/{{ '{{ doc.fullname | escape }}' }}" class="glyphicon glyphicon-education"></a>
                     </td>
                 </tr>
             </table>
             <p ng-show="documentList.length == 0 && folderList.length == 0">There are no documents to show.</p>
             {% if session.user_id %}
-                <a ng-click="showUploadFn()">Upload a new document</a>
-                <div class="uploadForm" ng-show="showUpload">
-                    <input type="file" ngf-select="onFileSelect($file)">
+                <uib-tabset active="-1">
+                    <uib-tab heading="Upload a new document">
+                        <div class="form-group">
+                            <label for="docUpload">Select a file:</label>
+                            <input id="docUpload" class="form-control" type="file" ngf-select="onFileSelect($file)">
+                        </div>
                      <span ng-show="file.progress >= 0"
                            ng-bind="file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!'">
                      </span>
-                    <button ng-disabled="uploadInProgress" type="button"
-                            ng-click="showUpload = false"
-                            ng-bind="file.progress && !uploadInProgress ? 'Close' : 'Cancel'">
-                    </button>
-                </div>
-                <div>
-                    <a ng-show="!showControls" ng-click="showControls = true">Create a new document</a>
-
-                    <div ng-show="showControls">
-                        <label>
+                    </uib-tab>
+                    <uib-tab heading="Create a new document">
+                        <div class="form-group"><label>
                             Document name:
-                            <input ng-model="docName" type="text">
-                        </label>
-                        <button ng-disabled="!docName" ng-click="createDocument(docName)" type="button">Create
+                            <input class="form-control" ng-model="docName" type="text">
+                        </label></div>
+                        <button class="timButton" ng-disabled="!docName" ng-click="createDocument(docName)" type="button">Create
                         </button>
-                        <button ng-click="showControls = false" type="button">Cancel</button>
-                    </div>
-                </div>
-                <div>
-                    <a ng-show="!showCreateFolder" ng-click="showCreateFolder = true">Create a new folder</a>
-
-                    <div ng-show="showCreateFolder">
-                        <label>
+                    </uib-tab>
+                    <uib-tab heading="Create a new folder">
+                        <div class="form-group"><label>
                             Folder name:
-                            <input ng-model="folderName" type="text">
-                        </label>
-                        <label>
-                            Owner:
-                            <select ng-model="folderOwner"
-                                    ng-options="group.name for group in userGroups track by group.id"></select>
-                        </label>
-                        <button ng-disabled="!folderName || !folderOwner"
-                                ng-click="createFolder(folderName, folderOwner.id)" type="button">Create
+                            <input class="form-control" ng-model="folderName" type="text">
+                        </label></div>
+                        <div class="form-group"><label>
+                            Owner: <input class="form-control" type="text" ng-model="folderOwner">
+                        </label></div>
+                        <button class="timButton" ng-disabled="!folderName || !folderOwner"
+                                ng-click="createFolder(folderName, folderOwner)" type="button">Create
                         </button>
-                        <button ng-click="showCreateFolder = false" type="button">Cancel</button>
-                    </div>
-                </div>
+                    </uib-tab>
+                </uib-tabset>
             {% else %}
                 To create or upload new documents, log in.
             {% endif %}

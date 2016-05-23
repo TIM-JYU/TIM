@@ -27,7 +27,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         return x.replace(/&quot;/g, '"');
     };
 
-    scope.settings = $window.settings;
+    scope.settings = $window.sessionsettings;
 
     scope.setTime = function () {
         scope.question.timeLimit = {hours: 0, minutes: 0, seconds: 30};
@@ -701,7 +701,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         var par_id = scope.getParId($par);
 
         // Without timeout 'timelimit' won't be saved in settings session variable. Thread issue?
-        $window.settings['timelimit'] = questionJson.TIMELIMIT.toString();
+        scope.settings['timelimit'] = questionJson.TIMELIMIT.toString();
         setTimeout(function () {
             setsetting('timelimit', questionJson.TIMELIMIT.toString());
         }, 1000);

@@ -1,0 +1,56 @@
+@charset "UTF-8";
+
+$basic-color: #3CC;
+$basic-color-inverse: invert($basic-color);
+$button-bg-color: $basic-color;
+$editline-bg-color: $basic-color;
+$areacollapse-color: $basic-color;
+$tab-bg-color: $basic-color;
+$csrundiv-color: $basic-color;
+$note-private-color: $basic-color;
+$note-public-color: #F60;
+$csrunmenu-button-bg-color: $basic-color;
+$csrunmenu-link-color: $basic-color;
+$timbutton-bg-color: $button-bg-color;
+$viewlogin-link-color: $basic-color;
+$draghandle-bg-color: $basic-color;
+$line-height: 1.4;
+$font-family: Verdana, Arial, sans-serif;
+$font-size: 1em;
+$bg-color: white;
+$material-shadow: none;
+$body-margin-left: 250px;
+$material-border: none;
+$material-border-radius: 0;
+$body-text-align: justify;
+$asset-path: "..";
+$footer-height: 60px;
+$header-footer-border: 1px solid #e5e5e5;
+$editline-width: 3em;
+$readline-offset: -1em;
+$note-width: 30%;
+$heading-outdent: -1em;
+
+// these column variables must match the ones in base.html
+$left-side-columns: 2;
+$right-side-columns: 3;
+
+// Bootstrap variable overrides:
+$gray-base: #000;
+$gray: lighten($gray-base, 33.5%);
+$brand-primary: $basic-color;
+$text-color: black;
+$input-color: black;
+$input-color-placeholder: $gray;
+$headings-font-weight: 700;
+$font-size-base: 14px; // this should probably not be changed from default 14px
+$font-size-h1: floor(($font-size-base * 2.29)); // default factor is 2.6
+$font-size-h2: floor(($font-size-base * 1.72)); // default factor is 2.15
+$font-size-h3: floor(($font-size-base * 1.5)); // default factor is 1.7
+$font-family-monospace: "Courier New", Courier, serif;
+$code-color: black;
+$code-bg: inherit;
+$pre-color: black;
+$pre-bg: inherit;
+$font-family-sans-serif: Verdana, Arial, sans-serif;
+$icon-font-path: "../scripts/bower_components/bootstrap-sass/assets/fonts/bootstrap/";

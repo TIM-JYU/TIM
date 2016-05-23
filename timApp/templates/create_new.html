@@ -8,88 +8,65 @@
         var folder = "{{''}}";
     </script>
     <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
-    <style type="text/css">
-        table {
-            margin: 0em;
-            border: none;
-        }
-
-        table td {
-            padding:  0.1em 0.5em 0.1em 0.5em;
-            border: none;
-        }
-    </style>
-    {% if session.user_id %}
-        {% include 'common_head.html' %}
-        {% if in_lecture %}
-            {% include 'lecture_head.html' %}
-        {% endif %}
-    {% endif %}
 {% endblock %}
 {% block content %}
-    <div ng-controller="IndexCtrl">
-        {% if in_lecture %}
-            {% include 'lecture.html' %}
-        {% elif session.user_id %}
-            {% include 'side_menu.html' %}
-        {% endif %}
-
+    <div ng-controller="IndexCtrl" class="index">
         <p class="errormsg">{{ message or 'The requested page does not exist.' }}</p>
         {% if session.user_id %}
             {% if rights %}
-                <table>
-                    <tr><td></td><td>Create a new document:</td></tr>
-                    <tr>
-                        <td></td>
-                        <td>
-                            <b>Pathname</b>
-                        </td>
-                        <td>
-                            <b>Owner</b>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td>
-                            {{ newItem }}
-                        </td>
-                        <td>
-                            {{ session.user_name }}
-                        </td>
-                        <td>
-                            <button ng-click="createDocument('{{ newItem }}')" type="button">Create
-                            </button>
-                        </td>
-                    </tr>
-                    <tr><td>&nbsp;</td></tr><tr><td>&nbsp;</td></tr>
-                    <tr><td></td><td>Create a new folder:</td></tr>
-                    <tr>
-                        <td></td>
-                        <td>
-                            <b>Pathname</b>
-                        </td>
-                        <td>
-                            <b>Owner</b>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><img src="{{ url_for('static', filename='images/folder.png') }}"/></td>
-                        <td>
-                            {{ newItem }}
-                        </td>
-                        <td>
-                            <label>
-                                <select ng-model="folderOwner"
-                                        ng-options="group.name for group in userGroups track by group.id"></select>
-                            </label>
-                        </td>
-                        <td>
-                            <button ng-disabled="!folderOwner"
-                                    ng-click="createFolder('{{ newItem }}', folderOwner.id)" type="button">Create
-                            </button>
-                        </td>
-                    </tr>
-                </table>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Create a new document here
+                    </div>
+                    <div class="panel-body">
+                        <form ng-submit="createDocument('{{ newItem }}')" class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Pathname</label>
+                                <div class="col-sm-10">
+                                    <p class="form-control-static">{{ newItem }}</p>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Owner</label>
+                                <div class="col-sm-10">
+                                    <p class="form-control-static">{{ session.user_name }}</p>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-offset-2 col-sm-10">
+                                    <button type="submit" class="timButton">Create</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Create a new folder here
+                    </div>
+                    <div class="panel-body">
+                        <form ng-submit="createFolder('{{ newItem }}', folderOwner)" class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Pathname</label>
+                                <div class="col-sm-10">
+                                    <p class="form-control-static">{{ newItem }}</p>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Owner</label>
+                                <div class="col-sm-10">
+                                    <input id="folderOwnerInput" class="form-control" type="text" ng-model="folderOwner">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-offset-2 col-sm-10">
+                                    <button ng-disabled="!folderOwner" type="submit" class="timButton">Create</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             {% else %}
                 You cannot create documents or folders here.
             {% endif %}

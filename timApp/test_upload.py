@@ -26,7 +26,7 @@ class UploadTest(TimRouteTest):
 
         resp = self.json_post('/createFolder',
                               {'name': fname,
-                               'owner': db.users.get_personal_usergroup_by_id(session['user_id'])})
+                               'owner': session['user_name']})
         j = self.assertResponseStatus(resp, return_json=True)
         db.users.grant_access(test1_group, j['id'], 'edit')
 

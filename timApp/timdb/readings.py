@@ -54,3 +54,18 @@ class Readings(TimDbBase):
             self.setAsRead(usergroup_id, doc, i, commit=False)
         if commit:
             self.db.commit()
+
+    def copy_readings(self, src_par: DocParagraph, dest_par: DocParagraph, commit: bool = False):
+        cursor = self.db.cursor()
+
+        cursor.execute(
+            """
+INSERT INTO ReadParagraphs (UserGroup_id, doc_id, par_id, timestamp, par_hash)
+SELECT UserGroup_id, ?, ?, timestamp, par_hash
+FROM ReadParagraphs
+WHERE doc_id = ? AND par_id = ?
+            """, [dest_par.doc.doc_id, dest_par.get_id(), src_par.doc.doc_id, src_par.get_id()]
+        )
+
+        if commit:
+            self.db.commit()
