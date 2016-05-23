@@ -1,5 +1,3 @@
-{% set areaeline = '<div class="arealine areaexpand" title="Click to expand / collapse"></div>' %}
-{% set areacline = '<div class="arealine areacollapse" title="Click to collapse / expand"></div>' %}
 {% set editline = '' %}
 {% if rights.editable or rights.can_comment %}
     {% set editline = '<div class="editline" title="Click to edit this paragraph"></div>' %}
@@ -54,8 +52,20 @@
 {% set areas = [] %}
 {% set open_areas = {} %}
 
-{% macro start_area(doc_id, areas) %}
-    <div class="area area_{{areas|join(' area_')}}" id="area_{{areas|join('_')}}" data-name="_{{areas|join('_')}}_" data-doc-id="{{doc_id}}">
+{% macro start_area(doc_id, areas, attrs) %}
+    {% set collapse = "" %}
+    {% if attrs.collapse %}
+        {% set area = attrs.area %}
+        {% if attrs.collapse == "true" %}
+            {% set collapse = "collapsed " %}
+            <div class="areaexpand" title="Click to expand / collapse" data-area="{{ areas|join('_') }}"></div>
+        {% else %}
+            <div class="areacollapse" title="Click to collapse / expand" data-area="{{ areas|join('_') }}"></div>
+        {% endif %}
+    {% endif %}
+
+    {% set area_name = areas|join('_') %}
+    <div class="area {{ collapse }}area_{{areas|join(' area_')}}" id="area_{{area_name}}" data-name="_{{area_name}}_" data-doc-id="{{doc_id}}">
         <div class="areaContent">
             {{ caller() }}
 {% endmacro %}
@@ -87,7 +97,7 @@
         {% set areas = areas + [t.attrs.area] %}
         {% do open_areas.__setitem__(t.attrs.area, open_areas|length + 1) %}
 
-        {% call start_area(t.doc_id, open_areas) %}
+        {% call start_area(t.doc_id, open_areas, t.attrs) %}
         {% endcall %}
     {% endif %}
     {% if t.ref_attrs and t.ref_attrs.area %}
@@ -105,7 +115,7 @@
         {% set areas = areas + [t.ref_attrs.area] %}
         {% do open_areas.__setitem__(t.attrs.area, areas|length) %}
 
-        {% call start_area(t.doc_id, open_areas) %}
+        {% call start_area(t.doc_id, open_areas, t.ref_attrs) %}
         {% endcall %}
     {% endif %}
 
@@ -121,9 +131,6 @@
      {% endif %}
      {% if area %}
          data-area="{{ area|safe }}"
-         {% if area_collapse %}
-             style="display: none;"
-         {% endif %}
      {% endif %}
      {% if t.ref_id %}
          ref-id="{{ t.ref_id }}"
@@ -161,15 +168,6 @@
 
     {% if area %}
         <div class="areapartline"></div>
-    {% elif t.attrs.area and t.attrs.collapse %}
-        {% set area = t.attrs.area %}
-        {% if t.attrs.collapse == "true" %}
-            {% set area_collapse = true %}
-            {{ areaeline|safe }}
-        {% else %}
-            {% set area_collapse = false %}
-            {{ areacline|safe }}
-        {% endif %}
     {% endif %}
 
     {% if not t.attrs.question %}
@@ -218,7 +216,7 @@
             {% do open_areas.pop(t.attrs.area_end, None) %}
 
             {% if open_areas|length > 0 %}
-                {% call start_area(t.doc_id, open_areas) %}
+                {% call start_area(t.doc_id, open_areas, t.attrs) %}
                 {% endcall %}
             {% endif %}
         {% endif %}
@@ -229,7 +227,7 @@
             {% do open_areas.pop(t.ref_attrs.area_end, None) %}
 
             {% if areas|length > 0 %}
-                {% call start_area(t.doc_id, open_areas) %}
+                {% call start_area(t.doc_id, open_areas, t.ref_attrs) %}
                 {% endcall %}
             {% endif %}
         {% endif %}

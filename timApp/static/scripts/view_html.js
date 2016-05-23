@@ -1129,6 +1129,10 @@ timApp.controller("ViewCtrl", [
             return false;
         };
 
+        sc.getArea = function(area) {
+            return $("#area_" + area);
+        };
+
         sc.setAreaAttr = function(area, attr, value) {
             var area_selector = "[data-area=" + area + "]";
             $(area_selector).css(attr, value);
@@ -1136,10 +1140,10 @@ timApp.controller("ViewCtrl", [
 
         sc.onClick(".areacollapse", function ($this, e) {
             $this.removeClass("areacollapse");
-            var area_name = $this.parent().attr('data-area-start');
+            var area_name = $this.attr('data-area');
             console.log("Collapse " + area_name);
-            sc.setAreaAttr(area_name, "display", "none");
-            $this.addClass("disabledexpand");
+            //sc.setAreaAttr(area_name, "display", "none");
+            sc.getArea(area_name).addClass("collapsed");
 
             // Set expandable after a timeout to avoid expanding right after collapse
             $window.setTimeout(function() { $this.removeClass("disabledexpand"); $this.addClass("areaexpand"); }, 200);
@@ -1147,9 +1151,10 @@ timApp.controller("ViewCtrl", [
 
         sc.onClick(".areaexpand", function ($this, e) {
             $this.removeClass("areaexpand");
-            var area_name = $this.parent().attr('data-area-start');
+            var area_name = $this.attr('data-area');
             console.log("Expand " + area_name);
-            sc.setAreaAttr(area_name, "display", "");
+            //sc.setAreaAttr(area_name, "display", "");
+            sc.getArea(area_name).removeClass("collapsed");
             $this.addClass("disabledcollapse");
 
             // Set collapsible after a timeout to avoid collapsing right after expand

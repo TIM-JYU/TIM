@@ -396,6 +396,22 @@ p.caption {
     position: relative;
 }
 
+.areacollapse, .areaexpand, .disabledcollapse, .disabledexpand {
+    cursor: pointer;
+    position: relative;
+}
+
+.areacollapse, .disabledcollapse {
+    left: $areacollapse-offset;
+    width: $areacollapse-width;
+}
+
+.areaexpand, .disabledexpand {
+    left: $areaexpand-offset;
+    width: $areaexpand-width;
+    margin-bottom: 1em;
+}
+
 .areacollapse::before {
     color: $areacollapse-color;
     content: "[-]";
@@ -423,7 +439,6 @@ p.caption {
 
 .arealine {
     position: absolute;
-    left: -2.5em;
     z-index: 2;
     width: 1.5em;
     height: 100%;
