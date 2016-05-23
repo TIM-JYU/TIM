@@ -173,8 +173,8 @@ def add_velp():
             print(group_id)
             timdb.velp_groups.add_velp_to_group(new_velp_id, group_id)
     else:
-        timdb.velp_groups.add_velp_to_group(new_velp_id, 1)
-    # Todo write logic that decides where the velp should go.
+        abort(400, "No velp groups")
+
     return jsonResponse(new_velp_id)
 
 @velps.route("/update_velp", methods=['POST'])

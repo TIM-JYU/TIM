@@ -162,7 +162,7 @@ def get_annotations(document_id: int) -> str:
     return response
 
 
-# TODO Remove everything down below?
+# TODO Outdated routes / methods
 
 # TODO decide whether we should instead return comments for just one annotation, instead of returning everything at
 # once, like here.

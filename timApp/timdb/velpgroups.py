@@ -14,19 +14,19 @@ from timdb.documents import *
 class VelpGroups(Documents):
 
     def create_default_velp_group(self, name: str, owner_group_id: int, default_group_path: str):
-        """Creates default velp group where all velps used in document are stored.
+        """Creates default velp group for document.
 
-        Make sure you have made a new document (needed for rights management) and use its id as velp_group_id
         :param name: Name of the new default velp group.
         :param owner_group_id: The id of the owner group.
         :param velp_group_id: ID
         :return:
         """
-        cursor = self.db.cursor()
+
+        # Create new document and add its ID to VelpGroupTable
         new_group = self.create(default_group_path, owner_group_id)
         new_group_id = new_group.doc_id
-
         valid_until = None
+        cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO
                       VelpGroup(id, name, valid_until, document_def)
@@ -39,16 +39,16 @@ class VelpGroups(Documents):
     def create_velp_group(self, name: str, owner_group_id: int, new_group_path: str, valid_until: Optional[str] = None):
         """Create a velp group
 
-        Make sure you have made a new document (needed for rights management) and use its id as velp_group_id
         :param name: Name of the created group.
         :param owner_group_id: The id of the owner group.
         :param valid_until: How long velp group is valid (None is forever).
         :return:
         """
-        cursor = self.db.cursor()
+
+        # Create new document and add its ID to VelpGroupTable
         new_group = self.create(new_group_path, owner_group_id)
         new_group_id = new_group.doc_id
-
+        cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO
                       VelpGroup(id, name, valid_until)
@@ -59,10 +59,10 @@ class VelpGroups(Documents):
         return new_group_id
 
     def make_document_a_velp_group(self, name: str, velp_group_id: int, valid_until: Optional[str] = None):
-        """Create a velp group
+        """Adds document to VelpGroup table
 
-        Make sure you have made a new document (needed for rights management) and use its id as velp_group_id
         :param name: Name of the created group.
+        :param velp_group_id: ID of new velp group (and existing document)
         :param valid_until: How long velp group is valid (None is forever).
         :return:
         """
@@ -77,9 +77,146 @@ class VelpGroups(Documents):
         self.db.commit()
         return velp_group_id
 
-    def update_velp_group(self, velp_group_id: int, name: str, valid_until: Optional[str]):
+    def add_velp_to_group(self, velp_id: int, velp_group_id: int):
+        """Adds a velp to a specific group
+
+        :param velp_id: Velp if
+        :param velp_group_id: Velp group id
+        :return:
         """
-        Updates name and/or valid until time of velp group
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      INSERT INTO
+                      VelpInGroup(velp_group_id, velp_id)
+                      VALUES (?, ?)
+                      """, [velp_group_id, velp_id]
+                       )
+        self.db.commit()
+
+    def get_velp_group_name(self, velp_group_id: int) -> str:
+        cursor = self.db.cursor()
+        cursor.execute('SELECT name FROM VelpGroup WHERE id = ?', [velp_group_id])
+        result = cursor.fetchone()
+        return result[0] if result is not None else None
+
+    def is_id_velp_group(self, doc_id: int) -> bool:
+        """ Checks whether given document id can also be found from VelpGroup table
+
+        :param doc_id: ID of document
+        :return: True if part of VelpGroup table, else False
+        """
+        cursor = self.db.cursor()
+        cursor.execute('SELECT name FROM VelpGroup WHERE id = ?', [doc_id])
+        result = cursor.fetchone()
+        return True if result is not None else False
+
+
+    def add_group_to_imported_table(self, user_group: int, doc_id: int, target_type: int, target_id: int,
+                                    velp_group_id: int):
+        """Adds velp groups to ImportedVelpGroups table for specific document / user group combo
+
+        :param user_group: ID of user group
+        :param doc_id: Id of document
+        :param target_type: Which kind of area group targets to (0 doc, 1 paragraph, 2 area)
+        :param target_id:  ID of target (0 for documents)
+        :param velp_group_id: ID of velp group
+        :return:
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      INSERT OR IGNORE INTO
+                      ImportedVelpGroups(user_group, doc_id, target_type, target_id, velp_group_id)
+                      VALUES (?, ?, ?, ?, ?)
+                      """, [user_group, doc_id, target_type, target_id, velp_group_id]
+                      )
+        self.db.commit()
+
+        return
+
+
+    def get_groups_from_imported_table(self, user_groups: [int], doc_id: int):
+        """Gets velp groups from ImportedVelpGroups table for specific document / user group IDs combo
+
+        :param user_groups: List of user group IDs
+        :param doc_id: ID of document
+        :return:
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT
+                      user_group, doc_id, target_type, target_id, velp_group_id as id
+                      FROM ImportedVelpGroups
+                      WHERE doc_id = ? AND user_group IN ({})
+                      """.format(self.get_sql_template(user_groups)), [doc_id] + user_groups
+                      )
+        results = self.resultAsDictionary(cursor)
+        return results
+
+    def add_groups_to_selection_table(self, velp_groups: dict, doc_id: int, user_id: int):
+        """Adds velp groups to VelpGroupSelection table
+
+        :param velp_groups: Velp groups as dictionaries
+        :param doc_id: ID of document
+        :param user_id: ID of user
+        :return:
+        """
+        cursor = self.db.cursor()
+        for velp_group in velp_groups:
+            target_type = velp_group['target_type']
+            target_id = velp_group['target_id']
+            selected = 1
+            velp_group_id = velp_group['id']
+            cursor.execute("""
+                          INSERT OR IGNORE INTO
+                          VelpGroupSelection(user_id, doc_id, target_type, target_id, selected, velp_group_id)
+                          VALUES (?, ?, ?, ?, ?, ?)
+                          """, [user_id, doc_id, target_type, target_id, selected, velp_group_id]
+                           )
+        self.db.commit()
+
+    def get_groups_from_selection_table(self, doc_id: int, user_id: int):
+        """Gets velp groups from VelpGroupSelection table of specific document / user combo
+
+        :param doc_id: ID of document
+        :param user_id: ID of user
+        :return:
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT
+                      target_type, target_id, velp_group_id as id,
+                      VelpGroup.name, DocEntry.name AS location
+                      FROM VelpGroupSelection
+                      JOIN VelpGroup ON VelpGroup.id = VelpGroupSelection.velp_group_id
+                      JOIN DocEntry ON DocEntry.id = VelpGroupSelection.velp_group_id
+                      WHERE doc_id = ? AND user_id = ?
+                      """, [doc_id, user_id]
+                      )
+        results = self.resultAsDictionary(cursor)
+        return results
+
+
+    # Unused methods
+
+    def remove_velp_from_group(self, velp_id: int, velp_group_id: int):
+        """
+        Removes a velp from a specific group
+        :param velp_id: Velp id
+        :param velp_group_id: Velp group id
+        :return:
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      DELETE
+                      FROM VelpInGroup
+                      WHERE velp_id = ? AND velp_group_id = ?
+                      """, [velp_id, velp_group_id]
+                       )
+        self.db.commit()
+
+    def update_velp_group(self, velp_group_id: int, name: str, valid_until: Optional[str]):
+        """Updates name and/or valid until time of velp group
+
         :param velp_group_id: Velp group id
         :param name: Name of velp group
         :param valid_until: How long velp group is valid
@@ -91,20 +228,6 @@ class VelpGroups(Documents):
                       SET name = ? AND  valid_until = ?
                       WHERE id = ?
                       """, [name, valid_until, velp_group_id]
-                       )
-        self.db.commit()
-
-    def copy_velp_group(self, copied_group_id: int, new_group_id):
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      INSERT INTO
-                      VelpInGroup(velp_group_id, velp_id, points)
-                      SELECT
-                      ?, velp_id, points
-                      FROM
-                      VelpInGroup
-                      WHERE velp_group_id = ?
-                      """, [new_group_id, copied_group_id]
                        )
         self.db.commit()
 
@@ -127,37 +250,26 @@ class VelpGroups(Documents):
                       """, [velp_group_id, velp_group_id]
                        )
 
-    def add_velp_to_group(self, velp_id: int, velp_group_id: int):
-        """Adds a velp to a specific group
 
-        :param velp_id: Velp if
-        :param velp_group_id: Velp group id
-        :return:
-        """
+
+
+    # TODO Outdated methods?
+
+
+    def copy_velp_group(self, copied_group_id: int, new_group_id):
         cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO
-                      VelpInGroup(velp_group_id, velp_id)
-                      VALUES (?, ?)
-                      """, [velp_group_id, velp_id]
+                      VelpInGroup(velp_group_id, velp_id, points)
+                      SELECT
+                      ?, velp_id, points
+                      FROM
+                      VelpInGroup
+                      WHERE velp_group_id = ?
+                      """, [new_group_id, copied_group_id]
                        )
         self.db.commit()
 
-    def remove_velp_from_group(self, velp_id: int, velp_group_id: int):
-        """
-        Removes a velp from a specific group
-        :param velp_id: Velp id
-        :param velp_group_id: Velp group id
-        :return:
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      DELETE
-                      FROM VelpInGroup
-                      WHERE velp_id = ? AND velp_group_id = ?
-                      """, [velp_id, velp_group_id]
-                       )
-        self.db.commit()
 
     def get_velps_from_group(self, velp_group_id: int):
         """
@@ -212,86 +324,6 @@ class VelpGroups(Documents):
                        """, [velp_group_id, document_id]
                        )
         self.db.commit()
-
-    def get_velp_group_name(self, velp_group_id: int) -> str:
-        cursor = self.db.cursor()
-        cursor.execute('SELECT name FROM VelpGroup WHERE id = ?', [velp_group_id])
-        result = cursor.fetchone()
-        return result[0] if result is not None else None
-
-
-    def is_id_velp_group(self, doc_id: int) -> bool:
-        """ Checks whether given document id can also be found from VelpGroup table
-
-        :param doc_id: ID of document
-        :return: True if part of VelpGroup table, else False
-        """
-        cursor = self.db.cursor()
-        cursor.execute('SELECT name FROM VelpGroup WHERE id = ?', [doc_id])
-        result = cursor.fetchone()
-        return True if result is not None else False
-
-    def add_group_to_imported_table(self, user_group: int, doc_id: int, target_type: int, target_id: int,
-                                    velp_group_id: int):
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      INSERT OR IGNORE INTO
-                      ImportedVelpGroups(user_group, doc_id, target_type, target_id, velp_group_id)
-                      VALUES (?, ?, ?, ?, ?)
-                      """, [user_group, doc_id, target_type, target_id, velp_group_id]
-                      )
-        self.db.commit()
-
-        return
-
-
-    def get_groups_from_imported_table(self, user_groups: [int], doc_id: int):
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      SELECT
-                      user_group, doc_id, target_type, target_id, velp_group_id as id
-                      FROM ImportedVelpGroups
-                      WHERE doc_id = ? AND user_group IN ({})
-                      """.format(self.get_sql_template(user_groups)), [doc_id] + user_groups
-                      )
-        results = self.resultAsDictionary(cursor)
-        return results
-
-    def add_groups_to_selection_table(self, velp_groups: dict, doc_id: int, user_id: int):
-        cursor = self.db.cursor()
-        for velp_group in velp_groups:
-            target_type = velp_group['target_type']
-            target_id = velp_group['target_id']
-            selected = 1
-            velp_group_id = velp_group['id']
-            cursor.execute("""
-                          INSERT OR IGNORE INTO
-                          VelpGroupSelection(user_id, doc_id, target_type, target_id, selected, velp_group_id)
-                          VALUES (?, ?, ?, ?, ?, ?)
-                          """, [user_id, doc_id, target_type, target_id, selected, velp_group_id]
-                           )
-        self.db.commit()
-
-    def get_groups_from_selection_table(self, doc_id: int, user_id: int):
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      SELECT
-                      target_type, target_id, velp_group_id as id,
-                      VelpGroup.name, DocEntry.name AS location
-                      FROM VelpGroupSelection
-                      JOIN VelpGroup ON VelpGroup.id = VelpGroupSelection.velp_group_id
-                      JOIN DocEntry ON DocEntry.id = VelpGroupSelection.velp_group_id
-                      WHERE doc_id = ? AND user_id = ?
-                      """, [doc_id, user_id]
-                      )
-        results = self.resultAsDictionary(cursor)
-        return results
-
-
-
-
-
-    # TODO Outdated methods?
 
     def create_default_velp_group_orig(self, name: str, owner_group_id: int, velp_group_id: Optional[int] = None):
         """Creates default velp group where all velps used in document are stored.

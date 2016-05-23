@@ -118,7 +118,7 @@ CREATE TABLE LabelInVelp (
 
   CONSTRAINT Label_id
   FOREIGN KEY (label_id)
-  REFERENCES Label (id)
+  REFERENCES VelpLabel (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE,
 

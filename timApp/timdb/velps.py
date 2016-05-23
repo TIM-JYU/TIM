@@ -268,7 +268,15 @@ class Velps(TimDbBase):
     # Methods for getting information for document
 
     def get_velp_content_for_document(self, doc_id: int, user_id: int, language_id: str = 'FI'):
+        """Gets velp content including labels and velp groups for document.
 
+        Uses VelpGroupSelection table data to determine which velp groups are usable
+        for specific user in specific document.
+        :param doc_id: ID of document in question
+        :param user_id: ID of current user
+        :param language_id: ID of language used
+        :return: List of velps as dictionaries
+        """
         velp_data = self.get_velps_for_document(doc_id, user_id, language_id)
         label_data = self.get_velp_label_ids_for_document(doc_id, user_id)
         group_data = self.get_velp_group_ids_for_document(doc_id, user_id)
@@ -318,6 +326,16 @@ class Velps(TimDbBase):
         return velp_data
 
     def get_velps_for_document(self, doc_id: int, user_id: int, language_id: str = 'FI'):
+        """Gets velps for document.
+
+        Uses VelpGroupSelection table data to determine which velp groups and via those which velps are usable
+        for specific user in specific document.
+        :param doc_id: ID of document in question
+        :param user_id: ID of current user
+        :param language_id: ID of language used
+        :return:
+        """
+
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT Velp.id AS id, Velp.default_points AS points, Velp.icon_id AS icon_id,
@@ -351,6 +369,14 @@ class Velps(TimDbBase):
         return results
 
     def get_velp_group_ids_for_document(self, doc_id: int, user_id: int):
+        """Gets velp group ids for document.
+
+        Uses VelpGroupSelection table data to determine which velp groups are usable
+        for specific user in specific document.
+        :param doc_id: ID of document in question
+        :param user_id: ID of current user
+        :return:
+        """
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT
@@ -377,6 +403,16 @@ class Velps(TimDbBase):
         return results
 
     def get_velp_label_ids_for_document(self, doc_id: int, user_id: int):
+        """Gets velp labels ids for document.
+
+        Uses VelpGroupSelection table data to determine which velp groups and via those which velp labels are usable
+        for specific user in specific document.
+        :param doc_id: ID of document in question
+        :param user_id: ID of current user
+        :param language_id: ID of language used
+        :return:
+        """
+
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT
@@ -403,6 +439,15 @@ class Velps(TimDbBase):
         return results
 
     def get_velp_label_content_for_document(self, doc_id: int, user_id: int, language_id: str = 'FI'):
+        """Gets velp label content for document.
+
+        Uses VelpGroupSelection table data to determine which velp groups and via those which velp labels are usable
+        for specific user in specific document.
+        :param doc_id: ID of document in question
+        :param user_id: ID of current user
+        :param language_id: ID of language used
+        :return:
+        """
         cursor = self.db.cursor()
         cursor.execute("""
                        SELECT VelpLabel.id, VelpLabel.content
@@ -436,6 +481,7 @@ class Velps(TimDbBase):
 
 
     # TODO: Outdated methods?
+
     def get_velp_content(self, velp_groups: Dict):
 
         velp_group_ids = []
