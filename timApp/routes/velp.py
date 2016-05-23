@@ -207,7 +207,7 @@ def update_velp():
         abort(400, "No edit access to velp via any velp group.")
 
     old_content = timdb.velps.get_latest_velp_version(velp_id, language_id)
-    old_labels = timdb.velps.get_velp_label_ids(velp_id)
+    old_labels = timdb.velps.get_velp_label_ids_for_velp(velp_id)
     if old_content != new_content:
         # Todo this does not really work correctly, now any update to any language creates a new version, and we can not
         # produce different contents with the same version but different language.
@@ -219,7 +219,7 @@ def update_velp():
     timdb.velps.update_velp(velp_id, default_points, icon_id)
     return "" #TODO: return something more informative
 
-@velps.route("/add_label", methods=["POST"])
+@velps.route("/add_velp_label", methods=["POST"])
 def add_label():
     # language_id = request.args.get('language_id')
     json_data = request.get_json()
@@ -235,27 +235,37 @@ def add_label():
 
     return jsonResponse(label_id)
 
+@velps.route("/update_velp_label", methods=["POST"])
+def update_velp_label():
+    json_data = request.get_json()
+    try:
+        content = json_data['content']
+        velp_label_id = json_data['id']
+    except KeyError as e:
+        abort(400, "Missing data: " + e.args[0])
+    language_id = json_data.get('language_id')
+    language_id = "FI" if language_id is None else language_id
+
+    timdb = getTimDb()
+    # TODO: Add some check so a random person can't use the route?
+    timdb.velps.update_velp_label(velp_label_id, language_id, content)
+
+
 @velps.route("/create_velp_group", methods=['POST'])
 def create_velp_group():
-    # TODO: Remove comments, kill test data from below
-    # TODO: method back to POST
-    '''
-    json_data = request.get_json()
-    # .get returns null instead of throwing if data is missing.
-    velp_group_name = json_data.get('name')
-    owner_group_id = json_data.get('owner')
-    root_path = json_data.get('root_path')
-    valid_until = json_data.get('valid_until')
-    doc_id = json_data.get('doc_id')
-    personal_group = json_data.get('personal_group')
-    '''
 
-    velp_group_name = "Kana2"
+    json_data = request.get_json()
+    try:
+        velp_group_name = json_data.get('name')
+        root_path = json_data.get('root_path')
+        doc_id = json_data.get('doc_id')
+        personal_group = json_data.get('personal_group')
+    except KeyError as e:
+        abort(400, "Missing data: " + e.args[0])
+
+    valid_until = json_data.get('valid_until')
     owner_group_id = getCurrentUserId()
-    valid_until = None
-    root_path = "users/josalatt/testikansio"
-    doc_id = 89
-    personal_group = False
+
     timdb = getTimDb()
 
     doc_name_info = timdb.documents.get_names(doc_id)

@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS Velp;
 
 DROP TABLE IF EXISTS Icon;
 
-DROP TABLE IF EXISTS Label;
+DROP TABLE IF EXISTS VelpLabel;
 
 DROP TABLE IF EXISTS LabelInVelp;
 
@@ -99,12 +99,12 @@ CREATE TABLE Icon (
 );
 
 
-CREATE TABLE Label (
+CREATE TABLE VelpLabel (
   id          INTEGER    NOT NULL,
   language_id VARCHAR(2) NOT NULL,
   content     TEXT,
 
-  CONSTRAINT Label_PK
+  CONSTRAINT VelpLabel_PK
   PRIMARY KEY (id, language_id)
 );
 
@@ -497,10 +497,10 @@ INSERT INTO VelpGroupInArea (velp_group_id, document_id, area_id) VALUES (1, 1, 
 
 INSERT INTO VelpGroupInFolder (velp_group_id, folder_id) VALUES (1, 1);
 
-INSERT INTO Label (id, language_id, content) VALUES (1, "FI", "Historia");
-INSERT INTO Label (id, language_id, content) VALUES (2, "FI", "Waterloo");
-INSERT INTO Label (id, language_id, content) VALUES (3, "FI", "Kielenhuolto");
-INSERT INTO Label (id, language_id, content) VALUES (4, "FI", "Kehut");
+INSERT INTO VelpLabel (id, language_id, content) VALUES (1, "FI", "Historia");
+INSERT INTO VelpLabel (id, language_id, content) VALUES (2, "FI", "Waterloo");
+INSERT INTO VelpLabel (id, language_id, content) VALUES (3, "FI", "Kielenhuolto");
+INSERT INTO VelpLabel (id, language_id, content) VALUES (4, "FI", "Kehut");
 
 INSERT INTO LabelInVelp (label_id, velp_id) VALUES (1, 1);
 INSERT INTO LabelInVelp (label_id, velp_id) VALUES (1, 2);
