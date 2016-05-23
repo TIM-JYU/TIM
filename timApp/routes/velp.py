@@ -219,7 +219,7 @@ def update_velp():
     timdb.velps.update_velp(velp_id, default_points, icon_id)
     return "" #TODO: return something more informative
 
-@velps.route("/add_label", methods=["POST"])
+@velps.route("/add_velp_label", methods=["POST"])
 def add_label():
     # language_id = request.args.get('language_id')
     json_data = request.get_json()
@@ -234,6 +234,21 @@ def add_label():
     label_id = timdb.velps.create_velp_label(language_id, content)
 
     return jsonResponse(label_id)
+
+@velps.route("/update_velp_label", methods=["POST"])
+def update_velp():
+    json_data = request.get_json()
+    try:
+        content = json_data['content']
+        velp_label_id = json_data['id']
+    except KeyError as e:
+        abort(400, "Missing data: " + e.args[0])
+    language_id = json_data.get('language_id')
+    language_id = "FI" if language_id is None else language_id
+
+    timdb = getTimDb()
+    timdb.velps.update_velp_label(velp_label_id, language_id, content)
+
 
 @velps.route("/create_velp_group", methods=['POST'])
 def create_velp_group():
