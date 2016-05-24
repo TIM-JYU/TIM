@@ -3,6 +3,7 @@ from typing import Optional, List
 from contracts import contract, new_contract
 from typing import Optional
 
+import os.path
 import hashlib
 import sqlite3
 
@@ -240,14 +241,15 @@ class VelpGroups(Documents):
         cursor.execute("""
                       SELECT
                       target_type, target_id, velp_group_id as id, selected,
-                      VelpGroup.name, DocEntry.name AS location
+                      DocEntry.name AS location
                       FROM VelpGroupSelection
-                      JOIN VelpGroup ON VelpGroup.id = VelpGroupSelection.velp_group_id
                       JOIN DocEntry ON DocEntry.id = VelpGroupSelection.velp_group_id
                       WHERE doc_id = ? AND user_id = ?
                       """, [doc_id, user_id]
                       )
         results = self.resultAsDictionary(cursor)
+        for result in results:
+            result['name'] = os.path.basename(result['location'])
         return results
 
     def change_selection(self, doc_id: int, velp_group_id: int, user_id: int, selected: bool):
