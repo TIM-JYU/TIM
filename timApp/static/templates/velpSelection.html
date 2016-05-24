@@ -212,7 +212,7 @@
                         </tr>
                         <tr ng-repeat="group in velpGroups">
                             <td>
-                                <input type="checkbox" ng-model="group.checked">
+                                <input type="checkbox" ng-model="group.selected" ng-click="changeVelpGroupSelection(group)">
                             </td>
                             <td>
                                 <a ng-href="/velp/{{group.location}}">{{ group.name }}</a>

@@ -81,9 +81,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         // Get velpgroup data
         $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id)).success(function (data) {
             $scope.velpGroups = data;
-            $scope.velpGroups.forEach(function (g) {
-                g.checked = true;
-            });
             console.log($scope.velpGroups);
         });
 
@@ -350,6 +347,17 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.resetNewLabel = function () {
         $scope.newLabel = {content: "", selected: true, valid: true};
     };
+
+    /** Velp group methods **/
+
+    $scope.changeVelpGroupSelection = function(group){
+        console.log(group);
+
+        $scope.makePostRequest("/{0}/change_selection".replace('{0}', doc_id), group, function (json) {
+            console.log(json);
+        });
+    };
+
 }]);
 
 timApp.filter('filterByVelpGroups', function() {
@@ -362,7 +370,7 @@ timApp.filter('filterByVelpGroups', function() {
            return velps;
 
        for (var j=0; j<groups.length; j++)
-            if (groups[j].checked) checkedGroups.push(groups[j].id);
+            if (groups[j].selected) checkedGroups.push(groups[j].id);
 
        for (var i=0; i<velps.length; i++){
            for (var j=0; j<checkedGroups.length; j++){

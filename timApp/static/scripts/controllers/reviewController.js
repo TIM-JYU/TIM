@@ -157,7 +157,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     $scope.getAnnotationsByAnswerId = function(id) {
         var annotations = [];
-        angular.forEach($scope.annotations, function(a){
+        $scope.annotations.forEach(function(a){
             console.log(a);
             if (a.answer_id !== null && a.answer_id === id)
                 annotations.push(a);
