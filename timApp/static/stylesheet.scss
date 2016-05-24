@@ -401,34 +401,38 @@ p.caption {
     position: relative;
 }
 
+.areatitle {
+    padding-left: 20px;
+    display: inline;
+
+    h1, h2, h3, h4, h5, h6 {
+        display: inline;
+        vertical-align: middle;
+    }
+}
+
 .areacollapse, .disabledcollapse {
     left: $areacollapse-offset;
-    width: $areacollapse-width;
 }
 
 .areaexpand, .disabledexpand {
     left: $areaexpand-offset;
-    width: $areaexpand-width;
     margin-bottom: 1em;
 }
 
-.areacollapse::before {
+.areacollapse::before, .areaexpand::before {
     color: $areacollapse-color;
+}
+
+.disabledcollapse::before, .disabledexpand::before {
+    color: #ccc;
+}
+
+.areacollapse::before, .disabledcollapse::before {
     content: "[-]";
 }
 
-.areaexpand::before {
-    color: $areacollapse-color;
-    content: "[+]";
-}
-
-.disabledcollapse::before {
-    color: #ccc;
-    content: "[-]";
-}
-
-.disabledexpand::before {
-    color: #ccc;
+.areaexpand::before, .disabledexpand::before {
     content: "[+]";
 }
 

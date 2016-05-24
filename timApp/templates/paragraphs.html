@@ -52,16 +52,20 @@
 {% set areas = [] %}
 {% set open_areas = {} %}
 
-{% macro start_area(doc_id, areas, attrs) %}
+{% macro start_area(doc_id, title, areas, attrs) %}
     {% set collapse = "" %}
     {% if attrs.collapse %}
         {% set area = attrs.area %}
         {% if attrs.collapse == "true" %}
             {% set collapse = "collapsed " %}
-            <div class="areaexpand" title="Click to expand / collapse" data-area="{{ areas|join('_') }}"></div>
+            {% set cclass = "areaexpand" %}
         {% else %}
-            <div class="areacollapse" title="Click to collapse / expand" data-area="{{ areas|join('_') }}"></div>
+            {% set cclass = "areacollapse" %}
         {% endif %}
+
+        <div class="{{ cclass }}" title="Click to expand / collapse" data-area="{{ areas|join('_') }}">
+            <span class="areatitle">{{ title }}</span>
+        </div>
     {% endif %}
 
     {% set area_name = areas|join('_') %}
@@ -97,7 +101,7 @@
         {% set areas = areas + [t.attrs.area] %}
         {% do open_areas.__setitem__(t.attrs.area, open_areas|length + 1) %}
 
-        {% call start_area(t.doc_id, open_areas, t.attrs) %}
+        {% call start_area(t.doc_id, t.html|safe, open_areas, t.attrs) %}
         {% endcall %}
     {% endif %}
     {% if t.ref_attrs and t.ref_attrs.area %}
@@ -115,7 +119,7 @@
         {% set areas = areas + [t.ref_attrs.area] %}
         {% do open_areas.__setitem__(t.attrs.area, areas|length) %}
 
-        {% call start_area(t.doc_id, open_areas, t.ref_attrs) %}
+        {% call start_area(t.doc_id, t.html|safe, open_areas, t.ref_attrs) %}
         {% endcall %}
     {% endif %}
 
@@ -216,7 +220,7 @@
             {% do open_areas.pop(t.attrs.area_end, None) %}
 
             {% if open_areas|length > 0 %}
-                {% call start_area(t.doc_id, open_areas, t.attrs) %}
+                {% call start_area(t.doc_id, t.html|safe, open_areas, t.attrs) %}
                 {% endcall %}
             {% endif %}
         {% endif %}
@@ -227,7 +231,7 @@
             {% do open_areas.pop(t.ref_attrs.area_end, None) %}
 
             {% if areas|length > 0 %}
-                {% call start_area(t.doc_id, open_areas, t.ref_attrs) %}
+                {% call start_area(t.doc_id, t.html|safe, open_areas, t.ref_attrs) %}
                 {% endcall %}
             {% endif %}
         {% endif %}
