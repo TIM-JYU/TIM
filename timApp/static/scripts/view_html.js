@@ -687,7 +687,7 @@ timApp.controller("ViewCtrl", [
                     "docId" : sc.docId,
                     "par_next" : par_next
                 }).success(function(data, status, headers, config) {
-                    $window.location.reload();
+                    sc.reload();
                 }).error(function(data, status, headers, config) {
                     $window.alert(data.error);
                 });
@@ -1160,6 +1160,7 @@ timApp.controller("ViewCtrl", [
             var $area_part = $this.parent().filter('.area');
             var coords = {left: e.pageX - $area_part.offset().left, top: e.pageY - $area_part.offset().top};
 
+            sc.selectedAreaName = areaName;
             $('.area.area_' + areaName).children(className).addClass('menuopen');
 
             // We need the timeout so we don't trigger the ng-clicks on the buttons
@@ -1826,7 +1827,7 @@ timApp.controller("ViewCtrl", [
                 //$area.append('<div class="areaeditline1">');
 
                 //if (options.collapsible)
-                    $window.location.reload();
+                    sc.reload();
 
             }).error(function(data, status, headers, config) {
                 $window.alert(data.error);
@@ -1901,20 +1902,15 @@ timApp.controller("ViewCtrl", [
             }
         };
 
-        sc.removeAreaMarking = function (e, $area) {
-            var area_name = sc.getAreaId($area);
+        sc.removeAreaMarking = function (e, $pars) {
+            var area_name = sc.selectedAreaName;
             if (!area_name) {
                 $window.alert("Could not get area name");
             }
 
             http.post('/unwrap_area/' + sc.docId + '/' + area_name, {
             }).success(function (data, status, headers, config) {
-                $area.children('.areaeditline1, .areaeditline2, .areaeditline3').remove();
-                $area.children().find('.areapartline').remove();
-                var $areaContent = $area.children('.areaContent');
-                $areaContent.children('[data-area-start]').remove();
-                $areaContent.unwrap();
-                $areaContent.children().unwrap();
+                sc.reload();
             }).error(function (data, status, headers, config) {
                 $window.alert(data.error);
             });
