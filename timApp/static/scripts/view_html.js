@@ -252,8 +252,6 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getFirstPar = function ($par_or_area) {
-            console.log('sc.getFirstPar():');
-            console.log($par_or_area);
             if ($par_or_area.length > 1) {
                 return sc.getFirstPar($par_or_area.first());
             }
@@ -358,7 +356,7 @@ timApp.controller("ViewCtrl", [
                 if (par_id != "null")
                     attrs["initial-text-url"] = '/getBlock/' + sc.docId + "/" + par_id;
             }
-            sc.toggleEditor($pars, options, attrs, caption);
+            sc.toggleEditor($par, options, attrs, caption);
         };
 
         sc.getRefAttrs = function ($par) {
@@ -1152,8 +1150,8 @@ timApp.controller("ViewCtrl", [
             $window.setTimeout(function() { $this.removeClass("disabledcollapse"); $this.addClass("areacollapse"); }, 200);
         });
 
-        sc.showNoteWindow = function (e, $par) {
-            sc.toggleNoteEditor($par, {isNew: true});
+        sc.showNoteWindow = function (e, $pars) {
+            sc.toggleNoteEditor(sc.getFirstPar($pars), {isNew: true});
         };
 
         sc.handleNoteCancel = function () {
