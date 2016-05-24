@@ -108,7 +108,7 @@
                                     </div>
                                 </div>
 
-                            <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByLabels: labels:advancedOn)">
+                            <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn )">
 
                                 <div class="velp"  ng-click="useVelp(velp)"
                                      ng-style="{top: 2+$index*2 + 'em'}">
@@ -212,10 +212,10 @@
                         </tr>
                         <tr ng-repeat="group in velpGroups">
                             <td>
-                                <input type="checkbox" ng-checked="true">
+                                <input type="checkbox" ng-model="group.checked">
                             </td>
                             <td>
-                                {{ group.name }}
+                                <a ng-href="/velp/{{group.location}}">{{ group.name }}</a>
                             </td>
                         </tr>
                     </table>
