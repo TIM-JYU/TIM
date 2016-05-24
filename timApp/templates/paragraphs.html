@@ -92,6 +92,7 @@
 
 
 {% for t in text %}
+    {% set drop_content = false %}
     {% if t.attrs.area %}
         {% if open_areas|length > 0 %}
             {% call end_area(open_areas) %}
@@ -103,6 +104,8 @@
 
         {% call start_area(t.doc_id, t.html|safe, open_areas, t.attrs) %}
         {% endcall %}
+
+        {% set drop_content = true %}
     {% endif %}
     {% if t.ref_attrs and t.ref_attrs.area %}
         {% if refcount %}
@@ -121,6 +124,8 @@
 
         {% call start_area(t.doc_id, t.html|safe, open_areas, t.ref_attrs) %}
         {% endcall %}
+
+        {% set drop_content = true %}
     {% endif %}
 
     <div class="{{[t.cls|trim, t.is_plugin|trim]|join(' ')|trim}}"
@@ -129,9 +134,6 @@
          attrs="{{ t.attrs_str }}"
      {% if t.ref_attrs and t.ref_attrs.classes and "deleted" in t.ref_attrs.classes %}
          title="This paragraph has been deleted from the source document."
-     {% endif %}
-     {% if t.attrs.area %}
-         data-area-start="{{ t.attrs.area|safe }}"
      {% endif %}
      {% if area %}
          data-area="{{ area|safe }}"
@@ -153,7 +155,9 @@
         <a href="#{{ task_id }}" title="Permlink" class="headerlink">#</a>
     {% endif %}
     <div class="parContent"{% if task_id %} id="{{ task_id }}"{% endif %}>
+        {% if not drop_content %}
         {{ t.html|safe }}
+        {% endif %}
     </div>
     {% if t.attrs.rl == 'force' or not (not t.attrs.rd or t.attrs.rl == 'no') %}
         <a
@@ -166,6 +170,7 @@
            data-docid="{{ t.ref_doc_id }}" data-parid="{{ t.ref_id }}">
             <sup>[*]</sup></a>
     {% endif %}
+
     {% if t.attrs.area_end == area %}
         {% set area = none %}
     {% endif %}

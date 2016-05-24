@@ -1175,6 +1175,7 @@ timApp.controller("ViewCtrl", [
             $this.removeClass("areacollapse");
             var area_name = $this.attr('data-area');
             sc.getArea(area_name).addClass("collapsed");
+            $this.addClass("disabledexpand");
 
             // Set expandable after a timeout to avoid expanding right after collapse
             $window.setTimeout(function() { $this.removeClass("disabledexpand"); $this.addClass("areaexpand"); }, 200);
