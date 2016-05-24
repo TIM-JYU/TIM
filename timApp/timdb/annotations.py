@@ -30,7 +30,7 @@ class Annotations(TimDbBase):
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
 
-    def create_annotation(self, version_id: int, visible_to: AnnotationVisibility, points: Optional[float],
+    def create_annotation(self, velp_version_id: int, visible_to: AnnotationVisibility, points: Optional[float],
                           annotator_id: int, document_id: int, paragraph_id_start: Optional[str],
                           paragraph_id_end: Optional[str], offset_start: int, node_start: int, depth_start: int,
                           offset_end: int, node_end: int, depth_end: int, hash_start: Optional[str],
@@ -64,12 +64,12 @@ class Annotations(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO
-                      Annotation(version_id, visible_to, points, valid_until, icon_id, annotator_id,
+                      Annotation(velp_version_id, visible_to, points, valid_until, icon_id, annotator_id,
                       document_id, answer_id, paragraph_id_start, paragraph_id_end,
                       offset_start, node_start, depth_start, offset_end, node_end, depth_end, hash_start, hash_end,
                       element_path_start, element_path_end)
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                      """, [version_id, visible_to.value, points, valid_until, icon_id, annotator_id, document_id,
+                      """, [velp_version_id, visible_to.value, points, valid_until, icon_id, annotator_id, document_id,
                             answer_id, paragraph_id_start, paragraph_id_end, offset_start, node_start, depth_start,
                             offset_end, node_end, depth_end, hash_start, hash_end, element_path_start, element_path_end]
                        )
@@ -89,15 +89,15 @@ class Annotations(TimDbBase):
         """
         cursor = self.db.cursor()
         cursor.execute("""
-                       UPDATE Annotation
-                       SET
-                         version_id     = ?,
-                         visible_to     = ?,
-                         points         = ?,
-                         icon_id        = ?
-                       WHERE id = ?
+                      UPDATE Annotation
+                      SET
+                        velp_version_id = ?,
+                        visible_to      = ?,
+                        points          = ?,
+                        icon_id         = ?
+                      WHERE id = ?
                       """, [version_id, visible_to.value, points, icon_id, annotation_id]
-                       )
+                      )
         self.db.commit()
         return
 
@@ -274,8 +274,8 @@ class Annotations(TimDbBase):
                          Annotation.element_path_start,
                          Annotation.element_path_end
                        FROM Annotation
-                         INNER JOIN VelpVersion ON VelpVersion.id = Annotation.version_id
-                         INNER JOIN VelpContent ON VelpContent.version_id = Annotation.version_id
+                         INNER JOIN VelpVersion ON VelpVersion.id = Annotation.velp_version_id
+                         INNER JOIN VelpContent ON VelpContent.version_id = Annotation.velp_version_id
                          LEFT JOIN UserAnswer ON UserAnswer.answer_id = Annotation.answer_id
                        WHERE VelpContent.language_id = ? AND
                              (Annotation.valid_until ISNULL OR
@@ -355,7 +355,7 @@ class Annotations(TimDbBase):
                          Annotation.element_path_start,
                          Annotation.element_path_end
                        FROM Annotation
-                         INNER JOIN VelpVersion ON VelpVersion.id = Annotation.version_id
+                         INNER JOIN VelpVersion ON VelpVersion.id = Annotation.velp_version_id
                        WHERE (Annotation.valid_until ISNULL OR
                              Annotation.valid_until >= CURRENT_TIMESTAMP) AND
                              Annotation.answer_id = ?
