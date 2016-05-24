@@ -64,6 +64,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             if (v.labels === undefined)
                 v.labels = [];
         });
+        console.log($scope.velps);
 
 
         //$http.get('/static/test_data/markings.json').success(function (data) {  // ANNOTATION TEST DATA
@@ -82,6 +83,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     // Get velpgroup data
     $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id)).success(function (data) {
         $scope.velpGroups = data;
+        $scope.velpGroups.forEach(function (g) {
+            g.checked = true;
+        });
         console.log($scope.velpGroups);
     });
 
@@ -332,6 +336,29 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         $scope.newLabel = {content: "", selected: true, valid: true};
     };
 }]);
+
+timApp.filter('filterByVelpGroups', function() {
+   return function (velps, groups) {
+
+       var selectedVelps = [];
+       var checkedGroups = [];
+
+       if (typeof groups == "undefined" || typeof velps == "undefined")
+           return velps;
+
+       for (var j=0; j<groups.length; j++)
+            if (groups[j].checked) checkedGroups.push(groups[j].id);
+
+       for (var i=0; i<velps.length; i++){
+           for (var j=0; j<checkedGroups.length; j++){
+               if (velps[i].velp_groups.indexOf(checkedGroups[j]) >= 0)
+                    selectedVelps.push(velps[i]);
+           }
+       }
+
+       return selectedVelps;
+   }
+});
 
 /**
  * Filter for ordering velps
