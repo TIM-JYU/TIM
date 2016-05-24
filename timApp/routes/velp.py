@@ -109,6 +109,12 @@ def get_velp_groups(document_id: int):
         abort(400, "Document_id is not a number.")
     user_id = getCurrentUserId()
     velp_groups = timdb.velp_groups.get_groups_from_selection_table(doc_id, user_id)
+    # SQLite uses 1/0 instead of True/False, change them to True/False for JavaScript side
+    for group in velp_groups:
+        if group['selected'] is 1:
+            group['selected'] = True
+        else:
+            group['selected'] = False
 
     return jsonResponse(velp_groups)
 
