@@ -239,7 +239,7 @@ class VelpGroups(Documents):
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT
-                      target_type, target_id, velp_group_id as id,
+                      target_type, target_id, velp_group_id as id, selected,
                       VelpGroup.name, DocEntry.name AS location
                       FROM VelpGroupSelection
                       JOIN VelpGroup ON VelpGroup.id = VelpGroupSelection.velp_group_id
@@ -259,6 +259,10 @@ class VelpGroups(Documents):
         :param selected: Boolean whether group is selected or not
         :return:
         """
+        if selected is True:
+            selected = 1
+        else:
+            selected = 0
         cursor = self.db.cursor()
         cursor.execute("""
                       UPDATE VelpGroupSelection

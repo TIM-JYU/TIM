@@ -318,6 +318,8 @@ def change_selection(document_id: int):
     timdb = getTimDb()
     timdb.velp_groups.change_selection(doc_id, velp_group_id, user_id, selection)
 
+    return ""
+
 @velps.route("/create_velp_group", methods=['POST'])
 def create_velp_group():
 
