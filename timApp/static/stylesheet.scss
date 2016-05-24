@@ -368,7 +368,7 @@ p.caption {
         opacity: 0.2;
     }
 
-    &:hover, &.menuopen, &.show.menuopen {
+    &:hover, &.manualhover, &.menuopen, &.show.menuopen {
         opacity: 0.5;
     }
 }

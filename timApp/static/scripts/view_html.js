@@ -645,6 +645,23 @@ timApp.controller("ViewCtrl", [
             });
         };
 
+        sc.onMouseOverOut = function (className, func) {
+            // A combination function with a third parameter
+            // true when over, false when out
+
+            $document.on('mouseover', className, function (e) {
+                if (func($(this), sc.fixPageCoords(e), true)) {
+                    e.preventDefault();
+                }
+            });
+
+            $document.on('mouseout', className, function (e) {
+                if (func($(this), sc.fixPageCoords(e), false)) {
+                    e.preventDefault();
+                }
+            });
+        };
+
         sc.showEditWindow = function (e, $pars) {
             $(".par.new").remove();
             sc.toggleParEditor($pars, {showDelete: true, area: false});
@@ -1101,6 +1118,21 @@ timApp.controller("ViewCtrl", [
             return false;
         });
 
+        sc.onMouseOverOut(".areaeditline1", function ($this, e, select) {
+            var areaName = $this.attr('data-area');
+            sc.selectArea(areaName, ".areaeditline1", select);
+        });
+
+        sc.onMouseOverOut(".areaeditline2", function ($this, e, select) {
+            var areaName = $this.attr('data-area');
+            sc.selectArea(areaName, ".areaeditline2", select);
+        });
+
+        sc.onMouseOverOut(".areaeditline3", function ($this, e, select) {
+            var areaName = $this.attr('data-area');
+            sc.selectArea(areaName, ".areaeditline3", select);
+        });
+
         sc.onClick(".areaeditline1", function ($this, e) {
             return sc.onAreaEditClicked($this, e, ".areaeditline1");
         });
@@ -1112,6 +1144,14 @@ timApp.controller("ViewCtrl", [
         sc.onClick(".areaeditline3", function ($this, e) {
             return sc.onAreaEditClicked($this, e, ".areaeditline3");
         });
+
+        sc.selectArea = function(areaName, className, selected) {
+            var $selection = $('.area.area_' + areaName).children(className);
+            if (selected)
+                $selection.addClass('manualhover');
+            else
+                $selection.removeClass('manualhover');
+        };
 
         sc.onAreaEditClicked = function($this, e, className) {
             sc.closeOptionsWindow();
