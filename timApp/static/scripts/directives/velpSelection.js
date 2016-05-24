@@ -52,10 +52,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         console.log("Test");
         default_velp_group = data;
         console.log(default_velp_group);
-    });
 
-
-    // Get velp and annotation data
+        // Get velp and annotation data
     $http.get('/{0}/get_velps'.replace('{0}', doc_id)).success(function (data) {
         $scope.velps = data;
         $scope.velps.forEach(function (v) {
@@ -78,25 +76,33 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
          console.log(data[0].id);
          default_velp_group = data[0].id;
          });*/
+
+
+        // Get velpgroup data
+        $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id)).success(function (data) {
+            $scope.velpGroups = data;
+            $scope.velpGroups.forEach(function (g) {
+                g.checked = true;
+            });
+            console.log($scope.velpGroups);
+        });
+
+        // Get label data
+        $http.get('/{0}/get_velp_labels'.replace('{0}', doc_id)).success(function (data) {
+            $scope.labels = data;
+            $scope.labels.forEach(function (l) {
+                l.edit = false;
+                l.selected = false;
+            });
+        });
+
     });
 
-    // Get velpgroup data
-    $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id)).success(function (data) {
-        $scope.velpGroups = data;
-        $scope.velpGroups.forEach(function (g) {
-            g.checked = true;
-        });
-        console.log($scope.velpGroups);
+
     });
 
-    // Get label data
-    $http.get('/{0}/get_velp_labels'.replace('{0}', doc_id)).success(function (data) {
-        $scope.labels = data;
-        $scope.labels.forEach(function (l) {
-            l.edit = false;
-            l.selected = false;
-        });
-    });
+
+
 
 
     // Methods
@@ -302,20 +308,20 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         for (var i=0; i<$scope.labels.length; i++){
             if ($scope.labels[i].id == $scope.labelToEdit.id){
                 // TODO: This works yet not
-                console.log("lolol");
-                console.log($scope.labelToEdit.id);
-                console.log($scope.labelToEdit.content);
-                console.log("asdasd");
-                console.log($scope.labelToEdit);
-                $scope.makePostRequest("/update_velp_label", $scope.labelToEdit, function (json){
-                    $scope.labelToEdit.edit = false;
-                    $scope.labels[i].content = $scope.labelToEdit.content;
-                    $scope.labels[i].edit = false;
-                });
+                $scope.labelToEdit.edit = false;
+                $scope.labels[i].content = $scope.labelToEdit.content;
+                $scope.labels[i].edit = false;
+                var updatedLabel = $scope.labels[i];
+                break;
             }
         }
+        console.log(updatedLabel);
 
-        // TODO: post request
+        $scope.makePostRequest("/update_velp_label", updatedLabel, function (json) {
+
+            console.log(json);
+        });
+
     };
 
     /**

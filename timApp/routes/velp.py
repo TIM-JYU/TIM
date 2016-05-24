@@ -296,6 +296,8 @@ def update_velp_label():
     # TODO: Add some check so a random person can't use the route?
     timdb.velps.update_velp_label(velp_label_id, language_id, content)
 
+    return ""
+
 @velps.route("/<document_id>/change_selection", methods=["POST"])
 def change_selection(document_id: int):
     """Change selection for velp group in users VelpGroupSelection in current document
