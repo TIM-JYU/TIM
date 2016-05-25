@@ -21,7 +21,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
         $scope.lectureQuestions = [];
         $scope.materialQuestions = [];
 
-        $scope.active = null;
+        $scope.active = -1;
         if ($window.showIndex) {
             $scope.active = 0;
         }
