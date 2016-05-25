@@ -73,6 +73,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id)).success(function (data) {
                 $scope.velpGroups = data;
                 console.log($scope.velpGroups);
+                $scope.velpGroups.forEach(function(g) {
+                    g.default = false;
+                    if (g.id == default_velp_group.id)
+                        g.default = true;
+                })
             });
 
             // Get label data
@@ -169,6 +174,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         // Form is valid:
         form.$setPristine();
+
+        if ($scope.newVelp.velp_groups.length === 0)
+            $scope.newVelp.velp_groups = [default_velp_group.id];
 
         var velpToAdd = {
             labels: $scope.newVelp["labels"],

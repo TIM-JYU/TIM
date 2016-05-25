@@ -106,7 +106,8 @@
                                 <p ng-show="advancedOn">
                                     <span ng-repeat="gr in velpGroups">
                                         <label><input type="checkbox"
-                                                      ng-click="updateVelpGroups(newVelp, gr)"> {{ gr.name }}</label><br>
+                                                      ng-click="updateVelpGroups(newVelp, gr)"
+                                                      ng-checked="gr.default"> {{ gr.name }}</label><br>
                                     </span>
                                 </p>
                                     <p><input type="submit" value="Add velp"/></p>
