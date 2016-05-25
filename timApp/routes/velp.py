@@ -115,6 +115,7 @@ def get_velp_groups(document_id: int):
             group['selected'] = True
         else:
             group['selected'] = False
+        group['edit_access']= timdb.users.has_edit_access(user_id, group['id'])
 
     return jsonResponse(velp_groups)
 
@@ -173,7 +174,7 @@ def add_velp():
         if timdb.users.has_edit_access(current_user_id, group) is True:
             velp_groups_rights.append(group)
         else:
-            print("No edit access for velp group: ") # + timdb.velp_groups.get_velp_group_name(group))
+            print("No edit access for velp group:", group)
 
     velp_groups = velp_groups_rights
 
