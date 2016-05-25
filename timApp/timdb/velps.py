@@ -160,8 +160,8 @@ class Velps(TimDbBase):
                       INSERT INTO
                       VelpLabel(language_id, content, id)
                       VALUES (?, ?, (SELECT
-                      MAX(Label.id)+1
-                      FROM Label))
+                      MAX(VelpLabel.id)+1
+                      FROM VelpLabel))
                       """, [language_id, content]
                        )
         self.db.commit()
