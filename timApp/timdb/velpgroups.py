@@ -263,6 +263,7 @@ class VelpGroups(Documents):
             selected = 1
         else:
             selected = 0
+        print("SELECTION", selected, doc_id, velp_group_id, user_id)
         cursor = self.db.cursor()
         cursor.execute("""
                       UPDATE VelpGroupSelection
@@ -270,6 +271,7 @@ class VelpGroups(Documents):
                         WHERE user_id = ? AND doc_id = ? AND velp_group_id = ?
                         """, [selected, user_id, doc_id, velp_group_id]
                       )
+        self.db.commit()
 
 
     # Unused methods
