@@ -94,6 +94,8 @@
                                               placeholder="Points" value="0"></p>
 
                                     <p ng-show="advancedOn">
+                                        <fieldset>
+                                            <legend>Labels</legend>
                                                     <span ng-repeat="l in labels">
                                                         <label><input type="checkbox" ng-click="updateVelpLabels(newVelp, l)"
                                                                ng-checked="isLabelInVelp(newVelp, l)"> {{ l.content }}</label><br>
@@ -101,14 +103,18 @@
                                         <input placeholder="Add label" ng-model="newLabel['content']">
                                         <input type="button" value="Add" ng-click="addLabel(newVelp)">
                                         <span ng-hide="newLabel['valid']" class="error">Label content too short</span>
+                                    </fieldset>
                                     </p>
 
                                 <p ng-show="advancedOn">
-                                    <span ng-repeat="gr in velpGroups">
-                                        <label><input type="checkbox"
-                                                      ng-click="updateVelpGroups(newVelp, gr)"
-                                                      ng-checked="gr.default"> {{ gr.name }}</label><br>
-                                    </span>
+                                    <fieldset>
+                                        <legend>Velpgroups</legend>
+                                        <span ng-repeat="gr in velpGroups">
+                                            <label><input type="checkbox"
+                                                          ng-click="updateVelpGroups(newVelp, gr)"
+                                                          ng-checked="gr.default"> {{ gr.name }}</label><br>
+                                        </span>
+                                    </fieldset>
                                 </p>
                                     <p><input type="submit" value="Add velp"/></p>
 
@@ -162,7 +168,10 @@
                                                 <p><input id="addVelpPoints" type="number" style="width: 100%;"
                                                           ng-model="velpToEdit['points']"
                                                           placeholder="Points" value="0"></p>
-                                                <p ng-show="advancedOn">
+
+                                                    <fieldset ng-show="advancedOn">
+                                                <legend>Labels</legend>
+
                                                     <span ng-repeat="l in labels">
                                                         <span ng-show="!l.edit">
                                                         <label><input type="checkbox"
@@ -184,14 +193,17 @@
                                                     <input placeholder="Add label" ng-model="newLabel['content']">
                                                     <input type="button" value="Add" ng-click="addLabel(velpToEdit)">
                                                     <span ng-hide="newLabel['valid']" class="error">Label content too short</span>
-                                                </p>
-                                                <p ng-show="advancedOn">
+                                                </fieldset>
+
+
+                                                <fieldset ng-show="advancedOn">
+                                                <legend>Velpgroups</legend>
                                                     <span ng-repeat="g in velpGroups">
                                                         <label><input type="checkbox"
                                                                       ng-click="updateVelpGroups(velpToEdit, g)"
                                                                       ng-checked="isGroupInVelp(velpToEdit, g)"> {{ g.name }}</label><br>
                                                     </span>
-                                                </p>
+                                                </fieldset>
 
                                                 <p><input type="submit" value="Save changes"/> <input type="button" value="Cancel" ng-click="selectVelpToEdit(velp)"></p>
                                             </form>
