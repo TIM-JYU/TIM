@@ -25,7 +25,8 @@ def get_default_velp_group(document_id: int):
     timdb = getTimDb()
     user_id = getCurrentUserId()
 
-    owner_group_id = 3  # TODO: Choose owner_group, now Korppi users
+    owner_group_id = timdb.documents.get_owner(doc_id)
+    print(owner_group_id)
     full_path = timdb.documents.get_first_document_name(doc_id)
     doc_name = os.path.basename(full_path)
 
@@ -365,8 +366,6 @@ def create_velp_group(document_id: int):
     json_data = request.get_json()
     try:
         velp_group_name = json_data.get('name')
-        root_path = json_data.get('root_path')
-        doc_id = json_data.get('doc_id')
         personal_group = json_data.get('personal_group')
     except KeyError as e:
         abort(400, "Missing data: " + e.args[0])
