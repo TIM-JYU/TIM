@@ -49,6 +49,9 @@ body {
 .paragraphs {
     @include center-block();
     max-width: 52em;
+    .smalltext > .parContent {
+        font-size: small;
+    }
     .parContent {
         text-align: $body-text-align;
         font-size: 16px;
