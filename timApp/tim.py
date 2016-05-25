@@ -511,7 +511,7 @@ def setslidestatus():
     if 'doc_id' not in request.args or 'status' not in request.args:
         abort(404, "Missing doc id or status")
     doc_id = int(request.args['doc_id'])
-    verify_ownership(doc_id)
+    verify_manage_access(doc_id)
     status = request.args['status']
     tempdb = getTempDb()
     tempdb.slidestatuses.update_or_add_status(doc_id, status)
