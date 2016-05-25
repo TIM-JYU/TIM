@@ -267,7 +267,7 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM User WHERE name = ?', [name])
+        cursor.execute('SELECT id FROM User WHERE id >= 0 AND name = ?', [name])
         result = cursor.fetchone()
         return result[0] if result is not None else None
 
