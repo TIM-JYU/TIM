@@ -355,7 +355,7 @@ class Users(TimDbBase):
             raise TimDbException("No such user")
 
         # For anonymous users, we return the group of anonymous users
-        if user['id'] < 0:
+        if user['id'] < 0 or user['id'] == self.get_anon_user_id():
             return self.get_anon_group_id()
 
         userName = user['name']
