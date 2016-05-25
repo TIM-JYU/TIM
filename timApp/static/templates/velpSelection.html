@@ -93,8 +93,8 @@
                                     <p><input id="addVelpPoints" type="number" ng-model="newVelp['points']" style="width: 100%;"
                                               placeholder="Points" value="0"></p>
 
-                                    <p ng-show="advancedOn">
-                                        <fieldset>
+
+                                        <fieldset ng-show="advancedOn">
                                             <legend>Labels</legend>
                                                     <span ng-repeat="l in labels">
                                                         <label><input type="checkbox" ng-click="updateVelpLabels(newVelp, l)"
@@ -104,10 +104,10 @@
                                         <input type="button" value="Add" ng-click="addLabel(newVelp)">
                                         <span ng-hide="newLabel['valid']" class="error">Label content too short</span>
                                     </fieldset>
-                                    </p>
 
-                                <p ng-show="advancedOn">
-                                    <fieldset>
+
+
+                                    <fieldset ng-show="advancedOn">
                                         <legend>Velpgroups</legend>
                                         <span ng-repeat="gr in velpGroups">
                                             <label><input type="checkbox"
@@ -115,7 +115,7 @@
                                                           ng-checked="gr.default"> {{ gr.name }}</label><br>
                                         </span>
                                     </fieldset>
-                                </p>
+                   
                                     <p><input type="submit" value="Add velp"/></p>
 
                                 </form>
