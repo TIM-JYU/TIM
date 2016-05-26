@@ -281,7 +281,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         // TODO: Make velpGroups to [{'id':1, 'selected':'True'}]
         console.log($scope.velpToEdit);
-        $scope.makePostRequest("/update_velp", $scope.velpToEdit, function (json) {
+        $scope.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), $scope.velpToEdit, function (json) {
             console.log(json);
         });
 

@@ -87,7 +87,7 @@ class VelpGroups(Documents):
         """
         cursor = self.db.cursor()
         cursor.execute("""
-                      INSERT INTO
+                      INSERT OR IGNORE INTO
                       VelpInGroup(velp_group_id, velp_id)
                       VALUES (?, ?)
                       """, [velp_group_id, velp_id]
@@ -104,7 +104,7 @@ class VelpGroups(Documents):
         cursor = self.db.cursor()
         for velp_group in velp_group_ids:
             cursor.execute("""
-                          INSERT INTO
+                          INSERT OR IGNORE INTO
                           VelpInGroup(velp_group_id, velp_id)
                           VALUES (?, ?)
                           """, [velp_group, velp_id]
@@ -134,13 +134,15 @@ class VelpGroups(Documents):
         :param velp_group_ids: List of velp group IDs
         :return:
         """
+        print(velp_group_ids)
         cursor = self.db.cursor()
-        cursor.execute("""
-                      DELETE
-                      FROM VelpInGroup
-                      WHERE velp_id = ? AND velp_group_id = ({})
-                      """.format(self.get_sql_template(velp_group_ids)), [velp_id] + velp_group_ids
-                      )
+        for velp_group in velp_group_ids:
+            cursor.execute("""
+                          DELETE
+                          FROM VelpInGroup
+                          WHERE velp_id = ? AND velp_group_id = ?
+                          """, [velp_id, velp_group]
+                          )
         self.db.commit()
 
     def get_velp_group_name(self, velp_group_id: int) -> str:
