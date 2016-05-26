@@ -359,7 +359,7 @@ def change_selection(document_id: int):
     return ""
 
 
-@velps.route("/<document_id>/create_velp_group", methods=['GET'])
+@velps.route("/<document_id>/create_velp_group", methods=['POST'])
 def create_velp_group(document_id: int):
     try:
         doc_id = int(document_id)
