@@ -186,7 +186,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             language_id: "FI",
             icon_id: null,
             valid_until: null,
-            velp_groups: $scope.newVelp['velp_groups']  // TODO: Change to default group, add choices where to add
+            velp_groups: $scope.newVelp['velp_groups'] // TODO: Change to default group, add choices where to add
         };
 
         $scope.makePostRequest("/add_velp", velpToAdd, function (json) {

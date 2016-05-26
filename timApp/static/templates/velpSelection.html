@@ -115,7 +115,7 @@
                                                           ng-checked="gr.default"> {{ gr.name }}</label><br>
                                         </span>
                                     </fieldset>
-                   
+
                                     <p><input type="submit" value="Add velp"/></p>
 
                                 </form>
@@ -251,6 +251,15 @@
                             </td>
                         </tr>
                     </table>
+                    <form>
+                        <p><label>Group name:</label><input type="text" placeholder="Velp group"></p>
+                        <fieldset>
+                            <legend>Attatch this group to:</legend>
+                            <p><input type="radio" name="group1" id="radioDoc"> <label for="radioDoc">Document</label><br>
+                                <input type="radio" name="group1" id="radioFolder"> <label for="radioFolder">Folder</label></p>
+                        </fieldset>
+                        <p><input type="button" class="timButton" value="Create velpgroup"></p>
+                    </form>
                 </div>
             </div>
         </uib-tab>
