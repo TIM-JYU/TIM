@@ -129,6 +129,16 @@
     margin: 6px;
 }
 
+.velpArea input[type="number"] {
+    width: 30%;
+}
+
+.velpArea legend {
+    font-size: 1.1em;
+    margin-top: 0.8em;
+    margin-bottom: 0.3em;
+}
+
 .velpTable td{
     border: 0;
     margin: 0;
@@ -152,9 +162,17 @@
     border-bottom: solid 4px darkblue;
 }
 
-#addLabelButton {
-    margin-left: 0.4em;
-    margin-bottom: 2em;
+#addLabelField {
+    display: inline;
+    width: 76%;
+}
+
+#addLabelBtn {
+    display: inline;
+}
+
+#addVelpBtn {
+  margin-top: 0.8em;
 }
 
 #createVelpButton {

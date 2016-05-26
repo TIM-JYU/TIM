@@ -25,7 +25,8 @@ def get_default_velp_group(document_id: int):
     timdb = getTimDb()
     user_id = getCurrentUserId()
 
-    owner_group_id = 3  # TODO: Choose owner_group, now Korppi users
+    owner_group_id = timdb.documents.get_owner(doc_id)
+    print(owner_group_id)
     full_path = timdb.documents.get_first_document_name(doc_id)
     doc_name = os.path.basename(full_path)
 
@@ -174,12 +175,18 @@ def add_velp():
 
     velp_groups_rights = []
 
+    can_add_velp = False
+
     # Check where user has edit rights and only add new velp to those
     for group in velp_groups:
         if timdb.users.has_edit_access(current_user_id, group) is True:
+            can_add_velp = True
             velp_groups_rights.append(group)
         else:
             print("No edit access for velp group:", group)
+
+    if can_add_velp is False:
+        abort(403, "Can't add velp without any velp groups")
 
     velp_groups = velp_groups_rights
 
@@ -199,12 +206,16 @@ def add_velp():
     return jsonResponse(new_velp_id)
 
 
-@velps.route("/update_velp", methods=['POST'])
-def update_velp():
+@velps.route("/<document_id>/update_velp", methods=['POST'])
+def update_velp(document_id: int):
     """Updates velp data
 
     :return:
     """
+    try:
+        doc_id = int(document_id)
+    except ValueError as e:
+        abort(400, "Document_id is not a number.")
 
     try:
         json_data = request.get_json()
@@ -222,14 +233,14 @@ def update_velp():
     new_labels = json_data.get('labels')
     timdb = getTimDb()
     verifyLoggedIn()
-    current_user_id = getCurrentUserId()
+    user_id = getCurrentUserId()
     edit_access = False
 
     all_velp_groups = timdb.velp_groups.get_groups_for_velp(velp_id)
 
     # Check that user has edit access to velp via any velp group in database
     for group in all_velp_groups:
-        if timdb.users.has_edit_access(current_user_id, group['id']) is True:
+        if timdb.users.has_edit_access(user_id, group['id']) is True:
             edit_access = True
             break
     if edit_access is False:
@@ -237,24 +248,31 @@ def update_velp():
 
     # Check which velp groups velp should belong to after update
     edit_access = False
-    groups_to_add = []
     groups_to_remove = []
-    print("asdasdasder5e343")
-    print(velp_groups)
-    for group in velp_groups:
-        if timdb.users.has_edit_access(current_user_id, group['id']) is True:
+    groups_to_add = []
+
+    # Add all velp group ids user edit has access to in a document to a list
+    doc_groups = timdb.velp_groups.get_groups_from_selection_table(doc_id, user_id)
+    for group in doc_groups:
+        if timdb.users.has_edit_access(user_id, group['id']) is True:
+            groups_to_remove.append(group['id'])
             edit_access = True
-            if group['selected'] is True:
-                groups_to_add.append(group['id'])
-            else:
-                groups_to_remove.append(group['id'])
         else:
-            print("No edit access to group " + group)
+            print("No edit access to group", group[id])
+
+    # Check that user has edit access to velp groups in given velp group list and add them to a new list
+    for group in velp_groups:
+        if timdb.users.has_edit_access(user_id, group) is True:
+            edit_access = True
+            groups_to_add.append(group)
+
+        else:
+            print("No edit access to group", group)
 
     # Add and remove velp from velp groups
     if edit_access is True:
-        timdb.velp_groups.add_velp_to_groups(velp_id, groups_to_add)
         timdb.velp_groups.remove_velp_from_groups(velp_id, groups_to_remove)
+        timdb.velp_groups.add_velp_to_groups(velp_id, groups_to_add)
 
     old_content = timdb.velps.get_latest_velp_version(velp_id, language_id)
     old_labels = timdb.velps.get_velp_label_ids_for_velp(velp_id)
@@ -341,13 +359,16 @@ def change_selection(document_id: int):
     return ""
 
 
-@velps.route("/create_velp_group", methods=['POST'])
-def create_velp_group():
+@velps.route("/<document_id>/create_velp_group", methods=['POST'])
+def create_velp_group(document_id: int):
+    try:
+        doc_id = int(document_id)
+    except ValueError as e:
+        abort(400, "Document_id is not a number.")
+
     json_data = request.get_json()
     try:
         velp_group_name = json_data.get('name')
-        root_path = json_data.get('root_path')
-        doc_id = json_data.get('doc_id')
         personal_group = json_data.get('personal_group')
     except KeyError as e:
         abort(400, "Missing data: " + e.args[0])
@@ -381,6 +402,7 @@ def create_velp_group():
         return jsonResponse(velp_group_id)
 
     # Gives path to either velp groups or velp groups/document name folder
+    root_path=""
     velps_folder_path = timdb.folders.check_velp_group_folder_path(root_path, owner_group_id, doc_name)
     new_group_path = velps_folder_path + "/" + velp_group_name
 
