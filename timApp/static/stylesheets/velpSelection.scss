@@ -49,7 +49,7 @@
 .velpMenu {
     position: fixed;
     min-width: 19em;
-    max-width: 21em;
+    max-width: 22.5em;
     word-wrap: break-word;
     right: 0;
     top: 50px;
@@ -111,13 +111,22 @@
     position: absolute;
 }
 
-/* Table styles */
+#searchVelps {
+    width: 11em;
+}
+
+.adjustForm {
+    margin-top: 0.4em;
+    margin-bottom: 0.4em;
+}
+/* Table styles*/
 .velpTable {
     table-layout: fixed;
     margin-left: 0;
     margin-top: 1em;
     margin-bottom: 1em;
-    border-collapse: separate;
+    border-collapse: collapse;
+    border: none;
     text-align: left;
 }
 
@@ -176,7 +185,8 @@
 }
 
 #createVelpButton {
-    margin-left: 0.4em;
+    margin-left: 0.2em;
+    margin-top: 1.5em;
 }
 
 .velp {
