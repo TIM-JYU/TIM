@@ -170,6 +170,7 @@ def add_velp():
     icon_id = int(icon_id) if icon_id is not None else None
 
     timdb = getTimDb()
+    verifyLoggedIn()
     current_user_id = getCurrentUserId()
 
     velp_groups_rights = []
@@ -231,6 +232,7 @@ def update_velp(document_id: int):
     icon_id = json_data.get('icon_id')
     new_labels = json_data.get('labels')
     timdb = getTimDb()
+    verifyLoggedIn()
     user_id = getCurrentUserId()
     edit_access = False
 
@@ -242,7 +244,7 @@ def update_velp(document_id: int):
             edit_access = True
             break
     if edit_access is False:
-        abort(400, "No edit access to velp via any velp group.")
+        abort(403, "No edit access to velp via any velp group.")
 
     # Check which velp groups velp should belong to after update
     edit_access = False
@@ -349,6 +351,7 @@ def change_selection(document_id: int):
         selection = json_data['selected']
     except KeyError as e:
         abort(400, "Missing data: " + e.args[0])
+    verifyLoggedIn()
     user_id = getCurrentUserId()
     timdb = getTimDb()
     timdb.velp_groups.change_selection(doc_id, velp_group_id, user_id, selection)
@@ -366,22 +369,26 @@ def create_velp_group(document_id: int):
     json_data = request.get_json()
     try:
         velp_group_name = json_data.get('name')
-        personal_group = json_data.get('personal_group')
+        target_type = json_data.get('target_type')
     except KeyError as e:
         abort(400, "Missing data: " + e.args[0])
 
-    valid_until = json_data.get('valid_until')
-    owner_group_id = getCurrentUserId()
-
     timdb = getTimDb()
 
-    doc_name_info = timdb.documents.get_names(doc_id)
-    doc_name = doc_name_info[0]['name']
+    full_path = timdb.documents.get_first_document_name(doc_id)
+    doc_name = os.path.basename(full_path)
+    doc_path = full_path[:len(full_path) - len(doc_name) - 1]
+    if len(doc_path) < len(doc_name):   # If document is located in root folder
+        doc_path = ""
+
+    # valid_until = json_data.get('valid_until')
+
+    verifyLoggedIn()
+    user_group_id = getCurrentUserGroup()
 
     # Create a new velp group / document in users/username/velp groups folder
-    if personal_group is True:
+    if target_type == 0:
         user = getCurrentUserName()
-        user_group_id = getCurrentUserGroup()
         print(user_group_id)
         user_velp_path = timdb.folders.check_personal_velp_folder(user, user_group_id)
         print(user_velp_path)
@@ -390,26 +397,24 @@ def create_velp_group(document_id: int):
         if group_exists is None:
             # new_group = timdb.documents.create(new_group_path, user_group_id)
             # new_group_id = new_group.doc_id
-            velp_group_id = timdb.velp_groups.create_velp_group2(velp_group_name, user_group_id, new_group_path,
-                                                                 valid_until)
+            velp_group_id = timdb.velp_groups.create_velp_group(velp_group_name, user_group_id, new_group_path)
         else:
             abort(400, "Velp group with same name and location exists already.")
 
         return jsonResponse(velp_group_id)
 
+    if target_type == 2:
+        doc_name = ""
     # Gives path to either velp groups or velp groups/document name folder
-    velps_folder_path = timdb.folders.check_velp_group_folder_path(root_path, owner_group_id, doc_name)
-    new_group_path = velps_folder_path + "/" + velp_group_name
+    velps_folder_path = timdb.folders.check_velp_group_folder_path(doc_path, user_group_id, doc_name)
 
+    new_group_path = velps_folder_path + "/" + velp_group_name
     group_exists = timdb.documents.resolve_doc_id_name(new_group_path)  # Check name so no duplicates are made
     if group_exists is None:
-        # new_group = timdb.documents.create(new_group_path, owner_group_id)
-        # new_group_id = new_group.doc_id
-        velp_group_id = timdb.velp_groups.create_velp_group2(velp_group_name, owner_group_id, new_group_path,
-                                                             valid_until)
-        timdb.velp_groups.insert_group_to_document(velp_group_id, doc_id)
+        velp_group_id = timdb.velp_groups.create_velp_group(velp_group_name, user_group_id, new_group_path)
     else:
         abort(400, "Velp group with same name and location exists already.")
+
 
     return jsonResponse(velp_group_id)
 

@@ -64,7 +64,7 @@ def add_annotation() -> str:
         hash_end = end['t']
     except KeyError as e:
         abort(400, "Missing data: " + e.args[0])
-
+    verifyLoggedIn()
     annotator_id = getCurrentUserId()
     velp_version = timdb.velps.get_latest_velp_version(velp_id)
     new_id = timdb.annotations.create_annotation(velp_version, visible_to, points, annotator_id, document_id,
@@ -76,6 +76,7 @@ def add_annotation() -> str:
 
 @annotations.route("/update_annotation", methods=['POST'])
 def update_annotation() -> str:
+    verifyLoggedIn()
     user_id = getCurrentUserId()
     json_data = request.get_json()
     try:
@@ -117,6 +118,7 @@ def invalidate_annotation() -> str:
     if not annotation:
         abort(404, "No such annotation.")
     annotation = annotation[0]
+    verifyLoggedIn()
     user_id = getCurrentUserId()
     if not annotation['annotator_id'] == user_id:
         abort(403, "You are not the annotator.")
@@ -134,6 +136,7 @@ def add_comment() -> str:
         abort(400, "Missing data: " + e.args[0])
     # Todo maybe check that content isn't an empty string
     timdb = getTimDb()
+    verifyLoggedIn()
     commenter_id = getCurrentUserId()
     timdb.annotations.add_comment(annotation_id, commenter_id, content)
     return jsonResponse(timdb.users.get_user(commenter_id))

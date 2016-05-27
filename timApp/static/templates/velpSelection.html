@@ -9,18 +9,12 @@
 
                 <!-- LABELS -->
                 <div id="labels" ng-show="advancedOn">
-                    <table class="velpTable">
-                        <tr>
-                            <td>
-                                <label for="searchLabels">Filter labels </label>
-                            </td>
-                            <td>
-                                <input id="searchLabels" ng-model="filterLabel" placeholder="filter labels">
-                            </td>
-                        </tr>
-                    </table>
-                    <!--   <tr>
-                           <td colspan="4">-->
+                    <form class="form-inline adjustForm">
+                        <div class="form-group">
+                            <label for="searchLabels">Filter labels:</label>
+                            <input id="searchLabels" ng-model="filterLabel" placeholder="filter labels">
+                        </div>
+                    </form>
                     <div>
                         <div class="fulldiv">
                             <p ng-repeat="label in filteredLabels = ( labels | filter:{content:filterLabel} )"
@@ -29,41 +23,35 @@
                                ng-click="toggleLabel(label)" ng-model="test" value="{{ label.id }}">
                                 {{ label.content }} <span class="glyphicon glyphicon-ok"
                                                           ng-show="label.selected"></span>
-                            </p><!-- p ng-click="selectLabelToEdit()" ng-class="['label', 'tag-false']" style="background: blue;">
-                                <span class="glyphicon glyphicon-plus"></span> Add label
-                            </p -->
+                            </p>
                             <hr/>
                         </div>
-
                     </div>
                 </div>
-                <!--    </td>
-                </tr>-->
-                <table class="velpTable">
-                    <tr>
-                        <td>
-                            <label for="searchVelps">Search velps:</label>
-                        </td>
-                        <td>
-                            <input id="searchVelps" ng-model="filterVelp" placeholder="Filter velps">
-                        </td>
-                    </tr>
-                    <tr ng-show="advancedOn">
-                        <td>
+                <div>
+                <form class="form-inline adjustForm">
+                    <div class="form-group">
+                        <label for="searchVelps">Search velps:</label>
+                        <input id="searchVelps" ng-model="filterVelp" placeholder="Filter velps">
+                    </div>
+                </form>
+                </div>
+                <div ng-show="advancedOn">
+                    <form class="form-inline adjustForm">
+                        <div class="form-group">
                             <label for="orderVelps">Order velps:</label>
-                        </td>
-                        <td><select id="orderVelps" ng-model="orderVelp">
-                            <option value="content">Alphabetical</option>
-                            <option value="-used">Most used</option>
-                            <option value="label">Labels</option>
-                            <option value="-points">Highest point</option>
-                            <option value="points">Lowest point</option>
-                        </select>
-                        </td>
-                    </tr>
-                </table>
+                            <select id="orderVelps" ng-model="orderVelp">
+                                <option value="content">Alphabetical</option>
+                                <option value="-used">Most used</option>
+                                <option value="label">Labels</option>
+                                <option value="-points">Highest point</option>
+                                <option value="points">Lowest point</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
 
-                <input type="button" ng-click="selectVelpToEdit(newVelp)" value="Create velp">
+                <input id="createVelpButton" type="button" ng-click="selectVelpToEdit(newVelp)" value="Create velp">
 
                 <div class="stack">
 
