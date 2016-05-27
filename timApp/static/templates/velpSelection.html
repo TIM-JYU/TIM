@@ -11,8 +11,8 @@
                 <div id="labels" ng-show="advancedOn">
                     <form class="form-inline adjustForm">
                         <div class="form-group">
-                            <label for="searchLabels">Filter labels:</label>
-                            <input id="searchLabels" ng-model="filterLabel" placeholder="filter labels">
+                            <label class="formLabel" for="searchLabels">Search labels:</label>
+                            <input class="formInput" id="searchLabels" ng-model="filterLabel" placeholder="Filter labels">
                         </div>
                     </form>
                     <div>
@@ -31,15 +31,15 @@
                 <div>
                 <form class="form-inline adjustForm">
                     <div class="form-group">
-                        <label for="searchVelps">Search velps:</label>
-                        <input id="searchVelps" ng-model="filterVelp" placeholder="Filter velps">
+                        <label class="formLabel" for="searchVelps">Search velps:</label>
+                        <input class="formInput" id="searchVelps" ng-model="filterVelp" placeholder="Filter velps">
                     </div>
                 </form>
                 </div>
                 <div ng-show="advancedOn">
                     <form class="form-inline adjustForm">
                         <div class="form-group">
-                            <label for="orderVelps">Order velps:</label>
+                            <label class="formLabel" for="orderVelps">Order velps:</label>
                             <select id="orderVelps" ng-model="orderVelp">
                                 <option value="content">Alphabetical</option>
                                 <option value="-used">Most used</option>
@@ -51,7 +51,7 @@
                     </form>
                 </div>
 
-                <input id="createVelpButton" type="button" ng-click="selectVelpToEdit(newVelp)" value="Create velp">
+                <input id="createVelpButton" type="button" ng-click="selectVelpToEdit(newVelp)" value="Create new velp">
 
                 <div class="stack">
 
