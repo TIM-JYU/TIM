@@ -159,6 +159,11 @@ body {
         border: none;
         border-left: 4px solid $basic-color;
         border-radius: 0;
+        overflow: visible;
+
+        code {
+            white-space: pre;
+        }
     }
 }
 
