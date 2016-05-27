@@ -12,7 +12,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     "use strict";
 
     $scope.annotationsAdded = false;
-    $scope.selectedAnnotation = {"comments": [], "velp": "", "points": 0};
+    $scope.selectedElement = null;
+    //$scope.selectedAnnotation = {"comments": [], "velp": "", "points": 0};
     //$scope.selectionParent = null;
 
     var username = $scope.$parent.users[0].name;
@@ -80,7 +81,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Get children (not childNodes) of the element.
-     *
      * @param element
      * @returns {Array}
      */
@@ -99,8 +99,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Get parent element of the given element
-     * @param element
-     * @returns {*}
+     * @param element element which parent is queried
+     * @returns element parent
      */
     var getElementParent = function(element){
         /*
@@ -113,6 +113,20 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
 
         getElementParent(parent);
+    };
+
+    /**
+     * Gets element parent element when certain attribute is present.
+     * @param element element which parent is queried
+     * @param attribute attribute as string
+     * @returns first element parent that has given attribute
+     */
+    var getElementParentUntilAttribute = function(element, attribute){
+        console.log(element);
+        while (!element.hasAttribute(attribute)){
+            element = getElementParent(element);
+        }
+        return element;
     };
 
     /**
@@ -291,6 +305,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             console.log(range.toString());
             if (range.toString().length > 0){
                 $scope.selectedArea = range.getRangeAt(0);
+                $scope.selectedElement = getElementParentUntilAttribute($scope.selectedArea.startContainer, "t");
             } else {
                 $scope.selectedArea = undefined;
             }
@@ -298,6 +313,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         } catch (err) {
             console.log(err);
         }
+
+        if ($scope.selectedElement === null){
+            var elements = $(".lightselect");
+            if (elements.length > 0)
+                $scope.selectedElement = elements[0];
+        }
+        console.log($scope.selectedElement);
+
+
     };
 
 
@@ -331,12 +355,13 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     /**
      * Uses selected velp, if area is selected.
      * TODO: When annotations can cross HTML-tags, change end coordinate according to end element
+     * TODO: Also get parelement according to endContainer
      * @param velp velp selected in velpSelection directive
      */
     $scope.useVelp = function (velp) {
         if (typeof $scope.selectedArea != "undefined") {
 
-            var parelement = getElementParent($scope.selectedArea["commonAncestorContainer"]);
+            var parelement = getElementParent($scope.selectedArea["startContainer"]);
             var startElement = getElementParent($scope.selectedArea["startContainer"]);
 
             var innerDiv = document.createElement('div');

@@ -85,9 +85,12 @@ timApp.controller('AnnotationController', ['$scope', '$http', function ($scope, 
 
         // Add comment
         if ($scope.newComment.length > 0) {
-            $scope.comments.push({commenter_username: $scope.user, content: $scope.newComment});
+            var comment = $scope.newComment;
+
             var data = {annotation_id: id, content: $scope.newComment};
-            $scope.$parent.makePostRequest("/add_annotation_comment", data, function(json){console.log(json);});
+            $scope.$parent.makePostRequest("/add_annotation_comment", data, function(json){
+                $scope.comments.push({commenter_username: json.data.name, content: comment});
+            });
         }
         $scope.newComment = "";
 

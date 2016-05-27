@@ -68,6 +68,7 @@
                 <div class="stack">
 
                     <!-- NEW VELP -->
+
                     <div ng-model="newVelp" class="velp" ng-style="{top: 0}" ng-hide="!newVelp.edit">
                         <div ng-class="['emphasise', 'new', { neutral: newVelp.points == 0, positive: newVelp.points > 0, negative: newVelp.points < 0,
                             edit: newVelp.edit}]">
@@ -124,6 +125,8 @@
 
                     <!-- EDIT VELPS -->
                             <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn )">
+
+
 
                                 <div class="velp" ng-click="useVelp(velp)"
                                      ng-style="{top: 2+$index*2 + 'em'}">
@@ -246,12 +249,15 @@
                     <table class="fulldiv">
                         <tr>
                             <th>Show</th>
+                            <th>Default</th>
                             <th>Group name</th>
                         </tr>
                         <tr ng-repeat="group in velpGroups">
                             <td>
-                                <input type="checkbox" ng-model="group.selected"
-                                       ng-click="changeVelpGroupSelection(group)">
+                                <input type="checkbox" ng-model="group.selected" ng-click="changeVelpGroupSelection(group)">
+                            </td>
+                            <td>
+                                <input type="checkbox">
                             </td>
                             <td>
                                 <a ng-href="/velp/{{ group.location }}">{{ group.name }}</a>
@@ -262,8 +268,9 @@
                         <p><label>Group name:</label><input type="text" placeholder="Velp group"></p>
                         <fieldset>
                             <legend>Attatch this group to:</legend>
-                            <p><input type="radio" name="group1" id="radioDoc"> <label for="radioDoc">Document</label><br>
-                                <input type="radio" name="group1" id="radioFolder"> <label for="radioFolder">Folder</label></p>
+                            <p><input type="radio" name="group1" id="radioPar"> <label for="radioPar">Selected paragraph</label><br>
+                               <input type="radio" name="group1" id="radioDoc"> <label for="radioDoc">Document</label><br>
+                               <input type="radio" name="group1" id="radioFolder"> <label for="radioFolder">Folder</label></p>
                         </fieldset>
                         <p><input type="button" class="timButton" value="Create velpgroup"></p>
                     </form>

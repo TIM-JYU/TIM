@@ -1766,6 +1766,7 @@ timApp.controller("ViewCtrl", [
             sc.toggleReviewEditor($par, {showDelete: false, area: false});
         };
 
+        /*
         sc.selectText = function () {
             var sel = $window.getSelection();
             if (sel.toString().length > 0) {
@@ -1776,7 +1777,7 @@ timApp.controller("ViewCtrl", [
             }
             console.log(sel.toString());
         };
-
+        */
 
         sc.getEditorFunctions = function () {
             if (sc.editing) {

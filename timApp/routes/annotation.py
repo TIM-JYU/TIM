@@ -135,8 +135,8 @@ def add_comment() -> str:
     # Todo maybe check that content isn't an empty string
     timdb = getTimDb()
     commenter_id = getCurrentUserId()
-    new_id = timdb.annotations.add_comment(annotation_id, commenter_id, content)
-    return jsonResponse(new_id)
+    timdb.annotations.add_comment(annotation_id, commenter_id, content)
+    return jsonResponse(timdb.users.get_user(commenter_id))
 
 
 @annotations.route("/<document_id>/get_annotations", methods=['GET'])
