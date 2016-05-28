@@ -575,6 +575,7 @@ timApp.controller("ViewCtrl", [
                 if (downEvent !== null) {
                     if (func($(this), downEvent)) {
                         e.preventDefault();
+                        e.stopPropagation();
                     }
                     downEvent = null;
                 }
@@ -585,6 +586,7 @@ timApp.controller("ViewCtrl", [
             $document.on('mouseover', className, function (e) {
                 if (func($(this), sc.fixPageCoords(e))) {
                     e.preventDefault();
+                    e.stopPropagation();
                 }
             });
         };
@@ -593,6 +595,7 @@ timApp.controller("ViewCtrl", [
             $document.on('mouseout', className, function (e) {
                 if (func($(this), sc.fixPageCoords(e))) {
                     e.preventDefault();
+                    e.stopPropagation();
                 }
             });
         };
@@ -1088,13 +1091,17 @@ timApp.controller("ViewCtrl", [
             var $target = $(e.target);
             var tag = $target.prop("tagName");
 
-            // Don't show paragraph menu on these specific tags or class
+            // Don't show paragraph menu on these specific tags or classes
             var ignoredTags = ['BUTTON', 'INPUT', 'TEXTAREA', 'A', 'QUESTIONADDEDNEW'];
-            if (ignoredTags.indexOf(tag) > -1 || $target.parents('.no-popup-menu').length > 0) {
+            var ignoredClasses = ['no-popup-menu', 'ace_editor'];
+            var classSelector = ignoredClasses.map(function (c) {
+                return '.' + c;
+            }).join(',');
+            if (ignoredTags.indexOf(tag) > -1 || $target.parents(classSelector).length > 0) {
                 return false;
             }
 
-            var $par = $this.parent();
+            var $par = $this.parents('.par');
             if (sc.selection.start !== null) {
                 sc.extendSelection($par, true);
             }
