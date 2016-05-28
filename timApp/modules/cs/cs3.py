@@ -142,7 +142,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     """
     s_in = ""
     pwd = ""
-    if not ulimit: ulimit = "ulimit -f 100 -t 10 -s 100 "  # -v 2000 -s 100 -u 10
+    if not ulimit: ulimit = "ulimit -f 1000 -t 10 -s 100 "  # -v 2000 -s 100 -u 10
     if uargs and len(uargs): args.extend(shlex.split(uargs))
     if stdin: s_in = " <" + stdin
     mkdirs(cwd + "/run")
@@ -494,6 +494,12 @@ def return_points(points_rule, result):
         result["tim_info"] = tim_info
     if "points" in points_rule: result["save"]["points"] = points_rule["points"]
 
+    
+def get_imgsource(query):
+    result = get_param(query, "imgsource", "")
+    if result: return result
+    result = get_param(query, "bmpname", "") # backwards compability
+    
 
 class TIMServer(http.server.BaseHTTPRequestHandler):
     def __init__(self, request, client_address, _server):
@@ -864,13 +870,26 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 pure_exename = "./%s.py" % filename
                 fileext = "py"
                 pngname = "/csimages/%s.png" % rndname
-                bmpname = get_param(query, "bmpname", "")
+                imgsource = get_imgsource(query)
+
+            if ttype == "octave":
+                csfname = "/tmp/%s/%s.oct" % (basename, filename)
+                exename = csfname
+                pure_exename = "./%s.oct" % filename
+                fileext = "oct"
+                pngname = "/csimages/%s.png" % rndname
+                imgsource = get_imgsource(query)
+                wavsource = get_param(query, "wavsource", "")
+                wavdest = "/csimages/%s/%s" % (self.user_id,wavsource)
+                wavname = "%s/%s" % (self.user_id,wavsource)
+                mkdirs("/csimages/%s" % self.user_id)
+
 
             if ttype == "alloy":
                 csfname = "/tmp/%s/%s.als" % (basename, filename)
                 exename = csfname
                 pure_exename = "./%s.als" % filename
-                bmpname = "%s/mm.png" % prgpath
+                imgsource = "%s/mm.png" % prgpath
                 pngname = "/csimages/%s.png" % rndname
 
             if ttype == "shell":
@@ -884,7 +903,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 exename = csfname
                 pure_exename = "/home/agent/%s" % filename
                 pngname = "/csimages/%s.png" % rndname
-                bmpname = get_param(query, "bmpname", "")
+                imgsource = get_imgsource(query)
+
 
             if ttype == "r":
                 debug_str("r alkaa")
@@ -896,7 +916,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 mkdirs(filepath)
                 image_ext = "png"
                 pure_exename = "./%s.r" % filename
-                bmpname = "%s/Rplot001.%s" % (prgpath, image_ext)
+                imgsource = "%s/Rplot001.%s" % (prgpath, image_ext)
                 pure_pngname = u"{0:s}.{1:s}".format(rndname, image_ext)
                 pngname = "/csimages/%s.%s" % (rndname, image_ext)
 
@@ -932,7 +952,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 mainfile = "/cs/jypeli/Ohjelma.cs"
                 csfname = "/tmp/%s/%s.cs" % (basename, filename)
                 exename = "/tmp/%s/%s.exe" % (basename, filename)
-                bmpname = "/tmp/%s/output.bmp" % (basename)
+                imgsource = "/tmp/%s/output.bmp" % (basename)
                 fileext = "cs"
                 pure_bmpname = "./%s.bmp" % filename
                 pngname = "/csimages/%s.png" % rndname
@@ -1020,8 +1040,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 javaname = filepath + "/" + classname + ".java"
                 fileext = "java"
                 csfname = javaname
-                # bmpname = "capture.png" % basename
-                bmpname = "%s/run/capture.png" % prgpath
+                # imgsource = "capture.png" % basename
+                imgsource = "%s/run/capture.png" % prgpath
                 # pngname = "/csimages/%s.png" % basename
                 pngname = "/csimages/%s.png" % rndname
                 # print("TYYPPI = " + ttype + " nimi = " + csfname + " class = " + javaclassname)
@@ -1258,12 +1278,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 err = re.sub("^ALSA.*\n", "", err, flags=re.M)
                 print(err)
                 # err = ""
-                wait_file(bmpname)
-                #statinfo = os.stat(bmpname)
+                wait_file(imgsource)
+                #statinfo = os.stat(imgsource)
                 #print("bmpsize: ", statinfo.st_size)
-                run(["convert", "-flip", bmpname, pngname], cwd=prgpath, timeout=20)
-                #print(bmpname, pngname)
-                remove(bmpname)
+                run(["convert", "-flip", imgsource, pngname], cwd=prgpath, timeout=20)
+                #print(imgsource, pngname)
+                remove(imgsource)
                 # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/cs/%s.png\n" % (basename))
                 print("*** Screenshot: https://tim.it.jyu.fi/csimages/cs/%s\n" % pure_pngname)
                 # TODO: clean up screenshot directory
@@ -1295,8 +1315,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()
                 # err = ""
-                # run(["convert", "-flip", bmpname, pngname], cwd=prgpath, timeout=20)
-                image_ok, e = copy_file(bmpname, pngname)
+                # run(["convert", "-flip", imgsource, pngname], cwd=prgpath, timeout=20)
+                image_ok, e = copy_file(imgsource, pngname)
                 if e:
                     err = err + "\n" + str(e) + "\n" + out
                     print(e)
@@ -1323,10 +1343,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()
                 print(err)
-                #  wait_file(bmpname)
+                #  wait_file(imgsource)
                 debug_str("r kuvan kopiointi aloitetaan")
-                image_ok, e = copy_file(bmpname, pngname, True, True)  # is_optional_image)
-                remove(bmpname)
+                image_ok, e = copy_file(imgsource, pngname, True, True)  # is_optional_image)
+                remove(imgsource)
                 debug_str("r kuva kopioitu")
                 print("*** Screenshot: https://tim.it.jyu.fi/csimages/cs/%s\n" % pure_pngname)
                 if code == -9:
@@ -1346,12 +1366,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 print(err)
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()
-                # bmpname = "run/capture.png"
+                # imgsource = "run/capture.png"
                 if code == -9:
                     out = "Runtime exceeded, maybe loop forever\n" + out
                 else:
                     # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
-                    image_ok, e = copy_file(bmpname, pngname, True, is_optional_image)
+                    image_ok, e = copy_file(imgsource, pngname, True, is_optional_image)
                     print(is_optional_image, image_ok)
                     if image_ok:
                         web["image"] = "/csimages/cs/" + rndname + ".png"
@@ -1456,7 +1476,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             else:
                 runcommand = get_param(query, "cmd", "");
-                if runcommand or get_param(query, "cmds", ""):
+                if ttype != "run" and (runcommand or get_param(query, "cmds", "")):
                     print("runcommand: ", runcommand)
                     # code, out, err, pwd = run2([runcommand], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                     #                               uargs=get_param(query, "runargs", "") + " " + userargs)
@@ -1471,9 +1491,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     except Exception as e:
                         print(e)
                         code, out, err = (-1, "", str(e).encode())
+                    print("Run2: ", imgsource, pngname)    
                     if code == -9:
                         out = "Runtime exceeded, maybe loop forever\n" + out
-                    # out, err = check_code(out, err, compiler_output, ttype)    
+                    else:
+                        if imgsource and pngname:
+                            image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
+                            if e: err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
+                            # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
+                            print(is_optional_image, image_ok)
+                            remove(imgsource)
+                            if image_ok: web["image"] = "/csimages/cs/" + rndname + ".png"
                 elif ttype == "java":
                     print("java: ", javaclassname)
                     # code, out, err = run2(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
@@ -1500,25 +1528,28 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     except OSError as e:
                         print(e)
                         code, out, err = (-1, "", str(e).encode())
-                elif ttype == "run":
+                elif ttype == "run": 
                     cmd = shlex.split(get_param(query, "cmd", "ls -la") + " " + pure_exename)
                     extra = get_param(query, "cmds", "").format(pure_exename)
                     if extra != "": cmd = []
                     print("run: ", cmd, extra, pure_exename, csfname)
+                    print("Run1: ", imgsource, pngname)    
                     try:
                         code, out, err, pwd = run2(cmd, cwd=prgpath, timeout=10, env=env, stdin=stdin, uargs=userargs,
                                                    extra=extra)
                     except Exception as e:
                         print(e)
                         code, out, err = (-1, "", str(e).encode())
+                    print("Run2: ", imgsource, pngname)    
                     if code == -9:
                         out = "Runtime exceeded, maybe loop forever\n" + out
                     else:
-                        if bmpname and pngname:
-                            image_ok, e = copy_file(filepath + "/" + bmpname, pngname, True, is_optional_image)
+                        if imgsource and pngname:
+                            image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
                             if e: err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
                             # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
                             print(is_optional_image, image_ok)
+                            remove(imgsource)
                             if image_ok: web["image"] = "/csimages/cs/" + rndname + ".png"
 
                 elif ttype == "jjs":
@@ -1547,12 +1578,31 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     print("py: ", exename)
                     code, out, err, pwd = run2(["python3", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                                uargs=userargs)
-                    if bmpname and pngname:
-                        image_ok, e = copy_file(filepath + "/" + bmpname, pngname, True, is_optional_image)
+                    if imgsource and pngname:
+                        image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
                         if e: err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
                         # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
                         print(is_optional_image, image_ok)
+                        remove(imgsource)
                         if image_ok: web["image"] = "/csimages/cs/" + rndname + ".png"
+                        
+                elif ttype == "octave":
+                    print("octave: ", exename)
+                    code, out, err, pwd = run2(["octave", "-qf", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
+                                               uargs=userargs)
+                    if imgsource and pngname:
+                        image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
+                        if e: err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
+                        # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
+                        print(is_optional_image, image_ok)
+                        remove(imgsource)
+                        if image_ok: web["image"] = "/csimages/cs/" + rndname + ".png"
+                    if wavsource and wavdest:
+                        wav_ok, e = copy_file(filepath + "/" + wavsource, wavdest, True, is_optional_image)
+                        if e: err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
+                        print("WAV: ",is_optional_image, wav_ok, wavname,wavsource,wavdest)
+                        remove(wavsource)
+                        if wav_ok: web["wav"] = "/csimages/cs/" + wavname
                         
                 elif ttype == "clisp":
                     print("clips: ", exename)

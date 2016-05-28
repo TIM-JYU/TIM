@@ -120,7 +120,10 @@ run wget -q https://get.docker.com/builds/Linux/x86_64/docker-1.10.2.tgz && \
 run apt-get install -y python3-numpy python3-scipy python3-matplotlib python3-pandas 
 run pip3 install statsmodels
 
-    
+# Octave
+run apt-get install -y octave less   
+run apt-get install -y epstool 
+run apt-get install -y transfig
     
     
 # Lisätään käyttäjä `agent` -- Emme halua ajaa containerissakaan
