@@ -12,6 +12,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     "use strict";
 
     $scope.annotationsAdded = false;
+    $scope.selectedArea = null;
     $scope.selectedElement = null;
     //$scope.selectedAnnotation = {"comments": [], "velp": "", "points": 0};
     //$scope.selectionParent = null;
@@ -53,7 +54,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 continue;
             }
 
-            if (parent.getAttribute("t") == placeInfo["start"]["t"]) {
+            if (parent.getAttribute("t") == placeInfo["start"]["t"] && placeInfo["start"]["offset"] !== null) {
                 var elements = parent.querySelector(".parContent");
 
                 var start_elpath = placeInfo["start"]["el_path"];
@@ -70,7 +71,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 var range = document.createRange();
                 range.setStart(startel, placeInfo["start"]["offset"]);
                 range.setEnd(endel, placeInfo["end"]["offset"]);
-                addAnnotationToCoord(range, $scope.annotations[i], false);
+                $scope.addAnnotationToCoord(range, $scope.annotations[i], false);
             } else {
                 addAnnotationToElement(parent, $scope.annotations[i], false, "Paragraph has been modified");
             }
@@ -123,6 +124,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     var getElementParentUntilAttribute = function(element, attribute){
         console.log(element);
+        element = getElementParent(element);
         while (!element.hasAttribute(attribute)){
             element = getElementParent(element);
         }
@@ -165,7 +167,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             var range = document.createRange();
             range.setStart(element, placeInfo["start"]["offset"]);
             range.setEnd(element, placeInfo["end"]["offset"]);
-            addAnnotationToCoord(range, annotations[i], false);
+            $scope.addAnnotationToCoord(range, annotations[i], false);
         }
     };
 
@@ -192,7 +194,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param annotation annotation info
      * @param show show by default
      */
-    var addAnnotationToCoord = function (range, annotation, show) {
+    $scope.addAnnotationToCoord = function (range, annotation, show) {
         var span = $scope.createPopOverElement(annotation, show);
         try {
             range.surroundContents(span);
@@ -207,7 +209,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             new_range.setStart(el, start);
             new_range.setEnd(el, end);
-            addAnnotationToCoord(new_range, annotation, show);
+            $scope.addAnnotationToCoord(new_range, annotation, show);
         }
 
         $compile(span)($scope); // Gives error [$compile:nonassign]
@@ -294,7 +296,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Select text range
      */
     $scope.selectText = function () {
-
+        console.log("hei");
         try {
             var range;
             if ($window.getSelection) {
@@ -305,22 +307,21 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             console.log(range.toString());
             if (range.toString().length > 0){
                 $scope.selectedArea = range.getRangeAt(0);
-                $scope.selectedElement = getElementParentUntilAttribute($scope.selectedArea.startContainer, "t");
+                $scope.selectedElement = getElementParentUntilAttribute($scope.selectedArea["startContainer"], "t");
+                console.log($scope.selectedElement);
             } else {
-                $scope.selectedArea = undefined;
+                $scope.selectedArea = null;
             }
-
         } catch (err) {
             console.log(err);
         }
-
-        if ($scope.selectedElement === null){
-            var elements = $(".lightselect");
+        console.log($scope.selectedArea);
+        if ($scope.selectedArea === null){
+            var elements = document.getElementsByClassName("lightselect");
+            console.log(elements);
             if (elements.length > 0)
                 $scope.selectedElement = elements[0];
         }
-        console.log($scope.selectedElement);
-
 
     };
 
@@ -359,7 +360,20 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param velp velp selected in velpSelection directive
      */
     $scope.useVelp = function (velp) {
-        if (typeof $scope.selectedArea != "undefined") {
+
+        var newAnnotation = {
+            id: -($scope.annotations.length + 1),
+            velp: velp.id,
+            points: velp.points,
+            doc_id: $scope.docId,
+            visible_to: 4,
+            content: velp.content,
+            coord: {},
+            comments: []
+        };
+
+
+        if ($scope.selectedArea !== null) {
 
             var parelement = getElementParent($scope.selectedArea["startContainer"]);
             var startElement = getElementParent($scope.selectedArea["startContainer"]);
@@ -380,38 +394,27 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             if (innerDiv.childElementCount == 0)
                 endOffset = startoffset + innerDiv.childNodes[innerDiv.childNodes.length - 1].length;
 
-            var newAnnotation = {
-                id: -($scope.annotations.length + 1),
-                velp: velp.id,
-                points: velp.points,
-                doc_id: $scope.docId,
-                visible_to: 4,
-                content: velp.content,
-                coord: {
-                    start: {
-                        par_id: parelement.id,
-                        t: parelement.getAttribute("t"),
-                        el_path: element_path,
-                        offset: startoffset,
-                        depth: element_path.length
-                    },
-                    end: {
-                        par_id: parelement.id,
-                        t: parelement.getAttribute("t"),
-                        el_path: element_path,
-                        offset: endOffset,
-                        depth: element_path.length
-                    }
+            newAnnotation.coord = {
+                start: {
+                    par_id: parelement.id,
+                    t: parelement.getAttribute("t"),
+                    el_path: element_path,
+                    offset: startoffset,
+                    depth: element_path.length
                 },
-                comments: [
-                    //{"content": "", "author": username}
-                ]
+                end: {
+                    par_id: parelement.id,
+                    t: parelement.getAttribute("t"),
+                    el_path: element_path,
+                    offset: endOffset,
+                    depth: element_path.length
+                }
             };
 
             if (answer_id !== null)
                 newAnnotation.answer_id = answer_id.selectedAnswer.id;
 
-            addAnnotationToCoord($scope.selectedArea, newAnnotation, true);
+            $scope.addAnnotationToCoord($scope.selectedArea, newAnnotation, true);
             $scope.annotations.push(newAnnotation);
             $scope.annotationids[newAnnotation.id] = newAnnotation.id;
 
@@ -423,14 +426,66 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             $scope.makePostRequest("/add_annotation", newAnnotation, function (json) {
                 $scope.annotationids[newAnnotation.id] = json.data;
-                console.log("Annotation");
+                console.log("Annotation to text");
                 console.log(json);
             });
 
             $scope.selectedArea = undefined;
             velp.used += 1;
+        } else if($scope.selectedElement !== null){
+            newAnnotation.coord = {
+                start: {
+                    par_id: $scope.selectedElement.id,
+                    t: $scope.selectedElement.getAttribute("t")
+                },
+                end: {
+                    par_id: $scope.selectedElement.id,
+                    t: $scope.selectedElement.getAttribute("t")
+                }
+            };
+            addAnnotationToElement($scope.selectedElement, newAnnotation, true, "No coordinate found");
+            $scope.annotations.push(newAnnotation);
+            $scope.annotationids[newAnnotation.id] = newAnnotation.id;
+
+            $scope.makePostRequest("/add_annotation", newAnnotation, function (json) {
+                $scope.annotationids[newAnnotation.id] = json.data;
+                console.log("Annotation to element");
+                console.log(json);
+            });
+            velp.used += 1;
         }
+
         $scope.annotationsAdded = true;
+    };
+
+    $scope.getNewAnnotation = function (json) {
+        var newAnnotation = {
+            id: -($scope.annotations.length + 1),
+            velp: velp.id,
+            points: velp.points,
+            doc_id: $scope.docId,
+            visible_to: 4,
+            content: velp.content,
+            coord: {
+                start: {
+                    par_id: parelement.id,
+                    t: parelement.getAttribute("t"),
+                    el_path: element_path,
+                    offset: startoffset,
+                    depth: element_path.length
+                },
+                end: {
+                    par_id: parelement.id,
+                    t: parelement.getAttribute("t"),
+                    el_path: element_path,
+                    offset: endOffset,
+                    depth: element_path.length
+                }
+            },
+            comments: [
+                //{"content": "", "author": username}
+            ]
+        };
     };
 
     /**
@@ -593,6 +648,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.createPopOverElement = function (annotation, show) {
         var element = document.createElement("span");
+
+        //element.setAttribute("style", "line-height: 1em;");
         element.setAttribute("annotation", "");
         //element.classList.add("annotation-element");
         var velp_data = $scope.getVelpById(annotation.velp);

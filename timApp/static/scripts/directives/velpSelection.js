@@ -90,7 +90,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             });
 
         });
-
     });
 
 
