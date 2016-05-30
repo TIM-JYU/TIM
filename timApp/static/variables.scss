@@ -28,6 +28,9 @@ $editline-width: 3em;
 $readline-offset: -1em;
 $note-width: 30%;
 $heading-outdent: -1em;
+$icon-color: $basic-color;
+$icon-hover-color: darken($basic-color, 10%);
+$link-visited-color: #5242CE;
 
 // these column variables must match the ones in base.html
 $left-side-columns: 2;
@@ -39,7 +42,8 @@ $gray: lighten($gray-base, 33.5%);
 $brand-primary: $basic-color;
 $text-color: black;
 $input-color: black;
-$link-color: darken($brand-primary, 10%);
+$link-color: #5588FF;
+$link-hover-color: darken($link-color, 15%);
 $input-color-placeholder: $gray;
 $headings-font-weight: 700;
 $font-size-base: 14px; // this should probably not be changed from default 14px

@@ -8,6 +8,22 @@ body {
     margin-bottom: $footer-height;
 }
 
+a:visited {
+    color: $link-visited-color;
+}
+
+a .glyphicon {
+    color: $icon-color;
+    &:hover {
+        color: $icon-hover-color;
+    }
+}
+
+// make sure active tab remains black
+.active a .glyphicon {
+    color: inherit;
+}
+
 .siteheader {
     @include clearfix;
     border-bottom: $header-footer-border;
