@@ -18,11 +18,12 @@ class NoWarnings:
 
 class MailerTest(unittest.TestCase):
     def setUp(self):
+
         self.maildir = os.path.join(os.getcwd(), 'test_mail')
         if os.path.exists(self.maildir):
             rmtree(self.maildir)
 
-        self.mailer = Mailer(mail_dir=self.maildir, dry_run=True)
+        self.mailer = Mailer(mail_dir=self.maildir, client_rate=20, client_rate_window=60, dry_run=True)
 
     def tearDown(self):
         if os.path.exists(self.maildir):
@@ -204,36 +205,29 @@ class MailerTest(unittest.TestCase):
         files = os.listdir(self.maildir)
         self.assertEqual(len(files), 0)
 
-    def wait_and_update(self, delay):
-        t0 = time.time()
-        while time.time() - t0 < delay:
-            self.mailer.update()
-
     def testUpdate(self):
-        self.mailer = Mailer(mail_dir=self.maildir, client_rate=2, client_rate_window=1, dry_run=True)
-        self.mailer.update()
+        self.mailer = Mailer(mail_dir=self.maildir, client_rate=2, client_rate_window=60, dry_run=True)
 
         self.mailer.enqueue(self.mkheader("s1", "r1", "subj1"), "m1")
         self.mailer.enqueue(self.mkheader("s2", "r2", "subj2"), "m2")
         self.mailer.enqueue(self.mkheader("s3", "r3", "subj3"), "m3")
         self.mailer.enqueue(self.mkheader("s4", "r4", "subj4"), "m4")
-        self.wait_and_update(0.5)    # window 1: 0.5
+        self.mailer.update(30)    # window 1: 30 s
 
         files = os.listdir(self.maildir)
         self.assertEqual(len(files), 4, "Files in maildir: " + str(os.listdir(self.maildir)))
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
-        self.mailer.update()
         self.assertEqual(len(os.listdir(self.maildir)), 4)
 
         self.mailer.enqueue(self.mkheader("s5", "r5", "subj5"), "m5")
 
-        self.wait_and_update(0.7)    # window 1: 1.2
+        self.mailer.update(45)    # window 2: 25 s
         self.assertEqual(len(os.listdir(self.maildir)), 3)
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
 
-        self.wait_and_update(0.9)    # window 2: 0.1
+        self.mailer.update(50)    # window 2: 35 s
         self.assertEqual(len(os.listdir(self.maildir)), 0)
 
     def testNewInstance(self):
@@ -243,23 +237,22 @@ class MailerTest(unittest.TestCase):
         self.mailer.enqueue(self.mkheader("s4", "r4", "subj4"), "m4")
 
         self.mailer = Mailer(mail_dir=self.maildir, client_rate=2, client_rate_window=1, dry_run=True)
-        self.mailer.update()
+        self.mailer.update(0)
 
-        self.wait_and_update(0.5)    # window 1: 0.5
+        self.mailer.update(0.5)    # window 1: 0.5
 
         files = os.listdir(self.maildir)
         self.assertEqual(len(files), 4, "Files in maildir: " + str(os.listdir(self.maildir)))
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
-        self.mailer.update()
         self.assertEqual(len(os.listdir(self.maildir)), 4)
 
         self.mailer.enqueue(self.mkheader("s5", "r5", "subj5"), "m5")
 
-        self.wait_and_update(0.7)    # window 1: 1.2
+        self.mailer.update(0.7)    # window 1: 1.2
         self.assertEqual(len(os.listdir(self.maildir)), 3)
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
 
-        self.wait_and_update(0.9)    # window 2: 0.1
+        self.mailer.update(0.9)    # window 2: 0.1
         self.assertEqual(len(os.listdir(self.maildir)), 0)

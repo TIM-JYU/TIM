@@ -4,7 +4,6 @@ import os
 import random
 import smtplib
 import string
-import time
 
 from email.mime.text import MIMEText
 from typing import Union
@@ -36,8 +35,8 @@ class Mailer:
         self.client_rate_window = client_rate_window
         self.dry_run = dry_run
 
-        self.first_message_time = None
-        self.messages_remaining = client_rate
+        self.messages_remaining = self.client_rate
+        self.window_age = 0
 
     def get_first_filename(self) -> str:
         return os.path.join(self.mail_dir, 'first')
@@ -147,25 +146,24 @@ class Mailer:
         s.quit()
         logging.getLogger('mailer').info("Message sent")
 
-    def update(self):
-        if self.first_message_time is not None:
-            window_age = time.time() - self.first_message_time
-            if window_age > self.client_rate_window:
-                # New window
-                self.first_message_time = None
-                self.messages_remaining = self.client_rate
-                logging.getLogger('mailer').info("A new message window is opened")
+    def update(self, dt: float):
+        old_window_age = self.window_age
 
-        if not self.has_messages():
-            return
+        self.window_age += dt
+        if self.window_age > self.client_rate_window:
+            self.messages_remaining = self.client_rate
+            while self.window_age >= self.client_rate_window:
+                self.window_age -= self.client_rate_window
+            logging.getLogger('mailer').info("A new message window is opened")
 
-        if self.messages_remaining < 1:
-            logging.getLogger('mailer').info("{} messages in queue, waiting for a new send window".format(
-                self.messages_remaining))
-            return
+        print('update({}), window age = {} -> {}'.format(dt, old_window_age, self.window_age))
 
-        self.send_message(self.dequeue())
-        self.messages_remaining -= 1
-        if self.first_message_time is None:
-            self.first_message_time = time.time()
+        while self.has_messages():
+            if self.messages_remaining < 1:
+                logging.getLogger('mailer').info("{} messages in queue, waiting for a new send window".format(
+                    self.messages_remaining))
+                return
+
+            self.send_message(self.dequeue())
+            self.messages_remaining -= 1
 
