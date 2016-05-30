@@ -363,7 +363,10 @@ def yubi_login(username, otp):
     if not client:
         abort(403, 'Yubico API keys not configured - see routes/login.py for details')
 
-    if not client.verify(otp):
+    try:
+        if not client.verify(otp):
+            abort(403, 'Authentication failed')
+    except YubicoError:
         abort(403, 'Authentication failed')
 
     session['user_id'] = user['id']
