@@ -783,12 +783,12 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 
     $scope.onFileSelect = function (file) {
         // if (!touchDevice) $scope.editor.focus();
-        $scope.file = file;
+        $scope.ufile = file;
         console.log(file);
 
         if (file) {
-            $scope.file.progress = 0;
-            $scope.file.error = null;
+            $scope.ufile.progress = 0;
+            $scope.ufile.error = null;
             $scope.uploadedFile = null;
             $scope.uploadresult = null;
             $scope.docURL = null;
@@ -808,9 +808,9 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
                 });
             }, function (response) {
                 if (response.status > 0) 
-                    $scope.file.error = response.data.error;
+                    $scope.ufile.error = response.data.error;
             }, function (evt) {
-                    $scope.file.progress = Math.min(100, parseInt(100.0 *
+                    $scope.ufile.progress = Math.min(100, parseInt(100.0 *
                     evt.loaded / evt.total));
             });
 
