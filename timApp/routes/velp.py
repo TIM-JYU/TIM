@@ -125,7 +125,7 @@ def get_velp_groups(document_id: int):
 
 @velps.route("/<document_id>/get_velp_group_defaults", methods=['GET'])
 def get_velp_group_defaults(document_id: int):
-    """Gets all velp groups for document user has access to by using VelpGroupSelection table
+    """Gets default velp group selections for velp groups user has access to in document
 
     :param document_id: ID of document
     :return:
@@ -369,12 +369,14 @@ def change_selection(document_id: int):
     try:
         velp_group_id = json_data['id']
         selection = json_data['selected']
+        target_type = json_data['target_type']
+        target_id = json_data['target_id']
     except KeyError as e:
         abort(400, "Missing data: " + e.args[0])
     verifyLoggedIn()
     user_id = getCurrentUserId()
     timdb = getTimDb()
-    timdb.velp_groups.change_selection(doc_id, velp_group_id, user_id, selection)
+    timdb.velp_groups.change_selection(doc_id, velp_group_id, target_type, target_id, user_id, selection)
 
     return ""
 
