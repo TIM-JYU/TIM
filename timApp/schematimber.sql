@@ -24,13 +24,7 @@ DROP TABLE IF EXISTS VelpGroupSelection;
 
 DROP TABLE IF EXISTS ImportedVelpGroups;
 
-DROP TABLE IF EXISTS VelpGroupInDocument;
-
-DROP TABLE IF EXISTS VelpGroupInParagraph;
-
-DROP TABLE IF EXISTS VelpGroupInArea;
-
-DROP TABLE IF EXISTS VelpGroupInFolder;
+DROP TABLE IF EXISTS VelpGroupDefaults;
 
 DROP TABLE IF EXISTS VelpGroupLabel;
 
@@ -284,74 +278,15 @@ CREATE TABLE ImportedVelpGroups (
 );
 
 
-CREATE TABLE VelpGroupInDocument (
+CREATE TABLE VelpGroupDefaults (
+  doc_id        INTEGER NOT NULL,
+  target_type   INTEGER NOT NULL,   -- 0 = document, 1 = paragraph, 2 = area
+  target_id     TEXT NOT NULL,
   velp_group_id INTEGER NOT NULL,
-  document_id   INTEGER NOT NULL,
+  selected      BOOLEAN DEFAULT FALSE,
 
-  CONSTRAINT VelpGroupInDocument_PK
-  PRIMARY KEY (velp_group_id, document_id),
-
-  CONSTRAINT VelpGroup_id
-  FOREIGN KEY (velp_group_id)
-  REFERENCES VelpGroup (id)
-  ON DELETE CASCADE
-  ON UPDATE CASCADE
-);
-
-
-CREATE TABLE VelpGroupInParagraph (
-  velp_group_id INTEGER NOT NULL,
-  document_id   INTEGER NOT NULL,
-  paragraph_id  TEXT    NOT NULL,
-
-  CONSTRAINT VelpGroupInParagraph_PK
-  PRIMARY KEY (velp_group_id, document_id, paragraph_id),
-
-  CONSTRAINT VelpGroup_id
-  FOREIGN KEY (velp_group_id)
-  REFERENCES VelpGroup (id)
-  ON DELETE CASCADE
-  ON UPDATE CASCADE
-);
-
-
-CREATE TABLE VelpGroupInArea (
-  velp_group_id INTEGER NOT NULL,
-  document_id   INTEGER NOT NULL,
-  area_id       TEXT    NOT NULL,
-
-  CONSTRAINT VelpGroupInArea_PK
-  PRIMARY KEY (velp_group_id, document_id, area_id),
-
-  CONSTRAINT VelpGroup_id
-  FOREIGN KEY (velp_group_id)
-  REFERENCES VelpGroup (id)
-  ON DELETE CASCADE
-  ON UPDATE CASCADE
-);
-
-
-CREATE TABLE VelpGroupInFolder (
-  velp_group_id INTEGER NOT NULL,
-  folder_id     INTEGER NOT NULL,
-
-  CONSTRAINT VelpGroupInFolder_PK
-  PRIMARY KEY (velp_group_id, folder_id),
-
-  CONSTRAINT VelpGroup_id
-  FOREIGN KEY (velp_group_id)
-  REFERENCES VelpGroup (id)
-  ON DELETE CASCADE
-  ON UPDATE CASCADE
-);
-
-
-CREATE TABLE VelpGroupLabel (
-  id      INTEGER NOT NULL,
-  content TEXT    NOT NULL,
-
-  CONSTRAINT VelpGroupLabel_PK
-  PRIMARY KEY (id)
+  CONSTRAINT ImportedVelpGroups_PK
+  PRIMARY KEY (doc_id, target_id, velp_group_id)
 );
 
 
@@ -385,40 +320,6 @@ CREATE VIEW VelpInformation AS
     VelpVersion.modify_time
   FROM VelpVersion
     INNER JOIN VelpContent ON VelpVersion.id = VelpContent.version_id;
-
-
-CREATE VIEW VelpGroupInAssessmentArea AS
-  SELECT
-    VelpGroupInDocument.velp_group_id AS velp_group_id,
-    VelpGroupInDocument.document_id   AS document_id,
-    NULL                              AS paragraph_id,
-    NULL                              AS area_id,
-    NULL                              AS folder_id
-  FROM VelpGroupInDocument
-  UNION ALL
-  SELECT
-    VelpGroupInParagraph.velp_group_id,
-    VelpGroupInParagraph.document_id,
-    VelpGroupInParagraph.paragraph_id,
-    NULL,
-    NULL
-  FROM VelpGroupInParagraph
-  UNION ALL
-  SELECT
-    VelpGroupInArea.velp_group_id,
-    VelpGroupInArea.document_id,
-    NULL,
-    VelpGroupInArea.area_id,
-    NULL
-  FROM VelpGroupInArea
-  UNION ALL
-  SELECT
-    VelpGroupInFolder.velp_group_id,
-    NULL,
-    NULL,
-    NULL,
-    VelpGroupInFolder.folder_id
-  FROM VelpGroupInFolder;
 
 -- IMPORTANT! THIS IS EXAMPLE DATA. YOU SHOULD PROBABLY DELETE IT BEFORE RUNNING IN PRODUCTION.
 INSERT INTO Velp (id, creator_id, default_points, icon_id, valid_until) VALUES (1, 1, -2, NULL, NULL);
@@ -476,29 +377,6 @@ INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (3, 6);
 
 INSERT INTO ImportedVelpGroups (user_group, doc_id, target_type, target_id, velp_group_id) VALUES (3, 7, 0, 0, 1);
 INSERT INTO ImportedVelpGroups (user_group, doc_id, target_type, target_id, velp_group_id) VALUES (3, 162, 0, 0, 1);
-
---INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 1);
---INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 2);
---INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 3);
---INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 4);
---INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 5);
---INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 6);
---INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 7);
---INSERT INTO VelpInGroup (velp_group_id, velp_id) VALUES (167, 8);
---
-INSERT INTO VelpGroupInDocument (velp_group_id, document_id) VALUES (1, 1);
-INSERT INTO VelpGroupInDocument (velp_group_id, document_id) VALUES (2, 1);
-INSERT INTO VelpGroupInDocument (velp_group_id, document_id) VALUES (3, 1);
-INSERT INTO VelpGroupInDocument (velp_group_id, document_id) VALUES (2, 7);
-INSERT INTO VelpGroupInDocument (velp_group_id, document_id) VALUES (1, 7);
-INSERT INTO VelpGroupInDocument (velp_group_id, document_id) VALUES (3, 7);
-INSERT INTO VelpGroupInDocument (velp_group_id, document_id) VALUES (4, 7);
-
-INSERT INTO VelpGroupInParagraph (velp_group_id, document_id, paragraph_id) VALUES (1, 1, "4S2wxuOzeuNb");
-
-INSERT INTO VelpGroupInArea (velp_group_id, document_id, area_id) VALUES (1, 1, "joku area-id");
-
-INSERT INTO VelpGroupInFolder (velp_group_id, folder_id) VALUES (1, 1);
 
 INSERT INTO VelpLabel (id, language_id, content) VALUES (1, "FI", "Historia");
 INSERT INTO VelpLabel (id, language_id, content) VALUES (2, "FI", "Waterloo");
