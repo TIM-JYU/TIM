@@ -85,7 +85,8 @@ def update_database():
                    3: add_seeanswers_right,
                    4: add_translation_table,
                    5: add_logged_in_user,
-                   6: add_notifications}
+                   6: add_notifications,
+                   7: add_yubikey}
     while ver in update_dict:
         # TODO: Take automatic backup of the db (tim_files) before updating
         print('Starting update {}'.format(update_dict[ver].__name__))
@@ -129,6 +130,8 @@ CREATE TABLE Notification (
 
     return True
 
+def add_yubikey(timdb):
+    timdb.execute_sql('ALTER TABLE User ADD COLUMN yubikey VARCHAR(12)')
 
 def add_logged_in_user(timdb):
     lu = timdb.users.get_user_id_by_name(LOGGED_IN_USERNAME)

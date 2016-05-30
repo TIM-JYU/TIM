@@ -56,6 +56,7 @@ run pip3 install python-magic
 run pip3 install git+git://github.com/miracle2k/webassets.git
 run pip3 install libsass
 run pip3 install flask-assets
+run pip3 install yubico-client
 
 # Need to update the package "six"; otherwise there will be a strange error with Flask's reloader
 # run pip3 install -U six

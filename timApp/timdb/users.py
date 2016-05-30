@@ -1,10 +1,10 @@
-import json
 from contracts import contract, new_contract
 from typing import Optional
 
 from timdb.timdbbase import TimDbBase, TimDbException
 
 import hashlib
+import re
 import sqlite3
 
 new_contract('row', sqlite3.Row)
@@ -124,6 +124,20 @@ class Users(TimDbBase):
                        [name, real_name, email, pass_hash, user_id])
         if commit:
             self.db.commit()
+
+    def update_user_field(self, user_id: int, field_name: str, field_value: str, commit: bool = True):
+        cursor = self.db.cursor()
+        if field_name == 'pass':
+            field_value = self.hash_password(field_value)
+
+        # No sql injection or other funny business
+        if re.match('^[a-zA-Z_-]+$', field_name) is None:
+            raise TimDbException('update_user_field: passed field name ' + field_name)
+
+        cursor.execute('UPDATE User SET {} = ? WHERE id = ?'.format(field_name), [field_value, user_id])
+        if commit:
+            self.db.commit()
+
 
     @contract
     def create_usergroup(self, name: 'str', commit: 'bool' = True) -> 'int':
@@ -254,7 +268,7 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT id, name, real_name, email FROM User WHERE id = ?', [user_id])
+        cursor.execute('SELECT * FROM User WHERE id = ?', [user_id])
         result = self.resultAsDictionary(cursor)
         return result[0] if len(result) > 0 else None
 
