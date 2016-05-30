@@ -123,8 +123,8 @@ def get_velp_groups(document_id: int):
 
     return jsonResponse(velp_groups)
 
-@velps.route("/<document_id>/get_velp_group_defaults", methods=['GET'])
-def get_velp_group_defaults(document_id: int):
+@velps.route("/<document_id>/get_velp_group_default_selections", methods=['GET'])
+def get_velp_group_default_selections(document_id: int):
     """Gets default velp group selections for velp groups user has access to in document
 
     :param document_id: ID of document
