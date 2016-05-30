@@ -250,38 +250,41 @@ class Annotations(TimDbBase):
         # Distinct is necessary, because we get several identical rows if there are several users contributing in the
         # same answer.
         cursor.execute("""
-                       SELECT DISTINCT
-                         Annotation.id,
-                         VelpVersion.velp_id AS velp,
-                         VelpContent.content AS content,
-                         Annotation.visible_to,
-                         Annotation.points,
-                         Annotation.creation_time,
-                         Annotation.valid_until,
-                         Annotation.icon_id,
-                         Annotation.annotator_id,
-                         Annotation.answer_id,
-                         Annotation.paragraph_id_start,
-                         Annotation.paragraph_id_end,
-                         Annotation.offset_start,
-                         Annotation.node_start,
-                         Annotation.depth_start,
-                         Annotation.offset_end,
-                         Annotation.node_end,
-                         Annotation.depth_end,
-                         Annotation.hash_start,
-                         Annotation.hash_end,
-                         Annotation.element_path_start,
-                         Annotation.element_path_end
-                       FROM Annotation
-                         INNER JOIN VelpVersion ON VelpVersion.id = Annotation.velp_version_id
-                         INNER JOIN VelpContent ON VelpContent.version_id = Annotation.velp_version_id
-                         LEFT JOIN UserAnswer ON UserAnswer.answer_id = Annotation.answer_id
-                       WHERE VelpContent.language_id = ? AND
-                             (Annotation.valid_until ISNULL OR
-                                Annotation.valid_until >= CURRENT_TIMESTAMP) AND
-                             Annotation.document_id = ? AND (
-                                Annotation.annotator_id = ? OR (
+                       select distinct
+                         annotation.id,
+                         velpversion.velp_id as velp,
+                         velpcontent.content as content,
+                         annotation.visible_to,
+                         annotation.points,
+                         annotation.creation_time,
+                         annotation.valid_until,
+                         annotation.icon_id,
+                         annotation.annotator_id,
+                         user.name as annotator_name,
+                         user.real_name as annotator_real_name,
+                         annotation.answer_id,
+                         annotation.paragraph_id_start,
+                         annotation.paragraph_id_end,
+                         annotation.offset_start,
+                         annotation.node_start,
+                         annotation.depth_start,
+                         annotation.offset_end,
+                         annotation.node_end,
+                         annotation.depth_end,
+                         annotation.hash_start,
+                         annotation.hash_end,
+                         annotation.element_path_start,
+                         annotation.element_path_end
+                       from annotation
+                         inner join velpversion on velpversion.id = annotation.velp_version_id
+                         inner join velpcontent on velpcontent.version_id = annotation.velp_version_id
+                         left join useranswer on useranswer.answer_id = annotation.answer_id
+                         inner join user on user.id = annotation.annotator_id
+                       where velpcontent.language_id = ? and
+                             (annotation.valid_until isnull or
+                                annotation.valid_until >= current_timestamp) and
+                             annotation.document_id = ? and (
+                                annotation.annotator_id = ? or (
                                 """ + check_annotation_access_right_sql +
                                 """ AND (? OR UserAnswer.user_id = ? OR UserAnswer.user_id ISNULL)
                              )

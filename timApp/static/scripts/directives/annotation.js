@@ -18,7 +18,7 @@ timApp.directive("annotation", function() {
             visibleto: '=',
             comments: '=',
             aid: '=',
-            user: '@',
+            annotator: '@',
             velp: '@'
         },
 

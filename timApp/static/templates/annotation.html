@@ -1,7 +1,7 @@
 <!-- Pop over element --><span class="annotation-element"><span ng-show="show" ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
     <span class="fulldiv">
         <span class="div-90">
-            <p><span><strong>{{ velp }}</strong></span>
+            <p><span><strong>{{ velp }}</strong></span><em>by: {{ annotator }}</em>
                 <label>Points: <input type="number" ng-model="points" ng-value="points"
                                            ng-change="changePoints(points)" /></label>
             </p>
