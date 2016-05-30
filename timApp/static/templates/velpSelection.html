@@ -51,7 +51,7 @@
                     </form>
                 </div>
 
-                <input id="createVelpButton" type="button" ng-click="selectVelpToEdit(newVelp)" value="Create new velp">
+                <input id="createVelpButton" class="timButton" type="button" ng-click="selectVelpToEdit(newVelp)" value="Create new velp">
 
                 <div class="stack">
 
@@ -105,7 +105,7 @@
                                                           ng-checked="gr.default"> {{ gr.name }}</label><br>
                                         </span>
                                     </fieldset>
-                                    <p><input id="addVelpBtn" type="submit" value="Add velp"/></p>
+                                    <p><input id="addVelpBtn" class="timButton" type="submit" value="Create velp"/></p>
                                 </form>
                             </div>
                         </div>
@@ -113,9 +113,6 @@
 
                     <!-- EDIT VELPS -->
                             <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn )">
-
-
-
                                 <div class="velp" ng-click="useVelp(velp)"
                                      ng-style="{top: 2+$index*2 + 'em'}">
                                     <div ng-class="['velp-data', 'emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0,
@@ -260,11 +257,13 @@
                                <input type="radio" name="group1" ng-model="newVelpGroup.content_type" id="radioDoc" value="1"> <label for="radioDoc">Document</label><br>
                                <input type="radio" name="group1" ng-model="newVelpGroup.content_type" id="radioFolder" value="2"> <label for="radioFolder">Folder</label></p>
                         </fieldset>
+
                         <p><input type="submit" class="timButton" value="Create velpgroup"></p>
                         <p ng-show="(addVelpGroupForm.newVelpGroup.name.$invalid && !addVelpGroupForm.newVelpGroup.name.$pristine) || (submitted.velpGroup && addVelpGroupForm.newVelpGroup.name.$invalid)"
                                                    class="error">
                                                     VelpGroup name is required!
                         </p>
+
                     </form>
                 </div>
             </div>
