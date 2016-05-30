@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 var csPluginStartTime = new Date();
 /*
 Sagea varten ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst#id3
@@ -11,18 +11,21 @@ if (angular.isDefined(window.csApp)) {
     var csAppCompile = csApp.compile;
 }
 
-var csApp = angular.module('csApp', ['ngSanitize']);
-csApp.directive('csRunner',['$sanitize','$compile', function ($sanitize,$compile1) {	"use strict"; csApp.sanitize = $sanitize; csApp.compile = $compile1; return csApp.directiveFunction('console',false); }]);
-csApp.directive('csJypeliRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('jypeli',false); }]);
-csApp.directive('csComtestRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('comtest',false); }]);
-csApp.directive('csRunnerInput',['$sanitize','$compile', function ($sanitize,$compile1) { "use strict";	csApp.sanitize = $sanitize; csApp.compile = $compile1; return csApp.directiveFunction('console',true); }]);
-csApp.directive('csJypeliRunnerInput', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('jypeli',true); }]);
-csApp.directive('csComtestRunnerInput', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('comtest',true); }]);
-csApp.directive('csTaunoRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',false); }]);
-csApp.directive('csTaunoRunnerInput', ['$sanitize','$compile', function ($sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',true); }]);
-csApp.directive('csParsonsRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('parsons',false); }]);
-csApp.directive('csSageRunner', ['$sanitize','$compile', function ($sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('sage',true); }]);
-csApp.directive('csSimcirRunner', ['$sanitize','$compile', function ($sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('simcir',false); }]);
+var csApp = angular.module('csApp', ['ngSanitize','ngFileUpload']);
+csApp.directive('csRunner',['Upload','$sanitize','$compile', 
+  function (Upload, $sanitize,$compile1) {	
+       "use strict"; csApp.Upload = Upload; csApp.sanitize = $sanitize; csApp.compile = $compile1; 
+       return csApp.directiveFunction('console',false); }]);
+csApp.directive('csJypeliRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('jypeli',false); }]);
+csApp.directive('csComtestRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('comtest',false); }]);
+csApp.directive('csRunnerInput',['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict";	csApp.sanitize = $sanitize; csApp.compile = $compile1; return csApp.directiveFunction('console',true); }]);
+csApp.directive('csJypeliRunnerInput', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('jypeli',true); }]);
+csApp.directive('csComtestRunnerInput', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('comtest',true); }]);
+csApp.directive('csTaunoRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',false); }]);
+csApp.directive('csTaunoRunnerInput', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',true); }]);
+csApp.directive('csParsonsRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('parsons',false); }]);
+csApp.directive('csSageRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('sage',true); }]);
+csApp.directive('csSimcirRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('simcir',false); }]);
 // csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
 
 // redefine csApp.sanitize and csApp.compile if needed
@@ -89,8 +92,8 @@ ConsolePWD.getPWD = function() {
 
 var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage","simcir","xml","r"];
-languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python","json","xml","r"];
+languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage","simcir","xml","r", "octave"];
+languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python","json","xml","r","octave"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
@@ -258,7 +261,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
     csLogTime("dir templ " + t);
     if ( TESTWITHOUTPLUGINS ) return '';
     
-	return  '<div class="csRunDiv no-popup-menu" ng-cloak>' + 
+	return  '<div class="csRunDiv " ng-cloak>' + 
     
 				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>
@@ -271,6 +274,15 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				    '<p ng-if="taunoOn" class="taunoOhje">{{taunoOhjeText}}</a></p>' 
                     : '<p ng-if="taunoOn && !noeditor" class="pluginHide"" ><a ng-click="copyFromSimcir()">copy from SimCir</a> | <a ng-click="copyToSimcir()">copy to SimCir</a> | <a ng-click="hideTauno()">hide SimCir</a></p>') +
 					"" : "") +   
+                  '<div ng-if="upload" class="form-inline">' +  
+                  '<div class="form-group">' +
+                  '    Upload image/file: <input type="file" ngf-select="onFileSelect($file)" >' +
+                  '            <span ng-show="file.progress >= 0 && !file.error"' +
+                  '                  ng-bind="file.progress < 100 ? \'Uploading... \' + file.progress + \'%\' : \'Done!\'"></span>' +
+                  '</div>' +
+                  '    <div class="error" ng-show="file.error" ng-bind="file.error"></div>' +
+                  '    <div  class="úploadresult" ng-if="uploadresult" ><span ng-bind-html="uploadresult"></span></div>' +
+                  '</div>' +
                   '<div ng-show="isAll" style="float: right;">{{languageText}} '+
                     '<select ng-model="selectedLanguage" ng-required ng-init="progLanguag=\'java\'">'+
                       '<option ng-repeat="item in progLanguages" value="{{item}}">{{item}}</option>'+
@@ -342,7 +354,9 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   //'<div  class="htmlresult" ng-if="htmlresult" ><span ng-bind-html="htmlresult"></span></div>'+
 				  //'<div  class="htmlresult" ng-if="htmlresult" >{{htmlresult}}</span></div>'+
                   
-				  (t === "jypeli" || true ? '<img ng-if="imgURL" class="grconsole" ng-src="{{imgURL}}" alt=""  />' : "") +
+				  (t === "jypeli" || true ? '<img ng-if="imgURL" class="grconsole" ng-src="{{imgURL}}" alt=""  />' +
+                         '<video ng-if="wavURL" ng-src="{{wavURL}}" type="video/mp4" controls="" autoplay="true" width="300" height="40"></video>'
+                      : "") +
 				  // '<a ng-if="docURL" class="docurl" href="{{docURL}}" target="csdocument" >Go to document</a>' +
 				  '<div ng-if="docURL" class="docurl">'+
 				  '<p align="right" style="position: absolute; margin-left: 790px;"><a ng-click="closeDocument()" >X</a></p>' +
@@ -417,6 +431,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"file");
 			csApp.set(scope,attrs,"viewCode",false);
 			csApp.set(scope,attrs,"filename");
+			csApp.set(scope,attrs,"upload");
 			csApp.set(scope,attrs,"lang");
 			csApp.set(scope,attrs,"width");
 			csApp.set(scope,attrs,"height");
@@ -581,6 +596,8 @@ csApp.directiveFunction = function(t,isInput) {
             scope.changeCodeLink();
             csLogTime(scope.taskId);
             
+            scope.showUploaded(scope.attrs.uploadedFile,scope.attrs.uploadedType);
+            
             // if ( scope.isSage ) alustaSage(scope);
             
 		},		
@@ -604,13 +621,24 @@ function alustaSage(scope,firstTime) {
 // TODO: kielien valinnan tallentaminen
 // TODO: kielien valinta kunnolla float.  
 // ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst  
+    if ( scope.sagecellInfo ) {
+        scope.sagecellInfo.editor = "textarea";
+        //scope.sagecellInfo.inputLocation = null;
+        //scope.sagecellInfo.outputLocation = null;
+        //sagecell.deleteSagecell(scope.sagecellInfo);
+        //scope.sagecellInfo = null;
+    }        
     var types = scope.type.split("/");
     var languages = sagecell.allLanguages;
     if ( types.length > 1 ) languages = types.slice(1); 
     if ( scope.sagecellInfo ) {
         var outputLocation = $(scope.sageOutput);
         outputLocation.find(".sagecell_output_elements").hide();
-        scope.sagecellInfo.code = scope.usercode;
+        // scope.sagecellInfo.code = scope.usercode;
+        scope.sagecellInfo.code = scope.getReplacedCode();
+        scope.sagecellInfo.session.code = scope.sagecellInfo.code;
+        // scope.sagecellInfo.inputLocation.innerText = scope.sagecellInfo.code;
+        scope.sagecellInfo.inputLocation.children[0].children[0].children[0].value = scope.sagecellInfo.code;
         return;
     }    
     scope.sageArea = scope.element0.getElementsByClassName('computeSage')[0];                    
@@ -619,19 +647,26 @@ function alustaSage(scope,firstTime) {
     
     scope.sagecellInfo = sagecell.makeSagecell({
         inputLocation: scope.sageArea,
-        // inputLocation: scope.editArea,
+        replaceOutput: true,
+        //inputLocation: scope.editArea,
         editor: "textarea",
+        // hide: ["evalButton"],
         hide: ["editor","evalButton"],
         outputLocation: scope.sageOutput,
         requires_tos: false,
-        code: scope.usercode,
-        getCode: function() { return scope.getCode(); },
+        // code: scope.usercode,
+        code: scope.getReplacedCode(),
+        getCode: function() { 
+          return scope.getReplacedCode(); 
+        },
         autoeval: scope.attrs.autorun || firstTime,
         callback: function() {
             scope.sageButton = scope.sageArea.getElementsByClassName("sagecell_evalButton")[0]; // .button();     
             
             scope.sageButton.onclick = function() {
                 // scope.checkSageSave();
+                scope.sagecellInfo.code = scope.getReplacedCode();
+                scope.sagecellInfo.session.code = scope.sagecellInfo.code;
             };
             var sagecellOptions = scope.element0.getElementsByClassName('sagecell_options')[0];  
             var csRunMenuArea = scope.element0.getElementsByClassName('csRunMenuArea')[0];
@@ -705,9 +740,10 @@ csApp.Hex2Str = function (s) {
 };
 
 
-csApp.Controller = function($scope,$http,$transclude,$sce) {
+csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 "use strict";
     csLogTime("controller");
+	$scope.wavURL = "";
 	$scope.byCode ="";
 	$scope.attrs = {};
     $scope.svgImageSnippet = function() {
@@ -745,6 +781,56 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 	$scope.runSuccess = false;
 	$scope.copyingFromTauno = false;
 
+    $scope.onFileSelect = function (file) {
+        // if (!touchDevice) $scope.editor.focus();
+        $scope.file = file;
+        console.log(file);
+
+        if (file) {
+            $scope.file.progress = 0;
+            $scope.file.error = null;
+            $scope.uploadedFile = null;
+            $scope.uploadresult = null;
+            $scope.docURL = null;
+            var ti = $scope.taskId.split(".");
+            if ( ti.length < 2 ) return;
+            file.upload = Upload.upload({
+                url: '/pluginUpload/' + ti[0] + '/' + ti[1] + '/' + $scope.user_id + '/',
+                data: {
+                    file: file
+                }
+            });
+
+            file.upload.then(function (response) {
+                $timeout(function () {
+                    $scope.showUploaded(response.data.file, response.data.type);
+                    $scope.doRunCode('upload',false);
+                });
+            }, function (response) {
+                if (response.status > 0) 
+                    $scope.file.error = response.data.error;
+            }, function (evt) {
+                    $scope.file.progress = Math.min(100, parseInt(100.0 *
+                    evt.loaded / evt.total));
+            });
+
+            file.upload.finally(function () {
+            })
+        }
+    };
+    
+    $scope.showUploaded = function(file,type) {
+        if ( !file || !type ) return;
+        $scope.uploadedFile = file;
+        $scope.uploadedType = type;
+        if (type.startsWith("image")) {
+            $scope.uploadresult = '<img src="'+$scope.uploadedFile+'"/>';
+        } else {
+			$scope.uploadresult = $sce.trustAsHtml('<iframe width="800" height="600"  src="' + file +'" target="csdocument" />');
+        }
+    }
+    
+    
 	$scope.$watch('usercode', function() {
 		if ( !$scope.copyingFromTauno && $scope.usercode !== $scope.byCode ) $scope.muokattu = true;
 		$scope.copyingFromTauno = false;
@@ -865,8 +951,9 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         $scope.closeDocument();
         // alert("moi");
         
+        if ( $scope.isSage ) alustaSage($scope,true);
         if ( $scope.sageButton ) $scope.sageButton.click();
-        if ( $scope.isSage && !$scope.sagecellInfo ) alustaSage($scope,true);
+        // if ( $scope.isSage && !$scope.sagecellInfo ) alustaSage($scope,true);
         
         if ( $scope.simcir ) {
             $scope.usercode = $scope.getCircuitData();
@@ -893,6 +980,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         }
 		$scope.resImage = "";
 		$scope.imgURL = "";
+		$scope.wavURL = "";
 		$scope.runSuccess = false;
 		if ( runType != "js" ) $scope.result = "";
 		$scope.runTestGreen = false;
@@ -919,6 +1007,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 			    'userinput':uinput,
 			    'isInput' : isInput,
 			    'userargs': uargs,
+                'uploadedFile' : $scope.uploadedFile,
+                'uploadedType' : $scope.uploadedType,
                 // 'markup': {'type':t, 'file': $scope.file, 'replace': $scope.replace, 'lang': $scope.lang, 'taskId': $scope.taskId, 'user_id': $scope.user_id},
 				'markup': { 'type': t, 'taskId': $scope.taskId, 'user_id': $scope.user_id }
 			}
@@ -944,12 +1034,14 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 			}
 			$scope.error = data.web.error;
 			var imgURL = "";
+			var wavURL = "";
 			$scope.runSuccess = true;
             $scope.isRunning = false;
 
 			$scope.runError = $scope.error; // !$scope.runSuccess;
 
 			imgURL = data.web.image;
+			wavURL = data.web.wav;
 			if ( data.web.testGreen ) $scope.runTestGreen = true;
 			if ( data.web.testRed ) $scope.runTestRed = true;
 			$scope.comtestError = data.web.comtestError;
@@ -962,6 +1054,12 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 				$scope.result = data.web.console.trim();
 			}
 
+            if ( wavURL ) {
+                // <video src="https://tim.jyu.fi/csimages/cs/vesal/sinewave.wav" type="video/mp4" controls="" autoplay="true" ></video>
+				$scope.wavURL = wavURL;
+				$scope.result = data.web.console.trim();
+            }
+            
 			if ( imgURL ) {
 				// $scope.resImage = '<img src="' + imgURL + ' " alt="Result image" />';
 				$scope.imgURL = imgURL;
@@ -1270,6 +1368,33 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         $scope.carretPos = start; // seuraava tapahtuma nappaa tämän ja siirtää vain kursorin.
     };
 		
+	$scope.getReplacedCode = function() {
+		// $scope.code = $scope.localcode;
+		if ( !$scope.attrs.program ) { $scope.code = $scope.usercode; return $scope.code; }
+		var st = $scope.attrs.program.split("\n");
+		var r = "";
+		var rp = ["",""]; // alkuosa, loppuosa
+		var step = 0;
+		var nl = "";
+		var nls = "";
+        var needReplace = !!$scope.replace;
+        var regexp = new RegExp($scope.replace);
+		for (var i in st) if ( st.hasOwnProperty(i) ) {
+			var s = st[i];
+			// if ( s.indexOf($scope.replace) >= 0 ) {
+            if ( needReplace && regexp.test(s) ) {
+				r += nl + $scope.usercode;
+				if ( step === 0 ) { step++; nls = ""; continue; }
+			} else { 
+				r += nl + s;
+				rp[step] += nls + s;
+			}
+			nl = nls = "\n";
+		}
+		$scope.code = r;
+        return $scope.code;
+    }
+        
 	$scope.showCodeLocal = function() {
 		// $scope.code = $scope.localcode;
 		if ( $scope.localcode === "" ) { $scope.code = $scope.usercode; return; }
@@ -1663,12 +1788,9 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
           fn();
         }
         } else {
-        this.$apply(fn);
-    }
-    
-      
-
-};
+            this.$apply(fn);
+        }
+    };
 
 };
 

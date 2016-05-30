@@ -7,6 +7,24 @@ new_contract('bytes', bytes)
 
 class Images(TimDbBase):
     @contract
+    def get_file_path(self, path: 'str', filename: 'str'):
+        """Gets the path of an image.
+
+        :param path: The path for the file
+        :param file_id: The id of the image.
+        :param filename: The filename of the image.
+        :returns: The id and path of the image file.
+        """
+        p = os.path.join(self.blocks_path, 'dl', path)
+        if not os.path.exists(p):
+            os.makedirs(p)
+        file_id = len(os.listdir(p))+1
+        p = os.path.join(self.blocks_path, 'dl', path, str(file_id))
+        os.makedirs(p)
+
+        return file_id, os.path.join(p, filename)
+
+    @contract
     def getImagePath(self, image_id: 'int', image_filename: 'str'):
         """Gets the path of an image.
         
@@ -27,6 +45,31 @@ class Images(TimDbBase):
         """
 
         return os.path.relpath(self.getImagePath(image_id, image_filename), self.blocks_path)
+
+    @contract
+    def saveFile(self, file_data: 'bytes', path: 'str', filename: 'str', owner_group_id: 'int') -> 'str':
+        """Saves a file to the database.
+
+        :param file_data: The  data.
+        :param path: path for the file
+        :param filename: The filename
+        :param owner_group_id: The owner group of the file.
+        :returns: the relative path of the form 'path/file_id/filename'.
+        """
+
+        # TODO: Check that the file extension is allowed.
+        # TODO: Use imghdr module to do basic validation of the file contents.
+        # TODO: Should file name be unique among images?
+        cursor = self.db.cursor()
+        file_id, file_path = self.get_file_path(path, filename)
+        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (?,?,?)',
+                       [file_path, owner_group_id, blocktypes.IMAGE])
+
+        with open(file_path, 'wb') as f:
+            f.write(file_data)
+
+        self.db.commit()
+        return file_path
 
     @contract
     def saveImage(self, image_data: 'bytes', image_filename: 'str', owner_group_id: 'int') -> 'tuple(int, str)':

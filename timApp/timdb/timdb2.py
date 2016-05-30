@@ -67,6 +67,7 @@ class TimDb(object):
         self.readings = Readings(self.db, files_root_path, 'notes', current_user_name)
         self.users = Users(self.db, files_root_path, 'users', current_user_name)
         self.images = Images(self.db, files_root_path, 'images', current_user_name)
+        self.uploads = Uploads(self.db, files_root_path, 'uploads', current_user_name)
         self.files = Files(self.db, files_root_path, 'files', current_user_name)
         self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
         self.answers = Answers(self.db, files_root_path, 'answers', current_user_name)
