@@ -69,7 +69,7 @@ def add_annotation() -> str:
                                                  paragraph_id_start, paragraph_id_end, offset_start, node_start,
                                                  depth_start, offset_end, node_end, depth_end, hash_start, hash_end,
                                                  element_path_start, element_path_end, None, icon_id, answer_id)
-    return jsonResponse(new_id)
+    return jsonResponse({"id": new_id, "annotator_name": timdb.users.get_user(annotator_id)['name']})
 
 
 @annotations.route("/update_annotation", methods=['POST'])

@@ -368,6 +368,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             doc_id: $scope.docId,
             visible_to: 4,
             content: velp.content,
+            annotator_name: "me",
             coord: {},
             comments: []
         };
@@ -425,7 +426,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             console.log(newAnnotation);
 
             $scope.makePostRequest("/add_annotation", newAnnotation, function (json) {
-                $scope.annotationids[newAnnotation.id] = json.data;
+                $scope.annotationids[newAnnotation.id] = json.data.id;
                 console.log("Annotation to text");
                 console.log(json);
             });
@@ -448,7 +449,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             $scope.annotationids[newAnnotation.id] = newAnnotation.id;
 
             $scope.makePostRequest("/add_annotation", newAnnotation, function (json) {
-                $scope.annotationids[newAnnotation.id] = json.data;
+                $scope.annotationids[newAnnotation.id] = json.data.id;
                 console.log("Annotation to element");
                 console.log(json);
             });
@@ -466,6 +467,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             doc_id: $scope.docId,
             visible_to: 4,
             content: velp.content,
+            annotator_name: username,
             coord: {
                 start: {
                     par_id: parelement.id,
@@ -665,7 +667,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         element.setAttribute("velp", velp_content);
         element.setAttribute("points", annotation.points);
         element.setAttribute("aid", annotation.id);
-        console.log(annotation.annotator_name);
         element.setAttribute("annotator", annotation.annotator_name);
         element.setAttribute("visibleto", annotation.visible_to);
         element.setAttribute("show", show);
