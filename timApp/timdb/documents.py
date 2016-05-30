@@ -4,6 +4,7 @@ import os
 from sqlite3 import Connection
 
 from contracts import contract
+from typing import List
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.docsettings import DocSettings
@@ -351,7 +352,7 @@ class Documents(TimDbBase):
         return rows[0] if len(rows) > 0 else None
 
     @contract
-    def get_documents(self, include_nonpublic: 'bool' = False) -> 'list(dict)':
+    def get_documents(self, include_nonpublic: bool = False) -> List[dict]:
         """Gets all the documents in the database.
 
         :historylimit Maximum depth in version history.

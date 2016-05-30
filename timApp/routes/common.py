@@ -76,6 +76,12 @@ def verify_edit_access(block_id, message="Sorry, you don't have permission to ed
         abort(403, message)
 
 
+def verify_manage_access(block_id, message="Sorry, you don't have permission to manage this resource."):
+    timdb = getTimDb()
+    if not timdb.users.has_manage_access(getCurrentUserId(), block_id):
+        abort(403, message)
+
+
 def has_edit_access(block_id):
     timdb = getTimDb()
     return timdb.users.has_edit_access(getCurrentUserId(), block_id)

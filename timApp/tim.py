@@ -40,6 +40,7 @@ from routes.view import view_page
 from tim_app import app
 
 # db.engine.pool.use_threadlocal = True # This may be needless
+from utils import datestr_to_relative
 
 cache.init_app(app)
 
@@ -264,6 +265,7 @@ def get_documents(folder):
         doc['canEdit'] = timdb.users.has_edit_access(uid, doc['id'])
         doc['isOwner'] = timdb.users.user_is_owner(getCurrentUserId(), doc['id']) or timdb.users.has_admin_access(uid)
         doc['owner'] = timdb.users.get_owner_group(doc['id'])
+        doc['modified'] = datestr_to_relative(doc['modified'])
         final_docs.append(doc)
 
     final_docs.sort(key=lambda d: d['name'].lower())
@@ -515,7 +517,7 @@ def setslidestatus():
     if 'doc_id' not in request.args or 'status' not in request.args:
         abort(404, "Missing doc id or status")
     doc_id = int(request.args['doc_id'])
-    verify_ownership(doc_id)
+    verify_manage_access(doc_id)
     status = request.args['status']
     tempdb = getTempDb()
     tempdb.slidestatuses.update_or_add_status(doc_id, status)
