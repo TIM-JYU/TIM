@@ -44,7 +44,7 @@ class Funnel:
         self.server = None
         logging.getLogger().info('Server stops')
 
-    def update(self):
+    def update(self, dt: float):
         if self.server:
             self.server.handle_request()
             self.mailer.update()
@@ -98,8 +98,11 @@ if __name__ == '__main__':
     funnel.start()
 
     try:
+        t0 = time.time()
         while True:
-            funnel.update()
+            t = time.time()
+            funnel.update(t - t0)
+            time.sleep(5)
 
     except KeyboardInterrupt:
         pass

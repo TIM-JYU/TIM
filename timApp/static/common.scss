@@ -1,0 +1,87 @@
+.logintext {
+    @extend .text-center, .small;
+    margin-top: 13px;
+}
+
+.draghandle {
+    min-height: 13px;
+    width: 100%;
+    background-color: $draghandle-bg-color;
+    position: initial;
+    margin-bottom: 10px;
+    margin-top: 0;
+
+    p {
+        color: set-text-color($draghandle-bg-color);
+        margin-top: 0;
+        padding-left: 1em;
+        height: 15px;
+        font-size: 13px;
+        line-height: 15px;
+        cursor: default;
+        touch-action: none;
+    }
+}
+
+.resizehandle-r {
+    cursor: e-resize;
+    width: 20px;
+    right: -10px;
+    top: 0;
+    bottom: 15px;
+    border-top-right-radius: 5px;
+}
+
+.resizehandle-rd {
+    cursor: se-resize;
+    width: 25px;
+    height: 25px;
+    right: -10px;
+    bottom: -10px;
+    z-index: 95;
+    border-bottom-right-radius: 5px;
+    border-top-left-radius: 5px;
+}
+
+.resizehandle-d {
+    cursor: s-resize;
+    height: 20px;
+    bottom: -10px;
+    left: 0;
+    right: 15px;
+    border-bottom-left-radius: 5px;
+}
+
+.resizehandle {
+    /*
+    background-color: black;
+    opacity: 0.1;*/
+    z-index: 90;
+    position: absolute;
+    font-size: 0.1px;
+    display: block;
+    -ms-touch-action: none;
+    touch-action: none;
+}
+
+.resizehandle:hover {
+    background-color: black;
+    opacity: 0.1;
+}
+
+.minimize {
+    padding-left: 15px;
+    right: 55px;
+}
+
+.close {
+    padding-right: 15px;
+    right: 10px;
+}
+
+.titlebutton {
+    z-index: 2;
+    top: 0;
+    position: absolute;
+    cursor: pointer;
+}

@@ -70,12 +70,15 @@ def manage(path):
                            rights=get_rights(block_id))
 
 
-@manage_page.route("/changeOwner/<int:doc_id>/<int:new_owner>", methods=["PUT"])
-def changeOwner(doc_id, new_owner):
+@manage_page.route("/changeOwner/<int:doc_id>/<new_owner_name>", methods=["PUT"])
+def changeOwner(doc_id, new_owner_name):
     timdb = getTimDb()
     if not timdb.documents.exists(doc_id) and not timdb.folders.exists(doc_id):
         abort(404)
     verify_ownership(doc_id)
+    new_owner = timdb.users.get_usergroup_by_name(new_owner_name)
+    if new_owner is None:
+        abort(404, 'Non-existent usergroup.')
     possible_groups = timdb.users.get_user_groups(getCurrentUserId())
     if new_owner not in [group['id'] for group in possible_groups]:
         abort(403, "You must belong to the new usergroup.")
@@ -265,6 +268,9 @@ def deleteDocument(doc_id):
         return abort(404, 'Document does not exist.')
     if not timdb.users.user_is_owner(getCurrentUserId(), doc_id):
         return abort(403, "You don't have permission to delete this document.")
+    abort(403, 'Deleting documents has been disabled until a proper backup mechanism is implemented. '
+               'Please contact TIM administrators if you really want to delete this document. '
+               'You can hide this document from others by removing all permissions.')
     timdb.documents.delete(doc_id)
     return okJsonResponse()
 

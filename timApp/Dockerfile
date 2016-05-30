@@ -2,14 +2,17 @@
 from ubuntu
 maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 
-# Set locale
-env LANG en_US.utf8
-env LANGUAGE en_US.utf8
-run locale-gen en_US.utf8
+# Configure timezone and locale
+run locale-gen en_US.UTF-8
+env LANG en_US.UTF-8
+env LANGUAGE en_US:en
+env LC_ALL en_US.UTF-8
+run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
 
 # Install Python, pip and other necessary packages
 
 run apt-get update
+run apt-get install -y openssh-server
 run apt-get install -y python3
 run apt-get install -y python3-pip
 run apt-get install -y git-core
@@ -24,7 +27,6 @@ run apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys B97
 # Add PostgreSQL's repository.
 run echo "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 
-run apt-get update
 run apt-get install -y libpq-dev # Needed by PostGreSQL
 # Install postgresql 9.3, version 9.4 didn't install correctly
 run apt-get install -y postgresql-9.3
@@ -51,6 +53,10 @@ run pip3 install cffi
 run pip3 install git+https://github.com/benoitc/gunicorn.git gevent==1.1rc4 eventlet tornado aiohttp
 run pip3 install typing
 run pip3 install python-magic
+run pip3 install git+git://github.com/miracle2k/webassets.git
+run pip3 install libsass
+run pip3 install flask-assets
+run pip3 install yubico-client
 
 # Need to update the package "six"; otherwise there will be a strange error with Flask's reloader
 # run pip3 install -U six
@@ -80,6 +86,7 @@ expose 22
 
 run apt-get install -y npm
 run npm install -g bower
+run npm install uglify-js -g
 run ln -s /usr/bin/nodejs /usr/bin/node
 run bower --allow-root install angular#~1.4
 run bower --allow-root install angular-ui-ace#36844ff7c0e0d9445bc8e31514d7f0f59cb8b048
@@ -95,6 +102,10 @@ run bower --allow-root install rangyinputs
 run bower --allow-root install ngstorage#~0.3
 run bower --allow-root install chartjs#~1.0
 run bower --allow-root install oclazyload#~1.0
+run bower --allow-root install bootstrap-sass#~3.3
+run bower --allow-root install angular-bootstrap#~1.3
+run bower --allow-root install angular-animate#~1.4
+run bower --allow-root install angular-touch#~1.4
 
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
 run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js
@@ -102,16 +113,9 @@ run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce)
 # Force auto-render extension to throw exceptions instead of printing to console
 run sed -i 's/f instanceof katex\.ParseError/false/' /bower_components/KaTeX/dist/contrib/auto-render.min.js
 
-run npm uninstall bower
-run apt-get remove -y npm
-
-run apt-get install -y openssh-server
 run mkdir /var/run/sshd
 run echo 'root:test' | chpasswd
 run sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-
-# Configure timezone and locale
-run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
 
 # Default startup command
 cmd cd /service/timApp && source initenv.sh && python3 launch.py

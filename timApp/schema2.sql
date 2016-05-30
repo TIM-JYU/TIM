@@ -104,6 +104,7 @@ CREATE TABLE User (
   email     VARCHAR(100),
   prefs     TEXT,
   pass      VARCHAR(128),
+  yubikey   VARCHAR(12),
 
   CONSTRAINT User_PK
   PRIMARY KEY (id)

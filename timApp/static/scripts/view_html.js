@@ -214,6 +214,79 @@ timApp.controller("ViewCtrl", [
             return $par.attr("id");
         };
 
+        sc.dereferencePar = function ($par) {
+            if ($par.length === 0 || !$par.hasClass('par')) {
+                return null;
+            }
+            if ($par.attr('ref-id') && $par.attr('ref-doc-id')) {
+                return [$par.attr('ref-doc-id'), $par.attr('ref-id')];
+            }
+
+            return [sc.docId, $par.attr('id')];
+        };
+
+        sc.getAreaDocId = function ($area) {
+            if (!$area.hasClass('area')) {
+                return null;
+            }
+
+            return $area.attr("data-doc-id");
+        };
+
+        sc.getAreaId = function ($area) {
+            if (!$area.hasClass('area')) {
+                return null;
+            }
+
+            return $area.attr("data-name");
+        };
+
+        sc.getAreaById = function (area_name) {
+            if (!area_name) {
+                return null;
+            }
+
+            return $('.area.area_' + area_name).children('.areaContent').children();
+        };
+
+        sc.getFirstPar = function ($par_or_area) {
+            console.log('sc.getFirstPar():');
+            console.log($par_or_area);
+            if ($par_or_area.length > 1) {
+                return sc.getFirstPar($par_or_area.first());
+            }
+            if ($par_or_area.hasClass('area')) {
+                return $par_or_area.find('.par').first();
+            }
+            if ($par_or_area.hasClass('par')) {
+                return $par_or_area;
+            }
+
+            return null;
+        };
+
+        sc.getLastPar = function ($par_or_area) {
+            if ($par_or_area.length > 1) {
+                return sc.getLastPar($par_or_area.last());
+            }
+            if ($par_or_area.hasClass('area')) {
+                return $par_or_area.find('.par').last();
+            }
+            if ($par_or_area.hasClass('par')) {
+                return $par_or_area;
+            }
+
+            return null;
+        };
+
+        sc.getFirstParId = function ($par_or_area) {
+            return sc.getParId(sc.getFirstPar($par_or_area));
+        };
+
+        sc.getLastParId = function ($par_or_area) {
+            return sc.getParId(sc.getLastPar($par_or_area));
+        };
+
         sc.getElementByParId = function (id) {
             return $("#" + id);
         };
@@ -243,13 +316,8 @@ timApp.controller("ViewCtrl", [
             var area_end;
 
             if (options.area) {
-                if (sc.selection.reversed) {
-                    area_start = sc.selection.end;
-                    area_end = sc.selection.start;
-                } else {
-                    area_end = sc.selection.end;
-                    area_start = sc.selection.start;
-                }
+                area_end = sc.getParId(sc.selection.end);
+                area_start = sc.getParId(sc.selection.start);
             } else {
                 area_start = null;
                 area_end = null;
@@ -465,13 +533,29 @@ timApp.controller("ViewCtrl", [
             }
         });
 
-        sc.onClick = function (className, func) {
+        sc.onClick = function (className, func, overrideModalCheck) {
             var downEvent = null;
             var downCoords = null;
+            var lastDownEvent = null;
+            var lastclicktime = -1;
 
-            $document.on('mousedown touchstart', className, function (e) {
+           $document.on('mousedown touchstart', className, function (e) {
+                if (!overrideModalCheck && $(".actionButtons").length > 0 || $(EDITOR_CLASS_DOT).length > 0) {
+                    // Disable while there are modal gui elements
+                    return;
+                }
+                if (lastDownEvent && lastDownEvent.type != e.type && new Date().getTime() - lastclicktime < 500) {
+                    // This is to prevent chaotic behavior from both mouseDown and touchStart
+                    // events happening at the same coordinates
+                    console.log("Ignoring event:");
+                    console.log(e);
+                    return;
+                }
+
                 downEvent = sc.fixPageCoords(e);
+                lastDownEvent = downEvent;
                 downCoords = {left: downEvent.pageX, top: downEvent.pageY};
+                lastclicktime = new Date().getTime();
             });
             $document.on('mousemove touchmove', className, function (e) {
                 if (downEvent === null) {
@@ -485,13 +569,13 @@ timApp.controller("ViewCtrl", [
                 }
             });
             $document.on('touchcancel', className, function (e) {
-                $window.console.log("cancel");
                 downEvent = null;
             });
             $document.on('mouseup touchend', className, function (e) {
                 if (downEvent !== null) {
                     if (func($(this), downEvent)) {
                         e.preventDefault();
+                        e.stopPropagation();
                     }
                     downEvent = null;
                 }
@@ -502,6 +586,7 @@ timApp.controller("ViewCtrl", [
             $document.on('mouseover', className, function (e) {
                 if (func($(this), sc.fixPageCoords(e))) {
                     e.preventDefault();
+                    e.stopPropagation();
                 }
             });
         };
@@ -510,6 +595,7 @@ timApp.controller("ViewCtrl", [
             $document.on('mouseout', className, function (e) {
                 if (func($(this), sc.fixPageCoords(e))) {
                     e.preventDefault();
+                    e.stopPropagation();
                 }
             });
         };
@@ -552,9 +638,8 @@ timApp.controller("ViewCtrl", [
             {
                 var start = pars[0];
                 var end = pars[pars.length - 1];
-                sc.selection.start = sc.getParId($(start));
-                sc.selection.end = sc.getParId($(end));
-                sc.selection.reversed = false;
+                sc.selection.start = $(start);
+                sc.selection.end = $(end);
                 $(pars).addClass('selected');
                 sc.toggleParEditor($(pars), {showDelete: true, area: true});
                 $(pars).removeClass('selected');
@@ -572,6 +657,41 @@ timApp.controller("ViewCtrl", [
                 .append($("<div>", {class: "parContent"}).html('New paragraph'));
         };
 
+        sc.selectionToStr = function(selection) {
+            return selection.toArray().map(function (e) { return "#" + e.id; }).join(',');
+        };
+
+        sc.showPopupMenu = function (e, $pars, coords, attrs) {
+            var $popup = $('<popup-menu>');
+            $popup.attr('tim-draggable-fixed', '');
+            $popup.attr('srcid', sc.selectionToStr($pars));
+            for (var key in attrs) {
+                if (attrs.hasOwnProperty(key)) {
+                    $popup.attr(key, attrs[key]);
+                }
+            }
+            $pars.prepend($popup); // need to prepend to DOM before compiling
+            $compile($popup[0])(sc);
+            // TODO: Set offset for the popup
+            var element = $popup;
+            var viewport = {};
+            viewport.top = $(window).scrollTop();
+            viewport.bottom = viewport.top + $(window).height();
+            var bounds = {};
+            bounds.top = element.offset().top;
+            bounds.bottom = bounds.top + element.outerHeight();
+            var y = $(window).scrollTop();
+            if (bounds.bottom > viewport.bottom) {
+                y += (bounds.bottom - viewport.bottom);
+            }
+            else if (bounds.top < viewport.top) {
+                y += (bounds.top - viewport.top);
+            }
+            $('html, body').animate({
+                scrollTop: y
+            }, 500);
+        };
+
         sc.showAddParagraphAbove = function (e, $par) {
             var $newpar = sc.createNewPar();
             $par.before($newpar);
@@ -582,6 +702,146 @@ timApp.controller("ViewCtrl", [
             var $newpar = sc.createNewPar();
             $par.after($newpar);
             sc.toggleParEditor($newpar, {showDelete: false, area: false});
+        };
+
+        sc.showPasteMenu = function (e, $par_or_area, coords) {
+            sc.pasteFunctions = sc.getPasteFunctions();
+            sc.showPopupMenu(e, $par_or_area, coords, {actions: 'pasteFunctions', contenturl: '/clipboard'});
+        };
+
+        sc.showMoveMenu = function (e, $par_or_area, coords) {
+            sc.pasteFunctions = sc.getMoveFunctions();
+            sc.showPopupMenu(e, $par_or_area, coords, {actions: 'pasteFunctions', contenturl: '/clipboard'});
+        };
+
+        sc.pasteContentAbove = function (e, $par) {
+            sc.pasteAbove(e, $par, false);
+        };
+
+        sc.pasteRefAbove = function (e, $par) {
+            sc.pasteAbove(e, $par, true);
+        };
+
+        sc.pasteContentBelow = function (e, $par) {
+            sc.pasteBelow(e, $par, false);
+        };
+
+        sc.pasteRefBelow = function (e, $par) {
+            sc.pasteBelow(e, $par, true);
+        };
+
+        sc.deleteFromSource = function () {
+            http.post('/clipboard/deletesrc/' + sc.docId, {
+            }).success(function(data, status, headers, config) {
+                var doc_ver = data['doc_ver'];
+                var pars = data['pars'];
+                if (pars.length > 0) {
+                    var first_par = pars[0].id;
+                    var last_par = pars[pars.length - 1].id;
+                    sc.handleDelete({version: doc_ver}, {par: first_par, area_start: first_par, area_end: last_par});
+                }
+
+                sc.allowPasteContent = false;
+                sc.allowPasteRef = false;
+            }).error(function(data, status, headers, config) {
+                $window.alert(data.error);
+            });
+        };
+
+        sc.moveAbove = function (e, $par_or_area) {
+            http.post('/clipboard/paste/' + sc.docId, {
+                "par_before" : sc.getFirstParId($par_or_area),
+            }).success(function(data, status, headers, config) {
+                if (data == null)
+                    return;
+
+                var $newpar = sc.createNewPar();
+                $par_or_area.before($newpar);
+
+                var extra_data = {
+                    docId: sc.docId, // current document id
+                    par: sc.getFirstParId($newpar), // the id of paragraph on which the editor was opened
+                    par_next: $par_or_area.id // the id of the paragraph that follows par
+                };
+
+                sc.addSavedParToDom(data, extra_data);
+                sc.deleteFromSource();
+
+            }).error(function(data, status, headers, config) {
+                $window.alert(data.error);
+            });
+        };
+
+        sc.moveBelow = function (e, $par_or_area) {
+            http.post('/clipboard/paste/' + sc.docId, {
+                "par_after" : sc.getLastParId($par_or_area),
+            }).success(function(data, status, headers, config) {
+                if (data == null)
+                    return;
+
+                var $newpar = sc.createNewPar();
+                $par_or_area.after($newpar);
+
+                var extra_data = {
+                    docId: sc.docId, // current document id
+                    par: sc.getFirstParId($newpar), // the id of paragraph on which the editor was opened
+                    par_next: $par_or_area.id // the id of the paragraph that follows par
+                };
+
+                sc.addSavedParToDom(data, extra_data);
+                sc.deleteFromSource();
+
+            }).error(function(data, status, headers, config) {
+                $window.alert(data.error);
+            });
+        };
+
+        sc.pasteAbove = function (e, $par_or_area, as_ref) {
+            http.post('/clipboard/paste/' + sc.docId, {
+                "par_before" : sc.getFirstParId($par_or_area),
+                "as_ref": as_ref
+            }).success(function(data, status, headers, config) {
+                if (data == null)
+                    return;
+
+                var $newpar = sc.createNewPar();
+                $par_or_area.before($newpar);
+
+                var extra_data = {
+                    docId: sc.docId, // current document id
+                    par: sc.getFirstParId($newpar), // the id of paragraph on which the editor was opened
+                    par_next: $par_or_area.id // the id of the paragraph that follows par
+                };
+
+                sc.addSavedParToDom(data, extra_data);
+
+            }).error(function(data, status, headers, config) {
+                $window.alert(data.error);
+            });
+        };
+
+        sc.pasteBelow = function (e, $par_or_area, as_ref) {
+            http.post('/clipboard/paste/' + sc.docId, {
+                "par_after" : sc.getLastParId($par_or_area),
+                "as_ref": as_ref
+            }).success(function(data, status, headers, config) {
+                if (data == null)
+                    return;
+
+                var $newpar = sc.createNewPar();
+                $par_or_area.after($newpar);
+
+                var extra_data = {
+                    docId: sc.docId, // current document id
+                    par: sc.getFirstParId($newpar), // the id of paragraph on which the editor was opened
+                    par_next: $par_or_area.id // the id of the paragraph that follows par
+                };
+
+                sc.addSavedParToDom(data, extra_data);
+
+            }).error(function(data, status, headers, config) {
+                $window.alert(data.error);
+            });
         };
 
         // Event handler for "Add question below"
@@ -728,14 +988,62 @@ timApp.controller("ViewCtrl", [
             return sc.selection.pars.filter($par).length > 0;
         };
 
-        sc.onClick(".editline", function ($this, e) {
-            $(".actionButtons").remove();
-            var $par = $this.parent();
-            if (sc.selection.start !== null && (sc.selection.end === null || !sc.isParWithinArea($par))) {
-                sc.selection.end = sc.getParId($par);
+        sc.getParIndex = function($par) {
+            var par_id = sc.getParId($par);
+            var $pars = $('.par');
+            var realIndex = 0;
+
+            if ($par.find('.parContent').not(':empty').length === 0)
+                return null;
+
+            for (var i = 0; i < $pars.length; i++) {
+                var $node = $pars.eq(i);
+                if ($node.find('.parContent').not(':empty').length === 0)
+                    continue;
+
+                if (sc.getParId($node) == par_id) {
+                    //console.log('sc.getParIndex(' + par_id + ') = ' + realIndex);
+                    return realIndex;
+                }
+
+                realIndex++;
+            }
+        };
+
+        sc.extendSelection = function ($par, allowShrink) {
+            if (sc.selection.start === null) {
+                sc.selection.start = $par;
+                sc.selection.end = $par;
+            } else {
+                var n = sc.selection.pars.length;
+                var startIndex = sc.getParIndex(sc.selection.pars.eq(0));
+                var endIndex = sc.getParIndex(sc.selection.pars.eq(n - 1));
+                var areaLength = endIndex - startIndex + 1;
+                var newIndex = sc.getParIndex($par);
+
+                if (newIndex < startIndex) {
+                    sc.selection.start = $par;
+                } else if (newIndex > endIndex) {
+                    sc.selection.end = $par;
+                } else if (allowShrink && areaLength > 1 && newIndex == startIndex) {
+                    sc.selection.start = $(sc.selection.pars[1]);
+                } else if (allowShrink && areaLength > 1 && newIndex == endIndex) {
+                    sc.selection.end = $(sc.selection.pars[n - 2]);
+                }
+            }
+        };
+
+        sc.onClick(".editline, .editlineQuestion", function ($this, e) {
+            sc.closeOptionsWindow();
+            var $par = $this.parent().filter('.par');
+            if (sc.selection.start !== null) {
+                sc.extendSelection($par);
             }
             var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
-            return sc.showOptionsWindow(e, $par, coords);
+
+            // We need the timeout so we don't trigger the ng-clicks on the buttons
+            $timeout( function() {sc.showOptionsWindow(e, $par, coords);}, 80);
+            return false;
         });
 
         sc.setAreaAttr = function(area, attr, value) {
@@ -783,15 +1091,19 @@ timApp.controller("ViewCtrl", [
             var $target = $(e.target);
             var tag = $target.prop("tagName");
 
-            // Don't show paragraph menu on these specific tags or class
-            var ignoredTags = ['BUTTON', 'INPUT', 'TEXTAREA', 'A'];
-            if (ignoredTags.indexOf(tag) > -1 || $target.parents('.no-popup-menu').length > 0) {
+            // Don't show paragraph menu on these specific tags or classes
+            var ignoredTags = ['BUTTON', 'INPUT', 'TEXTAREA', 'A', 'QUESTIONADDEDNEW'];
+            var ignoredClasses = ['no-popup-menu', 'ace_editor'];
+            var classSelector = ignoredClasses.map(function (c) {
+                return '.' + c;
+            }).join(',');
+            if (ignoredTags.indexOf(tag) > -1 || $target.parents(classSelector).length > 0) {
                 return false;
             }
 
-            var $par = $this.parent();
+            var $par = $this.parents('.par');
             if (sc.selection.start !== null) {
-                sc.selection.end = sc.getParId($par);
+                sc.extendSelection($par, true);
             }
             else {
                 var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
@@ -800,12 +1112,12 @@ timApp.controller("ViewCtrl", [
 
                 $(".par.selected").removeClass("selected");
                 $(".par.lightselect").removeClass("lightselect");
-                $(".actionButtons").remove();
+                sc.closeOptionsWindow();
                 sc.toggleActionButtons(e, $par, toggle1, toggle2, coords);
             }
             sc.$apply();
             return true;
-        });
+        }, true);
 
         sc.onClick(".note", function ($this, e) {
             if (!$this.hasClass('editable')) {
@@ -823,29 +1135,44 @@ timApp.controller("ViewCtrl", [
             sc.par = ($(question).parent().parent());
         });
 
-        sc.showOptionsWindow = function (e, $par, coords) {
-            var $popup = $('<popup-menu>');
-            $popup.attr('tim-draggable-fixed', '');
-            $par.prepend($popup); // need to prepend to DOM before compiling
-            $compile($popup[0])(sc);
-            // TODO: Set offset for the popup
-            var element = $popup;
-            var viewport = {};
-            viewport.top = $(window).scrollTop();
-            viewport.bottom = viewport.top + $(window).height();
-            var bounds = {};
-            bounds.top = element.offset().top;
-            bounds.bottom = bounds.top + element.outerHeight();
-            var y = $(window).scrollTop();
-            if (bounds.bottom > viewport.bottom) {
-                y += (bounds.bottom - viewport.bottom);
+        sc.onClick("html.ng-scope", function ($this, e) {
+            // Clicking anywhere
+            var tagName = e.target.tagName.toLowerCase();
+            var ignoreTags = ['button', 'input'];
+            if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || $(e.target).hasClass("menu-icon")
+                || $(e.target).hasClass("editline") || $(e.target).hasClass("areaeditline1") ||
+                   $(e.target).hasClass("areaeditline2") || $(e.target).hasClass("areaeditline3")) {
+                return false;
             }
-            else if (bounds.top < viewport.top) {
-                y += (bounds.top - viewport.top);
+
+            sc.closeOptionsWindow();
+
+            if (tagName !== "p") {
+                $(".selected").removeClass("selected");
+                $(".lightselect").removeClass("lightselect");
             }
-            $('html, body').animate({
-                scrollTop: y
-            }, 500);
+
+            //console.log(e.target);
+            return false;
+
+        }, true);
+
+        sc.showOptionsWindow = function (e, $pars, coords) {
+            $pars.children('.editline').addClass('menuopen');
+            sc.showPopupMenu(e, $pars, coords,
+                {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'});
+        };
+
+        sc.closeOptionsWindow = function () {
+            var $actionButtons = $(".actionButtons");
+            var $par_or_area = $actionButtons.parent();
+            $actionButtons.remove();
+            sc.optionsWindowClosed($par_or_area);
+        };
+
+        sc.optionsWindowClosed = function ($par_or_area) {
+            var $editline = $('.menuopen');
+            $editline.removeClass('menuopen');
         };
 
         sc.dist = function (coords1, coords2) {
@@ -1117,10 +1444,14 @@ timApp.controller("ViewCtrl", [
         }
         sc.processAllMathDelayed($('body'));
 
+        sc.getEditMode = function() { return $window.editMode; };
+        sc.getAllowMove = function() { return $window.allowMove; };
+
         sc.defaultAction = {func: sc.showOptionsWindow, desc: 'Show options window'};
         timLogTime("VieCtrl end","view");
         sc.selection = {start: null, end: null};
-        sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end', 'editing'], function (newValues, oldValues, scope) {
+        sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end', 'editing', 'getEditMode()',
+                        'allowPasteContent', 'allowPasteRef', 'getAllowMove()'], function (newValues, oldValues, scope) {
             sc.editorFunctions = sc.getEditorFunctions();
             if (sc.editing) {
                 sc.notification = "Editor is already open.";
@@ -1129,25 +1460,55 @@ timApp.controller("ViewCtrl", [
             }
         });
 
-        sc.$watchGroup(['selection.start', 'selection.end'], function (newValues, oldValues, scope) {
-            $('.par.selected').removeClass('selected');
-            if (sc.selection.start !== null) {
-                var $start = sc.getElementByParId(sc.selection.start);
-                if (sc.selection.end !== null && sc.selection.end !== sc.selection.start) {
-                    var $end = sc.getElementByParId(sc.selection.end);
-                    if ($end.prevAll().filter($start).length !== 0) {
-                        sc.selection.reversed = false;
-                        sc.selection.pars = $start.nextUntil($end);
+        sc.getPars = function($par_first, $par_last) {
+            var pars = [$par_first];
+            var $par = $par_first;
+            var $next = $par.next();
+            var i = 1000000;
 
-                    } else {
-                        sc.selection.reversed = true;
-                        sc.selection.pars = $start.prevUntil($end);
+            while (i > 0) {
+                if ($next.length == 0) {
+                    $par = $par.parent();
+                    $next = $par.next();
+                    if ($par.prop("tagName").toLowerCase() == "html") {
+                        break;
                     }
-                    sc.selection.pars = sc.selection.pars.add($start).add($end);
+
+                    continue;
+                }
+
+                if ($next.hasClass('area')) {
+                    $next = $next.children('.areaContent').children().first();
+                    continue;
+                }
+
+                if ($next.hasClass('par') && sc.getParIndex($next) !== null) {
+                    pars.push($next);
+                    if ($next.is($par_last))
+                        break;
+                }
+
+                $par = $next;
+                $next = $par.next();
+                i -= 1;
+            }
+
+            return $(pars).map (function () {return this.toArray(); } );
+        };
+
+        sc.$watchGroup(['selection.start', 'selection.end'], function (newValues, oldValues, scope) {
+            $('.par.lightselect').removeClass('lightselect');
+            $('.par.selected').removeClass('selected');
+            $('.par.marked').removeClass('marked');
+            if (sc.selection.start !== null) {
+                var $start = sc.selection.start;
+                if (sc.selection.end !== null && !sc.selection.end.is(sc.selection.start)) {
+                    var $end = sc.selection.end;
+                    sc.selection.pars = sc.getPars($start, $end);
                 } else {
                     sc.selection.pars = $start;
                 }
-                sc.selection.pars.addClass('selected');
+                sc.selection.pars.addClass('marked');
             }
         });
 
@@ -1207,14 +1568,110 @@ timApp.controller("ViewCtrl", [
             $(".refPopup").remove();
         };
 
+        sc.cutPar = function (e, $par) {
+            var doc_par_id = sc.dereferencePar($par);
+
+            http.post('/clipboard/cut/' + doc_par_id[0] + '/' + doc_par_id[1] + '/' + doc_par_id[1], {
+                }).success(function(data, status, headers, config) {
+                    var doc_ver = data['doc_ver'];
+                    var pars = data['pars'];
+                    if (pars.length > 0) {
+                        var first_par = pars[0].id;
+                        var last_par = pars[pars.length - 1].id;
+                        sc.handleDelete({version: doc_ver}, {par: first_par, area_start: first_par, area_end: last_par});
+                    }
+
+                    sc.allowPasteContent = true;
+                    sc.allowPasteRef = false;
+                }).error(function(data, status, headers, config) {
+                    $window.alert(data.error);
+                });
+        };
+        
+        sc.copyPar = function (e, $par) {
+            var doc_par_id = sc.dereferencePar($par);
+
+            http.post('/clipboard/copy/' + doc_par_id[0] + '/' + doc_par_id[1] + '/' + doc_par_id[1], {
+                }).success(function(data, status, headers, config) {
+                    sc.allowPasteContent = true;
+                    sc.allowPasteRef = true;
+                }).error(function(data, status, headers, config) {
+                    $window.alert(data.error);
+                });
+        };
+        
         sc.startArea = function (e, $par) {
-            sc.selection.start = sc.getParId($par);
+            sc.extendSelection($par);
         };
 
         sc.cancelArea = function (e, $par) {
             sc.selection.start = null;
             sc.selection.end = null;
         };
+
+        sc.cutArea = function (e, $par_or_area, cut) {
+            sc.copyArea(e, $par_or_area, sc.docId, true);
+        };
+
+        sc.copyArea = function (e, $par_or_area, override_doc_id, cut) {
+            var ref_doc_id, area_name, area_start, area_end;
+
+            if ($window.editMode == 'area') {
+                ref_doc_id = sc.getAreaDocId($par_or_area);
+                area_name = sc.getAreaId($par_or_area);
+                area_start = sc.getFirstParId($par_or_area);
+                area_end = sc.getLastParId($par_or_area);
+            } else {
+                ref_doc_id = null;
+                area_name = null;
+                area_start = sc.getParId(sc.selection.start);
+                area_end = sc.getParId(sc.selection.end);
+            }
+
+            var doc_id = override_doc_id ? override_doc_id : sc.docId;
+
+            if (cut) {
+                http.post('/clipboard/cut/' + doc_id + '/' + area_start + '/' + area_end, {
+                    area_name: area_name
+                }).success(function (data, status, headers, config) {
+                    sc.selection.start = null;
+                    sc.selection.end = null;
+
+                    if (doc_id == sc.docId) {
+                        var doc_ver = data['doc_ver'];
+                        var pars = data['pars'];
+                        if (pars.length > 0) {
+                            var first_par = pars[0].id;
+                            var last_par = pars[pars.length - 1].id;
+                            sc.handleDelete({version: doc_ver}, {
+                                par: first_par,
+                                area_start: first_par,
+                                area_end: last_par
+                            });
+
+                            sc.allowPasteContent = true;
+                            sc.allowPasteRef = false;
+                        }
+                    }
+                }).error(function (data, status, headers, config) {
+                    $window.alert(data.error);
+                });
+
+            } else {
+                http.post('/clipboard/copy/' + doc_id + '/' + area_start + '/' + area_end, {
+                    ref_doc_id: ref_doc_id,
+                    area_name: area_name
+                }).success(function (data, status, headers, config) {
+                    sc.selection.start = null;
+                    sc.selection.end = null;
+                    sc.allowPasteContent = true;
+                    sc.allowPasteRef = true;
+                }).error(function (data, status, headers, config) {
+                    $window.alert(data.error);
+                });
+            }
+        };
+
 
         sc.nothing = function () {
         };
@@ -1241,38 +1698,83 @@ timApp.controller("ViewCtrl", [
                     {func: sc.closeWithoutSaving, desc: 'Close editor and cancel', show: true},
                     {func: sc.nothing, desc: 'Close menu', show: true}
                 ];
+            } else if (sc.selection.start !== null && $window.editMode) {
+                return [
+                    {
+                        func: sc.beginAreaEditing,
+                        desc: 'Edit area',
+                        show: true
+                    },
+                    //{func: sc.nameArea, desc: 'Name area', show: true},
+                    {func: sc.cutArea, desc: 'Cut area', show: true},
+                    {func: sc.copyArea, desc: 'Copy area', show: true},
+                    {func: sc.cancelArea, desc: 'Cancel area', show: true},
+                    {func: sc.nothing, desc: 'Close menu', show: true}
+                ];
             } else {
                 return [
                     {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
                     {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
+                    {func: sc.cutPar, desc: 'Cut paragraph', show: $window.editMode === 'par'},
+                    {func: sc.copyPar, desc: 'Copy paragraph', show: $window.editMode !== 'area'},
+                    //{func: sc.cutArea, desc: 'Cut area', show: $window.editMode === 'area'},
+                    //{func: sc.copyArea, desc: 'Copy area', show: $window.editMode === 'area'},
+                    {func: sc.showPasteMenu, desc: 'Paste...', show: $window.editMode && (sc.allowPasteRef || sc.allowPasteContent)},
+                    {func: sc.showMoveMenu, desc: 'Move here...', show: $window.allowMove},
+                    //{func: sc.removeAreaMarking, desc: 'Remove area marking', show: $window.editMode === 'area'},
                     {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
-                    {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
                     {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
                     {
                         func: sc.startArea,
                         desc: 'Start selecting area',
-                        show: sc.rights.editable && sc.selection.start === null
+                        show: $window.editMode == 'par' && sc.selection.start === null
                     },
-                    {
-                        func: sc.beginAreaEditing,
-                        desc: 'Edit area',
-                        show: sc.selection.start !== null && sc.rights.editable
-                    },
-                    {func: sc.cancelArea, desc: 'Cancel area', show: sc.selection.start !== null},
                     {func: sc.nothing, desc: 'Close menu', show: true}
                 ];
             }
+        };
+
+        sc.getAddParagraphFunctions = function () {
+            return [
+                {func: sc.showAddParagraphAbove, desc: 'Above', show: true},
+                {func: sc.showAddParagraphBelow, desc: 'Below', show: true},
+                {func: sc.nothing, desc: 'Cancel', show: true}
+            ];
+        };
+
+        sc.getPasteFunctions = function () {
+            return [
+                {func: sc.pasteRefAbove, desc: 'Above, as a reference', show: sc.allowPasteRef},
+                {func: sc.pasteContentAbove, desc: 'Above, as content', show: sc.allowPasteContent},
+                {func: sc.pasteRefBelow, desc: 'Below, as a reference', show: sc.allowPasteRef},
+                {func: sc.pasteContentBelow, desc: 'Below, as content', show: sc.allowPasteContent},
+                {func: sc.nothing, desc: 'Cancel', show: true}
+            ];
+        };
+
+        sc.getMoveFunctions = function () {
+            return [
+                {func: sc.moveAbove, desc: 'Above', show: sc.allowPasteContent},
+                {func: sc.moveBelow, desc: 'Below', show: sc.allowPasteContent},
+                {func: sc.nothing, desc: 'Cancel', show: true}
+            ];
         };
 
         // call marktree.js initialization function so that TOC clicking works
         $window.addEvents();
 
         sc.editorFunctions = sc.getEditorFunctions();
+        sc.addParagraphFunctions = sc.getAddParagraphFunctions();
+        sc.pasteFunctions = sc.getPasteFunctions();
 
         sc.$storage = $localStorage.$default({
-            defaultAction: null,
+            defaultAction: "Show options window",
             noteAccess: 'everyone'
         });
+
+        sc.allowPasteContent = true;
+        sc.allowPasteRef = true;
+        $window.allowMove = false;
 
         try {
             var found = $filter('filter')(sc.editorFunctions,
