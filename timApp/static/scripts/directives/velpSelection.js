@@ -35,6 +35,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.labelToEdit = {content: "", selected: false, edit: false, id: -3};
     $scope.selectedLabels = [];
     $scope.settings = {selectedAllGroups: false};
+    $scope.submitted = {velp: false, velpGroup: false};
 
 
     // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
@@ -168,7 +169,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
      */
     $scope.addVelp = function (form) {
         var valid = form.$valid;
-        $scope.submitted = true;
+        $scope.submitted.velp = true;
         if (!valid) return;
 
         // Form is valid:
@@ -194,7 +195,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             $scope.resetNewVelp();
             $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};
             $scope.velps.push(velpToAdd);
-            $scope.submitted = false;
+            $scope.submitted.velp = false;
             //$scope.resetLabels();
         });
     };
@@ -273,7 +274,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
      */
     $scope.editVelp = function (form) {
         var valid = form.$valid;
-        $scope.submitted = true;
+        $scope.submitted.velp = true;
         if (!valid) return;
 
         form.$setPristine();
@@ -376,6 +377,18 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         if (typeof velp.velp_groups == "undefined" || typeof group.id == "undefined")
             return false;
         return velp.velp_groups.indexOf(group.id) >= 0;
+    };
+
+    $scope.addVelpGroup = function(form){
+        var valid = form.$valid;
+        $scope.submitted.velpGroup = true;
+        if (!valid) return;
+
+        form.$setPristine();
+        console.log("hei!");
+
+
+
     };
 
     $scope.updateVelpGroups = function(velp, group){

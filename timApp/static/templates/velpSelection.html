@@ -76,7 +76,7 @@
                                                   ng-style="{ color: getColor(label) }"></span></p>
 
                                     <p class="error"
-                                       ng-show="(addVelpForm.velpName.$invalid && !addVelpForm.velpName.$pristine) || (submitted && addVelpForm.velpName.$invalid)">
+                                       ng-show="(addVelpForm.velpName.$invalid && !addVelpForm.velpName.$pristine) || (submitted.velp && addVelpForm.velpName.$invalid)">
                                         Velp content is required
                                     </p>
 
@@ -150,7 +150,7 @@
                                                           ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
                                                 </p>
 
-                                                <p ng-show="(editVelpForm.velpName.$invalid && !editVelpForm.velpName.$pristine) || (submitted && editVelpForm.velpName.$invalid)"
+                                                <p ng-show="(editVelpForm.velpName.$invalid && !editVelpForm.velpName.$pristine) || (submitted.velp && editVelpForm.velpName.$invalid)"
                                                    class="error">
                                                     Velp content is required
                                                 </p>
@@ -252,15 +252,19 @@
                             </td>
                         </tr>
                     </table>
-                    <form>
-                        <p><label>Group name:</label><input type="text" placeholder="Velp group"></p>
+                    <form ng-submit="addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
+                        <p><label>Group name:</label><input type="text" ng-model="newVelpGroup.name" placeholder="Velp group" required></p>
                         <fieldset>
-                            <legend>Attatch this group to:</legend>
-                            <p><input type="radio" name="group1" id="radioPar"> <label for="radioPar">Selected paragraph</label><br>
-                               <input type="radio" name="group1" id="radioDoc"> <label for="radioDoc">Document</label><br>
-                               <input type="radio" name="group1" id="radioFolder"> <label for="radioFolder">Folder</label></p>
+                            <legend>Attach this group to:</legend>
+                            <p><input type="radio" name="group1" ng-model="newVelpGroup.content_type" id="radioPar" value="0" checked="checked"> <label for="radioPar">Personal collection</label><br>
+                               <input type="radio" name="group1" ng-model="newVelpGroup.content_type" id="radioDoc" value="1"> <label for="radioDoc">Document</label><br>
+                               <input type="radio" name="group1" ng-model="newVelpGroup.content_type" id="radioFolder" value="2"> <label for="radioFolder">Folder</label></p>
                         </fieldset>
-                        <p><input type="button" class="timButton" value="Create velpgroup"></p>
+                        <p><input type="submit" class="timButton" value="Create velpgroup"></p>
+                        <p ng-show="(addVelpGroupForm.newVelpGroup.name.$invalid && !addVelpGroupForm.newVelpGroup.name.$pristine) || (submitted.velpGroup && addVelpGroupForm.newVelpGroup.name.$invalid)"
+                                                   class="error">
+                                                    VelpGroup name is required!
+                        </p>
                     </form>
                 </div>
             </div>
