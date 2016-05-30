@@ -18,18 +18,18 @@
         <textarea placeholder="Add comment" ng-model="newComment" autofocus></textarea>
     </span>
 
-    <table class="annTable">
-        <tr>
-            <td>
-                <p>Visible to:</p>
-            </td>
-            <td>
-                <select ng-model="visible_options.value" ng-options="v as visible_options.names[v-1] for v in visible_options.values">
+    <div>
+    <form class="form-inline adjustAnnForm">
+        <div class="form-group">
+            <label>Visible to:</label>
+            <select ng-model="visible_options.value" ng-options="v as visible_options.names[v-1] for v in visible_options.values">
             </select>
-                <span ng-class="['annqmark', 'float-right', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"></span>
-            </td>
-        </tr>
-    </table>
+            <span ng-class="['annqmark', 'float-right', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']" ng-click="showInfo()"
+                data-container="body" data-toggle="popover" data-placement="right" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus.">
+            </span>
+        </div>
+    </form>
+    </div>
     <span>
         <button class="saveChanges timButton" ng-disabled="!checkIfChanged()" ng-click="saveChanges()">Save changes</button>
     </span><span class="annDelAnnotation" title="Delete annotation"

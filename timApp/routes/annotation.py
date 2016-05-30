@@ -23,28 +23,6 @@ def add_annotation() -> str:
         start = coordinates['start']
         end = coordinates['end']
 
-        offset_start = start['offset']
-        depth_start = start['depth']
-        node_start = start['node']
-
-        element_path_start = start['el_path']
-        if type(element_path_start) is not list:
-            raise TypeError(str(element_path_start))
-        if any(type(i) is not int for i in element_path_start):
-            raise TypeError(str(element_path_start))
-        element_path_start = str(element_path_start)
-
-        offset_end = end['offset']
-        depth_end = end['depth']
-        node_end = end['node']
-
-        element_path_end = end['el_path']
-        if type(element_path_end) is not list:
-            raise TypeError(str(element_path_end))
-        if any(type(i) is not int for i in element_path_end):
-            raise TypeError(str(element_path_end))
-        element_path_end = str(element_path_end)
-
     except KeyError as e:  # one of the json_data['foo'] fails
         abort(400, "Missing data: " + e.args[0])
     except TypeError as e:  # one of the element paths is not a list of integers
@@ -53,6 +31,26 @@ def add_annotation() -> str:
         abort(400, e.args[0])
 
     # .get() returns None if there is no data instead of throwing.
+    offset_start = start.get('offset')
+    depth_start = start.get('depth')
+    node_start = start.get('node')
+
+    offset_end = end.get('offset')
+    depth_end = end.get('depth')
+    node_end = end.get('node')
+
+    element_path_start = start.get('el_path')
+    if element_path_start is not None:
+        if type(element_path_start) is not list or any(type(i) is not int for i in element_path_start):
+            abort(400, "Malformed element path. " + str(element_path_start))
+        element_path_start = str(element_path_start)
+
+    element_path_end = end.get('el_path')
+    if element_path_end is not None:
+        if type(element_path_end) is not list or any(type(i) is not int for i in element_path_end):
+            abort(400, "Malformed element path. " + str(element_path_end))
+        element_path_end = str(element_path_end)
+
     points = json_data.get('points')
     icon_id = json_data.get('icon_id')
     answer_id = json_data.get('answer_id')
