@@ -107,6 +107,25 @@ run wget -q https://get.docker.com/builds/Linux/x86_64/docker-1.10.2.tgz && \
     tar -xzvf docker-1.10.2.tgz && \
     rm docker-1.10.2.tgz
 
+# Python packages
+
+#run pip3 install numpy
+#run pip3 install scipy
+#run pip3 install scikit-learn
+#run pip3 install matplotlib
+#run pip3 install statsmodels
+#run pip3 install pandas
+# http://www.scipy.org/install.html
+# sudo apt-get install python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas python-sympy python-nose
+run apt-get install -y python3-numpy python3-scipy python3-matplotlib python3-pandas 
+run pip3 install statsmodels
+
+# Octave
+run apt-get install -y octave less   
+run apt-get install -y epstool 
+run apt-get install -y transfig
+    
+    
 # Lisätään käyttäjä `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.
 # run useradd -M agent 

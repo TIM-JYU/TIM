@@ -89,8 +89,8 @@ ConsolePWD.getPWD = function() {
 
 var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage","simcir","xml","r"];
-languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python","json","xml","r"];
+languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage","simcir","xml","r", "octave"];
+languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python","json","xml","r","octave"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
@@ -258,7 +258,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
     csLogTime("dir templ " + t);
     if ( TESTWITHOUTPLUGINS ) return '';
     
-	return  '<div class="csRunDiv no-popup-menu" ng-cloak>' + 
+	return  '<div class="csRunDiv " ng-cloak>' + 
     
 				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>
@@ -342,7 +342,9 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   //'<div  class="htmlresult" ng-if="htmlresult" ><span ng-bind-html="htmlresult"></span></div>'+
 				  //'<div  class="htmlresult" ng-if="htmlresult" >{{htmlresult}}</span></div>'+
                   
-				  (t === "jypeli" || true ? '<img ng-if="imgURL" class="grconsole" ng-src="{{imgURL}}" alt=""  />' : "") +
+				  (t === "jypeli" || true ? '<img ng-if="imgURL" class="grconsole" ng-src="{{imgURL}}" alt=""  />' +
+                         '<video ng-if="wavURL" ng-src="{{wavURL}}" type="video/mp4" controls="" autoplay="true" width="300" height="40"></video>'
+                      : "") +
 				  // '<a ng-if="docURL" class="docurl" href="{{docURL}}" target="csdocument" >Go to document</a>' +
 				  '<div ng-if="docURL" class="docurl">'+
 				  '<p align="right" style="position: absolute; margin-left: 790px;"><a ng-click="closeDocument()" >X</a></p>' +
@@ -604,13 +606,24 @@ function alustaSage(scope,firstTime) {
 // TODO: kielien valinnan tallentaminen
 // TODO: kielien valinta kunnolla float.  
 // ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst  
+    if ( scope.sagecellInfo ) {
+        scope.sagecellInfo.editor = "textarea";
+        //scope.sagecellInfo.inputLocation = null;
+        //scope.sagecellInfo.outputLocation = null;
+        //sagecell.deleteSagecell(scope.sagecellInfo);
+        //scope.sagecellInfo = null;
+    }        
     var types = scope.type.split("/");
     var languages = sagecell.allLanguages;
     if ( types.length > 1 ) languages = types.slice(1); 
     if ( scope.sagecellInfo ) {
         var outputLocation = $(scope.sageOutput);
         outputLocation.find(".sagecell_output_elements").hide();
-        scope.sagecellInfo.code = scope.usercode;
+        // scope.sagecellInfo.code = scope.usercode;
+        scope.sagecellInfo.code = scope.getReplacedCode();
+        scope.sagecellInfo.session.code = scope.sagecellInfo.code;
+        // scope.sagecellInfo.inputLocation.innerText = scope.sagecellInfo.code;
+        scope.sagecellInfo.inputLocation.children[0].children[0].children[0].value = scope.sagecellInfo.code;
         return;
     }    
     scope.sageArea = scope.element0.getElementsByClassName('computeSage')[0];                    
@@ -619,19 +632,26 @@ function alustaSage(scope,firstTime) {
     
     scope.sagecellInfo = sagecell.makeSagecell({
         inputLocation: scope.sageArea,
-        // inputLocation: scope.editArea,
+        replaceOutput: true,
+        //inputLocation: scope.editArea,
         editor: "textarea",
+        // hide: ["evalButton"],
         hide: ["editor","evalButton"],
         outputLocation: scope.sageOutput,
         requires_tos: false,
-        code: scope.usercode,
-        getCode: function() { return scope.getCode(); },
+        // code: scope.usercode,
+        code: scope.getReplacedCode(),
+        getCode: function() { 
+          return scope.getReplacedCode(); 
+        },
         autoeval: scope.attrs.autorun || firstTime,
         callback: function() {
             scope.sageButton = scope.sageArea.getElementsByClassName("sagecell_evalButton")[0]; // .button();     
             
             scope.sageButton.onclick = function() {
                 // scope.checkSageSave();
+                scope.sagecellInfo.code = scope.getReplacedCode();
+                scope.sagecellInfo.session.code = scope.sagecellInfo.code;
             };
             var sagecellOptions = scope.element0.getElementsByClassName('sagecell_options')[0];  
             var csRunMenuArea = scope.element0.getElementsByClassName('csRunMenuArea')[0];
@@ -708,6 +728,7 @@ csApp.Hex2Str = function (s) {
 csApp.Controller = function($scope,$http,$transclude,$sce) {
 "use strict";
     csLogTime("controller");
+	$scope.wavURL = "";
 	$scope.byCode ="";
 	$scope.attrs = {};
     $scope.svgImageSnippet = function() {
@@ -865,8 +886,9 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         $scope.closeDocument();
         // alert("moi");
         
+        if ( $scope.isSage ) alustaSage($scope,true);
         if ( $scope.sageButton ) $scope.sageButton.click();
-        if ( $scope.isSage && !$scope.sagecellInfo ) alustaSage($scope,true);
+        // if ( $scope.isSage && !$scope.sagecellInfo ) alustaSage($scope,true);
         
         if ( $scope.simcir ) {
             $scope.usercode = $scope.getCircuitData();
@@ -893,6 +915,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         }
 		$scope.resImage = "";
 		$scope.imgURL = "";
+		$scope.wavURL = "";
 		$scope.runSuccess = false;
 		if ( runType != "js" ) $scope.result = "";
 		$scope.runTestGreen = false;
@@ -944,12 +967,14 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 			}
 			$scope.error = data.web.error;
 			var imgURL = "";
+			var wavURL = "";
 			$scope.runSuccess = true;
             $scope.isRunning = false;
 
 			$scope.runError = $scope.error; // !$scope.runSuccess;
 
 			imgURL = data.web.image;
+			wavURL = data.web.wav;
 			if ( data.web.testGreen ) $scope.runTestGreen = true;
 			if ( data.web.testRed ) $scope.runTestRed = true;
 			$scope.comtestError = data.web.comtestError;
@@ -962,6 +987,12 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 				$scope.result = data.web.console.trim();
 			}
 
+            if ( wavURL ) {
+                // <video src="https://tim.jyu.fi/csimages/cs/vesal/sinewave.wav" type="video/mp4" controls="" autoplay="true" ></video>
+				$scope.wavURL = wavURL;
+				$scope.result = data.web.console.trim();
+            }
+            
 			if ( imgURL ) {
 				// $scope.resImage = '<img src="' + imgURL + ' " alt="Result image" />';
 				$scope.imgURL = imgURL;
@@ -1270,6 +1301,33 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         $scope.carretPos = start; // seuraava tapahtuma nappaa tämän ja siirtää vain kursorin.
     };
 		
+	$scope.getReplacedCode = function() {
+		// $scope.code = $scope.localcode;
+		if ( !$scope.attrs.program ) { $scope.code = $scope.usercode; return $scope.code; }
+		var st = $scope.attrs.program.split("\n");
+		var r = "";
+		var rp = ["",""]; // alkuosa, loppuosa
+		var step = 0;
+		var nl = "";
+		var nls = "";
+        var needReplace = !!$scope.replace;
+        var regexp = new RegExp($scope.replace);
+		for (var i in st) if ( st.hasOwnProperty(i) ) {
+			var s = st[i];
+			// if ( s.indexOf($scope.replace) >= 0 ) {
+            if ( needReplace && regexp.test(s) ) {
+				r += nl + $scope.usercode;
+				if ( step === 0 ) { step++; nls = ""; continue; }
+			} else { 
+				r += nl + s;
+				rp[step] += nls + s;
+			}
+			nl = nls = "\n";
+		}
+		$scope.code = r;
+        return $scope.code;
+    }
+        
 	$scope.showCodeLocal = function() {
 		// $scope.code = $scope.localcode;
 		if ( $scope.localcode === "" ) { $scope.code = $scope.usercode; return; }

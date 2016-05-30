@@ -110,15 +110,30 @@
     height: 22em;
     position: absolute;
 }
-
+/*
 #searchVelps {
     width: 11em;
-}
+}*/
 
 .adjustForm {
     margin-top: 0.4em;
     margin-bottom: 0.4em;
 }
+
+.adjustAnnForm {
+    margin-top: 0.6em;
+    margin-bottom: 0.9em;
+}
+
+.formLabel {
+    font-size: 0.9em;
+}
+
+.formInput {
+    max-width: 59%;
+    float: right;
+}
+
 /* Table styles*/
 .velpTable {
     table-layout: fixed;
@@ -186,7 +201,7 @@
 
 #createVelpButton {
     margin-left: 0.2em;
-    margin-top: 1.5em;
+    margin-top: 1.3em;
 }
 
 .velp {

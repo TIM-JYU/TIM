@@ -14,8 +14,6 @@ $csrunmenu-link-color: $basic-color;
 $timbutton-bg-color: $button-bg-color;
 $viewlogin-link-color: $basic-color;
 $draghandle-bg-color: $basic-color;
-$line-height: 1.4;
-$font-family: Verdana, Arial, sans-serif;
 $font-size: 1em;
 $bg-color: white;
 $material-shadow: none;
@@ -41,12 +39,14 @@ $gray: lighten($gray-base, 33.5%);
 $brand-primary: $basic-color;
 $text-color: black;
 $input-color: black;
+$link-color: darken($brand-primary, 10%);
 $input-color-placeholder: $gray;
 $headings-font-weight: 700;
 $font-size-base: 14px; // this should probably not be changed from default 14px
 $font-size-h1: floor(($font-size-base * 2.29)); // default factor is 2.6
 $font-size-h2: floor(($font-size-base * 1.72)); // default factor is 2.15
 $font-size-h3: floor(($font-size-base * 1.5)); // default factor is 1.7
+$font-family-base: Verdana, Arial, sans-serif;
 $font-family-monospace: "Courier New", Courier, serif;
 $code-color: black;
 $code-bg: inherit;
