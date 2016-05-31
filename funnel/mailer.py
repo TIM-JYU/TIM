@@ -1,12 +1,9 @@
-import json
 import logging
-import os
-import random
 import smtplib
-import string
 
 from email.mime.text import MIMEText
-from typing import Union
+from persistent_queue import PersistentQueue, PersistenceException
+from typing import Dict, Optional, Tuple, Union
 
 MAIL_HOST = "smtp.jyu.fi"
 MAIL_DIR = "/service/mail"
@@ -28,8 +25,7 @@ class Mailer:
         logging.getLogger('mailer').info('Dry run mode is {}'.format(dry_run))
         self.mail_host = mail_host
         self.mail_dir = mail_dir
-        if not os.path.exists(mail_dir):
-            os.mkdir(mail_dir)
+        self.queue = PersistentQueue(self.mail_dir)
 
         self.client_rate = client_rate
         self.client_rate_window = client_rate_window
@@ -39,87 +35,34 @@ class Mailer:
         self.window_age = 0
 
     def get_first_filename(self) -> str:
-        return os.path.join(self.mail_dir, 'first')
+        return self.queue.get_first_filename()
 
     def get_last_filename(self) -> str:
-        return os.path.join(self.mail_dir, 'last')
+        return self.queue.get_last_filename()
 
-    def get_random_filenames(self) -> str:
-        while True:
-            without_path = ''.join([random.choice(string.ascii_letters) for _ in range(16)])
-            with_path = os.path.join(self.mail_dir, without_path)
-            if not os.path.isfile(with_path):
-                return with_path, without_path
+    def get_random_filenames(self) -> Tuple[str, str]:
+        return self.queue.get_random_filenames()
 
     def set_next(self, filename: str, next_filename: str):
         try:
-            with open(filename, 'r') as f_src:
-                msg = json.loads(f_src.read())
-        except Exception as e:
-            logging.getLogger('mailer').error('Error reading {}: {}'.format(filename, e))
-            return
-
-        msg['Next-Msg'] = next_filename
-
-        try:
-            with open(filename, 'w') as f_dest:
-                f_dest.write(json.dumps(msg))
-        except Exception as e:
-            logging.getLogger('mailer').error('Error writing {}: {}'.format(filename, e))
-            return
+            self.queue.set_next(filename, next_filename)
+        except PersistenceException as e:
+            logging.getLogger('mailer').error(str(e))
 
     def enqueue(self, headers: dict, msg: str) -> str:
         logging.getLogger('mailer').debug('Enqueuing message: {}'.format(headers))
-        this_absfile, this_relfile = self.get_random_filenames()
-        with open(this_absfile, 'w') as f:
-            fullmsg = headers.copy()
-            fullmsg['Body'] = msg
-            fullmsg['Next-Msg'] = ''
-            f.write(json.dumps(fullmsg))
-
-        first_file = self.get_first_filename()
-        last_file = self.get_last_filename()
-
-        if not os.path.islink(first_file):
-            files = os.listdir(self.mail_dir)
-            if len(files) > 1:
-                os.symlink(files[0], first_file)
-            else:
-                os.symlink(this_relfile, first_file)
-
-        if os.path.islink(last_file):
-            self.set_next(last_file, this_relfile)
-            os.unlink(last_file)
-
-        os.symlink(this_relfile, last_file)
+        e = headers.copy()
+        e['Body'] = msg
+        this_relfile = self.queue.enqueue(e)
         logging.getLogger('mailer').debug('Enqueuing succeeded')
         return this_relfile
 
     def has_messages(self):
-        return os.path.islink(self.get_first_filename())
+        return not self.queue.is_empty()
 
-    def dequeue(self) -> Union[dict, None]:
+    def dequeue(self) -> Optional[Dict[str, str]]:
         logging.getLogger('mailer').debug('Dequeuing message')
-        first_file = self.get_first_filename()
-        if not os.path.isfile(first_file):
-            logging.getLogger().warning('Called dequeue with no messages in the queue')
-            return None
-
-        try:
-            with open(first_file, 'r') as f_src:
-                msg = json.loads(f_src.read())
-        except Exception as e:
-            logging.getLogger().error('Error parsing file {}: {}'.format(first_file, str(e)))
-            # TODO: proper error handling... move the file to an error directory
-            return None
-
-        os.unlink(os.path.join(self.mail_dir, os.readlink(first_file)))
-        os.unlink(first_file)
-        if msg['Next-Msg'] == '':
-            os.unlink(self.get_last_filename())
-        else:
-            os.symlink(msg['Next-Msg'], first_file)
-
+        msg = self.queue.dequeue()
         logging.getLogger('mailer').debug('Dequeuing succeeded: {}'.format(msg))
         return msg
 
@@ -147,16 +90,12 @@ class Mailer:
         logging.getLogger('mailer').info("Message sent")
 
     def update(self, dt: float):
-        old_window_age = self.window_age
-
         self.window_age += dt
         if self.window_age > self.client_rate_window:
             self.messages_remaining = self.client_rate
             while self.window_age >= self.client_rate_window:
                 self.window_age -= self.client_rate_window
             logging.getLogger('mailer').info("A new message window is opened")
-
-        print('update({}), window age = {} -> {}'.format(dt, old_window_age, self.window_age))
 
         while self.has_messages():
             if self.messages_remaining < 1:
