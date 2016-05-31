@@ -1,11 +1,12 @@
 <!-- Pop over element --><span class="annotation-element"><span ng-show="show" ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
     <span class="fulldiv">
         <span class="div-90">
-            <p><span><strong>{{ velp }}</strong></span><em>by: {{ annotator }}</em>
-                <label>Points: <input type="number" ng-model="points" ng-value="points"
-                                           ng-change="changePoints(points)" /></label>
-            </p>
+            <p><span><strong>{{ velp }}</strong></span></p>
+            <p><em>by: {{ annotator }}</em></p>
+            <p><label>Points: <input type="number" ng-model="points" ng-value="points"
+                                           ng-change="changePoints(points)" /></label></p>
         </span>
+
         <span class="div-10">
             <span title="Close" class="float-right glyphicon glyphicon-remove clickable-icon closeAnn"
                   ng-click="toggleAnnotation()"></span>
@@ -13,7 +14,12 @@
     </span>
     <span class="fulldiv">
         <ul class="comments">
-            <li ng-repeat="comment in comments"><strong>{{ comment["commenter_username"] }}</strong>: {{ comment["content"] }}</li>
+            <li ng-repeat="comment in comments">
+                <a class="username" title="{{ comment.commenter_real_name }}" href="mailto:{{ comment.commenter_email }}">
+                            {{ comment.commenter_username }}</a>
+                <span class="timestamp" title="{{ comment.comment_time }}">{{ comment.comment_relative_time }}</span>
+                <!--strong>{{ comment["commenter_username"] }}</strong-->
+                <p>{{ comment["content"] }}</p></li>
         </ul>
         <textarea placeholder="Add comment" ng-model="newComment" autofocus></textarea>
     </span>
@@ -24,8 +30,7 @@
             <label>Visible to:</label>
             <select ng-model="visible_options.value" ng-options="v as visible_options.names[v-1] for v in visible_options.values">
             </select>
-            <span ng-class="['annqmark', 'float-right', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']" ng-click="showInfo()"
-                data-container="body" data-toggle="popover" data-placement="right" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus.">
+            <span ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']" uib-popover="Vivamus sagittis lacus vel augue laoreet rutrum faucibus." popover-placement="right">
             </span>
         </div>
     </form>

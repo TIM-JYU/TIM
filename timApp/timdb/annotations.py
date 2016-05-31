@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 from timdb.timdbbase import TimDbBase
 from timdb.users import Users
 from assessment_area import AssessmentArea
+from utils import datestr_to_relative
 
 
 class Annotations(TimDbBase):
@@ -191,6 +192,7 @@ class Annotations(TimDbBase):
                     annotation_id = next_id
                     dict_help.clear()
                     del list_help[:]
+                    dict_help['comment_relative_time'] = datestr_to_relative(comment_data[i]['comment_time'])
                     dict_help['comment_time'] = comment_data[i]['comment_time']
                     dict_help['commenter_id'] = comment_data[i]['commenter_id']
                     dict_help['content'] = comment_data[i]['content']
@@ -199,6 +201,7 @@ class Annotations(TimDbBase):
                     dict_help['commenter_email'] = comment_data[i]['user_email']
                     list_help.append(copy.deepcopy(dict_help))
                 else:
+                    dict_help['comment_relative_time'] = datestr_to_relative(comment_data[i]['comment_time'])
                     dict_help['comment_time'] = comment_data[i]['comment_time']
                     dict_help['commenter_id'] = comment_data[i]['commenter_id']
                     dict_help['content'] = comment_data[i]['content']

@@ -19,7 +19,7 @@ class VelpGroups(Documents):
 
         :param name: Name of the new default velp group.
         :param owner_group_id: The id of the owner group.
-        :param velp_group_id: ID
+        :param default_group_path: Path of new document / velp group
         :return:
         """
 
@@ -29,8 +29,8 @@ class VelpGroups(Documents):
         valid_until = None
         cursor = self.db.cursor()
         cursor.execute("""
-                      INSERT INTO
-                      VelpGroup(id, name, valid_until, document_def)
+                      INSERT OR IGNORE INTO
+                      VelpGroup(id, name, valid_until, default_group)
                       VALUES (?, ?, ?, ?)
                       """, [new_group_id, name, valid_until, 1]
                        )
@@ -42,6 +42,7 @@ class VelpGroups(Documents):
 
         :param name: Name of the created group.
         :param owner_group_id: The id of the owner group.
+        :param new_group_path: Path of new document / velp group
         :param valid_until: How long velp group is valid (None is forever).
         :return:
         """
@@ -59,24 +60,41 @@ class VelpGroups(Documents):
         self.db.commit()
         return new_group_id
 
-    def make_document_a_velp_group(self, name: str, velp_group_id: int, valid_until: Optional[str] = None):
+    def make_document_a_velp_group(self, name: str, velp_group_id: int, valid_until: Optional[str] = None,
+                                   default_group: Optional[bool] = 0):
         """Adds document to VelpGroup table
 
         :param name: Name of the created group.
         :param velp_group_id: ID of new velp group (and existing document)
-        :param valid_until: How long velp group is valid (None is forever).
+        :param valid_until: How long velp group is valid (None is forever)
+        :param default_group: Boolean whether velp group should be default or not
         :return:
         """
         cursor = self.db.cursor()
 
         cursor.execute("""
                       INSERT OR IGNORE INTO
-                      VelpGroup(id, name, valid_until)
-                      VALUES (?, ?, ?)
-                      """, [velp_group_id, name, valid_until]
+                      VelpGroup(id, name, valid_until, default_group)
+                      VALUES (?, ?, ?, ?)
+                      """, [velp_group_id, name, valid_until, default_group]
                        )
         self.db.commit()
         return velp_group_id
+
+    def update_velp_group_to_default_velp_group(self, velp_group_id: int):
+        """Makes velp group a default velp group in velp group table
+
+        :param velp_group_id: ID of velp group
+        :return:
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      UPDATE VelpGroup
+                      SET default_group = 1, valid_until = NULL
+                      WHERE id = ?
+                      """, [velp_group_id]
+                       )
+        self.db.commit()
 
     def add_velp_to_group(self, velp_id: int, velp_group_id: int):
         """Adds a velp to a specific group
@@ -324,6 +342,23 @@ class VelpGroups(Documents):
                       )
         results = self.resultAsDictionary(cursor)
         return results
+
+    def check_velp_group_ids_for_default_group(self, velp_group_ids: [int]):
+        """Checks if list of velp group IDs contains a default velp group
+
+        :param velp_group_ids: List of velp group IDs
+        :return: First found default velp group ID and name
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT
+                      id, name
+                      FROM VelpGroup
+                      WHERE id IN ({}) AND default_group = 1
+                      """.format(self.get_sql_template(velp_group_ids)), velp_group_ids
+                      )
+        results = self.resultAsDictionary(cursor)
+        return results[0] if len(results) > 0 else None
 
     # Unused methods
 

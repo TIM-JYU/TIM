@@ -117,9 +117,6 @@ timApp.directive("annotation", function() {
                 return false;
             };
 
-            scope.showInfo = function () {
-                 $('[data-toggle="popover"]').popover();
-            };
         }
     }
 });

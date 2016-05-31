@@ -224,7 +224,7 @@ CREATE TABLE VelpGroup (
   creation_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   valid_from    DATETIME DEFAULT CURRENT_TIMESTAMP,
   valid_until   DATETIME,
-  document_def  BOOLEAN  NOT NULL DEFAULT 0, -- sqlite doesn't have true/false boolean
+  default_group BOOLEAN  NOT NULL DEFAULT 0, -- sqlite doesn't have true/false boolean
 
   CONSTRAINT VelpGroup_PK
   PRIMARY KEY (id)
