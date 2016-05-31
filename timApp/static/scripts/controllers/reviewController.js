@@ -8,12 +8,13 @@ var timApp = angular.module('timApp');
 console.log("reviewController.js added");
 
 
-timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile', '$timeout', function ($scope, $http, $window, $compile, $timeout) {
+timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile', function ($scope, $http, $window, $compile) {
     "use strict";
 
     $scope.annotationsAdded = false;
     $scope.selectedArea = null;
     $scope.selectedElement = null;
+
     //$scope.selectedAnnotation = {"comments": [], "velp": "", "points": 0};
     //$scope.selectionParent = null;
 
@@ -253,7 +254,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         btn.classList.add("timButton");
         btn.value = "V";
         btn.id = "velpBadge";
-        btn.setAttribute("ng-click", "clearVelpBadgeById('"+ id +"')");
+        btn.setAttribute("ng-click", "clearVelpBadge($event)");
+        $compile(btn)($scope);
         return btn;
     };
 
@@ -261,17 +263,18 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Update "Velp badge" to correct element
      */
     $scope.updateVelpBadge = function(oldElment, newElement){
-        /*
+        console.log(oldElment);
         if (oldElment == null){
             addElementToParagraphMargin(newElement, createVelpBadge(newElement.id));
             return;
         } else if (oldElment.id != newElement.id){
-            $scope.clearVelpBadge(oldElment);
+            $scope.clearVelpBadge(null);
             addElementToParagraphMargin(newElement, createVelpBadge(newElement.id));
         }
-        */
+        /*
         console.log("old " + oldElment.id);
         console.log("new " + newElement.id);
+        */
 
         /*
         var container = el.getElementsByClassName("missing-velps");
@@ -289,20 +292,23 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     /**
      * Closes element selection
      */
-    $scope.clearVelpBadgeById = function(parentid){
-        console.log("testi");
-        var parent = document.getElementById(parentid);
+    $scope.clearVelpBadge = function(e){
         var btn = document.getElementById("velpBadge");
+        var parent = getElementParent(btn);
+        console.log(parent);
         parent.removeChild(btn);
+
+        if (e != null){
+            console.log(e);
+            $scope.selectedElement = null;
+            e.stopPropagation();
+
+            while (!parent.hasAttribute("t")) {
+                parent = getElementParent(parent);
+            }
+        }
     };
 
-    /**
-     * Closes element selection
-     */
-    $scope.clearVelpBadge = function(parent){
-        var btn = document.getElementById("velpBadge");
-        parent.removeChild(btn);
-    };
 
     /**
      * Returns real ids of annotations

@@ -293,8 +293,12 @@ class Annotations(TimDbBase):
                        [language_id, document_id, user_id] + annotation_access_levels + [user_has_see_answers, user_id])
         results = self.resultAsDictionary(cursor)
         for result in results:
-            start_path = [int(i) for i in result['element_path_start'][1:-1].split(',')]
-            end_path = [int(i) for i in result['element_path_end'][1:-1].split(',')]
+            if result['element_path_start'] is not None and result['element_path_end'] is not None:
+                start_path = [int(i) for i in result['element_path_start'][1:-1].split(',')]
+                end_path = [int(i) for i in result['element_path_end'][1:-1].split(',')]
+            else:
+                start_path = None
+                end_path = None
 
             start = {'par_id': result['paragraph_id_start'], 'offset': result['offset_start'],
                      'node': result['node_start'], 'depth': result['depth_start'], 't': result['hash_start'],
