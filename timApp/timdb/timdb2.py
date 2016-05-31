@@ -5,6 +5,7 @@ Another version of TimDb that stores documents as whole.
 import sqlite3
 from contracts import contract
 from timdb.notes import Notes
+from timdb.uploads import Uploads
 from timdb.users import Users
 from timdb.images import Images
 from timdb.files import Files
