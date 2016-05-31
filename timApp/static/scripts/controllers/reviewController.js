@@ -226,7 +226,54 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var span = $scope.createPopOverElement(annotation, show);
         var text = document.createTextNode("\u00A0"+annotation.content+"\u00A0");
         span.appendChild(text);
+        addElementToParagraphMargin(el, span);
 
+        console.log(reason);
+        $compile(span)($scope); // Gives error [$compile:nonassign]
+    };
+
+    var addElementToParagraphMargin = function(par, el){
+        var container = par.getElementsByClassName("missing-velps");
+        if (container.length > 0){
+            container[0].appendChild(el);
+        } else {
+            container = document.createElement("div");
+            container.classList.add("missing-velps");
+            container.appendChild(el);
+            par.appendChild(container);
+        }
+    };
+
+    /**
+     * Stores element for velping
+     */
+    var createVelpBadge = function(id){
+        var btn = document.createElement("input");
+        btn.type = "button";
+        btn.classList.add("timButton");
+        btn.value = "V";
+        btn.id = "velpBadge";
+        btn.setAttribute("ng-click", "clearVelpBadgeById('"+ id +"')");
+        return btn;
+    };
+
+    /**
+     * Update "Velp badge" to correct element
+     */
+    $scope.updateVelpBadge = function(oldElment, newElement){
+        /*
+        if (oldElment == null){
+            addElementToParagraphMargin(newElement, createVelpBadge(newElement.id));
+            return;
+        } else if (oldElment.id != newElement.id){
+            $scope.clearVelpBadge(oldElment);
+            addElementToParagraphMargin(newElement, createVelpBadge(newElement.id));
+        }
+        */
+        console.log("old " + oldElment.id);
+        console.log("new " + newElement.id);
+
+        /*
         var container = el.getElementsByClassName("missing-velps");
         if (container.length > 0){
             container[0].appendChild(span);
@@ -236,11 +283,32 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             container.appendChild(span);
             el.appendChild(container);
         }
-
-        console.log(reason);
-        $compile(span)($scope); // Gives error [$compile:nonassign]
+        */
     };
 
+    /**
+     * Closes element selection
+     */
+    $scope.clearVelpBadgeById = function(parentid){
+        console.log("testi");
+        var parent = document.getElementById(parentid);
+        var btn = document.getElementById("velpBadge");
+        parent.removeChild(btn);
+    };
+
+    /**
+     * Closes element selection
+     */
+    $scope.clearVelpBadge = function(parent){
+        var btn = document.getElementById("velpBadge");
+        parent.removeChild(btn);
+    };
+
+    /**
+     * Returns real ids of annotations
+     * @param id
+     * @returns {*}
+     */
     $scope.getRealAnnotationId = function(id){
         if (id < 0){
             return $scope.annotationids[id];
@@ -296,7 +364,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Select text range
      */
     $scope.selectText = function () {
-        console.log("hei");
+
+        var oldElement = null;
+        if ($scope.selectedElement != null)
+            oldElement = $scope.selectedElement;
+
         try {
             var range;
             if ($window.getSelection) {
@@ -315,6 +387,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         } catch (err) {
             console.log(err);
         }
+
         console.log($scope.selectedArea);
         if ($scope.selectedArea === null){
             var elements = document.getElementsByClassName("lightselect");
@@ -323,6 +396,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 $scope.selectedElement = elements[0];
         }
 
+        var newElement = $scope.selectedElement;
+        $scope.updateVelpBadge(oldElement, newElement);
     };
 
 
