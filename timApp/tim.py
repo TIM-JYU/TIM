@@ -10,7 +10,7 @@ import shutil
 from flask import Blueprint
 from flask import render_template
 from flask import stream_with_context
-from flask.ext.assets import Environment
+from flask_assets import Environment
 from flask.helpers import send_file
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
