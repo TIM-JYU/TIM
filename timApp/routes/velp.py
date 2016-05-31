@@ -432,24 +432,34 @@ def create_velp_group(document_id: int):
         else:
             abort(400, "Velp group with same name and location exists already.")
 
-        return jsonResponse(velp_group_id)
 
     # TODO: Who has can add velp groups to documents or folders
     # TODO: Also who owns the new velp group? Now it is current user
-    if target_type == 2:
-        doc_name = ""
-    # Gives path to either velp groups or velp groups/document name folder
-    velps_folder_path = timdb.folders.check_velp_group_folder_path(doc_path, user_group_id, doc_name)
-
-    new_group_path = velps_folder_path + "/" + velp_group_name
-    group_exists = timdb.documents.resolve_doc_id_name(new_group_path)  # Check name so no duplicates are made
-    if group_exists is None:
-        velp_group_id = timdb.velp_groups.create_velp_group(velp_group_name, user_group_id, new_group_path)
     else:
-        abort(400, "Velp group with same name and location exists already.")
+        if target_type == 2:
+            doc_name = ""
+        # Gives path to either velp groups or velp groups/document name folder
+        velps_folder_path = timdb.folders.check_velp_group_folder_path(doc_path, user_group_id, doc_name)
 
+        new_group_path = velps_folder_path + "/" + velp_group_name
+        group_exists = timdb.documents.resolve_doc_id_name(new_group_path)  # Check name so no duplicates are made
+        if group_exists is None:
+            velp_group_id = timdb.velp_groups.create_velp_group(velp_group_name, user_group_id, new_group_path)
+        else:
+            abort(400, "Velp group with same name and location exists already.")
 
-    return jsonResponse(velp_group_id)
+    created_velp_group = dict
+    created_velp_group['id'] = velp_group_id
+    created_velp_group['target_type'] = 0
+    created_velp_group['target_id'] = "0"
+    created_velp_group['name'] = velp_group_name
+    created_velp_group['location'] = new_group_path
+    created_velp_group['selected'] = True
+    created_velp_group['edit_access'] = True
+
+    timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, getCurrentUserId())
+
+    return jsonResponse(created_velp_group)
 
 @velps.route("/<document_id>/create_default_velp_group", methods=['POST'])
 def create_default_velp_group(document_id: int):
@@ -485,8 +495,18 @@ def create_default_velp_group(document_id: int):
         velp_group_id = timdb.velp_groups.make_document_a_velp_group(velp_group_name, default_id, None, 1)
         timdb.velp_groups.update_velp_group_to_default_velp_group(default_id)
 
+    created_velp_group = dict
+    created_velp_group['id'] = velp_group_id
+    created_velp_group['target_type'] = 0
+    created_velp_group['target_id'] = "0"
+    created_velp_group['name'] = velp_group_name
+    created_velp_group['location'] = new_group_path
+    created_velp_group['selected'] = True
+    created_velp_group['edit_access'] = True
 
-    return jsonResponse(velp_group_id)
+    timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, getCurrentUserId())
+
+    return jsonResponse(created_velp_group)
 
 
 
@@ -498,6 +518,8 @@ def get_velp_groups_from_tree(document_id: int):
     finally checks users own velp group folder.
 
     Checks that user has minimum of view right for velp groups.
+
+    :param document_id: ID of document
     :return: List of document / velp group information of found hits.
     """
 
