@@ -43,12 +43,6 @@ class Mailer:
     def get_random_filenames(self) -> Tuple[str, str]:
         return self.queue.get_random_filenames()
 
-    def set_next(self, filename: str, next_filename: str):
-        try:
-            self.queue.set_next(filename, next_filename)
-        except PersistenceException as e:
-            logging.getLogger('mailer').error(str(e))
-
     def enqueue(self, headers: dict, msg: str) -> str:
         logging.getLogger('mailer').debug('Enqueuing message: {}'.format(headers))
         e = headers.copy()
