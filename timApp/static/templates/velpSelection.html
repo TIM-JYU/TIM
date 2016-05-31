@@ -12,7 +12,8 @@
                     <form class="form-inline adjustForm">
                         <div class="form-group">
                             <label class="formLabel" for="searchLabels">Search labels:</label>
-                            <input class="formInput" id="searchLabels" ng-model="filterLabel" placeholder="Filter labels">
+                            <input class="formInput" id="searchLabels" ng-model="filterLabel"
+                                   placeholder="Filter labels">
                         </div>
                     </form>
                     <div>
@@ -29,12 +30,12 @@
                     </div>
                 </div>
                 <div>
-                <form class="form-inline adjustForm">
-                    <div class="form-group">
-                        <label class="formLabel" for="searchVelps">Search velps:</label>
-                        <input class="formInput" id="searchVelps" ng-model="filterVelp" placeholder="Filter velps">
-                    </div>
-                </form>
+                    <form class="form-inline adjustForm">
+                        <div class="form-group">
+                            <label class="formLabel" for="searchVelps">Search velps:</label>
+                            <input class="formInput" id="searchVelps" ng-model="filterVelp" placeholder="Filter velps">
+                        </div>
+                    </form>
                 </div>
                 <div ng-show="advancedOn">
                     <form class="form-inline adjustForm">
@@ -51,7 +52,8 @@
                     </form>
                 </div>
 
-                <input id="createVelpButton" class="timButton" type="button" ng-click="selectVelpToEdit(newVelp)" value="Create new velp">
+                <input id="createVelpButton" class="timButton" type="button" ng-click="selectVelpToEdit(newVelp)"
+                       value="Create new velp">
 
                 <div class="stack">
 
@@ -93,7 +95,8 @@
                                                     </span>
                                         <input id="addLabelField" placeholder="Add label"
                                                ng-model="newLabel['content']">
-                                        <input id="addLabelBtn" type="button" value="Add" ng-click="addLabel(newVelp)">
+                                        <input id="addLabelBtn" class="timButton" type="button" value="Add"
+                                               ng-click="addLabel(newVelp)">
                                         <span ng-hide="newLabel['valid']" class="error">Label content too short</span>
                                     </fieldset>
 
@@ -173,15 +176,18 @@
                                                                    ng-model="labelToEdit.content">
                                                             <span class="float-right" ng-click="selectLabelToEdit(l)"
                                                                   ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
-                                                            <input type="button" value="Save"
-                                                                   ng-click="editLabel(labelToEdit)"> <input
-                                                                type="button" value="Cancel"
-                                                                ng-click="selectLabelToEdit(l)">
+                                                            <input class="timButton" type="button" value="Save"
+                                                                   ng-click="editLabel(labelToEdit)">
+                                                            <input
+                                                                    class="timButton"
+                                                                    type="button" value="Cancel"
+                                                                    ng-click="selectLabelToEdit(l)">
                                                             <br>
                                                         </span>
                                                     </span>
                                                     <input placeholder="Add label" ng-model="newLabel['content']">
-                                                    <input type="button" value="Add" ng-click="addLabel(velpToEdit)">
+                                                    <input class="timButton" type="button" value="Add"
+                                                           ng-click="addLabel(velpToEdit)">
                                                     <span ng-hide="newLabel['valid']" class="error">Label content too short</span>
                                                 </fieldset>
 
@@ -196,9 +202,11 @@
                                                     </span>
                                                 </fieldset>
 
-                                                <p><input type="submit" value="Save changes"/> <input type="button"
-                                                                                                      value="Cancel"
-                                                                                                      ng-click="selectVelpToEdit(velp)">
+                                                <p><input type="submit" class="timButton" value="Save changes"/>
+                                                    <input type="button"
+                                                           class="timButton"
+                                                           value="Cancel"
+                                                           ng-click="selectVelpToEdit(velp)">
                                                 </p>
                                             </form>
                                         </div>
@@ -239,7 +247,8 @@
                         </tr>
                         <tr ng-repeat="group in velpGroups">
                             <td>
-                                <input type="checkbox" ng-model="group.selected" ng-click="changeVelpGroupSelection(group)">
+                                <input type="checkbox" ng-model="group.selected"
+                                       ng-click="changeVelpGroupSelection(group)">
                             </td>
                             <td>
                                 <input type="checkbox">
@@ -250,18 +259,22 @@
                         </tr>
                     </table>
                     <form ng-submit="addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
-                        <p><label>Group name:</label><input type="text" ng-model="newVelpGroup.name" placeholder="Velp group" required></p>
+                        <p><label>Group name:</label><input type="text" ng-model="newVelpGroup.name"
+                                                            placeholder="Velp group" required></p>
                         <fieldset>
                             <legend>Attach this group to:</legend>
-                            <p><input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioPar" value="0" checked="checked"> <label for="radioPar">Personal collection</label><br>
-                               <input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioDoc" value="1"> <label for="radioDoc">Document</label><br>
-                               <input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioFolder" value="2"> <label for="radioFolder">Folder</label></p>
+                            <p><input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioPar"
+                                      value="0" checked="checked"> <label for="radioPar">Personal collection</label><br>
+                                <input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioDoc"
+                                       value="1"> <label for="radioDoc">Document</label><br>
+                                <input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioFolder"
+                                       value="2"> <label for="radioFolder">Folder</label></p>
                         </fieldset>
 
                         <p><input type="submit" class="timButton" value="Create velpgroup"></p>
                         <p ng-show="(addVelpGroupForm.newVelpGroup.name.$invalid && !addVelpGroupForm.newVelpGroup.name.$pristine) || (submitted.velpGroup && addVelpGroupForm.newVelpGroup.name.$invalid)"
-                                                   class="error">
-                                                    VelpGroup name is required!
+                           class="error">
+                            VelpGroup name is required!
                         </p>
 
                     </form>
