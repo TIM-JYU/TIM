@@ -1,7 +1,7 @@
 import imghdr
 import io
 import os
-
+import mimetypes
 import posixpath
 
 import magic
@@ -28,6 +28,15 @@ PIC_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif']
 ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
 
 
+def get_mimetype(p):
+    mt, code = mimetypes.guess_type(p)
+    if not mt:
+        mt = "text/plain"
+    return mt
+    # mime = magic.Magic(mime=True)
+    # mt = mime.from_file(p).decode('utf-8')
+
+
 @upload.route('/uploads/<path:relfilename>')
 def get_upload(relfilename):
     timdb = getTimDb()
@@ -37,9 +46,8 @@ def get_upload(relfilename):
     data = timdb.uploads.get_file(relfilename)
     # imgtype = imghdr.what(None, h=data)
     f = io.BytesIO(data)
-    mime = magic.Magic(mime=True)
     p = os.path.join(timdb.uploads.blocks_path, relfilename)
-    mt = mime.from_file(p).decode('utf-8')
+    mt = get_mimetype(p)
     return send_file(f, mimetype=mt)
     # return send_file(f, mimetype='image/' + imgtype)
 
@@ -64,9 +72,8 @@ def pluginUpload_file(doc_id: str, plugin_id: str, user_id: str):
         relfilename = timdb.uploads.save_file(content, p,
                                               secure_filename(file.filename),
                                               getCurrentUserGroup())
-        mime = magic.Magic(mime=True)
         p = os.path.join(timdb.uploads.blocks_path, relfilename)
-        mt = mime.from_file(p).decode('utf-8')
+        mt = get_mimetype(p)
         # timdb.users.grant_view_access(timdb.users.get_anon_group_id(), img_id)  # So far everyone can see all images
         # TODO put here the rights for the user or group
         relfilename = os.path.join('/uploads',relfilename)

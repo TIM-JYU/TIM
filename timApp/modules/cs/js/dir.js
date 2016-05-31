@@ -274,8 +274,8 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				    '<p ng-if="taunoOn" class="taunoOhje">{{taunoOhjeText}}</a></p>' 
                     : '<p ng-if="taunoOn && !noeditor" class="pluginHide"" ><a ng-click="copyFromSimcir()">copy from SimCir</a> | <a ng-click="copyToSimcir()">copy to SimCir</a> | <a ng-click="hideTauno()">hide SimCir</a></p>') +
 					"" : "") +   
-                  '<div ng-if="upload" class="form-inline">' +  
-                  '<div class="form-group">' +
+                  '<div ng-if="upload" class="form-inline small">' +  
+                  '<div class="form-group small">' +
                   '    Upload image/file: <input type="file" ngf-select="onFileSelect($file)" >' +
                   '            <span ng-show="file.progress >= 0 && !file.error"' +
                   '                  ng-bind="file.progress < 100 ? \'Uploading... \' + file.progress + \'%\' : \'Done!\'"></span>' +
@@ -823,10 +823,15 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         if ( !file || !type ) return;
         $scope.uploadedFile = file;
         $scope.uploadedType = type;
+            var html = '<p class="smalllink"><a href="' + file +'">' + file + '</a> (' + type + ')</p>';
         if (type.startsWith("image")) {
-            $scope.uploadresult = '<img src="'+$scope.uploadedFile+'"/>';
+            html += '<img src="'+$scope.uploadedFile+'"/>';
+            $scope.uploadresult = $sce.trustAsHtml(html);
         } else {
-			$scope.uploadresult = $sce.trustAsHtml('<iframe width="800" height="600"  src="' + file +'" target="csdocument" />');
+            html += '<iframe width="800" height="600"  src="' + file +'" target="csdocument" />';
+			$scope.uploadresult = $sce.trustAsHtml(html);
+            //$scope.uploadresult = $sce.trustAsHtml('<embed  width="800" height="600"  src="' + file +'" />');
+            //$scope.uploadresult = $sce.trustAsHtml('<object width="800" height="600"   data="' + file +'" type="' + type +'"  ></object>');
         }
     }
     
