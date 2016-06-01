@@ -1,11 +1,10 @@
 import copy
 from enum import Enum, unique
+from datetime import timedelta
 from sqlite3 import Connection
 from typing import Dict, List, Optional
 from timdb.timdbbase import TimDbBase
-from timdb.users import Users
-from assessment_area import AssessmentArea
-from utils import datestr_to_relative
+from utils import diff_to_relative
 
 
 class Annotations(TimDbBase):
@@ -98,7 +97,7 @@ class Annotations(TimDbBase):
                         icon_id         = ?
                       WHERE id = ?
                       """, [version_id, visible_to.value, points, icon_id, annotation_id]
-                      )
+                       )
         self.db.commit()
         return
 
@@ -163,8 +162,8 @@ class Annotations(TimDbBase):
         self.db.commit()
         return cursor.lastrowid
 
-
-    def get_annotations_with_comments_in_document(self, user_id: int, user_has_see_answers: bool, user_has_teacher: bool,
+    def get_annotations_with_comments_in_document(self, user_id: int, user_has_see_answers: bool,
+                                                  user_has_teacher: bool,
                                                   user_has_owner: bool, document_id: int):
         annotations = self.get_annotations_in_document(user_id, user_has_see_answers, user_has_teacher, user_has_owner,
                                                        document_id)
@@ -192,23 +191,15 @@ class Annotations(TimDbBase):
                     annotation_id = next_id
                     dict_help.clear()
                     del list_help[:]
-                    dict_help['comment_relative_time'] = datestr_to_relative(comment_data[i]['comment_time'])
-                    dict_help['comment_time'] = comment_data[i]['comment_time']
-                    dict_help['commenter_id'] = comment_data[i]['commenter_id']
-                    dict_help['content'] = comment_data[i]['content']
-                    dict_help['commenter_username'] = comment_data[i]['username']
-                    dict_help['commenter_real_name'] = comment_data[i]['real_name']
-                    dict_help['commenter_email'] = comment_data[i]['user_email']
-                    list_help.append(copy.deepcopy(dict_help))
-                else:
-                    dict_help['comment_relative_time'] = datestr_to_relative(comment_data[i]['comment_time'])
-                    dict_help['comment_time'] = comment_data[i]['comment_time']
-                    dict_help['commenter_id'] = comment_data[i]['commenter_id']
-                    dict_help['content'] = comment_data[i]['content']
-                    dict_help['commenter_username'] = comment_data[i]['username']
-                    dict_help['commenter_real_name'] = comment_data[i]['real_name']
-                    dict_help['commenter_email'] = comment_data[i]['user_email']
-                    list_help.append(copy.deepcopy(dict_help))
+                dict_help['comment_relative_time'] = diff_to_relative(
+                    timedelta(seconds=comment_data[i]['seconds_since']))
+                dict_help['comment_time'] = comment_data[i]['comment_time']
+                dict_help['commenter_id'] = comment_data[i]['commenter_id']
+                dict_help['content'] = comment_data[i]['content']
+                dict_help['commenter_username'] = comment_data[i]['username']
+                dict_help['commenter_real_name'] = comment_data[i]['real_name']
+                dict_help['commenter_email'] = comment_data[i]['user_email']
+                list_help.append(copy.deepcopy(dict_help))
                 if i == len(comment_data) - 1:
                     # comment_dict['id'] = annotation_id
                     comment_dict[annotation_id] = copy.deepcopy(list_help)
@@ -253,18 +244,18 @@ class Annotations(TimDbBase):
         # Distinct is necessary, because we get several identical rows if there are several users contributing in the
         # same answer.
         cursor.execute("""
-                       select distinct
+                       SELECT DISTINCT
                          annotation.id,
-                         velpversion.velp_id as velp,
-                         velpcontent.content as content,
+                         velpversion.velp_id AS velp,
+                         velpcontent.content AS content,
                          annotation.visible_to,
                          annotation.points,
                          annotation.creation_time,
                          annotation.valid_until,
                          annotation.icon_id,
                          annotation.annotator_id,
-                         user.name as annotator_name,
-                         user.real_name as annotator_real_name,
+                         user.name AS annotator_name,
+                         user.real_name AS annotator_real_name,
                          annotation.answer_id,
                          annotation.paragraph_id_start,
                          annotation.paragraph_id_end,
@@ -278,21 +269,21 @@ class Annotations(TimDbBase):
                          annotation.hash_end,
                          annotation.element_path_start,
                          annotation.element_path_end
-                       from annotation
-                         inner join velpversion on velpversion.id = annotation.velp_version_id
-                         inner join velpcontent on velpcontent.version_id = annotation.velp_version_id
-                         left join useranswer on useranswer.answer_id = annotation.answer_id
-                         inner join user on user.id = annotation.annotator_id
-                       where velpcontent.language_id = ? and
-                             (annotation.valid_until isnull or
-                                annotation.valid_until >= current_timestamp) and
-                             annotation.document_id = ? and (
-                                annotation.annotator_id = ? or (
+                       FROM annotation
+                         INNER JOIN velpversion ON velpversion.id = annotation.velp_version_id
+                         INNER JOIN velpcontent ON velpcontent.version_id = annotation.velp_version_id
+                         LEFT JOIN useranswer ON useranswer.answer_id = annotation.answer_id
+                         INNER JOIN user ON user.id = annotation.annotator_id
+                       WHERE velpcontent.language_id = ? AND
+                             (annotation.valid_until ISNULL OR
+                                annotation.valid_until >= current_timestamp) AND
+                             annotation.document_id = ? AND (
+                                annotation.annotator_id = ? OR (
                                 """ + check_annotation_access_right_sql +
                                 """ AND (? OR UserAnswer.user_id = ? OR UserAnswer.user_id ISNULL)
+                                )
                              )
-                          )
-           ORDER BY depth_start DESC, node_start DESC, offset_start DESC""",
+  ORDER BY depth_start DESC, node_start DESC, offset_start DESC""",
                        [language_id, document_id, user_id] + annotation_access_levels + [user_has_see_answers, user_id])
         results = self.resultAsDictionary(cursor)
         for result in results:
@@ -314,7 +305,11 @@ class Annotations(TimDbBase):
         return results
 
     def get_comments_for_annotations(self, annotation_ids: List[int]) -> List[dict]:
-        """Gets comments for annotations given as a list
+        """Gets comments for annotations given as a list.
+
+        Also calculates for each comment how long ago it was made. (This can be negative if for some reason there are
+        timestamps ahead of the server clock in the database. I didn't find a way to calculate the difference without
+        using strftime.
 
         :param annotation_ids: List of annotation IDs
         :return:
@@ -324,16 +319,18 @@ class Annotations(TimDbBase):
                       SELECT
                         AnnotationComment.annotation_id,
                         AnnotationComment.comment_time,
+                        strftime('%s','now')- strftime('%s',AnnotationComment.comment_time) as seconds_since,
                         AnnotationComment.commenter_id,
                         AnnotationComment.content,
-                        User.name as username, User.real_name,
+                        User.name as username,
+                        User.real_name,
                         User.email as user_email
                       FROM AnnotationComment
                       JOIN User ON AnnotationComment.commenter_id = User.id
                       WHERE AnnotationComment.annotation_id IN ({})
                       ORDER BY AnnotationComment.annotation_id ASC;
                       """.format(self.get_sql_template(annotation_ids)), annotation_ids
-                      )
+                       )
         comment_data = self.resultAsDictionary(cursor)
 
         return comment_data
