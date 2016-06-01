@@ -448,7 +448,7 @@ def create_velp_group(document_id: int):
         else:
             abort(400, "Velp group with same name and location exists already.")
 
-    created_velp_group = dict
+    created_velp_group = dict()
     created_velp_group['id'] = velp_group_id
     created_velp_group['target_type'] = 0
     created_velp_group['target_id'] = "0"

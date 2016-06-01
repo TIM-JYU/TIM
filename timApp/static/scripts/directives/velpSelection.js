@@ -357,11 +357,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         if (!valid) return;
 
         form.$setPristine();
-        console.log($scope.newVelpGroup);
-        $scope.newVelpGroup.target_type = parseInt($scope.newVelpGroup.target_type);
 
+        $scope.newVelpGroup.target_type = parseInt($scope.newVelpGroup.target_type);
+        console.log($scope.newVelpGroup);
         $scope.makePostRequest("/{0}/create_velp_group".replace('{0}', doc_id), $scope.newVelpGroup, function (json) {
-            console.log(json);
+            $scope.velpGroups.push(json.data);
         });
     };
 
