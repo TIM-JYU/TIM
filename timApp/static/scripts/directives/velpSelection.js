@@ -52,7 +52,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     // Get default velpgroup data
     $http.get('/{0}/get_default_velp_group'.replace('{0}', doc_id)).success(function (data) {
         console.log("Test");
-        default_velp_group = data;
+        default_velp_group = data.id;
         console.log(default_velp_group);
 
         // Get velp and annotation data
@@ -338,7 +338,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
      * Reset new velp information
      */
     $scope.resetNewVelp = function () {
-        $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2, velp_groups:[]};
+        $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2, velp_groups: $scope.newVelp.velp_groups};
     };
 
     /**
