@@ -78,6 +78,7 @@ class MyServer(BaseHTTPRequestHandler):
                 self.send_str_response(400, 'Missing message data', self.headers.items())
                 return
 
+            # todo: error handling
             Funnel.get_mailer().enqueue(msg_headers, msg_data)
             self.send_str_response(200, 'Message queued')
         else:

@@ -1,10 +1,10 @@
 import json
 import logging
-import os
 import unittest
 from shutil import rmtree
 from typing import Optional
 
+from fileutils import *
 from mailer import Mailer
 
 
@@ -29,15 +29,17 @@ class MailerTest(unittest.TestCase):
         if os.path.exists(self.maildir):
             rmtree(self.maildir)
 
-    def mkheader(self, sender: str, rcpt: str, subj: str, group: Optional[str] = None) -> dict:
+    @classmethod
+    def mkheader(cls, sender: str, rcpt: str, subj: str, group: Optional[str] = None) -> dict:
         return {"From": sender, "Rcpt-To": rcpt, "Subject": subj, "Msg-Group": group}
 
-    def mkmsg(self, next_msg: str, sender: str, rcpt: str, subj: str, msg: str):
+    @classmethod
+    def mkmsg(cls, next_msg: str, sender: str, rcpt: str, subj: str, msg: str):
         return {"From": sender, "Rcpt-To": rcpt, "Subject": subj, "Body": msg, "_next_file": next_msg}
 
     def testInit(self):
         self.assertTrue(os.path.exists(self.maildir))
-        self.assertEqual(len(os.listdir(self.maildir)), 0)
+        self.assertEqual(len(listfiles(self.maildir)), 0)
         self.assertEqual(self.mailer.get_first_filename(), os.path.join(self.maildir, 'first'))
         self.assertEqual(self.mailer.get_last_filename(), os.path.join(self.maildir, 'last'))
         self.assertFalse(self.mailer.has_messages())
@@ -46,13 +48,14 @@ class MailerTest(unittest.TestCase):
         # First enqueue
         f1_data = self.mkmsg('', 'sender', 'recipient', 'subject', 'message')
         f1_file = self.mailer.enqueue(f1_data, f1_data['Body'])
+        self.assertIsNotNone(f1_file)
         self.assertTrue(self.mailer.has_messages())
 
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 3)
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
-        self.assertTrue(f1_file in files)
+        self.assertTrue(f1_file in files, '{} not found in {}'.format(f1_file, files))
         self.assertEqual(os.readlink(self.mailer.get_first_filename()), f1_file)
         self.assertEqual(os.readlink(self.mailer.get_last_filename()), f1_file)
 
@@ -69,7 +72,7 @@ class MailerTest(unittest.TestCase):
         f2_file = self.mailer.enqueue(f2_data, f2_data['Body'])
         self.assertTrue(self.mailer.has_messages())
 
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 4)
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
@@ -90,7 +93,7 @@ class MailerTest(unittest.TestCase):
         f3_file = self.mailer.enqueue(f1_data, f1_data['Body'])
         self.assertTrue(self.mailer.has_messages())
 
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 5)
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
@@ -112,7 +115,7 @@ class MailerTest(unittest.TestCase):
         # Empty dequeue
         with NoWarnings():
             self.assertEqual(self.mailer.dequeue(), None)
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 0)
 
         # Single element
@@ -126,7 +129,7 @@ class MailerTest(unittest.TestCase):
 
         readdata = self.mailer.dequeue()
 
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 0)
         self.assertEqual(readdata['From'], f1_data['From'])
         self.assertEqual(readdata['Rcpt-To'], f1_data['Rcpt-To'])
@@ -146,7 +149,7 @@ class MailerTest(unittest.TestCase):
 
         # 3 -> 2 messages in the queue
         readdata = self.mailer.dequeue()
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 4, 'Files: ' + str(files))
         self.assertEqual(readdata['From'], f_data[0]["From"])
         self.assertEqual(readdata['Rcpt-To'], f_data[0]["Rcpt-To"])
@@ -155,7 +158,7 @@ class MailerTest(unittest.TestCase):
 
         # 2 -> 1 messages in the queue
         readdata = self.mailer.dequeue()
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 3, 'Files: ' + str(files))
         self.assertEqual(readdata['From'], f_data[1]["From"])
         self.assertEqual(readdata['Rcpt-To'], f_data[1]["Rcpt-To"])
@@ -164,7 +167,7 @@ class MailerTest(unittest.TestCase):
 
         # 1 -> 0 messages in the queue
         readdata = self.mailer.dequeue()
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 0, 'Files: ' + str(files))
         self.assertEqual(readdata['From'], f_data[2]["From"])
         self.assertEqual(readdata['Rcpt-To'], f_data[2]["Rcpt-To"])
@@ -174,7 +177,7 @@ class MailerTest(unittest.TestCase):
         # Empty dequeue
         with NoWarnings():
             self.assertEqual(self.mailer.dequeue(), None)
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 0)
 
     def testUpdate(self):
@@ -186,21 +189,21 @@ class MailerTest(unittest.TestCase):
         self.mailer.enqueue(self.mkheader("s4", "r4", "subj4"), "m4")
         self.mailer.update(30)    # window 1: 30 s
 
-        files = os.listdir(self.maildir)
-        self.assertEqual(len(files), 4, "Files in maildir: " + str(os.listdir(self.maildir)))
+        files = listfiles(self.maildir)
+        self.assertEqual(len(files), 4, "Files in maildir: " + str(listfiles(self.maildir)))
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
-        self.assertEqual(len(os.listdir(self.maildir)), 4)
+        self.assertEqual(len(listfiles(self.maildir)), 4)
 
         self.mailer.enqueue(self.mkheader("s5", "r5", "subj5"), "m5")
 
         self.mailer.update(45)    # window 2: 25 s
-        self.assertEqual(len(os.listdir(self.maildir)), 3)
+        self.assertEqual(len(listfiles(self.maildir)), 3)
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
 
         self.mailer.update(50)    # window 2: 35 s
-        self.assertEqual(len(os.listdir(self.maildir)), 0)
+        self.assertEqual(len(listfiles(self.maildir)), 0)
 
     def testNewInstance(self):
         self.mailer.enqueue(self.mkheader("s1", "r1", "subj1"), "m1")
@@ -211,21 +214,21 @@ class MailerTest(unittest.TestCase):
         self.mailer = Mailer(mail_dir=self.maildir, client_rate=2, client_rate_window=1, dry_run=True)
         self.mailer.update(0.5)    # window 1: 0.5
 
-        files = os.listdir(self.maildir)
-        self.assertEqual(len(files), 4, "Files in maildir: " + str(os.listdir(self.maildir)))
+        files = listfiles(self.maildir)
+        self.assertEqual(len(files), 4, "Files in maildir: " + str(listfiles(self.maildir)))
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
-        self.assertEqual(len(os.listdir(self.maildir)), 4)
+        self.assertEqual(len(listfiles(self.maildir)), 4)
 
         self.mailer.enqueue(self.mkheader("s5", "r5", "subj5"), "m5")
 
         self.mailer.update(0.7)    # window 1: 1.2
-        self.assertEqual(len(os.listdir(self.maildir)), 3)
+        self.assertEqual(len(listfiles(self.maildir)), 3)
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
 
         self.mailer.update(0.9)    # window 2: 0.1
-        self.assertEqual(len(os.listdir(self.maildir)), 0)
+        self.assertEqual(len(listfiles(self.maildir)), 0)
 
     def _testGrouping(self):
         self.mailer = Mailer(mail_dir=self.maildir, client_rate=4, client_rate_window=10,

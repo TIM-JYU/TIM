@@ -1,8 +1,8 @@
 import json
-import os
 import unittest
 from shutil import rmtree
 
+from fileutils import *
 from persistent_queue import PersistentQueue
 
 
@@ -21,7 +21,7 @@ class QueueTest(unittest.TestCase):
 
     def testInit(self):
         self.assertTrue(os.path.exists(self.dir))
-        self.assertEqual(len(os.listdir(self.dir)), 0)
+        self.assertEqual(len(listfiles(self.dir)), 0)
         self.assertEqual(self.queue.get_first_filename(), os.path.join(self.dir, 'first'))
         self.assertEqual(self.queue.get_last_filename(), os.path.join(self.dir, 'last'))
         self.assertTrue(self.queue.is_empty())
