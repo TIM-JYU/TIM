@@ -30,7 +30,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.orderVelp = 'label';
     $scope.advancedOn = false;
     $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2, velp_groups:[]};
-    $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};
+    $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: []};
     $scope.newLabel = {content: "", selected: false, edit: false, valid: true};
     $scope.labelToEdit = {content: "", selected: false, edit: false, id: -3};
     $scope.newVelpGroup = {name: "", target_type: 0};
