@@ -29,7 +29,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     // Data
     $scope.orderVelp = 'label';
     $scope.advancedOn = false;
-    $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2, velp_groups:[]};
+    $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2, velp_groups: []};
     $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: []};
     $scope.newLabel = {content: "", selected: false, edit: false, valid: true};
     $scope.labelToEdit = {content: "", selected: false, edit: false, id: -3};
@@ -175,67 +175,48 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         form.$setPristine();
 
         if ($scope.newVelp.velp_groups.length === 0) {
-            $scope.newVelp.velp_groups = [default_velp_group.id];
+            $scope.newVelp.velp_groups = [default_velp_group];
 
-            if (default_velp_group.id === -1) {
+            if (default_velp_group === -1) {
                 console.log("ASDASD");
                 $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), null, function (json) {
-                    default_velp_group = (json.data);
-                    $scope.newVelp.velp_groups = [default_velp_group.id];
+                    default_velp_group = (json.data.id);
+                    $scope.newVelp.velp_groups = [default_velp_group];
                     if (json.data.created_new_group === true)
                         $scope.velpGroups.push(json.data);
-
-                    var velpToAdd = {
-                        labels: $scope.newVelp["labels"],
-                        used: 0,
-                        points: $scope.newVelp["points"],
-                        content: $scope.newVelp["content"],
-                        language_id: "FI",
-                        icon_id: null,
-                        valid_until: null,
-                        velp_groups: [default_velp_group.id] // TODO: Change to default group, add choices where to add
-
-                    };
-
-                    $scope.makePostRequest("/add_velp", velpToAdd, function (json) {
-                        velpToAdd.id = parseInt(json.data);
-                        console.log(velpToAdd);
-                        $scope.resetNewVelp();
-                        $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};
-                        console.log("123");
-                        $scope.velps.push(velpToAdd);
-                        console.log("456");
-                        $scope.submitted.velp = false;
-                        console.log("789");
-                        //$scope.resetLabels();
-                    });
+                    addNewVelp();
                 });
+            } else {
+                addNewVelp();
             }
 
         } else {
-
-            var velpToAdd = {
-                labels: $scope.newVelp["labels"],
-                used: 0,
-                points: $scope.newVelp["points"],
-                content: $scope.newVelp["content"],
-                language_id: "FI",
-                icon_id: null,
-                valid_until: null,
-                velp_groups: $scope.newVelp['velp_groups'] // TODO: Change to default group, add choices where to add
-
-            };
-
-            $scope.makePostRequest("/add_velp", velpToAdd, function (json) {
-                velpToAdd.id = parseInt(json.data);
-                console.log(velpToAdd);
-                $scope.resetNewVelp();
-                $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};
-                $scope.velps.push(velpToAdd);
-                $scope.submitted.velp = false;
-                //$scope.resetLabels();
-            });
+            addNewVelp();
         }
+    };
+
+    var addNewVelp = function () {
+        var velpToAdd = {
+            labels: $scope.newVelp["labels"],
+            used: 0,
+            points: $scope.newVelp["points"],
+            content: $scope.newVelp["content"],
+            language_id: "FI",
+            icon_id: null,
+            valid_until: null,
+            velp_groups: $scope.newVelp['velp_groups']
+
+        };
+        console.log(velpToAdd);
+        $scope.makePostRequest("/add_velp", velpToAdd, function (json) {
+            velpToAdd.id = parseInt(json.data);
+            console.log(velpToAdd);
+            $scope.resetNewVelp();
+            $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};
+            $scope.velps.push(velpToAdd);
+            $scope.submitted.velp = false;
+            //$scope.resetLabels();
+        });
     };
 
 
@@ -375,7 +356,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
      * Reset new velp information
      */
     $scope.resetNewVelp = function () {
-        $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2, velp_groups: $scope.newVelp.velp_groups};
+        $scope.newVelp = {
+            content: "",
+            points: "",
+            labels: [],
+            edit: false,
+            id: -2,
+            velp_groups: $scope.newVelp.velp_groups
+        };
     };
 
     /**
