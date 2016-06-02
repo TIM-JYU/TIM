@@ -183,18 +183,18 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
                     $scope.newVelp.velp_groups = [default_velp_group];
                     if (json.data.created_new_group === true)
                         $scope.velpGroups.push(json.data);
-                    addNewVelp();
+                    addNewVelpToDatabase();
                 });
             } else {
-                addNewVelp();
+                addNewVelpToDatabase();
             }
 
         } else {
-            addNewVelp();
+            addNewVelpToDatabase();
         }
     };
 
-    var addNewVelp = function () {
+    var addNewVelpToDatabase = function () {
         var velpToAdd = {
             labels: $scope.newVelp["labels"],
             used: 0,
