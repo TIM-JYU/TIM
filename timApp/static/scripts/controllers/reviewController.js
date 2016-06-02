@@ -264,6 +264,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.updateVelpBadge = function(oldElment, newElement){
         console.log(oldElment);
+        console.log(newElement);
+        if (newElement == null)
+            return;
         if (oldElment == null){
             addElementToParagraphMargin(newElement, createVelpBadge(newElement.id));
             return;
@@ -301,6 +304,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         if (e != null){
             console.log(e);
             $scope.selectedElement = null;
+            $scope.selectedArea = null;
             e.stopPropagation();
 
             while (!parent.hasAttribute("t")) {

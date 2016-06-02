@@ -29,8 +29,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     // Data
     $scope.orderVelp = 'label';
     $scope.advancedOn = false;
-    $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2, velp_groups: []};
-    $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};
+    $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2, velp_groups:[]};
+    $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: []};
     $scope.newLabel = {content: "", selected: false, edit: false, valid: true};
     $scope.labelToEdit = {content: "", selected: false, edit: false, id: -3};
     $scope.newVelpGroup = {name: "", target_type: 0};
@@ -52,7 +52,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     // Get default velpgroup data
     $http.get('/{0}/get_default_velp_group'.replace('{0}', doc_id)).success(function (data) {
         console.log("Test");
-        default_velp_group = data;
+        default_velp_group = data.id;
         console.log(default_velp_group);
 
 
@@ -375,7 +375,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
      * Reset new velp information
      */
     $scope.resetNewVelp = function () {
-        $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2, velp_groups: []};
+        $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2, velp_groups: $scope.newVelp.velp_groups};
     };
 
     /**
@@ -394,11 +394,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         if (!valid) return;
 
         form.$setPristine();
-        console.log($scope.newVelpGroup);
-        $scope.newVelpGroup.target_type = parseInt($scope.newVelpGroup.target_type);
 
+        $scope.newVelpGroup.target_type = parseInt($scope.newVelpGroup.target_type);
+        console.log($scope.newVelpGroup);
         $scope.makePostRequest("/{0}/create_velp_group".replace('{0}', doc_id), $scope.newVelpGroup, function (json) {
-            console.log(json);
+            $scope.velpGroups.push(json.data);
         });
     };
 

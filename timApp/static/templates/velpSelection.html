@@ -115,7 +115,7 @@
                     </div>
 
                     <!-- EDIT VELPS -->
-                            <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn )">
+                            <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn ) track by $index">
                                 <div class="velp" ng-click="useVelp(velp)"
                                      ng-style="{top: 2+$index*2 + 'em'}">
                                     <div ng-class="['velp-data', 'emphasise', {neutral: velp.points == 0, positive: velp.points > 0, negative: velp.points < 0,

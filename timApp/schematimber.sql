@@ -203,7 +203,7 @@ CREATE TABLE Annotation (
 CREATE TABLE AnnotationComment (
   id            INTEGER  NOT NULL,
   annotation_id INTEGER  NOT NULL,
-  comment_time  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  comment_time  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   commenter_id  INTEGER  NOT NULL,
   content       TEXT,
 
