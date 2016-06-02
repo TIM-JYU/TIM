@@ -58,30 +58,33 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
     });
 
-    // Get velp and annotation data
-    $http.get('/{0}/get_velps'.replace('{0}', doc_id)).success(function (data) {
-        $scope.velps = data;
-        $scope.velps.forEach(function (v) {
-            v.used = 0;
-            v.edit = false;
-            if (v.labels === undefined)
-                v.labels = [];
+    // Get velpgroup data
+    $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id)).success(function (data) {
+        $scope.velpGroups = data;
+        console.log($scope.velpGroups);
+        $scope.velpGroups.forEach(function (g) {
+            g.default = false;
+            if (g.id == default_velp_group.id)
+                g.default = true;
         });
-        console.log($scope.velps);
+
         $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) {
             $scope.annotations = data;
             $scope.loadDocumentAnnotations();
         });
-        // Get velpgroup data
-        $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id)).success(function (data) {
-            $scope.velpGroups = data;
-            console.log($scope.velpGroups);
-            $scope.velpGroups.forEach(function (g) {
-                g.default = false;
-                if (g.id == default_velp_group.id)
-                    g.default = true;
+
+        // Get velp and annotation data
+        $http.get('/{0}/get_velps'.replace('{0}', doc_id)).success(function (data) {
+            $scope.velps = data;
+            $scope.velps.forEach(function (v) {
+                v.used = 0;
+                v.edit = false;
+                if (v.labels === undefined)
+                    v.labels = [];
             })
         });
+        console.log($scope.velps);
+
         // Get label data
         $http.get('/{0}/get_velp_labels'.replace('{0}', doc_id)).success(function (data) {
             $scope.labels = data;
@@ -430,7 +433,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         }
     };
 
-}]);
+}
+])
+;
 
 timApp.filter('filterByVelpGroups', function () {
     return function (velps, groups) {

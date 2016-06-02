@@ -68,16 +68,8 @@ def get_velps(document_id: int):
         doc_id = int(document_id)
     except ValueError as e:
         abort(400, "Document_id is not a number.")
-    velp_groups = get_velp_groups_from_tree(doc_id)
-    user_id = getCurrentUserId()
-    timdb.velp_groups.add_groups_to_selection_table(velp_groups, doc_id, user_id)
 
-    user_groups = timdb.users.get_user_groups(user_id)
-    user_group_list = []
-    for group in user_groups:
-        user_group_list.append(group['id'])
-    imported_groups = timdb.velp_groups.get_groups_from_imported_table(user_group_list, doc_id)
-    timdb.velp_groups.add_groups_to_selection_table(imported_groups, doc_id, user_id)
+    user_id = getCurrentUserId()
     velp_content = timdb.velps.get_velp_content_for_document(doc_id, user_id)
 
     return jsonResponse(velp_content)
@@ -96,16 +88,28 @@ def get_velp_groups(document_id: int):
     except ValueError as e:
         abort(400, "Document_id is not a number.")
     user_id = getCurrentUserId()
-    velp_groups = timdb.velp_groups.get_groups_from_selection_table(doc_id, user_id)
+
+    velp_groups = get_velp_groups_from_tree(doc_id)
+    timdb.velp_groups.add_groups_to_selection_table(velp_groups, doc_id, user_id)
+
+    user_groups = timdb.users.get_user_groups(user_id)
+    user_group_list = []
+    for group in user_groups:
+        user_group_list.append(group['id'])
+    imported_groups = timdb.velp_groups.get_groups_from_imported_table(user_group_list, doc_id)
+    timdb.velp_groups.add_groups_to_selection_table(imported_groups, doc_id, user_id)
+
+
+    all_velp_groups = timdb.velp_groups.get_groups_from_selection_table(doc_id, user_id)
     # SQLite uses 1/0 instead of True/False, change them to True/False for JavaScript side
-    for group in velp_groups:
+    for group in all_velp_groups:
         if group['selected'] is 1:
             group['selected'] = True
         else:
             group['selected'] = False
         group['edit_access'] = timdb.users.has_edit_access(user_id, group['id'])
 
-    return jsonResponse(velp_groups)
+    return jsonResponse(all_velp_groups)
 
 @velps.route("/<document_id>/get_velp_group_default_selections", methods=['GET'])
 def get_velp_group_default_selections(document_id: int):
@@ -477,16 +481,13 @@ def create_default_velp_group(document_id: int):
     if len(doc_path) < len(doc_name):   # If document is located in root folder
         doc_path = ""
 
-    print("1 on paras")
-
     verifyLoggedIn()
     user_group_id = timdb.documents.get_owner(doc_id)
     user_id = getCurrentUserId()
     print(timdb.users.is_user_id_in_group_id(user_id, user_group_id))
     if timdb.users.is_user_id_in_group_id(user_id, user_group_id) is False:
+        print("User is not owner of current document")
         abort(400, "User is not owner of current document")
-
-    print("2 on joo")
 
     velps_folder_path = timdb.folders.check_velp_group_folder_path(doc_path, user_group_id, doc_name)
     velp_group_name = doc_name + "_default"
@@ -502,8 +503,6 @@ def create_default_velp_group(document_id: int):
         timdb.velp_groups.update_velp_group_to_default_velp_group(default_id)
         created_new_group = False
 
-    print("3 kiva myös")
-
     created_velp_group = dict()
     created_velp_group['id'] = velp_group_id
     created_velp_group['target_type'] = 0
@@ -515,12 +514,7 @@ def create_default_velp_group(document_id: int):
     created_velp_group['default_group'] = True
     created_velp_group['created_new_group'] = created_new_group
 
-    print("4 asdasdasdasdasd")
-    print(created_velp_group)
-
     timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, getCurrentUserId())
-
-    print("5 loppuu")
 
     return jsonResponse(created_velp_group)
 
