@@ -2,7 +2,7 @@
 import os
 import re
 import shutil
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import yaml
 from typing import List
@@ -23,9 +23,13 @@ def date_to_relative(d):
     :return: A string representing the given date relative to current time.
     """
     diff = datetime.now() - d
+    return diff_to_relative(diff)
+
+
+def diff_to_relative(diff: timedelta):
     s = diff.seconds
     if diff.days > 7 or diff.days < 0:
-        return d.strftime('%d %b %y')
+        return (datetime.now()-diff).strftime('%d %b %y')
     elif diff.days == 1:
         return '1 day ago'
     elif diff.days > 1:
