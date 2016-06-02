@@ -712,14 +712,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                   "/static/scripts/jquery.ui.touch-punch.min.js",
                                   "/cs/cs-parsons/csparsons.js",
                                   #"https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
-                                  "https://sagecell.sagemath.org/static/embedded_sagecell.js"],
+                                  # "https://sagecell.sagemath.org/static/embedded_sagecell.js", # will be loaded by JS lazily
+                                  ],
                                   #"/cs/js/embedded_sagecell.js"],
                            "angularModule": ["csApp", "csConsoleApp"],
                            "css": ["/cs/css/cs.css"], "multihtml": True}
             if is_parsons:
                 result_json = {"js": ["/cs/js/dir.js",
                                       # "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
-                                      "https://sagecell.sagemath.org/static/embedded_sagecell.js",
+                                      # "https://sagecell.sagemath.org/static/embedded_sagecell.js", # will be loaded by JS lazily
                                       # "/cs/js/embedded_sagecell.js",
                                       "/static/scripts/jquery.ui.touch-punch.min.js",
                                       "/cs/cs-parsons/csparsons.js",

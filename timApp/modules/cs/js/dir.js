@@ -621,6 +621,12 @@ function alustaSage(scope,firstTime) {
 // TODO: kielien valinnan tallentaminen
 // TODO: kielien valinta kunnolla float.  
 // ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst  
+    var sageLoading = $.ajax({
+        dataType: "script",
+        cache: true,
+        url: "//sagecell.sagemath.org/static/embedded_sagecell.js"
+    });
+    sageLoading.done(function() {
     if ( scope.sagecellInfo ) {
         scope.sagecellInfo.editor = "textarea";
         //scope.sagecellInfo.inputLocation = null;
@@ -675,6 +681,8 @@ function alustaSage(scope,firstTime) {
         },
         languages: languages // sagecell.allLanguages
     });
+    });
+    return sageLoading;
 }    
 
 csApp.getInt = function(s) {
@@ -958,8 +966,12 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         $scope.closeDocument();
         // alert("moi");
         
-        if ( $scope.isSage ) alustaSage($scope,true);
-        if ( $scope.sageButton ) $scope.sageButton.click();
+        if ( $scope.isSage ) {
+            var sageLoading = alustaSage($scope,true);
+            if ( $scope.sageButton ) {
+                sageLoading.done(function() {$scope.sageButton.click();});
+            }
+        }
         // if ( $scope.isSage && !$scope.sagecellInfo ) alustaSage($scope,true);
         
         if ( $scope.simcir ) {
