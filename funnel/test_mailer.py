@@ -1,9 +1,9 @@
 import json
 import logging
 import os
-import time
 import unittest
 from shutil import rmtree
+from typing import Optional
 
 from mailer import Mailer
 
@@ -29,11 +29,11 @@ class MailerTest(unittest.TestCase):
         if os.path.exists(self.maildir):
             rmtree(self.maildir)
 
-    def mkheader(self, sender: str, rcpt: str, subj: str) -> dict:
-        return {"From": sender, "Rcpt-To": rcpt, "Subject": subj}
+    def mkheader(self, sender: str, rcpt: str, subj: str, group: Optional[str] = None) -> dict:
+        return {"From": sender, "Rcpt-To": rcpt, "Subject": subj, "Msg-Group": group}
 
     def mkmsg(self, next_msg: str, sender: str, rcpt: str, subj: str, msg: str):
-        return {"From": sender, "Rcpt-To": rcpt, "Subject": subj, "Body": msg, "Next-Msg": next_msg}
+        return {"From": sender, "Rcpt-To": rcpt, "Subject": subj, "Body": msg, "_next_file": next_msg}
 
     def testInit(self):
         self.assertTrue(os.path.exists(self.maildir))
@@ -41,34 +41,6 @@ class MailerTest(unittest.TestCase):
         self.assertEqual(self.mailer.get_first_filename(), os.path.join(self.maildir, 'first'))
         self.assertEqual(self.mailer.get_last_filename(), os.path.join(self.maildir, 'last'))
         self.assertFalse(self.mailer.has_messages())
-
-    def testRandomFilename(self):
-        filenames = []
-        for i in range(10):
-            random_abs, random_rel = self.mailer.get_random_filenames()
-            self.assertEqual(random_abs, os.path.join(self.maildir, random_rel))
-            self.assertFalse(os.path.isfile(random_abs))
-            with open(random_abs, 'w') as f:
-                pass
-            self.assertTrue(os.path.isfile(random_abs))
-
-    def testSetNext(self):
-        f1_abs, f1_rel = self.mailer.get_random_filenames()
-        f2_abs, f2_rel = self.mailer.get_random_filenames()
-
-        f1_data = {'From': 'from-addr', 'Rcpt-To': 'to-addr', 'Subject': 'subj', 'Next-Msg': f1_rel}
-        with open(f1_abs, 'w') as f1:
-            f1.write(json.dumps(f1_data))
-
-        self.mailer.set_next(f1_abs, f2_rel)
-
-        with open(f1_abs, 'r') as f1:
-            f1_newdata = json.loads(f1.read())
-
-        self.assertEqual(len(f1_newdata), len(f1_data))
-        for key in f1_data:
-            self.assertEqual(f1_newdata[key], f1_newdata[key], 'f1_newdata[{0}] == {1} != {2} == f1_data[{0}]'.format(
-                key, f1_newdata[key], f1_data[key]))
 
     def testEnqueue(self):
         # First enqueue
@@ -237,8 +209,6 @@ class MailerTest(unittest.TestCase):
         self.mailer.enqueue(self.mkheader("s4", "r4", "subj4"), "m4")
 
         self.mailer = Mailer(mail_dir=self.maildir, client_rate=2, client_rate_window=1, dry_run=True)
-        self.mailer.update(0)
-
         self.mailer.update(0.5)    # window 1: 0.5
 
         files = os.listdir(self.maildir)
@@ -256,3 +226,24 @@ class MailerTest(unittest.TestCase):
 
         self.mailer.update(0.9)    # window 2: 0.1
         self.assertEqual(len(os.listdir(self.maildir)), 0)
+
+    def _testGrouping(self):
+        self.mailer = Mailer(mail_dir=self.maildir, client_rate=4, client_rate_window=10,
+                             group_delay=20, dry_run=True)
+
+        groups = [None, 'first', 'first', None, 'snd', 'third', 'snd', None, 'first', 'third']
+        files = []
+        for i in range(0, 10):
+            p = [s + str(i + 1) for s in ['s', 'r', 'subj', 'm']]
+            name = self.mailer.enqueue(self.mkheader(p[0], p[1], p[2], groups[i]), p[3])
+            files.append(os.path.join(self.maildir, name))
+
+        self.mailer.update(5)
+        shouldExist = [False, True, True, False, True, True, True, False, True, True]
+        self.assertEqual(len(shouldExist), len(files)) # just in case
+
+        for i in range(0, 10):
+            self.assertEqual(os.path.isfile(files[i]), shouldExist[i], 'Message #' + str(i))
+
+        # todo
+

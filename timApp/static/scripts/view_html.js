@@ -540,7 +540,7 @@ timApp.controller("ViewCtrl", [
             var lastclicktime = -1;
 
            $document.on('mousedown touchstart', className, function (e) {
-                if (!overrideModalCheck && $(".actionButtons").length > 0 || $(EDITOR_CLASS_DOT).length > 0) {
+                if (!overrideModalCheck && ($(".actionButtons").length > 0 || $(EDITOR_CLASS_DOT).length > 0)) {
                     // Disable while there are modal gui elements
                     return;
                 }
@@ -1044,7 +1044,7 @@ timApp.controller("ViewCtrl", [
             // We need the timeout so we don't trigger the ng-clicks on the buttons
             $timeout( function() {sc.showOptionsWindow(e, $par, coords);}, 80);
             return false;
-        });
+        }, true);
 
         sc.setAreaAttr = function(area, attr, value) {
             var area_selector = "[data-area=" + area + "]";
