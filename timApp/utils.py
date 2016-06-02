@@ -27,6 +27,11 @@ def date_to_relative(d):
 
 
 def diff_to_relative(diff: timedelta):
+    """Converts the given timedelta object to relative string representation, such as "2 days ago", etc.
+
+    :param diff: The timedelta object to conver
+    :return: A string representing the given date relative to current time.
+    """
     s = diff.seconds
     if diff.days > 7 or diff.days < 0:
         return (datetime.now()-diff).strftime('%d %b %y')

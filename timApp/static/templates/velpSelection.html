@@ -2,7 +2,7 @@
 
 
     <uib-tabset active="active">
-        <uib-tab index="0" heading="Select velp">
+        <uib-tab index="0" heading="Select">
             <br/>
             <label><input type="checkbox" ng-model="advancedOn"> Advanced view</label>
             <div class="velpArea">
@@ -95,7 +95,7 @@
                                                     </span>
                                         <input id="addLabelField" placeholder="Add label"
                                                ng-model="newLabel['content']">
-                                        <input id="addLabelBtn" class="timButton" type="button" value="Add"
+                                        <input id="addLabelBtn" type="button" value="Add"
                                                ng-click="addLabel(newVelp)">
                                         <span ng-hide="newLabel['valid']" class="error">Label content too short</span>
                                     </fieldset>
@@ -224,7 +224,7 @@
         </uib-tab>
 
         <!-- MANAGE VELPS -->
-        <uib-tab index="1" heading="Manage velps">
+        <uib-tab index="1" heading="Manage">
 
             <div class="velpArea">
                 <div class="velpSummary">
