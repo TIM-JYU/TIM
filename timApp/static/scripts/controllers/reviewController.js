@@ -42,14 +42,22 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Loads document annotations into view
      */
     $scope.loadDocumentAnnotations = function () {
+        var annotationsToRemove = [];
 
         for (var i = 0; i < $scope.annotations.length; i++) {
 
             var placeInfo = $scope.annotations[i]["coord"];
             var parent = document.getElementById(placeInfo["start"]["par_id"]);
 
-            if ($scope.annotations[i].answer_id !== null) {
-                if (!parent.classList.contains("has-annotation")) {
+            if (parent == null){
+                // TODO: Decide what to do, when parent element has been deleted, for now remove annotation from list
+                annotationsToRemove.push($scope.annotations[i]);
+                continue;
+            }
+
+            if ($scope.annotations[i].answer_id !== null){
+                if (!parent.classList.contains("has-annotation")){
+
                     parent.classList.add("has-annotation");
                 }
                 continue;
@@ -66,16 +74,26 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                         elements = elementChildren[start_elpath[j]];
                 }
 
-                var startel = elements.childNodes[placeInfo["start"]["node"]];
-                var endel = elements.childNodes[placeInfo["end"]["node"]];
+                try{
+                    var startel = elements.childNodes[placeInfo["start"]["node"]];
+                    var endel = elements.childNodes[placeInfo["end"]["node"]];
 
-                var range = document.createRange();
-                range.setStart(startel, placeInfo["start"]["offset"]);
-                range.setEnd(endel, placeInfo["end"]["offset"]);
-                $scope.addAnnotationToCoord(range, $scope.annotations[i], false);
+                    var range = document.createRange();
+                    range.setStart(startel, placeInfo["start"]["offset"]);
+                    range.setEnd(endel, placeInfo["end"]["offset"]);
+                    $scope.addAnnotationToCoord(range, $scope.annotations[i], false);
+                } catch (err) {
+                    addAnnotationToElement(parent, $scope.annotations[i], false, "Could not show annotation in correct place");
+                }
             } else {
                 addAnnotationToElement(parent, $scope.annotations[i], false, "Paragraph has been modified");
             }
+        }
+
+        for (var k=0; k<annotationsToRemove.length; k++){
+            console.log("Deleted annotation: " + $scope.annotations[k].content);
+            var index = $scope.annotations.indexOf(annotationsToRemove[k]);
+            $scope.annotations.splice(index, 1);
         }
 
         $scope.annotationsAdded = true;
@@ -118,13 +136,33 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
+     *
+     * @param range place
+     */
+    var checkIfCoordIsLegal = function(range){
+        var legal = true;
+
+        /*
+          1. Get start element and end element
+          2. Get elements between start and end
+          3. Check if iteratively if there are any illegal parent elements
+          4. Check recursevily if there is illegal child-element in any element
+             - Check also taglines [p, strong, em, strong] -> illegal
+                                   [p, strong, em, strong, p] -> legal
+         */
+
+        console.log(range);
+
+    };
+
+    /**
      * Gets element parent element when certain attribute is present.
      * @param element element which parent is queried
      * @param attribute attribute as string
      * @returns first element parent that has given attribute
      */
-    var getElementParentUntilAttribute = function (element, attribute) {
-        console.log(element);
+    var getElementParentUntilAttribute = function(element, attribute){
+        //console.log(element);
         element = getElementParent(element);
         while (!element.hasAttribute(attribute)) {
             element = getElementParent(element);
@@ -262,34 +300,16 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     /**
      * Update "Velp badge" to correct element
      */
-    $scope.updateVelpBadge = function (oldElment, newElement) {
-        console.log(oldElment);
-        console.log(newElement);
-        if (newElement == null)
+    $scope.updateVelpBadge = function(oldElment, newElement){
+
+        if (newElement == null) {
             return;
-        if (oldElment == null) {
+        } else if (oldElment == null){
             addElementToParagraphMargin(newElement, createVelpBadge(newElement.id));
-            return;
-        } else if (oldElment.id != newElement.id) {
+        } else if (oldElment.id != newElement.id){
             $scope.clearVelpBadge(null);
             addElementToParagraphMargin(newElement, createVelpBadge(newElement.id));
         }
-        /*
-         console.log("old " + oldElment.id);
-         console.log("new " + newElement.id);
-         */
-
-        /*
-         var container = el.getElementsByClassName("missing-velps");
-         if (container.length > 0){
-         container[0].appendChild(span);
-         } else {
-         container = document.createElement("div");
-         container.classList.add("missing-velps");
-         container.appendChild(span);
-         el.appendChild(container);
-         }
-         */
     };
 
     /**
@@ -371,7 +391,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Select text range
+     * Select text range. If range breaks taglines, method sets range "as long as possible"
+     * // TODO: When annotations can cross taglines remove method selection.
      */
     $scope.selectText = function () {
 
@@ -395,21 +416,52 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 $scope.selectedArea = null;
             }
         } catch (err) {
+            console.log("error in method selectText");
             console.log(err);
         }
 
-        console.log($scope.selectedArea);
-        if ($scope.selectedArea === null) {
+        if ($scope.selectedArea !== null){
+            var crossTaglines = isSelectionTagParentsEqual($scope.selectedArea);
+            var hasAnnotationParent = hasSelectionParentAnnotation($scope.selectedArea);
+            console.log("Has annotation parent " + hasAnnotationParent);
+            console.log("Crosses taglines " + !crossTaglines);
+        } else if($scope.selectedArea === null) {
             var elements = document.getElementsByClassName("lightselect");
             console.log(elements);
             if (elements.length > 0)
                 $scope.selectedElement = elements[0];
         }
 
+
         var newElement = $scope.selectedElement;
         $scope.updateVelpBadge(oldElement, newElement);
     };
 
+    var isSelectionTagParentsEqual = function(range){
+        return getElementParent(range.startContainer) === getElementParent(range.endContainer);
+    };
+
+    var hasSelectionParentAnnotation = function(range){
+        var startcont = getElementParent(range.startContainer);
+        while (!startcont.hasAttribute("t")){
+            startcont = getElementParent(startcont);
+            if (checkIfAnnotation(startcont))
+                return true;
+        }
+
+        var endcont = getElementParent(range.endContainer);
+        while (!endcont.hasAttribute("t")){
+            endcont = getElementParent(endcont);
+            if (checkIfAnnotation(endcont))
+                return true;
+        }
+
+        return false;
+    };
+
+    var hasSelectionChildrenAnnotation = function(range){
+
+    };
 
     /**
      * Get velp by its id
@@ -545,41 +597,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
 
         $scope.annotationsAdded = true;
-    };
-
-    $scope.getNewAnnotation = function (json) {
-        var newAnnotation = {
-            id: -($scope.annotations.length + 1),
-            velp: velp.id,
-            points: velp.points,
-            doc_id: $scope.docId,
-            visible_to: 4,
-            content: velp.content,
-            // TODO use actual username & email
-            annotator_name: "me",
-            email: "",
-            timesince: "just now",
-            creationtime: "now",
-            coord: {
-                start: {
-                    par_id: parelement.id,
-                    t: parelement.getAttribute("t"),
-                    el_path: element_path,
-                    offset: startoffset,
-                    depth: element_path.length
-                },
-                end: {
-                    par_id: parelement.id,
-                    t: parelement.getAttribute("t"),
-                    el_path: element_path,
-                    offset: endOffset,
-                    depth: element_path.length
-                }
-            },
-            comments: [
-                //{"content": "", "author": username}
-            ]
-        };
     };
 
     /**
