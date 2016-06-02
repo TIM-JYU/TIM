@@ -170,6 +170,7 @@ class Annotations(TimDbBase):
         annotation_ids = []
         for annotation in annotations:
             annotation_ids.append(annotation['id'])
+            annotation['timesince'] = diff_to_relative(timedelta(seconds=annotation['seconds_since']))
 
         comment_data = self.get_comments_for_annotations(annotation_ids)
 
@@ -250,12 +251,14 @@ class Annotations(TimDbBase):
                          velpcontent.content AS content,
                          annotation.visible_to,
                          annotation.points,
-                         annotation.creation_time,
+                         strftime('%s','now')- strftime('%s',annotation.creation_time) AS seconds_since,
+                         annotation.creation_time as creationtime,
                          annotation.valid_until,
                          annotation.icon_id,
                          annotation.annotator_id,
                          user.name AS annotator_name,
                          user.real_name AS annotator_real_name,
+                         user.email,
                          annotation.answer_id,
                          annotation.paragraph_id_start,
                          annotation.paragraph_id_end,
@@ -275,15 +278,15 @@ class Annotations(TimDbBase):
                          LEFT JOIN useranswer ON useranswer.answer_id = annotation.answer_id
                          INNER JOIN user ON user.id = annotation.annotator_id
                        WHERE velpcontent.language_id = ? AND
-                             (annotation.valid_until ISNULL OR
-                                annotation.valid_until >= current_timestamp) AND
-                             annotation.document_id = ? AND (
-                                annotation.annotator_id = ? OR (
-                                """ + check_annotation_access_right_sql +
-                                """ AND (? OR UserAnswer.user_id = ? OR UserAnswer.user_id ISNULL)
-                                )
+                         (annotation.valid_until ISNULL OR
+                           annotation.valid_until >= current_timestamp) AND
+                         annotation.document_id = ? AND (
+                           annotation.annotator_id = ? OR (
+                             """ + check_annotation_access_right_sql +
+                             """ AND (? OR UserAnswer.user_id = ? OR UserAnswer.user_id ISNULL)
                              )
-  ORDER BY depth_start DESC, node_start DESC, offset_start DESC""",
+                         )
+ORDER BY depth_start DESC, node_start DESC, offset_start DESC""",
                        [language_id, document_id, user_id] + annotation_access_levels + [user_has_see_answers, user_id])
         results = self.resultAsDictionary(cursor)
         for result in results:

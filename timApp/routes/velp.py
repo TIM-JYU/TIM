@@ -72,7 +72,9 @@ def get_velps(document_id: int):
     user_id = getCurrentUserId()
     velp_content = timdb.velps.get_velp_content_for_document(doc_id, user_id)
 
-    return jsonResponse(velp_content)
+    response = jsonResponse(velp_content)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
 
 
 @velps.route("/<document_id>/get_velp_groups", methods=['GET'])

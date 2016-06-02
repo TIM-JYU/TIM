@@ -1,10 +1,14 @@
-<!-- Pop over element --><span class="annotation-element"><span ng-show="show" ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
+<!-- Pop over element --><span class="annotation-element"><span ng-show="show"
+                                                                ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
     <span class="fulldiv">
         <span class="div-90">
             <p><span><strong>{{ velp }}</strong></span></p>
-            <p><em>{{ annotator }}</em></p>
+            <p>
+                <a class="username" href="mailto:{{ email }}">{{ annotator }}</a>
+                <span class="timestamp" title="{{ creationtime }}">{{ timesince }}</span>
+            </p>
             <p><label>Points: <input type="number" ng-model="points" ng-value="points"
-                                           ng-change="changePoints(points)" /></label></p>
+                                     ng-change="changePoints(points)"/></label></p>
         </span>
 
         <span class="div-10">
@@ -15,8 +19,9 @@
     <span class="fulldiv">
         <ul class="comments">
             <li ng-repeat="comment in comments">
-                <a class="username" title="{{ comment.commenter_real_name }}" href="mailto:{{ comment.commenter_email }}">
-                            {{ comment.commenter_username }}</a>
+                <a class="username" title="{{ comment.commenter_real_name }}"
+                   href="mailto:{{ comment.commenter_email }}">
+                    {{ comment.commenter_username }}</a>
                 <span class="timestamp" title="{{ comment.comment_time }}">{{ comment.comment_relative_time }}</span>
                 <!--strong>{{ comment["commenter_username"] }}</strong-->
                 <p>{{ comment["content"] }}</p></li>
@@ -25,21 +30,24 @@
     </span>
 
     <div>
-    <form class="form-inline adjustAnnForm">
-        <div class="form-group">
-            <label>Visible to:</label>
-            <select ng-model="visible_options.value" ng-options="v as visible_options.names[v-1] for v in visible_options.values">
-            </select>
-            <div ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']" uib-popover="Vivamus sagittis lacus vel augue laoreet rutrum faucibus." popover-placement="right">
+        <form class="form-inline adjustAnnForm">
+            <div class="form-group">
+                <label>Visible to:</label>
+                <select ng-model="visible_options.value"
+                        ng-options="v as visible_options.names[v-1] for v in visible_options.values">
+                </select>
+                <div ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
+                     uib-popover="Vivamus sagittis lacus vel augue laoreet rutrum faucibus." popover-placement="right">
+                </div>
             </div>
-        </div>
-    </form>
+        </form>
     </div>
     <span>
-        <button class="saveChanges timButton" ng-disabled="!checkIfChanged()" ng-click="saveChanges()">Save changes</button>
+        <button class="saveChanges timButton" ng-disabled="!checkIfChanged()" ng-click="saveChanges()">Save changes
+        </button>
     </span><span class="annDelAnnotation" title="Delete annotation"
-                  ng-class="['delAnnotation', 'float-right', 'glyphicon', 'glyphicon-trash', 'clickable-icon', {hide: comments.length > 1} ]"
-                  ng-click="deleteAnnotation()"></span>
+                 ng-class="['delAnnotation', 'float-right', 'glyphicon', 'glyphicon-trash', 'clickable-icon', {hide: comments.length > 1} ]"
+                 ng-click="deleteAnnotation()"></span>
 </span></span><!--
 Highlighted text--><span ng-click="toggleAnnotation()" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
 {neutral: points == 0, negative: points < 0, positive: points > 0}]" ng-transclude="true"></span>
