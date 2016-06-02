@@ -178,7 +178,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             $scope.newVelp.velp_groups = [default_velp_group];
 
             if (default_velp_group === -1) {
-                console.log("ASDASD");
                 $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), null, function (json) {
                     default_velp_group = (json.data.id);
                     $scope.newVelp.velp_groups = [default_velp_group];
