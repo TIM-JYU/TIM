@@ -281,7 +281,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   '                  ng-bind="file.progress < 100 ? \'Uploading... \' + file.progress + \'%\' : \'Done!\'"></span>' +
                   '</div>' +
                   '    <div class="error" ng-show="file.error" ng-bind="file.error"></div>' +
-                  '    <div  class="úploadresult" ng-if="uploadresult" ><span ng-bind-html="uploadresult"></span></div>' +
+                  '    <div  class="úploadresult" ng-if="uploadresult"  ><span ng-bind-html="uploadresult"></span></div>' +
                   '</div>' +
                   '<div ng-show="isAll" style="float: right;">{{languageText}} '+
                     '<select ng-model="selectedLanguage" ng-required ng-init="progLanguag=\'java\'">'+
@@ -828,10 +828,12 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             html += '<img src="'+$scope.uploadedFile+'"/>';
             $scope.uploadresult = $sce.trustAsHtml(html);
         } else {
-            html += '<iframe width="800" height="600"  src="' + file +'" target="csdocument" />';
+            html += '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:900px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;"  width:1200px>';
+            html += '<iframe width="800" height="900"  src="' + file +'" target="csdocument" />';
+            //html += '<embed  width="800" height="16000"  src="' + file +'" />';
+            //html += '<object width="800" height="600"   data="' + file +'" type="' + type +'"  ></object>';
+            html += '</div>';
 			$scope.uploadresult = $sce.trustAsHtml(html);
-            //$scope.uploadresult = $sce.trustAsHtml('<embed  width="800" height="600"  src="' + file +'" />');
-            //$scope.uploadresult = $sce.trustAsHtml('<object width="800" height="600"   data="' + file +'" type="' + type +'"  ></object>');
         }
     }
     
