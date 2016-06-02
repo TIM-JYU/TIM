@@ -2,7 +2,7 @@
     <span class="fulldiv">
         <span class="div-90">
             <p><span><strong>{{ velp }}</strong></span></p>
-            <p><em>by: {{ annotator }}</em></p>
+            <p><em>{{ annotator }}</em></p>
             <p><label>Points: <input type="number" ng-model="points" ng-value="points"
                                            ng-change="changePoints(points)" /></label></p>
         </span>
@@ -30,8 +30,8 @@
             <label>Visible to:</label>
             <select ng-model="visible_options.value" ng-options="v as visible_options.names[v-1] for v in visible_options.values">
             </select>
-            <span ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']" uib-popover="Vivamus sagittis lacus vel augue laoreet rutrum faucibus." popover-placement="right">
-            </span>
+            <div ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']" uib-popover="Vivamus sagittis lacus vel augue laoreet rutrum faucibus." popover-placement="right">
+            </div>
         </div>
     </form>
     </div>
