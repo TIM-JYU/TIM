@@ -448,7 +448,7 @@ def create_velp_group(document_id: int):
         else:
             abort(400, "Velp group with same name and location exists already.")
 
-    created_velp_group = dict
+    created_velp_group = dict()
     created_velp_group['id'] = velp_group_id
     created_velp_group['target_type'] = 0
     created_velp_group['target_id'] = "0"
@@ -456,6 +456,7 @@ def create_velp_group(document_id: int):
     created_velp_group['location'] = new_group_path
     created_velp_group['selected'] = True
     created_velp_group['edit_access'] = True
+    created_velp_group['default_group'] = False
 
     timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, getCurrentUserId())
 
@@ -476,12 +477,16 @@ def create_default_velp_group(document_id: int):
     if len(doc_path) < len(doc_name):   # If document is located in root folder
         doc_path = ""
 
+    print("1 on paras")
+
     verifyLoggedIn()
     user_group_id = timdb.documents.get_owner(doc_id)
     user_id = getCurrentUserId()
     print(timdb.users.is_user_id_in_group_id(user_id, user_group_id))
     if timdb.users.is_user_id_in_group_id(user_id, user_group_id) is False:
         abort(400, "User is not owner of current document")
+
+    print("2 on joo")
 
     velps_folder_path = timdb.folders.check_velp_group_folder_path(doc_path, user_group_id, doc_name)
     velp_group_name = doc_name + "_default"
@@ -490,12 +495,16 @@ def create_default_velp_group(document_id: int):
     group_exists = timdb.documents.resolve_doc_id_name(new_group_path)  # Check name so no duplicates are made
     if group_exists is None:
         velp_group_id = timdb.velp_groups.create_default_velp_group(velp_group_name, user_group_id, new_group_path)
+        created_new_group = True
     else:
         default_id = timdb.documents.get_document_id(new_group_path)
         velp_group_id = timdb.velp_groups.make_document_a_velp_group(velp_group_name, default_id, None, 1)
         timdb.velp_groups.update_velp_group_to_default_velp_group(default_id)
+        created_new_group = False
 
-    created_velp_group = dict
+    print("3 kiva myös")
+
+    created_velp_group = dict()
     created_velp_group['id'] = velp_group_id
     created_velp_group['target_type'] = 0
     created_velp_group['target_id'] = "0"
@@ -503,8 +512,15 @@ def create_default_velp_group(document_id: int):
     created_velp_group['location'] = new_group_path
     created_velp_group['selected'] = True
     created_velp_group['edit_access'] = True
+    created_velp_group['default_group'] = True
+    created_velp_group['created_new_group'] = created_new_group
+
+    print("4 asdasdasdasdasd")
+    print(created_velp_group)
 
     timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, getCurrentUserId())
+
+    print("5 loppuu")
 
     return jsonResponse(created_velp_group)
 
