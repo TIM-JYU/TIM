@@ -19,6 +19,9 @@ timApp.directive("annotation", function() {
             comments: '=',
             aid: '=',
             annotator: '@',
+            email: '@',
+            timesince: '@',
+            creationtime: '@',
             velp: '@'
         },
 
@@ -85,7 +88,7 @@ timApp.directive("annotation", function() {
 
                     var data = {annotation_id: id, content: scope.newComment};
                     scope.$parent.makePostRequest("/add_annotation_comment", data, function (json) {
-                        scope.comments.push({commenter_username: json.data.name, content: comment});
+                        scope.comments.push({commenter_username: json.data.name, content: comment, comment_time: "now", comment_relative_time: "just now"});
                     });
                 }
                 scope.newComment = "";
