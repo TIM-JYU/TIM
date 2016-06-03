@@ -54,8 +54,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         console.log("Test");
         default_velp_group = data.id;
         console.log(default_velp_group);
-
-
     });
 
     // Get velpgroup data

@@ -413,11 +413,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             } else {
                 range = document.getSelection();
             }
-            console.log(range.toString());
             if (range.toString().length > 0) {
                 $scope.selectedArea = range.getRangeAt(0);
                 $scope.selectedElement = getElementParentUntilAttribute($scope.selectedArea["startContainer"], "t");
-                console.log($scope.selectedElement);
             } else {
                 $scope.selectedArea = null;
             }
@@ -427,19 +425,17 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
 
         if ($scope.selectedArea !== null){
-            var crossTaglines = isSelectionTagParentsUnequal($scope.selectedArea);
-            var hasAnnotationParent = hasSelectionParentAnnotation($scope.selectedArea);
-            if (crossTaglines || hasAnnotationParent)
+            // Check if selection breaks tags, has annotation as a parent or as a child.
+            if (isSelectionTagParentsUnequal($scope.selectedArea) || hasSelectionParentAnnotation($scope.selectedArea)
+                || hasSelectionChildrenAnnotation($scope.selectedArea)){
                 $scope.selectedArea = null;
-            console.log("Has annotation parent " + hasAnnotationParent);
-            console.log("Crosses taglines " + !crossTaglines);
+            }
         } else if($scope.selectedArea === null) {
             var elements = document.getElementsByClassName("lightselect");
             console.log(elements);
             if (elements.length > 0)
                 $scope.selectedElement = elements[0];
         }
-
 
         var newElement = $scope.selectedElement;
         $scope.updateVelpBadge(oldElement, newElement);
@@ -451,6 +447,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @returns {boolean}
      */
     var isSelectionTagParentsUnequal = function(range){
+        console.log("check tags");
         return getElementParent(range.startContainer) !== getElementParent(range.endContainer);
     };
 
@@ -460,6 +457,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @returns {boolean}
      */
     var hasSelectionParentAnnotation = function(range){
+        console.log("check parents");
         var startcont = getElementParent(range.startContainer);
         while (!startcont.hasAttribute("t")){
             startcont = getElementParent(startcont);
@@ -478,11 +476,51 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Checks if
+     * Checks recursevily if selection has annotations as children.
+     * TODO: Make this work
+     * 1. Start from staroffset
+     *  - Check if there are annotations in children
+     *      return true
+     *  - Check if node == endNode
+     *      return false
+     * 2. Go to next sibling
      * @param range
      */
     var hasSelectionChildrenAnnotation = function(range){
+        console.log("check children");
+        console.log(range);
+        var start = getElementParent(range.startContainer);
 
+        console.log(range.commonAncestorContainer);
+
+        var children = getElementChildren(range.commonAncestorContainer);
+        var end = getElementParent(range.endContainer);
+        var startPosInTree = getElementPositionInTree(start, []);
+        var endPosInTree = getElementPositionInTree(end, []);
+        console.log(startPosInTree);
+        console.log(endPosInTree);
+
+        for (var i=0; i<children.length; i++){
+            if (hasElementChildrenAnnotation(children[i]))
+                return true;
+        }
+        return false;
+    };
+
+    /**
+     * Check if
+     * @param element
+     * @returns {boolean}
+     */
+    var hasElementChildrenAnnotation = function(element){
+        if (checkIfAnnotation(element))
+            return true;
+
+        var children = getElementChildren(element);
+        for (var i=0; i<children.length; i++)
+            hasElementChildrenAnnotation(children[i]);
+
+        return false;
     };
 
     /**
@@ -679,7 +717,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Get start offset according to "original state" of DOM tree.
-     * Ignores annoations elements, but not elements inside it
+     * Ignores annoations elements, but not elements inside annotation
      * @param el start container
      * @param startoffset original start offset
      * @returns {*}
