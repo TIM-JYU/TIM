@@ -1605,7 +1605,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "octave":
                     print("octave: ", exename)
                     code, out, err, pwd = run2(["octave", "-qf", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                               uargs=userargs)
+                                           uargs=userargs, ulimit="ulimit -f 80000")
                     if imgsource and pngname:
                         image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
                         if e: err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
