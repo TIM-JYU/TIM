@@ -3,6 +3,7 @@ import smtplib
 
 from email.mime.text import MIMEText
 from fileutils import *
+from grouping_queue import GroupingQueue
 from persistent_queue import PersistentQueue, PersistenceException
 from ratelimiter import RateLimited
 from typing import Dict, Optional, Tuple, Union
@@ -14,6 +15,18 @@ MAIL_DIR = "/service/mail"
 CLIENT_RATE        = 20  # Max messages per client rate window
 CLIENT_RATE_WINDOW = 60  # In seconds
 GROUP_DELAY        = 120 # In seconds, the delay to combine similar messages into one
+
+
+def group_messages(msg_a: Dict, msg_b: Dict):
+    if msg_a['Rcpt-To'] != msg_b['Rcpt-To']:
+        return None
+
+    return {
+        'From': 'tim.jyu.fi',
+        'Rcpt-To': msg_a['Rcpt-To'],
+        'Subject': msg_a.get('Group-Subject', 'Various notifications'),
+        'Body': msg_a['Body'] + '\n\n' + msg_b['Body']
+    }
 
 
 class Mailer:
@@ -30,7 +43,8 @@ class Mailer:
         self.mail_host = mail_host
         self.mail_dir = mail_dir
         self.queue = PersistentQueue(self.mail_dir)
-        self.group_queues = {d: PersistentQueue(os.path.join(mail_dir, d)) for d in get_subdirs(mail_dir)}
+        self.group_queues = {group_id: self.get_group_queue(group_id, use_cache=False) for group_id in get_subdirs(mail_dir)}
+        self.group_delay = group_delay
         self.dry_run = dry_run
 
         self.dequeue = RateLimited(self.force_dequeue, client_rate_window, client_rate)
@@ -41,15 +55,21 @@ class Mailer:
     def get_last_filename(self) -> str:
         return self.queue.get_last_filename()
 
-    def get_group_queue(self, group_id: str) -> PersistentQueue:
-        if group_id not in self.group_queues:
+    def get_group_queue(self, group_id: str, use_cache: bool = True) -> PersistentQueue:
+        if not use_cache or group_id not in self.group_queues:
             abs_path = os.path.join(self.mail_dir, group_id)
-            self.group_queues[group_id] = PersistentQueue(abs_path)
+            group_queue = GroupingQueue(abs_path, grouping_function=group_messages)
+            group_queue.limited_dequeue = RateLimited(group_queue.dequeue, self.group_delay, 1)
 
-        return self.group_queues[group_id]
+            if use_cache:
+                self.group_queues[group_id] = group_queue
+        else:
+            group_queue = self.group_queues[group_id]
 
-    def enqueue(self, headers: dict, msg: str, group_id: Optional[str] = None) -> Optional[str]:
-        print('Enqueue called')
+        return group_queue
+
+    def enqueue(self, headers: dict, msg: str) -> Optional[str]:
+        group_id = headers.get('Group-Id')
         group_name = 'master' if group_id is None else group_id
         logging.getLogger('mailer').debug('Enqueuing message: {} in {} queue'.format(headers, group_name))
 
@@ -70,12 +90,28 @@ class Mailer:
             return None
 
     def has_messages(self):
+        for queue_name in self.group_queues:
+            queue = self.group_queues[queue_name]
+            if not queue.is_empty():
+                return False
+
         return not self.queue.is_empty()
 
     def force_dequeue(self) -> Optional[Dict[str, str]]:
-        print('Dequeue called')
         logging.getLogger('mailer').debug('Dequeuing message')
-        msg = self.queue.dequeue()
+        msg = None
+
+        for queue_name in self.group_queues:
+            queue = self.group_queues[queue_name]
+            msg = queue.limited_dequeue()
+            if msg is not None:
+                logging.getLogger('mailer').debug('Dequeuing from {} queue'.format(queue_name))
+                break
+
+        if msg is None:
+            logging.getLogger('mailer').debug('Dequeuing from master queue')
+            msg = self.queue.dequeue()
+
         logging.getLogger('mailer').debug('Dequeuing succeeded: {}'.format(msg))
         return msg
 
@@ -103,10 +139,7 @@ class Mailer:
         logging.getLogger('mailer').info("Message sent")
 
     def update(self, dt: float):
-        print('Before update: window age = {}, messages left = {}'.format(self.dequeue.window_age, self.dequeue.calls_remaining))
-
         self.dequeue.update(dt)
-        print('After update: window age = {}, messages left = {}'.format(self.dequeue.window_age, self.dequeue.calls_remaining))
 
         while self.has_messages():
             msg = self.dequeue()

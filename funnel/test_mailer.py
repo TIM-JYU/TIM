@@ -30,8 +30,8 @@ class MailerTest(unittest.TestCase):
             rmtree(self.maildir)
 
     @classmethod
-    def mkheader(cls, sender: str, rcpt: str, subj: str, group: Optional[str] = None) -> dict:
-        return {"From": sender, "Rcpt-To": rcpt, "Subject": subj, "Msg-Group": group}
+    def mkheader(cls, sender: str, rcpt: str, subj: str, group_id: Optional[str] = None) -> dict:
+        return {"From": sender, "Rcpt-To": rcpt, "Subject": subj, "Group-Id": group_id}
 
     @classmethod
     def mkmsg(cls, next_msg: str, sender: str, rcpt: str, subj: str, msg: str):
@@ -230,23 +230,39 @@ class MailerTest(unittest.TestCase):
         self.mailer.update(0.9)    # window 2: 0.1
         self.assertEqual(len(listfiles(self.maildir)), 0)
 
-    def _testGrouping(self):
+    def testNonGrouping(self):
         self.mailer = Mailer(mail_dir=self.maildir, client_rate=4, client_rate_window=10,
                              group_delay=20, dry_run=True)
 
-        groups = [None, 'first', 'first', None, 'snd', 'third', 'snd', None, 'first', 'third']
+        groups = [None, '1st', '1st', None, '2nd', '3rd', '2nd', None, '1st', '3rd']
         files = []
         for i in range(0, 10):
             p = [s + str(i + 1) for s in ['s', 'r', 'subj', 'm']]
             name = self.mailer.enqueue(self.mkheader(p[0], p[1], p[2], groups[i]), p[3])
             files.append(os.path.join(self.maildir, name))
 
-        self.mailer.update(5)
-        shouldExist = [False, True, True, False, True, True, True, False, True, True]
-        self.assertEqual(len(shouldExist), len(files)) # just in case
+        self.assertEqual(len(self.mailer.queue), 3)
+        self.assertEqual(len(self.mailer.group_queues), 3)
+        self.assertEqual(len(self.mailer.get_group_queue('1st')), 3)
+        self.assertEqual(len(self.mailer.get_group_queue('2nd')), 2)
+        self.assertEqual(len(self.mailer.get_group_queue('3rd')), 2)
 
+    def testGrouping(self):
+        self.mailer = Mailer(mail_dir=self.maildir, client_rate=4, client_rate_window=10,
+                             group_delay=20, dry_run=True)
+
+        groups = [None, '1st', '1st', None, '2nd', '3rd', '2nd', None, '1st', '3rd']
+        files = []
         for i in range(0, 10):
-            self.assertEqual(os.path.isfile(files[i]), shouldExist[i], 'Message #' + str(i))
+            p = [s + str(i + 1) for s in ['s', 'r', 'subj', 'm']]
+            name = self.mailer.enqueue(self.mkheader(p[0], 'same_recipient', p[2], groups[i]), p[3])
+            files.append(os.path.join(self.maildir, name))
 
-        # todo
+        self.assertEqual(len(self.mailer.queue), 3)
+        self.assertEqual(len(self.mailer.group_queues), 3)
+        self.assertEqual(len(self.mailer.get_group_queue('1st')), 1)
+        self.assertEqual(len(self.mailer.get_group_queue('2nd')), 1)
+        self.assertEqual(len(self.mailer.get_group_queue('3rd')), 1)
+
+        # todo: test group timing
 
