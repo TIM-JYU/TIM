@@ -37,6 +37,30 @@ class PersistentQueue():
     def get_last_filename(self) -> str:
         return os.path.join(self.dir, 'last')
 
+    def get_file_at_index(self, index: int) -> str:
+        if index < 0 or index >= len(self):
+            raise IndexError()
+
+        i = 0
+        name = self.get_first_filename()
+
+        while i < index:
+            name = os.path.join(self.dir, self.get_next(name))
+            i += 1
+
+        return name
+
+    def __getitem__(self, index: int):
+        return self.__read_element_dict(self.get_file_at_index(index))
+
+    def __setitem__(self, index: int, value: dict):
+        name = self.get_file_at_index(index)
+        next_name = self.get_next(name)
+        new_element = value.copy()
+        new_element[self.NEXTFILEATTR] = next_name
+        self.__write_element_dict(new_element, name)
+
+
     @classmethod
     def __read_element_dict(cls, filename: str) -> Dict[str, str]:
         try:
@@ -56,15 +80,15 @@ class PersistentQueue():
     def get_next(self, filename: str) -> Optional[str]:
         node = self.__read_element_dict(filename)
 
-        # Next-Msg is only for backwards compatibility, can be removed later
-        return node.get(self.NEXTFILEATTR) or node.get('Next-Msg')
+        # OLD_NEXTFILEATTR is only for backwards compatibility, can be removed later
+        return node.get(self.NEXTFILEATTR) or node.get(self.OLD_NEXTFILEATTR)
 
     def set_next(self, filename: str, next_filename: str):
         msg = self.__read_element_dict(filename)
         msg[self.NEXTFILEATTR] = next_filename
         self.__write_element_dict(msg, filename)
 
-    def enqueue(self, element: dict) -> str:
+    def enqueue(self, element: Dict) -> str:
         this_absfile, this_relfile = get_random_filenames(self.dir)
         element[self.NEXTFILEATTR] = ''
         self.__write_element_dict(element, this_absfile)

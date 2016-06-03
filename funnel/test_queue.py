@@ -48,6 +48,51 @@ class QueueTest(unittest.TestCase):
             self.assertEqual(f1_newdata[key], f1_newdata[key], 'f1_newdata[{0}] == {1} != {2} == f1_data[{0}]'.format(
                 key, f1_newdata[key], f1_data[key]))
 
+    def assertFailingIndex(self, index: int):
+        try:
+            test = self.queue[index]
+            self.fail('Element at index -1 returned {} instead of raising exception'.format(test))
+        except IndexError:
+            pass
+
+    def assertMsgEqual(self, actual_msg: dict, expected_msg: dict):
+        for field in ['From', 'Rcpt-To', 'Subject']:
+            self.assertEqual(actual_msg[field], expected_msg[field], "Field {} doesn't match".format(field))
+
+    def testIndexing(self):
+        self.assertFailingIndex(-1)
+        self.assertFailingIndex(0)
+
+        firstItem = self.mkmsg("s1", "r1", "subj1", "m1")
+        self.queue.enqueue(firstItem)
+        self.assertMsgEqual(self.queue[0], firstItem)
+        self.assertFailingIndex(1)
+
+        secondItem = self.mkmsg("s2", "r2", "subj2", "m2")
+        self.queue.enqueue(secondItem)
+        self.assertMsgEqual(self.queue[0], firstItem)
+        self.assertMsgEqual(self.queue[1], secondItem)
+        self.assertFailingIndex(2)
+
+        thirdItem = self.mkmsg("s3", "r3", "subj3", "m3")
+        self.queue.enqueue(thirdItem)
+        self.assertMsgEqual(self.queue[0], firstItem)
+        self.assertMsgEqual(self.queue[1], secondItem)
+        self.assertMsgEqual(self.queue[2], thirdItem)
+        self.assertFailingIndex(3)
+
+        self.queue.dequeue()
+        self.assertMsgEqual(self.queue[0], secondItem)
+        self.assertMsgEqual(self.queue[1], thirdItem)
+        self.assertFailingIndex(2)
+
+        self.queue.dequeue()
+        self.assertMsgEqual(self.queue[0], thirdItem)
+        self.assertFailingIndex(1)
+
+        self.queue.dequeue()
+        self.assertFailingIndex(0)
+
     def testQueue(self):
         self.queue.enqueue(self.mkmsg("s1", "r1", "subj1", "m1"))
         self.queue.enqueue(self.mkmsg("s2", "r2", "subj2", "m2"))
