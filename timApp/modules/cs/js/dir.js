@@ -616,17 +616,33 @@ csApp.directiveFunction = function(t,isInput) {
 	}; 
 };
 
-function alustaSage(scope,firstTime) {
-// TODO: lisää kentätkin vasta kun 1. kerran alustetaan.
-// TODO: kielien valinnan tallentaminen
-// TODO: kielien valinta kunnolla float.  
-// ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst  
+var sageLoaded = false;
+
+function lataaSage(scope,firstTime, readyFunction) {
+    if ( sageLoaded ) return;
     var sageLoading = $.ajax({
         dataType: "script",
         cache: true,
         url: "//sagecell.sagemath.org/static/embedded_sagecell.js"
     });
     sageLoading.done(function() {
+        sageLoaded = true;
+        alustaSage(scope, firstTime, readyFunction);
+    });
+    return sageLoading;
+}
+
+function runSage(scope) {
+    if ( scope.sageButton ) scope.sageButton.click();
+}
+
+function alustaSage(scope,firstTime, readyFunction) {
+// TODO: lisää kentätkin vasta kun 1. kerran alustetaan.
+// TODO: kielien valinnan tallentaminen
+// TODO: kielien valinta kunnolla float.  
+// ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst  
+    if ( !sageLoaded ) return lataaSage(scope, firstTime, readyFunction);
+    
     if ( scope.sagecellInfo ) {
         scope.sagecellInfo.editor = "textarea";
         //scope.sagecellInfo.inputLocation = null;
@@ -637,14 +653,17 @@ function alustaSage(scope,firstTime) {
     var types = scope.type.split("/");
     var languages = sagecell.allLanguages;
     if ( types.length > 1 ) languages = types.slice(1); 
-    if ( scope.sagecellInfo ) {
+    // if ( scope.sagecellInfo ) {
+    if ( scope.sageInput ) {
         var outputLocation = $(scope.sageOutput);
         outputLocation.find(".sagecell_output_elements").hide();
         // scope.sagecellInfo.code = scope.usercode;
-        scope.sagecellInfo.code = scope.getReplacedCode();
-        scope.sagecellInfo.session.code = scope.sagecellInfo.code;
+        // scope.sagecellInfo.code = scope.getReplacedCode();
+        // scope.sagecellInfo.session.code = scope.sagecellInfo.code;
         // scope.sagecellInfo.inputLocation.innerText = scope.sagecellInfo.code;
-        scope.sagecellInfo.inputLocation.children[0].children[0].children[0].value = scope.sagecellInfo.code;
+        //scope.sagecellInfo.inputLocation.children[0].children[0].children[0].value = scope.sagecellInfo.code;
+        scope.sageInput.value = scope.getReplacedCode();
+        if ( readyFunction ) readyFunction();
         return;
     }    
     scope.sageArea = scope.element0.getElementsByClassName('computeSage')[0];                    
@@ -668,11 +687,12 @@ function alustaSage(scope,firstTime) {
         autoeval: scope.attrs.autorun || firstTime,
         callback: function() {
             scope.sageButton = scope.sageArea.getElementsByClassName("sagecell_evalButton")[0]; // .button();     
+            scope.sageInput = scope.sageArea.getElementsByClassName("sagecell_commands")[0]; 
             
             scope.sageButton.onclick = function() {
                 // scope.checkSageSave();
                 scope.sagecellInfo.code = scope.getReplacedCode();
-                scope.sagecellInfo.session.code = scope.sagecellInfo.code;
+                // scope.sagecellInfo.session.code = scope.sagecellInfo.code;
             };
             var sagecellOptions = scope.element0.getElementsByClassName('sagecell_options')[0];  
             var csRunMenuArea = scope.element0.getElementsByClassName('csRunMenuArea')[0];
@@ -681,8 +701,8 @@ function alustaSage(scope,firstTime) {
         },
         languages: languages // sagecell.allLanguages
     });
-    });
-    return sageLoading;
+    if ( readyFunction ) readyFunction();
+
 }    
 
 csApp.getInt = function(s) {
@@ -788,7 +808,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 	$scope.viewCode = false;
 	$scope.runSuccess = false;
 	$scope.copyingFromTauno = false;
-
+    
     $scope.onFileSelect = function (file) {
         // if (!touchDevice) $scope.editor.focus();
         $scope.ufile = file;
@@ -837,7 +857,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             $scope.uploadresult = $sce.trustAsHtml(html);
         } else {
             html += '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:900px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;"  width:1200px>';
-            html += '<iframe width="800" height="900"  src="' + file +'" target="csdocument" />';
+            html += '<iframe width="700" height="900"  src="' + file +'" target="csdocument" />';
             //html += '<embed  width="800" height="16000"  src="' + file +'" />';
             //html += '<object width="800" height="600"   data="' + file +'" type="' + type +'"  ></object>';
             html += '</div>';
@@ -967,10 +987,13 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         // alert("moi");
         
         if ( $scope.isSage ) {
+            alustaSage($scope, true, function() {runSage($scope);});
+            /*
             var sageLoading = alustaSage($scope,true);
             if ( $scope.sageButton ) {
                 sageLoading.done(function() {$scope.sageButton.click();});
             }
+            */
         }
         // if ( $scope.isSage && !$scope.sagecellInfo ) alustaSage($scope,true);
         
@@ -1316,7 +1339,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             $scope.initUserCode = true;
             $scope.showOtherEditor($scope.editorMode);
         }
-        if ( $scope.isSage ) alustaSage($scope);
+        if ( $scope.isSage ) alustaSage($scope,false,null);
         if ( $scope.simcir ) $scope.setCircuitData();
 	};
 
