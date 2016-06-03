@@ -239,6 +239,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             range.surroundContents(span);
         } catch (err) {
             // TODO: Add annotation to the "club of missing velps"
+            var parent = getElementParentUntilAttribute(range.startContainer, "t");
+            addAnnotationToElement(span, annotation,true, "Annotation crosses taglines");
+
+
+            $scope.selectedArea = null;
+
             console.log(err);
             var new_range = document.createRange();
 
@@ -421,8 +427,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
 
         if ($scope.selectedArea !== null){
-            var crossTaglines = isSelectionTagParentsEqual($scope.selectedArea);
+            var crossTaglines = isSelectionTagParentsUnequal($scope.selectedArea);
             var hasAnnotationParent = hasSelectionParentAnnotation($scope.selectedArea);
+            if (crossTaglines || hasAnnotationParent)
+                $scope.selectedArea = null;
             console.log("Has annotation parent " + hasAnnotationParent);
             console.log("Crosses taglines " + !crossTaglines);
         } else if($scope.selectedArea === null) {
@@ -437,10 +445,20 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         $scope.updateVelpBadge(oldElement, newElement);
     };
 
-    var isSelectionTagParentsEqual = function(range){
-        return getElementParent(range.startContainer) === getElementParent(range.endContainer);
+    /**
+     * Checks if given range object breaks taglines. Returns true if taglines are broken.
+     * @param range Range object
+     * @returns {boolean}
+     */
+    var isSelectionTagParentsUnequal = function(range){
+        return getElementParent(range.startContainer) !== getElementParent(range.endContainer);
     };
 
+    /**
+     * Checks iteratively if element has annotation as parent
+     * @param range Range object
+     * @returns {boolean}
+     */
     var hasSelectionParentAnnotation = function(range){
         var startcont = getElementParent(range.startContainer);
         while (!startcont.hasAttribute("t")){
@@ -459,6 +477,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         return false;
     };
 
+    /**
+     * Checks if
+     * @param range
+     */
     var hasSelectionChildrenAnnotation = function(range){
 
     };
