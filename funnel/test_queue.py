@@ -19,6 +19,10 @@ class QueueTest(unittest.TestCase):
         if os.path.exists(self.dir):
             rmtree(self.dir)
 
+    @classmethod
+    def mkmsg(cls, sender: str, rcpt: str, subj: str, msg: str):
+        return {"From": sender, "Rcpt-To": rcpt, "Subject": subj, "Body": msg}
+
     def testInit(self):
         self.assertTrue(os.path.exists(self.dir))
         self.assertEqual(len(listfiles(self.dir)), 0)
@@ -26,18 +30,9 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(self.queue.get_last_filename(), os.path.join(self.dir, 'last'))
         self.assertTrue(self.queue.is_empty())
 
-    def testRandomFilename(self):
-        for i in range(10):
-            random_abs, random_rel = self.queue.get_random_filenames()
-            self.assertEqual(random_abs, os.path.join(self.dir, random_rel))
-            self.assertFalse(os.path.isfile(random_abs))
-            with open(random_abs, 'w') as f:
-                pass
-            self.assertTrue(os.path.isfile(random_abs))
-
     def testSetNext(self):
-        f1_abs, f1_rel = self.queue.get_random_filenames()
-        f2_abs, f2_rel = self.queue.get_random_filenames()
+        f1_abs, f1_rel = get_random_filenames(self.dir)
+        f2_abs, f2_rel = get_random_filenames(self.dir)
     
         f1_data = {'From': 'from-addr', 'Rcpt-To': 'to-addr', 'Subject': 'subj', '_next_file': f1_rel}
         with open(f1_abs, 'w') as f1:
@@ -52,3 +47,29 @@ class QueueTest(unittest.TestCase):
         for key in f1_data:
             self.assertEqual(f1_newdata[key], f1_newdata[key], 'f1_newdata[{0}] == {1} != {2} == f1_data[{0}]'.format(
                 key, f1_newdata[key], f1_data[key]))
+
+    def testQueue(self):
+        self.queue.enqueue(self.mkmsg("s1", "r1", "subj1", "m1"))
+        self.queue.enqueue(self.mkmsg("s2", "r2", "subj2", "m2"))
+        self.queue.enqueue(self.mkmsg("s3", "r3", "subj3", "m3"))
+        self.queue.enqueue(self.mkmsg("s4", "r4", "subj4", "m4"))
+
+        self.queue.dequeue()
+        self.queue.dequeue()
+
+        files = listfiles(self.dir)
+        self.assertEqual(len(files), 4, "Files in queue dir: " + str(listfiles(self.dir)))
+        self.assertTrue('first' in files)
+        self.assertTrue('last' in files)
+        self.assertEqual(len(listfiles(self.dir)), 4)
+
+        self.queue.enqueue(self.mkmsg("s5", "r5", "subj5", "m5"))
+        self.queue.dequeue()
+        self.queue.dequeue()
+
+        self.assertEqual(len(listfiles(self.dir)), 3)
+        self.assertTrue('first' in files)
+        self.assertTrue('last' in files)
+
+        self.queue.dequeue()
+        self.assertEqual(len(listfiles(self.dir)), 0)

@@ -4,6 +4,7 @@ import smtplib
 from email.mime.text import MIMEText
 from fileutils import *
 from persistent_queue import PersistentQueue, PersistenceException
+from ratelimiter import RateLimited
 from typing import Dict, Optional, Tuple, Union
 
 MAIL_HOST = "smtp.jyu.fi"
@@ -30,22 +31,15 @@ class Mailer:
         self.mail_dir = mail_dir
         self.queue = PersistentQueue(self.mail_dir)
         self.group_queues = {d: PersistentQueue(os.path.join(mail_dir, d)) for d in get_subdirs(mail_dir)}
-
-        self.client_rate = client_rate
-        self.client_rate_window = client_rate_window
         self.dry_run = dry_run
 
-        self.messages_remaining = self.client_rate
-        self.window_age = 0
+        self.dequeue = RateLimited(self.force_dequeue, client_rate_window, client_rate)
 
     def get_first_filename(self) -> str:
         return self.queue.get_first_filename()
 
     def get_last_filename(self) -> str:
         return self.queue.get_last_filename()
-
-    def get_random_filenames(self) -> Tuple[str, str]:
-        return self.queue.get_random_filenames()
 
     def get_group_queue(self, group_id: str) -> PersistentQueue:
         if group_id not in self.group_queues:
@@ -55,6 +49,7 @@ class Mailer:
         return self.group_queues[group_id]
 
     def enqueue(self, headers: dict, msg: str, group_id: Optional[str] = None) -> Optional[str]:
+        print('Enqueue called')
         group_name = 'master' if group_id is None else group_id
         logging.getLogger('mailer').debug('Enqueuing message: {} in {} queue'.format(headers, group_name))
 
@@ -77,7 +72,8 @@ class Mailer:
     def has_messages(self):
         return not self.queue.is_empty()
 
-    def dequeue(self) -> Optional[Dict[str, str]]:
+    def force_dequeue(self) -> Optional[Dict[str, str]]:
+        print('Dequeue called')
         logging.getLogger('mailer').debug('Dequeuing message')
         msg = self.queue.dequeue()
         logging.getLogger('mailer').debug('Dequeuing succeeded: {}'.format(msg))
@@ -107,19 +103,14 @@ class Mailer:
         logging.getLogger('mailer').info("Message sent")
 
     def update(self, dt: float):
-        self.window_age += dt
-        if self.window_age > self.client_rate_window:
-            self.messages_remaining = self.client_rate
-            while self.window_age >= self.client_rate_window:
-                self.window_age -= self.client_rate_window
-            logging.getLogger('mailer').info("A new message window is opened")
+        print('Before update: window age = {}, messages left = {}'.format(self.dequeue.window_age, self.dequeue.calls_remaining))
+
+        self.dequeue.update(dt)
+        print('After update: window age = {}, messages left = {}'.format(self.dequeue.window_age, self.dequeue.calls_remaining))
 
         while self.has_messages():
-            if self.messages_remaining < 1:
-                logging.getLogger('mailer').info("{} messages in queue, waiting for a new send window".format(
-                    self.messages_remaining))
+            msg = self.dequeue()
+            if msg is None:
                 return
 
-            self.send_message(self.dequeue())
-            self.messages_remaining -= 1
-
+            self.send_message(msg)

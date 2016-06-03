@@ -121,7 +121,7 @@ class MailerTest(unittest.TestCase):
         # Single element
 
         f1_data = self.mkmsg('', 'sender', 'recipient', 'subject', 'message')
-        f1_abs, f1_rel = self.mailer.get_random_filenames()
+        f1_abs, f1_rel = get_random_filenames(self.maildir)
         with open(f1_abs, 'w') as f1:
             f1.write(json.dumps(f1_data))
         os.symlink(f1_rel, self.mailer.get_first_filename())
@@ -137,7 +137,7 @@ class MailerTest(unittest.TestCase):
         self.assertEqual(readdata['Body'], f1_data['Body'])
 
         # Multiple elements
-        f_abs, f_rel = zip(*[self.mailer.get_random_filenames() for _ in range(3)])
+        f_abs, f_rel = zip(*[get_random_filenames(self.maildir) for _ in range(3)])
         f_data = [self.mkmsg(f_rel[1], f1_data["From"], f1_data["Rcpt-To"], f1_data["Subject"], f1_data["Body"]),
                   self.mkmsg(f_rel[2], 'daemon@example.org', 'human@example2.com', 'Notification', 'first line\nsecond line'),
                   self.mkmsg('', 'third@sender.com', 'third@recipient.net', 'test subject', 'message number three')]

@@ -1,8 +1,6 @@
 import json
-import os
-import random
-import string
 
+from fileutils import *
 from typing import Dict, Optional, Tuple
 
 
@@ -30,18 +28,14 @@ class PersistentQueue():
         self.dir = directory
         os.makedirs(directory, exist_ok=True)
 
+    def __len__(self):
+        return len(listnormalfiles(self.dir))
+
     def get_first_filename(self) -> str:
         return os.path.join(self.dir, 'first')
 
     def get_last_filename(self) -> str:
         return os.path.join(self.dir, 'last')
-
-    def get_random_filenames(self) -> Tuple[str, str]:
-        while True:
-            without_path = ''.join([random.choice(string.ascii_letters) for _ in range(16)])
-            with_path = os.path.join(self.dir, without_path)
-            if not os.path.isfile(with_path):
-                return with_path, without_path
 
     @classmethod
     def __read_element_dict(cls, filename: str) -> Dict[str, str]:
@@ -71,7 +65,7 @@ class PersistentQueue():
         self.__write_element_dict(msg, filename)
 
     def enqueue(self, element: dict) -> str:
-        this_absfile, this_relfile = self.get_random_filenames()
+        this_absfile, this_relfile = get_random_filenames(self.dir)
         element[self.NEXTFILEATTR] = ''
         self.__write_element_dict(element, this_absfile)
 
