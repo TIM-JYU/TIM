@@ -415,10 +415,8 @@ def create_velp_group(document_id: int):
     timdb = getTimDb()
 
     full_path = timdb.documents.get_first_document_name(doc_id)
-    doc_name = os.path.basename(full_path)
-    doc_path = full_path[:len(full_path) - len(doc_name) - 1]
-    if len(doc_path) < len(doc_name):   # If document is located in root folder
-        doc_path = ""
+    doc_path, doc_name = timdb.documents.split_location(full_path)
+
 
     # valid_until = json_data.get('valid_until')
 
@@ -478,10 +476,7 @@ def create_default_velp_group(document_id: int):
     timdb = getTimDb()
 
     full_path = timdb.documents.get_first_document_name(doc_id)
-    doc_name = os.path.basename(full_path)
-    doc_path = full_path[:len(full_path) - len(doc_name) - 1]
-    if len(doc_path) < len(doc_name):   # If document is located in root folder
-        doc_path = ""
+    doc_path, doc_name = timdb.documents.split_location(full_path)
 
     verifyLoggedIn()
     user_group_id = timdb.documents.get_owner(doc_id)
