@@ -109,13 +109,27 @@ def get_velp_groups(document_id: int):
 
     # SQLite uses 1/0 instead of True/False, change them to True/False for JavaScript side
     for group in all_velp_groups:
-        if group['selected'] is 1:
-            group['selected'] = True
-        else:
-            group['selected'] = False
         group['edit_access'] = timdb.users.has_edit_access(user_id, group['id'])
 
     return jsonResponse(all_velp_groups)
+
+@velps.route("/<document_id>/get_velp_group_personal_selections", methods=['GET'])
+def get_velp_group_personal_selections(document_id: int):
+    """Gets default velp group selections for velp groups user has access to in document
+
+    :param document_id: ID of document
+    :return:
+    """
+    timdb = getTimDb()
+    try:
+        doc_id = int(document_id)
+    except ValueError as e:
+        abort(400, "Document_id is not a number.")
+    user_id = getCurrentUserId()
+    velp_group_defaults = timdb.velp_groups.get_personal_selections_for_velp_groups(doc_id, user_id)
+
+    return jsonResponse(velp_group_defaults)
+
 
 @velps.route("/<document_id>/get_velp_group_default_selections", methods=['GET'])
 def get_velp_group_default_selections(document_id: int):
@@ -130,10 +144,7 @@ def get_velp_group_default_selections(document_id: int):
     except ValueError as e:
         abort(400, "Document_id is not a number.")
     user_id = getCurrentUserId()
-    velp_group_defaults = timdb.velp_groups.get_groups_from_defaults_table(doc_id)
-    for group in velp_group_defaults:
-        if timdb.users.has_view_access(user_id, group['id']) is False:
-            velp_group_defaults.remove(group)
+    velp_group_defaults = timdb.velp_groups.get_default_selections_for_velp_groups(doc_id, user_id)
 
     return jsonResponse(velp_group_defaults)
 

@@ -6,6 +6,7 @@ from typing import Optional
 import os.path
 import hashlib
 import sqlite3
+import copy
 
 new_contract('row', sqlite3.Row)
 
@@ -95,6 +96,23 @@ class VelpGroups(Documents):
                       """, [velp_group_id]
                        )
         self.db.commit()
+
+    def check_velp_group_ids_for_default_group(self, velp_group_ids: [int]):
+        """Checks if list of velp group IDs contains a default velp group
+
+        :param velp_group_ids: List of velp group IDs
+        :return: First found default velp group ID and name
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT
+                      id, name
+                      FROM VelpGroup
+                      WHERE id IN ({}) AND default_group = 1
+                      """.format(self.get_sql_template(velp_group_ids)), velp_group_ids
+                      )
+        results = self.resultAsDictionary(cursor)
+        return results[0] if len(results) > 0 else None
 
     def add_velp_to_group(self, velp_id: int, velp_group_id: int):
         """Adds a velp to a specific group
@@ -260,17 +278,115 @@ class VelpGroups(Documents):
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT
-                      target_type, target_id, velp_group_id as id, selected,
-                      DocEntry.name AS location
+                      velp_group_id as id, DocEntry.name AS location
                       FROM VelpGroupSelection
                       JOIN DocEntry ON DocEntry.id = VelpGroupSelection.velp_group_id
-                      WHERE doc_id = ? AND user_id = ?
+                      WHERE doc_id = ? AND user_id = ? AND target_type = 0
                       """, [doc_id, user_id]
                       )
         results = self.resultAsDictionary(cursor)
         for result in results:
             result['name'] = os.path.basename(result['location'])
         return results
+
+    def add_groups_to_default_table(self, velp_groups: dict, doc_id: int):
+        """Adds velp groups to VelpGroupDefaults table
+
+        :param velp_groups: Velp groups as dictionaries
+        :param doc_id: ID of document
+        :return:
+        """
+        cursor = self.db.cursor()
+        for velp_group in velp_groups:
+            target_type = 0
+            target_id = 0
+            selected = 1
+            velp_group_id = velp_group['id']
+            cursor.execute("""
+                          INSERT OR IGNORE INTO
+                          VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)
+                          VALUES (?, ?, ?, ?, ?)
+                          """, [doc_id, target_type, target_id, selected, velp_group_id]
+                           )
+        self.db.commit()
+
+    def get_personal_selections_for_velp_groups(self, doc_id: int, user_id: int):
+        """Gets all velp group personal selections for document
+
+        :param doc_id: ID of document
+        :param user_id: ID of user
+        :return: Dict with following info { target_id: [selected velp groups], etc }
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT
+                      target_id, velp_group_id
+                      FROM VelpGroupSelection
+                      WHERE doc_id = ? AND user_id = ? AND selected = 1
+                      ORDER BY target_id ASC
+                      """, [doc_id, user_id]
+                      )
+        results = self.resultAsDictionary(cursor)
+
+        if results:
+            target_id = results[0]['target_id']
+            list_help = []
+            target_dict = dict()
+            for i in range(len(results)):
+                next_id = results[i]['target_id']
+                if next_id != target_id:
+                    target_dict[target_id] = copy.deepcopy(list_help)
+                    target_id = next_id
+                    del list_help[:]
+                    list_help.append(results[i]['velp_group_id'])
+                else:
+                    list_help.append(results[i]['velp_group_id'])
+                if i == len(results) - 1:
+                    target_dict[target_id] = copy.deepcopy(list_help)
+            return target_dict
+        else:
+            return None
+
+    def get_default_selections_for_velp_groups(self, doc_id: int, user_id: int):
+        """Gets all velp group default selections for document
+
+        :param doc_id: ID of document
+        :param user_id: ID of user
+        :return: Dict with following info { target_id: [selected velp groups], etc }
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT
+                      VelpGroupSelection.target_id,
+                      VelpGroupSelection.velp_group_id
+                      FROM VelpGroupSelection
+                        LEFT JOIN VelpGroupDefaults ON VelpGroupSelection.target_id = VelpGroupDefaults.target_id
+                      AND VelpGroupSelection.velp_group_id = VelpGroupDefaults.velp_group_id
+                      WHERE VelpGroupSelection.doc_id = ? AND VelpGroupSelection.user_id = ?
+                      AND VelpGroupDefaults.selected = 1
+                      """, [doc_id, user_id]
+                      )
+        results = self.resultAsDictionary(cursor)
+
+        if results:
+            target_id = results[0]['target_id']
+            list_help = []
+            target_dict = dict()
+            for i in range(len(results)):
+                next_id = results[i]['target_id']
+                if next_id != target_id:
+                    target_dict[target_id] = copy.deepcopy(list_help)
+                    target_id = next_id
+                    del list_help[:]
+                    list_help.append(results[i]['velp_group_id'])
+                else:
+                    list_help.append(results[i]['velp_group_id'])
+                if i == len(results) - 1:
+                    target_dict[target_id] = copy.deepcopy(list_help)
+            return target_dict
+
+        else:
+            return None
 
     def change_selection(self, doc_id: int, velp_group_id: int, target_type: int, target_id: str, user_id: int,
                          selected: bool):
@@ -317,88 +433,19 @@ class VelpGroups(Documents):
             selected = 0
         cursor = self.db.cursor()
         cursor.execute("""
-                      REPLACE INTO
-                      VelpGroupDefaults(doc_id, target_type, target_id, velp_group_id, selected)
-                      VALUES (?, ?, ?, ?, ?)
-                      """, [doc_id, target_type, target_id, velp_group_id, selected]
+                      UPDATE VelpGroupDefaults
+                      SET selected = ?
+                      WHERE doc_id = ? AND velp_group_id = ? AND target_type = ? AND target_id = ?
+                      """, [selected, doc_id, velp_group_id, target_type, target_id]
+                      )
+        cursor.execute("""
+                      INSERT INTO
+                      VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)
+                      SELECT ?, ?, ?, ?, ?
+                      WHERE changes() = 0;
+                        """, [selected, doc_id, velp_group_id, target_type, target_id]
                       )
         self.db.commit()
-
-    def add_groups_to_default_table(self, velp_groups: dict, doc_id: int):
-        """Adds velp groups to VelpGroupDefaults table
-
-        :param velp_groups: Velp groups as dictionaries
-        :param doc_id: ID of document
-        :return:
-        """
-        cursor = self.db.cursor()
-        for velp_group in velp_groups:
-            target_type = velp_group['target_type']
-            target_id = velp_group['target_id']
-            if target_type == 0:
-                selected = 1
-            else:
-                selected = 0
-            velp_group_id = velp_group['id']
-            cursor.execute("""
-                          INSERT OR IGNORE INTO
-                          VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)
-                          VALUES (?, ?, ?, ?, ?)
-                          """, [doc_id, target_type, target_id, selected, velp_group_id]
-                           )
-        self.db.commit()
-
-    def get_groups_from_defaults_table(self, doc_id: int):
-        """Gets all velp group default selections for document
-
-        :param doc_id: ID of document
-        :return:
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      SELECT
-                      doc_id, target_type, target_id, velp_group_id as id, selected
-                      FROM VelpGroupDefaults
-                      WHERE doc_id = ?
-                      """, [doc_id]
-                      )
-        results = self.resultAsDictionary(cursor)
-        return results
-
-    def get_groups_from_defaults_table2(self, doc_id: int):
-        """Gets all velp group default selections for document
-
-        :param doc_id: ID of document
-        :return:
-        """
-        user_id = 6
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      SELECT
-                      doc_id, target_type, target_id, velp_group_id as id, selected
-                      FROM VelpGroupDefaults
-                      WHERE doc_id = ?
-                      """, [doc_id]
-                      )
-        results = self.resultAsDictionary(cursor)
-        return results
-
-    def check_velp_group_ids_for_default_group(self, velp_group_ids: [int]):
-        """Checks if list of velp group IDs contains a default velp group
-
-        :param velp_group_ids: List of velp group IDs
-        :return: First found default velp group ID and name
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      SELECT
-                      id, name
-                      FROM VelpGroup
-                      WHERE id IN ({}) AND default_group = 1
-                      """.format(self.get_sql_template(velp_group_ids)), velp_group_ids
-                      )
-        results = self.resultAsDictionary(cursor)
-        return results[0] if len(results) > 0 else None
 
     # Unused methods
 
