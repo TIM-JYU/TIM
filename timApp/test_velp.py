@@ -32,7 +32,7 @@ class VelpTest(TimRouteTest):
         self.assertEqual(len(resp), 0)
 
         # Create a default velp group for document
-        resp = self.json_post('/{}/create_default_velp_group'.format(str(doc1_id)), {})
+        resp = self.json_post('/{}/create_default_velp_group'.format(str(doc1_id)))
         j = self.assertResponseStatus(resp, return_json=True)
         self.assertEqual('test1_default', j['name'])
         self.assertNotEqual(-1, j['id'])
@@ -60,7 +60,7 @@ class VelpTest(TimRouteTest):
         test3_default_path = '{}/test3/test3_default'.format(deep_velp_group_folder)
         test3_default = db.documents.create(test3_default_path, 7)
         test3_default_id = test3_default.doc_id
-        resp = self.json_post('/{}/create_default_velp_group'.format(str(doc3_id)), {})
+        resp = self.json_post('/{}/create_default_velp_group'.format(str(doc3_id)))
         j = self.assertResponseStatus(resp, return_json=True)
         self.assertEqual('test3_default', j['name'])
         self.assertEqual(test3_default_id, j['id'])
@@ -82,5 +82,5 @@ class VelpTest(TimRouteTest):
         resp = self.get('/{}/get_default_velp_group'.format(str(doc2_id)), as_json=True)
         self.assertEqual(-1, resp['id'])
         self.assertDictResponse({'error': 'User is not owner of current document'},
-                                self.json_post('/{}/create_default_velp_group'.format(str(doc2_id)), {}),
+                                self.json_post('/{}/create_default_velp_group'.format(str(doc2_id))),
                                 expect_status = 400)
