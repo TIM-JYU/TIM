@@ -103,6 +103,10 @@ def get_velp_groups(document_id: int):
 
 
     all_velp_groups = timdb.velp_groups.get_groups_from_selection_table(doc_id, user_id)
+
+    if timdb.users.has_manage_access(user_id, doc_id):
+        timdb.velp_groups.add_groups_to_default_table(all_velp_groups, doc_id)
+
     # SQLite uses 1/0 instead of True/False, change them to True/False for JavaScript side
     for group in all_velp_groups:
         if group['selected'] is 1:
@@ -196,7 +200,7 @@ def add_velp():
             print("No edit access for velp group:", group)
 
     if can_add_velp is False:
-        abort(403, "Can't add velp without any velp groups")
+        abort(400, "Can't add velp without any velp groups")
 
     velp_groups = velp_groups_rights
 
@@ -484,7 +488,7 @@ def create_default_velp_group(document_id: int):
     print(timdb.users.is_user_id_in_group_id(user_id, user_group_id))
     if timdb.users.is_user_id_in_group_id(user_id, user_group_id) is False:
         print("User is not owner of current document")
-        abort(400, "User is not owner of current document")
+        abort(403, "User is not owner of current document")
 
     velps_folder_path = timdb.folders.check_velp_group_folder_path(doc_path, user_group_id, doc_name)
     velp_group_name = doc_name + "_default"
