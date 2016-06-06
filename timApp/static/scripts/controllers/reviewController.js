@@ -437,6 +437,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         var newElement = $scope.selectedElement;
         $scope.updateVelpBadge(oldElement, newElement);
+        $scope.updateVelpList();
     };
 
     /**
@@ -549,6 +550,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param velp velp selected in velpSelection directive
      */
     $scope.useVelp = function (velp) {
+
+        if ($scope.velpToEdit.id >= 0) return;
 
         var newAnnotation = {
             id: -($scope.annotations.length + 1),

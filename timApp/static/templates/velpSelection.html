@@ -146,7 +146,7 @@
                                             <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]"
                                                   ng-repeat="l in velpToEdit.labels"
                                                   ng-style="{ color: getColor(l) }"></span>
-                                                    <span class="float-right" ng-click="selectVelpToEdit(velp)"
+                                                    <span class="float-right" ng-click="selectVelpToEdit(velp )"
                                                           ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
                                                 </p>
 
@@ -206,7 +206,7 @@
                                                     <input type="button"
                                                            class="timButton"
                                                            value="Cancel"
-                                                           ng-click="selectVelpToEdit(velp)">
+                                                           ng-click="selectVelpToEdit(velp )">
                                                 </p>
                                             </form>
                                         </div>
@@ -240,7 +240,14 @@
                     </table -->
 
                     <table class="fulldiv">
-                        <tr>
+
+                        <h5>Otsikko tähän</h5>
+                        <fieldset>
+                        <input type="radio" ng-click="updateVelpList()" ng-model="groupAttachment.target_type" value="0" name="selArea" checked="checked" id="selDoc"><label for="selDoc"> Document</label><br>
+                        <input type="radio" ng-click="updateVelpList()" ng-model="groupAttachment.target_type" value="1" name="selArea" id="selPar" ng-class="{disbled: selectedElement == null}" ng-disabled="selectedElement == null">
+                        <label for="selPar"> Selected paragraph</label>
+                        </fieldset>
+                            <tr>
                             <th>Show</th>
                             <th>Default</th>
                             <th>Group name</th>
@@ -259,10 +266,9 @@
                         </tr>
                     </table>
                     <form ng-submit="addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
-                        <p><label>Group name:</label><input type="text" ng-model="newVelpGroup.name"
-                                                            placeholder="Velp group" required></p>
+                        <p><label>New Velp Group name:</label><input type="text" ng-model="newVelpGroup.name"
+                                                            placeholder="Velp group name" required></p>
                         <fieldset>
-                            <legend>Attach this group to:</legend>
                             <p><input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioPar"
                                       value="0" checked="checked"> <label for="radioPar">Personal collection</label><br>
                                 <input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioDoc"
@@ -276,7 +282,6 @@
                            class="error">
                             VelpGroup name is required!
                         </p>
-
                     </form>
                 </div>
             </div>
@@ -284,7 +289,7 @@
 
         <!-- SUMMARY -->
         <uib-tab index="2" heading="Summary">
-            <div velp-summary="" annotations="annotations"></div>
+            <div velp-summary="" annotations="nnotations"></div>
         </uib-tab>
     </uib-tabset>
 </div>
