@@ -180,8 +180,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             return true;
 
         if (element.nodeName == "SPAN") {
-            console.log(element);
-            console.log(element.hasAttribute("annotation"));
             return element.hasAttribute("annotation");
         }
 
@@ -477,32 +475,20 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Checks recursevily if selection has annotations as children.
-     * TODO: Make this work
-     * 1. Start from staroffset
-     *  - Check if there are annotations in children
-     *      return true
-     *  - Check if node == endNode
-     *      return false
-     * 2. Go to next sibling
-     * @param range
+     *
      */
     var hasSelectionChildrenAnnotation = function(range){
         console.log("check children");
-        console.log(range);
-        var start = getElementParent(range.startContainer);
-
-        console.log(range.commonAncestorContainer);
-
-        var children = getElementChildren(range.commonAncestorContainer);
-        var end = getElementParent(range.endContainer);
-        var startPosInTree = getElementPositionInTree(start, []);
-        var endPosInTree = getElementPositionInTree(end, []);
-        console.log(startPosInTree);
-        console.log(endPosInTree);
-
+        var div = document.createElement("div");
+        var clone = range.cloneContents();
+        div.appendChild(clone);
+        var children = div.childNodes;
+        console.log(div);
         for (var i=0; i<children.length; i++){
-            if (hasElementChildrenAnnotation(children[i]))
+            if (hasElementChildrenAnnotation(children[i])){
+                console.log("Child has annotation");
                 return true;
+            }
         }
         return false;
     };
@@ -513,12 +499,18 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @returns {boolean}
      */
     var hasElementChildrenAnnotation = function(element){
-        if (checkIfAnnotation(element))
-            return true;
 
-        var children = getElementChildren(element);
+        if (checkIfAnnotation(element)){
+            console.log("Is annotation");
+            return true;
+        }
+
+        var children = element.childNodes;
+
+
         for (var i=0; i<children.length; i++)
-            hasElementChildrenAnnotation(children[i]);
+            if(hasElementChildrenAnnotation(children[i]))
+                return true;
 
         return false;
     };

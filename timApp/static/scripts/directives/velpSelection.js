@@ -27,6 +27,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     "use strict";
 
     // Data
+    $scope.velps = [];
+    $scope.annotations = [];
+    $scope.labels = [];
+    $scope.velpGroups = [];
+
     $scope.orderVelp = 'label';
     $scope.advancedOn = false;
     $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2, velp_groups: []};
@@ -49,6 +54,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.annotations = [];
     // $scope.filteredVelpCount = 0;
 
+
     // Get default velpgroup data
     $http.get('/{0}/get_default_velp_group'.replace('{0}', doc_id)).success(function (data) {
         console.log("Test");
@@ -56,21 +62,15 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         console.log(default_velp_group);
     });
 
+
     // Get velpgroup data
     $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id)).success(function (data) {
         $scope.velpGroups = data;
         console.log($scope.velpGroups);
-        $scope.velpGroups.forEach(function (g) {
+        /*$scope.velpGroups.forEach(function (g) {
             g.default = false;
-            if (g.id == default_velp_group.id)
-                g.default = true;
-        });
-
-        $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) {
-            $scope.annotations = data;
-            $scope.loadDocumentAnnotations();
-        });
-
+        }); */
+        
         // Get velp and annotation data
         $http.get('/{0}/get_velps'.replace('{0}', doc_id)).success(function (data) {
             $scope.velps = data;
@@ -81,7 +81,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
                     v.labels = [];
             })
         });
-        console.log($scope.velps);
+
+        $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) {
+            $scope.annotations = data;
+            $scope.loadDocumentAnnotations();
+        });
 
         // Get label data
         $http.get('/{0}/get_velp_labels'.replace('{0}', doc_id)).success(function (data) {
