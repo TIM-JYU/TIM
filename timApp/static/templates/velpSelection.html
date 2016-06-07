@@ -105,10 +105,13 @@
                                         <span ng-repeat="gr in velpGroups">
                                             <label><input type="checkbox"
                                                           ng-click="updateVelpGroups(newVelp, gr)"
-                                                          ng-checked="gr.default"> {{ gr.name }}</label><br>
+                                                          ng-checked="gr.selected"> {{ gr.name }}</label><br>
                                         </span>
                                     </fieldset>
-                                    <p><input id="addVelpBtn" class="timButton" type="submit" value="Create velp"/></p>
+                                    <p class="error" ng-show="!isSomeVelpGroupSelected(newVelp)">
+                                        You need to select at least one velpgroup.
+                                    </p>
+                                    <p><input id="addVelpBtn" class="timButton" type="submit" value="Create velp" ng-disabled="!isSomeVelpGroupSelected(newVelp) || newVelp.content.length==0"/></p>
                                 </form>
                             </div>
                         </div>
@@ -254,7 +257,7 @@
                         </tr>
                         <tr ng-repeat="group in velpGroups">
                             <td>
-                                <input type="checkbox" ng-model="group.selected"
+                                <input type="checkbox" ng-model="group.show"
                                        ng-click="changeVelpGroupSelection(group, 'show')">
                             </td>
                             <td>
