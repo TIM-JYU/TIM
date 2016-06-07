@@ -402,14 +402,14 @@ def change_default_selection(document_id: int):
         velp_group_id = json_data['id']
         target_type = json_data['target_type']
         target_id = json_data['target_id']
-        selection = json_data['selected']
+        selection = json_data['default']
     except KeyError as e:
         abort(400, "Missing data: " + e.args[0])
     verifyLoggedIn()
     user_id = getCurrentUserId()
     timdb = getTimDb()
-    if timdb.users.has_manage_access_access(user_id, doc_id) is True:
-        timdb.velp_groups.change_default_selection(doc_id, target_type, target_id, velp_group_id, selection)
+    if timdb.users.has_manage_access(user_id, doc_id) is True:
+        timdb.velp_groups.change_default_selection(doc_id, velp_group_id, target_type, target_id, selection)
 
     return ""
 

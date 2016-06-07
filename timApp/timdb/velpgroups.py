@@ -345,7 +345,7 @@ class VelpGroups(Documents):
                     target_dict[target_id] = copy.deepcopy(list_help)
             return target_dict
         else:
-            return None
+            return {'0': []}
 
     def get_default_selections_for_velp_groups(self, doc_id: int, user_id: int):
         """Gets all velp group default selections for document
@@ -386,7 +386,9 @@ class VelpGroups(Documents):
             return target_dict
 
         else:
-            return None
+            return {'0': []}
+
+    #timdb.velp_groups.change_selection(doc_id, velp_group_id, target_type, target_id, user_id, selection)
 
     def change_selection(self, doc_id: int, velp_group_id: int, target_type: int, target_id: str, user_id: int,
                          selected: bool):
@@ -410,10 +412,10 @@ class VelpGroups(Documents):
                       )
         cursor.execute("""
                       INSERT INTO
-                      VelpGroupSelection(user_id, doc_id, target_type, target_id, selected, velp_group_id)
+                      VelpGroupSelection(user_id, doc_id, velp_group_id, target_type, target_id, selected)
                       SELECT ?, ?, ?, ?, ?, ?
                       WHERE changes() = 0;
-                        """, [selected, user_id, doc_id, velp_group_id, target_type, target_id]
+                        """, [user_id, doc_id, velp_group_id, target_type, target_id, selected]
                       )
         self.db.commit()
 
@@ -443,7 +445,7 @@ class VelpGroups(Documents):
                       VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)
                       SELECT ?, ?, ?, ?, ?
                       WHERE changes() = 0;
-                        """, [selected, doc_id, velp_group_id, target_type, target_id]
+                        """, [doc_id, target_type, target_id, selected, velp_group_id]
                       )
         self.db.commit()
 

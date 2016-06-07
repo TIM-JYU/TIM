@@ -255,10 +255,11 @@
                         <tr ng-repeat="group in velpGroups">
                             <td>
                                 <input type="checkbox" ng-model="group.selected"
-                                       ng-click="changeVelpGroupSelection(group)">
+                                       ng-click="changeVelpGroupSelection(group, 'show')">
                             </td>
                             <td>
-                                <input type="checkbox">
+                                <input type="checkbox" ng-model="group.default"
+                                    ng-click="changeVelpGroupSelection(group, 'default')">
                             </td>
                             <td>
                                 <a ng-href="/velp/{{ group.location }}">{{ group.name }}</a>

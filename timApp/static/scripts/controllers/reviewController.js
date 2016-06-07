@@ -396,7 +396,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Select text range. If range breaks taglines, method sets range "as long as possible"
-     * // TODO: When annotations can cross taglines remove method selection.
+     * // TODO: When annotations can cross taglines, check annotations from all elements in selection
      */
     $scope.selectText = function () {
 
@@ -476,7 +476,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Checks recursevily if selection has annotations as children.
-     *
+     * @param range selection
+     * @returns {boolean}
      */
     var hasSelectionChildrenAnnotation = function(range){
         console.log("check children");
@@ -495,19 +496,17 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Check if
-     * @param element
+     * Check if element children has annotation
+     * @param element element to check
      * @returns {boolean}
      */
     var hasElementChildrenAnnotation = function(element){
 
         if (checkIfAnnotation(element)){
-            console.log("Is annotation");
             return true;
         }
 
         var children = element.childNodes;
-
 
         for (var i=0; i<children.length; i++)
             if(hasElementChildrenAnnotation(children[i]))
