@@ -415,27 +415,33 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.updateVelpList = function(){
         var showGroupsInPar = [];
         var defaultGroupsInPar = [];
+        var add = false;
         if ($scope.selectedElement != null && $scope.groupAttachment.target_type == 1){
-            console.log("Test");
-
+            add = true;
             if ($scope.groupSelections.hasOwnProperty($scope.selectedElement.id)){
                 showGroupsInPar = $scope.groupSelections[$scope.selectedElement.id];
             }
             if ($scope.groupDefaults.hasOwnProperty($scope.selectedElement.id)){
                 defaultGroupsInPar = $scope.groupDefaults[$scope.selectedElement.id];
             }
-
-            $scope.velpGroups.forEach(function(g){
-                g.show = false;
-                g.default = false;
-                var sel_ind = showGroupsInPar.indexOf(g.id);
-                var def_ind = defaultGroupsInPar.indexOf(g.id);
-                if (sel_ind >= 0)
-                    g.show = true;
-                if (def_ind >= 0)
-                    g.default = true;
-            });
         }
+        else if ($scope.groupAttachment.target_type == 0){
+            add = true;
+            showGroupsInPar = $scope.groupSelections["0"];
+            defaultGroupsInPar = $scope.groupDefaults["0"];
+        }
+
+        if (add){
+        $scope.velpGroups.forEach(function(g){
+            g.show = false;
+            g.default = false;
+            var sel_ind = showGroupsInPar.indexOf(g.id);
+            var def_ind = defaultGroupsInPar.indexOf(g.id);
+            if (sel_ind >= 0)
+                g.show = true;
+            if (def_ind >= 0)
+                g.default = true;
+        })}
     };
 
     $scope.addVelpGroup = function (form) {
