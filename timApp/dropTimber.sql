@@ -1,0 +1,16 @@
+-- Always wear a helmet when running this!
+DROP TABLE IF EXISTS Velp;
+DROP TABLE IF EXISTS Icon;
+DROP TABLE IF EXISTS VelpLabel;
+DROP TABLE IF EXISTS LabelInVelp;
+DROP TABLE IF EXISTS VelpVersion;
+DROP TABLE IF EXISTS VelpContent;
+DROP TABLE IF EXISTS Annotation;
+DROP TABLE IF EXISTS AnnotationComment;
+DROP TABLE IF EXISTS VelpGroup;
+DROP TABLE IF EXISTS VelpInGroup;
+DROP TABLE IF EXISTS VelpGroupSelection;
+DROP TABLE IF EXISTS ImportedVelpGroups;
+DROP TABLE IF EXISTS VelpGroupDefaults;
+DROP TABLE IF EXISTS VelpGroupLabel;
+DROP TABLE IF EXISTS LabelInVelpGroup;

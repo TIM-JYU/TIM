@@ -1,40 +1,3 @@
-DROP TABLE IF EXISTS Velp;
-
-DROP TABLE IF EXISTS Icon;
-
-DROP TABLE IF EXISTS VelpLabel;
-
-DROP TABLE IF EXISTS LabelInVelp;
-
-DROP TABLE IF EXISTS VelpVersion;
-
-DROP TABLE IF EXISTS VelpContent;
-
-DROP TABLE IF EXISTS Annotation;
-
-DROP TABLE IF EXISTS AnnotationVisibility;
-
-DROP TABLE IF EXISTS AnnotationComment;
-
-DROP TABLE IF EXISTS VelpGroup;
-
-DROP TABLE IF EXISTS VelpInGroup;
-
-DROP TABLE IF EXISTS VelpGroupSelection;
-
-DROP TABLE IF EXISTS ImportedVelpGroups;
-
-DROP TABLE IF EXISTS VelpGroupDefaults;
-
-DROP TABLE IF EXISTS VelpGroupLabel;
-
-DROP TABLE IF EXISTS LabelInVelpGroup;
-
-DROP VIEW IF EXISTS VelpInformation;
-
-DROP VIEW IF EXISTS VelpGroupInAssessmentArea;
-
-
 CREATE TABLE Velp (
   id             INTEGER  NOT NULL,
   creator_id     INTEGER  NOT NULL,
@@ -54,36 +17,6 @@ CREATE TABLE Velp (
   ON UPDATE CASCADE
 );
 
-/* These might not needed. Remember to check delete/update before use.
-CREATE TABLE VelpInVelpView (
-  velp_view_id   INTEGER NOT NULL,
-  velp_id        INTEGER NOT NULL,
-  default_points INTEGER NOT NULL, -- change to some better type?
-  velp_hidden    BOOLEAN NOT NULL,
-
-  CONSTRAINT VelpInVelpView_PK
-  PRIMARY KEY (velp_view_id),
-
-  CONSTRAINT Velp_id
-  FOREIGN KEY (velp_id)
-  REFERENCES Velp (velp_view_id)
-  ON DELETE CASCADE
-  ON UPDATE CASCADE,
-
-  CONSTRAINT Velp_view_id
-  FOREIGN KEY (velp_view_id)
-  REFERENCES VelpView (id)
-  ON DELETE CASCADE
-  ON UPDATE CASCADE
-);
-
--- At the moment only supports views in a paragraph.
-CREATE TABLE VelpView (
-  id           INTEGER NOT NULL,
-  document_id  INTEGER NOT NULL,
-  paragraph_id TEXT    NOT NULL
-);
-*/
 
 CREATE TABLE Icon (
   id       INT NOT NULL,
@@ -310,16 +243,6 @@ CREATE TABLE LabelInVelpGroup (
   ON UPDATE CASCADE
 );
 
--- Next up, some views!
-CREATE VIEW VelpInformation AS
-  SELECT
-    VelpVersion.id,
-    VelpVersion.velp_id,
-    VelpContent.language_id,
-    VelpContent.content,
-    VelpVersion.modify_time
-  FROM VelpVersion
-    INNER JOIN VelpContent ON VelpVersion.id = VelpContent.version_id;
 
 -- IMPORTANT! THIS IS EXAMPLE DATA. YOU SHOULD PROBABLY DELETE IT BEFORE RUNNING IN PRODUCTION.
 INSERT INTO Velp (id, creator_id, default_points, icon_id, valid_until) VALUES (1, 1, -2, NULL, NULL);
@@ -392,3 +315,10 @@ INSERT INTO LabelInVelp (label_id, velp_id) VALUES (2, 5);
 INSERT INTO LabelInVelp (label_id, velp_id) VALUES (3, 3);
 INSERT INTO LabelInVelp (label_id, velp_id) VALUES (3, 4);
 INSERT INTO LabelInVelp (label_id, velp_id) VALUES (4, 7);
+
+/*
+"or ignore" is because this script is sometimes run to recreate timber's stuff.
+ In that the previous inserts have been undone, but this one hasn't since it's not
+ our table.
+*/
+INSERT OR IGNORE INTO Version(id, updated_on) VALUES (7, CURRENT_TIMESTAMP);
