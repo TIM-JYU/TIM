@@ -66,7 +66,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         console.log(default_velp_group);
     });
 
-
     // Get velpgroup data
     $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id)).success(function (data) {
         $scope.velpGroups = data;
@@ -106,14 +105,15 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             console.log($scope.groupSelections);
             $scope.velpGroups.forEach(function(g){
                 if (docSelections.indexOf(g.id) >= 0)
-                    g.selected = true;
+                    g.show = true;
                 else
-                    g.selected = false;
+                    g.show = false;
             });
         });
 
         $http.get('/{0}/get_velp_group_default_selections'.replace('{0}', doc_id)).success(function (data) {
             $scope.groupDefaults = data;
+            console.log(data);
             if (!$scope.groupDefaults.hasOwnProperty("0"))
                 $scope.groupDefaults["0"] = [];
 
@@ -126,7 +126,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
                 else
                     g.default = false;
             });
-
         });
     });
 
@@ -416,27 +415,33 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.updateVelpList = function(){
         var showGroupsInPar = [];
         var defaultGroupsInPar = [];
+        var add = false;
         if ($scope.selectedElement != null && $scope.groupAttachment.target_type == 1){
-            console.log("Test");
-
+            add = true;
             if ($scope.groupSelections.hasOwnProperty($scope.selectedElement.id)){
                 showGroupsInPar = $scope.groupSelections[$scope.selectedElement.id];
             }
             if ($scope.groupDefaults.hasOwnProperty($scope.selectedElement.id)){
                 defaultGroupsInPar = $scope.groupDefaults[$scope.selectedElement.id];
             }
-
-            $scope.velpGroups.forEach(function(g){
-                g.selected = false;
-                g.default = false;
-                var sel_ind = showGroupsInPar.indexOf(g.id);
-                var def_ind = defaultGroupsInPar.indexOf(g.id);
-                if (sel_ind >= 0)
-                    g.selected = true;
-                if (def_ind >= 0)
-                    g.default = true;
-            });
         }
+        else if ($scope.groupAttachment.target_type == 0){
+            add = true;
+            showGroupsInPar = $scope.groupSelections["0"];
+            defaultGroupsInPar = $scope.groupDefaults["0"];
+        }
+
+        if (add){
+        $scope.velpGroups.forEach(function(g){
+            g.show = false;
+            g.default = false;
+            var sel_ind = showGroupsInPar.indexOf(g.id);
+            var def_ind = defaultGroupsInPar.indexOf(g.id);
+            if (sel_ind >= 0)
+                g.show = true;
+            if (def_ind >= 0)
+                g.default = true;
+        })}
     };
 
     $scope.addVelpGroup = function (form) {
@@ -474,9 +479,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
                 var index = -1;
             }
 
-            if (index < 0 && group.selected)
+            if (index < 0 && group.show)
                 $scope.groupSelections[group.target_id].push(group.id);
-            else if (index >= 0 && !group.selected)
+            else if (index >= 0 && !group.show)
                 $scope.groupSelections[group.target_id].splice(index, 0);
 
         }
@@ -532,7 +537,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             velp.velp_groups.splice(index, 1);
         }
     };
-
 }]);
 
 timApp.filter('filterByVelpGroups', function () {
@@ -545,7 +549,7 @@ timApp.filter('filterByVelpGroups', function () {
             return velps;
 
         for (var j = 0; j < groups.length; j++)
-            if (groups[j].selected) checkedGroups.push(groups[j].id);
+            if (groups[j].show) checkedGroups.push(groups[j].id);
 
         for (var i = 0; i < velps.length; i++) {
             for (var j = 0; j < checkedGroups.length; j++) {

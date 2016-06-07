@@ -332,6 +332,8 @@ class VelpGroups(Documents):
             target_id = results[0]['target_id']
             list_help = []
             target_dict = dict()
+            if target_id != '0':
+                target_dict['0'] = []
             for i in range(len(results)):
                 next_id = results[i]['target_id']
                 if next_id != target_id:
@@ -357,13 +359,13 @@ class VelpGroups(Documents):
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT
-                      VelpGroupSelection.target_id,
-                      VelpGroupSelection.velp_group_id
-                      FROM VelpGroupSelection
-                        LEFT JOIN VelpGroupDefaults ON VelpGroupSelection.target_id = VelpGroupDefaults.target_id
+                      VelpGroupDefaults.target_id, VelpGroupDefaults.velp_group_id
+                      FROM VelpGroupDefaults
+                      LEFT JOIN VelpGroupSelection ON VelpGroupSelection.doc_id = VelpGroupDefaults.doc_id
                       AND VelpGroupSelection.velp_group_id = VelpGroupDefaults.velp_group_id
                       WHERE VelpGroupSelection.doc_id = ? AND VelpGroupSelection.user_id = ?
-                      AND VelpGroupDefaults.selected = 1
+                      AND VelpGroupDefaults.selected = 1 AND VelpGroupSelection.doc_id = VelpGroupDefaults.doc_id
+                      ORDER BY target_id ASC
                       """, [doc_id, user_id]
                       )
         results = self.resultAsDictionary(cursor)
@@ -372,6 +374,8 @@ class VelpGroups(Documents):
             target_id = results[0]['target_id']
             list_help = []
             target_dict = dict()
+            if target_id != '0':
+                target_dict['0'] = []
             for i in range(len(results)):
                 next_id = results[i]['target_id']
                 if next_id != target_id:
