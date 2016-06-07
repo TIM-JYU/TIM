@@ -140,21 +140,17 @@ def add_comment() -> str:
     return jsonResponse(timdb.users.get_user(commenter_id))
 
 
-@annotations.route("/<document_id>/get_annotations", methods=['GET'])
-def get_annotations(document_id: int) -> str:
-    try:
-        document_id = int(document_id)
-    except ValueError as e:
-        abort(400, "Document_id is not a number.")
+@annotations.route("/<int:doc_id>/get_annotations", methods=['GET'])
+def get_annotations(doc_id: int) -> str:
     timdb = getTimDb()
     user_id = getCurrentUserId()
-    if not timdb.documents.exists(document_id):
+    if not timdb.documents.exists(doc_id):
         abort(404, "No such document.")
-    if not timdb.users.has_view_access(user_id, document_id):
+    if not timdb.users.has_view_access(user_id, doc_id):
         abort(403, "View access required.")
-    user_has_see_answers = timdb.users.has_seeanswers_access(user_id, document_id)
-    user_has_teacher = timdb.users.has_teacher_access(user_id, document_id)
-    user_has_owner = timdb.users.user_is_owner(user_id, document_id)
+    user_has_see_answers = timdb.users.has_seeanswers_access(user_id, doc_id)
+    user_has_teacher = timdb.users.has_teacher_access(user_id, doc_id)
+    user_has_owner = timdb.users.user_is_owner(user_id, doc_id)
 
     results = timdb.annotations.get_annotations_with_comments_in_document(getCurrentUserId(), user_has_see_answers,
                                                                           user_has_teacher, user_has_owner, document_id)
