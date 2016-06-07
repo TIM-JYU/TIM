@@ -77,6 +77,7 @@ def get_velp_groups(doc_id: int):
     :return:
     """
     timdb = getTimDb()
+    user_id = getCurrentUserId()
 
     velp_groups = get_velp_groups_from_tree(doc_id)
     timdb.velp_groups.add_groups_to_selection_table(velp_groups, doc_id, user_id)
