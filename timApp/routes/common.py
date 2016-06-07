@@ -6,6 +6,7 @@ from urllib.parse import urlparse, urljoin
 
 from flask import current_app, session, abort, g, Response, request, redirect, url_for, flash
 
+import documentmodel.document
 import pluginControl
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from documentmodel.document import Document
@@ -93,23 +94,23 @@ def verify_doc_existence(doc_id):
         abort(404)
 
 
-def verify_view_access(block_id, require=True):
-    return verify_access(getTimDb().users.has_view_access(getCurrentUserId(), block_id), require)
+def verify_view_access(block_id, require=True, message=None):
+    return verify_access(getTimDb().users.has_view_access(getCurrentUserId(), block_id), require, message)
 
 
-def verify_teacher_access(block_id, require=True):
-    return verify_access(getTimDb().users.has_teacher_access(getCurrentUserId(), block_id), require)
+def verify_teacher_access(block_id, require=True, message=None):
+    return verify_access(getTimDb().users.has_teacher_access(getCurrentUserId(), block_id), require, message)
 
 
-def verify_seeanswers_access(block_id, require=True):
-    return verify_access(getTimDb().users.has_seeanswers_access(getCurrentUserId(), block_id), require)
+def verify_seeanswers_access(block_id, require=True, message=None):
+    return verify_access(getTimDb().users.has_seeanswers_access(getCurrentUserId(), block_id), require, message)
 
 
-def verify_access(has_access, require=True):
+def verify_access(has_access, require=True, message=None):
     if has_access:
         return True
     if require:
-        abort(403, "Sorry, you don't have permission to view this resource.")
+        abort(403, message or "Sorry, you don't have permission to view this resource.")
     return False
 
 
@@ -408,3 +409,18 @@ def update_preferences(prefs):
             existing_css_files[t.filename] = True
     prefs['css_files'] = existing_css_files
     timdb.users.set_preferences(getCurrentUserId(), json.dumps(prefs))
+
+
+def verify_task_access(doc_id, task_id_name):
+    # If the user doesn't have access to the document, we need to check if the plugin was referenced
+    # from another document
+    if not verify_view_access(doc_id, require=False):
+        orig_doc = request.get_json().get('ref_from', {}).get('docId', doc_id)
+        verify_view_access(orig_doc)
+        par_id = request.get_json().get('ref_from', {}).get('par', doc_id)
+        par = Document(orig_doc).get_paragraph(par_id)
+        if not par.is_reference():
+            abort(403)
+        pars = documentmodel.document.dereference_pars([par])
+        if not any(p.get_attr('taskId') == task_id_name for p in pars):
+            abort(403)

@@ -4,8 +4,10 @@ from datetime import datetime
 from flask import Blueprint
 
 import containerLink
-import documentmodel.document
 from plugin import Plugin, PluginException
+from tim_app import db
+from timdb.tim_models import Block, AnswerUpload
+from timdb.timdbbase import blocktypes
 from .common import *
 
 
@@ -44,18 +46,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     timdb = getTimDb()
     doc_id, task_id_name, _ = Plugin.parse_task_id(task_id_ext)
     task_id = str(doc_id) + '.' + str(task_id_name)
-    # If the user doesn't have access to the document, we need to check if the plugin was referenced
-    # from another document
-    if not verify_view_access(doc_id, require=False):
-        orig_doc = request.get_json().get('ref_from', {}).get('docId', doc_id)
-        verify_view_access(orig_doc)
-        par_id = request.get_json().get('ref_from', {}).get('par', doc_id)
-        par = Document(orig_doc).get_paragraph(par_id)
-        if not par.is_reference():
-            abort(403)
-        pars = documentmodel.document.dereference_pars([par])
-        if not any(p.get_attr('taskId') == task_id_name for p in pars):
-            abort(403)
+    verify_task_access(doc_id, task_id_name)
     if 'input' not in request.get_json():
         return jsonResponse({'error': 'The key "input" was not found from the request.'}, 400)
     answerdata = request.get_json()['input']
@@ -88,6 +79,22 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     if plugin.type != plugintype:
         abort(400, 'Plugin type mismatch: {} != {}'.format(plugin.type, plugintype))
+
+    upload = None
+    if isinstance(answerdata, dict):
+        file = answerdata.get('uploadedFile', '')
+        trimmed_file = file.replace('/uploads/', '')
+        if trimmed_file:
+            # The initial upload entry was created in /pluginUpload route, so we need to check that the owner matches
+            # what the browser is saying. Additionally, we'll associate the answer with the uploaded file later
+            # in this route.
+            block = Block.query.filter((Block.description == trimmed_file) & (Block.type_id == blocktypes.UPLOAD)).first()
+            if block is None:
+                abort(400, 'Non-existent upload: {}'.format(trimmed_file))
+            verify_view_access(block.id, message="You don't have permission to touch this file.")
+            upload = AnswerUpload.query.filter(AnswerUpload.upload_block_id == block.id).first()
+            if upload.answer_id is not None:
+                abort(400, 'File was already uploaded: {}'.format(file))
 
     # Load old answers
     current_user_id = getCurrentUserId()
@@ -151,7 +158,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                         result['error'] = 'Points must be in range [{},{}]'.format(points_min, points_max)
                     else:
                         points = custom_points
-            result['savedNew'] = timdb.answers.saveAnswer([current_user_id],
+            result['savedNew'], saved_answer_id = timdb.answers.saveAnswer([current_user_id],
                                                           task_id,
                                                           json.dumps(save_object),
                                                           points,
@@ -165,14 +172,18 @@ def post_answer(plugintype: str, task_id_ext: str):
             points = answer_browser_data.get('points', points)
             if points == "":
                 points = None
-            result['savedNew'] = timdb.answers.saveAnswer(users,
+            result['savedNew'], saved_answer_id = timdb.answers.saveAnswer(users,
                                                           task_id,
                                                           json.dumps(save_object),
                                                           points,
                                                           tags,
                                                           valid=True)
         else:
-            result['savedNew'] = False
+            result['savedNew'], saved_answer_id = False, None
+        if result['savedNew'] and upload is not None:
+            # Associate this answer with the upload entry
+            upload.answer_id = saved_answer_id
+            db.session.commit()
 
     return jsonResponse(result)
 

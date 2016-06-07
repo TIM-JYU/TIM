@@ -1,17 +1,14 @@
-from flask_sqlalchemy import SQLAlchemy
-
 from timdb.runningquestion import RunningQuestions
 from timdb.useractivity import UserActivity
 from timdb.newanswers import NewAnswers
 from timdb.showpoints import ShowPoints
 from timdb.slidestatus import SlideStatuses
 from timdb.temp_info_for_user import TempInfoUserQuestion
-from tim_app import app
-
-db = SQLAlchemy(app)
+from tim_app import db
 
 
 class Runningquestion(db.Model):
+    __bind_key__ = 'tempdb'
     asked_id = db.Column(db.Integer, primary_key=True)
     lecture_id = db.Column(db.Integer, primary_key=True)
     ask_time = db.Column(db.BigInteger, nullable=False)
@@ -25,6 +22,7 @@ class Runningquestion(db.Model):
 
 
 class Usershown(db.Model):
+    __bind_key__ = 'tempdb'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -36,6 +34,7 @@ class Usershown(db.Model):
 
 
 class Useranswered(db.Model):
+    __bind_key__ = 'tempdb'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -47,6 +46,7 @@ class Useranswered(db.Model):
 
 
 class Userextended(db.Model):
+    __bind_key__ = 'tempdb'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -58,6 +58,7 @@ class Userextended(db.Model):
 
 
 class Showpoints(db.Model):
+    __bind_key__ = 'tempdb'
     asked_id = db.Column(db.Integer, primary_key=True)
     lecture_id = db.Column(db.Integer, nullable=False)
 
@@ -67,6 +68,7 @@ class Showpoints(db.Model):
 
 
 class Newanswer(db.Model):
+    __bind_key__ = 'tempdb'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -78,6 +80,7 @@ class Newanswer(db.Model):
 
 
 class Useractivity(db.Model):
+    __bind_key__ = 'tempdb'
     lecture_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
     active = db.Column(db.Text)
@@ -89,6 +92,7 @@ class Useractivity(db.Model):
 
 
 class Pointsshown(db.Model):
+    __bind_key__ = 'tempdb'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -100,6 +104,7 @@ class Pointsshown(db.Model):
 
 
 class Pointsclosed(db.Model):
+    __bind_key__ = 'tempdb'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -111,6 +116,7 @@ class Pointsclosed(db.Model):
 
 
 class SlideStatus(db.Model):
+    __bind_key__ = 'tempdb'
     doc_id = db.Column(db.Integer, primary_key=True)
     status = db.Column(db.Text, nullable=False)
 
@@ -137,6 +143,6 @@ tempdb = TempDb()
 
 def initialize_temp_database():
     print('initializing the temp database...', end='')
-    db.drop_all()
-    db.create_all()
+    db.drop_all(bind='tempdb')
+    db.create_all(bind='tempdb')
     print(' done.')

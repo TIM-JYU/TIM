@@ -30,10 +30,11 @@ class Answers(TimDbBase):
 
         existing_answers = self.get_common_answers(user_ids, task_id)
         if len(existing_answers) > 0 and existing_answers[0]['content'] == content:
+            existing_id = existing_answers[0]['id']
             cursor.execute("""UPDATE Answer SET points = ? WHERE id = ?""",
-                           [points, existing_answers[0]['id']])
+                           [points, existing_id])
             self.db.commit()
-            return False
+            return False, existing_id
 
         cursor.execute('INSERT INTO Answer (task_id, content, points, answered_on, valid)'
                        'VALUES (?,?,?,CURRENT_TIMESTAMP,?)',
@@ -48,7 +49,7 @@ class Answers(TimDbBase):
             cursor.execute('INSERT INTO AnswerTag (answer_id, tag) VALUES (?,?)', [answer_id, tag])
 
         self.db.commit()
-        return True
+        return True, answer_id
 
     @contract
     def get_answers(self, user_id: 'int', task_id: 'str', get_collaborators: 'bool'=True) -> 'list(dict)':

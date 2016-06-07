@@ -5,15 +5,14 @@ import os
 import sqlalchemy
 import sqlalchemy.exc
 
-import models
-from tim_app import app
+from tim_app import app, db
+from timdb import tempdb_models
 from timdb.timdb2 import TimDb
 from timdb.timdbbase import TimDbException
 from timdb.users import LOGGED_IN_USERNAME
 
 
 def postgre_create_database(db_name):
-    # app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432/tempdb_" + timname
     engine = sqlalchemy.create_engine("postgresql://docker:docker@postgre:5432/postgres")
     conn = engine.connect()
     conn.execute("commit")
@@ -27,7 +26,7 @@ def postgre_create_database(db_name):
 
 def initialize_temp_database():
     postgre_create_database('tempdb_' + app.config['TIM_NAME'])
-    models.initialize_temp_database()
+    tempdb_models.initialize_temp_database()
 
 
 def initialize_database(db_path='tim_files/tim.db', files_root_path='tim_files', create_docs=True, print_progress=True):
@@ -37,11 +36,14 @@ def initialize_database(db_path='tim_files/tim.db', files_root_path='tim_files',
     if os.path.exists(db_path):
         if print_progress:
             print('{} already exists, no need to initialize'.format(files_root_path))
+        # Initialize tables defined using SQLAlchemy if needed
+        db.create_all(bind='tim_main')
         return
     if print_progress:
         print('initializing the database in {}...'.format(files_root_path), end='')
     timdb = TimDb(db_path=db_path, files_root_path=files_root_path)
     timdb.initialize_tables()
+    db.create_all(bind='tim_main')
     timdb.users.create_special_usergroups()
     anon_group = timdb.users.get_anon_group_id()
     timdb.users.create_user_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)

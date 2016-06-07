@@ -6,11 +6,11 @@ from time import mktime
 
 from flask import Blueprint, request, abort, session, render_template, current_app
 
-import models
 from documentmodel.randutils import hashfunc
-from models import db
 from routes.common import getTimDb, getCurrentUserId, jsonResponse, verify_ownership, get_rights, has_ownership, \
     get_user_settings
+from timdb import tempdb_models
+from tim_app import db
 
 lecture_routes = Blueprint('lecture',
                            __name__,
@@ -1169,4 +1169,4 @@ def user_in_lecture():
 
 
 def getTempDb():
-    return models.tempdb
+    return tempdb_models.tempdb

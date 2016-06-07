@@ -7,15 +7,16 @@ from functools import lru_cache
 
 import flask
 from lxml import html
+from timdbtest import TimDbTest
 
 import tim
 from documentmodel.document import Document
-from timdbtest import TimDbTest
 from flask.testing import FlaskClient
 
 
 def load_json(resp):
     return json.loads(resp.get_data(as_text=True))
+
 
 orig_getaddrinfo = socket.getaddrinfo
 
@@ -32,8 +33,6 @@ def fast_getaddrinfo(host, port, family=0, addrtype=0, proto=0, flags=0):
 
 socket.getaddrinfo = fast_getaddrinfo
 
-tim.app.config['DATABASE'] = TimDbTest.db_path
-tim.app.config['TESTING'] = True
 testclient = tim.app.test_client()
 testclient = testclient.__enter__()  # type: FlaskClient
 
@@ -44,6 +43,7 @@ class TimRouteTest(TimDbTest):
     """
     doc_num = 1
     ok_resp = {'status': 'ok'}
+    permission_error = {'error': "Sorry, you don't have permission to view this resource."}
 
     @classmethod
     def setUpClass(cls):
@@ -64,7 +64,7 @@ class TimRouteTest(TimDbTest):
         if json_key is not None:
             resp_text = json.loads(resp_text)[json_key]
         assert_msg = """\n--------THIS TEXT:--------\n{}\n--------WAS NOT FOUND IN:---------\n{}""".format(
-                expected, resp_text)
+            expected, resp_text)
         if as_tree:
             self.assertLessEqual(1, len(html.fragment_fromstring(resp_text, create_parent=True).findall(expected)),
                                  msg=assert_msg)
