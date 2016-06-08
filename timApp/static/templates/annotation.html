@@ -2,8 +2,8 @@
                                                                 ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]">
     <span class="fulldiv">
         <span class="div-90">
-            <p><span><strong>{{ velp }}</strong></span></p>
-            <p>
+            <p><span class="annHeader"><strong>{{ velp }}</strong></span></p>
+            <p class="annUserTime">
                 <a class="username" href="mailto:{{ email }}">{{ annotator }}</a>
                 <span class="timestamp" title="{{ creationtime }}">{{ timesince }}</span>
             </p>
@@ -19,12 +19,16 @@
     <span class="fulldiv">
         <ul class="comments">
             <li ng-repeat="comment in comments">
-                <a class="username" title="{{ comment.commenter_real_name }}"
+                <p>{{ comment["content"] }}
+                <span class="annUserTime">
+                    <a class="username" title="{{ comment.commenter_real_name }}"
                    href="mailto:{{ comment.commenter_email }}">
                     {{ comment.commenter_username }}</a>
-                <span class="timestamp" title="{{ comment.comment_time }}">{{ comment.comment_relative_time }}</span>
+                   <span class="timestamp" title="{{ comment.comment_time }}">{{ comment.comment_relative_time }}</span>
+                </span>
+                </p>
                 <!--strong>{{ comment["commenter_username"] }}</strong-->
-                <p>{{ comment["content"] }}</p></li>
+                </li>
         </ul>
         <textarea placeholder="Add comment" ng-model="newComment" autofocus></textarea>
     </span>
