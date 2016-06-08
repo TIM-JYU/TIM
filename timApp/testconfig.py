@@ -15,3 +15,9 @@ SQLALCHEMY_BINDS = {
     'tim_main': 'sqlite:///' + DATABASE,
     'tempdb': "postgresql://docker:docker@postgre:5432/tempdb_" + TIM_NAME
 }
+SASS_GEN_PATH = 'testgen'
+
+# Webassets seems to have a weird bug that it cannot find the cache files if the paths are not default,
+# so we cannot modify them. And without the cache, running the tests is twice as slow.
+# ASSETS_DIRECTORY = '/tmp/doctest_files'
+# ASSETS_CACHE = '.webassets-cache'

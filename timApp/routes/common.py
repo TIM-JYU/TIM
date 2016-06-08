@@ -1,5 +1,6 @@
 """Common functions for use with routes."""
 import json
+import os
 import re
 from collections import defaultdict
 from urllib.parse import urlparse, urljoin
@@ -389,7 +390,7 @@ def get_preferences():
     css_file_list.sort()
     theme_list = [Theme(f) for f in css_file_list]
     try:
-        generate_theme_scss(theme_list, 'static/gen')
+        generate_theme_scss(theme_list, os.path.join('static', current_app.config['SASS_GEN_PATH']))
     except ThemeNotFoundException as e:
         flash('TIM was updated and some theme files (such as {}) are no longer available. '
               'See the settings page for the available themes.'.format(e))

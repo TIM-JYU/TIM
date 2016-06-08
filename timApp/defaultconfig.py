@@ -20,9 +20,11 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 IMMEDIATE_PRELOAD  = False
 LIBSASS_STYLE      = "compressed"
 LIBSASS_INCLUDES   = ["static/scripts/bower_components/bootstrap-sass/assets/stylesheets",
-                      "static/scripts/bower_components/jquery-ui/themes/base"]
+                      "static/scripts/bower_components/jquery-ui/themes/base",
+                      "static"]
 TIM_NAME = os.environ.get('TIM_NAME', 'tim')
 SQLALCHEMY_BINDS = {
     'tim_main': 'sqlite:///' + DATABASE,
     'tempdb': "postgresql://docker:docker@postgre:5432/tempdb_" + TIM_NAME
 }
+SASS_GEN_PATH = 'gen'

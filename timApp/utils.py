@@ -191,11 +191,11 @@ def generate_theme_scss(themes: List[Theme], gen_dir: str) -> None:
         os.mkdir(gen_dir)
     with open(os.path.join(gen_dir, combined + '.scss'), encoding='utf-8', mode='w') as f:
         f.write('@charset "UTF-8";\n')
-        f.write('@import "../variables";\n')
+        f.write('@import "variables";\n')
         for t in themes:
             f.write('@mixin {} {{}}\n'.format(t.filename))
-            f.write('@import "../css/{}";\n'.format(t.filename))
-        f.write('@import "../all";\n')
+            f.write('@import "css/{}";\n'.format(t.filename))
+        f.write('@import "all.scss";\n')  # "all" conflicts with a jQuery CSS file, so we must add the .scss extension
         for t in themes:
             f.write('@include {};\n'.format(t.filename))
 

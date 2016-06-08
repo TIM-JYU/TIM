@@ -142,7 +142,7 @@ def reset_css():
     assets_dir = os.path.join('static', '.webassets-cache')
     if os.path.exists(assets_dir):
         shutil.rmtree(assets_dir)
-    gen_dir = os.path.join('static', 'gen')
+    gen_dir = os.path.join('static', app.config['SASS_GEN_PATH'])
     if os.path.exists(gen_dir):
         shutil.rmtree(gen_dir)
     return okJsonResponse()

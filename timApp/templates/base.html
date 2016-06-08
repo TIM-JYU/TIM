@@ -23,7 +23,7 @@
         <script>timLogInit({{ request.query_string|string|tojson }});</script>
 
         {% block stylesheet %}
-            {{ scss('gen/' + prefs.css_combined) }}
+            {{ scss(config.SASS_GEN_PATH + '/' + prefs.css_combined) }}
         {% endblock %}
         <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.min.css') }}">
 
