@@ -478,6 +478,8 @@ def create_default_velp_group(doc_id: int):
     created_velp_group['name'] = velp_group_name
     created_velp_group['location'] = new_group_path
     created_velp_group['selected'] = True
+    created_velp_group['show'] = True
+    created_velp_group['default'] = False
     created_velp_group['edit_access'] = True
     created_velp_group['default_group'] = True
     created_velp_group['created_new_group'] = created_new_group

@@ -536,9 +536,17 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         return groups;
     };
 
-    $scope.isSomeVelpGroupSelected=function(velp){
-        return velp.velp_groups.length==0;
-    }
+    $scope.isSomeVelpGroupSelected = function(velp){
+        if (typeof velp.velp_groups === "undefined")
+            return false;
+        return velp.velp_groups.length > 0;
+    };
+
+    $scope.isVelpValid = function(velp){
+        if (typeof velp.content === "undefined")
+            return false;
+        return $scope.isSomeVelpGroupSelected(velp) && velp.content.length > 0;
+    };
 
     $scope.isGroupInVelp = function (velp, group) {
         if (typeof velp.velp_groups == "undefined" || typeof group.id == "undefined")

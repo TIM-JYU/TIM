@@ -111,7 +111,7 @@
                                     <p class="error" ng-show="!isSomeVelpGroupSelected(newVelp)">
                                         You need to select at least one velpgroup.
                                     </p>
-                                    <p><input id="addVelpBtn" class="timButton" type="submit" value="Create velp" ng-disabled="!isSomeVelpGroupSelected(newVelp) || newVelp.content.length==0"/></p>
+                                    <p><input id="addVelpBtn" class="timButton" type="submit" value="Create velp" ng-disabled="!isVelpValid(newVelp)"/></p>
                                 </form>
                             </div>
                         </div>
@@ -204,8 +204,11 @@
                                                         </label><br>
                                                     </span>
                                                 </fieldset>
+                                                <p class="error" ng-show="!isSomeVelpGroupSelected(velpToEdit)">
+                                                    You need to select at least one velpgroup.
+                                                </p>
 
-                                                <p><input type="submit" class="timButton" value="Save changes"/>
+                                                <p><input type="submit" class="timButton" value="Save changes" ng-disabled="isVelpValid(velpToEdit)"/>
                                                     <input type="button"
                                                            class="timButton"
                                                            value="Cancel"
