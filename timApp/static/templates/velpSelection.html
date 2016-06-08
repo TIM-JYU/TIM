@@ -105,7 +105,8 @@
                                         <span ng-repeat="gr in velpGroups">
                                             <label><input type="checkbox"
                                                           ng-click="updateVelpGroups(newVelp, gr)"
-                                                          ng-checked="gr.selected"> {{ gr.name }}</label><br>
+                                                          ng-checked="gr.selected"
+                                                          > {{ gr.name }}</label><br>
                                         </span>
                                     </fieldset>
                                     <p class="error" ng-show="!isSomeVelpGroupSelected(newVelp)">

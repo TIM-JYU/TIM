@@ -518,8 +518,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     };
 
     $scope.isSomeVelpGroupSelected=function(velp){
-        return velp.velp_groups.length==0;
-    }
+        return velp.velp_groups.length !== 0;
+    };
 
     $scope.isGroupInVelp = function (velp, group) {
         if (typeof velp.velp_groups == "undefined" || typeof group.id == "undefined")
