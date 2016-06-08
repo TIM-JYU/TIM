@@ -365,7 +365,7 @@ class VelpGroups(Documents):
                       AND VelpGroupSelection.velp_group_id = VelpGroupDefaults.velp_group_id
                       WHERE VelpGroupSelection.doc_id = ? AND VelpGroupSelection.user_id = ?
                       AND VelpGroupDefaults.selected = 1 AND VelpGroupSelection.doc_id = VelpGroupDefaults.doc_id
-                      ORDER BY target_id ASC
+                      ORDER BY VelpGroupDefaults.target_id ASC
                       """, [doc_id, user_id]
                       )
         results = self.resultAsDictionary(cursor)

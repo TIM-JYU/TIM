@@ -51,7 +51,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
     var doc_id = $scope.docId;
     var par = 0;
-    var default_velp_group = -1; // TODO Use route to add this information
+    var default_velp_group = {"id": -1, name: "Does not exist" } ; // TODO Use route to add this information
 
     var new_velp_id = 0; // get latest velp id
     var new_label_id = 0; // get latest label id
@@ -62,13 +62,18 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     // Get default velpgroup data
     $http.get('/{0}/get_default_velp_group'.replace('{0}', doc_id)).success(function (data) {
         console.log("Test");
-        default_velp_group = data.id;
-        console.log(default_velp_group);
+        default_velp_group = data;
+        default_velp_group.selected = true;
+        console.log(data);
     });
 
     // Get velpgroup data
     $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id)).success(function (data) {
         $scope.velpGroups = data;
+        if (default_velp_group.id < 0){
+            $scope.velpGroups.push(default_velp_group);
+        }
+        $scope.newVelp.velp_groups = [default_velp_group.id];
         console.log($scope.velpGroups);
 
         // Get velp and annotation data
@@ -211,22 +216,36 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         // Form is valid:
         form.$setPristine();
 
-        if ($scope.newVelp.velp_groups.length === 0) {
-            $scope.newVelp.velp_groups = [default_velp_group];
+        if ($scope.isGroupInVelp($scope.newVelp, default_velp_group)) {
+            // $scope.isGroupInVelp($scope.newVelp, -1);
+            //$scope.newVelp.velp_groups = [default_velp_group];
 
-            if (default_velp_group === -1) {
+            if (default_velp_group.id === -1) {
                 $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), null, function (json) {
-                    default_velp_group = (json.data.id);
-                    $scope.newVelp.velp_groups = [default_velp_group];
-                    if (json.data.created_new_group === true)
-                        $scope.velpGroups.push(json.data);
+                    var new_default_velp_group = json.data;
+                    console.log("NEW DEFAULT GROUP");
+                    console.log(new_default_velp_group);
+
+                    //$scope.newVelp.velp_groups.splice()
+                    var index = $scope.velpGroups.indexOf(default_velp_group);
+                    $scope.velpGroups.splice(index, 1);
+
+                    if ($scope.velpGroups.indexOf(new_default_velp_group) < 0)
+                        $scope.velpGroups.push(new_default_velp_group);
+
+                    var oldGroupIndex = $scope.newVelp.velp_groups.indexOf(default_velp_group.id);
+                    if (oldGroupIndex >= 0)
+                        $scope.newVelp.velp_groups.splice(oldGroupIndex, 1);
+
+                    $scope.newVelp.velp_groups.push(new_default_velp_group.id);
+                    default_velp_group = new_default_velp_group;
                     addNewVelpToDatabase();
                 });
             } else {
                 addNewVelpToDatabase();
             }
 
-        } else {
+        } else if ($scope.newVelp.velp_groups.length > 0) {
             addNewVelpToDatabase();
         }
     };

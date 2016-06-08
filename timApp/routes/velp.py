@@ -373,7 +373,7 @@ def change_selection(document_id: int):
     json_data = request.get_json()
     try:
         velp_group_id = json_data['id']
-        selection = json_data['selected']
+        selection = json_data['show']
         target_type = json_data['target_type']
         target_id = json_data['target_id']
     except KeyError as e:
@@ -474,6 +474,7 @@ def create_velp_group(document_id: int):
     created_velp_group['name'] = velp_group_name
     created_velp_group['location'] = new_group_path
     created_velp_group['selected'] = True
+    created_velp_group['show'] = True
     created_velp_group['edit_access'] = True
     created_velp_group['default_group'] = False
 

@@ -14,6 +14,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.annotationsAdded = false;
     $scope.selectedArea = null;
     $scope.selectedElement = null;
+    $scope.rights = $window.rights;
 
     //$scope.selectedAnnotation = {"comments": [], "velp": "", "points": 0};
     //$scope.selectionParent = null;
@@ -135,25 +136,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         getElementParent(parent);
     };
 
-    /**
-     *
-     * @param range place
-     */
-    var checkIfCoordIsLegal = function(range){
-        var legal = true;
-
-        /*
-          1. Get start element and end element
-          2. Get elements between start and end
-          3. Check if iteratively if there are any illegal parent elements
-          4. Check recursevily if there is illegal child-element in any element
-             - Check also taglines [p, strong, em, strong] -> illegal
-                                   [p, strong, em, strong, p] -> legal
-         */
-
-        console.log(range);
-
-    };
 
     /**
      * Gets element parent element when certain attribute is present.
