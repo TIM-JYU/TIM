@@ -24,11 +24,11 @@ def add_annotation() -> str:
         end = coordinates['end']
 
     except KeyError as e:  # one of the json_data['foo'] fails
-        abort(400, "Missing data: " + e.args[0])
+        return abort(400, "Missing data: " + e.args[0])
     except TypeError as e:  # one of the element paths is not a list of integers
-        abort(400, "Malformed element path. " + e.args[0])
+        return abort(400, "Malformed element path. " + e.args[0])
     except ValueError as e:  # visible_to could not be casted to the enum used.
-        abort(400, e.args[0])
+        return abort(400, e.args[0])
 
     # .get() returns None if there is no data instead of throwing.
     offset_start = start.get('offset')
@@ -42,13 +42,13 @@ def add_annotation() -> str:
     element_path_start = start.get('el_path')
     if element_path_start is not None:
         if type(element_path_start) is not list or any(type(i) is not int for i in element_path_start):
-            abort(400, "Malformed element path. " + str(element_path_start))
+            return abort(400, "Malformed element path. " + str(element_path_start))
         element_path_start = str(element_path_start)
 
     element_path_end = end.get('el_path')
     if element_path_end is not None:
         if type(element_path_end) is not list or any(type(i) is not int for i in element_path_end):
-            abort(400, "Malformed element path. " + str(element_path_end))
+            return abort(400, "Malformed element path. " + str(element_path_end))
         element_path_end = str(element_path_end)
 
     points = json_data.get('points')
@@ -61,7 +61,7 @@ def add_annotation() -> str:
         paragraph_id_end = end['par_id']
         hash_end = end['t']
     except KeyError as e:
-        abort(400, "Missing data: " + e.args[0])
+        return abort(400, "Missing data: " + e.args[0])
     verifyLoggedIn()
     annotator_id = getCurrentUserId()
     velp_version = timdb.velps.get_latest_velp_version(velp_id)
@@ -140,24 +140,20 @@ def add_comment() -> str:
     return jsonResponse(timdb.users.get_user(commenter_id))
 
 
-@annotations.route("/<document_id>/get_annotations", methods=['GET'])
-def get_annotations(document_id: int) -> str:
-    try:
-        document_id = int(document_id)
-    except ValueError as e:
-        abort(400, "Document_id is not a number.")
+@annotations.route("/<int:doc_id>/get_annotations", methods=['GET'])
+def get_annotations(doc_id: int) -> str:
     timdb = getTimDb()
     user_id = getCurrentUserId()
-    if not timdb.documents.exists(document_id):
-        abort(404, "No such document.")
-    if not timdb.users.has_view_access(user_id, document_id):
-        abort(403, "View access required.")
-    user_has_see_answers = timdb.users.has_seeanswers_access(user_id, document_id)
-    user_has_teacher = timdb.users.has_teacher_access(user_id, document_id)
-    user_has_owner = timdb.users.user_is_owner(user_id, document_id)
+    if not timdb.documents.exists(doc_id):
+        return abort(404, "No such document.")
+    if not timdb.users.has_view_access(user_id, doc_id):
+        return abort(403, "View access required.")
+    user_has_see_answers = timdb.users.has_seeanswers_access(user_id, doc_id)
+    user_has_teacher = timdb.users.has_teacher_access(user_id, doc_id)
+    user_has_owner = timdb.users.user_is_owner(user_id, doc_id)
 
     results = timdb.annotations.get_annotations_with_comments_in_document(getCurrentUserId(), user_has_see_answers,
-                                                                          user_has_teacher, user_has_owner, document_id)
+                                                                          user_has_teacher, user_has_owner, doc_id)
     response = jsonResponse(results)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     return response
