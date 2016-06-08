@@ -406,19 +406,16 @@ class VelpGroups(Documents):
         :param selected: Boolean whether group is selected or not
         :return:
         """
-        # TODO: Currently upsert below is SQLite specific, might need changing
         cursor = self.db.cursor()
         cursor.execute("""
-                      UPDATE VelpGroupSelection
-                      SET selected = ?
+                      DELETE FROM VelpGroupSelection
                       WHERE user_id = ? AND doc_id = ? AND velp_group_id = ? AND target_type = ? AND target_id = ?
-                      """, [selected, user_id, doc_id, velp_group_id, target_type, target_id]
+                      """, [user_id, doc_id, velp_group_id, target_type, target_id]
                       )
         cursor.execute("""
                       INSERT INTO
                       VelpGroupSelection(user_id, doc_id, velp_group_id, target_type, target_id, selected)
-                      SELECT ?, ?, ?, ?, ?, ?
-                      WHERE changes() = 0;
+                      VALUES (?, ?, ?, ?, ?, ?)
                         """, [user_id, doc_id, velp_group_id, target_type, target_id, selected]
                       )
         self.db.commit()
@@ -433,25 +430,21 @@ class VelpGroups(Documents):
         :param selected: Boolean whether group is selected or not
         :return:
         """
-        if selected is True:
-            selected = 1
-        else:
-            selected = 0
         cursor = self.db.cursor()
-        cursor.execute("""
-                      UPDATE VelpGroupDefaults
-                      SET selected = ?
-                      WHERE doc_id = ? AND velp_group_id = ? AND target_type = ? AND target_id = ?
-                      """, [selected, doc_id, velp_group_id, target_type, target_id]
-                      )
-        cursor.execute("""
-                      INSERT INTO
-                      VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)
-                      SELECT ?, ?, ?, ?, ?
-                      WHERE changes() = 0;
-                        """, [doc_id, target_type, target_id, selected, velp_group_id]
-                      )
-        self.db.commit()
+        if selected is False:
+            cursor.execute("""
+                          DELETE FROM VelpGroupDefaults
+                          WHERE doc_id = ? AND velp_group_id = ? AND target_type = ? AND target_id = ?
+                          """, [doc_id, velp_group_id, target_type, target_id]
+                          )
+        else:
+            cursor.execute("""
+                          INSERT INTO
+                          VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)
+                          SELECT ?, ?, ?, ?, ?
+                            """, [doc_id, target_type, target_id, selected, velp_group_id]
+                          )
+            self.db.commit()
 
     # Unused methods
 

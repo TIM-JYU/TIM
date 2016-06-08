@@ -155,9 +155,9 @@ def add_velp():
         velp_content = json_data['content']
         velp_groups = json_data['velp_groups']
     except KeyError as e:
-        abort(400, "Missing data: " + e.args[0])
+        return abort(400, "Missing data: " + e.args[0])
     if not velp_content:
-        abort(400, "Empty content string.")
+        return abort(400, "Empty content string.")
 
     # Optional stuff
     # .get returns null instead of throwing if data is missing.
@@ -180,14 +180,14 @@ def add_velp():
 
     # Check where user has edit rights and only add new velp to those
     for group in velp_groups:
-        if timdb.users.has_edit_access(current_user_id, group) is True:
+        if timdb.users.has_edit_access(current_user_id, group):
             can_add_velp = True
             velp_groups_rights.append(group)
         else:
             print("No edit access for velp group:", group)
 
-    if can_add_velp is False:
-        abort(400, "Can't add velp without any velp groups")
+    if not can_add_velp:
+        return abort(400, "Can't add velp without any velp groups")
 
     velp_groups = velp_groups_rights
 
@@ -202,7 +202,7 @@ def add_velp():
             print(group_id)
             timdb.velp_groups.add_velp_to_group(new_velp_id, group_id)
     else:
-        abort(400, "No velp groups")
+        return abort(400, "No velp groups")
 
     return jsonResponse(new_velp_id)
 
@@ -221,9 +221,9 @@ def update_velp(doc_id: int):
         language_id = json_data.get('language_id')
         velp_groups = json_data['velp_groups']
     except KeyError as e:
-        abort(400, "Missing data " + e.args[0])
+        return abort(400, "Missing data " + e.args[0])
     if not new_content:
-        abort(400, "Empty content string.")
+        return abort(400, "Empty content string.")
 
     default_points = json_data.get('points')
     icon_id = json_data.get('icon_id')
@@ -237,11 +237,11 @@ def update_velp(doc_id: int):
 
     # Check that user has edit access to velp via any velp group in database
     for group in all_velp_groups:
-        if timdb.users.has_edit_access(user_id, group['id']) is True:
+        if timdb.users.has_edit_access(user_id, group['id']):
             edit_access = True
             break
-    if edit_access is False:
-        abort(403, "No edit access to velp via any velp group.")
+    if not edit_access:
+        return abort(403, "No edit access to velp via any velp group.")
 
     # Check which velp groups velp should belong to after update
     edit_access = False
@@ -251,7 +251,7 @@ def update_velp(doc_id: int):
     # Add all velp group ids user edit has access to in a document to a list
     doc_groups = timdb.velp_groups.get_groups_from_selection_table(doc_id, user_id)
     for group in doc_groups:
-        if timdb.users.has_edit_access(user_id, group['id']) is True:
+        if timdb.users.has_edit_access(user_id, group['id']):
             groups_to_remove.append(group['id'])
             edit_access = True
         else:
@@ -259,7 +259,7 @@ def update_velp(doc_id: int):
 
     # Check that user has edit access to velp groups in given velp group list and add them to a new list
     for group in velp_groups:
-        if timdb.users.has_edit_access(user_id, group) is True:
+        if timdb.users.has_edit_access(user_id, group):
             edit_access = True
             groups_to_add.append(group)
 
@@ -267,7 +267,7 @@ def update_velp(doc_id: int):
             print("No edit access to group", group)
 
     # Add and remove velp from velp groups
-    if edit_access is True:
+    if edit_access:
         timdb.velp_groups.remove_velp_from_groups(velp_id, groups_to_remove)
         timdb.velp_groups.add_velp_to_groups(velp_id, groups_to_add)
 
@@ -295,7 +295,7 @@ def add_label():
     try:
         content = json_data['content']
     except KeyError as e:
-        abort(400, "Missing data: " + e.args[0])
+        return abort(400, "Missing data: " + e.args[0])
     language_id = json_data.get('language_id')
     language_id = "FI" if language_id is None else language_id
 
@@ -317,7 +317,7 @@ def update_velp_label():
         content = json_data['content']
         velp_label_id = json_data['id']
     except KeyError as e:
-        abort(400, "Missing data: " + e.args[0])
+        return abort(400, "Missing data: " + e.args[0])
     language_id = json_data.get('language_id')
     language_id = "FI" if language_id is None else language_id
 
@@ -343,7 +343,7 @@ def change_selection(doc_id: int):
         target_type = json_data['target_type']
         target_id = json_data['target_id']
     except KeyError as e:
-        abort(400, "Missing data: " + e.args[0])
+        return abort(400, "Missing data: " + e.args[0])
     verifyLoggedIn()
     user_id = getCurrentUserId()
     timdb = getTimDb()
@@ -366,12 +366,12 @@ def change_default_selection(doc_id: int):
         target_id = json_data['target_id']
         selection = json_data['default']
     except KeyError as e:
-        abort(400, "Missing data: " + e.args[0])
+        return abort(400, "Missing data: " + e.args[0])
         return
     verifyLoggedIn()
     user_id = getCurrentUserId()
     timdb = getTimDb()
-    if timdb.users.has_manage_access(user_id, doc_id) is True:
+    if timdb.users.has_manage_access(user_id, doc_id):
         timdb.velp_groups.change_default_selection(doc_id, velp_group_id, target_type, target_id, selection)
 
     return ""
@@ -384,7 +384,7 @@ def create_velp_group(doc_id: int):
         velp_group_name = json_data.get('name')
         target_type = json_data.get('target_type')
     except KeyError as e:
-        abort(400, "Missing data: " + e.args[0])
+        return abort(400, "Missing data: " + e.args[0])
 
     timdb = getTimDb()
 
@@ -408,7 +408,7 @@ def create_velp_group(doc_id: int):
             # new_group_id = new_group.doc_id
             velp_group_id = timdb.velp_groups.create_velp_group(velp_group_name, user_group_id, new_group_path)
         else:
-            abort(400, "Velp group with same name and location exists already.")
+            return abort(400, "Velp group with same name and location exists already.")
 
 
     # TODO: Who has can add velp groups to documents or folders
@@ -424,7 +424,7 @@ def create_velp_group(doc_id: int):
         if group_exists is None:
             velp_group_id = timdb.velp_groups.create_velp_group(velp_group_name, user_group_id, new_group_path)
         else:
-            abort(400, "Velp group with same name and location exists already.")
+            return abort(400, "Velp group with same name and location exists already.")
 
     created_velp_group = dict()
     created_velp_group['id'] = velp_group_id
@@ -452,9 +452,9 @@ def create_default_velp_group(doc_id: int):
     user_group_id = timdb.documents.get_owner(doc_id)
     user_id = getCurrentUserId()
     print(timdb.users.is_user_id_in_group_id(user_id, user_group_id))
-    if timdb.users.is_user_id_in_group_id(user_id, user_group_id) is False:
+    if not timdb.users.is_user_id_in_group_id(user_id, user_group_id):
         print("User is not owner of current document")
-        abort(403, "User is not owner of current document")
+        return abort(403, "User is not owner of current document")
 
     velps_folder_path = timdb.folders.check_velp_group_folder_path(doc_path, user_group_id, doc_name)
     velp_group_name = doc_name + "_default"
@@ -564,7 +564,7 @@ def get_velp_groups_from_tree(document_id: int):
     for result in results:
         id_number = result['id']
         is_velp_group = timdb.velp_groups.is_id_velp_group(id_number)
-        if is_velp_group is False:
+        if not is_velp_group:
             group_name = os.path.basename(timdb.documents.get_first_document_name(id_number))
             timdb.velp_groups.make_document_a_velp_group(group_name, id_number)
 
