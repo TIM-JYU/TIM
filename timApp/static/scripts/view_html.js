@@ -252,8 +252,6 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getFirstPar = function ($par_or_area) {
-            console.log('sc.getFirstPar():');
-            console.log($par_or_area);
             if ($par_or_area.length > 1) {
                 return sc.getFirstPar($par_or_area.first());
             }
@@ -358,7 +356,7 @@ timApp.controller("ViewCtrl", [
                 if (par_id != "null")
                     attrs["initial-text-url"] = '/getBlock/' + sc.docId + "/" + par_id;
             }
-            sc.toggleEditor($pars, options, attrs, caption);
+            sc.toggleEditor($par, options, attrs, caption);
         };
 
         sc.getRefAttrs = function ($par) {
@@ -647,6 +645,23 @@ timApp.controller("ViewCtrl", [
             });
         };
 
+        sc.onMouseOverOut = function (className, func) {
+            // A combination function with a third parameter
+            // true when over, false when out
+
+            $document.on('mouseover', className, function (e) {
+                if (func($(this), sc.fixPageCoords(e), true)) {
+                    e.preventDefault();
+                }
+            });
+
+            $document.on('mouseout', className, function (e) {
+                if (func($(this), sc.fixPageCoords(e), false)) {
+                    e.preventDefault();
+                }
+            });
+        };
+
         sc.showEditWindow = function (e, $pars) {
             $(".par.new").remove();
             sc.toggleParEditor($pars, {showDelete: true, area: false});
@@ -672,7 +687,7 @@ timApp.controller("ViewCtrl", [
                     "docId" : sc.docId,
                     "par_next" : par_next
                 }).success(function(data, status, headers, config) {
-                    $window.location.reload();
+                    sc.reload();
                 }).error(function(data, status, headers, config) {
                     $window.alert(data.error);
                 });
@@ -1059,7 +1074,7 @@ timApp.controller("ViewCtrl", [
                     continue;
 
                 if (sc.getParId($node) == par_id) {
-                    console.log('sc.getParIndex(' + par_id + ') = ' + realIndex);
+                    //console.log('sc.getParIndex(' + par_id + ') = ' + realIndex);
                     return realIndex;
                 }
 
@@ -1103,6 +1118,21 @@ timApp.controller("ViewCtrl", [
             return false;
         });
 
+        sc.onMouseOverOut(".areaeditline1", function ($this, e, select) {
+            var areaName = $this.attr('data-area');
+            sc.selectArea(areaName, ".areaeditline1", select);
+        });
+
+        sc.onMouseOverOut(".areaeditline2", function ($this, e, select) {
+            var areaName = $this.attr('data-area');
+            sc.selectArea(areaName, ".areaeditline2", select);
+        });
+
+        sc.onMouseOverOut(".areaeditline3", function ($this, e, select) {
+            var areaName = $this.attr('data-area');
+            sc.selectArea(areaName, ".areaeditline3", select);
+        });
+
         sc.onClick(".areaeditline1", function ($this, e) {
             return sc.onAreaEditClicked($this, e, ".areaeditline1");
         });
@@ -1115,6 +1145,14 @@ timApp.controller("ViewCtrl", [
             return sc.onAreaEditClicked($this, e, ".areaeditline3");
         });
 
+        sc.selectArea = function(areaName, className, selected) {
+            var $selection = $('.area.area_' + areaName).children(className);
+            if (selected)
+                $selection.addClass('manualhover');
+            else
+                $selection.removeClass('manualhover');
+        };
+
         sc.onAreaEditClicked = function($this, e, className) {
             sc.closeOptionsWindow();
             var areaName = $this.attr('data-area');
@@ -1122,6 +1160,7 @@ timApp.controller("ViewCtrl", [
             var $area_part = $this.parent().filter('.area');
             var coords = {left: e.pageX - $area_part.offset().left, top: e.pageY - $area_part.offset().top};
 
+            sc.selectedAreaName = areaName;
             $('.area.area_' + areaName).children(className).addClass('menuopen');
 
             // We need the timeout so we don't trigger the ng-clicks on the buttons
@@ -1129,16 +1168,14 @@ timApp.controller("ViewCtrl", [
             return false;
         };
 
-        sc.setAreaAttr = function(area, attr, value) {
-            var area_selector = "[data-area=" + area + "]";
-            $(area_selector).css(attr, value);
+        sc.getArea = function(area) {
+            return $("#area_" + area);
         };
 
         sc.onClick(".areacollapse", function ($this, e) {
             $this.removeClass("areacollapse");
-            var area_name = $this.parent().attr('data-area-start');
-            console.log("Collapse " + area_name);
-            sc.setAreaAttr(area_name, "display", "none");
+            var area_name = $this.attr('data-area');
+            sc.getArea(area_name).addClass("collapsed");
             $this.addClass("disabledexpand");
 
             // Set expandable after a timeout to avoid expanding right after collapse
@@ -1147,17 +1184,16 @@ timApp.controller("ViewCtrl", [
 
         sc.onClick(".areaexpand", function ($this, e) {
             $this.removeClass("areaexpand");
-            var area_name = $this.parent().attr('data-area-start');
-            console.log("Expand " + area_name);
-            sc.setAreaAttr(area_name, "display", "");
+            var area_name = $this.attr('data-area');
+            sc.getArea(area_name).removeClass("collapsed");
             $this.addClass("disabledcollapse");
 
             // Set collapsible after a timeout to avoid collapsing right after expand
             $window.setTimeout(function() { $this.removeClass("disabledcollapse"); $this.addClass("areacollapse"); }, 200);
         });
 
-        sc.showNoteWindow = function (e, $par) {
-            sc.toggleNoteEditor($par, {isNew: true});
+        sc.showNoteWindow = function (e, $pars) {
+            sc.toggleNoteEditor(sc.getFirstPar($pars), {isNew: true});
         };
 
         sc.handleNoteCancel = function () {
@@ -1232,10 +1268,12 @@ timApp.controller("ViewCtrl", [
         sc.onClick("html.ng-scope", function ($this, e) {
             // Clicking anywhere
             var tagName = e.target.tagName.toLowerCase();
-            var ignoreTags = ['button', 'input'];
+            var ignoreTags = ['button', 'input', 'label'];
             if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || $(e.target).hasClass("menu-icon")
-                || $(e.target).hasClass("editline") || $(e.target).hasClass("areaeditline1") ||
-                   $(e.target).hasClass("areaeditline2") || $(e.target).hasClass("areaeditline3")) {
+                || $(e.target).hasClass("editline") || $(e.target).hasClass("areaeditline1")
+                ||   $(e.target).hasClass("areaeditline2") || $(e.target).hasClass("areaeditline3")
+                ||   $(e.target).attr('position') == 'absolute')
+            {
                 return false;
             }
 
@@ -1762,7 +1800,7 @@ timApp.controller("ViewCtrl", [
             sc.selection.end = null;
         };
 
-        sc.nameArea = function (e, $par) {
+        sc.nameArea = function (e, $pars) {
             var $newArea = $('<div class="area" id="newarea" />')
             $newArea.attr('data-doc-id', sc.docId);
             sc.selection.pars.wrapAll($newArea);
@@ -1785,11 +1823,11 @@ timApp.controller("ViewCtrl", [
                 "area_end" : sc.getLastParId($area.last()),
                 "options" : options
             }).success(function(data, status, headers, config) {
-                $area.children().wrapAll('<div class="areaContent">');
-                $area.append('<div class="areaeditline1">');
+                //$area.children().wrapAll('<div class="areaContent">');
+                //$area.append('<div class="areaeditline1">');
 
-                if (options.collapsible)
-                    $window.location.reload();
+                //if (options.collapsible)
+                    sc.reload();
 
             }).error(function(data, status, headers, config) {
                 $window.alert(data.error);
@@ -1864,20 +1902,15 @@ timApp.controller("ViewCtrl", [
             }
         };
 
-        sc.removeAreaMarking = function (e, $area) {
-            var area_name = sc.getAreaId($area);
+        sc.removeAreaMarking = function (e, $pars) {
+            var area_name = sc.selectedAreaName;
             if (!area_name) {
                 $window.alert("Could not get area name");
             }
 
             http.post('/unwrap_area/' + sc.docId + '/' + area_name, {
             }).success(function (data, status, headers, config) {
-                $area.children('.areaeditline1, .areaeditline2, .areaeditline3').remove();
-                $area.children().find('.areapartline').remove();
-                var $areaContent = $area.children('.areaContent');
-                $areaContent.children('[data-area-start]').remove();
-                $areaContent.unwrap();
-                $areaContent.children().unwrap();
+                sc.reload();
             }).error(function (data, status, headers, config) {
                 $window.alert(data.error);
             });

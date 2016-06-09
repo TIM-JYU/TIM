@@ -1,32 +1,48 @@
-<div class="nameArea">
+<div class="actionButtons">
     <span class="error" ng-show="notification" ng-bind="notification"></span>
 
-    <div>
+    <div class="row">
+        <div class="col-xs-4">
             <label for="areaname">Area name:</label>
+        </div>
+        <div class="col-xs-8">
             <input id="areaname" type="text" ng-model="areaName" title="No spaces allowed" autofocus />
+        </div>
     </div>
 
-    <div class="nameArea-options">
-        <div>
+    <div class="row">
+        <div class="col-xs-2"></div>
+
+        <div class="col-xs-10">
             <input id="collapsible" type="checkbox" ng-model="options.collapsible" ng-click="toggleCollapsible()" />
             <label for="collapsible">Collapsible</label>
         </div>
+    </div>
 
-        <div id="collapsible-options" class="nameArea-inner hidden">
-            <div>
+    <div id="collapsible-options" class="hidden">
+        <div class="row">
+            <div class="col-xs-2"></div>
+            <div class="col-xs-10">
                 <label for="areatitle">Area title:</label>
                 <input id="areatitle" type="text" ng-model="options.title" title="Optional" />
             </div>
+        </div>
 
-            <div>
+        <div class="row">
+            <div class="col-xs-2"></div>
+            <div class="col-xs-10">
                 <input id="collapse" type="checkbox" ng-model="options.collapse" />
                 <label for="collapse">Collapsed by default</label>
             </div>
         </div>
     </div>
 
-    <div>
-        <button id="add" class="timButton" ng-click="addArea()" ng-disabled="!areaName">Add</button>
-        <button id="cancel" class="timButton" ng-click="cancelAdd()">Cancel</button>
+    <div class="row">
+        <div class="col-xs-6">
+            <button id="add" class="timButton" ng-click="addArea()" ng-disabled="!areaName">Add</button>
+        </div>
+        <div class="col-xs-6">
+            <button id="cancel" class="timButton" ng-click="cancelAdd()">Cancel</button>
+        </div>
     </div>
 </div>

@@ -17,9 +17,9 @@
             <div class="panel-body">
                 <form ng-submit="submit('{{ request.path + 'save' }}')">
                     {% if css_files %}
-                        <span>Available custom styles:</span>
+                        <span>Available themes:</span>
                     {% else %}
-                        <span>There are no available custom styles.</span>
+                        <span>There are no available themes.</span>
                     {% endif %}
                     <br>
                     {% for css_file in css_files %}

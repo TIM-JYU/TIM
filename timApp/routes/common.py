@@ -4,13 +4,14 @@ import re
 from collections import defaultdict
 from urllib.parse import urlparse, urljoin
 
-from flask import current_app, session, abort, g, Response, request, redirect, url_for
+from flask import current_app, session, abort, g, Response, request, redirect, url_for, flash
 
 import pluginControl
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from documentmodel.document import Document
+from theme import Theme
 from timdb.timdb2 import TimDb
-from utils import generate_theme_scss, get_combined_css_filename
+from utils import generate_theme_scss, get_combined_css_filename, ThemeNotFoundException
 
 
 def is_safe_url(url):
@@ -63,16 +64,22 @@ def verify_admin():
         abort(403, 'This action requires administrative rights.')
 
 
+def verify_doc_exists(doc_id, message="Sorry, the document does not exist."):
+    timdb = getTimDb()
+    if not timdb.documents.exists(doc_id):
+        abort(404, message)
+
+
 def verify_edit_access(block_id, message="Sorry, you don't have permission to edit this resource."):
     timdb = getTimDb()
     if not timdb.users.has_edit_access(getCurrentUserId(), block_id):
         abort(403, message)
 
 
-def verify_doc_exists(doc_id, message="Sorry, the document does not exist."):
+def verify_manage_access(block_id, message="Sorry, you don't have permission to manage this resource."):
     timdb = getTimDb()
-    if not timdb.documents.exists(doc_id):
-        abort(404, message)
+    if not timdb.users.has_manage_access(getCurrentUserId(), block_id):
+        abort(403, message)
 
 
 def has_edit_access(block_id):
@@ -383,6 +390,26 @@ def get_preferences():
         prefs['css_files'] = {}
         prefs['custom_css'] = ''
     css_file_list = [css for css, v in prefs['css_files'].items() if v]
-    generate_theme_scss(css_file_list, 'static/css', 'static/gen')
-    prefs['css_combined'] = get_combined_css_filename(css_file_list)
+    css_file_list.sort()
+    theme_list = [Theme(f) for f in css_file_list]
+    try:
+        generate_theme_scss(theme_list, 'static/gen')
+    except ThemeNotFoundException as e:
+        flash('TIM was updated and some theme files (such as {}) are no longer available. '
+              'See the settings page for the available themes.'.format(e))
+        update_preferences(prefs)
+        return get_preferences()
+    prefs['css_combined'] = get_combined_css_filename(theme_list)
     return prefs
+
+
+def update_preferences(prefs):
+    timdb = getTimDb()
+    css_files = prefs.get('css_files', {})
+    existing_css_files = {}
+    for k, v in css_files.items():
+        t = Theme(k)
+        if t.exists() and v:
+            existing_css_files[t.filename] = True
+    prefs['css_files'] = existing_css_files
+    timdb.users.set_preferences(getCurrentUserId(), json.dumps(prefs))
