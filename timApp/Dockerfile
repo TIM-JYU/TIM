@@ -113,5 +113,8 @@ run mkdir /var/run/sshd
 run echo 'root:test' | chpasswd
 run sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
+# Ensure that netcat is installed
+run apt-get install -y netcat-openbsd
+
 # Default startup command
-cmd cd /service/timApp && source initenv.sh && python3 launch.py
+cmd cd /service/timApp && source /service/scripts/_initenv.sh && python3 launch.py
