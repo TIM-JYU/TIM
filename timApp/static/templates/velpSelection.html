@@ -208,11 +208,11 @@
                                                     You need to select at least one velpgroup.
                                                 </p>
 
-                                                <p><input type="submit" class="timButton" value="Save changes" ng-disabled="isVelpValid(velpToEdit)"/>
+                                                <p><input type="submit" class="timButton" value="Save changes" ng-disabled="!isVelpValid(velpToEdit)"/>
                                                     <input type="button"
                                                            class="timButton"
                                                            value="Cancel"
-                                                           ng-click="selectVelpToEdit(velp )">
+                                                           ng-click="selectVelpToEdit(velp)">
                                                 </p>
                                             </form>
                                         </div>
