@@ -4,16 +4,17 @@
 
 var angular;
 var timApp = angular.module('timApp');
-
+var console = window.console;
 /**
  * Angular directive for phrase selection
  */
 timApp.directive('velpSummary', function () {
+    "use strict";
     return{
         templateUrl: "/static/templates/velpSummary.html",
         controller: 'VelpSummaryController',
         scope: {annotations: "="}
-    }
+    };
 });
 
 timApp.controller('VelpSummaryController', ['$scope', '$http', function ($scope) {

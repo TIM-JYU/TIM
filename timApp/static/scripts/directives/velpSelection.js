@@ -212,34 +212,20 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         // Form is valid:
         form.$setPristine();
 
-        if ($scope.isGroupInVelp($scope.newVelp, default_velp_group)) {
+        if ($scope.isGroupInVelp($scope.newVelp, default_velp_group) && default_velp_group.id === -1) {
             // $scope.isGroupInVelp($scope.newVelp, -1);
             //$scope.newVelp.velp_groups = [default_velp_group];
 
-            if (default_velp_group.id === -1) {
-                $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), null, function (json) {
-                    var new_default_velp_group = json.data;
-                    console.log("NEW DEFAULT GROUP");
-                    console.log(new_default_velp_group);
+            var old_default_group = default_velp_group;
+            $scope.generateDefaultVelpGroup(function () {
 
-                    //$scope.newVelp.velp_groups.splice()
-                    var index = $scope.velpGroups.indexOf(default_velp_group);
-                    $scope.velpGroups.splice(index, 1);
+                var oldGroupIndex = $scope.newVelp.velp_groups.indexOf(old_default_group.id); // -1 = old
+                if (oldGroupIndex >= 0)
+                    $scope.newVelp.velp_groups.splice(oldGroupIndex, 1);
+                $scope.newVelp.velp_groups.push(default_velp_group.id);
 
-                    if ($scope.velpGroups.indexOf(new_default_velp_group) < 0)
-                        $scope.velpGroups.push(new_default_velp_group);
-
-                    var oldGroupIndex = $scope.newVelp.velp_groups.indexOf(default_velp_group.id);
-                    if (oldGroupIndex >= 0)
-                        $scope.newVelp.velp_groups.splice(oldGroupIndex, 1);
-
-                    $scope.newVelp.velp_groups.push(new_default_velp_group.id);
-                    default_velp_group = new_default_velp_group;
-                    addNewVelpToDatabase();
-                });
-            } else {
                 addNewVelpToDatabase();
-            }
+            });
 
         } else if ($scope.newVelp.velp_groups.length > 0) {
             addNewVelpToDatabase();
@@ -344,9 +330,29 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         // TODO: Make velpGroups to [{'id':1, 'selected':'True'}]
         console.log($scope.velpToEdit);
-        $scope.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), $scope.velpToEdit, function (json) {
-            console.log(json);
-        });
+
+        if ($scope.isGroupInVelp($scope.velpToEdit, default_velp_group) && default_velp_group.id === -1){
+            var old_default_group = default_velp_group;
+
+            $scope.generateDefaultVelpGroup(function () {
+
+                var oldGroupIndex = $scope.velpToEdit.velp_groups.indexOf(old_default_group.id); // -1 = old
+                if (oldGroupIndex >= 0)
+                    $scope.velpToEdit.velp_groups.splice(oldGroupIndex, 1);
+                $scope.velpToEdit.velp_groups.push(default_velp_group.id);
+
+                $scope.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), $scope.velpToEdit, function (json) {
+                    console.log(json);
+                });
+            });
+        } else if ($scope.velpToEdit.velp_groups.length > 0) {
+            $scope.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), $scope.velpToEdit, function (json) {
+                console.log(json);
+            });
+        }
+
+
+
 
         for (var i = 0; i < $scope.velps.length; i++) {
             if ($scope.velps[i].id === $scope.velpToEdit.id) {
@@ -355,6 +361,21 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
                 break;
             }
         }
+    };
+
+    $scope.generateDefaultVelpGroup = function (method) {
+        $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), null, function (json) {
+            var new_default_velp_group = json.data;
+
+            var index = $scope.velpGroups.indexOf(default_velp_group);
+            $scope.velpGroups.splice(index, 1);
+
+            if ($scope.velpGroups.indexOf(new_default_velp_group) < 0)
+                $scope.velpGroups.push(new_default_velp_group);
+
+            default_velp_group = new_default_velp_group;
+            method();
+        });
     };
 
     /**

@@ -107,6 +107,25 @@ class Velps(TimDbBase):
                        """, [icon_id, default_points, velp_id]
                        )
 
+    def get_latest_velp_version(self, velp_id: int, language_id: str = "FI"):
+        """Method to fetch the latest version for velp in specific language
+
+        :param velp_id: ID of velp we're checking
+        :param language_id: ID of language
+        :return: ID of version
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      SELECT
+                      MAX(id)
+                      FROM
+                      VelpInformation
+                      WHERE velp_id = ? AND language_id = ?
+                      """, [velp_id, language_id]
+                       )
+        velp_version = cursor.fetchone()[0]
+        return velp_version
+
     # Methods concerning velp labels
 
     def create_velp_label(self, language_id: str, content: str) -> int:
