@@ -87,8 +87,8 @@ def get_velp_groups(doc_id: int):
 
     all_velp_groups = timdb.velp_groups.get_groups_from_selection_table(doc_id, user_id)
 
-    if timdb.users.has_manage_access(user_id, doc_id):
-        timdb.velp_groups.add_groups_to_default_table(all_velp_groups, doc_id)
+    #if timdb.users.has_manage_access(user_id, doc_id):
+    #    timdb.velp_groups.add_groups_to_default_table(all_velp_groups, doc_id)
 
     # SQLite uses 1/0 instead of True/False, change them to True/False for JavaScript side
     for group in all_velp_groups:

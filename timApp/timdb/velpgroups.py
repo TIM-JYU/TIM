@@ -289,27 +289,6 @@ class VelpGroups(Documents):
             result['name'] = os.path.basename(result['location'])
         return results
 
-    def add_groups_to_default_table(self, velp_groups: dict, doc_id: int):
-        """Adds velp groups to VelpGroupDefaults table
-
-        :param velp_groups: Velp groups as dictionaries
-        :param doc_id: ID of document
-        :return:
-        """
-        cursor = self.db.cursor()
-        for velp_group in velp_groups:
-            target_type = 0
-            target_id = 0
-            selected = 1
-            velp_group_id = velp_group['id']
-            cursor.execute("""
-                          INSERT OR IGNORE INTO
-                          VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)
-                          VALUES (?, ?, ?, ?, ?)
-                          """, [doc_id, target_type, target_id, selected, velp_group_id]
-                           )
-        self.db.commit()
-
     def get_personal_selections_for_velp_groups(self, doc_id: int, user_id: int):
         """Gets all velp group personal selections for document
 
@@ -482,3 +461,24 @@ class VelpGroups(Documents):
                       """, [velp_group_id, velp_group_id]
                        )
 
+    # TODO: Unused
+    def add_groups_to_default_table(self, velp_groups: dict, doc_id: int):
+        """Adds velp groups to VelpGroupDefaults table
+
+        :param velp_groups: Velp groups as dictionaries
+        :param doc_id: ID of document
+        :return:
+        """
+        cursor = self.db.cursor()
+        for velp_group in velp_groups:
+            target_type = 0
+            target_id = 0
+            selected = 1
+            velp_group_id = velp_group['id']
+            cursor.execute("""
+                          INSERT OR IGNORE INTO
+                          VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)
+                          VALUES (?, ?, ?, ?, ?)
+                          """, [doc_id, target_type, target_id, selected, velp_group_id]
+                           )
+        self.db.commit()
