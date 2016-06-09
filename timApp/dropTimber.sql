@@ -14,3 +14,4 @@ DROP TABLE IF EXISTS ImportedVelpGroups;
 DROP TABLE IF EXISTS VelpGroupDefaults;
 DROP TABLE IF EXISTS VelpGroupLabel;
 DROP TABLE IF EXISTS LabelInVelpGroup;
+DROP VIEW IF EXISTS VelpInformation;
