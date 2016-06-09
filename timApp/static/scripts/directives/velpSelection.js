@@ -10,14 +10,18 @@ var timApp = angular.module('timApp');
 
 var colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "cornflowerblue", "coral", "goldenrod", "blue"];
 
+var UNDEFINED = "undefined";
+var console = window.console;
+
 /**
  * Angular directive for velp selection
  */
 timApp.directive('velpSelection', function () {
+    "use strict";
     return {
         templateUrl: "/static/templates/velpSelection.html",
         controller: 'VelpSelectionController'
-    }
+    };
 });
 
 /**
@@ -44,31 +48,33 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.submitted = {velp: false, velpGroup: false};
 
     $scope.groupAttachment = {target_type: 0, id: null};
-    // TODO: REMOVE DEFAULT VALUES
-    $scope.groupSelections = {"0": [], "7PjmRRcYcW9s": [1, 106], "0LmKONKLmxdu": [106]};
-    $scope.groupDefaults = {"0": [], "7PjmRRcYcW9s": [1]};
+
+    $scope.groupSelections = {};
+    $scope.groupDefaults = {};
 
     // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
     var doc_id = $scope.docId;
-    var par = 0;
-    var default_velp_group = -1; // TODO Use route to add this information
+    var default_velp_group = {"id": -1, name: "Does not exist" } ; // TODO Use route to add this information
 
-    var new_velp_id = 0; // get latest velp id
-    var new_label_id = 0; // get latest label id
     $scope.annotations = [];
-    // $scope.filteredVelpCount = 0;
+
 
 
     // Get default velpgroup data
     $http.get('/{0}/get_default_velp_group'.replace('{0}', doc_id)).success(function (data) {
-        console.log("Test");
-        default_velp_group = data.id;
-        console.log(default_velp_group);
+        console.log("Get default velp group");
+        default_velp_group = data;
+        default_velp_group.selected = true;
+        console.log(data);
     });
 
     // Get velpgroup data
     $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id)).success(function (data) {
         $scope.velpGroups = data;
+        if (default_velp_group.id < 0){
+            $scope.velpGroups.push(default_velp_group);
+        }
+        $scope.newVelp.velp_groups = [default_velp_group.id];
         console.log($scope.velpGroups);
 
         // Get velp and annotation data
@@ -77,9 +83,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             $scope.velps.forEach(function (v) {
                 v.used = 0;
                 v.edit = false;
-                if (v.labels === undefined)
+                if (typeof v.labels === UNDEFINED)
                     v.labels = [];
-            })
+            });
         });
 
         $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) {
@@ -94,6 +100,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
                 l.edit = false;
                 l.selected = false;
             });
+            console.log("labels!");
+            console.log($scope.labels);
         });
 
         $http.get('/{0}/get_velp_group_personal_selections'.replace('{0}', doc_id)).success(function (data) {
@@ -101,30 +109,21 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             if (!$scope.groupSelections.hasOwnProperty("0"))
                 $scope.groupSelections["0"] = [];
             var docSelections = $scope.groupSelections["0"];
-            console.log("Selections: ");
+            console.log("SELECTIONS: ");
             console.log($scope.groupSelections);
             $scope.velpGroups.forEach(function(g){
-                if (docSelections.indexOf(g.id) >= 0)
-                    g.show = true;
-                else
-                    g.show = false;
+                g.show = docSelections.indexOf(g.id) >= 0;
             });
         });
 
         $http.get('/{0}/get_velp_group_default_selections'.replace('{0}', doc_id)).success(function (data) {
             $scope.groupDefaults = data;
-            console.log(data);
-            if (!$scope.groupDefaults.hasOwnProperty("0"))
-                $scope.groupDefaults["0"] = [];
 
             var docDefaults = $scope.groupDefaults["0"];
             console.log("DEFAULTS: ");
-            console.log(data);
+            console.log($scope.groupDefaults);
             $scope.velpGroups.forEach(function(g){
-                if (docDefaults.indexOf(g.id) >= 0)
-                    g.default = true;
-                else
-                    g.default = false;
+                g.default = docDefaults.indexOf(g.id) >= 0;
             });
         });
     });
@@ -180,7 +179,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         var labelToAdd = {
             content: $scope.newLabel.content,
-            language_id: "FI", // TODO: Change to user lang
+            language_id: "FI", // TODO: Change to user language
             selected: false
         };
 
@@ -192,7 +191,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             velp.labels.push(labelToAdd.id);
         });
 
-        // TODO: add label to edited or new velp
     };
 
     $scope.isLabelInVelp = function (velp, label) {
@@ -211,36 +209,36 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         // Form is valid:
         form.$setPristine();
 
-        if ($scope.newVelp.velp_groups.length === 0) {
-            $scope.newVelp.velp_groups = [default_velp_group];
+        if ($scope.isGroupInVelp($scope.newVelp, default_velp_group) && default_velp_group.id === -1) {
+            // $scope.isGroupInVelp($scope.newVelp, -1);
+            //$scope.newVelp.velp_groups = [default_velp_group];
 
-            if (default_velp_group === -1) {
-                $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), null, function (json) {
-                    default_velp_group = (json.data.id);
-                    $scope.newVelp.velp_groups = [default_velp_group];
-                    if (json.data.created_new_group === true)
-                        $scope.velpGroups.push(json.data);
-                    addNewVelpToDatabase();
-                });
-            } else {
+            var old_default_group = default_velp_group;
+            $scope.generateDefaultVelpGroup(function () {
+
+                var oldGroupIndex = $scope.newVelp.velp_groups.indexOf(old_default_group.id); // -1 = old
+                if (oldGroupIndex >= 0)
+                    $scope.newVelp.velp_groups.splice(oldGroupIndex, 1);
+                $scope.newVelp.velp_groups.push(default_velp_group.id);
+
                 addNewVelpToDatabase();
-            }
+            });
 
-        } else {
+        } else if ($scope.newVelp.velp_groups.length > 0) {
             addNewVelpToDatabase();
         }
     };
 
     var addNewVelpToDatabase = function () {
         var velpToAdd = {
-            labels: $scope.newVelp["labels"],
+            labels: $scope.newVelp.labels,
             used: 0,
-            points: $scope.newVelp["points"],
-            content: $scope.newVelp["content"],
+            points: $scope.newVelp.points,
+            content: $scope.newVelp.content,
             language_id: "FI",
             icon_id: null,
             valid_until: null,
-            velp_groups: $scope.newVelp['velp_groups']
+            velp_groups: $scope.newVelp.velp_groups
 
         };
         console.log(velpToAdd);
@@ -265,7 +263,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     };
 
     $scope.selectLabelToEdit = function (label) {
-        if (label.id == $scope.labelToEdit.id && label.edit) {
+        if (label.id === $scope.labelToEdit.id && label.edit) {
             label.edit = false;
             $scope.labelToEdit = {content: "", selected: false, edit: false};
             return;
@@ -296,7 +294,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
     $scope.selectVelpToEdit = function (velp) {
 
-        if (velp.id == $scope.velpToEdit.id && velp.edit) {
+        if (velp.id === $scope.velpToEdit.id && velp.edit) {
             velp.edit = false;
             $scope.velpToEdit = {content: "", points: "", labels: [], edit: false};
             return;
@@ -314,14 +312,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         $scope.velpToEdit = (JSON.parse(JSON.stringify(velp)));
 
-
-        /*
-         if (velp.labels !== undefined) {
-         for (var i = 0; i < velp.labels.length; i++) {
-         $scope.toggleLabel($scope.getLabelById(velp.labels[i]));
-         }
-         }
-         */
     };
 
     /**
@@ -337,17 +327,52 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         // TODO: Make velpGroups to [{'id':1, 'selected':'True'}]
         console.log($scope.velpToEdit);
-        $scope.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), $scope.velpToEdit, function (json) {
-            console.log(json);
-        });
+
+        if ($scope.isGroupInVelp($scope.velpToEdit, default_velp_group) && default_velp_group.id === -1){
+
+            var old_default_group = default_velp_group;
+            $scope.generateDefaultVelpGroup(function () {
+
+                var oldGroupIndex = $scope.velpToEdit.velp_groups.indexOf(old_default_group.id); // -1 = old
+                if (oldGroupIndex >= 0)
+                    $scope.velpToEdit.velp_groups.splice(oldGroupIndex, 1);
+                $scope.velpToEdit.velp_groups.push(default_velp_group.id);
+
+                $scope.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), $scope.velpToEdit, function (json) {
+                    console.log(json);
+                });
+            });
+        } else if ($scope.velpToEdit.velp_groups.length > 0) {
+            $scope.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), $scope.velpToEdit, function (json) {
+                console.log(json);
+            });
+        }
+
+
+
 
         for (var i = 0; i < $scope.velps.length; i++) {
-            if ($scope.velps[i].id == $scope.velpToEdit.id) {
+            if ($scope.velps[i].id === $scope.velpToEdit.id) {
                 $scope.velpToEdit.edit = false;
                 $scope.velps[i] = $scope.velpToEdit;
                 break;
             }
         }
+    };
+
+    $scope.generateDefaultVelpGroup = function (method) {
+        $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), null, function (json) {
+            var new_default_velp_group = json.data;
+
+            var index = $scope.velpGroups.indexOf(default_velp_group);
+            $scope.velpGroups.splice(index, 1);
+
+            if ($scope.velpGroups.indexOf(new_default_velp_group) < 0)
+                $scope.velpGroups.push(new_default_velp_group);
+
+            default_velp_group = new_default_velp_group;
+            method();
+        });
     };
 
     /**
@@ -359,13 +384,13 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             return;
         }
 
+        var updatedLabel = null;
         for (var i = 0; i < $scope.labels.length; i++) {
-            if ($scope.labels[i].id == $scope.labelToEdit.id) {
-                // TODO: This works yet not
+            if ($scope.labels[i].id === $scope.labelToEdit.id) {
                 $scope.labelToEdit.edit = false;
                 $scope.labels[i].content = $scope.labelToEdit.content;
                 $scope.labels[i].edit = false;
-                var updatedLabel = $scope.labels[i];
+                updatedLabel = $scope.labels[i];
                 break;
             }
         }
@@ -373,20 +398,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         $scope.makePostRequest("/update_velp_label", updatedLabel, function (json) {
             console.log(json);
         });
-
-    };
-
-    /**
-     * Get velp by its id
-     * @param id velp to find
-     * @returns velp or undefined
-     */
-    $scope.getLabelById = function (id) {
-        for (var i = 0; i < $scope.labels.length; i++)
-            if ($scope.labels[i].id == id)
-                return $scope.labels[i];
-
-        return null;
     };
 
     /**
@@ -415,33 +426,36 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.updateVelpList = function(){
         var showGroupsInPar = [];
         var defaultGroupsInPar = [];
-        var add = false;
-        if ($scope.selectedElement != null && $scope.groupAttachment.target_type == 1){
-            add = true;
+
+        console.log($scope.selectedElement.id);
+
+        if ($scope.selectedElement.id !== null && $scope.groupAttachment.target_type === 1){
+            console.log("Täällä");
             if ($scope.groupSelections.hasOwnProperty($scope.selectedElement.id)){
+                console.log( $scope.groupSelections[$scope.selectedElement.id]);
                 showGroupsInPar = $scope.groupSelections[$scope.selectedElement.id];
             }
             if ($scope.groupDefaults.hasOwnProperty($scope.selectedElement.id)){
+                console.log( $scope.groupDefaults[$scope.selectedElement.id]);
                 defaultGroupsInPar = $scope.groupDefaults[$scope.selectedElement.id];
             }
         }
-        else if ($scope.groupAttachment.target_type == 0){
-            add = true;
+        else if ($scope.groupAttachment.target_type === 0){
             showGroupsInPar = $scope.groupSelections["0"];
             defaultGroupsInPar = $scope.groupDefaults["0"];
         }
 
-        if (add){
-        $scope.velpGroups.forEach(function(g){
-            g.show = false;
-            g.default = false;
-            var sel_ind = showGroupsInPar.indexOf(g.id);
-            var def_ind = defaultGroupsInPar.indexOf(g.id);
-            if (sel_ind >= 0)
-                g.show = true;
-            if (def_ind >= 0)
-                g.default = true;
-        })}
+
+            console.log(showGroupsInPar);
+            console.log(defaultGroupsInPar);
+            $scope.velpGroups.forEach(function (g) {
+                g.show = false;
+                g.default = false;
+
+                g.show = showGroupsInPar.indexOf(g.id) >= 0;
+                g.default =  defaultGroupsInPar.indexOf(g.id) >= 0;
+            });
+
     };
 
     $scope.addVelpGroup = function (form) {
@@ -462,7 +476,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         $scope.groupAttachment.target_type = parseInt($scope.groupAttachment.target_type);
 
-        if ($scope.groupAttachment.target_type == 1){
+        if ($scope.groupAttachment.target_type === 1){
             group.target_id = $scope.selectedElement.id;
             group.target_type = 1;
         } else {
@@ -470,13 +484,15 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             group.target_type = 0;
         }
 
+        var index;
         if (type === "show"){
             $scope.makePostRequest("/{0}/change_selection".replace('{0}', doc_id), group, function (json) {console.log(json);});
+
             if ($scope.groupSelections.hasOwnProperty(group.target_id))
-                var index = $scope.groupSelections[group.target_id].indexOf(group.id);
+                index = $scope.groupSelections[group.target_id].indexOf(group.id);
             else{
                 $scope.groupSelections[group.target_id] = [];
-                var index = -1;
+                index = -1;
             }
 
             if (index < 0 && group.show)
@@ -486,13 +502,15 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         }
         else if (type === "default"){
+            $scope.makePostRequest("/{0}/change_default_selection".replace('{0}', doc_id), group, function (json) {console.log(json);});
+
             if ($scope.groupDefaults.hasOwnProperty(group.target_id))
-                var index = $scope.groupDefaults[group.target_id].indexOf(group.id);
+                index = $scope.groupDefaults[group.target_id].indexOf(group.id);
             else {
                 $scope.groupDefaults[group.target_id] = [];
-                var index = -1;
+                index = -1;
             }
-            $scope.makePostRequest("/{0}/change_default_selection".replace('{0}', doc_id), group, function (json) {console.log(json);});
+
             if (index < 0 && group.default)
                 $scope.groupDefaults[group.target_id].push(group.id);
             else if (index >= 0 && !group.default)
@@ -507,22 +525,26 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         for (var i = 0; i < velp.velp_groups.length; i++) {
             for (var j = 0; j < $scope.velpGroups.length; j++) {
                 groups.push($scope.velpGroups[j]);
-                if (velp.velp_groups.indexOf($scope.velpGroups[j].id) >= 0) {
-                    groups[i].selected = true;
-                } else {
-                    groups[i].selected = false;
-                }
+                groups[i].selected = velp.velp_groups.indexOf($scope.velpGroups[j].id) >= 0;
             }
         }
         return groups;
     };
 
-    $scope.isSomeVelpGroupSelected=function(velp){
-        return velp.velp_groups.length !== 0;
+    $scope.isSomeVelpGroupSelected = function(velp){
+        if (typeof velp.velp_groups === UNDEFINED)
+            return false;
+        return velp.velp_groups.length > 0;
+    };
+
+    $scope.isVelpValid = function(velp){
+        if (typeof velp.content === UNDEFINED)
+            return false;
+        return $scope.isSomeVelpGroupSelected(velp) && velp.content.length > 0;
     };
 
     $scope.isGroupInVelp = function (velp, group) {
-        if (typeof velp.velp_groups == "undefined" || typeof group.id == "undefined")
+        if (typeof velp.velp_groups === UNDEFINED || typeof group.id === UNDEFINED)
             return false;
         return velp.velp_groups.indexOf(group.id) >= 0;
     };
@@ -540,32 +562,34 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 }]);
 
 timApp.filter('filterByVelpGroups', function () {
+    "use strict";
     return function (velps, groups) {
 
         var selected = [];
         var checkedGroups = [];
 
-        if (typeof groups == "undefined" || typeof velps == "undefined")
+        if (typeof groups === UNDEFINED || typeof velps === UNDEFINED)
             return velps;
 
         for (var j = 0; j < groups.length; j++)
             if (groups[j].show) checkedGroups.push(groups[j].id);
 
         for (var i = 0; i < velps.length; i++) {
-            for (var j = 0; j < checkedGroups.length; j++) {
-                if (velps[i].velp_groups.indexOf(checkedGroups[j]) >= 0 && selected.indexOf(velps[i]) < 0)
+            for (var k = 0; k < checkedGroups.length; k++) {
+                if (velps[i].velp_groups.indexOf(checkedGroups[k]) >= 0 && selected.indexOf(velps[i]) < 0)
                     selected.push(velps[i]);
             }
         }
 
         return selected;
-    }
+    };
 });
 
 /**
  * Filter for ordering velps
  */
 timApp.filter('filterByLabels', function () {
+    "use strict";
     return function (velps, labels, advancedOn) {
 
         var selectedVelps = {};
@@ -582,24 +606,20 @@ timApp.filter('filterByLabels', function () {
         }
 
         if (velps !== undefined) {
-            for (var i = 0; i < velps.length; i++) {
-                // return all velps if velp is under edit
-                /*if (velps[i].edit){
-                 return lockedVelps;
-                 }*/
+            for (var j = 0; j < velps.length; j++) {
 
-                for (var j = 0; j < selectedLabels.length; j++) {
-                    if (typeof velps[i].labels != "undefined" && velps[i].labels.indexOf(selectedLabels[j]) != -1)
-                        if (!(i in selectedVelps))
-                            selectedVelps[i] = [velps[i], 1];
+                for (var k = 0; k < selectedLabels.length; k++) {
+                    if (typeof velps[j].labels !== UNDEFINED && velps[j].labels.indexOf(selectedLabels[k]) !== -1)
+                        if (!(j in selectedVelps))
+                            selectedVelps[j] = [velps[j], 1];
                         else
-                            selectedVelps[i][1] += 1;
+                            selectedVelps[j][1] += 1;
                 }
             }
         }
 
         // return all velps if no labels selected
-        if (selectedLabels.length == 0)
+        if (selectedLabels.length === 0)
             return velps;
 
         var selectedArray = [];
@@ -611,11 +631,11 @@ timApp.filter('filterByLabels', function () {
         }
 
         selectedArray.sort(function (a, b) {
-            return b[1] - a[1]
+            return b[1] - a[1];
         });
 
-        for (var i = 0; i < selectedArray.length; i++)
-            returnVelps.push(selectedArray[i][0]);
+        for (var l = 0; l < selectedArray.length; l++)
+            returnVelps.push(selectedArray[l][0]);
 
         return returnVelps;
     };

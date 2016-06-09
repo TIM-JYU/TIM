@@ -332,8 +332,12 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
     cursor: pointer;
 }
 
+.annHeader {
+    font-size: 1.5rem;
+}
+
 .annotation-info{
-    line-height: 20px;
+    /*line-height: 20px;*/
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     font-size: 1.3rem;
     color: black;
@@ -361,7 +365,8 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 .annotation-info .comments li{
     width: 100%;
     font-size: 0.9em;
-    margin: 0;
+    margin-bottom: 0.5em;
+
 }
 
 .annotation-info ul.comments {
@@ -389,6 +394,27 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
     margin-top: 0.6em;
     font-size: 0.9em;
     resize: vertical;
+}
+
+.annotation-info .username {
+    font-size: 0.9rem;
+}
+
+.annotation-info .timestamp {
+    font-size: 0.9rem;
+    color: grey;
+}
+
+.annotation-info .popover.left > .arrow {
+    display: none;
+}
+
+.annotation-info .popover {
+    width: 25em;
+}
+
+.annTopSection {
+    line-height: 1.15em;
 }
 
 .annTable {

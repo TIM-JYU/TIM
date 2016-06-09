@@ -83,4 +83,4 @@ class VelpTest(TimRouteTest):
         self.assertEqual(-1, resp['id'])
         self.assertDictResponse({'error': 'User is not owner of current document'},
                                 self.json_post('/{}/create_default_velp_group'.format(str(doc2_id))),
-                                expect_status = 400)
+                                expect_status = 403)

@@ -222,6 +222,14 @@ CREATE TABLE VelpGroupDefaults (
   PRIMARY KEY (doc_id, target_id, velp_group_id)
 );
 
+CREATE TABLE VelpGroupLabel (
+  id      INTEGER NOT NULL,
+  content TEXT    NOT NULL,
+
+  CONSTRAINT VelpGroupLabel_PK
+  PRIMARY KEY (id)
+);
+
 
 CREATE TABLE LabelInVelpGroup (
   velp_group_id  INTEGER NOT NULL,
@@ -242,6 +250,17 @@ CREATE TABLE LabelInVelpGroup (
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
+
+
+CREATE VIEW VelpInformation AS
+  SELECT
+    VelpVersion.id,
+    VelpVersion.velp_id,
+    VelpContent.language_id,
+    VelpContent.content,
+    VelpVersion.modify_time
+  FROM VelpVersion
+    INNER JOIN VelpContent ON VelpVersion.id = VelpContent.version_id;
 
 
 -- IMPORTANT! THIS IS EXAMPLE DATA. YOU SHOULD PROBABLY DELETE IT BEFORE RUNNING IN PRODUCTION.
