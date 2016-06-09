@@ -48,9 +48,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.submitted = {velp: false, velpGroup: false};
 
     $scope.groupAttachment = {target_type: 0, id: null};
-    // TODO: REMOVE DEFAULT VALUES
-    $scope.groupSelections = {"0": [], "7PjmRRcYcW9s": [1, 106], "0LmKONKLmxdu": [106]};
-    $scope.groupDefaults = {"0": [], "7PjmRRcYcW9s": [1]};
+
+    $scope.groupSelections = {};
+    $scope.groupDefaults = {};
 
     // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
     var doc_id = $scope.docId;
@@ -109,7 +109,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             if (!$scope.groupSelections.hasOwnProperty("0"))
                 $scope.groupSelections["0"] = [];
             var docSelections = $scope.groupSelections["0"];
-            console.log("Selections: ");
+            console.log("SELECTIONS: ");
             console.log($scope.groupSelections);
             $scope.velpGroups.forEach(function(g){
                 g.show = docSelections.indexOf(g.id) >= 0;
@@ -118,13 +118,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         $http.get('/{0}/get_velp_group_default_selections'.replace('{0}', doc_id)).success(function (data) {
             $scope.groupDefaults = data;
-            console.log(data);
-            if (!$scope.groupDefaults.hasOwnProperty("0"))
-                $scope.groupDefaults["0"] = [];
 
             var docDefaults = $scope.groupDefaults["0"];
             console.log("DEFAULTS: ");
-            console.log(data);
+            console.log($scope.groupDefaults);
             $scope.velpGroups.forEach(function(g){
                 g.default = docDefaults.indexOf(g.id) >= 0;
             });
@@ -429,34 +426,36 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.updateVelpList = function(){
         var showGroupsInPar = [];
         var defaultGroupsInPar = [];
-        var add = false;
-        if ($scope.selectedElement !== null && $scope.groupAttachment.target_type === 1){
-            add = true;
+
+        console.log($scope.selectedElement.id);
+
+        if ($scope.selectedElement.id !== null && $scope.groupAttachment.target_type === 1){
+            console.log("Täällä");
             if ($scope.groupSelections.hasOwnProperty($scope.selectedElement.id)){
+                console.log( $scope.groupSelections[$scope.selectedElement.id]);
                 showGroupsInPar = $scope.groupSelections[$scope.selectedElement.id];
             }
             if ($scope.groupDefaults.hasOwnProperty($scope.selectedElement.id)){
+                console.log( $scope.groupDefaults[$scope.selectedElement.id]);
                 defaultGroupsInPar = $scope.groupDefaults[$scope.selectedElement.id];
             }
         }
         else if ($scope.groupAttachment.target_type === 0){
-            add = true;
             showGroupsInPar = $scope.groupSelections["0"];
             defaultGroupsInPar = $scope.groupDefaults["0"];
         }
 
-        if (add){
+
+            console.log(showGroupsInPar);
+            console.log(defaultGroupsInPar);
             $scope.velpGroups.forEach(function (g) {
                 g.show = false;
                 g.default = false;
-                var sel_ind = showGroupsInPar.indexOf(g.id);
-                var def_ind = defaultGroupsInPar.indexOf(g.id);
-                if (sel_ind >= 0)
-                    g.show = true;
-                if (def_ind >= 0)
-                    g.default = true;
+
+                g.show = showGroupsInPar.indexOf(g.id) >= 0;
+                g.default =  defaultGroupsInPar.indexOf(g.id) >= 0;
             });
-        }
+
     };
 
     $scope.addVelpGroup = function (form) {
@@ -503,18 +502,21 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         }
         else if (type === "default"){
+            $scope.makePostRequest("/{0}/change_default_selection".replace('{0}', doc_id), group, function (json) {console.log(json);});
+
             if ($scope.groupDefaults.hasOwnProperty(group.target_id))
                 index = $scope.groupDefaults[group.target_id].indexOf(group.id);
             else {
                 $scope.groupDefaults[group.target_id] = [];
                 index = -1;
             }
-            $scope.makePostRequest("/{0}/change_default_selection".replace('{0}', doc_id), group, function (json) {console.log(json);});
+
             if (index < 0 && group.default)
                 $scope.groupDefaults[group.target_id].push(group.id);
             else if (index >= 0 && !group.default)
                 $scope.groupDefaults[group.target_id].splice(index, 0);
         }
+
     };
 
     $scope.getVelpsVelpGroups = function (velp) {

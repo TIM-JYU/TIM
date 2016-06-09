@@ -337,7 +337,7 @@ class VelpGroups(Documents):
         """
         cursor = self.db.cursor()
         cursor.execute("""
-                      SELECT
+                      SELECT DISTINCT
                       VelpGroupDefaults.target_id, VelpGroupDefaults.velp_group_id
                       FROM VelpGroupDefaults
                       LEFT JOIN VelpGroupSelection ON VelpGroupSelection.doc_id = VelpGroupDefaults.doc_id

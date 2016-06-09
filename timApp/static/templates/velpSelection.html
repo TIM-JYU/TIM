@@ -249,8 +249,8 @@
 
                         <h5>Otsikko tähän</h5>
                         <fieldset>
-                        <input type="radio" ng-click="updateVelpList()" ng-model="groupAttachment.target_type" value="0" name="selArea" checked="checked" id="selDoc"><label for="selDoc"> Document</label><br>
-                        <input type="radio" ng-click="updateVelpList()" ng-model="groupAttachment.target_type" value="1" name="selArea" id="selPar" ng-class="{disbled: selectedElement == null}" ng-disabled="selectedElement == null">
+                        <input type="radio" ng-click="updateVelpList()" ng-model="groupAttachment.target_type" ng-value="0" name="selArea" id="selDoc"><label for="selDoc"> Document</label><br>
+                        <input type="radio" ng-click="updateVelpList()" ng-model="groupAttachment.target_type" ng-value="1" name="selArea" id="selPar" ng-class="{disbled: selectedElement == null}" ng-disabled="selectedElement == null">
                         <label for="selPar"> Selected paragraph</label>
                         </fieldset>
                             <tr>
@@ -277,11 +277,11 @@
                                                             placeholder="Velp group name" required></p>
                         <fieldset>
                             <p><input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioPar"
-                                      value="0" checked="checked"> <label for="radioPar">Personal collection</label><br>
+                                      ng-value="0" checked="checked"> <label for="radioPar">Personal collection</label><br>
                                 <input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioDoc"
-                                       value="1"> <label for="radioDoc">Document</label><br>
+                                      ng-value="1"> <label for="radioDoc">Document</label><br>
                                 <input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioFolder"
-                                       value="2"> <label for="radioFolder">Folder</label></p>
+                                      ng-value="2"> <label for="radioFolder">Folder</label></p>
                         </fieldset>
 
                         <p><input type="submit" class="timButton" value="Create velpgroup"></p>
