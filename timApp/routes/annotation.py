@@ -9,7 +9,11 @@ annotations = Blueprint('annotations',
 
 # TODO connect the routes in this file to the ui.
 @annotations.route("/add_annotation", methods=['POST'])
-def add_annotation() -> str:
+def add_annotation() -> dict():
+    """Creates a new annotation.
+
+    :return:
+    """
     json_data = request.get_json()
     print(json_data)
     timdb = getTimDb()
@@ -69,79 +73,100 @@ def add_annotation() -> str:
                                                  paragraph_id_start, paragraph_id_end, offset_start, node_start,
                                                  depth_start, offset_end, node_end, depth_end, hash_start, hash_end,
                                                  element_path_start, element_path_end, None, icon_id, answer_id)
+
     return jsonResponse({"id": new_id, "annotator_name": timdb.users.get_user(annotator_id)['name']})
 
 
 @annotations.route("/update_annotation", methods=['POST'])
-def update_annotation() -> str:
+def update_annotation():
+    """Updates annotation visibility and/or points.
+
+    :return: okJsonResponse()
+    """
     verifyLoggedIn()
     user_id = getCurrentUserId()
     json_data = request.get_json()
     try:
         annotation_id = json_data['annotation_id']
     except KeyError as e:
-        abort(400, "Missing data: " + e.args[0])
+        return abort(400, "Missing data: " + e.args[0])
     visible_to = json_data.get('visible_to')
     points = json_data.get('points')
     timdb = getTimDb()
     # Get values from the database to fill in unchanged new values.
     new_values = timdb.annotations.get_annotation(annotation_id)
     if not new_values:
-        abort(404, "No such annotation.")
+        return abort(404, "No such annotation.")
     new_values = new_values[0]
     # Todo panic if there is more than one item in the list.
     if not new_values['annotator_id'] == user_id:
-        abort(403, "You are not the annotator.")
+        return abort(403, "You are not the annotator.")
     if visible_to:
         try:
             visible_to = Annotations.AnnotationVisibility(visible_to)
         except ValueError as e:
-            abort(400, "Visibility should be 1, 2, 3 or 4.")
+            return abort(400, "Visibility should be 1, 2, 3 or 4.")
         new_values['visible_to'] = visible_to
     new_values['points'] = points
     timdb.annotations.update_annotation(new_values['id'], new_values['velp_version_id'], new_values['visible_to'],
                                         new_values['points'], new_values['icon_id'])
-    return ""
+    return okJsonResponse()
 
 
 @annotations.route("/invalidate_annotation", methods=['POST'])
-def invalidate_annotation() -> str:
+def invalidate_annotation():
+    """Invalidates annotation by setting its valid from to current moment
+
+    :return: okJsonResponse()
+    """
     json_data = request.get_json()
     try:
         annotation_id = json_data['annotation_id']
     except KeyError as e:
-        abort(400, "Missing data: " + e.args[0])
+        return abort(400, "Missing data: " + e.args[0])
     timdb = getTimDb()
     annotation = timdb.annotations.get_annotation(annotation_id)
     if not annotation:
-        abort(404, "No such annotation.")
+        return abort(404, "No such annotation.")
     annotation = annotation[0]
     verifyLoggedIn()
     user_id = getCurrentUserId()
     if not annotation['annotator_id'] == user_id:
-        abort(403, "You are not the annotator.")
+        return abort(403, "You are not the annotator.")
+    # TODO: Add option to choose when annotation gets invalidated
     timdb.annotations.invalidate_annotation(annotation_id)
-    return ""
+
+    return okJsonResponse()
 
 
 @annotations.route("/add_annotation_comment", methods=['POST'])
-def add_comment() -> str:
+def add_comment() -> dict():
+    """Adds new comment to annotation.
+
+    :return: Dictionary of information about user who added the comment
+    """
     json_data = request.get_json()
     try:
         annotation_id = json_data['annotation_id']
         content = json_data['content']
     except KeyError as e:
-        abort(400, "Missing data: " + e.args[0])
+        return abort(400, "Missing data: " + e.args[0])
     # Todo maybe check that content isn't an empty string
     timdb = getTimDb()
     verifyLoggedIn()
     commenter_id = getCurrentUserId()
     timdb.annotations.add_comment(annotation_id, commenter_id, content)
+
     return jsonResponse(timdb.users.get_user(commenter_id))
 
 
 @annotations.route("/<int:doc_id>/get_annotations", methods=['GET'])
-def get_annotations(doc_id: int) -> str:
+def get_annotations(doc_id: int):
+    """Returns all annotations with comments user can see / has access to in a document.
+
+    :param doc_id: ID of document
+    :return: List of dictionaries containing annotations with comments
+    """
     timdb = getTimDb()
     user_id = getCurrentUserId()
     if not timdb.documents.exists(doc_id):

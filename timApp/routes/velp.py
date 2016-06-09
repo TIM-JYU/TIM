@@ -13,10 +13,11 @@ velps = Blueprint('velps',
 
 
 @velps.route("/<int:doc_id>/get_default_velp_group", methods=['GET'])
-def get_default_velp_group(doc_id: int):
-    """Get default velp group id and if default velp group doesn't exist yet, create one
+def get_default_velp_group(doc_id: int) -> dict():
+    """Get default velp group id and if default velp group doesn't exist yet, create one.
 
-    :return: Doc id
+    :param doc_id: ID of document
+    :return: Dictionary containing default velp group's ID and name
     """
 
     timdb = getTimDb()
@@ -24,7 +25,7 @@ def get_default_velp_group(doc_id: int):
 
     owner_group_id = timdb.documents.get_owner(doc_id)
     full_path = timdb.documents.get_first_document_name(doc_id)
-    doc_name = os.path.basename(full_path)
+    doc_path, doc_name = timdb.documents.split_location(full_path)
 
     # Check if document's path contains velp groups folder and if it does, make document its own default velp group
     if "velp groups/" in full_path:
@@ -33,12 +34,6 @@ def get_default_velp_group(doc_id: int):
         timdb.velp_groups.add_groups_to_selection_table(velp_group, doc_id, user_id)
         print("Document is a velp group, made default velp group to point itself")
         return jsonResponse({"id": doc_id, "name": "Default"})
-
-    # Problems arise if document is located in [root] folder, this check fixes that
-    if len(full_path) - len(doc_name) - 1 < len(doc_name):
-        doc_path = ""
-    else:
-        doc_path = full_path[:len(full_path) - len(doc_name) - 1]
 
     found_velp_groups = timdb.documents.get_documents_in_folder(doc_path + "/" + "velp groups" + "/" + doc_name)
     velp_groups = []
@@ -49,14 +44,14 @@ def get_default_velp_group(doc_id: int):
     if default_group is not None:
         return jsonResponse(default_group)
 
-    return jsonResponse({"id": -1, "name": "Does not exist"})
+    return jsonResponse({"id": -1, "name": doc_name + "_default"})
 
 
 @velps.route("/<int:doc_id>/get_velps", methods=['GET'])
 def get_velps(doc_id: int):
-    """Get all velps for document user has access to
+    """Get all velps for document user has access to.
 
-    :param document_id: ID of document
+    :param doc_id: ID of document
     :return: List of velps as dictionaries containing all needed information
     """
     timdb = getTimDb()
@@ -71,10 +66,10 @@ def get_velps(doc_id: int):
 
 @velps.route("/<int:doc_id>/get_velp_groups", methods=['GET'])
 def get_velp_groups(doc_id: int):
-    """Gets all velp groups for document user has access to by using VelpGroupSelection table
+    """Gets all velp groups for document user has access to by using VelpGroupSelection table.
 
-    :param document_id: ID of document
-    :return:
+    :param doc_id: ID of document
+    :return: List of dictionaries containing velp group information
     """
     timdb = getTimDb()
     user_id = getCurrentUserId()
@@ -102,25 +97,25 @@ def get_velp_groups(doc_id: int):
     return jsonResponse(all_velp_groups)
 
 @velps.route("/<int:doc_id>/get_velp_group_personal_selections", methods=['GET'])
-def get_velp_group_personal_selections(doc_id: int):
-    """Gets default velp group selections for velp groups user has access to in document
+def get_velp_group_personal_selections(doc_id: int) -> dict():
+    """Gets default velp group selections for velp groups user has access to in document.
 
-    :param document_id: ID of document
-    :return:
+    :param doc_id: ID of document
+    :return: Dictionary containing list of selected velp groups for each target area IDs
     """
     timdb = getTimDb()
     user_id = getCurrentUserId()
-    velp_group_defaults = timdb.velp_groups.get_personal_selections_for_velp_groups(doc_id, user_id)
+    velp_group_selections = timdb.velp_groups.get_personal_selections_for_velp_groups(doc_id, user_id)
 
-    return jsonResponse(velp_group_defaults)
+    return jsonResponse(velp_group_selections)
 
 
 @velps.route("/<int:doc_id>/get_velp_group_default_selections", methods=['GET'])
-def get_velp_group_default_selections(doc_id: int):
+def get_velp_group_default_selections(doc_id: int) -> dict():
     """Gets default velp group selections for velp groups user has access to in document
 
-    :param document_id: ID of document
-    :return:
+    :param doc_id: ID of document
+    :return: Dictionary containing list of default velp groups for each target area IDs
     """
     timdb = getTimDb()
     user_id = getCurrentUserId()
@@ -131,10 +126,10 @@ def get_velp_group_default_selections(doc_id: int):
 
 @velps.route("/<int:doc_id>/get_velp_labels", methods=['GET'])
 def get_velp_labels(doc_id: int) -> 'str':
-    """Gets all velp labels for document user has access to by using VelpGroupSelection table
+    """Gets all velp labels for document user has access to by using VelpGroupSelection table.
 
-    :param document_id: ID of document
-    :return:
+    :param doc_id: ID of document
+    :return: List of dicts containing velp label IDs and content for the document
     """
     timdb = getTimDb()
     # Todo select language.
@@ -145,8 +140,8 @@ def get_velp_labels(doc_id: int) -> 'str':
 
 
 @velps.route("/add_velp", methods=['POST'])
-def add_velp():
-    """Creates a new velp and adds it to velp groups user chose
+def add_velp() -> int:
+    """Creates a new velp and adds it to velp groups user chose.
 
     :return: ID of new velp
     """
@@ -209,9 +204,10 @@ def add_velp():
 
 @velps.route("/<int:doc_id>/update_velp", methods=['POST'])
 def update_velp(doc_id: int):
-    """Updates velp data
+    """Updates velp data.
 
-    :return:
+    :param doc_id: ID of document
+    :return: okJsonResponse
     """
 
     try:
@@ -282,12 +278,13 @@ def update_velp(doc_id: int):
     if old_labels != new_labels:
         timdb.velps.update_velp_labels(velp_id, new_labels)
     timdb.velps.update_velp(velp_id, default_points, icon_id)
-    return ""  # TODO: return something more informative
+
+    return okJsonResponse()
 
 
 @velps.route("/add_velp_label", methods=["POST"])
-def add_label():
-    """Creates new velp label
+def add_label() -> int:
+    """Creates new velp label.
 
     :return: ID of new velp label
     """
@@ -307,9 +304,9 @@ def add_label():
 
 @velps.route("/update_velp_label", methods=["POST"])
 def update_velp_label():
-    """Updates velp label content
+    """Updates velp label content.
 
-    :return:
+    :return: okJsonResponse
     """
     json_data = request.get_json()
     print(json_data)
@@ -325,15 +322,15 @@ def update_velp_label():
     # TODO: Add some check so a random person can't use the route?
     timdb.velps.update_velp_label(velp_label_id, language_id, content)
 
-    return ""
+    return okJsonResponse()
 
 
 @velps.route("/<int:doc_id>/change_selection", methods=["POST"])
 def change_selection(doc_id: int):
-    """Change selection for velp group in users VelpGroupSelection in current document
+    """Change selection for velp group in users VelpGroupSelection in current document.
 
-    :param document_id: ID of document
-    :return:
+    :param doc_id: ID of document
+    :return: okJsonResponse
     """
 
     json_data = request.get_json()
@@ -349,14 +346,14 @@ def change_selection(doc_id: int):
     timdb = getTimDb()
     timdb.velp_groups.change_selection(doc_id, velp_group_id, target_type, target_id, user_id, selection)
 
-    return ""
+    return okJsonResponse()
 
 @velps.route("/<int:doc_id>/change_default_selection", methods=["POST"])
 def change_default_selection(doc_id: int):
     """Change selection for velp group in users VelpGroupSelection in current document
 
-    :param document_id: ID of document
-    :return:
+    :param doc_id: ID of document
+    :return: okJsonResponse
     """
 
     json_data = request.get_json()
@@ -367,17 +364,21 @@ def change_default_selection(doc_id: int):
         selection = json_data['default']
     except KeyError as e:
         return abort(400, "Missing data: " + e.args[0])
-        return
     verifyLoggedIn()
     user_id = getCurrentUserId()
     timdb = getTimDb()
     if timdb.users.has_manage_access(user_id, doc_id):
         timdb.velp_groups.change_default_selection(doc_id, velp_group_id, target_type, target_id, selection)
 
-    return ""
+    return okJsonResponse()
 
 @velps.route("/<int:doc_id>/create_velp_group", methods=['POST'])
-def create_velp_group(doc_id: int):
+def create_velp_group(doc_id: int) -> dict():
+    """Creates a new velp group
+
+    :param doc_id: ID of document
+    :return: Dictionary containing information of new velp group
+    """
 
     json_data = request.get_json()
     try:
@@ -404,8 +405,6 @@ def create_velp_group(doc_id: int):
         new_group_path = user_velp_path + "/" + velp_group_name
         group_exists = timdb.documents.resolve_doc_id_name(new_group_path)
         if group_exists is None:
-            # new_group = timdb.documents.create(new_group_path, user_group_id)
-            # new_group_id = new_group.doc_id
             velp_group_id = timdb.velp_groups.create_velp_group(velp_group_name, user_group_id, new_group_path)
         else:
             return abort(400, "Velp group with same name and location exists already.")
@@ -443,6 +442,11 @@ def create_velp_group(doc_id: int):
 
 @velps.route("/<int:doc_id>/create_default_velp_group", methods=['POST'])
 def create_default_velp_group(doc_id: int):
+    """Creates a default velp group document or changes existing document to default velp group.
+
+    :param doc_id: ID of document
+    :return: Dictionary containing information of new default velp group
+    """
 
     timdb = getTimDb()
 
