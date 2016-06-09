@@ -426,31 +426,36 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.updateVelpList = function(){
         var showGroupsInPar = [];
         var defaultGroupsInPar = [];
-        var add = false;
-        console.log($scope.groupAttachment.target_type);
-        if ($scope.selectedElement !== null && $scope.groupAttachment.target_type === 1){
-            add = true;
+
+        console.log($scope.selectedElement.id);
+
+        if ($scope.selectedElement.id !== null && $scope.groupAttachment.target_type === 1){
+            console.log("Täällä");
             if ($scope.groupSelections.hasOwnProperty($scope.selectedElement.id)){
+                console.log( $scope.groupSelections[$scope.selectedElement.id]);
                 showGroupsInPar = $scope.groupSelections[$scope.selectedElement.id];
             }
             if ($scope.groupDefaults.hasOwnProperty($scope.selectedElement.id)){
+                console.log( $scope.groupDefaults[$scope.selectedElement.id]);
                 defaultGroupsInPar = $scope.groupDefaults[$scope.selectedElement.id];
             }
         }
         else if ($scope.groupAttachment.target_type === 0){
-            add = true;
             showGroupsInPar = $scope.groupSelections["0"];
             defaultGroupsInPar = $scope.groupDefaults["0"];
         }
 
-        if (add){
+
             console.log(showGroupsInPar);
             console.log(defaultGroupsInPar);
             $scope.velpGroups.forEach(function (g) {
+                g.show = false;
+                g.default = false;
+
                 g.show = showGroupsInPar.indexOf(g.id) >= 0;
                 g.default =  defaultGroupsInPar.indexOf(g.id) >= 0;
             });
-        }
+
     };
 
     $scope.addVelpGroup = function (form) {
@@ -497,18 +502,21 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         }
         else if (type === "default"){
+            $scope.makePostRequest("/{0}/change_default_selection".replace('{0}', doc_id), group, function (json) {console.log(json);});
+
             if ($scope.groupDefaults.hasOwnProperty(group.target_id))
                 index = $scope.groupDefaults[group.target_id].indexOf(group.id);
             else {
                 $scope.groupDefaults[group.target_id] = [];
                 index = -1;
             }
-            $scope.makePostRequest("/{0}/change_default_selection".replace('{0}', doc_id), group, function (json) {console.log(json);});
+
             if (index < 0 && group.default)
                 $scope.groupDefaults[group.target_id].push(group.id);
             else if (index >= 0 && !group.default)
                 $scope.groupDefaults[group.target_id].splice(index, 0);
         }
+
     };
 
     $scope.getVelpsVelpGroups = function (velp) {

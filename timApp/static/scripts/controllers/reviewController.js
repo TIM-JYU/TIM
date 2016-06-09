@@ -316,7 +316,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.clearVelpBadge = function (e) {
         var btn = document.getElementById("velpBadge");
         var parent = getElementParent(btn);
-        console.log(parent);
         parent.removeChild(btn);
 
         if (e !== null) {
@@ -434,7 +433,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         var newElement = $scope.selectedElement;
         $scope.updateVelpBadge(oldElement, newElement);
-        $scope.updateVelpList();
+        if (newElement !== null)
+            $scope.updateVelpList();
     };
 
     /**
