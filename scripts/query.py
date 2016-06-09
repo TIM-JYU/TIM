@@ -1,12 +1,9 @@
 #!/usr/bin/python3
 import sqlite3
 import os
-import sys
 import time
 
-DBFILE = 'tim_files/tim.db'
-STDOUT = sys.stdout
-STDERR = sys.stderr
+from _script_common import *
 
 
 def show_tables(db):
@@ -32,14 +29,6 @@ def command_help(db = None, params=None):
     stderr()
 
 
-def stdout(s=''):
-    print(s, file=STDOUT)
-
-
-def stderr(s=''):
-    print(s, file=STDERR)
-
-
 def command_show(db, params):
     # Only "show tables" for now
     show_tables(db)
@@ -59,8 +48,7 @@ def command_out(db, params):
         stderr('Syntax: OUT <filename|stdout>\n')
         return
 
-    global STDOUT
-    STDOUT = sys.stdout if params[0].lower() == 'stdout' else open(params[0], 'w')
+    set_stdout(None if params[0].lower() == 'stdout' else params[0])
 
 
 def interpret_sql(db, command):
@@ -141,5 +129,5 @@ def main():
 
 if __name__ == '__main__':
     main()
-    STDOUT.close()
-    STDERR.close()
+    close_stdout()
+

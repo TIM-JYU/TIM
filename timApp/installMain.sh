@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 # Set locale
 env LANG en_US.utf8
@@ -88,4 +89,4 @@ apt-get install -y openssh-server
 run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
 
 # Default startup command
-# cmd cd /service/timApp && source initenv.sh && python3 launch.py
+# cmd cd /service/timApp && source /service/scripts/_initenv.sh && python3 launch.py
