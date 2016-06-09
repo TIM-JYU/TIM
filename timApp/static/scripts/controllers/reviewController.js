@@ -415,7 +415,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         } catch (err) {
             console.log("error in method selectText");
             console.log(err);
-            return;
+            //return;
         }
 
         if ($scope.selectedArea !== null){
