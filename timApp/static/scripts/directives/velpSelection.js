@@ -332,8 +332,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         console.log($scope.velpToEdit);
 
         if ($scope.isGroupInVelp($scope.velpToEdit, default_velp_group) && default_velp_group.id === -1){
-            var old_default_group = default_velp_group;
 
+            var old_default_group = default_velp_group;
             $scope.generateDefaultVelpGroup(function () {
 
                 var oldGroupIndex = $scope.velpToEdit.velp_groups.indexOf(old_default_group.id); // -1 = old
