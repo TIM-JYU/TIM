@@ -431,19 +431,17 @@ class VelpGroups(Documents):
         :return:
         """
         cursor = self.db.cursor()
-        if selected is False:
-            cursor.execute("""
-                          DELETE FROM VelpGroupDefaults
-                          WHERE doc_id = ? AND velp_group_id = ? AND target_type = ? AND target_id = ?
-                          """, [doc_id, velp_group_id, target_type, target_id]
-                          )
-        else:
-            cursor.execute("""
-                          INSERT INTO
-                          VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)
-                          SELECT ?, ?, ?, ?, ?
-                            """, [doc_id, target_type, target_id, selected, velp_group_id]
-                          )
+        cursor.execute("""
+                      DELETE FROM VelpGroupDefaults
+                      WHERE doc_id = ? AND velp_group_id = ? AND target_type = ? AND target_id = ?
+                      """, [doc_id, velp_group_id, target_type, target_id]
+                      )
+        cursor.execute("""
+                      INSERT OR IGNORE INTO
+                      VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)
+                      SELECT ?, ?, ?, ?, ?
+                      """, [doc_id, target_type, target_id, selected, velp_group_id]
+                      )
         self.db.commit()
 
     # Unused methods
