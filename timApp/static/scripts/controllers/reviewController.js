@@ -305,7 +305,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         } else if (oldElment === null){
             addElementToParagraphMargin(newElement, createVelpBadge(newElement.id));
         } else if (oldElment.id !== newElement.id){
-            $scope.clearVelpBadge();
+            $scope.clearVelpBadge(null);
             addElementToParagraphMargin(newElement, createVelpBadge(newElement.id));
         }
     };
