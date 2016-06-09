@@ -444,7 +444,7 @@ class VelpGroups(Documents):
                           SELECT ?, ?, ?, ?, ?
                             """, [doc_id, target_type, target_id, selected, velp_group_id]
                           )
-            self.db.commit()
+        self.db.commit()
 
     # Unused methods
 
