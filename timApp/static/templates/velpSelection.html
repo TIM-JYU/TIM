@@ -103,10 +103,13 @@
                                     <fieldset ng-show="advancedOn">
                                         <legend>Velp groups</legend>
                                         <span ng-repeat="gr in velpGroups">
-                                            <label><input type="checkbox"
+                                            <span ng-if="gr.edit_access">
+                                                <label><input type="checkbox"
                                                           ng-click="updateVelpGroups(newVelp, gr)"
                                                           ng-checked="gr.selected"
-                                                          > {{ gr.name }}</label><br>
+                                                          > {{ gr.name }}</label>
+                                                <br>
+                                            </span>
                                         </span>
                                     </fieldset>
                                     <p class="error" ng-show="!isSomeVelpGroupSelected(newVelp)">
@@ -201,7 +204,8 @@
                                                     <span ng-repeat="g in velpGroups">
                                                         <label><input type="checkbox"
                                                                       ng-click="updateVelpGroups(velpToEdit, g)"
-                                                                      ng-checked="isGroupInVelp(velpToEdit, g)"> {{ g.name }}
+                                                                      ng-checked="isGroupInVelp(velpToEdit, g)"
+                                                                      ng-disabled="g.edit_access"> {{ g.name }}
                                                         </label><br>
                                                     </span>
                                                 </fieldset>

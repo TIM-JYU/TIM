@@ -117,14 +117,14 @@ class Velps(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT
-                      MAX(id)
+                      MAX(id),content
                       FROM
                       VelpInformation
                       WHERE velp_id = ? AND language_id = ?
                       """, [velp_id, language_id]
                        )
-        velp_version = cursor.fetchone()[0]
-        return velp_version
+        row = cursor.fetchone()
+        return {"id":row[0], "content":row[1]}
 
     # Methods concerning velp labels
 

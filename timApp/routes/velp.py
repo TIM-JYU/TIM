@@ -269,7 +269,7 @@ def update_velp(doc_id: int):
         timdb.velp_groups.remove_velp_from_groups(velp_id, groups_to_remove)
         timdb.velp_groups.add_velp_to_groups(velp_id, groups_to_add)
 
-    old_content = timdb.velps.get_latest_velp_version(velp_id, language_id)
+    old_content = timdb.velps.get_latest_velp_version(velp_id, language_id)['content']
     old_labels = timdb.velps.get_velp_label_ids_for_velp(velp_id)
     if old_content != new_content:
         # Todo this does not really work correctly, now any update to any language creates a new version, and we can not
