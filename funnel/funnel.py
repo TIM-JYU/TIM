@@ -15,6 +15,8 @@ MAIL_DIR = "/service/mail"
 EMAIL_HEADERS = {'From': 'no-reply@tim.jyu.fi',
                  'Rcpt-To': None,
                  'Reply-To': None,
+                 'Group-Id': None,
+                 'Group-Subject': None,
                  'Subject': 'TIM Notification'}
 
 class Funnel:
