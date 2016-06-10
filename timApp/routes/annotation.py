@@ -68,8 +68,9 @@ def add_annotation() -> dict():
         return abort(400, "Missing data: " + e.args[0])
     verifyLoggedIn()
     annotator_id = getCurrentUserId()
-    velp_version = timdb.velps.get_latest_velp_version(velp_id)
-    new_id = timdb.annotations.create_annotation(velp_version, visible_to, points, annotator_id, document_id,
+    velp_version_id = timdb.velps.get_latest_velp_version(velp_id)["id"]
+
+    new_id = timdb.annotations.create_annotation(velp_version_id, visible_to, points, annotator_id, document_id,
                                                  paragraph_id_start, paragraph_id_end, offset_start, node_start,
                                                  depth_start, offset_end, node_end, depth_end, hash_start, hash_end,
                                                  element_path_start, element_path_end, None, icon_id, answer_id)

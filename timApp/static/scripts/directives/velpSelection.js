@@ -65,6 +65,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         console.log("Get default velp group");
         default_velp_group = data;
         default_velp_group.selected = true;
+        default_velp_group.edit_access = true;
         console.log(data);
     });
 
@@ -517,7 +518,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.checkShowsToDefaults = function (){
         $scope.groupSelections = JSON.parse(JSON.stringify($scope.groupDefaults));
 
-        $scope.makePostRequest("/{0}/change_selections_to_defaults".replace('{0}', doc_id), $scope.groupSelections, function (json) {
+        $scope.makePostRequest("/{0}/change_selections_to_defaults".replace('{0}', doc_id), null, function (json) {
             $scope.updateVelpList();
         });
     };

@@ -5,10 +5,15 @@
  * custom elements reliably.
  */
 
-'use strict';
+/*
+var angular;
+var timApp = angular.module('timApp');
+*/
+var console = window.console;
 
 /* Directive for marking */
 timApp.directive("annotation", function() {
+
     return{
         templateUrl: "/static/templates/annotation.html",
         transclude: true,
@@ -104,8 +109,6 @@ timApp.directive("annotation", function() {
                 scope.$parent.makePostRequest("/update_annotation", scope.original, function (json) {
                     console.log(json);
                 });
-
-
             };
 
             scope.checkIfChanged = function () {
@@ -113,7 +116,7 @@ timApp.directive("annotation", function() {
                     return true;
                 if (scope.original.comment !== scope.newComment)
                     return true;
-                if (scope.original.visible_to != scope.visible_options.value)
+                if (scope.original.visible_to !== scope.visible_options.value)
                     return true;
                 if (scope.original.velp !== scope.velp)
                     return true;
@@ -121,7 +124,7 @@ timApp.directive("annotation", function() {
             };
 
         }
-    }
+    };
 });
 
 

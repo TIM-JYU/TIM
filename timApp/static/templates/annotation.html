@@ -18,10 +18,11 @@
         <ul class="comments">
             <li ng-repeat="comment in comments">
                 <p>{{ comment["content"] }}
-                    <a class="username" title="{{ comment.commenter_real_name }}"
+                    <span class="comment-info"><a class="username" title="{{ comment.commenter_real_name }}"
                    href="mailto:{{ comment.commenter_email }}">
                     {{ comment.commenter_username }}</a>
                    <span class="timestamp" title="{{ comment.comment_time }}">{{ comment.comment_relative_time }}</span>
+                    </span>
                 </p>
                 <!--strong>{{ comment["commenter_username"] }}</strong-->
                 </li>
