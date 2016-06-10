@@ -123,7 +123,6 @@ class TimDbBase(object):
                        [usergroup_id, block_id])
         self.db.commit()
 
-    # TODO: contract
     def resultAsDictionary(self, cursor):
         """Converts the result in database cursor object to JSON."""
 
@@ -137,34 +136,6 @@ class TimDbBase(object):
             results.append(result)
         return results
 
-    @contract
-    def writeUtf8(self, content: 'str', path: 'str'):
-        with open(path, 'w', encoding='utf-8', newline='\n') as f:
-            f.write(content)
-
-    @contract
-    def getOwnedBlockRelations(self, block_id: 'int', user_id: 'int', relation_type: 'int') -> 'list(dict)':
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT id, parent_block_specifier, description, created, modified FROM Block,BlockRelation WHERE
-                             Block.id = BlockRelation.Block_id
-                          AND id IN
-                             (SELECT Block_id FROM BlockRelation WHERE parent_block_id = ?)
-                          AND type_id = ?
-                          AND UserGroup_id IN
-                                 (SELECT UserGroup_id FROM UserGroupMember WHERE User_id = ?)""",
-                       [block_id, relation_type, user_id])
-        return self.resultAsDictionary(cursor)
-
-    @contract
-    def getBlockRelations(self, block_id: 'int', relation_type: 'int') -> 'list(dict)':
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT id, parent_block_specifier, description, created, modified FROM Block,BlockRelation WHERE
-                             Block.id = BlockRelation.Block_id
-                          AND id IN
-                             (SELECT Block_id FROM BlockRelation WHERE parent_block_id = ?)
-                          AND type_id = ?""", [block_id, relation_type])
-        return self.resultAsDictionary(cursor)
-
     @classmethod
     @contract
     def split_location(cls, path: 'str') -> 'tuple(str, str)':
@@ -175,4 +146,3 @@ class TimDbBase(object):
     @contract
     def join_location(cls, location: 'str', name: 'str') -> 'str':
         return name if location == '' else location + '/' + name
-

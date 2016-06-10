@@ -4,8 +4,6 @@ DROP TABLE IF EXISTS BlockViewAccess;
 
 DROP TABLE IF EXISTS UserGroupMember;
 
-DROP TABLE IF EXISTS BlockRelation;
-
 DROP TABLE IF EXISTS Block;
 
 DROP TABLE IF EXISTS DocEntry;
@@ -187,20 +185,6 @@ CREATE TABLE Folder (
   ON UPDATE CASCADE
 );
 
-CREATE TABLE BlockRelation (
-  parent_block_specifier   INTEGER NOT NULL,
-  parent_block_revision_id INTEGER,
-  parent_block_id          INTEGER NOT NULL,
-  Block_id                 INTEGER NOT NULL,
-
-  CONSTRAINT BlockRelation_PK
-  PRIMARY KEY (Block_id),
-  CONSTRAINT BlockRelation_id
-  FOREIGN KEY (Block_id)
-  REFERENCES Block (id)
-  ON DELETE NO ACTION
-  ON UPDATE CASCADE
-);
 
 CREATE TABLE UserGroupMember (
   UserGroup_id INTEGER NOT NULL,
