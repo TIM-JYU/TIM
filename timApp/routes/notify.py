@@ -84,6 +84,8 @@ def replace_macros(msg: str, doc_id: int, par_id: Optional[str]) -> str:
         doc_url = 'http://{}/view/{}{}'.format(os.environ.get("TIM_HOST", "localhost"), doc_name.replace(' ', '%20'),
                                                par_part)
         new_msg = new_msg.replace('[doc_name]', doc_name).replace('[doc_url]', doc_url)
+    if '[doc_id]' in msg:
+        new_msg = new_msg.replace('[doc_id]', str(doc_id))
 
     return new_msg
 
@@ -94,8 +96,8 @@ def notify_doc_owner(doc_id, subject, msg, setting=None, par_id=None, group_id=N
     owner_group = timdb.documents.get_owner(doc_id)
     macro_subject = replace_macros(subject, doc_id, par_id)
     macro_msg = replace_macros(msg, doc_id, par_id)
-    macro_msg += '\n\n--\This message was automatically sent by TIM'
 
+    macro_grpid= replace_macros(group_id, doc_id, par_id) if group_id else None
     macro_grpsubj = replace_macros(group_subject, doc_id, par_id) if group_subject else None
 
     for user in timdb.users.get_users_in_group(owner_group):
@@ -106,5 +108,5 @@ def notify_doc_owner(doc_id, subject, msg, setting=None, par_id=None, group_id=N
                     continue
 
             send_email(user['email'], macro_subject, macro_msg, mail_from=me['email'],
-                       group_id=group_id, group_subject=macro_grpsubj)
+                       group_id=macro_grpid, group_subject=macro_grpsubj)
 

@@ -12,6 +12,14 @@ notes = Blueprint('notes',
 KNOWN_TAGS = ['difficult', 'unclear']
 
 
+def get_group_id() -> str:
+    return "notes_[doc_id]"
+
+
+def get_group_subject() -> str:
+    return "Your document [doc_name] has new notes"
+
+
 @notes.route("/note/<int:note_id>")
 def get_note(note_id):
     timdb = getTimDb()
@@ -55,7 +63,8 @@ def post_note():
     if access == "everyone":
         notify_doc_owner(doc_id, '[user_name] has posted a note on your document [doc_name]',
                          '[user_name] has posted the following note on your document [doc_url]\n\n{}'.format(note_text),
-                         setting="comment_add", par_id=par_id)
+                         setting="comment_add", par_id=par_id,
+                         group_id=get_group_id(), group_subject=get_group_subject())
 
     return par_response([doc.get_paragraph(par_id)],
                         doc)
@@ -89,7 +98,8 @@ def edit_note():
 {}\n\n
 === MODIFIED ===\n
 {}\n
-""".format(prev_note_text, note_text), setting="comment_modify", par_id=par_id)
+""".format(prev_note_text, note_text), setting="comment_modify", par_id=par_id,
+                     group_id=get_group_id(), group_subject=get_group_subject())
 
     doc = Document(doc_id)
     return par_response([doc.get_paragraph(par_id)],
