@@ -1,4 +1,4 @@
-<div class="velpMenu" tim-draggable-fixed="" caption="Velp menu">
+<div class="velpMenu" tim-draggable-fixed="" caption="Velp menu" id="velpSelection">
 
 
     <uib-tabset active="active">
@@ -200,12 +200,12 @@
 
 
                                                 <fieldset ng-show="advancedOn">
-                                                    <legend>Velpgroups</legend>
+                                                    <legend>Velp groups</legend>
                                                     <span ng-repeat="g in velpGroups">
                                                         <label><input type="checkbox"
                                                                       ng-click="updateVelpGroups(velpToEdit, g)"
                                                                       ng-checked="isGroupInVelp(velpToEdit, g)"
-                                                                      ng-disabled="g.edit_access"> {{ g.name }}
+                                                                      ng-disabled="!g.edit_access"> {{ g.name }}
                                                         </label><br>
                                                     </span>
                                                 </fieldset>
@@ -249,7 +249,7 @@
                             </td>
                         </tr>
                     </table -->
-
+                    <form>
                     <table class="fulldiv">
 
                         <h5>Otsikko tähän</h5>
@@ -277,6 +277,9 @@
                             </td>
                         </tr>
                     </table>
+                    <input type="button" class="timButton" value="Change all to defaults" ng-click="checkShowsToDefaults()"/>
+                    </form>
+                    <hr>
                     <form ng-submit="addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
                         <p><label>New Velp Group name:</label><input type="text" ng-model="newVelpGroup.name"
                                                             placeholder="Velp group name" required></p>
