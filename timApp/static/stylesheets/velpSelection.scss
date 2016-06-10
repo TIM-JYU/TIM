@@ -197,21 +197,36 @@
 }
 
 .tags {
+    top: 25px;
     right: 5px;
     position: absolute;
+    width: 3em;
 }
 
-#addLabelField {
+
+
+.addLabelField {
     display: inline;
     width: 76%;
 }
 
-#addLabelBtn {
+.addLabelBtn {
     display: inline;
+}
+/*
+.labelsLegend {
+    display: inline;
+}*/
+
+.editVelpTags {
+    /*display: inline;*/
+    top: 85px;
+    right: 5px;
+    position: absolute;
 }
 
 #addVelpBtn {
-  margin-top: 0.8em;
+    margin-top: 0.8em;
 }
 
 #createVelpButton {
