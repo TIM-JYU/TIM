@@ -74,7 +74,13 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         $scope.velpGroups = data;
         if (default_velp_group.id < 0){
             $scope.velpGroups.push(default_velp_group);
+        } else {
+            $scope.velpGroups.forEach(function(g) {
+               if (g.id === default_velp_group.id)
+                   g.selected = true;
+            });
         }
+
         $scope.newVelp.velp_groups = [default_velp_group.id];
         console.log($scope.velpGroups);
 
@@ -469,6 +475,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         $scope.newVelpGroup.target_type = parseInt($scope.newVelpGroup.target_type);
         console.log($scope.newVelpGroup);
         $scope.makePostRequest("/{0}/create_velp_group".replace('{0}', doc_id), $scope.newVelpGroup, function (json) {
+            var group = json.data;
+            group.selected = false;
+            group.show = true;
             $scope.velpGroups.push(json.data);
         });
     };
