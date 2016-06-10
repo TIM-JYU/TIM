@@ -261,7 +261,7 @@ def alt_login():
         
     else:
         flash("Email address or password did not match. Please try again.", 'loginmsg')
-    
+
     return finish_login(ready=False)
 
 
@@ -283,6 +283,9 @@ def save_came_from():
 
 
 def finish_login(ready=True):
+    if not ready:
+        return safe_redirect(url_for('start_page'))
+
     anchor = session.get('anchor', '')
     if anchor:
         anchor = "#" + anchor
