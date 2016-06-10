@@ -516,8 +516,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
     $scope.checkShowsToDefaults = function (){
         $scope.groupSelections = JSON.parse(JSON.stringify($scope.groupDefaults));
-        console.log($scope.groupSelections);
-        $scope.updateVelpList();
+
+        $scope.makePostRequest("/{0}/change_selections_to_defaults".replace('{0}', doc_id), $scope.groupSelections, function (json) {
+            $scope.updateVelpList();
+        });
     };
 
     $scope.getVelpsVelpGroups = function (velp) {
