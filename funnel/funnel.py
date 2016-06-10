@@ -47,7 +47,7 @@ class Funnel:
     def update(self, dt: float):
         if self.server:
             self.server.handle_request()
-            self.mailer.update()
+            self.mailer.update(dt)
 
 
 class MyServer(BaseHTTPRequestHandler):
