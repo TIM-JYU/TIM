@@ -170,16 +170,14 @@
     width: 10em;
     white-space: normal;
 }
-/*
+
 .glyphicon-pencil {
-    top: 5px;
-    right: 5px;
-    position: absolute;
-}*/
+    margin-left: 5px;
+}
 
 .pointsPen {
-    top: 3px;
-    right: 3px;
+    top: 5px;
+    right: 5px;
     position: absolute;
 }
 
@@ -196,6 +194,11 @@
 
 .tag-true {
     border-bottom: solid 4px darkblue;
+}
+
+.tags {
+    right: 5px;
+    position: absolute;
 }
 
 #addLabelField {
@@ -248,6 +251,11 @@
 -webkit-box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 -moz-box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
+}
+
+.velp-name {
+    width: 77%;
+    word-break: break-all;
 }
 
 .bottom-part{
