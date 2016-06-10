@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import sqlite3
 import os
+import readline
 import time
 
 from _script_common import *
@@ -118,6 +119,8 @@ def main():
     print("Using database " + DBFILE)
     show_tables(db)
     command_help()
+
+    readline.parse_and_bind('tab: complete')
 
     try:
         while interpret_command(db, input('tim.db > ')):
