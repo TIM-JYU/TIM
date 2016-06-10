@@ -196,8 +196,6 @@ def add_velp() -> int:
         timdb.velps.add_labels_to_velp(new_velp_id, velp_labels)
     if velp_groups is not None:
         for group_id in velp_groups:
-            print(new_velp_id)
-            print(group_id)
             timdb.velp_groups.add_velp_to_group(new_velp_id, group_id)
     else:
         return abort(400, "No velp groups")
@@ -312,7 +310,6 @@ def update_velp_label():
     :return: okJsonResponse
     """
     json_data = request.get_json()
-    print(json_data)
     try:
         content = json_data['content']
         velp_label_id = json_data['id']
@@ -474,7 +471,6 @@ def create_default_velp_group(doc_id: int):
     verifyLoggedIn()
     user_group_id = timdb.documents.get_owner(doc_id)
     user_id = getCurrentUserId()
-    print(timdb.users.is_user_id_in_group_id(user_id, user_group_id))
     if not timdb.users.is_user_id_in_group_id(user_id, user_group_id):
         print("User is not owner of current document")
         return abort(403, "User is not owner of current document")

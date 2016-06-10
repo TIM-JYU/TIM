@@ -61,6 +61,7 @@ class Annotations(TimDbBase):
         :param answer_id: ID of answer if annotation is located within one.
         :return: ID of the new, just added annotation.
         """
+
         cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO

@@ -170,7 +170,6 @@ class VelpGroups(Documents):
         :param velp_group_ids: List of velp group IDs
         :return:
         """
-        print(velp_group_ids)
         cursor = self.db.cursor()
         for velp_group in velp_group_ids:
             cursor.execute("""
@@ -427,7 +426,6 @@ class VelpGroups(Documents):
         :param doc_id: ID of document
         :param user_id: ID of user
         """
-
         cursor = self.db.cursor()
         cursor.execute("""
                       UPDATE VelpGroupSelection
@@ -437,23 +435,20 @@ class VelpGroups(Documents):
                        )
         cursor.execute("""
                       DELETE FROM VelpGroupSelection
-                      WHERE doc_id AND velp_group_id AND target_id IN (
-                        SELECT VelpGroupDefaults.doc_id
-                        FROM VelpGroupDefaults
-                        INNER JOIN VelpGroupSelection ON (VelpGroupDefaults.doc_id = VelpGroupSelection.doc_id)
-                        WHERE VelpGroupDefaults.doc_id = ? AND
-                          VelpGroupSelection.velp_group_id = VelpGroupDefaults.target_id AND
+                      WHERE EXISTS( SELECT * FROM VelpGroupDefaults
+                        WHERE VelpGroupDefaults.doc_id = ? AND VelpGroupSelection.doc_id = ? AND
+                          VelpGroupSelection.velp_group_id = VelpGroupDefaults.velp_group_id AND
                             VelpGroupSelection.target_id = VelpGroupDefaults.target_id AND
                             VelpGroupDefaults.selected = 1
                       )
-                      """, [doc_id]
+                      """, [doc_id, doc_id]
                       )
         cursor.execute("""
                       INSERT OR IGNORE INTO
-                      VelpGroupSelection(user_id, doc_id, target_type, target_id, selected, velp_group_id)
+                      VelpGroupSelection
                       SELECT ?, doc_id, target_type, target_id, selected, velp_group_id
-                      FROM VelpGroupDefaults
-                      """, [user_id]
+                      FROM VelpGroupDefaults WHERE VelpGroupDefaults.doc_id = ?
+                      """, [user_id, doc_id]
                       )
         self.db.commit()
 
