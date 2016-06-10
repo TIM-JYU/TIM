@@ -16,12 +16,10 @@ if __name__ == '__main__':
         raise Exception('static/scripts directory does not seem to exist, '
                         'make sure the working directory is correct')
     copy_bower_libs_if_needed()
-    ephemeral_started = False
     dumbo_started = False
     try:
         if not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
             d = dumboclient.launch_dumbo()
-            ephemeral_started = True
             dumbo_started = True
         initdb2.initialize_database()
         initdb2.initialize_temp_database()
@@ -37,7 +35,5 @@ if __name__ == '__main__':
             raise Exception('Unknown command line argument: ' + sys.argv[1])
         tim.start_app()
     finally:
-        if ephemeral_started:
-            p.kill()
         if dumbo_started:
             d.kill()
