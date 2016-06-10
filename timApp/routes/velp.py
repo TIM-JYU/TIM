@@ -107,8 +107,9 @@ def get_velp_group_personal_selections(doc_id: int) -> dict():
     user_id = getCurrentUserId()
     velp_group_selections = timdb.velp_groups.get_personal_selections_for_velp_groups(doc_id, user_id)
 
-    velp_group_selections['Cache-Control'] = 'no-store, no-cache, must-revalidate'
-    return jsonResponse(velp_group_selections)
+    response = jsonResponse(velp_group_selections)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
 
 
 @velps.route("/<int:doc_id>/get_velp_group_default_selections", methods=['GET'])
@@ -122,9 +123,9 @@ def get_velp_group_default_selections(doc_id: int) -> dict():
     user_id = getCurrentUserId()
     velp_group_defaults = timdb.velp_groups.get_default_selections_for_velp_groups(doc_id, user_id)
 
-    velp_group_defaults['Cache-Control'] = 'no-store, no-cache, must-revalidate'
-    return jsonResponse(velp_group_defaults)
-
+    response = jsonResponse(velp_group_defaults)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
 
 @velps.route("/<int:doc_id>/get_velp_labels", methods=['GET'])
 def get_velp_labels(doc_id: int) -> 'str':
