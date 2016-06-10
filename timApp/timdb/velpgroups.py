@@ -383,7 +383,6 @@ class VelpGroups(Documents):
         :param target_id: ID of targeted area
         :param user_id: ID of user
         :param selected: Boolean whether group is selected or not
-        :return:
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -407,7 +406,6 @@ class VelpGroups(Documents):
         :param target_id: ID of targeted area
         :param velp_group_id: ID of velp group
         :param selected: Boolean whether group is selected or not
-        :return:
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -420,6 +418,42 @@ class VelpGroups(Documents):
                       VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)
                       SELECT ?, ?, ?, ?, ?
                       """, [doc_id, target_type, target_id, selected, velp_group_id]
+                      )
+        self.db.commit()
+
+    def change_selections_to_defaults(self, doc_id: int, user_id: int):
+        """Changes user's all personal velp group selections in document to defaults
+
+        :param doc_id: ID of document
+        :param user_id: ID of user
+        """
+
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      UPDATE VelpGroupSelection
+                      SET selected = 0
+                      WHERE doc_id = ? AND user_id = ?
+                      """, [doc_id, user_id]
+                       )
+        cursor.execute("""
+                      DELETE FROM VelpGroupSelection
+                      WHERE doc_id AND velp_group_id AND target_id IN (
+                        SELECT VelpGroupDefaults.doc_id
+                        FROM VelpGroupDefaults
+                        INNER JOIN VelpGroupSelection ON (VelpGroupDefaults.doc_id = VelpGroupSelection.doc_id)
+                        WHERE VelpGroupDefaults.doc_id = ? AND
+                          VelpGroupSelection.velp_group_id = VelpGroupDefaults.target_id AND
+                            VelpGroupSelection.target_id = VelpGroupDefaults.target_id AND
+                            VelpGroupDefaults.selected = 1
+                      )
+                      """, [doc_id]
+                      )
+        cursor.execute("""
+                      INSERT OR IGNORE INTO
+                      VelpGroupSelection(user_id, doc_id, target_type, target_id, selected, velp_group_id)
+                      SELECT ?, doc_id, target_type, target_id, selected, velp_group_id
+                      FROM VelpGroupDefaults
+                      """, [user_id]
                       )
         self.db.commit()
 

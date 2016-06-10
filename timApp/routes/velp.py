@@ -375,6 +375,21 @@ def change_default_selection(doc_id: int):
 
     return okJsonResponse()
 
+@velps.route("/<int:doc_id>/change_selections_to_defaults", methods=['POST'])
+def change_selections_to_defaults(doc_id: int):
+    """Changes user's all personal velp group selections in document to defaults
+
+    :param doc_id: ID of document
+    :return: okJsonResponse()
+    """
+
+    timdb = getTimDb()
+    user_id = getCurrentUserId()
+
+    timdb.velp_groups.change_selections_to_defaults(doc_id, user_id)
+
+    return okJsonResponse()
+
 @velps.route("/<int:doc_id>/create_velp_group", methods=['POST'])
 def create_velp_group(doc_id: int) -> dict():
     """Creates a new velp group
