@@ -167,12 +167,11 @@
                                                           placeholder="Points" value="0"></p>
 
                                                 <fieldset ng-show="advancedOn">
-                                                    <legend class="labelsLegend">Labels</legend>
-                                                    <div class="editVelpTags">
+                                                    <legend>Labels
                                                         <span class="float-right" ng-class="['glyphicon', 'glyphicon-tag']"
                                                             ng-repeat="l in velpToEdit.labels"
                                                             ng-style="{ color: getColor(l) }"></span>
-                                                    </div>
+                                                    </legend>
                                                     <span ng-repeat="l in labels">
                                                         <span ng-show="!l.edit">
                                                         <label><input type="checkbox"

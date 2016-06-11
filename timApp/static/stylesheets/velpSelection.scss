@@ -159,7 +159,7 @@
 
 .velpArea legend {
     font-size: 1.1em;
-    margin-top: 0.8em;
+    margin-top: 15px;
     margin-bottom: 0.3em;
 }
 
@@ -203,26 +203,14 @@
     width: 3em;
 }
 
-
-
 .addLabelField {
     display: inline;
     width: 76%;
+    margin-bottom: 10px;
 }
 
 .addLabelBtn {
     display: inline;
-}
-/*
-.labelsLegend {
-    display: inline;
-}*/
-
-.editVelpTags {
-    /*display: inline;*/
-    top: 85px;
-    right: 5px;
-    position: absolute;
 }
 
 #addVelpBtn {
