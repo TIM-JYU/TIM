@@ -524,8 +524,9 @@ def get_velp_groups_from_tree(document_id: int):
     doc_id = int(document_id)
     timdb = getTimDb()
     full_path = timdb.documents.get_first_document_name(doc_id)
-    doc_name = os.path.basename(full_path)
-    doc_path = full_path[:len(full_path) - len(doc_name) - 1]
+    parts=full_path.rsplit('/',1)
+    doc_name=parts[1]
+    doc_path=parts[0]
     velp_group_folder = "velp groups"
 
     current_path = doc_path
