@@ -117,4 +117,4 @@ run sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/s
 run apt-get install -y netcat-openbsd
 
 # Default startup command
-cmd cd /service/timApp && source /service/scripts/_initenv.sh && python3 launch.py
+cmd cd /service/timApp && source scripts/_initenv.sh && python3 launch.py
