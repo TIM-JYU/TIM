@@ -35,7 +35,10 @@ def get_default_velp_group(doc_id: int) -> dict():
         print("Document is a velp group, made default velp group to point itself")
         return jsonResponse({"id": doc_id, "name": "Default"})
 
-    found_velp_groups = timdb.documents.get_documents_in_folder(doc_path + "/" + "velp groups" + "/" + doc_name)
+    if doc_path != "":
+        found_velp_groups = timdb.documents.get_documents_in_folder(doc_path + "/" + "velp groups" + "/" + doc_name)
+    else:
+        found_velp_groups = timdb.documents.get_documents_in_folder("velp groups" + "/" + doc_name)
     velp_groups = []
     for v in found_velp_groups:
         #if timdb.users.has_view_access(user_id, timdb.documents.get_document_id(v['name'])):
@@ -549,7 +552,10 @@ def get_velp_groups_from_tree(document_id: int):
     velp_group_folder = "velp groups"
 
     current_path = doc_path
-    velp_groups_path = current_path + "/" + velp_group_folder
+    if current_path != "":
+        velp_groups_path = current_path + "/" + velp_group_folder
+    else:
+        velp_groups_path = velp_group_folder
     doc_velp_path = velp_groups_path + "/" + doc_name
     username = getCurrentUserName()
     personal_velps_path = "users/" + username + "/" + velp_group_folder
@@ -569,7 +575,11 @@ def get_velp_groups_from_tree(document_id: int):
                 velp_groups.append(v)
 
     # Document's own velp group
-    found_velp_groups = timdb.documents.get_documents_in_folder(current_path + "/" + velp_group_folder + "/" + doc_name)
+    if current_path != "":
+        found_velp_groups = timdb.documents.get_documents_in_folder(current_path + "/" + velp_group_folder +
+                                                                    "/" + doc_name)
+    else:
+        found_velp_groups = timdb.documents.get_documents_in_folder(velp_group_folder + "/" + doc_name)
     for v in found_velp_groups:
         if timdb.users.has_view_access(getCurrentUserId(), timdb.documents.get_document_id(v['name'])):
             v['target_type'] = 0

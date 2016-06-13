@@ -397,6 +397,31 @@ class VelpGroups(Documents):
                       )
         self.db.commit()
 
+    def change_all_target_area_selections(self, doc_id: int, target_type: int, target_id: str, user_id: int,
+                                          selected: bool):
+        cursor = self.db.cursor()
+        if target_type == 0:
+            cursor.execute("""
+                      UPDATE VelpGroupSelection
+                      SET selected = 0
+                      WHERE doc_id = ? AND target_id = ? AND user_id = ?
+                      """, [doc_id, target_id, user_id]
+                       )
+        else:
+            cursor.execute("""
+                          DELETE FROM VelpGroupSelection
+                          WHERE user_id = ? AND doc_id = ? AND target_type = ? AND target_id = ?
+                          """, [user_id, doc_id, target_type, target_id]
+                          )
+            cursor.execute("""
+                          INSERT INTO
+                          VelpGroupSelection(user_id, doc_id, target_type, target_id, velp_group_id, selected)
+                          SELECT ?, ?, ?, ?, velp_group_id, ? FROM VelpGroupSelection WHERE doc_id = ? AND
+                          user_id = ? AND target_type = 0
+                            """, [user_id, doc_id, target_type, target_id, selected, doc_id, user_id]
+                          )
+        self.db.commit()
+
     def change_default_selection(self, doc_id: int, velp_group_id: int, target_type: int, target_id: str, selected: bool):
         """Changes selection for velp group's default selection in target area
 
