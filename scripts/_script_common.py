@@ -22,6 +22,19 @@ def get_timdb():
     return TIMDB
 
 
+def docker_path(path: str):
+    if os.path.isabs(path):
+        try:
+            timindex = path.rindex('/tim/')
+            return '/service/' + path[timindex+5:]
+        except ValueError:
+            raise IOError('Cannot access the given absolute path from TIM Docker container')
+    else:
+        if path.startswith('..'):
+            raise IOError('Cannot access the given relative path from TIM Docker container')
+        return os.path.normpath(os.path.join('/service', path))
+
+
 def stdout(s=''):
     print(s, file=STDOUT)
 
