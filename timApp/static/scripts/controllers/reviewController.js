@@ -14,6 +14,8 @@ console.log("reviewController.js added");
 timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile', function ($scope, $http, $window, $compile) {
     "use strict";
 
+    var illegalClasses = ["annotation-element", "highlighted", "editorArea", "previewcontent"];
+
     $scope.annotationsAdded = false;
     $scope.selectedArea = null;
     $scope.selectedElement = null;
@@ -57,24 +59,24 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             if ($scope.annotations[i].answer_id !== null){
                 if (!parent.classList.contains("has-annotation")){
-
                     parent.classList.add("has-annotation");
                 }
                 continue;
             }
 
             if (parent.getAttribute("t") === placeInfo.start.t && placeInfo.start.offset !== null) {
-                var elements = parent.querySelector(".parContent");
-
-                var start_elpath = placeInfo.start.el_path;
-
-                for (var j = 0; j < start_elpath.length; j++) {
-                    var elementChildren = getElementChildren(elements);
-                    if (elementChildren[start_elpath[j]] !== null)
-                        elements = elementChildren[start_elpath[j]];
-                }
 
                 try{
+                    var elements = parent.querySelector(".parContent");
+
+                    var start_elpath = placeInfo.start.el_path;
+
+                    for (var j = 0; j < start_elpath.length; j++) {
+                        var elementChildren = getElementChildren(elements);
+                        if (elementChildren[start_elpath[j]] !== null)
+                            elements = elementChildren[start_elpath[j]];
+                    }
+
                     var startel = elements.childNodes[placeInfo.start.node];
                     var endel = elements.childNodes[placeInfo.end.node];
 
@@ -91,7 +93,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
 
         for (var k=0; k<annotationsToRemove.length; k++){
-            console.log("Deleted annotation: " + $scope.annotations[k].content);
+            console.log("Deleted annotation:");
+            console.log(annotationsToRemove[k]);
             var index = $scope.annotations.indexOf(annotationsToRemove[k]);
             $scope.annotations.splice(index, 1);
         }
@@ -462,7 +465,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var startcont = getElementParent(range.startContainer);
         while (!startcont.hasAttribute("t")){
             startcont = getElementParent(startcont);
-            if (checkIfAnnotation(startcont))
+            if (checkIfAnnotation(startcont) || hasAnyIllegalClass(startcont))
                 return true;
         }
 
@@ -473,6 +476,19 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 return true;
         }
 
+        return false;
+    };
+
+    /**
+     * Checks if element has any class in illegalClasses array.
+     * @param element element to be checked
+     * @returns {boolean} whether illegal class was found or not.
+     */
+    var hasAnyIllegalClass = function(element){
+        for (var i=0; i<illegalClasses.length; i++){
+            if (element.classList.contains(illegalClasses[i]))
+                return true;
+        }
         return false;
     };
 

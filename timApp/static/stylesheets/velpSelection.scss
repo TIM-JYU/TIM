@@ -259,6 +259,8 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 .velp-name {
     width: 77%;
     word-break: break-all;
+    overflow: hidden;
+    height: 2.5em;
 }
 
 .bottom-part{
