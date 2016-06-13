@@ -372,8 +372,29 @@ def change_default_selection(doc_id: int):
 
     return okJsonResponse()
 
-@velps.route("/<int:doc_id>/change_selections_to_defaults", methods=['POST'])
-def change_selections_to_defaults(doc_id: int):
+@velps.route("/<int:doc_id>/reset_target_area_selections_to_defaults", methods=['POST'])
+def reset_target_area_selections_to_defaults(doc_id: int):
+    """Changes user's personal velp group selections in target area to defaults
+
+    :param doc_id: ID of document
+    :return: okJsonResponse()
+    """
+
+    json_data = request.get_json()
+    try:
+        target_id = json_data['target_id']
+    except KeyError as e:
+        return abort(400, "Missing data: " + e.args[0])
+
+    timdb = getTimDb()
+    user_id = getCurrentUserId()
+
+    timdb.velp_groups.reset_target_area_selections_to_defaults(doc_id, target_id, user_id)
+
+    return okJsonResponse()
+
+@velps.route("/<int:doc_id>/reset_all_selections_to_defaults", methods=['POST'])
+def reset_all_selections_to_defaults(doc_id: int):
     """Changes user's all personal velp group selections in document to defaults
 
     :param doc_id: ID of document
@@ -383,7 +404,7 @@ def change_selections_to_defaults(doc_id: int):
     timdb = getTimDb()
     user_id = getCurrentUserId()
 
-    timdb.velp_groups.change_selections_to_defaults(doc_id, user_id)
+    timdb.velp_groups.reset_all_selections_to_defaults(doc_id, user_id)
 
     return okJsonResponse()
 
