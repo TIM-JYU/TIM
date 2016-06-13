@@ -106,6 +106,7 @@ class Velps(TimDbBase):
                        WHERE id = ?
                        """, [icon_id, default_points, velp_id]
                        )
+        self.db.commit()
 
     def get_latest_velp_version(self, velp_id: int, language_id: str = "FI"):
         """Method to fetch the latest version for velp in specific language
