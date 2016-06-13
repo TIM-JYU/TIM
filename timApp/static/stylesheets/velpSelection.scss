@@ -234,6 +234,13 @@
     position: relative;
 }
 
+.notes .velp-badge {
+    position: absolute;
+    top: 0;
+    left: -3em;
+    z-index: 10;
+}
+
 .velp:hover .emphasise{
     margin-top: -1em;
     -webkit-box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);

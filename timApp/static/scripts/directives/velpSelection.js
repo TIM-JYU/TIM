@@ -525,14 +525,17 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     };
 
     $scope.resetCurrentShowsToDefaults = function (){
-        $scope.groupAttachment.target_type = parseInt($scope.groupAttachment.target_type);
+
 
         var targetID;
+        $scope.groupAttachment.target_type = parseInt($scope.groupAttachment.target_type);
+
         if ($scope.groupAttachment.target_type === 1){
             targetID = $scope.selectedElement.id;
         } else {
             targetID = "0";
         }
+
         $scope.groupSelections[target_id] = JSON.parse(JSON.stringify($scope.groupDefaults[target_id]));
 
         $scope.makePostRequest("/{0}/reset_target_area_selections_to_defaults".replace('{0}', doc_id), {'target_id': targetID}, function (json) {

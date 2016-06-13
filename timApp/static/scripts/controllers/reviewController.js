@@ -289,6 +289,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     var createVelpBadge = function () {
         var btn = document.createElement("input");
         btn.type = "button";
+        btn.classList.add("velp-badge");
         btn.classList.add("timButton");
         btn.value = "V";
         btn.id = "velpBadge";
@@ -319,18 +320,16 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.clearVelpBadge = function (e) {
         var btn = document.getElementById("velpBadge");
-        var parent = getElementParent(btn);
-        parent.removeChild(btn);
+        if (btn !== null){
+            var parent = getElementParent(btn);
+            parent.removeChild(btn);
+        }
 
         if (e !== null) {
             console.log(e);
             $scope.selectedElement = null;
             $scope.selectedArea = null;
             e.stopPropagation();
-
-            while (!parent.hasAttribute("t")) {
-                parent = getElementParent(parent);
-            }
         }
     };
 

@@ -13,7 +13,7 @@ var console = window.console;
 
 /* Directive for marking */
 timApp.directive("annotation", function() {
-
+    "use strict";
     return{
         templateUrl: "/static/templates/annotation.html",
         transclude: true,
