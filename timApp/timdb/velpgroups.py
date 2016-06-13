@@ -420,7 +420,41 @@ class VelpGroups(Documents):
                       )
         self.db.commit()
 
-    def change_selections_to_defaults(self, doc_id: int, user_id: int):
+    def reset_target_area_selections_to_default(self, doc_id: int, target_id: str, user_id: int):
+        """Changes user's personal velp group selections in target area to defaults
+
+        :param doc_id: ID of document
+        :param target_id: ID of target area
+        :param user_id: ID of user
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                      UPDATE VelpGroupSelection
+                      SET selected = 0
+                      WHERE doc_id = ? AND target_id = ? AND user_id = ?
+                      """, [doc_id, target_id, user_id]
+                       )
+        cursor.execute("""
+                      DELETE FROM VelpGroupSelection
+                      WHERE EXISTS( SELECT * FROM VelpGroupDefaults
+                        WHERE VelpGroupDefaults.doc_id = ? AND VelpGroupSelection.doc_id = ? AND
+                        VelpGroupDefaults.target_id = ? AND VelpGroupSelection.target_id = ? AND
+                          VelpGroupSelection.velp_group_id = VelpGroupDefaults.velp_group_id AND
+                            VelpGroupSelection.target_id = VelpGroupDefaults.target_id AND
+                            VelpGroupDefaults.selected = 1
+                      )
+                      """, [doc_id, doc_id, target_id, target_id]
+                      )
+        cursor.execute("""
+                      INSERT OR IGNORE INTO
+                      VelpGroupSelection
+                      SELECT ?, doc_id, target_type, target_id, selected, velp_group_id
+                      FROM VelpGroupDefaults WHERE VelpGroupDefaults.doc_id = ? AND VelpGroupDefaults.target_id = ?
+                      """, [user_id, doc_id, target_id]
+                      )
+        self.db.commit()
+
+    def reset_all_selections_to_defaults(self, doc_id: int, user_id: int):
         """Changes user's all personal velp group selections in document to defaults
 
         :param doc_id: ID of document

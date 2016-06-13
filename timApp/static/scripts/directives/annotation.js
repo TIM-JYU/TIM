@@ -23,14 +23,15 @@ timApp.directive("annotation", function() {
             visibleto: '=',
             comments: '=',
             aid: '=',
+            ismargin: '=',
             annotator: '@',
-            email: '@',
+            //email: '@',
             timesince: '@',
             creationtime: '@',
             velp: '@'
         },
 
-        link: function (scope) {
+        link: function (scope, transclude) {
             scope.newComment = "";
             scope.visible_options = {
                 "type": "select",
@@ -67,8 +68,11 @@ timApp.directive("annotation", function() {
              * Delete selected annotation. Queries parent scope.
              */
             scope.deleteAnnotation = function () {
+
                 if (scope.comments.length < 2) {
-                    scope.$parent.deleteAnnotation(scope.aid);
+                    console.log(scope.ismargin);
+
+                    scope.$parent.deleteAnnotation(scope.aid, scope.ismargin);
                     scope.toggleAnnotation();
                 }
             };

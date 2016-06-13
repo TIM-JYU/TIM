@@ -524,10 +524,18 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         }
     };
 
-    $scope.checkShowsToDefaults = function (){
+    $scope.resetAllShowsToDefaults = function (){
         $scope.groupSelections = JSON.parse(JSON.stringify($scope.groupDefaults));
 
-        $scope.makePostRequest("/{0}/change_selections_to_defaults".replace('{0}', doc_id), null, function (json) {
+        $scope.makePostRequest("/{0}/reset_all_selections_to_defaults".replace('{0}', doc_id), null, function (json) {
+            $scope.updateVelpList();
+        });
+    };
+
+    $scope.resetCurrentShowsToDefaults = function (){
+        // $scope.groupSelections = JSON.parse(JSON.stringify($scope.groupDefaults));
+
+        $scope.makePostRequest("/{0}/reset_target_area_selections_to_defaults".replace('{0}', doc_id), null, function (json) {
             $scope.updateVelpList();
         });
     };
