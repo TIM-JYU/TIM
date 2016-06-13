@@ -8,7 +8,7 @@ import tempfile
 from _script_common import *
 from documentmodel.document import Document
 from documentmodel.documentversion import DocumentVersion
-from initdb2 import initialize_database
+from typing import List, Optional
 
 
 class DocExportError(Exception):
@@ -29,6 +29,34 @@ def parse_cmdline():
 
     tmpdir = tempfile.mkdtemp()
     return doc_id, outfile, tmpdir
+
+
+def desc_table(c, table_name) -> str:
+    # SQLite dependent, for now
+    c.execute("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?", [table_name])
+    return c.fetchone()[0]
+
+
+def create_db(db_path: str, src_db, tables: List[str]):
+    db = sqlite3.connect(db_path)
+    c = db.cursor()
+    src_c = src_db.cursor()
+    for table in tables:
+        create_statement = desc_table(src_c, table)
+        c.execute(create_statement)
+    return db
+
+
+def copy_values(src_c, dest_c, table, condition):
+    src_c.execute('SELECT * FROM ' + table + ' ' + condition)
+    rows = [x for x in src_c.fetchall()]
+    cols = [x[0] for x in src_c.description]
+    params = ', '.join('?' for _ in cols)
+    insert_statement = 'INSERT INTO ' + table + ' (' + ', '.join(cols) + ') VALUES (' + params + ')'
+    print(insert_statement)
+
+    for row in rows:
+        dest_c.execute(insert_statement, list(row))
 
 
 def doc_export(doc_id: int, out_dir: str):
@@ -54,8 +82,19 @@ def doc_export(doc_id: int, out_dir: str):
         os.makedirs(os.path.join(out_dir, 'pars'))
         shutil.copytree(par_dir, target_par_dir, symlinks=True)
 
-    #stdout('Creating a temporary database...')
-    #stdout('Copying metadata...')
+    stdout('Creating a temporary database...')
+    targetdb_path = os.path.join(out_dir, 'tim_part.db')
+    targetdb = create_db(targetdb_path, timdb.db, ['Block', 'DocEntry', 'Version'])
+
+    stdout('Copying metadata...')
+    src_cursor = timdb.db.cursor()
+    dest_cursor = targetdb.cursor()
+    copy_values(src_cursor, dest_cursor, 'Block', 'WHERE id = ' + str(doc_id))
+    copy_values(src_cursor, dest_cursor, 'DocEntry', 'WHERE id = ' + str(doc_id))
+    copy_values(src_cursor, dest_cursor, 'Version', 'WHERE id = ' + str(doc_id))
+
+    targetdb.commit()
+    targetdb.close()
 
 
 def compress(src_dir: str, dest_file: str, remove_src: bool = True):
