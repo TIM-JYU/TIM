@@ -41,7 +41,7 @@ def get_default_velp_group(doc_id: int) -> dict():
         found_velp_groups = timdb.documents.get_documents_in_folder("velp groups" + "/" + doc_name)
     velp_groups = []
     for v in found_velp_groups:
-        #if timdb.users.has_view_access(user_id, timdb.documents.get_document_id(v['name'])):
+        # if timdb.users.has_view_access(user_id, timdb.documents.get_document_id(v['name'])):
         velp_groups.append(v['id'])
     default_group = timdb.velp_groups.check_velp_group_ids_for_default_group(velp_groups)
     if default_group is not None:
@@ -87,10 +87,9 @@ def get_velp_groups(doc_id: int):
     imported_groups = timdb.velp_groups.get_groups_from_imported_table(user_group_list, doc_id)
     timdb.velp_groups.add_groups_to_selection_table(imported_groups, doc_id, user_id)
 
-
     all_velp_groups = timdb.velp_groups.get_groups_from_selection_table(doc_id, user_id)
 
-    #if timdb.users.has_manage_access(user_id, doc_id):
+    # if timdb.users.has_manage_access(user_id, doc_id):
     #    timdb.velp_groups.add_groups_to_default_table(all_velp_groups, doc_id)
 
     # SQLite uses 1/0 instead of True/False, change them to True/False for JavaScript side
@@ -98,6 +97,7 @@ def get_velp_groups(doc_id: int):
         group['edit_access'] = timdb.users.has_edit_access(user_id, group['id'])
 
     return jsonResponse(all_velp_groups)
+
 
 @velps.route("/<int:doc_id>/get_velp_group_personal_selections", methods=['GET'])
 def get_velp_group_personal_selections(doc_id: int) -> dict():
@@ -129,6 +129,7 @@ def get_velp_group_default_selections(doc_id: int) -> dict():
     response = jsonResponse(velp_group_defaults)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     return response
+
 
 @velps.route("/<int:doc_id>/get_velp_labels", methods=['GET'])
 def get_velp_labels(doc_id: int) -> 'str':
@@ -351,6 +352,7 @@ def change_selection(doc_id: int):
 
     return okJsonResponse()
 
+
 @velps.route("/<int:doc_id>/change_default_selection", methods=["POST"])
 def change_default_selection(doc_id: int):
     """Change selection for velp group in users VelpGroupSelection in current document
@@ -375,6 +377,7 @@ def change_default_selection(doc_id: int):
 
     return okJsonResponse()
 
+
 @velps.route("/<int:doc_id>/reset_target_area_selections_to_defaults", methods=['POST'])
 def reset_target_area_selections_to_defaults(doc_id: int):
     """Changes user's personal velp group selections in target area to defaults
@@ -396,6 +399,7 @@ def reset_target_area_selections_to_defaults(doc_id: int):
 
     return okJsonResponse()
 
+
 @velps.route("/<int:doc_id>/reset_all_selections_to_defaults", methods=['POST'])
 def reset_all_selections_to_defaults(doc_id: int):
     """Changes user's all personal velp group selections in document to defaults
@@ -410,6 +414,7 @@ def reset_all_selections_to_defaults(doc_id: int):
     timdb.velp_groups.reset_all_selections_to_defaults(doc_id, user_id)
 
     return okJsonResponse()
+
 
 @velps.route("/<int:doc_id>/create_velp_group", methods=['POST'])
 def create_velp_group(doc_id: int) -> dict():
@@ -431,16 +436,16 @@ def create_velp_group(doc_id: int) -> dict():
     full_path = timdb.documents.get_first_document_name(doc_id)
     doc_path, doc_name = timdb.documents.split_location(full_path)
 
-
     # valid_until = json_data.get('valid_until')
 
     verifyLoggedIn()
     user_group_id = getCurrentUserGroup()
+    user_id = getCurrentUserId()
 
     # Create a new velp group / document in users/username/velp groups folder
     if target_type == 0:
-        user = getCurrentUserName()
-        user_velp_path = timdb.folders.check_personal_velp_folder(user, user_group_id)
+        user_name = getCurrentUserName()
+        user_velp_path = timdb.folders.check_personal_velp_folder(user_name, user_group_id)
         new_group_path = user_velp_path + "/" + velp_group_name
         group_exists = timdb.documents.resolve_doc_id_name(new_group_path)
         if group_exists is None:
@@ -449,18 +454,31 @@ def create_velp_group(doc_id: int) -> dict():
             return abort(400, "Velp group with same name and location exists already.")
 
 
-    # TODO: Who has can add velp groups to documents or folders
-    # TODO: Also who owns the new velp group? Now it is current user
     else:
         if target_type == 2:
+            target_id = timdb.folders.get_folder_id(doc_path)
             doc_name = ""
+        elif target_type == 1:
+            target_id = doc_id
+        else:
+            return abort(400, "Unknown velp group target type.")
+
+        if not timdb.users.has_edit_access(user_id, target_id):
+            return abort(403, "Edit access is required.")
+
         # Gives path to either velp groups or velp groups/document name folder
         velps_folder_path = timdb.folders.check_velp_group_folder_path(doc_path, user_group_id, doc_name)
 
         new_group_path = velps_folder_path + "/" + velp_group_name
         group_exists = timdb.documents.resolve_doc_id_name(new_group_path)  # Check name so no duplicates are made
         if group_exists is None:
-            velp_group_id = timdb.velp_groups.create_velp_group(velp_group_name, user_group_id, new_group_path)
+            original_owner = timdb.folders.get_owner(target_id)
+            velp_group_id = timdb.velp_groups.create_velp_group(velp_group_name, original_owner, new_group_path)
+            rights = timdb.users.get_rights_holders(target_id)
+            for right in rights:
+                # TODO once someone implements a grant_access that takes access ids instead of strings, change to that
+                # function.
+                timdb.users.grant_access(right['gid'], velp_group_id, right['access_name'])
         else:
             return abort(400, "Velp group with same name and location exists already.")
 
@@ -478,6 +496,7 @@ def create_velp_group(doc_id: int) -> dict():
     timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, getCurrentUserId())
 
     return jsonResponse(created_velp_group)
+
 
 @velps.route("/<int:doc_id>/create_default_velp_group", methods=['POST'])
 def create_default_velp_group(doc_id: int):
@@ -529,7 +548,6 @@ def create_default_velp_group(doc_id: int):
     timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, getCurrentUserId())
 
     return jsonResponse(created_velp_group)
-
 
 
 def get_velp_groups_from_tree(document_id: int):
