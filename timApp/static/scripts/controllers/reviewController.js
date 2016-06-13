@@ -14,6 +14,8 @@ console.log("reviewController.js added");
 timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile', function ($scope, $http, $window, $compile) {
     "use strict";
 
+    var illegalClasses = ["annotation-element", "highlighted", "editorArea", "previewcontent"];
+
     $scope.annotationsAdded = false;
     $scope.selectedArea = null;
     $scope.selectedElement = null;
@@ -57,24 +59,24 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             if ($scope.annotations[i].answer_id !== null){
                 if (!parent.classList.contains("has-annotation")){
-
                     parent.classList.add("has-annotation");
                 }
                 continue;
             }
 
             if (parent.getAttribute("t") === placeInfo.start.t && placeInfo.start.offset !== null) {
-                var elements = parent.querySelector(".parContent");
-
-                var start_elpath = placeInfo.start.el_path;
-
-                for (var j = 0; j < start_elpath.length; j++) {
-                    var elementChildren = getElementChildren(elements);
-                    if (elementChildren[start_elpath[j]] !== null)
-                        elements = elementChildren[start_elpath[j]];
-                }
 
                 try{
+                    var elements = parent.querySelector(".parContent");
+
+                    var start_elpath = placeInfo.start.el_path;
+
+                    for (var j = 0; j < start_elpath.length; j++) {
+                        var elementChildren = getElementChildren(elements);
+                        if (elementChildren[start_elpath[j]] !== null)
+                            elements = elementChildren[start_elpath[j]];
+                    }
+
                     var startel = elements.childNodes[placeInfo.start.node];
                     var endel = elements.childNodes[placeInfo.end.node];
 
@@ -91,7 +93,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
 
         for (var k=0; k<annotationsToRemove.length; k++){
-            console.log("Deleted annotation: " + $scope.annotations[k].content);
+            console.log("Deleted annotation:");
+            console.log(annotationsToRemove[k]);
             var index = $scope.annotations.indexOf(annotationsToRemove[k]);
             $scope.annotations.splice(index, 1);
         }
@@ -253,6 +256,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param reason why annotation is put to here
      */
     var addAnnotationToElement = function (el, annotation, show, reason) {
+        annotation.reason = reason;
         var span = $scope.createPopOverElement(annotation, show);
         var text = document.createTextNode("\u00A0" + annotation.content + "\u00A0");
         span.appendChild(text);
@@ -348,18 +352,22 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * TODO: Make query to database
      * @param id annotation id
      */
-    $scope.deleteAnnotation = function (id) {
+    $scope.deleteAnnotation = function (id, inmargin) {
+        console.log(inmargin);
         var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
         var annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
-        var savedHTML = "";
 
-        for (var i = 0; i < annotationHighlights.length; i++) {
-            var addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', '');
-            addHTML = addHTML.replace('</span>', '');
-            savedHTML += addHTML;
+        if (!inmargin) {
+            var savedHTML = "";
+            for (var i = 0; i < annotationHighlights.length; i++) {
+                var addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', '');
+                addHTML = addHTML.replace('</span>', '');
+                savedHTML += addHTML;
+            }
+            annotationParents[0].outerHTML = savedHTML;
+        } else {
+            annotationParents[0].parentNode.removeChild(annotationParents[0]);
         }
-
-        annotationParents[0].outerHTML = savedHTML;
 
         for (var a = 0; a < $scope.annotations.length; a++) {
             if (id === $scope.annotations[a].id)
@@ -457,7 +465,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var startcont = getElementParent(range.startContainer);
         while (!startcont.hasAttribute("t")){
             startcont = getElementParent(startcont);
-            if (checkIfAnnotation(startcont))
+            if (checkIfAnnotation(startcont) || hasAnyIllegalClass(startcont))
                 return true;
         }
 
@@ -468,6 +476,19 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 return true;
         }
 
+        return false;
+    };
+
+    /**
+     * Checks if element has any class in illegalClasses array.
+     * @param element element to be checked
+     * @returns {boolean} whether illegal class was found or not.
+     */
+    var hasAnyIllegalClass = function(element){
+        for (var i=0; i<illegalClasses.length; i++){
+            if (element.classList.contains(illegalClasses[i]))
+                return true;
+        }
         return false;
     };
 
@@ -832,6 +853,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         element.setAttribute("email", annotation.email);
         element.setAttribute("visibleto", annotation.visible_to);
         element.setAttribute("show", show);
+        if (typeof annotation.reason !== "undefined")
+            element.setAttribute("ismargin", true);
+        else
+            element.setAttribute("ismargin", false);
         element.setAttribute("comments", JSON.stringify(annotation.comments));
 
         return element;
