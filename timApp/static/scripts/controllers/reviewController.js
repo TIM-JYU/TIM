@@ -253,6 +253,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param reason why annotation is put to here
      */
     var addAnnotationToElement = function (el, annotation, show, reason) {
+        annotation.reason = reason;
         var span = $scope.createPopOverElement(annotation, show);
         var text = document.createTextNode("\u00A0" + annotation.content + "\u00A0");
         span.appendChild(text);
@@ -348,18 +349,22 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * TODO: Make query to database
      * @param id annotation id
      */
-    $scope.deleteAnnotation = function (id) {
+    $scope.deleteAnnotation = function (id, inmargin) {
+        console.log(inmargin);
         var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
         var annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
-        var savedHTML = "";
 
-        for (var i = 0; i < annotationHighlights.length; i++) {
-            var addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', '');
-            addHTML = addHTML.replace('</span>', '');
-            savedHTML += addHTML;
+        if (!inmargin) {
+            var savedHTML = "";
+            for (var i = 0; i < annotationHighlights.length; i++) {
+                var addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', '');
+                addHTML = addHTML.replace('</span>', '');
+                savedHTML += addHTML;
+            }
+            annotationParents[0].outerHTML = savedHTML;
+        } else {
+            annotationParents[0].parentNode.removeChild(annotationParents[0]);
         }
-
-        annotationParents[0].outerHTML = savedHTML;
 
         for (var a = 0; a < $scope.annotations.length; a++) {
             if (id === $scope.annotations[a].id)
@@ -832,6 +837,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         element.setAttribute("email", annotation.email);
         element.setAttribute("visibleto", annotation.visible_to);
         element.setAttribute("show", show);
+        if (typeof annotation.reason !== "undefined")
+            element.setAttribute("ismargin", true);
+        else
+            element.setAttribute("ismargin", false);
         element.setAttribute("comments", JSON.stringify(annotation.comments));
 
         return element;
