@@ -175,21 +175,35 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param answer_id answer id
      * @param par_id paragraph id
      */
-    $scope.loadAnnotationsToAnswer = function (answer_id, par_id) {
+    $scope.loadAnnotationsToAnswer = function (answer_id, par_id, showInPlace) {
         var par = document.getElementById(par_id);
         var annotations = $scope.getAnnotationsByAnswerId(answer_id);
 
+        var oldAnnotations = par.querySelectorAll(".notes [aid]");
+        if (oldAnnotations.length > 0) {
+            var annotationParent = getElementParent(oldAnnotations[0]);
+            for (var a = 0; a < oldAnnotations.length; a++) {
+                console.log(getElementParent(oldAnnotations[a]));
+                annotationParent.remove(oldAnnotations[a]);
+            }
+        }
+
+        console.log("Loading annotations");
         for (var i = 0; i < annotations.length; i++) {
             var placeInfo = annotations[i].coord;
 
             var element = par.getElementsByTagName("PRE")[0].firstChild;
-            console.log(element);
             console.log(annotations[i]);
 
-            var range = document.createRange();
-            range.setStart(element, placeInfo.start.offset);
-            range.setEnd(element, placeInfo.end.offset);
-            $scope.addAnnotationToCoord(range, annotations[i], false);
+            if (!showInPlace || placeInfo.start.offset === null) {
+                addAnnotationToElement(par, annotations[i], false, "Added as margin annotation");
+            } else {
+                var range = document.createRange();
+                range.setStart(element, placeInfo.start.offset);
+                range.setEnd(element, placeInfo.end.offset);
+                $scope.addAnnotationToCoord(range, annotations[i], false);
+            }
+
         }
     };
 
@@ -645,16 +659,24 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             $scope.selectedArea = undefined;
             velp.used += 1;
         } else if ($scope.selectedElement !== null) {
+
             newAnnotation.coord = {
                 start: {
                     par_id: $scope.selectedElement.id,
-                    t: $scope.selectedElement.getAttribute("t")
+                    t: $scope.selectedElement.getAttribute("t"),
+                    offset: null
                 },
                 end: {
                     par_id: $scope.selectedElement.id,
                     t: $scope.selectedElement.getAttribute("t")
                 }
             };
+
+            var el_answer_id = getAnswerInfo($scope.selectedElement);
+
+            if (el_answer_id !== null)
+                newAnnotation.answer_id = el_answer_id.selectedAnswer.id;
+
             addAnnotationToElement($scope.selectedElement, newAnnotation, true, "No coordinate found");
             $scope.annotations.push(newAnnotation);
             $scope.annotationids[newAnnotation.id] = newAnnotation.id;
@@ -676,6 +698,16 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @returns {*}
      */
     var getAnswerInfo = function (start) {
+
+        if (start.hasAttribute("attrs") && start.hasAttribute("t")) {
+            var answ = start.getElementsByTagName("answerbrowser");
+            if (answ.length > 0) {
+                var answScope = angular.element(answ[0]).isolateScope();
+                return answScope;
+            }
+            return null;
+        }
+
         var myparent = getElementParent(start);
 
         if (myparent.tagName === "ANSWERBROWSER") {
