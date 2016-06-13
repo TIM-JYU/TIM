@@ -524,18 +524,26 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         }
     };
 
-    $scope.resetAllShowsToDefaults = function (){
-        $scope.groupSelections = JSON.parse(JSON.stringify($scope.groupDefaults));
+    $scope.resetCurrentShowsToDefaults = function (){
+        $scope.groupAttachment.target_type = parseInt($scope.groupAttachment.target_type);
 
-        $scope.makePostRequest("/{0}/reset_all_selections_to_defaults".replace('{0}', doc_id), null, function (json) {
+        var target_id;
+        if ($scope.groupAttachment.target_type === 1){
+            target_id = $scope.selectedElement.id;
+        } else {
+            target_id = "0";
+        }
+        $scope.groupSelections[target_id] = JSON.parse(JSON.stringify($scope.groupDefaults[target_id]));
+
+        $scope.makePostRequest("/{0}/reset_target_area_selections_to_defaults".replace('{0}', doc_id), {'target_id': target_id}, function (json) {
             $scope.updateVelpList();
         });
     };
 
-    $scope.resetCurrentShowsToDefaults = function (){
-        // $scope.groupSelections = JSON.parse(JSON.stringify($scope.groupDefaults));
+    $scope.resetAllShowsToDefaults = function (){
+        $scope.groupSelections = JSON.parse(JSON.stringify($scope.groupDefaults));
 
-        $scope.makePostRequest("/{0}/reset_target_area_selections_to_defaults".replace('{0}', doc_id), null, function (json) {
+        $scope.makePostRequest("/{0}/reset_all_selections_to_defaults".replace('{0}', doc_id), null, function (json) {
             $scope.updateVelpList();
         });
     };
