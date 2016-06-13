@@ -48,12 +48,13 @@ def create_db(db_path: str, src_db, tables: List[str]):
 
 
 def copy_values(src_c, dest_c, table, condition):
+    #print('SELECT * FROM ' + table + ' ' + condition)
     src_c.execute('SELECT * FROM ' + table + ' ' + condition)
     rows = [x for x in src_c.fetchall()]
     cols = [x[0] for x in src_c.description]
     params = ', '.join('?' for _ in cols)
     insert_statement = 'INSERT INTO ' + table + ' (' + ', '.join(cols) + ') VALUES (' + params + ')'
-    print(insert_statement)
+    #print(insert_statement)
 
     for row in rows:
         dest_c.execute(insert_statement, list(row))
@@ -84,16 +85,44 @@ def doc_export(doc_id: int, out_dir: str):
 
     stdout('Creating a temporary database...')
     targetdb_path = os.path.join(out_dir, 'tim_part.db')
-    targetdb = create_db(targetdb_path, timdb.db, ['Block', 'DocEntry', 'Version'])
-
-    stdout('Copying metadata...')
+    targetdb = create_db(targetdb_path, timdb.db, ['Block', 'BlockAccess', 'DocEntry', 'ReadParagraphs', 'User',
+                                                   'UserGroup', 'UserGroupMember', 'UserNotes', 'Version'])
     src_cursor = timdb.db.cursor()
     dest_cursor = targetdb.cursor()
+
+    stdout('Copying associated users and user groups...')
+    copy_values(src_cursor, dest_cursor, 'UserGroup',
+                """WHERE id IN (SELECT UserGroup_id FROM BlockAccess WHERE Block_id = "{0}"
+UNION SELECT UserGroup_id FROM ReadParagraphs WHERE doc_id = "{0}"
+UNION SELECT UserGroup_id FROM UserNotes WHERE doc_id = "{0}"
+)""".format(doc_id))
+    targetdb.commit()
+
+    dest_cursor.execute('SELECT id FROM UserGroup')
+    user_groups = list(set([str(row[0]) for row in dest_cursor.fetchall() or []]))
+    copy_values(src_cursor, dest_cursor, 'UserGroupMember', 'WHERE UserGroup_id IN ({})'.format(', '.join(user_groups)))
+    targetdb.commit()
+
+    dest_cursor.execute('SELECT User_id FROM UserGroupMember')
+    users = list(set([str(row[0]) for row in dest_cursor.fetchall() or []]))
+    copy_values(src_cursor, dest_cursor, 'User', 'WHERE id IN ({})'.format(', '.join(users)))
+    targetdb.commit()
+
+    stdout('Copying metadata...')
     copy_values(src_cursor, dest_cursor, 'Block', 'WHERE id = ' + str(doc_id))
+    copy_values(src_cursor, dest_cursor, 'BlockAccess', 'WHERE Block_id = ' + str(doc_id))  # UserGroup_id
     copy_values(src_cursor, dest_cursor, 'DocEntry', 'WHERE id = ' + str(doc_id))
     copy_values(src_cursor, dest_cursor, 'Version', 'WHERE id = ' + str(doc_id))
-
     targetdb.commit()
+
+    stdout('Copying read markings...')
+    copy_values(src_cursor, dest_cursor, 'ReadParagraphs', 'WHERE doc_id = ' + str(doc_id)) # UserGroup_id
+    targetdb.commit()
+
+    stdout('Copying user notes...')
+    copy_values(src_cursor, dest_cursor, 'UserNotes', 'WHERE doc_id = ' + str(doc_id)) # UserGroup_id
+    targetdb.commit()
+
     targetdb.close()
 
 
