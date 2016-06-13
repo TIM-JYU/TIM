@@ -420,7 +420,7 @@ class VelpGroups(Documents):
                       )
         self.db.commit()
 
-    def reset_target_area_selections_to_default(self, doc_id: int, target_id: str, user_id: int):
+    def reset_target_area_selections_to_defaults(self, doc_id: int, target_id: str, user_id: int):
         """Changes user's personal velp group selections in target area to defaults
 
         :param doc_id: ID of document
