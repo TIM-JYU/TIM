@@ -78,6 +78,12 @@ class TimDb(object):
         self.folders = Folders(self.db, files_root_path, 'folders', current_user_name)
         self.lecture_answers = LectureAnswers(self.db, files_root_path, 'lecture_answers', current_user_name)
 
+    def __del__(self):
+        """Commit and release the database connection when the object is deleted."""
+        if self.db is not None:
+            self.commit()
+            self.close()
+
     def clear(self):
         """Clears the contents of all database tables."""
         for table in TABLE_NAMES:
@@ -89,7 +95,9 @@ class TimDb(object):
 
     def close(self):
         """Closes the database connection."""
-        self.db.close()
+        if self.db is not None:
+            self.db.close()
+            self.db = None
 
     def initialize_tables(self):
         """Initializes the database from the schema2.sql file.
