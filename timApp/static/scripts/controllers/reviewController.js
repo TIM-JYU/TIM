@@ -330,10 +330,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             $scope.selectedElement = null;
             $scope.selectedArea = null;
             e.stopPropagation();
-
-            while (!parent.hasAttribute("t")) {
-                parent = getElementParent(parent);
-            }
         }
     };
 
