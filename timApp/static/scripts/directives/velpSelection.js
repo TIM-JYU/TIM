@@ -536,7 +536,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             targetID = "0";
         }
 
-        $scope.groupSelections[target_id] = JSON.parse(JSON.stringify($scope.groupDefaults[target_id]));
+        $scope.groupSelections[targetID] = JSON.parse(JSON.stringify($scope.groupDefaults[targetID]));
 
         $scope.makePostRequest("/{0}/reset_target_area_selections_to_defaults".replace('{0}', doc_id), {'target_id': targetID}, function (json) {
             $scope.updateVelpList();
