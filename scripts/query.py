@@ -1,6 +1,4 @@
 #!/usr/bin/python3
-import sqlite3
-import os
 import readline
 import time
 
@@ -114,7 +112,7 @@ def main():
     if not os.path.isfile(DBFILE):
         stderr("Can't find {}!".format(DBFILE))
         return
-    db = sqlite3.Connection(DBFILE)
+    db = get_timdb().db
 
     print("Using database " + DBFILE)
     show_tables(db)
@@ -127,8 +125,6 @@ def main():
             pass
     except (EOFError, KeyboardInterrupt):
         pass
-
-    db.close()
 
 if __name__ == '__main__':
     main()
