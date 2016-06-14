@@ -89,6 +89,14 @@
             <div class="parContent mdcontent"{% if task_id %} id="{{ task_id }}"{% endif %}>
                 {{ t.md|safe }}
             </div>
+        {% elif t.attrs_str %}
+            <div class="parContent mdcontent"{% if task_id %} id="{{ task_id }}"{% endif %}>
+                {{ t.attrs_str }}
+            </div>
+        {% else %}
+            <div class="parContent mdcontent"{% if task_id %} id="{{ task_id }}"{% endif %}>
+                (hidden paragraph)
+            </div>
         {% endif %}
     {% else %}
         <div class="parContent"{% if task_id %} id="{{ task_id }}"{% endif %}>
