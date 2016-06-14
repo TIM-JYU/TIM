@@ -879,6 +879,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         element.setAttribute("points", annotation.points);
         element.setAttribute("aid", annotation.id);
         element.setAttribute("annotator", annotation.annotator_name);
+        element.setAttribute("editaccess", annotation.edit_access);
         element.setAttribute("timesince", annotation.timesince);
         element.setAttribute("creationtime", annotation.creationtime);
         element.setAttribute("email", annotation.email);
