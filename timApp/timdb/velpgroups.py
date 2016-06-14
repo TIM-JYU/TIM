@@ -277,15 +277,13 @@ class VelpGroups(Documents):
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT
-                      velp_group_id as id, DocEntry.name AS location
+                      velp_group_id as id, VelpGroup.name
                       FROM VelpGroupSelection
-                      JOIN DocEntry ON DocEntry.id = VelpGroupSelection.velp_group_id
+                      INNER JOIN VelpGroup ON VelpGroup.id = VelpGroupSelection.velp_group_id
                       WHERE doc_id = ? AND user_id = ? AND target_type = 0
                       """, [doc_id, user_id]
                       )
         results = self.resultAsDictionary(cursor)
-        for result in results:
-            _, result['name'] = self.split_location(result['location'])
         return results
 
     def get_personal_selections_for_velp_groups(self, doc_id: int, user_id: int):
