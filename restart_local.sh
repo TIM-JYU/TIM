@@ -38,9 +38,6 @@ checkdir /opt/funnel $PWD/funnel
 checkdir /var/log/funnel $PWD/tim_logs
 checkdir /var/log/wuff $PWD/tim_logs
 
-# Set a lock for the watchdog
-touch /opt/tim/restarting
-
 # Stop and remove containers
 if param tim; then
     docker rm -f tim > /dev/null 2>&1 &
@@ -104,8 +101,5 @@ fi
 if param nginx; then
   docker run --net=timnet -d --name nginx -p 80:80 -v /opt/cs/:/opt/cs/ local_nginx /startup.sh
 fi
-
-# Remove the lock
-rm /opt/tim/restarting
 
 exit 0
