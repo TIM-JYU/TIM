@@ -54,7 +54,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
     // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
     var doc_id = $scope.docId;
-    var default_velp_group = {"id": -1, name: "Does not exist" } ; // TODO Use route to add this information
+    var default_velp_group = {id: -1, name: "No access to default group", edit_access: false}; // TODO Use route to add this information
 
     $scope.annotations = [];
 
@@ -65,7 +65,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         console.log("Get default velp group");
         default_velp_group = data;
         default_velp_group.selected = true;
-        default_velp_group.edit_access = true;
         console.log(data);
     });
 
@@ -490,7 +489,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             group.target_type = 0;
         }
 
-        var index;
         if (type === "show"){
             $scope.makePostRequest("/{0}/change_selection".replace('{0}', doc_id), group, function (json) {console.log(json);});
 
@@ -584,6 +582,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         $scope.groupSelections[targetID] = JSON.parse(JSON.stringify($scope.groupDefaults[targetID]));
 
         $scope.makePostRequest("/{0}/reset_target_area_selections_to_defaults".replace('{0}', doc_id), {'target_id': targetID}, function (json) {
+            console.log(json);
             $scope.updateVelpList();
         });
     };
@@ -592,6 +591,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         $scope.groupSelections = JSON.parse(JSON.stringify($scope.groupDefaults));
 
         $scope.makePostRequest("/{0}/reset_all_selections_to_defaults".replace('{0}', doc_id), null, function (json) {
+            console.log(json);
             $scope.updateVelpList();
         });
     };
