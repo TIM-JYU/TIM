@@ -107,8 +107,13 @@ p.stem {
     font-size: 1em;
   }
 
+  h2, h3, h4 {
+    margin-left: 0;
+  }
+
   h4 {
     margin-top: 0.0em;
+    margin-left: 0;
     padding-top: 1em;
     padding-left: 1em;
     padding-bottom: 1em;
@@ -130,7 +135,7 @@ p.stem {
     line-height: 1.1;
     font-size: 0.96em;
     box-shadow: none;
-    width: calc(100% - 1.4em) !important;
+    width: 100%;
     white-space: pre;
     border: 0 none;
     border-left: thin solid #0066FF;

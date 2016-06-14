@@ -186,6 +186,8 @@ a .glyphicon {
             white-space: pre;
         }
     }
+
+    @import "csRun";
 }
 
 .correct {
@@ -776,8 +778,6 @@ input[type="file"] {
 .questionButton {
     margin: 0.2em;
 }
-
-@import "csRun";
 
 @media print {
     body {
