@@ -138,8 +138,8 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                         $scope.$parent.processAllMathDelayed(plugin);
                         if ($scope.review) {
                             $scope.element.find('.review').html(data.reviewHtml);
-                            $scope.$parent.loadAnnotationsToAnswer($scope.selectedAnswer.id, par_id);
                         }
+                        $scope.$parent.loadAnnotationsToAnswer($scope.selectedAnswer.id, par_id, $scope.review);
 
                     }).error(function (data, status, headers, config) {
                         $scope.error = 'Error getting state: ' + data.error;
