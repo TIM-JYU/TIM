@@ -117,7 +117,6 @@ timApp.directive("annotation", function() {
             };
 
             scope.checkRights = function(){
-                console.log(scope.editaccess);
                 return scope.editaccess!==1;
             };
 
