@@ -26,6 +26,11 @@ def get_default_velp_group(doc_id: int) -> dict():
     owner_group_id = timdb.documents.get_owner(doc_id)
     full_path = timdb.documents.get_first_document_name(doc_id)
     doc_path, doc_name = timdb.documents.split_location(full_path)
+    edit_access = False
+    if timdb.users.has_manage_access(user_id, doc_id):
+        edit_access = True
+    else:
+        return {"id": -2, "name": "No access to default group", "edit_access": edit_access}
 
     # Check if document's path contains velp groups folder and if it does, make document its own default velp group
     if "velp groups/" in full_path:
@@ -33,7 +38,7 @@ def get_default_velp_group(doc_id: int) -> dict():
         velp_group = [{'target_type': '0', 'target_id': 0, 'id': doc_id}]
         timdb.velp_groups.add_groups_to_selection_table(velp_group, doc_id, user_id)
         print("Document is a velp group, made default velp group to point itself")
-        return jsonResponse({"id": doc_id, "name": "Default"})
+        return jsonResponse({"id": doc_id, "name": "Default", "edit_access": edit_access})
 
     if doc_path != "":
         found_velp_groups = timdb.documents.get_documents_in_folder(doc_path + "/" + "velp groups" + "/" + doc_name)
@@ -45,9 +50,10 @@ def get_default_velp_group(doc_id: int) -> dict():
         velp_groups.append(v['id'])
     default_group = timdb.velp_groups.check_velp_group_ids_for_default_group(velp_groups)
     if default_group is not None:
+        default_group["edit_access"] = edit_access
         return jsonResponse(default_group)
 
-    return jsonResponse({"id": -1, "name": doc_name + "_default"})
+    return jsonResponse({"id": -1, "name": doc_name + "_default", "edit_access": edit_access})
 
 
 @velps.route("/<int:doc_id>/get_velps", methods=['GET'])
@@ -249,26 +255,21 @@ def update_velp(doc_id: int):
     groups_to_remove = []
     groups_to_add = []
 
-    # Add all velp group ids user edit has access to in a document to a list
+    # Add all velp group ids user has edit access to in a document to a remove list
     doc_groups = timdb.velp_groups.get_groups_from_selection_table(doc_id, user_id)
     for group in doc_groups:
         if timdb.users.has_edit_access(user_id, group['id']):
             groups_to_remove.append(group['id'])
             edit_access = True
-        else:
-            print("No edit access to group", group['id'])
 
-    # Check that user has edit access to velp groups in given velp group list and add them to a new list
+    # Check that user has edit access to velp groups in given velp group list and add them to an add list
     for group in velp_groups:
         if timdb.users.has_edit_access(user_id, group):
             edit_access = True
             groups_to_add.append(group)
 
-        else:
-            print("No edit access to group", group)
-
     # Add and remove velp from velp groups
-    if edit_access:
+    if edit_access and len(groups_to_add) > 0:
         timdb.velp_groups.remove_velp_from_groups(velp_id, groups_to_remove)
         timdb.velp_groups.add_velp_to_groups(velp_id, groups_to_add)
 

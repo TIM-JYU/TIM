@@ -54,7 +54,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
     // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
     var doc_id = $scope.docId;
-    var default_velp_group = {"id": -1, name: "Does not exist" } ; // TODO Use route to add this information
+    var default_velp_group = {id: -2, name: "No access to default group", edit_access: false}; // TODO Use route to add this information
 
     $scope.annotations = [];
 
