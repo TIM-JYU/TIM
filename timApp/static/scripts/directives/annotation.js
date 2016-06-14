@@ -115,6 +115,10 @@ timApp.directive("annotation", function() {
                 });
             };
 
+            scope.checkRights = function(){
+                return false;
+            };
+
             scope.checkIfChanged = function () {
                 if (scope.original.points !== scope.points)
                     return true;

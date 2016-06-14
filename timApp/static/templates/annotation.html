@@ -5,7 +5,7 @@
             <p><span class="annHeader"><strong>{{ velp }}</strong></span></p>
             <p><a class="username" href="mailto:{{ email }}">{{ annotator }}</a>
                     <span class="timestamp" title="{{ creationtime }}">{{ timesince }}</span></p>
-            <p><label>Points: <input type="number" ng-model="points" ng-value="points"
+            <p><label>Points: <input type="number" ng-model="points" ng-value="points" ng-disabled="checkRights()"
                                      ng-change="changePoints(points)"/></label></p>
         </span>
 
@@ -34,7 +34,7 @@
         <form class="form-inline adjustAnnForm">
             <div class="form-group">
                 <label>Visible to:</label>
-                <select ng-model="visible_options.value"
+                <select ng-model="visible_options.value" ng-disabled="checkRights()"
                         ng-options="v as visible_options.names[v-1] for v in visible_options.values">
                 </select>
                 <div ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
@@ -49,6 +49,7 @@
         </button>
     </span><span class="annDelAnnotation" title="Delete annotation"
                  ng-class="['delAnnotation', 'float-right', 'glyphicon', 'glyphicon-trash', 'clickable-icon', {hide: comments.length > 1} ]"
+                 ng-hide="checkRights()"
                  ng-click="deleteAnnotation()"></span>
 </span></span><!--
 Highlighted text--><span ng-click="toggleAnnotation()" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
