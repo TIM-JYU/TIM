@@ -115,6 +115,7 @@ timApp.directive("annotation", function() {
                 });
             };
 
+            // TODO: Make this right
             scope.checkRights = function(){
                 return false;
             };
