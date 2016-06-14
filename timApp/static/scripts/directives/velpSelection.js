@@ -44,7 +44,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $scope.labelToEdit = {content: "", selected: false, edit: false, id: -3};
     $scope.newVelpGroup = {name: "", target_type: 0};
     $scope.selectedLabels = [];
-    $scope.settings = {selectedAllGroups: false};
+    $scope.settings = {selectedAllShows: false, selectedAllDefault: false};
     $scope.submitted = {velp: false, velpGroup: false};
 
     $scope.groupAttachment = {target_type: 0, id: null};
@@ -524,8 +524,57 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         }
     };
 
-    $scope.resetCurrentShowsToDefaults = function (){
+    $scope.changeAllVelpGroupSelections = function (type) {
 
+        $scope.groupAttachment.target_type = parseInt($scope.groupAttachment.target_type);
+
+        var targetID, targetType;
+
+        if ($scope.groupAttachment.target_type === 1){
+            targetID = $scope.selectedElement.id;
+            targetType = 1;
+        } else {
+            targetID = "0";
+            targetType = 0;
+        }
+        console.log(targetID);
+        console.log(targetType);
+        console.log($scope.settings.selectedAllShows);
+
+        if (type === "show"){
+            $scope.makePostRequest("/{0}/change_all_selections".replace('{0}', doc_id), {
+                'target_id': targetID, 'target_type': targetType, 'selection':$scope.settings.selectedAllShows
+            }, function (json) {console.log(json);});
+
+            // Iz no work :(
+            // Selections go to database, interface doesn't refresh immediately
+
+            //console.log("---------------");
+            //console.log($scope.groupSelections);
+            //console.log($scope.velpGroups);
+            //angular.forEach($scope.velpGroups, function (group) {
+            //    group .show = $scope.settings.selectedAllShows;
+            //});
+//
+            //$scope.updateVelpList();
+
+        }
+        else if (type === "default"){
+            $scope.makePostRequest("/{0}/change_default_selection".replace('{0}', doc_id), group, function (json) {console.log(json);});
+
+            if (!$scope.groupDefaults.hasOwnProperty(group.target_id))
+                $scope.groupDefaults[group.target_id] = [];
+
+            var defGroups = $scope.groupDefaults[group.target_id];
+
+            if (defGroups.indexOf(group.id) < 0)
+                $scope.groupDefaults[group.target_id].push(group.id);
+            else
+                $scope.groupDefaults[group.target_id].splice(defGroups.indexOf(group.id), 1);
+        }
+    };
+
+    $scope.resetCurrentShowsToDefaults = function (){
 
         var targetID;
         $scope.groupAttachment.target_type = parseInt($scope.groupAttachment.target_type);
@@ -536,7 +585,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             targetID = "0";
         }
 
-        $scope.groupSelections[target_id] = JSON.parse(JSON.stringify($scope.groupDefaults[target_id]));
+        $scope.groupSelections[targetID] = JSON.parse(JSON.stringify($scope.groupDefaults[targetID]));
 
         $scope.makePostRequest("/{0}/reset_target_area_selections_to_defaults".replace('{0}', doc_id), {'target_id': targetID}, function (json) {
             $scope.updateVelpList();

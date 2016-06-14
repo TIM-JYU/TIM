@@ -285,7 +285,7 @@ class VelpGroups(Documents):
                       )
         results = self.resultAsDictionary(cursor)
         for result in results:
-            result['name'] = os.path.basename(result['location'])
+            _, result['name'] = self.split_location(result['location'])
         return results
 
     def get_personal_selections_for_velp_groups(self, doc_id: int, user_id: int):
@@ -403,9 +403,9 @@ class VelpGroups(Documents):
         if target_type == 0:
             cursor.execute("""
                       UPDATE VelpGroupSelection
-                      SET selected = 0
+                      SET selected = ?
                       WHERE doc_id = ? AND target_id = ? AND user_id = ?
-                      """, [doc_id, target_id, user_id]
+                      """, [selected, doc_id, target_id, user_id]
                        )
         else:
             cursor.execute("""

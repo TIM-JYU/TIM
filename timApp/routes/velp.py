@@ -37,7 +37,7 @@ def get_default_velp_group(doc_id: int) -> dict():
 
     if doc_path != "":
         found_velp_groups = timdb.documents.get_documents_in_folder(doc_path + "/" + "velp groups" + "/" + doc_name)
-    else:
+    else:   # Documents in root folder don't like / after empty path
         found_velp_groups = timdb.documents.get_documents_in_folder("velp groups" + "/" + doc_name)
     velp_groups = []
     for v in found_velp_groups:
@@ -351,6 +351,29 @@ def change_selection(doc_id: int):
 
     return okJsonResponse()
 
+@velps.route("/<int:doc_id>/change_all_selections", methods=["POST"])
+def change_all_selections(doc_id: int):
+    """Change selection for velp group in users VelpGroupSelection in current document.
+
+    :param doc_id: ID of document
+    :return: okJsonResponse
+    """
+
+    json_data = request.get_json()
+    try:
+        selection = json_data['selection']
+        target_type = json_data['target_type']
+        target_id = json_data['target_id']
+    except KeyError as e:
+        return abort(400, "Missing data: " + e.args[0])
+    verifyLoggedIn()
+    user_id = getCurrentUserId()
+    timdb = getTimDb()
+    timdb.velp_groups.change_all_target_area_selections(doc_id, target_type, target_id, user_id, selection)
+
+    return okJsonResponse()
+
+
 @velps.route("/<int:doc_id>/change_default_selection", methods=["POST"])
 def change_default_selection(doc_id: int):
     """Change selection for velp group in users VelpGroupSelection in current document
@@ -554,7 +577,7 @@ def get_velp_groups_from_tree(document_id: int):
     current_path = doc_path
     if current_path != "":
         velp_groups_path = current_path + "/" + velp_group_folder
-    else:
+    else:   # Documents in root folder don't like / after empty path
         velp_groups_path = velp_group_folder
     doc_velp_path = velp_groups_path + "/" + doc_name
     username = getCurrentUserName()
@@ -578,7 +601,7 @@ def get_velp_groups_from_tree(document_id: int):
     if current_path != "":
         found_velp_groups = timdb.documents.get_documents_in_folder(current_path + "/" + velp_group_folder +
                                                                     "/" + doc_name)
-    else:
+    else:   # Documents in root folder don't like / after empty path
         found_velp_groups = timdb.documents.get_documents_in_folder(velp_group_folder + "/" + doc_name)
     for v in found_velp_groups:
         if timdb.users.has_view_access(getCurrentUserId(), timdb.documents.get_document_id(v['name'])):
@@ -616,7 +639,7 @@ def get_velp_groups_from_tree(document_id: int):
         id_number = result['id']
         is_velp_group = timdb.velp_groups.is_id_velp_group(id_number)
         if not is_velp_group:
-            group_name = os.path.basename(timdb.documents.get_first_document_name(id_number))
+            _, group_name = timdb.documents.split_location(timdb.documents.get_first_document_name(id_number))
             timdb.velp_groups.make_document_a_velp_group(group_name, id_number)
 
     return results
