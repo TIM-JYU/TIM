@@ -153,7 +153,7 @@
                                                 <p><input name="velpName" type="text"
                                                           ng-model="velpToEdit['content']"
                                                           required placeholder="Edit velp!">
-                                                    <span class="float-right" ng-click="selectVelpToEdit(velp )"
+                                                    <span class="float-right" ng-click="selectVelpToEdit(velp); $event.stopPropagation();"
                                                           ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
 
                                                 </p>
@@ -221,7 +221,7 @@
                                                     <input type="button"
                                                            class="timButton"
                                                            value="Cancel"
-                                                           ng-click="selectVelpToEdit(velp)">
+                                                           ng-click="selectVelpToEdit(velp); $event.stopPropagation();">
                                                 </p>
                                             </form>
                                         </div>

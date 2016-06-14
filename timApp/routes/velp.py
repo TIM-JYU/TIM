@@ -256,7 +256,7 @@ def update_velp(doc_id: int):
             groups_to_remove.append(group['id'])
             edit_access = True
         else:
-            print("No edit access to group", group[id])
+            print("No edit access to group", group['id'])
 
     # Check that user has edit access to velp groups in given velp group list and add them to a new list
     for group in velp_groups:

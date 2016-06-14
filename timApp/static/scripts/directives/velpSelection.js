@@ -318,7 +318,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         velp.edit = true;
 
         $scope.velpToEdit = (JSON.parse(JSON.stringify(velp)));
-
     };
 
     /**
@@ -354,9 +353,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
                 console.log(json);
             });
         }
-
-
-
 
         for (var i = 0; i < $scope.velps.length; i++) {
             if ($scope.velps[i].id === $scope.velpToEdit.id) {
