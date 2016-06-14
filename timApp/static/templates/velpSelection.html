@@ -263,16 +263,13 @@
                         <label for="selPar"> Selected paragraph</label>
                         </fieldset>
                         <tr>
-                            <th>Show</th>
-                            <th>Default</th>
-                            <th>Group name</th>
+                            <th><span class="comment-info small"><input type="checkbox"  ng-model="settings.selectedAllShows"
+                                      ng-checked="checkCheckBoxes('show')" ng-click="changeAllVelpGroupSelections('show')"> Show</span></th>
+                            <th><span class="comment-info small"><input type="checkbox" ng-model="settings.selectedAllDefault"
+                                      ng-checked="checkCheckBoxes('default')" ng-click="changeAllVelpGroupSelections('default')"> Default</span></th>
+                            <th><span class="small">Group</span></th>
                         </tr>
-                        <tr>
-                            <th class="summCheckbox"><input type="checkbox"  ng-model="settings.selectedAllShows"
-                                                            ng-click="changeAllVelpGroupSelections('show')"></th>
-                            <th class="summCheckbox"><input type="checkbox"></th>
-                            <th></th>
-                        </tr>
+
                         <tr ng-repeat="group in velpGroups">
                             <td>
                                 <input type="checkbox" ng-model="group.show"

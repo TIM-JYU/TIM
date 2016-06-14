@@ -537,41 +537,41 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             targetID = "0";
             targetType = 0;
         }
+
         console.log(targetID);
         console.log(targetType);
         console.log($scope.settings.selectedAllShows);
 
         if (type === "show"){
+            if (!$scope.settings.selectedAllShows) {
+                $scope.groupSelections[targetID] = [];
+            } else {
+                $scope.velpGroups.forEach(function (g) {
+                    $scope.groupSelections[targetID].push(g.id);
+                });
+            }
+
             $scope.makePostRequest("/{0}/change_all_selections".replace('{0}', doc_id), {
-                'target_id': targetID, 'target_type': targetType, 'selection':$scope.settings.selectedAllShows
-            }, function (json) {console.log(json);});
+                'target_id': targetID, 'target_type': targetType, 'selection': $scope.settings.selectedAllShows
+            }, function (json) {
+                console.log(json);
+            });
 
-            // Iz no work :(
-            // Selections go to database, interface doesn't refresh immediately
 
-            //console.log("---------------");
-            //console.log($scope.groupSelections);
-            //console.log($scope.velpGroups);
-            //angular.forEach($scope.velpGroups, function (group) {
-            //    group .show = $scope.settings.selectedAllShows;
-            //});
-//
-            //$scope.updateVelpList();
 
         }
-        else if (type === "default"){
-            $scope.makePostRequest("/{0}/change_default_selection".replace('{0}', doc_id), group, function (json) {console.log(json);});
-
-            if (!$scope.groupDefaults.hasOwnProperty(group.target_id))
-                $scope.groupDefaults[group.target_id] = [];
-
-            var defGroups = $scope.groupDefaults[group.target_id];
-
-            if (defGroups.indexOf(group.id) < 0)
-                $scope.groupDefaults[group.target_id].push(group.id);
-            else
-                $scope.groupDefaults[group.target_id].splice(defGroups.indexOf(group.id), 1);
+        else if (type === "default") {
+            console.log("DEFAULT " + $scope.settings.selectedAllDefault);
+            if (!$scope.settings.selectedAllDefault) {
+                $scope.groupDefaults[targetID] = [];
+            } else {
+                for (var i=0;i<$scope.velpGroups.length; i++)
+                    $scope.groupDefaults[targetID].push($scope.velpGroups[i].id);
+            }
         }
+
+        $scope.updateVelpList();
+
     };
 
     $scope.resetCurrentShowsToDefaults = function (){
@@ -598,6 +598,22 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         $scope.makePostRequest("/{0}/reset_all_selections_to_defaults".replace('{0}', doc_id), null, function (json) {
             $scope.updateVelpList();
         });
+    };
+
+    $scope.checkCheckBoxes = function(type){
+        var targetID = null;
+
+        if ($scope.groupAttachment.target_type === 1){
+            targetID = $scope.selectedElement.id;
+        } else {
+            targetID = "0";
+        }
+
+        if (type === "show" && typeof $scope.groupSelections[targetID] !== UNDEFINED){
+            return $scope.groupSelections[targetID].length === $scope.velpGroups.length;
+        } else if (type === "default" && typeof $scope.groupDefaults[targetID] !== UNDEFINED){
+            return $scope.groupDefaults[targetID].length === $scope.velpGroups.length;
+        }
     };
 
     $scope.getVelpsVelpGroups = function (velp) {
