@@ -20,7 +20,7 @@ class DocumentTest(TimDbTest):
         d = Document(doc_id=doc_id)
         self.assertFalse(d.exists())
         db = self.get_db()
-        self.get_db().documents.create(str(d.doc_id), 0, d.doc_id)
+        db.documents.create(str(d.doc_id), 0, d.doc_id)
         db.close()
         return d
 
