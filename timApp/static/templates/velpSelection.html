@@ -88,11 +88,29 @@
                                     <fieldset ng-show="advancedOn">
                                         <legend>Labels</legend>
                                                     <span ng-repeat="l in labels">
+                                                        <span ng-show="!l.edit">
                                                         <label><input type="checkbox"
                                                                       ng-click="updateVelpLabels(newVelp, l)"
                                                                       ng-checked="isLabelInVelp(newVelp, l)"> {{ l.content }}
-                                                        </label><br>
-                                                    </span>
+                                                        </label>
+                                                        <span class="float-right" ng-click="selectLabelToEdit(l)"
+                                                              ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
+                                                        <br>
+                                                        </span>
+                                                        <span ng-show="l.edit">
+                                                            <input type="text" placeholder="Label name"
+                                                                   ng-model="labelToEdit.content">
+                                                            <span class="float-right" ng-click="selectLabelToEdit(l)"
+                                                                  ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
+                                                            <input class="timButton" type="button" value="Save"
+                                                                   ng-click="editLabel(newVelp)">
+                                                            <input
+                                                                    class="timButton"
+                                                                    type="button" value="Cancel"
+                                                                    ng-click="selectLabelToEdit(l)">
+                                                            <br>
+                                                        </span>
+                                                        </span>
                                         <input class="addLabelField" placeholder="Add label"
                                                ng-model="newLabel['content']">
                                         <input class="addLabelBtn" type="button" value="Add"
