@@ -1149,13 +1149,19 @@ timApp.controller("ViewCtrl", [
         sc.onClick("html.ng-scope", function ($this, e) {
             // Clicking anywhere
             var tagName = e.target.tagName.toLowerCase();
-            var ignoreTags = ['button', 'input'];
-            if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || $(e.target).hasClass("menu-icon")
-                || $(e.target).hasClass("editline") || $(e.target).hasClass("areaeditline1") ||
-                   $(e.target).hasClass("areaeditline2") || $(e.target).hasClass("areaeditline3")) {
+            var jqTarget = $(e.target);
+            var ignoreTags = ['button', 'input', 'label', 'i'];
+            var ignoreClasses = ['menu-icon', 'editline', 'areaeditline', 'draghandle'];
+
+            if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || jqTarget.attr('position') == 'absolute')
                 return false;
+
+            for (var i = 0; i < ignoreClasses.length; i++) {
+                if (jqTarget.hasClass(ignoreClasses[i]))
+                    return false;
             }
 
+            //console.log(jqTarget);
             sc.closeOptionsWindow();
 
             if (tagName !== "p") {
