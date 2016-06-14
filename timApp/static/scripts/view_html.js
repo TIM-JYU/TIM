@@ -917,9 +917,10 @@ timApp.controller("ViewCtrl", [
                 var $endpar = sc.getElementByParId(extraData.area_end);
                 $par.nextUntil($endpar).add($endpar).remove();
             }
-            var newPars = $($compile(data.texts)(sc));
-            $par.replaceWith(newPars);
-            sc.processAllMathDelayed(newPars);
+
+            var $newPars = $($compile(data.texts)(sc));
+            $par.replaceWith($newPars);
+            sc.processAllMathDelayed($newPars);
             http.defaults.headers.common.Version = data.version;
             sc.editing = false;
             sc.cancelArea();
@@ -948,12 +949,22 @@ timApp.controller("ViewCtrl", [
             for (var key in sc.pendingUpdates) {
                 if (sc.pendingUpdates.hasOwnProperty(key)) {
                     var $par = sc.getElementByParId(key);
-                    var newPar = $($compile(sc.pendingUpdates[key])(sc));
-                    $par.replaceWith(newPar);
-                    sc.processAllMathDelayed(newPar);
+                    var $newPar = $($compile(sc.pendingUpdates[key])(sc));
+                    $par.replaceWith($newPar);
+                    sc.applyDynamicStyles($newPar);
+                    sc.processAllMathDelayed($newPar);
                 }
             }
             sc.pendingUpdates = {};
+        };
+
+        sc.applyDynamicStyles = function($par) {
+            if ($window.editMode) {
+                $par.addClass('editmode');
+
+                // Show hidden paragraphs if in edit mode
+                $par.find('.mdcontent').css('display', 'initial');
+            }
         };
 
         sc.isReference = function ($par) {

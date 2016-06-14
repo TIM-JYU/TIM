@@ -113,6 +113,11 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
         $scope.disable_area_edit = function () {
         };
 
+        $scope.show_hidden = function (show_param) {
+            var display_value = show_param == null ? 'none' : 'initial';
+            $('.mdcontent').css('display', display_value)
+        };
+
         $scope.model = {editState: $window.editMode};
 
         $scope.$watch('model.editState', function (newVal, oldVal, scope) {
@@ -136,6 +141,8 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
                 $scope.enable_par_edit();
                 $scope.enable_area_edit_passive();
             }
+            
+            $scope.show_hidden(newVal);
         });
     }
 ])

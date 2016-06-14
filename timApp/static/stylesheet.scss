@@ -114,6 +114,11 @@ a .glyphicon {
         }
     }
 
+    .mdcontent {
+        color: #DCDCDC;
+        display: none;
+    }
+
     table {
         @extend .table, .table-condensed, .table-bordered;
         width: auto;

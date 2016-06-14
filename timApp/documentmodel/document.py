@@ -475,11 +475,14 @@ class Document:
                         f.write('\n')
                     f.write(line)
 
-    def modify_paragraph(self, par_id: str, new_text: str, new_attrs: Optional[dict]=None, new_properties: Optional[dict]=None) -> DocParagraph:
+    def modify_paragraph(self, par_id: str, new_text: str, new_attrs: Optional[dict]=None,
+                         new_properties: Optional[dict]=None) -> DocParagraph:
         """
         Modifies the text of the given paragraph.
         :param par_id: Paragraph id.
         :param new_text: New text.
+        :param new_attrs: New attributes.
+        :param new_properties: New properties.
         :return: The new paragraph object.
         """
 

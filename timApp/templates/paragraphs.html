@@ -83,9 +83,19 @@
     {% if task_id and not preview %}
         <a href="#{{ task_id }}" title="Permlink" class="headerlink">#</a>
     {% endif %}
-    <div class="parContent"{% if task_id %} id="{{ task_id }}"{% endif %}>
-        {{ t.html|safe }}
-    </div>
+
+    {% if not t.html %}
+        {% if t.md %}
+            <div class="parContent mdcontent"{% if task_id %} id="{{ task_id }}"{% endif %}>
+                {{ t.md|safe }}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="parContent"{% if task_id %} id="{{ task_id }}"{% endif %}>
+            {{ t.html|safe }}
+        </div>
+    {% endif %}
+
     {% if t.attrs.rl == 'force' or not (not t.attrs.rd or t.attrs.rl == 'no') %}
         <a
         {% if t.ref_attrs and t.ref_attrs.classes and "deleted" in t.ref_attrs.classes %}

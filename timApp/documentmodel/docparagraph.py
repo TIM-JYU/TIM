@@ -145,6 +145,9 @@ class DocParagraph:
 
         try:
             self.__htmldata['html'] = self.get_html(from_preview=from_preview)
+            if not self.__htmldata['html']:
+                self.__htmldata['md'] = self.get_markdown()
+
         except Exception as e:
             self.__htmldata['html'] = get_error_html(e)
 
