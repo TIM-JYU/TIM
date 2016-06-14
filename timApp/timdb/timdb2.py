@@ -79,9 +79,8 @@ class TimDb(object):
         self.lecture_answers = LectureAnswers(self.db, files_root_path, 'lecture_answers', current_user_name)
 
     def __del__(self):
-        """Commit and release the database connection when the object is deleted."""
+        """Release the database connection when the object is deleted."""
         if self.db is not None:
-            self.commit()
             self.close()
 
     def clear(self):
