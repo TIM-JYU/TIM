@@ -270,15 +270,17 @@
                             </td>
                         </tr>
                     </table -->
-                    <form>
+                    <fieform>
                     <table class="fulldiv">
 
-                        <h5>Otsikko tähän</h5>
+                        <h5>Choose area for velp group:</h5>
                         <fieldset>
-                        <input type="radio" ng-click="updateVelpList()" ng-model="groupAttachment.target_type" ng-value="0" name="selArea" id="selDoc"><label for="selDoc"> Document</label><br>
-                        <input type="radio" ng-click="updateVelpList()" ng-model="groupAttachment.target_type" ng-value="1" name="selArea" id="selPar" ng-class="{disbled: selectedElement == null}" ng-disabled="selectedElement == null">
-                        <label for="selPar"> Selected paragraph</label>
+                            <input type="radio" ng-click="updateVelpList()" ng-model="groupAttachment.target_type" ng-value="0" name="selArea" id="selDoc">
+                                <label for="selDoc">Whole document</label><br />
+                            <input type="radio" ng-click="updateVelpList()" ng-model="groupAttachment.target_type" ng-value="1" name="selArea" id="selPar" ng-class="{disabled: selectedElement == null}" ng-disabled="selectedElement == null">
+                                <label for="selPar">Selected paragraph</label>
                         </fieldset>
+
                         <tr>
                             <th><span class="comment-info small"><input type="checkbox"  ng-model="settings.selectedAllShows"
                                       ng-click="changeAllVelpGroupSelections('show')"> Show</span></th>
@@ -302,11 +304,11 @@
                         </tr>
                     </table>
                     <input type="button" class="timButton" value="Reset current selections to default" ng-click="resetCurrentShowsToDefaults()"/>
-                    <input type="button" class="timButton" value="Reset all selections to default" ng-click="resetAllShowsToDefaults()"/>
+                    <input id="resetAllSelBtn" type="button" class="timButton" value="Reset all selections to default" ng-click="resetAllShowsToDefaults()"/>
                     </form>
                     <hr>
                     <form ng-submit="addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
-                        <p><label>New Velp Group name:</label><input type="text" ng-model="newVelpGroup.name"
+                        <p><label>Create new velp group:</label><input type="text" ng-model="newVelpGroup.name"
                                                             placeholder="Velp group name" required></p>
                         <fieldset>
                             <p><input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioPar"
@@ -317,10 +319,10 @@
                                       ng-value="2"> <label for="radioFolder">Folder</label></p>
                         </fieldset>
 
-                        <p><input type="submit" class="timButton" value="Create velpgroup"></p>
+                        <p><input type="submit" class="timButton" value="Create velp group"></p>
                         <p ng-show="(addVelpGroupForm.newVelpGroup.name.$invalid && !addVelpGroupForm.newVelpGroup.name.$pristine) || (submitted.velpGroup && addVelpGroupForm.newVelpGroup.name.$invalid)"
                            class="error">
-                            VelpGroup name is required!
+                            Velp group name is required!
                         </p>
                     </form>
                 </div>
