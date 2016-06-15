@@ -19,7 +19,6 @@ def get_default_velp_group(doc_id: int) -> dict():
     :param doc_id: ID of document
     :return: Dictionary containing default velp group's ID and name
     """
-
     timdb = getTimDb()
     user_id = getCurrentUserId()
 
@@ -27,13 +26,18 @@ def get_default_velp_group(doc_id: int) -> dict():
     full_path = timdb.documents.get_first_document_name(doc_id)
     doc_path, doc_name = timdb.documents.split_location(full_path)
     edit_access = False
-    if timdb.users.has_manage_access(user_id, doc_id):
+    if timdb.users.has_edit_access(user_id, doc_id):
         edit_access = True
     else:
-        return {"id": -2, "name": "No access to default group", "edit_access": edit_access}
+        return jsonResponse({"id": -1, "name": "No access to default group", "edit_access": edit_access})
 
-    # Check if document's path contains velp groups folder and if it does, make document its own default velp group
+    # Check if document's path contains velp groups folder and if it does, make document its own default velp group.
+    # This default document declaration isn't saved to database (else eventually all velp groups might be defaults).
     if "velp groups/" in full_path:
+        if timdb.users.has_edit_access(user_id, doc_id):
+            edit_access = True
+        else:
+            return jsonResponse({"id": -1, "name": "No access to default group", "edit_access": edit_access})
         timdb.velp_groups.make_document_a_velp_group(doc_name, doc_id)
         velp_group = [{'target_type': '0', 'target_id': 0, 'id': doc_id}]
         timdb.velp_groups.add_groups_to_selection_table(velp_group, doc_id, user_id)

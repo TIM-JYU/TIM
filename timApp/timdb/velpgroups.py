@@ -409,7 +409,7 @@ class VelpGroups(Documents):
                       SET selected = ?
                       WHERE doc_id = ? AND target_id = ? AND user_id = ?
                       """, [selected, doc_id, target_id, user_id]
-                           )
+                        )
         else:
             cursor.execute("""
                           DELETE FROM VelpGroupSelection

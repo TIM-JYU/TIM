@@ -64,7 +64,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     $http.get('/{0}/get_default_velp_group'.replace('{0}', doc_id)).success(function (data) {
         console.log("Get default velp group");
         default_velp_group = data;
-        default_velp_group.selected = true;
+        if (default_velp_group.edit_access)
+            default_velp_group.selected = true;
         console.log(data);
     });
 
@@ -79,8 +80,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
                    g.selected = true;
             });
         }
-
-        $scope.newVelp.velp_groups = [default_velp_group.id];
+        if (default_velp_group.edit_access)
+            $scope.newVelp.velp_groups = [default_velp_group.id];
         console.log($scope.velpGroups);
 
         // Get velp and annotation data
@@ -364,18 +365,21 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     };
 
     $scope.generateDefaultVelpGroup = function (method) {
-        $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), null, function (json) {
-            var new_default_velp_group = json.data;
+        if (default_velp_group.edit_access) {
+            $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), null, function (json) {
+                var new_default_velp_group = json.data;
 
-            var index = $scope.velpGroups.indexOf(default_velp_group);
-            $scope.velpGroups.splice(index, 1);
+                var index = $scope.velpGroups.indexOf(default_velp_group);
+                $scope.velpGroups.splice(index, 1);
 
-            if ($scope.velpGroups.indexOf(new_default_velp_group) < 0)
-                $scope.velpGroups.push(new_default_velp_group);
+                if ($scope.velpGroups.indexOf(new_default_velp_group) < 0)
+                    $scope.velpGroups.push(new_default_velp_group);
 
-            default_velp_group = new_default_velp_group;
-            method();
-        });
+                default_velp_group = new_default_velp_group;
+                method();
+            });
+        }
+        else console.log("No edit access to default velp group")
     };
 
     /**
