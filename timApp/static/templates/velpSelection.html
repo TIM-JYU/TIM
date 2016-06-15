@@ -79,7 +79,7 @@
 
                                     <p class="error"
                                        ng-show="(addVelpForm.velpName.$invalid && !addVelpForm.velpName.$pristine) || (submitted.velp && addVelpForm.velpName.$invalid)">
-                                        Velp content is required
+                                        Velp content is required!
                                     </p>
 
                                     <p><input type="number" ng-model="newVelp['points']"
@@ -177,7 +177,7 @@
 
                                                 <p ng-show="(editVelpForm.velpName.$invalid && !editVelpForm.velpName.$pristine) || (submitted.velp && editVelpForm.velpName.$invalid)"
                                                    class="error">
-                                                    Velp content is required
+                                                    Velp content is required!
                                                 </p>
                                                 <p><input id="addVelpPoints" type="number" style="width: 100%;"
                                                           ng-model="velpToEdit['points']"
@@ -270,7 +270,7 @@
                             </td>
                         </tr>
                     </table -->
-                    <fieform>
+                    <form>
                     <table class="fulldiv">
 
                         <h5>Choose area for velp group:</h5>
@@ -303,8 +303,8 @@
                             </td>
                         </tr>
                     </table>
-                    <input type="button" class="timButton" value="Reset current selections to default" ng-click="resetCurrentShowsToDefaults()"/>
-                    <input id="resetAllSelBtn" type="button" class="timButton" value="Reset all selections to default" ng-click="resetAllShowsToDefaults()"/>
+                    <input type="button" class="timButton" value="Reset current area selections to default" ng-click="resetCurrentShowsToDefaults()"/>
+                    <input id="resetAllSelBtn" type="button" class="timButton" value="Reset document and all paragraph selections to default" ng-click="resetAllShowsToDefaults()"/>
                     </form>
                     <hr>
                     <form ng-submit="addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
