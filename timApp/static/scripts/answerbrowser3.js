@@ -150,6 +150,9 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
 
                 };
 
+                // Loads annotations to answer
+                setTimeout($scope.changeAnswer, 500); //TODO: Don't use timeout
+
                 $scope.next = function () {
                     var newIndex = $scope.findSelectedAnswerIndex() - 1;
                     if (newIndex < 0) {
