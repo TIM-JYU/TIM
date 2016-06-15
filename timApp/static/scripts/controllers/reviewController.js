@@ -591,6 +591,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             visible_to: 4,
             content: velp.content,
             annotator_name: "me",
+            edit_access: 1,
             email: "",
             timesince: "just now",
             creationtime: "now",
@@ -879,6 +880,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         element.setAttribute("points", annotation.points);
         element.setAttribute("aid", annotation.id);
         element.setAttribute("annotator", annotation.annotator_name);
+        element.setAttribute("editaccess", annotation.edit_access);
         element.setAttribute("timesince", annotation.timesince);
         element.setAttribute("creationtime", annotation.creationtime);
         element.setAttribute("email", annotation.email);

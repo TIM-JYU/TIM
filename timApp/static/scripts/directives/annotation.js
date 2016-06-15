@@ -25,6 +25,7 @@ timApp.directive("annotation", function() {
             aid: '=',
             ismargin: '=',
             annotator: '@',
+            editaccess: '=',
             //email: '@',
             timesince: '@',
             creationtime: '@',
@@ -115,9 +116,8 @@ timApp.directive("annotation", function() {
                 });
             };
 
-            // TODO: Make this right
             scope.checkRights = function(){
-                return false;
+                return scope.editaccess!==1;
             };
 
             scope.checkIfChanged = function () {

@@ -260,6 +260,7 @@ class Annotations(TimDbBase):
                         annotation.valid_until,
                         annotation.icon_id,
                         annotation.annotator_id,
+                        Annotation.annotator_id = ? AS edit_access,
                         user.name AS annotator_name,
                         user.real_name AS annotator_real_name,
                         user.email,
@@ -290,7 +291,7 @@ class Annotations(TimDbBase):
                           )
                         )
                       ORDER BY depth_start DESC, node_start DESC, offset_start DESC
-                      """, [language_id, document_id, user_id] + annotation_access_levels +
+                      """, [user_id, language_id, document_id, user_id] + annotation_access_levels +
                             [user_has_see_answers, user_id]
                       )
 
