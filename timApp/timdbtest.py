@@ -1,11 +1,9 @@
 import os
 import unittest
-from documentmodel.docparagraph import DocParagraph
-from documentmodel.document import Document
 
 import dumboclient
-from filemodehelper import change_permission_and_retry
 import initdb2
+from filemodehelper import change_permission_and_retry
 from timdb.timdb2 import TimDb
 from utils import del_content
 
@@ -27,9 +25,7 @@ class TimDbTest(unittest.TestCase):
             del_content(cls.test_files_path, onerror=change_permission_and_retry)
         else:
             os.mkdir(cls.test_files_path)
-        Document.default_files_root = cls.test_files_path
-        DocParagraph.default_files_root = cls.test_files_path
-        initdb2.initialize_database(cls.db_path, cls.test_files_path, create_docs=False, print_progress=False)
+        initdb2.initialize_database(create_docs=False, print_progress=False)
         cls.dumbo = dumboclient.launch_dumbo()
 
     @classmethod

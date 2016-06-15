@@ -1,3 +1,8 @@
+"""
+Defines the temporary data models used by TIM.
+
+Each model MUST have 'tempdb' as the __bind_key__ attribute.
+"""
 from timdb.runningquestion import RunningQuestions
 from timdb.useractivity import UserActivity
 from timdb.newanswers import NewAnswers

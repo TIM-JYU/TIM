@@ -1,3 +1,6 @@
+-- NOTE: This file is obsolete; do not edit!
+-- Put new table models in timdb/tim_models.py.
+
 DROP TABLE IF EXISTS BlockAccess;
 
 DROP TABLE IF EXISTS UserGroupMember;
