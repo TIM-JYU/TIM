@@ -277,7 +277,7 @@
                         <fieldset>
                             <input type="radio" ng-click="updateVelpList()" ng-model="groupAttachment.target_type" ng-value="0" name="selArea" id="selDoc">
                                 <label for="selDoc">Whole document</label><br />
-                            <input type="radio" ng-click="updateVelpList()" ng-model="groupAttachment.target_type" ng-value="1" name="selArea" id="selPar" ng-class="{disabled: selectedElement == null}" ng-disabled="selectedElement == null">
+                            <input title="A paragraph must be clicked to choose this option" type="radio" ng-click="updateVelpList()" ng-model="groupAttachment.target_type" ng-value="1" name="selArea" id="selPar" ng-class="{disabled: selectedElement == null}" ng-disabled="selectedElement == null">
                                 <label for="selPar">Selected paragraph</label>
                         </fieldset>
 
@@ -303,8 +303,8 @@
                             </td>
                         </tr>
                     </table>
-                    <input type="button" class="timButton" value="Reset current area selections to default" ng-click="resetCurrentShowsToDefaults()"/>
-                    <input id="resetAllSelBtn" type="button" class="timButton" value="Reset document and all paragraph selections to default" ng-click="resetAllShowsToDefaults()"/>
+                    <input type="button" class="timButton" title="Resets current area selections to default" value="Reset current selections" ng-click="resetCurrentShowsToDefaults()"/>
+                    <input id="resetAllSelBtn" type="button" class="timButton" title="Resets document and all paragraph selections to default" value="Reset all selections" ng-click="resetAllShowsToDefaults()"/>
                     </form>
                     <hr>
                     <form ng-submit="addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
