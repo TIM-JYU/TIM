@@ -1,6 +1,4 @@
-DROP TABLE IF EXISTS BlockEditAccess;
-
-DROP TABLE IF EXISTS BlockViewAccess;
+DROP TABLE IF EXISTS BlockAccess;
 
 DROP TABLE IF EXISTS UserGroupMember;
 
