@@ -32,8 +32,10 @@ timApp.directive("annotation", function() {
             velp: '@'
         },
 
-        link: function (scope, transclude) {
+        link: function (scope, element, compile) {
             scope.newComment = "";
+            scope.velpElement = null;
+
             scope.visible_options = {
                 "type": "select",
                 "value": scope.visibleto,
@@ -56,6 +58,21 @@ timApp.directive("annotation", function() {
              */
             scope.toggleAnnotation = function () {
                 scope.show = !scope.show;
+                scope.updateVelpZIndex();
+                if (scope.show){
+                    scope.updateVelpZIndex();
+                }
+            };
+
+            scope.updateVelpZIndex = function () {
+                if (scope.velpElement === null) {
+                    scope.velpElement = element[0].getElementsByClassName("annotation-info")[0];
+                    scope.velpElement.style.zIndex = scope.$parent.zIndex.toString();
+                    scope.$parent.zIndex++;
+                } else {
+                    scope.velpElement.style.zIndex = scope.$parent.zIndex.toString();
+                    scope.$parent.zIndex++;
+                }
             };
 
             /**
@@ -63,6 +80,7 @@ timApp.directive("annotation", function() {
              */
             scope.showAnnotation = function () {
                 scope.show = true;
+                scope.updateVelpZIndex();
             };
 
             /**

@@ -97,6 +97,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
         $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) {
             $scope.annotations = data;
             $scope.loadDocumentAnnotations();
+            console.log(data);
         });
 
         // Get label data

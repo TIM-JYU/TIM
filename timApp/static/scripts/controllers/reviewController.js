@@ -22,6 +22,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.rights = $window.rights;
 
     $scope.annotationids = {0: 0};
+    $scope.zIndex = 1000;
 
     /**
      * Makes post request to given url
