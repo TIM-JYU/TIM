@@ -57,7 +57,9 @@ def get_default_velp_group(doc_id: int) -> dict():
         default_group["edit_access"] = edit_access
         return jsonResponse(default_group)
 
-    return jsonResponse({"id": -1, "name": doc_name + "_default", "edit_access": edit_access})
+    response = jsonResponse({"id": -1, "name": doc_name + "_default", "edit_access": edit_access})
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
 
 @velps.route("/get_default_personal_velp_group", methods=['GET'])
 def get_default_personal_velp_group() -> dict():
@@ -99,7 +101,9 @@ def get_default_personal_velp_group() -> dict():
         created_velp_group['default_group'] = True
         created_velp_group['created_new_group'] = created_new
 
-        return jsonResponse(created_velp_group)
+        response = jsonResponse(created_velp_group)
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+        return response
 
 @velps.route("/<int:doc_id>/get_velps", methods=['GET'])
 def get_velps(doc_id: int):
@@ -147,7 +151,9 @@ def get_velp_groups(doc_id: int):
     for group in all_velp_groups:
         group['edit_access'] = timdb.users.has_edit_access(user_id, group['id'])
 
-    return jsonResponse(all_velp_groups)
+    response = jsonResponse(all_velp_groups)
+    response['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
 
 
 @velps.route("/<int:doc_id>/get_velp_group_personal_selections", methods=['GET'])
