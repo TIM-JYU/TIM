@@ -55,6 +55,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
     // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
     var doc_id = $scope.docId;
     var default_velp_group = {id: -1, name: "No access to default group", edit_access: false}; // TODO Use route to add this information
+    var default_personal_velp_group = {id: -2, name: "No personal default"}
 
     $scope.annotations = [];
 
@@ -80,8 +81,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
                    g.selected = true;
             });
         }
+
         if (default_velp_group.edit_access)
             $scope.newVelp.velp_groups = [default_velp_group.id];
+        console.log("VELP GROUPS")
         console.log($scope.velpGroups);
 
         // Get velp and annotation data
@@ -93,6 +96,19 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
                 if (typeof v.labels === UNDEFINED)
                     v.labels = [];
             });
+        });
+
+        $http.get('/get_default_personal_velp_group').success(function (data) {
+            default_personal_velp_group = {id: data.id, name: data.name};
+            if (data.created_new_group) {
+                $scope.velpGroups.push(data);
+            }
+            else $scope.velpGroups.some(function(g){
+                if (g.id === default_personal_velp_group.id)
+                    return g.selected = true;
+            });
+            if (!default_velp_group.edit_access)
+                $scope.newVelp.velp_groups = [default_personal_velp_group.id];
         });
 
         $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) {

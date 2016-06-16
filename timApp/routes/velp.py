@@ -59,6 +59,47 @@ def get_default_velp_group(doc_id: int) -> dict():
 
     return jsonResponse({"id": -1, "name": doc_name + "_default", "edit_access": edit_access})
 
+@velps.route("/get_default_personal_velp_group", methods=['GET'])
+def get_default_personal_velp_group() -> dict():
+
+    timdb = getTimDb()
+    user_name = getCurrentUserName()
+
+    personal_velp_group_path = "users/" + user_name + "/velp groups"
+    found_velp_groups = timdb.documents.get_documents_in_folder(personal_velp_group_path)
+    velp_groups = []
+    for v in found_velp_groups:
+        velp_groups.append(v['id'])
+    default_group = timdb.velp_groups.check_velp_group_ids_for_default_group(velp_groups)
+    if default_group is not None:
+        return jsonResponse(default_group)
+    else:
+        group_name = "Personal default"
+        new_group_path = personal_velp_group_path + "/" + group_name
+        group_exists = timdb.documents.resolve_doc_id_name(new_group_path)
+        if group_exists:
+            default_id = timdb.documents.get_document_id(new_group_path)
+            timdb.velp_groups.update_velp_group_to_default_velp_group(default_id)
+            created_new = False
+        else:
+            user_group = getCurrentUserGroup()
+            default_id = timdb.velp_groups.create_default_velp_group(group_name, user_group, new_group_path)
+            created_new = True
+
+        created_velp_group = dict()
+        created_velp_group['id'] = default_id
+        created_velp_group['target_type'] = 0
+        created_velp_group['target_id'] = "0"
+        created_velp_group['name'] = group_name
+        created_velp_group['location'] = new_group_path
+        created_velp_group['selected'] = True
+        created_velp_group['show'] = True
+        created_velp_group['default'] = False
+        created_velp_group['edit_access'] = True
+        created_velp_group['default_group'] = True
+        created_velp_group['created_new_group'] = created_new
+
+        return jsonResponse(created_velp_group)
 
 @velps.route("/<int:doc_id>/get_velps", methods=['GET'])
 def get_velps(doc_id: int):

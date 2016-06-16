@@ -97,7 +97,7 @@ class VelpGroups(Documents):
                        )
         self.db.commit()
 
-    def check_velp_group_ids_for_default_group(self, velp_group_ids: [int]):
+    def check_velp_group_ids_for_default_group(self, velp_group_ids: List[int]):
         """Checks if list of velp group IDs contains a default velp group
 
         :param velp_group_ids: List of velp group IDs
