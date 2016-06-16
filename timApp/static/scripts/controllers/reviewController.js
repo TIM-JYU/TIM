@@ -9,6 +9,12 @@ var timApp = angular.module('timApp');
 var UNDEFINED = "undefined";
 var console = window.console;
 
+/* This is to avoid errors in ie, where console.log is missing when the inspector window is not open. That took a while
+   to notice.
+ */
+if (typeof console == UNDEFINED)
+    console = { log: function() {} };
+
 console.log("reviewController.js added");
 
 timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile', function ($scope, $http, $window, $compile) {
