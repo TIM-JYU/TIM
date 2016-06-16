@@ -152,7 +152,7 @@ def get_velp_groups(doc_id: int):
         group['edit_access'] = timdb.users.has_edit_access(user_id, group['id'])
 
     response = jsonResponse(all_velp_groups)
-    response['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     return response
 
 
