@@ -25,6 +25,7 @@ class TimDbTest(unittest.TestCase):
             del_content(cls.test_files_path, onerror=change_permission_and_retry)
         else:
             os.mkdir(cls.test_files_path)
+        initdb2.initialize_temp_database(print_progress=False)
         initdb2.initialize_database(create_docs=False, print_progress=False)
         cls.dumbo = dumboclient.launch_dumbo()
 

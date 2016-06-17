@@ -222,6 +222,10 @@ def get_updates():
                  "lectureEnding": lecture_ending})
 
         db.session.remove()
+
+        if current_app.config['TESTING']:
+            # Don't loop when testing
+            break
         # Myös tämä sleep kannattaa poistaa.
         time.sleep(1)
         step += 1

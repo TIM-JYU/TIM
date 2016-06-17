@@ -6,6 +6,7 @@ import socket
 from functools import lru_cache
 
 import flask
+from flask import session
 from lxml import html
 from timdbtest import TimDbTest
 
@@ -88,8 +89,11 @@ class TimRouteTest(TimDbTest):
         self.assertEqual(expect_status, resp.status_code)
         self.assertListEqual(expected, load_json(resp))
 
-    def get(self, url: str, as_tree=False, as_json=False, **kwargs):
-        resp = self.app.get(url, **kwargs).get_data(as_text=True)
+    def get(self, url: str, as_tree=False, as_json=False, expect_status=None, **kwargs):
+        resp = self.app.get(url, **kwargs)
+        if expect_status:
+            self.assertResponseStatus(resp, expect_status)
+        resp = resp.get_data(as_text=True)
         if as_tree:
             return html.fromstring(resp)
         elif as_json:
@@ -126,6 +130,9 @@ class TimRouteTest(TimDbTest):
             "docId": doc.doc_id,
             "par_next": next_id
         })
+
+    def current_user_name(self):
+        return session['user_name']
 
     def login_test1(self, force=False):
         return self.login('testuser1', 'test1@example.com', 'test1pass', force=force)
