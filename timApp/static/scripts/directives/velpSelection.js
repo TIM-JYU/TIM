@@ -69,7 +69,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             default_velp_group.selected = true;
         console.log(data);
     });
-a
+
     // Get velpgroup data
     $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id)).success(function (data) {
         $scope.velpGroups = data;
