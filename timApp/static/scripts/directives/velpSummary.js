@@ -4,24 +4,24 @@
 
 var angular;
 var timApp = angular.module('timApp');
-var console = window.console;
 /**
  * Angular directive for phrase selection
  */
 timApp.directive('velpSummary', function () {
     "use strict";
-    return{
+    return {
         templateUrl: "/static/templates/velpSummary.html",
         controller: 'VelpSummaryController',
         scope: {annotations: "="}
     };
 });
 
-timApp.controller('VelpSummaryController', ['$scope', '$http', function ($scope) {
+timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', function ($scope, $http, $window) {
     "use strict";
+    var console = $window.console;
     $scope.settings = {selectedAll: false};
 
-    $scope.toggleAnnotation = function(annotation){
+    $scope.toggleAnnotation = function (annotation) {
         console.log("Annotation");
         $scope.$parent.toggleAnnotation(annotation);
     };

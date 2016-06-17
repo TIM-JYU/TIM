@@ -6,15 +6,15 @@
  */
 
 /*
-var angular;
-var timApp = angular.module('timApp');
-*/
-var console = window.console;
+ var angular;
+ var timApp = angular.module('timApp');
+ */
 
 /* Directive for marking */
-timApp.directive("annotation", function() {
+timApp.directive("annotation", ['$window', function ($window) {
     "use strict";
-    return{
+    var console = $window.console;
+    return {
         templateUrl: "/static/templates/annotation.html",
         transclude: true,
         scope: {
@@ -59,7 +59,7 @@ timApp.directive("annotation", function() {
             scope.toggleAnnotation = function () {
                 scope.show = !scope.show;
                 scope.updateVelpZIndex();
-                if (scope.show){
+                if (scope.show) {
                     scope.updateVelpZIndex();
                 }
             };
@@ -116,7 +116,12 @@ timApp.directive("annotation", function() {
 
                     var data = {annotation_id: id, content: scope.newComment};
                     scope.$parent.makePostRequest("/add_annotation_comment", data, function (json) {
-                        scope.comments.push({commenter_username: json.data.name, content: comment, comment_time: "now", comment_relative_time: "just now"});
+                        scope.comments.push({
+                            commenter_username: json.data.name,
+                            content: comment,
+                            comment_time: "now",
+                            comment_relative_time: "just now"
+                        });
                     });
                 }
                 scope.newComment = "";
@@ -134,8 +139,8 @@ timApp.directive("annotation", function() {
                 });
             };
 
-            scope.checkRights = function(){
-                return scope.editaccess!==1;
+            scope.checkRights = function () {
+                return scope.editaccess !== 1;
             };
 
             scope.checkIfChanged = function () {
@@ -152,6 +157,6 @@ timApp.directive("annotation", function() {
 
         }
     };
-});
+}]);
 
 

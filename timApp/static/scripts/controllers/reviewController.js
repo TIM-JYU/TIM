@@ -7,18 +7,10 @@ var angular;
 var timApp = angular.module('timApp');
 
 var UNDEFINED = "undefined";
-var console = window.console;
-
-/* This is to avoid errors in ie, where console.log is missing when the inspector window is not open. That took a while
-   to notice.
- */
-if (typeof console == UNDEFINED)
-    console = { log: function() {} };
-
-console.log("reviewController.js added");
 
 timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile', function ($scope, $http, $window, $compile) {
     "use strict";
+    var console = $window.console;
 
     var illegalClasses = ["annotation-element", "highlighted", "editorArea", "previewcontent"];
 
@@ -58,14 +50,14 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             var placeInfo = $scope.annotations[i].coord;
             var parent = document.getElementById(placeInfo.start.par_id);
 
-            if (parent === null){
+            if (parent === null) {
                 // TODO: Decide what to do, when parent element has been deleted, for now remove annotation from list
                 annotationsToRemove.push($scope.annotations[i]);
                 continue;
             }
 
-            if ($scope.annotations[i].answer_id !== null){
-                if (!parent.classList.contains("has-annotation")){
+            if ($scope.annotations[i].answer_id !== null) {
+                if (!parent.classList.contains("has-annotation")) {
                     parent.classList.add("has-annotation");
                 }
                 continue;
@@ -73,7 +65,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             if (parent.getAttribute("t") === placeInfo.start.t && placeInfo.start.offset !== null) {
 
-                try{
+                try {
                     var elements = parent.querySelector(".parContent");
 
                     var start_elpath = placeInfo.start.el_path;
@@ -99,7 +91,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             }
         }
 
-        for (var k=0; k<annotationsToRemove.length; k++){
+        for (var k = 0; k < annotationsToRemove.length; k++) {
             console.log("Deleted annotation:");
             console.log(annotationsToRemove[k]);
             var index = $scope.annotations.indexOf(annotationsToRemove[k]);
@@ -152,7 +144,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param attribute attribute as string
      * @returns first element parent that has given attribute
      */
-    var getElementParentUntilAttribute = function(element, attribute){
+    var getElementParentUntilAttribute = function (element, attribute) {
         //console.log(element);
         element = getElementParent(element);
         while (!element.hasAttribute(attribute)) {
@@ -249,21 +241,21 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         } catch (err) {
             // TODO: Add annotation to the "club of missing velps"
 
-            addAnnotationToElement(span, annotation,true, "Annotation crosses taglines");
+            addAnnotationToElement(span, annotation, true, "Annotation crosses taglines");
             $scope.selectedArea = null;
 
             /*
-            console.log(err);
-            var new_range = document.createRange();
+             console.log(err);
+             var new_range = document.createRange();
 
-            var el = range.startContainer;
-            var start = range.startOffset;
-            var end = range.startContainer.parentNode.innerHTML.length - 1;
+             var el = range.startContainer;
+             var start = range.startOffset;
+             var end = range.startContainer.parentNode.innerHTML.length - 1;
 
-            new_range.setStart(el, start);
-            new_range.setEnd(el, end);
-            $scope.addAnnotationToCoord(new_range, annotation, show);
-            */
+             new_range.setStart(el, start);
+             new_range.setEnd(el, end);
+             $scope.addAnnotationToCoord(new_range, annotation, show);
+             */
         }
 
         $compile(span)($scope); // Gives error [$compile:nonassign]
@@ -325,12 +317,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param newElement element, where badge needs to go
      * @returns {null}
      */
-    $scope.updateVelpBadge = function(oldElment, newElement){
+    $scope.updateVelpBadge = function (oldElment, newElement) {
         if (newElement === null) {
             return null;
-        } else if (oldElment === null){
+        } else if (oldElment === null) {
             addElementToParagraphMargin(newElement, createVelpBadge(newElement.id));
-        } else if (oldElment.id !== newElement.id){
+        } else if (oldElment.id !== newElement.id) {
             $scope.clearVelpBadge(null);
             addElementToParagraphMargin(newElement, createVelpBadge(newElement.id));
         }
@@ -341,7 +333,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.clearVelpBadge = function (e) {
         var btn = document.getElementById("velpBadge");
-        if (btn !== null){
+        if (btn !== null) {
             var parent = getElementParent(btn);
             parent.removeChild(btn);
         }
@@ -445,14 +437,14 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             //return;
         }
 
-        if ($scope.selectedArea !== null){
+        if ($scope.selectedArea !== null) {
             // Check if selection breaks tags, has annotation as a parent or as a child.
             if (isSelectionTagParentsUnequal($scope.selectedArea) ||
                 hasSelectionParentAnnotation($scope.selectedArea) ||
-                hasSelectionChildrenAnnotation($scope.selectedArea)){
+                hasSelectionChildrenAnnotation($scope.selectedArea)) {
                 $scope.selectedArea = null;
             }
-        } else if($scope.selectedArea === null) {
+        } else if ($scope.selectedArea === null) {
             var elements = document.getElementsByClassName("lightselect");
             console.log(elements);
             if (elements.length > 0)
@@ -470,7 +462,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param range Range object
      * @returns {boolean}
      */
-    var isSelectionTagParentsUnequal = function(range){
+    var isSelectionTagParentsUnequal = function (range) {
         console.log("check tags");
         return getElementParent(range.startContainer) !== getElementParent(range.endContainer);
     };
@@ -480,17 +472,17 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param range Range object
      * @returns {boolean}
      */
-    var hasSelectionParentAnnotation = function(range){
+    var hasSelectionParentAnnotation = function (range) {
         console.log("check parents");
         var startcont = getElementParent(range.startContainer);
-        while (!startcont.hasAttribute("t")){
+        while (!startcont.hasAttribute("t")) {
             startcont = getElementParent(startcont);
             if (checkIfAnnotation(startcont) || hasAnyIllegalClass(startcont))
                 return true;
         }
 
         var endcont = getElementParent(range.endContainer);
-        while (!endcont.hasAttribute("t")){
+        while (!endcont.hasAttribute("t")) {
             endcont = getElementParent(endcont);
             if (checkIfAnnotation(endcont))
                 return true;
@@ -504,8 +496,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param element element to be checked
      * @returns {boolean} whether illegal class was found or not.
      */
-    var hasAnyIllegalClass = function(element){
-        for (var i=0; i<illegalClasses.length; i++){
+    var hasAnyIllegalClass = function (element) {
+        for (var i = 0; i < illegalClasses.length; i++) {
             if (element.classList.contains(illegalClasses[i]))
                 return true;
         }
@@ -517,15 +509,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param range selection
      * @returns {boolean}
      */
-    var hasSelectionChildrenAnnotation = function(range){
+    var hasSelectionChildrenAnnotation = function (range) {
         console.log("check children");
         var div = document.createElement("div");
         var clone = range.cloneContents();
         div.appendChild(clone);
         var children = div.childNodes;
         console.log(div);
-        for (var i=0; i<children.length; i++){
-            if (hasElementChildrenAnnotation(children[i])){
+        for (var i = 0; i < children.length; i++) {
+            if (hasElementChildrenAnnotation(children[i])) {
                 console.log("Child has annotation");
                 return true;
             }
@@ -538,16 +530,16 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param element element to check
      * @returns {boolean}
      */
-    var hasElementChildrenAnnotation = function(element){
+    var hasElementChildrenAnnotation = function (element) {
 
-        if (checkIfAnnotation(element)){
+        if (checkIfAnnotation(element)) {
             return true;
         }
 
         var children = element.childNodes;
 
-        for (var i=0; i<children.length; i++)
-            if(hasElementChildrenAnnotation(children[i]))
+        for (var i = 0; i < children.length; i++)
+            if (hasElementChildrenAnnotation(children[i]))
                 return true;
 
         return false;
