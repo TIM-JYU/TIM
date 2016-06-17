@@ -283,9 +283,9 @@
 
                         <tr>
                             <th><span class="comment-info small"><input type="checkbox"  ng-model="settings.selectedAllShows"
-                                      ng-click="changeAllVelpGroupSelections('show')"> Show</span></th>
-                            <th><span class="comment-info small"><input type="checkbox" ng-model="settings.selectedAllDefault"
-                                      ng-click="changeAllVelpGroupSelections('default')"> Default</span></th>
+                                      ng-click="changeAllVelpGroupSelections('show')">Show</span></th>
+                            <th><span class="comment-info small"><input type="checkbox" ng-model="settings.selectedAllDefault" ng-disabled=!rights.manage
+                                      ng-click="changeAllVelpGroupSelections('default')">Default</span></th>
                             <th><span class="small">Group</span></th>
                         </tr>
 
@@ -295,7 +295,7 @@
                                        ng-click="changeVelpGroupSelection(group, 'show')">
                             </td>
                             <td>
-                                <input type="checkbox" ng-model="group.default"
+                                <input type="checkbox" ng-model="group.default" ng-disabled=!rights.manage
                                     ng-click="changeVelpGroupSelection(group, 'default')">
                             </td>
                             <td>
