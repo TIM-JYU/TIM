@@ -84,7 +84,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         if (default_velp_group.edit_access)
             $scope.newVelp.velp_groups = [default_velp_group.id];
-        console.log("VELP GROUPS")
+        console.log("VELP GROUPS");
         console.log($scope.velpGroups);
 
         // Get velp and annotation data
@@ -554,10 +554,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             targetType = 0;
         }
 
-        console.log(targetID);
-        console.log(targetType);
-        console.log($scope.settings.selectedAllShows);
-
         if (type === "show"){
             if (!$scope.settings.selectedAllShows) {
                 $scope.groupSelections[targetID] = [];
@@ -568,7 +564,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             }
 
             $scope.makePostRequest("/{0}/change_all_selections".replace('{0}', doc_id), {
-                'target_id': targetID, 'target_type': targetType, 'selection': $scope.settings.selectedAllShows
+                'target_id': targetID, 'target_type': targetType, 'selection': $scope.settings.selectedAllShows,
+                'selection_type': type
             }, function (json) {
                 console.log(json);
             });
@@ -581,9 +578,18 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             if (!$scope.settings.selectedAllDefault) {
                 $scope.groupDefaults[targetID] = [];
             } else {
+                $scope.groupDefaults[targetID] = [];
                 for (var i=0;i<$scope.velpGroups.length; i++)
                     $scope.groupDefaults[targetID].push($scope.velpGroups[i].id);
             }
+
+            $scope.makePostRequest("/{0}/change_all_selections".replace('{0}', doc_id), {
+                'target_id': targetID, 'target_type': targetType, 'selection': $scope.settings.selectedAllDefault,
+                'selection_type': type
+            }, function (json) {
+                console.log(json);
+            });
+
         }
 
         $scope.updateVelpList();

@@ -428,12 +428,18 @@ def change_all_selections(doc_id: int):
         selection = json_data['selection']
         target_type = json_data['target_type']
         target_id = json_data['target_id']
+        selection_type = json_data['selection_type']
     except KeyError as e:
         return abort(400, "Missing data: " + e.args[0])
     verifyLoggedIn()
     user_id = getCurrentUserId()
     timdb = getTimDb()
-    timdb.velp_groups.change_all_target_area_selections(doc_id, target_type, target_id, user_id, selection)
+    if selection_type == "show":
+        timdb.velp_groups.change_all_target_area_selections(doc_id, target_type, target_id, user_id, selection)
+    elif selection_type == "default":
+        if timdb.users.has_manage_access(user_id, doc_id):
+            timdb.velp_groups.change_all_target_area_default_selections(doc_id, target_type, target_id, user_id,
+                                                                        selection)
 
     response = okJsonResponse()
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
