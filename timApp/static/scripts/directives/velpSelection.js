@@ -55,6 +55,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
     // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
     var doc_id = $scope.docId;
     var default_velp_group = {id: -1, name: "No access to default group", edit_access: false}; // TODO Use route to add this information
+    var default_personal_velp_group = {id: -2, name: "No personal default"}
 
     $scope.annotations = [];
 
@@ -79,8 +80,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                     g.selected = true;
             });
         }
+
         if (default_velp_group.edit_access)
             $scope.newVelp.velp_groups = [default_velp_group.id];
+        console.log("VELP GROUPS");
         console.log($scope.velpGroups);
 
         // Get velp and annotation data
@@ -94,9 +97,23 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             });
         });
 
+        $http.get('/get_default_personal_velp_group').success(function (data) {
+            default_personal_velp_group = {id: data.id, name: data.name};
+            if (data.created_new_group) {
+                $scope.velpGroups.push(data);
+            }
+            else $scope.velpGroups.some(function (g) {
+                if (g.id === default_personal_velp_group.id)
+                    return g.selected = true;
+            });
+            if (!default_velp_group.edit_access)
+                $scope.newVelp.velp_groups = [default_personal_velp_group.id];
+        });
+
         $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) {
             $scope.annotations = data;
             $scope.loadDocumentAnnotations();
+            console.log("ANNOTATIONS");
             console.log(data);
         });
 
@@ -492,6 +509,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             group.target_id = "0";
             group.target_type = 0;
         }
+        group.selection_type = type
 
         if (type === "show") {
             $scope.makePostRequest("/{0}/change_selection".replace('{0}', doc_id), group, function (json) {
@@ -510,10 +528,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
 
         }
         else if (type === "default") {
-            $scope.makePostRequest("/{0}/change_default_selection".replace('{0}', doc_id), group, function (json) {
+            $scope.makePostRequest("/{0}/change_selection".replace('{0}', doc_id), group, function (json) {
                 console.log(json);
             });
-
             if (!$scope.groupDefaults.hasOwnProperty(group.target_id))
                 $scope.groupDefaults[group.target_id] = [];
 
@@ -540,10 +557,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             targetType = 0;
         }
 
-        console.log(targetID);
-        console.log(targetType);
-        console.log($scope.settings.selectedAllShows);
-
         if (type === "show") {
             if (!$scope.settings.selectedAllShows) {
                 $scope.groupSelections[targetID] = [];
@@ -554,7 +567,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             }
 
             $scope.makePostRequest("/{0}/change_all_selections".replace('{0}', doc_id), {
-                'target_id': targetID, 'target_type': targetType, 'selection': $scope.settings.selectedAllShows
+                'target_id': targetID, 'target_type': targetType, 'selection': $scope.settings.selectedAllShows,
+                'selection_type': type
             }, function (json) {
                 console.log(json);
             });
@@ -566,9 +580,18 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             if (!$scope.settings.selectedAllDefault) {
                 $scope.groupDefaults[targetID] = [];
             } else {
+                $scope.groupDefaults[targetID] = [];
                 for (var i = 0; i < $scope.velpGroups.length; i++)
                     $scope.groupDefaults[targetID].push($scope.velpGroups[i].id);
             }
+
+            $scope.makePostRequest("/{0}/change_all_selections".replace('{0}', doc_id), {
+                'target_id': targetID, 'target_type': targetType, 'selection': $scope.settings.selectedAllDefault,
+                'selection_type': type
+            }, function (json) {
+                console.log(json);
+            });
+
         }
 
         $scope.updateVelpList();

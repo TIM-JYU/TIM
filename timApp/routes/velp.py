@@ -57,8 +57,53 @@ def get_default_velp_group(doc_id: int) -> dict():
         default_group["edit_access"] = edit_access
         return jsonResponse(default_group)
 
-    return jsonResponse({"id": -1, "name": doc_name + "_default", "edit_access": edit_access})
+    response = jsonResponse({"id": -1, "name": doc_name + "_default", "edit_access": edit_access})
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
 
+@velps.route("/get_default_personal_velp_group", methods=['GET'])
+def get_default_personal_velp_group() -> dict():
+
+    timdb = getTimDb()
+    user_name = getCurrentUserName()
+
+    personal_velp_group_path = "users/" + user_name + "/velp groups"
+    found_velp_groups = timdb.documents.get_documents_in_folder(personal_velp_group_path)
+    velp_groups = []
+    for v in found_velp_groups:
+        velp_groups.append(v['id'])
+    default_group = timdb.velp_groups.check_velp_group_ids_for_default_group(velp_groups)
+    if default_group is not None:
+        return jsonResponse(default_group)
+    else:
+        group_name = "Personal default"
+        new_group_path = personal_velp_group_path + "/" + group_name
+        group_exists = timdb.documents.resolve_doc_id_name(new_group_path)
+        if group_exists:
+            default_id = timdb.documents.get_document_id(new_group_path)
+            timdb.velp_groups.update_velp_group_to_default_velp_group(default_id)
+            created_new = False
+        else:
+            user_group = getCurrentUserGroup()
+            default_id = timdb.velp_groups.create_default_velp_group(group_name, user_group, new_group_path)
+            created_new = True
+
+        created_velp_group = dict()
+        created_velp_group['id'] = default_id
+        created_velp_group['target_type'] = 0
+        created_velp_group['target_id'] = "0"
+        created_velp_group['name'] = group_name
+        created_velp_group['location'] = new_group_path
+        created_velp_group['selected'] = True
+        created_velp_group['show'] = True
+        created_velp_group['default'] = False
+        created_velp_group['edit_access'] = True
+        created_velp_group['default_group'] = True
+        created_velp_group['created_new_group'] = created_new
+
+        response = jsonResponse(created_velp_group)
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+        return response
 
 @velps.route("/<int:doc_id>/get_velps", methods=['GET'])
 def get_velps(doc_id: int):
@@ -106,7 +151,9 @@ def get_velp_groups(doc_id: int):
     for group in all_velp_groups:
         group['edit_access'] = timdb.users.has_edit_access(user_id, group['id'])
 
-    return jsonResponse(all_velp_groups)
+    response = jsonResponse(all_velp_groups)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
 
 
 @velps.route("/<int:doc_id>/get_velp_group_personal_selections", methods=['GET'])
@@ -151,6 +198,7 @@ def get_velp_labels(doc_id: int) -> 'str':
     timdb = getTimDb()
     # Todo select language.
     label_data = timdb.velps.get_velp_label_content_for_document(doc_id, getCurrentUserId())
+
     response = jsonResponse(label_data)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     return response
@@ -214,7 +262,9 @@ def add_velp() -> int:
     else:
         return abort(400, "No velp groups")
 
-    return jsonResponse(new_velp_id)
+    response = jsonResponse(new_velp_id)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
 
 
 @velps.route("/<int:doc_id>/update_velp", methods=['POST'])
@@ -289,7 +339,9 @@ def update_velp(doc_id: int):
         timdb.velps.update_velp_labels(velp_id, new_labels)
     timdb.velps.update_velp(velp_id, default_points, icon_id)
 
-    return okJsonResponse()
+    response = okJsonResponse()
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
 
 
 @velps.route("/add_velp_label", methods=["POST"])
@@ -309,7 +361,9 @@ def add_label() -> int:
     timdb = getTimDb()
     label_id = timdb.velps.create_velp_label(language_id, content)
 
-    return jsonResponse(label_id)
+    response = okJsonResponse()
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
 
 
 @velps.route("/update_velp_label", methods=["POST"])
@@ -331,7 +385,9 @@ def update_velp_label():
     # TODO: Add some check so a random person can't use the route?
     timdb.velps.update_velp_label(velp_label_id, language_id, content)
 
-    return okJsonResponse()
+    response = okJsonResponse()
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
 
 
 @velps.route("/<int:doc_id>/change_selection", methods=["POST"])
@@ -348,14 +404,20 @@ def change_selection(doc_id: int):
         selection = json_data['show']
         target_type = json_data['target_type']
         target_id = json_data['target_id']
+        selection_type = json_data['selection_type']
     except KeyError as e:
         return abort(400, "Missing data: " + e.args[0])
     verifyLoggedIn()
     user_id = getCurrentUserId()
     timdb = getTimDb()
-    timdb.velp_groups.change_selection(doc_id, velp_group_id, target_type, target_id, user_id, selection)
+    if selection_type == "show":
+        timdb.velp_groups.change_selection(doc_id, velp_group_id, target_type, target_id, user_id, selection)
+    elif selection_type == "default" and timdb.users.has_manage_access(user_id, doc_id):
+        timdb.velp_groups.change_default_selection(doc_id, velp_group_id, target_type, target_id, selection)
 
-    return okJsonResponse()
+    response = okJsonResponse()
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
 
 @velps.route("/<int:doc_id>/change_all_selections", methods=["POST"])
 def change_all_selections(doc_id: int):
@@ -370,39 +432,20 @@ def change_all_selections(doc_id: int):
         selection = json_data['selection']
         target_type = json_data['target_type']
         target_id = json_data['target_id']
+        selection_type = json_data['selection_type']
     except KeyError as e:
         return abort(400, "Missing data: " + e.args[0])
     verifyLoggedIn()
     user_id = getCurrentUserId()
     timdb = getTimDb()
-    timdb.velp_groups.change_all_target_area_selections(doc_id, target_type, target_id, user_id, selection)
+    if selection_type == "show":
+        timdb.velp_groups.change_all_target_area_selections(doc_id, target_type, target_id, user_id, selection)
+    elif selection_type == "default" and timdb.users.has_manage_access(user_id, doc_id):
+        timdb.velp_groups.change_all_target_area_default_selections(doc_id, target_type, target_id, user_id, selection)
 
-    return okJsonResponse()
-
-
-@velps.route("/<int:doc_id>/change_default_selection", methods=["POST"])
-def change_default_selection(doc_id: int):
-    """Change selection for velp group in users VelpGroupSelection in current document
-
-    :param doc_id: ID of document
-    :return: okJsonResponse
-    """
-
-    json_data = request.get_json()
-    try:
-        velp_group_id = json_data['id']
-        target_type = json_data['target_type']
-        target_id = json_data['target_id']
-        selection = json_data['default']
-    except KeyError as e:
-        return abort(400, "Missing data: " + e.args[0])
-    verifyLoggedIn()
-    user_id = getCurrentUserId()
-    timdb = getTimDb()
-    if timdb.users.has_manage_access(user_id, doc_id):
-        timdb.velp_groups.change_default_selection(doc_id, velp_group_id, target_type, target_id, selection)
-
-    return okJsonResponse()
+    response = okJsonResponse()
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
 
 
 @velps.route("/<int:doc_id>/reset_target_area_selections_to_defaults", methods=['POST'])
@@ -424,7 +467,9 @@ def reset_target_area_selections_to_defaults(doc_id: int):
 
     timdb.velp_groups.reset_target_area_selections_to_defaults(doc_id, target_id, user_id)
 
-    return okJsonResponse()
+    response = okJsonResponse()
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
 
 
 @velps.route("/<int:doc_id>/reset_all_selections_to_defaults", methods=['POST'])
@@ -440,7 +485,9 @@ def reset_all_selections_to_defaults(doc_id: int):
 
     timdb.velp_groups.reset_all_selections_to_defaults(doc_id, user_id)
 
-    return okJsonResponse()
+    response = okJsonResponse()
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
 
 
 @velps.route("/<int:doc_id>/create_velp_group", methods=['POST'])
@@ -522,7 +569,9 @@ def create_velp_group(doc_id: int) -> dict():
 
     timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, getCurrentUserId())
 
-    return jsonResponse(created_velp_group)
+    response = jsonResponse(created_velp_group)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
 
 
 @velps.route("/<int:doc_id>/create_default_velp_group", methods=['POST'])
@@ -573,6 +622,7 @@ def create_default_velp_group(doc_id: int):
     created_velp_group['created_new_group'] = created_new_group
 
     timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, getCurrentUserId())
+
 
     return jsonResponse(created_velp_group)
 

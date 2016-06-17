@@ -97,7 +97,7 @@ class VelpGroups(Documents):
                        )
         self.db.commit()
 
-    def check_velp_group_ids_for_default_group(self, velp_group_ids: [int]):
+    def check_velp_group_ids_for_default_group(self, velp_group_ids: List[int]):
         """Checks if list of velp group IDs contains a default velp group
 
         :param velp_group_ids: List of velp group IDs
@@ -402,6 +402,15 @@ class VelpGroups(Documents):
 
     def change_all_target_area_selections(self, doc_id: int, target_type: int, target_id: str, user_id: int,
                                           selected: bool):
+        """Change all personal selections to True or False for currently chose area (document or paragraph)
+
+        :param doc_id: ID of document
+        :param target_type: Currently 0 = document, 1 = paragraph
+        :param target_id: ID of target ('0' for documents)
+        :param user_id: ID of user
+        :param selected: True or False
+        :return:
+        """
         cursor = self.db.cursor()
         if target_type == 0:
             cursor.execute("""
@@ -410,7 +419,7 @@ class VelpGroups(Documents):
                       WHERE doc_id = ? AND target_id = ? AND user_id = ?
                       """, [selected, doc_id, target_id, user_id]
                         )
-        else:
+        elif target_type == 1:
             cursor.execute("""
                           DELETE FROM VelpGroupSelection
                           WHERE user_id = ? AND doc_id = ? AND target_type = ? AND target_id = ?
@@ -423,6 +432,8 @@ class VelpGroups(Documents):
                           user_id = ? AND target_type = 0
                             """, [user_id, doc_id, target_type, target_id, selected, doc_id, user_id]
                            )
+            # target_type is 0 because only 0 always contains all velp groups user has access to.
+            # Other target types will get added to database only after they've been clicked once in interface.
         self.db.commit()
 
     def change_default_selection(self, doc_id: int, velp_group_id: int, target_type: int, target_id: str,
@@ -447,6 +458,34 @@ class VelpGroups(Documents):
                       SELECT ?, ?, ?, ?, ?
                       """, [doc_id, target_type, target_id, selected, velp_group_id]
                        )
+        self.db.commit()
+
+    def change_all_target_area_default_selections(self, doc_id: int, target_type: int, target_id: str, user_id: int,
+                                          selected: bool):
+        """Change all default selections to True or False for currently chose area (document or paragraph)
+
+        :param doc_id: ID of document
+        :param target_type: Currently 0 = document, 1 = paragraph
+        :param target_id: ID of target ('0' for documents)
+        :param user_id: ID of user (with manage access) to get all defaults from that user's selection table
+        :param selected: True or False
+        :return:
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""
+                        DELETE FROM VelpGroupDefaults
+                        WHERE doc_id = ? AND target_type = ? AND target_id = ?
+                        """, [doc_id, target_type, target_id]
+                       )
+        cursor.execute("""
+                        INSERT INTO
+                        VelpGroupDefaults(doc_id, target_type, target_id, velp_group_id, selected)
+                        SELECT ?, ?, ?, velp_group_id, ? FROM VelpGroupSelection WHERE doc_id = ? AND
+                        user_id = ? AND target_type = 0
+                          """, [doc_id, target_type, target_id, selected, doc_id, user_id]
+                       )
+        # target_type is 0 because only 0 always contains all velp groups user (with manage access) has access to.
+        # Other target types will get added to database only after they've been clicked once in interface.
         self.db.commit()
 
     def reset_target_area_selections_to_defaults(self, doc_id: int, target_id: str, user_id: int):
