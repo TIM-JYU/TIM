@@ -346,7 +346,7 @@ def send_message():
 
     new_timestamp = str(datetime.datetime.now())
     msg_id = timdb.messages.add_message(getCurrentUserId(), lecture_id, new_message, new_timestamp, True)
-    return jsonResponse(msg_id)
+    return jsonResponse({'id': msg_id, 'time': new_timestamp})
 
 
 @lecture_routes.route('/getQuestion')
