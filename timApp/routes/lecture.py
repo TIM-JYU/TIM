@@ -103,8 +103,7 @@ def get_all_messages(param_lecture_id=-1):
 @lecture_routes.route('/getUpdates')
 def get_updates():
     """Gets updates from some lecture. Checks updates in 1 second frequently and answers if there is updates."""
-    if not request.args.get('client_message_id') or not request.args.get("lecture_id") or not request.args.get(
-            'is_lecturer'):
+    if not request.args.get('client_message_id') or not request.args.get("lecture_id"):
         abort(400, "Bad request")
     client_last_id = int(request.args.get('client_message_id'))
     current_question_id = None
