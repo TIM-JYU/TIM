@@ -1,6 +1,5 @@
 from flask import Blueprint
 from .common import *
-import os.path
 
 velps = Blueprint('velps',
                   __name__,
@@ -29,7 +28,8 @@ def get_default_velp_group(doc_id: int) -> dict():
     if timdb.users.has_edit_access(user_id, doc_id):
         edit_access = True
     else:
-        return jsonResponse({"id": -1, "name": "No access to default group", "edit_access": edit_access})
+        return set_no_cache_headers(
+            jsonResponse({"id": -1, "name": "No access to default group", "edit_access": edit_access}))
 
     # Check if document's path contains velp groups folder and if it does, make document its own default velp group.
     # This default document declaration isn't saved to database (else eventually all velp groups might be defaults).
@@ -37,16 +37,17 @@ def get_default_velp_group(doc_id: int) -> dict():
         if timdb.users.has_edit_access(user_id, doc_id):
             edit_access = True
         else:
-            return jsonResponse({"id": -1, "name": "No access to default group", "edit_access": edit_access})
+            return set_no_cache_headers(
+                jsonResponse({"id": -1, "name": "No access to default group", "edit_access": edit_access}))
         timdb.velp_groups.make_document_a_velp_group(doc_name, doc_id)
         velp_group = [{'target_type': '0', 'target_id': 0, 'id': doc_id}]
         timdb.velp_groups.add_groups_to_selection_table(velp_group, doc_id, user_id)
         print("Document is a velp group, made default velp group to point itself")
-        return jsonResponse({"id": doc_id, "name": "Default", "edit_access": edit_access})
+        return set_no_cache_headers(jsonResponse({"id": doc_id, "name": "Default", "edit_access": edit_access}))
 
     if doc_path != "":
         found_velp_groups = timdb.documents.get_documents_in_folder(doc_path + "/" + "velp groups" + "/" + doc_name)
-    else:   # Documents in root folder don't like / after empty path
+    else:  # Documents in root folder don't like / after empty path
         found_velp_groups = timdb.documents.get_documents_in_folder("velp groups" + "/" + doc_name)
     velp_groups = []
     for v in found_velp_groups:
@@ -55,15 +56,14 @@ def get_default_velp_group(doc_id: int) -> dict():
     default_group = timdb.velp_groups.check_velp_group_ids_for_default_group(velp_groups)
     if default_group is not None:
         default_group["edit_access"] = edit_access
-        return jsonResponse(default_group)
+        return set_no_cache_headers(jsonResponse(default_group))
 
     response = jsonResponse({"id": -1, "name": doc_name + "_default", "edit_access": edit_access})
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
-    return response
+    return set_no_cache_headers(response)
+
 
 @velps.route("/get_default_personal_velp_group", methods=['GET'])
 def get_default_personal_velp_group() -> dict():
-
     timdb = getTimDb()
     user_name = getCurrentUserName()
 
@@ -104,6 +104,7 @@ def get_default_personal_velp_group() -> dict():
         response = jsonResponse(created_velp_group)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
         return response
+
 
 @velps.route("/<int:doc_id>/get_velps", methods=['GET'])
 def get_velps(doc_id: int):
@@ -426,6 +427,7 @@ def change_selection(doc_id: int):
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     return response
 
+
 @velps.route("/<int:doc_id>/change_all_selections", methods=["POST"])
 def change_all_selections(doc_id: int):
     """Change selection for velp group in users VelpGroupSelection in current document.
@@ -657,7 +659,6 @@ def create_default_velp_group(doc_id: int):
 
     timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, getCurrentUserId())
 
-
     return jsonResponse(created_velp_group)
 
 
@@ -683,7 +684,7 @@ def get_velp_groups_from_tree(document_id: int):
     current_path = doc_path
     if current_path != "":
         velp_groups_path = current_path + "/" + velp_group_folder
-    else:   # Documents in root folder don't like / after empty path
+    else:  # Documents in root folder don't like / after empty path
         velp_groups_path = velp_group_folder
     doc_velp_path = velp_groups_path + "/" + doc_name
     username = getCurrentUserName()
@@ -707,7 +708,7 @@ def get_velp_groups_from_tree(document_id: int):
     if current_path != "":
         found_velp_groups = timdb.documents.get_documents_in_folder(current_path + "/" + velp_group_folder +
                                                                     "/" + doc_name)
-    else:   # Documents in root folder don't like / after empty path
+    else:  # Documents in root folder don't like / after empty path
         found_velp_groups = timdb.documents.get_documents_in_folder(velp_group_folder + "/" + doc_name)
     for v in found_velp_groups:
         if timdb.users.has_view_access(getCurrentUserId(), timdb.documents.get_document_id(v['name'])):
