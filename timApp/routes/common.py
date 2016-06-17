@@ -12,6 +12,7 @@ import pluginControl
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from documentmodel.document import Document
 from theme import Theme
+from tim_app import db
 from timdb.timdb2 import TimDb
 from utils import generate_theme_scss, get_combined_css_filename, ThemeNotFoundException
 
@@ -56,6 +57,7 @@ def getTimDb():
     if not hasattr(g, 'timdb'):
         g.timdb = TimDb(db_path=current_app.config['DATABASE'],
                         files_root_path=current_app.config['FILES_PATH'],
+                        session=db.session,
                         current_user_name=getCurrentUserName())
     return g.timdb
 

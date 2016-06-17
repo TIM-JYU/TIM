@@ -1,9 +1,11 @@
 """
-Another version of TimDb that stores documents as whole.
+Defines the TimDb database class.
 """
 
 import sqlite3
-from contracts import contract
+from sqlalchemy.orm import scoped_session
+
+from tim_app import db
 from timdb.notes import Notes
 from timdb.uploads import Uploads
 from timdb.users import Users
@@ -20,42 +22,23 @@ from timdb.lectureanswers import LectureAnswers
 import os
 
 
-TABLE_NAMES = ['BlockEditAccess',
-               'BlockViewAccess',
-               'UserGroupMember',
-               'BlockRelation',
-               'Block',
-               'User',
-               'UserGroup',
-               'Question',
-               'Messages',
-               'Lectures',
-               'LectureAnswers']
-
-
 class TimDb(object):
     """Handles saving and retrieving information from TIM database.
-
-    :type readings: Readings
-    :type notes: Notes
-    :type users: Users
-    :type images: Images
-    :type documents: Documents
-    :type answers: Answers
-    :type folders: Folders
-    :type db: sqlite3.Connection
     """
 
-    @contract
-    def __init__(self, db_path: 'str', files_root_path: 'str', current_user_name='Anonymous'):
-        """Initializes TimDB with the specified database and root path.
+    def __init__(self, db_path: str,
+                 files_root_path: str,
+                 session: scoped_session = None,
+                 current_user_name: str = 'Anonymous'):
+        """Initializes TimDB with the specified database, files root path, SQLAlchemy session and user name.
         
+        :param session: The scoped_session to be used for SQLAlchemy operations. If None, a scoped_session will be
+        created.
+        :param current_user_name: The username of the current user.
         :param db_path: The path of the database file.
         :param files_root_path: The root path where all the files will be stored.
         """
         self.files_root_path = os.path.abspath(files_root_path)
-        
-        # TODO: Make sure that files_root_path is valid!
         
         self.blocks_path = os.path.join(self.files_root_path, 'blocks')
         for path in [self.blocks_path]:
@@ -64,6 +47,10 @@ class TimDb(object):
         
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
+
+        if session is None:
+            self.session = db.create_scoped_session()
+
         self.notes = Notes(self.db, files_root_path, 'notes', current_user_name)
         self.readings = Readings(self.db, files_root_path, 'notes', current_user_name)
         self.users = Users(self.db, files_root_path, 'users', current_user_name)
@@ -83,13 +70,8 @@ class TimDb(object):
         if self.db is not None:
             self.close()
 
-    def clear(self):
-        """Clears the contents of all database tables."""
-        for table in TABLE_NAMES:
-            self.db.execute('delete from ' + table)  # TABLE_NAMES is constant so no SQL injection possible
-
     def commit(self):
-        """Commits any changes to the database"""
+        """Commits any changes to the database."""
         self.db.commit()
 
     def close(self):
@@ -113,21 +95,28 @@ class TimDb(object):
 
     def execute_sql(self, sql):
         """Executes an SQL command on the database.
-        :param sql_file: The SQL command to be executed.
+        :param sql: The SQL command to be executed.
         """
         self.db.cursor().executescript(sql)
         self.db.commit()
 
     def get_version(self):
+        """Gets the current database version.
+        :return: The database version as an integer.
+        """
         try:
             return self.db.execute("""SELECT MAX(id) FROM Version""").fetchone()[0]
         except sqlite3.OperationalError:
             return 0
 
     def update_version(self):
+        """Updates the database version by inserting a new sequential entry in the Version table.
+        """
         self.db.execute("""INSERT INTO Version(updated_on) VALUES (CURRENT_TIMESTAMP)""")
         self.db.commit()
 
     def table_exists(self, table_name):
+        """Checks whether a table with the specified name exists in the database.
+        """
         return bool(self.db.execute("SELECT EXISTS(SELECT name from sqlite_master WHERE type = 'table' AND name = ?)",
                                [table_name]).fetchone()[0])

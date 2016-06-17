@@ -9,18 +9,18 @@ class NewAnswers(TempDbBase):
     @contract
     def user_answered(self, lecture_id: "int", asked_id: "int", user_id: "int"):
         new_answer = self.table(lecture_id, asked_id, user_id)
-        self.db.session.add(new_answer)
-        self.db.session.commit()
+        self.session.add(new_answer)
+        self.session.commit()
 
     @contract
     def delete_question_answers(self, asked_id: "int"):
         self.table.query.filter_by(asked_id=asked_id).delete()
-        self.db.session.commit()
+        self.session.commit()
 
     @contract
     def delete_lecture_answers(self, lecture_id: "int"):
         self.table.query.filter_by(lecture_id=lecture_id).delete()
-        self.db.session.commit()
+        self.session.commit()
 
     @contract
     def get_new_answers(self, asked_id: "int"):
@@ -32,7 +32,7 @@ class NewAnswers(TempDbBase):
         if new_answers:
             for answer in new_answers:
                 new_user_ids.append(answer.user_id)
-                self.db.session.delete(answer)
-            self.db.session.commit()
+                self.session.delete(answer)
+            self.session.commit()
 
         return new_user_ids

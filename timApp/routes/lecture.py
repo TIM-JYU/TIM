@@ -9,8 +9,8 @@ from flask import Blueprint, request, abort, session, render_template, current_a
 from documentmodel.randutils import hashfunc
 from routes.common import getTimDb, getCurrentUserId, jsonResponse, verify_ownership, get_rights, has_ownership, \
     get_user_settings
-from timdb import tempdb_models
 from tim_app import db
+from timdb.tempdb_models import TempDb
 
 lecture_routes = Blueprint('lecture',
                            __name__,
@@ -1169,4 +1169,4 @@ def user_in_lecture():
 
 
 def getTempDb():
-    return tempdb_models.tempdb
+    return TempDb(session=db.session)

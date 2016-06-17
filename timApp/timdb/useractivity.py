@@ -11,17 +11,17 @@ class UserActivity(TempDbBase):
     def update_or_add_activity(self, lecture_id: "int", user_id: "int", active: "str"):
         activity = self.table(lecture_id, user_id, active)
         try:
-            self.db.session.merge(activity)
-            self.db.session.commit()
+            self.session.merge(activity)
+            self.session.commit()
         except IntegrityError:
             print("Activity already exists.")
-            self.db.session.rollback()
+            self.session.rollback()
 
 
     @contract
     def delete_lecture_activity(self, lecture_id: "int"):
         self.table.query.filter_by(lecture_id=lecture_id).delete()
-        self.db.session.commit()
+        self.session.commit()
 
     @contract
     def get_user_activity(self, lecture_id: "int", user_id: "int"):

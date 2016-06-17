@@ -29,9 +29,9 @@ def postgre_create_database(db_name):
     conn.close()
 
 
-def initialize_temp_database():
+def initialize_temp_database(print_progress=True):
     postgre_create_database('tempdb_' + app.config['TIM_NAME'])
-    tempdb_models.initialize_temp_database()
+    tempdb_models.initialize_temp_database(print_progress=print_progress)
 
 
 def initialize_database(create_docs=True, print_progress=True):
