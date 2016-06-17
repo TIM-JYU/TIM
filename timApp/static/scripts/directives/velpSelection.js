@@ -510,6 +510,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
             group.target_id = "0";
             group.target_type = 0;
         }
+        group.selection_type = type
 
         if (type === "show"){
             $scope.makePostRequest("/{0}/change_selection".replace('{0}', doc_id), group, function (json) {console.log(json);});
@@ -526,7 +527,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$http', function ($scop
 
         }
         else if (type === "default"){
-            $scope.makePostRequest("/{0}/change_default_selection".replace('{0}', doc_id), group, function (json) {console.log(json);});
+            $scope.makePostRequest("/{0}/change_selection".replace('{0}', doc_id), group, function (json) {console.log(json);});
 
             if (!$scope.groupDefaults.hasOwnProperty(group.target_id))
                 $scope.groupDefaults[group.target_id] = [];

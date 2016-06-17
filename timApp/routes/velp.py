@@ -404,12 +404,16 @@ def change_selection(doc_id: int):
         selection = json_data['show']
         target_type = json_data['target_type']
         target_id = json_data['target_id']
+        selection_type = json_data['selection_type']
     except KeyError as e:
         return abort(400, "Missing data: " + e.args[0])
     verifyLoggedIn()
     user_id = getCurrentUserId()
     timdb = getTimDb()
-    timdb.velp_groups.change_selection(doc_id, velp_group_id, target_type, target_id, user_id, selection)
+    if selection_type == "show":
+        timdb.velp_groups.change_selection(doc_id, velp_group_id, target_type, target_id, user_id, selection)
+    elif selection_type == "default" and timdb.users.has_manage_access(user_id, doc_id):
+        timdb.velp_groups.change_default_selection(doc_id, velp_group_id, target_type, target_id, selection)
 
     response = okJsonResponse()
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
@@ -436,37 +440,8 @@ def change_all_selections(doc_id: int):
     timdb = getTimDb()
     if selection_type == "show":
         timdb.velp_groups.change_all_target_area_selections(doc_id, target_type, target_id, user_id, selection)
-    elif selection_type == "default":
-        if timdb.users.has_manage_access(user_id, doc_id):
-            timdb.velp_groups.change_all_target_area_default_selections(doc_id, target_type, target_id, user_id,
-                                                                        selection)
-
-    response = okJsonResponse()
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
-    return response
-
-
-@velps.route("/<int:doc_id>/change_default_selection", methods=["POST"])
-def change_default_selection(doc_id: int):
-    """Change selection for velp group in users VelpGroupSelection in current document
-
-    :param doc_id: ID of document
-    :return: okJsonResponse
-    """
-
-    json_data = request.get_json()
-    try:
-        velp_group_id = json_data['id']
-        target_type = json_data['target_type']
-        target_id = json_data['target_id']
-        selection = json_data['default']
-    except KeyError as e:
-        return abort(400, "Missing data: " + e.args[0])
-    verifyLoggedIn()
-    user_id = getCurrentUserId()
-    timdb = getTimDb()
-    if timdb.users.has_manage_access(user_id, doc_id):
-        timdb.velp_groups.change_default_selection(doc_id, velp_group_id, target_type, target_id, selection)
+    elif selection_type == "default" and timdb.users.has_manage_access(user_id, doc_id):
+        timdb.velp_groups.change_all_target_area_default_selections(doc_id, target_type, target_id, user_id, selection)
 
     response = okJsonResponse()
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
