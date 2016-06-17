@@ -7,6 +7,7 @@ from time import mktime
 from flask import Blueprint, request, abort, session, render_template, current_app
 
 from documentmodel.randutils import hashfunc
+from options import get_option
 from routes.common import getTimDb, getCurrentUserId, jsonResponse, verify_ownership, get_rights, has_ownership, \
     get_user_settings
 from tim_app import db
@@ -113,19 +114,10 @@ def get_updates():
     if 'current_points_id' in request.args:
         current_points_id = int(request.args.get('current_points_id'))
 
-    use_wall = False
-    use_questions = False
-    if request.args.get('get_messages') == "true":
-        session['use_wall'] = True
-        use_wall = True
-    else:
-        session['use_wall'] = False
-
-    if request.args.get('get_questions') == "true":
-        session['use_questions'] = True
-        use_questions = True
-    else:
-        session['use_questions'] = False
+    use_wall = get_option(request, 'get_messages', False)
+    session['use_wall'] = use_wall
+    use_questions = get_option(request, 'get_questions', False)
+    session['use_questions'] = use_questions
 
     helper = request.args.get("lecture_id")
     if len(helper) > 0:
