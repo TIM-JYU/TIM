@@ -415,7 +415,7 @@ def get_block(doc_id, par_id):
         return jsonResponse({"text": par.get_exported_markdown()})
 
 
-@app.route("/<plugin>/<filename>")
+@app.route("/<plugin>/<path:filename>")
 def plugin_call(plugin, filename):
     try:
         req = containerLink.call_plugin_resource(plugin, filename)
