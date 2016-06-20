@@ -333,9 +333,9 @@
                                       ng-value="0" checked="checked"> <label for="radioPar">Personal
                                 collection</label><br>
                                 <input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioDoc"
-                                       ng-value="1"> <label for="radioDoc">Document</label><br>
+                                       ng-value="1" ng-disabled=!rights.edit> <label for="radioDoc">Document</label><br>
                                 <input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioFolder"
-                                       ng-value="2"> <label for="radioFolder">Folder</label></p>
+                                       ng-value="2" ng-disabled=!rights.edit> <label for="radioFolder">Folder</label></p>
                         </fieldset>
 
                         <p><input type="submit" class="timButton" value="Create velp group"></p>
