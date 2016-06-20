@@ -82,7 +82,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         }
 
         if (default_velp_group.edit_access)
-            $scope.newVelp.velp_groups = [default_velp_group.id];
+            $scope.newVelp.velp_groups.push(default_velp_group.id);
         console.log("VELP GROUPS");
         console.log($scope.velpGroups);
 
@@ -106,8 +106,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                 if (g.id === default_personal_velp_group.id)
                     return g.selected = true;
             });
-            if (!default_velp_group.edit_access)
-                $scope.newVelp.velp_groups = [default_personal_velp_group.id];
+            if (default_velp_group.edit_access)
+                $scope.newVelp.velp_groups.push(default_personal_velp_group.id);
         });
 
         $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) {
@@ -655,6 +655,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
     };
 
     $scope.isSomeVelpGroupSelected = function (velp) {
+        console.log(velp.velp_groups);
         if (typeof velp.velp_groups === UNDEFINED)
             return false;
         return velp.velp_groups.length > 0;
