@@ -94,7 +94,6 @@ def get_default_personal_velp_group() -> dict():
         created_velp_group['target_id'] = "0"
         created_velp_group['name'] = group_name
         created_velp_group['location'] = new_group_path
-        created_velp_group['selected'] = True
         created_velp_group['show'] = True
         created_velp_group['default'] = False
         created_velp_group['edit_access'] = True

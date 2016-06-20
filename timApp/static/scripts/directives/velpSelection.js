@@ -72,6 +72,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
     // Get velpgroup data
     $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id)).success(function (data) {
         $scope.velpGroups = data;
+
         if (default_velp_group.id < 0) {
             $scope.velpGroups.push(default_velp_group);
         } else {
@@ -102,12 +103,13 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             if (data.created_new_group) {
                 $scope.velpGroups.push(data);
             }
-            else $scope.velpGroups.some(function (g) {
-                if (g.id === default_personal_velp_group.id)
-                    return g.selected = true;
-            });
-            if (default_velp_group.edit_access)
+            if (!default_velp_group.edit_access) {
                 $scope.newVelp.velp_groups.push(default_personal_velp_group.id);
+                $scope.velpGroups.some(function (g) {
+                    if (g.id === default_personal_velp_group.id)
+                        return g.selected = true;
+                });
+            }
         });
 
         $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) {
@@ -509,7 +511,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             group.target_id = "0";
             group.target_type = 0;
         }
-        group.selection_type = type
+        group.selection_type = type;
 
         if (type === "show") {
             $scope.makePostRequest("/{0}/change_selection".replace('{0}', doc_id), group, function (json) {
