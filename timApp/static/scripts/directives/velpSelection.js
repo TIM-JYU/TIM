@@ -657,7 +657,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
     };
 
     $scope.isSomeVelpGroupSelected = function (velp) {
-        console.log(velp.velp_groups);
         if (typeof velp.velp_groups === UNDEFINED)
             return false;
         return velp.velp_groups.length > 0;
