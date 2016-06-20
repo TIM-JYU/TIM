@@ -298,19 +298,19 @@
                                 </th>
                                 <th><span class="comment-info small"><input type="checkbox"
                                                                             ng-model="settings.selectedAllDefault"
-                                                                            ng-disabled=!rights.manage
+                                                                            ng-disabled="!rights.manage"
                                                                             ng-click="changeAllVelpGroupSelections('default')">Default</span>
                                 </th>
                                 <th><span class="small">Group</span></th>
                             </tr>
 
-                            <tr ng-repeat="group in velpGroups">
+                            <tr ng-repeat="group in velpGroups" ng-hide="group.id<0">
                                 <td>
                                     <input type="checkbox" ng-model="group.show"
                                            ng-click="changeVelpGroupSelection(group, 'show')">
                                 </td>
                                 <td>
-                                    <input type="checkbox" ng-model="group.default" ng-disabled=!rights.manage
+                                    <input type="checkbox" ng-model="group.default" ng-disabled="!rights.manage"
                                            ng-click="changeVelpGroupSelection(group, 'default')">
                                 </td>
                                 <td>
