@@ -74,7 +74,7 @@ def get_default_personal_velp_group() -> dict():
         velp_groups.append(v['id'])
     default_group = timdb.velp_groups.check_velp_group_ids_for_default_group(velp_groups)
     if default_group is not None:
-        return jsonResponse(default_group)
+        return set_no_cache_headers(jsonResponse(default_group))
     else:
         group_name = "Personal default"
         new_group_path = personal_velp_group_path + "/" + group_name
@@ -101,8 +101,7 @@ def get_default_personal_velp_group() -> dict():
         created_velp_group['default_group'] = True
         created_velp_group['created_new_group'] = created_new
 
-        response = jsonResponse(created_velp_group)
-        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+        response = set_no_cache_headers(jsonResponse(created_velp_group))
         return response
 
 
