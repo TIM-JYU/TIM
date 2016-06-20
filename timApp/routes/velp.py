@@ -360,9 +360,7 @@ def add_label() -> int:
     timdb = getTimDb()
     label_id = timdb.velps.create_velp_label(language_id, content)
 
-    response = okJsonResponse()
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
-    return response
+    return str(label_id)
 
 
 @velps.route("/update_velp_label", methods=["POST"])
