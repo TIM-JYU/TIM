@@ -89,7 +89,9 @@ timApp.directive("annotation", ['$window', function ($window) {
 
                 if (scope.comments.length < 2) {
                     console.log(scope.ismargin);
-
+                    if (!$window.confirm("Delete - are you sure?")) {
+                        return;
+                    }
                     scope.$parent.deleteAnnotation(scope.aid, scope.ismargin);
                     scope.toggleAnnotation();
                 }

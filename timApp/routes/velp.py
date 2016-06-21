@@ -55,7 +55,7 @@ def get_default_velp_group(doc_id: int) -> dict():
         velp_groups.append(v['id'])
     default_group = timdb.velp_groups.check_velp_group_ids_for_default_group(velp_groups)
     if default_group is not None:
-        default_group["edit_access"] = edit_access
+        default_group["edit_access"] = timdb.users.has_edit_access(user_id,default_group['id'])
         return set_no_cache_headers(jsonResponse(default_group))
 
     response = jsonResponse({"id": -1, "name": doc_name + "_default", "edit_access": edit_access})
