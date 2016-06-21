@@ -59,33 +59,44 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
 
     $scope.annotations = [];
 
-
-    // Get default velpgroup data
-    $http.get('/{0}/get_default_velp_group'.replace('{0}', doc_id)).success(function (data) {
-        console.log("Get default velp group");
-        default_velp_group = data;
-        if (default_velp_group.edit_access)
-            default_velp_group.selected = true;
-        console.log(data);
-    });
-
     // Get velpgroup data
     $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id)).success(function (data) {
         $scope.velpGroups = data;
 
-        if (default_velp_group.id < 0) {
-            $scope.velpGroups.push(default_velp_group);
-        } else {
-            $scope.velpGroups.forEach(function (g) {
-                if (g.id === default_velp_group.id)
-                    g.selected = true;
-            });
-        }
+        // Get default velp group data
+        $http.get('/{0}/get_default_velp_group'.replace('{0}', doc_id)).success(function (data) {
+            console.log("Get default velp group");
+            default_velp_group = data;
+            if (default_velp_group.id < 0)
+                $scope.velpGroups.push(default_velp_group);
+            if (default_velp_group.edit_access) {
+                $scope.velpGroups.some(function (g) {
+                    if (g.id === default_velp_group.id)
+                        return g.selected = true;
+                });
+                default_velp_group.selected = true;
+                $scope.newVelp.velp_groups.push(default_velp_group.id)
+            }
+            console.log(data);
 
-        if (default_velp_group.edit_access)
-            $scope.newVelp.velp_groups.push(default_velp_group.id);
-        console.log("VELP GROUPS");
-        console.log($scope.velpGroups);
+            // Get personal velp group data
+            $http.get('/get_default_personal_velp_group').success(function (data) {
+                default_personal_velp_group = {id: data.id, name: data.name};
+                if (data.created_new_group) {
+                    $scope.velpGroups.push(data);
+                }
+                if (!default_velp_group.edit_access) {
+                    $scope.newVelp.velp_groups.push(default_personal_velp_group.id);
+                    $scope.velpGroups.some(function (g) {
+                        if (g.id === default_personal_velp_group.id)
+                            return g.selected = true;
+                    });
+                }
+            });
+
+            console.log("VELP GROUPS");
+            console.log($scope.velpGroups);
+        });
 
         // Get velp and annotation data
         $http.get('/{0}/get_velps'.replace('{0}', doc_id)).success(function (data) {
@@ -98,6 +109,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             });
         });
 
+        /*
         $http.get('/get_default_personal_velp_group').success(function (data) {
             default_personal_velp_group = {id: data.id, name: data.name};
             if (data.created_new_group) {
@@ -111,6 +123,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                 });
             }
         });
+        */
 
         $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) {
             $scope.annotations = data;
