@@ -183,7 +183,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             var annotationParent = getElementParent(oldAnnotations[0]);
             for (var a = 0; a < oldAnnotations.length; a++) {
                 console.log(getElementParent(oldAnnotations[a]));
-                annotationParent.remove(oldAnnotations[a]);
+                annotationParent.removeChild(oldAnnotations[a]);
             }
         }
 
