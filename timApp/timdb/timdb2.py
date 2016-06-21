@@ -48,22 +48,23 @@ class TimDb(object):
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
 
+        self.session = session
         if session is None:
             self.session = db.create_scoped_session()
 
-        self.notes = Notes(self.db, files_root_path, 'notes', current_user_name)
-        self.readings = Readings(self.db, files_root_path, 'notes', current_user_name)
-        self.users = Users(self.db, files_root_path, 'users', current_user_name)
-        self.images = Images(self.db, files_root_path, 'images', current_user_name)
-        self.uploads = Uploads(self.db, files_root_path, 'uploads', current_user_name)
-        self.files = Files(self.db, files_root_path, 'files', current_user_name)
-        self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
-        self.answers = Answers(self.db, files_root_path, 'answers', current_user_name)
-        self.questions = Questions(self.db, files_root_path, 'questions', current_user_name)
-        self.messages = Messages(self.db, files_root_path, 'messages', current_user_name)
-        self.lectures = Lectures(self.db, files_root_path, 'lectures', current_user_name)
-        self.folders = Folders(self.db, files_root_path, 'folders', current_user_name)
-        self.lecture_answers = LectureAnswers(self.db, files_root_path, 'lecture_answers', current_user_name)
+        self.notes = Notes(self.db, files_root_path, 'notes', current_user_name, self.session)
+        self.readings = Readings(self.db, files_root_path, 'notes', current_user_name, self.session)
+        self.users = Users(self.db, files_root_path, 'users', current_user_name, self.session)
+        self.images = Images(self.db, files_root_path, 'images', current_user_name, self.session)
+        self.uploads = Uploads(self.db, files_root_path, 'uploads', current_user_name, self.session)
+        self.files = Files(self.db, files_root_path, 'files', current_user_name, self.session)
+        self.documents = Documents(self.db, files_root_path, 'documents', current_user_name, self.session)
+        self.answers = Answers(self.db, files_root_path, 'answers', current_user_name, self.session)
+        self.questions = Questions(self.db, files_root_path, 'questions', current_user_name, self.session)
+        self.messages = Messages(self.db, files_root_path, 'messages', current_user_name, self.session)
+        self.lectures = Lectures(self.db, files_root_path, 'lectures', current_user_name, self.session)
+        self.folders = Folders(self.db, files_root_path, 'folders', current_user_name, self.session)
+        self.lecture_answers = LectureAnswers(self.db, files_root_path, 'lecture_answers', current_user_name, self.session)
 
     def __del__(self):
         """Release the database connection when the object is deleted."""

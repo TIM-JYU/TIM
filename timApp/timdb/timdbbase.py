@@ -4,6 +4,7 @@ import collections
 import sqlite3
 
 from contracts import contract, new_contract
+from sqlalchemy.orm import scoped_session
 
 new_contract('Connection', sqlite3.Connection)
 
@@ -26,7 +27,7 @@ class TimDbBase(object):
     """
 
     @contract
-    def __init__(self, db: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
+    def __init__(self, db: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str', session: scoped_session):
         """Initializes TimDB with the specified database and root path.
         
         :param db: The database connection.
@@ -42,6 +43,7 @@ class TimDbBase(object):
             if not os.path.exists(path):
                 os.makedirs(path)
         self.db = db
+        self.session = session
 
     @contract
     def get_sql_template(self, value_list: list):
