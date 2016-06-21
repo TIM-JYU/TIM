@@ -58,7 +58,6 @@ timApp.directive("annotation", ['$window', function ($window) {
              */
             scope.toggleAnnotation = function () {
                 scope.show = !scope.show;
-                scope.updateVelpZIndex();
                 if (scope.show) {
                     scope.updateVelpZIndex();
                 }
@@ -155,6 +154,9 @@ timApp.directive("annotation", ['$window', function ($window) {
                 return false;
             };
 
+            setTimeout(function(){
+                if (scope.show) scope.updateVelpZIndex();
+            }, 0);
         }
     };
 }]);
