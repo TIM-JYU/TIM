@@ -397,6 +397,10 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
     font-size: 0.9em;
 }
 
+label.disabled {
+    color: grey;
+}
+
 .annotation-info .comments li{
     width: 100%;
     font-size: 0.9em;

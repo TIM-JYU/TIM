@@ -228,7 +228,7 @@
                                                 <fieldset ng-show="advancedOn">
                                                     <legend>Velp groups</legend>
                                                     <span ng-repeat="g in velpGroups">
-                                                        <label><input type="checkbox"
+                                                        <label ng-class="{disabled: !g.edit_access}"><input type="checkbox"
                                                                       ng-click="updateVelpGroups(velpToEdit, g)"
                                                                       ng-checked="isGroupInVelp(velpToEdit, g)"
                                                                       ng-disabled="!g.edit_access"> {{ g.name }}
@@ -288,18 +288,18 @@
                                        ng-click="updateVelpList()" ng-model="groupAttachment.target_type" ng-value="1"
                                        name="selArea" id="selPar" ng-class="{disabled: selectedElement == null}"
                                        ng-disabled="selectedElement == null">
-                                <label for="selPar">Selected paragraph</label>
+                                <label for="selPar" ng-class="{'disabled':selectedElement == null}">Selected paragraph</label>
                             </fieldset>
 
                             <tr>
-                                <th><span class="comment-info small"><input type="checkbox"
+                                <th><label class="comment-info small"><input type="checkbox"
                                                                             ng-model="settings.selectedAllShows"
-                                                                            ng-click="changeAllVelpGroupSelections('show')">Show</span>
+                                                                            ng-click="changeAllVelpGroupSelections('show')">Show</label>
                                 </th>
-                                <th><span class="comment-info small"><input type="checkbox"
+                                <th><label ng-class="['comment-info', 'small', {disabled: !rights.manage}]"><input type="checkbox"
                                                                             ng-model="settings.selectedAllDefault"
                                                                             ng-disabled="!rights.manage"
-                                                                            ng-click="changeAllVelpGroupSelections('default')">Default</span>
+                                                                            ng-click="changeAllVelpGroupSelections('default')">Default</label>
                                 </th>
                                 <th><span class="small">Group</span></th>
                             </tr>
@@ -333,9 +333,9 @@
                                       ng-value="0" checked="checked"> <label for="radioPar">Personal
                                 collection</label><br>
                                 <input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioDoc"
-                                       ng-value="1" ng-disabled=!rights.editable> <label for="radioDoc">Document</label><br>
+                                       ng-value="1" ng-disabled="!rights.editable"> <label for="radioDoc" ng-class="{'disabled':!rights.editable}">Document</label><br>
                                 <input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioFolder"
-                                       ng-value="2" ng-disabled=!rights.editable> <label for="radioFolder">Folder</label></p>
+                                       ng-value="2" ng-disabled="!rights.editable"> <label for="radioFolder" ng-class="{'disabled':!rights.editable}">Folder</label></p>
                         </fieldset>
 
                         <p><input type="submit" class="timButton" value="Create velp group"></p>
