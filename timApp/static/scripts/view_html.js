@@ -653,7 +653,7 @@ timApp.controller("ViewCtrl", [
                 if (downEvent !== null) {
                     if (func($(this), downEvent)) {
                         e.preventDefault();
-                        e.stopPropagation();
+                        //e.stopPropagation();
                     }
                     downEvent = null;
                 }
