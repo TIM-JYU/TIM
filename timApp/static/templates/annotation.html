@@ -34,7 +34,7 @@
     <div>
         <form class="form-inline adjustAnnForm">
             <div class="form-group">
-                <label>Visible to:</label>
+                <label ng-class="{disabled: checkRights()}">Visible to:</label>
                 <select ng-model="visible_options.value" ng-disabled="checkRights()"
                         ng-options="v as visible_options.names[v-1] for v in visible_options.values">
                 </select>
