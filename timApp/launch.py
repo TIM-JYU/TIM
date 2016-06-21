@@ -3,8 +3,6 @@ import os
 import subprocess
 import sys
 
-# IMPORTANT: tim needs to be the first non-standard import because we want to disable contracts
-# before any @contract decorator is encountered.
 import tim
 
 import dumboclient

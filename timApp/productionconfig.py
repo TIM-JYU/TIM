@@ -1,1 +1,0 @@
-CONTRACTS_ENABLED = False

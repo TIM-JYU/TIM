@@ -1,6 +1,5 @@
 from sqlite3 import Connection
-
-from contracts import contract
+from typing import List
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
@@ -9,8 +8,7 @@ from timdb.timdbbase import TimDbBase
 
 
 class Notes(TimDbBase):
-    @contract
-    def __tagstostr(self, tags: 'list(str)') -> 'str':
+    def __tagstostr(self, tags: List[str]) -> str:
         tagstr = ''
         if 'difficult' in tags:
             tagstr += 'd'
@@ -18,8 +16,7 @@ class Notes(TimDbBase):
             tagstr += 'u'
         return tagstr
 
-    @contract
-    def __strtotags(self, tagstr: 'str') -> 'list(str)':
+    def __strtotags(self, tagstr: str) -> List[str]:
         tags = []
         if 'd' in tagstr:
             tags.append("difficult")
@@ -27,8 +24,7 @@ class Notes(TimDbBase):
             tags.append("unclear")
         return tags
 
-    @contract
-    def hasEditAccess(self, usergroup_id: 'int', note_id: 'int') -> 'bool':
+    def hasEditAccess(self, usergroup_id: int, note_id: int) -> bool:
         """Checks whether the specified usergroup has access to the specified note.
 
         :param usergroup_id: The usergroup id for which to check access.
@@ -44,9 +40,8 @@ class Notes(TimDbBase):
         row = cursor.fetchone()
         return row is not None and int(row[0]) == usergroup_id
 
-    @contract
-    def addNote(self, usergroup_id: 'int', doc: 'Document', par: 'DocParagraph', content: 'str', access: 'str',
-                tags: 'list(str)', commit: 'bool'=True):
+    def addNote(self, usergroup_id: int, doc: Document, par: DocParagraph, content: str, access: str,
+                tags: List[str], commit: bool=True):
         """Adds a note to the document.
 
         :param commit:
@@ -71,9 +66,8 @@ class Notes(TimDbBase):
         if commit:
             self.db.commit()
 
-    @contract
-    def modifyNote(self, note_id: 'int', new_content: 'str',
-                   access: 'str', new_tags: 'list(str)'):
+    def modifyNote(self, note_id: int, new_content: str,
+                   access: str, new_tags: List[str]):
         """Modifies an existing note.
 
         :param note_id: The id of the note.
@@ -92,8 +86,7 @@ class Notes(TimDbBase):
 
         self.db.commit()
 
-    @contract
-    def deleteNote(self, note_id: 'int'):
+    def deleteNote(self, note_id: int):
         """Deletes a note.
 
         :param note_id: The id of the note.
@@ -108,8 +101,7 @@ class Notes(TimDbBase):
 
         self.db.commit()
 
-    @contract
-    def getNotes(self, usergroup_id: 'int', doc: 'Document', include_public=True) -> 'list(dict)':
+    def getNotes(self, usergroup_id: int, doc: Document, include_public=True) -> List[dict]:
         """Gets all notes for a document a particular user has access to.
 
         :param usergroup_id: The usergroup id.
@@ -137,8 +129,7 @@ class Notes(TimDbBase):
 
         return self.process_notes(result)
 
-    @contract
-    def get_note(self, note_id: 'int') -> 'dict':
+    def get_note(self, note_id: int) -> dict:
         result = self.resultAsDictionary(
             self.db.execute('SELECT id, doc_id, par_id, par_hash, content, created, modified, access, tags, html, UserGroup_id '
                             'FROM UserNotes '
@@ -146,8 +137,7 @@ class Notes(TimDbBase):
 
         return self.process_notes(result)[0]
 
-    @contract
-    def process_notes(self, result: 'list(dict)') -> 'list(dict)':
+    def process_notes(self, result: List[dict]) -> List[dict]:
         for note in result:
             note["tags"] = self.__strtotags(note["tags"])
             if note['html'] is None:

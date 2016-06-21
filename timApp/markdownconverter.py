@@ -1,7 +1,7 @@
 """Provides functions for converting markdown-formatted text to HTML."""
 import re
+from typing import Optional, Dict
 
-from contracts import contract
 from jinja2 import Environment, TemplateSyntaxError
 from lxml import html
 
@@ -45,10 +45,9 @@ expand_macros = expand_macros_jinja2
 # expand_macros = expand_macros_regex
 
 
-@contract
 def md_to_html(text: str,
                sanitize: bool = True,
-               macros: 'dict(str:str)|None' = None,
+               macros: Optional[Dict[str, str]] = None,
                macro_delimiter=None) -> str:
     """
     Converts the specified markdown text to HTML.

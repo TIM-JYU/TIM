@@ -6,7 +6,6 @@ from difflib import SequenceMatcher
 from tempfile import mkstemp
 from time import time
 
-from contracts import contract, new_contract
 from lxml import etree, html
 from typing import List, Optional, Set, Tuple, Union
 
@@ -532,7 +531,7 @@ class Document:
                         f.write(line)
         return p
 
-    def update_section(self, text: str, par_id_first: str, par_id_last: str) -> 'tuple(str,str)':
+    def update_section(self, text: str, par_id_first: str, par_id_last: str) -> Tuple[str, str]:
         """Updates a section of the document.
 
         :param text: The text of the section.
@@ -786,9 +785,6 @@ class Document:
         self.version = None
 
 
-new_contract('Document', Document)
-
-
 class CacheIterator:
     def __init__(self, i):
         self.i = i
@@ -846,7 +842,6 @@ class DocParagraphIter:
             self.f = None
 
 
-@contract
 def get_index_from_html_list(html_table) -> List[Tuple]:
     index = []
     current_headers = None

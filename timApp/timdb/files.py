@@ -1,13 +1,11 @@
-from contracts import contract, new_contract
+from typing import List, Tuple
+
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 import os
 
-new_contract('bytes', bytes)
-
 
 class Files(TimDbBase):
-    @contract
-    def getFilePath(self, file_id: 'int', file_filename: 'str'):
+    def getFilePath(self, file_id: int, file_filename: str):
         """Gets the path of an file.
         
         :param file_id: The id of the file.
@@ -17,8 +15,7 @@ class Files(TimDbBase):
 
         return os.path.join(self.blocks_path, str(file_id), file_filename)
 
-    @contract
-    def getFileRelativePath(self, file_id: 'int', file_filename: 'str'):
+    def getFileRelativePath(self, file_id: int, file_filename: str):
         """Gets the relative path of a file.
         
         :param file_id: The id of the file.
@@ -28,8 +25,7 @@ class Files(TimDbBase):
 
         return os.path.relpath(self.getFilePath(file_id, file_filename), self.blocks_path)
 
-    @contract
-    def saveFile(self, file_data: 'bytes', file_filename: 'str', owner_group_id: 'int') -> 'tuple(int, str)':
+    def saveFile(self, file_data: 'bytes', file_filename: str, owner_group_id: int) -> Tuple[int, str]:
         """Saves a file to the database.
         
         :param file_data: The file data.
@@ -54,8 +50,7 @@ class Files(TimDbBase):
         self.db.commit()
         return img_id, file_filename
 
-    @contract
-    def deleteFile(self, file_id: 'int'):
+    def deleteFile(self, file_id: int):
         """Deletes an file from the database."""
 
         cursor = self.db.cursor()
@@ -71,8 +66,7 @@ class Files(TimDbBase):
 
         self.db.commit()
 
-    @contract
-    def getFile(self, file_id: 'int', file_filename: 'str') -> 'bytes':
+    def getFile(self, file_id: int, file_filename: str) -> bytes:
         """Gets the specified file.
         
         :param file_id: The id of the file.
@@ -83,8 +77,7 @@ class Files(TimDbBase):
         with open(self.getFilePath(file_id, file_filename), 'rb') as f:
             return f.read()
 
-    @contract
-    def getFiles(self) -> 'list(dict)':
+    def getFiles(self) -> List[dict]:
         """Gets all the files.
         
         :returns: A list of dictionaries of the form {'id': xx, 'file': 'xx/filename.ext'}.
@@ -95,7 +88,7 @@ class Files(TimDbBase):
         files = self.resultAsDictionary(cursor)
         return files
 
-    def fileExists(self, file_id: 'int', file_filename: 'str'):
+    def fileExists(self, file_id: int, file_filename: str):
         """Returns whether the specified file exists.
         
         :param file_id: The id of the file.

@@ -1,14 +1,14 @@
 from difflib import HtmlDiff
+from typing import Optional, Tuple
 
-from contracts import contract, new_contract
+from documentmodel.docsettings import DocSettings
 from documentmodel.document import Document, DocParagraphIter
 from documentmodel.docparagraph import DocParagraph
 
 
 class DocumentVersion(Document):
-    @contract
-    def __init__(self, doc_id: 'int', doc_ver: 'tuple(int, int)',
-                 files_root=None, modifier_group_id: 'int|None' = 0):
+    def __init__(self, doc_id: int, doc_ver: 'tuple(int, int)',
+                 files_root=None, modifier_group_id: Optional[int] = 0):
         super(DocumentVersion, self).__init__(doc_id, files_root, modifier_group_id)
         self.does_exist = None
         self.settings = None
@@ -31,32 +31,26 @@ class DocumentVersion(Document):
                     if len(entry) > 1:
                         self.index[entry[0]] = entry[1]
 
-    @contract
-    def __len__(self) -> 'int':
+    def __len__(self) -> int:
         self.cache_index()
         return self.indexlen
 
-    @contract
-    def exists(self) -> 'bool':
+    def exists(self) -> bool:
         if self.does_exist is None:
             self.does_exist = Document.version_exists(self.doc_id, self.version, self.files_root)
         return self.does_exist
 
-    @contract
-    def create(self, ignore_exists : 'bool' = False):
+    def create(self, ignore_exists : bool = False):
         assert False, "Called DocumentVersion.create"
 
     @classmethod
-    @contract
-    def remove(cls, doc_id: 'int', files_root: 'str|None' = None, ignore_exists=False):
+    def remove(cls, doc_id: int, files_root: Optional[str] = None, ignore_exists=False):
         assert False, "Called DocumentVersion.remove"
 
-    @contract
-    def get_version(self) -> 'tuple(int, int)':
+    def get_version(self) -> Tuple[int, int]:
         return self.version
 
-    @contract
-    def has_paragraph(self, par_id: 'str') -> 'bool':
+    def has_paragraph(self, par_id: str) -> bool:
         """
         Checks if the document has the given paragraph.
         :param par_id: The paragraph id.
@@ -65,8 +59,7 @@ class DocumentVersion(Document):
         self.cache_index()
         return par_id in self.index
 
-    @contract
-    def get_paragraph(self, par_id: 'str') -> 'DocParagraph':
+    def get_paragraph(self, par_id: str) -> DocParagraph:
         self.cache_index()
         par_hash = self.index.get(par_id, None)
         if par_hash is not None:
@@ -74,61 +67,50 @@ class DocumentVersion(Document):
         else:
             return DocParagraph.get_latest(self.doc_id, par_id, self.files_root)
 
-    @contract
-    def get_settings(self) -> 'DocSettings':
+    def get_settings(self) -> DocSettings:
         if self.settings is None:
             self.settings = super(DocumentVersion, self).get_settings()
         return self.settings
 
-    @contract
-    def add_paragraph_obj(self, p: 'DocParagraph') -> 'DocParagraph':
+    def add_paragraph_obj(self, p: DocParagraph) -> DocParagraph:
         assert False, "Called DocumentVersion.add_paragraph_obj"
 
-    @contract
     def add_paragraph(
             self,
-            text: 'str',
-            par_id: 'str|None'=None,
-            attrs: 'dict|None'=None,
-            properties: 'dict|None'=None
-            ) -> 'DocParagraph':
+            text: str,
+            par_id: Optional[str]=None,
+            attrs: Optional[dict]=None,
+            properties: Optional[dict]=None
+            ) -> DocParagraph:
         assert False, "Called DocumentVersion.add_paragraph"
 
-    def add_ref_paragraph(self, src_par: 'DocParagraph', text: 'str|None' = None) -> 'DocParagraph':
+    def add_ref_paragraph(self, src_par: DocParagraph, text: Optional[str] = None) -> DocParagraph:
         assert False, "Called DocumentVersion.add_ref_paragraph"
 
-    @contract
-    def delete_paragraph(self, par_id: 'str'):
+    def delete_paragraph(self, par_id: str):
         assert False, "Called DocumentVersion.delete_paragraph"
 
-    @contract
-    def insert_paragraph(self, text: 'str',
-                         insert_before_id: 'str|None',
-                         attrs: 'dict|None'=None, properties: 'dict|None'=None,
-                         par_id: 'str|None'=None) -> 'DocParagraph':
+    def insert_paragraph(self, text: str,
+                         insert_before_id: Optional[str],
+                         attrs: Optional[dict]=None, properties: Optional[dict]=None,
+                         par_id: Optional[str]=None) -> DocParagraph:
         assert False, "Called DocumentVersion.delete_paragraph"
 
-    @contract
-    def modify_paragraph(self, par_id: 'str', new_text: 'str', new_attrs: 'dict|None'=None, new_properties: 'dict|None'=None) -> 'DocParagraph':
+    def modify_paragraph(self, par_id: str, new_text: str, new_attrs: Optional[dict]=None, new_properties: Optional[dict]=None) -> DocParagraph:
         assert False, "Called DocumentVersion.modify_paragraph"
 
-    @contract
-    def update_section(self, text: 'str', par_id_first: 'str', par_id_last: 'str') -> 'tuple(str,str)':
+    def update_section(self, text: str, par_id_first: str, par_id_last: str) -> Tuple[str, str]:
         assert False, "Called DocumentVersion.update_section"
 
-    @contract
-    def update(self, text: 'str', original: 'str', strict_validation=True):
+    def update(self, text: str, original: str, strict_validation=True):
         assert False, "Called DocumentVersion.update"
 
-    @contract
-    def modify_paragraph_obj(self, par_id: 'str', p: 'DocParagraph') -> 'DocParagraph':
+    def modify_paragraph_obj(self, par_id: str, p: DocParagraph) -> DocParagraph:
         assert False, "Called DocumentVersion.modify_paragraph_obj"
 
-    @contract
-    def insert_paragraph_obj(self, p: 'DocParagraph', insert_before_id: 'str|None') -> 'DocParagraph':
+    def insert_paragraph_obj(self, p: DocParagraph, insert_before_id: Optional[str]) -> DocParagraph:
         assert False, "Called DocumentVersion.insert_paragraph_obj"
 
-    @contract
     def delete_section(self, area_start: str, area_end: str):
         assert False, "Called DocumentVersion.delete_section"
 

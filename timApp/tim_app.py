@@ -5,7 +5,6 @@ Do NOT define routes here.
 import mimetypes
 import sys
 
-import contracts
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
@@ -30,14 +29,5 @@ db = SQLAlchemy(app)
 
 app.jinja_env.filters['map_format'] = map_format
 app.jinja_env.filters['datestr_to_relative'] = datestr_to_relative
-
-# IMPORTANT: We want to disable contracts (if requested) as early as possible
-# before any @contract decorator is encountered.
-
-if app.config['CONTRACTS_ENABLED']:
-    print('Contracts are ENABLED')
-else:
-    contracts.disable_all()
-    print('Contracts are DISABLED')
 
 mimetypes.add_type('text/plain', '.scss')

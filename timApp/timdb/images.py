@@ -1,13 +1,11 @@
-from contracts import contract, new_contract
+from typing import List, Tuple
+
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 import os
 
-new_contract('bytes', bytes)
-
 
 class Images(TimDbBase):
-    @contract
-    def get_file_path(self, path: 'str', filename: 'str'):
+    def get_file_path(self, path: str, filename: str):
         """Gets the path of an image.
 
         :param path: The path for the file
@@ -24,8 +22,7 @@ class Images(TimDbBase):
 
         return file_id, os.path.join(p, filename)
 
-    @contract
-    def getImagePath(self, image_id: 'int', image_filename: 'str'):
+    def getImagePath(self, image_id: int, image_filename: str):
         """Gets the path of an image.
         
         :param image_id: The id of the image.
@@ -35,8 +32,7 @@ class Images(TimDbBase):
 
         return os.path.join(self.blocks_path, str(image_id), image_filename)
 
-    @contract
-    def getImageRelativePath(self, image_id: 'int', image_filename: 'str'):
+    def getImageRelativePath(self, image_id: int, image_filename: str):
         """Gets the relative path of an image.
         
         :param image_id: The id of the image.
@@ -46,8 +42,7 @@ class Images(TimDbBase):
 
         return os.path.relpath(self.getImagePath(image_id, image_filename), self.blocks_path)
 
-    @contract
-    def saveFile(self, file_data: 'bytes', path: 'str', filename: 'str', owner_group_id: 'int') -> 'str':
+    def saveFile(self, file_data: 'bytes', path: str, filename: str, owner_group_id: int) -> str:
         """Saves a file to the database.
 
         :param file_data: The  data.
@@ -71,8 +66,7 @@ class Images(TimDbBase):
         self.db.commit()
         return file_path
 
-    @contract
-    def saveImage(self, image_data: 'bytes', image_filename: 'str', owner_group_id: 'int') -> 'tuple(int, str)':
+    def saveImage(self, image_data: 'bytes', image_filename: str, owner_group_id: int) -> Tuple[int, str]:
         """Saves an image to the database.
         
         :param image_data: The image data.
@@ -97,8 +91,7 @@ class Images(TimDbBase):
         self.db.commit()
         return img_id, image_filename
 
-    @contract
-    def deleteImage(self, image_id: 'int'):
+    def deleteImage(self, image_id: int):
         """Deletes an image from the database."""
 
         cursor = self.db.cursor()
@@ -114,8 +107,7 @@ class Images(TimDbBase):
 
         self.db.commit()
 
-    @contract
-    def getImage(self, image_id: 'int', image_filename: 'str') -> 'bytes':
+    def getImage(self, image_id: int, image_filename: str) -> bytes:
         """Gets the specified image.
         
         :param image_id: The id of the image.
@@ -126,8 +118,7 @@ class Images(TimDbBase):
         with open(self.getImagePath(image_id, image_filename), 'rb') as f:
             return f.read()
 
-    @contract
-    def getImages(self) -> 'list(dict)':
+    def getImages(self) -> List[dict]:
         """Gets all the images.
         
         :returns: A list of dictionaries of the form {'id': xx, 'file': 'xx/filename.ext'}.
@@ -138,7 +129,7 @@ class Images(TimDbBase):
         images = self.resultAsDictionary(cursor)
         return images
 
-    def imageExists(self, image_id: 'int', image_filename: 'str'):
+    def imageExists(self, image_id: int, image_filename: str):
         """Returns whether the specified image exists.
         
         :param image_id: The id of the image.

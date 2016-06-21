@@ -1,11 +1,11 @@
-from contracts import contract
+from typing import List, Optional
+
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 
 ID_ROOT_FOLDER = -1
 
 class Folders(TimDbBase):
-    @contract
-    def create(self, name: 'str', owner_group_id: 'int') -> 'int':
+    def create(self, name: str, owner_group_id: int) -> int:
         """Creates a new folder with the specified name.
 
         :param name: The name of the folder to be created.
@@ -33,8 +33,7 @@ class Folders(TimDbBase):
 
         return block_id
 
-    @contract
-    def get_id(self, name: 'str') -> 'int|None':
+    def get_id(self, name: str) -> Optional[int]:
         """Gets the folders's identifier by its name or None if not found.
 
         :param name: The name of the folder.
@@ -45,8 +44,7 @@ class Folders(TimDbBase):
         row = cursor.fetchone()
         return row[0] if row is not None else None
 
-    @contract
-    def get(self, block_id: 'int') -> 'dict|None':
+    def get(self, block_id: int) -> Optional[dict]:
         """Gets the metadata information of the specified folder.
 
         :param document_id: The block id of the folder to be retrieved.
@@ -61,8 +59,7 @@ class Folders(TimDbBase):
 
         return None
 
-    @contract
-    def exists(self, folder_id: 'int') -> 'bool':
+    def exists(self, folder_id: int) -> bool:
         """Checks whether a folder with the specified id exists.
 
         :param folder_id: The id of the folder.
@@ -72,8 +69,7 @@ class Folders(TimDbBase):
         cursor.execute('SELECT EXISTS(SELECT id FROM Folder WHERE id = ?)', [folder_id])
         return bool(int(cursor.fetchone()[0]))
 
-    @contract
-    def get_folder_id(self, folder_name: 'str', create_with_owner_id: 'int|None' = None) -> 'int|None':
+    def get_folder_id(self, folder_name: str, create_with_owner_id: Optional[int] = None) -> Optional[int]:
         if folder_name == '':
             return ID_ROOT_FOLDER
 
@@ -86,8 +82,7 @@ class Folders(TimDbBase):
             return self.create(folder_name, create_with_owner_id)
         return result[0] if result is not None else None
 
-    @contract
-    def get_folders(self, root_path: 'str' = '') -> 'list(dict)':
+    def get_folders(self, root_path: str = '') -> List[dict]:
         """Gets all the folders under a path.
         :returns: A list of dictionaries of the form {'id': <folder_id>, 'name': 'folder_name', 'fullname': 'folder_path'}
         """
@@ -98,8 +93,7 @@ class Folders(TimDbBase):
            folder['fullname'] = self.join_location(root_path, folder['name'])
         return folders
 
-    @contract
-    def rename(self, block_id: 'int', new_name: 'str') -> 'None':
+    def rename(self, block_id: int, new_name: str) -> None:
         """Renames a folder, updating all the documents within.
 
         :param block_id: The id of the folder to be renamed.
@@ -135,8 +129,7 @@ class Folders(TimDbBase):
 
         self.db.commit()
 
-    @contract
-    def is_empty(self, block_id: 'int') -> 'bool':
+    def is_empty(self, block_id: int) -> bool:
         folder_info = self.get(block_id)
         assert folder_info is not None, 'folder does not exist: ' + str(block_id)
         folder_name = folder_info['fullname']
@@ -145,8 +138,7 @@ class Folders(TimDbBase):
         cursor.execute('SELECT exists(SELECT name FROM DocEntry WHERE name LIKE ?)', [folder_name + '/%'])
         return cursor.fetchone()[0] == 0
 
-    @contract
-    def delete(self, block_id: 'int') -> 'None':
+    def delete(self, block_id: int) -> None:
         """Deletes an empty folder.
         """
         folder_info = self.get(block_id)

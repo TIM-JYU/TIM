@@ -21,7 +21,6 @@ pip3 install flask
 pip3 install flask-compress
 pip3 install flask-cache
 pip3 install beautifulsoup4
-pip3 install pycontracts
 pip3 install hypothesis
 pip3 install gitpylib
 pip3 install lxml

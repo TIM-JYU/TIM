@@ -1,6 +1,5 @@
 import os
 
-CONTRACTS_ENABLED = True
 DEBUG = True
 PROFILE = False
 PLUGIN_CONNECTIONS = "nginx"

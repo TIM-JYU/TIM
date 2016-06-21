@@ -1,5 +1,6 @@
+from typing import List, Optional
+
 __author__ = 'hajoviin'
-from contracts import contract
 from timdb.timdbbase import TimDbBase
 
 
@@ -7,9 +8,8 @@ class LectureAnswers(TimDbBase):
     """
     LectureAnswer class to handle database for lecture answers
     """
-    @contract
-    def add_answer(self, user_id: "int", question_id: "int", lecture_id: "int", answer: "str", answered_on: "str",
-                   points: "float", commit: 'bool'=True):
+    def add_answer(self, user_id: int, question_id: int, lecture_id: int, answer: str, answered_on: str,
+                   points: float, commit: bool=True):
         """
         Adds answer to lecture question
         :param user_id: user id
@@ -31,9 +31,8 @@ class LectureAnswers(TimDbBase):
         if commit:
             self.db.commit()
 
-    @contract
-    def update_answer(self, answer_id: 'int', user_id: "int", question_id: "int", lecture_id: "int", answer: "str",
-                      answered_on: "str", points: "float", commit: 'bool'=True):
+    def update_answer(self, answer_id: int, user_id: int, question_id: int, lecture_id: int, answer: str,
+                      answered_on: str, points: float, commit: bool=True):
         """
         Update users answer to question
         :param answer_id: answer id
@@ -57,8 +56,7 @@ class LectureAnswers(TimDbBase):
         if commit:
             self.db.commit()
 
-    @contract
-    def update_answer_points(self, answer_id: 'int', points: "float", commit: 'bool'=True):
+    def update_answer_points(self, answer_id: int, points: float, commit: bool=True):
         """
         Update answers points
         :param answer_id: answer id
@@ -77,7 +75,7 @@ class LectureAnswers(TimDbBase):
         if commit:
             self.db.commit()
 
-    def get_answers_to_question(self, question_id: "int", timestamp: "str|None"=None) -> 'list(dict)':
+    def get_answers_to_question(self, question_id: int, timestamp: Optional[str]=None) -> List[dict]:
         """
         Gets answers from specific question
         :param question_id: question id
@@ -101,7 +99,7 @@ class LectureAnswers(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    def get_user_answer_to_question(self, asked_id: "int", user_id: "int") -> 'list(dict)':
+    def get_user_answer_to_question(self, asked_id: int, user_id: int) -> List[dict]:
         """
         Gets users answer to specific question
         :param asked_id: asked question id
@@ -119,8 +117,7 @@ class LectureAnswers(TimDbBase):
         return self.resultAsDictionary(cursor)
 
 
-    @contract
-    def get_answers_to_questions_from_lecture(self, lecture_id: "int") -> "list(dict)":
+    def get_answers_to_questions_from_lecture(self, lecture_id: int) -> List[dict]:
         """
         Gets all the naswers to questions from specific lecture
         :param lecture_id: lecture ID
@@ -136,8 +133,7 @@ class LectureAnswers(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def get_user_answers_to_questions_from_lecture(self, lecture_id: "int", user_id: "int") -> "list(dict)":
+    def get_user_answers_to_questions_from_lecture(self, lecture_id: int, user_id: int) -> List[dict]:
         """
         Gets all the naswers to questions from specific lecture
         :param lecture_id: lecture ID
@@ -153,8 +149,7 @@ class LectureAnswers(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def delete_answers_from_question(self, question_id: "int", commit:"bool"=True):
+    def delete_answers_from_question(self, question_id: int, commit:bool=True):
         """
         Deletes answers from question
         :param question_id: question
