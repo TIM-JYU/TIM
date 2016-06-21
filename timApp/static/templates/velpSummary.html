@@ -2,18 +2,19 @@
     <div class="velpSummary">
         <table>
             <tr>
+                <!-- Commented out for now, these are intended for publishing annotations.
                 <th class="summCheckbox"><input type="checkbox" ng-model="settings.selectedAll"
-                                                ng-change="checkAll()"></th>
+                                                ng-change="checkAll()"></th>-->
                 <th class="summSecColumn">Annotation</th>
                 <th class="summThiColumn">Points</th>
             </tr>
             <tr ng-repeat="a in annotations">
-                <td class="summCheckbox"><input type="checkbox" ng-model="a.selected"></td>
+                <!--<td class="summCheckbox"><input type="checkbox" ng-model="a.selected"></td> See comment above^-->
                 <td class="summSecColumn"><a ng-click="toggleAnnotation(a)">{{ a.content }}</a></td>
                 <td class="summThiColumn"><span>{{ a.points }}</span></td>
             </tr>
             <tr>
-                <th class="summCheckbox"></th>
+                <!--<th class="summCheckbox"></th> See comment above^-->
                 <th class="summSecColumn">Points total</th>
                 <th class="summThiColumn"><span>{{ getTotalPoints() }}</span></th>
             </tr>
