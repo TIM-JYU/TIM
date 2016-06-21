@@ -10,15 +10,6 @@ from timdb.timdbbase import TimDbBase
 
 class Notes(TimDbBase):
     @contract
-    def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
-        """Initializes TimDB with the specified database and root path.
-        
-        :param db_path: The path of the database file.
-        :param files_root_path: The root path where all the files will be stored.
-        """
-        TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
-
-    @contract
     def __tagstostr(self, tags: 'list(str)') -> 'str':
         tagstr = ''
         if 'difficult' in tags:

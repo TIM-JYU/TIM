@@ -8,15 +8,6 @@ import time
 
 class Readings(TimDbBase):
     @contract
-    def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
-        """Initializes TimDB with the specified database and root path.
-
-        :param db_path: The path of the database file.
-        :param files_root_path: The root path where all the files will be stored.
-        """
-        TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
-
-    @contract
     def getReadings(self, usergroup_id: 'int', doc: 'Document') -> 'list(dict)':
         """Gets the reading info for a document for a user.
 
