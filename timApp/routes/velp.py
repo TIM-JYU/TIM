@@ -43,7 +43,7 @@ def get_default_velp_group(doc_id: int) -> dict():
         velp_group = [{'target_type': '0', 'target_id': 0, 'id': doc_id}]
         timdb.velp_groups.add_groups_to_selection_table(velp_group, doc_id, user_id)
         print("Document is a velp group, made default velp group to point itself")
-        return set_no_cache_headers(jsonResponse({"id": doc_id, "name": "Default", "edit_access": edit_access}))
+        return set_no_cache_headers(jsonResponse({"id": doc_id, "name": doc_name, "edit_access": edit_access}))
 
     if doc_path != "":
         found_velp_groups = timdb.documents.get_documents_in_folder(doc_path + "/" + "velp groups" + "/" + doc_name)

@@ -66,9 +66,16 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         // Get default velp group data
         $http.get('/{0}/get_default_velp_group'.replace('{0}', doc_id)).success(function (data) {
             console.log("Get default velp group");
+            console.log(data);
             default_velp_group = data;
-            if (default_velp_group.id < 0)
-                $scope.velpGroups.push(default_velp_group);
+            // If doc_default exists already for some reason but isn't a velp group yet, remove it from fetched velp groups
+            $scope.velpGroups.some(function (g) {
+                if (g.name === default_velp_group.name && default_velp_group.id < 0) {
+                    var extraDefaultIndex = $scope.velpGroups.indexOf(g);
+                    $scope.velpGroups.push(default_velp_group);
+                    return $scope.velpGroups.splice(extraDefaultIndex, 1);
+                }
+            });
             if (default_velp_group.edit_access) {
                 $scope.velpGroups.some(function (g) {
                     if (g.id === default_velp_group.id)
@@ -77,7 +84,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                 default_velp_group.selected = true;
                 $scope.newVelp.velp_groups.push(default_velp_group.id)
             }
-            console.log(data);
 
             // Get personal velp group data
             $http.get('/get_default_personal_velp_group').success(function (data) {
