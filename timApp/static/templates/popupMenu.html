@@ -1,6 +1,7 @@
 <div class="actionButtons">
     <div class="error" ng-show="notification" ng-bind="notification"></div>
     <div id="content" class="actionButtonContent"></div>
+
     <div class="row" ng-repeat="f in actions | filter:{show: true}">
         <div class="col-xs-10">
             <button class="wideButton btn-sm" ng-bind="f.desc" ng-click="callFunc($event, f)">
@@ -12,6 +13,21 @@
                    ng-click="clicked(f.desc)"
                    class="valign"
                    type="radio">
+        </div>
+    </div>
+
+    <div class="row" style="padding-top: 6px" ng-show="rights.editable">
+        <div class="col-xs-10">
+            <button class="wideButton parEditButton"
+                    onclick="this.blur()"
+                    ng-model="model.editState"
+                    uib-btn-radio="'par'"
+                    uncheckable="true"
+                    title="Toggle paragraph edit mode">
+
+                <i class="glyphicon glyphicon-minus"></i>
+                <i class="glyphicon glyphicon-pencil"></i>
+            </button>
         </div>
     </div>
 </div>

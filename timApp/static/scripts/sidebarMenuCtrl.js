@@ -96,54 +96,8 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
                 });
         };
 
-        $scope.enable_par_edit = function () {
-            $('.editline-disabled').removeClass('editline-disabled').addClass('editline');
-        };
-
-        $scope.disable_par_edit = function () {
-            $('.editline').removeClass('editline').addClass('editline-disabled');
-        };
-
-        $scope.enable_area_edit_active = function () {
-        };
-
-        $scope.enable_area_edit_passive = function () {
-        };
-
-        $scope.disable_area_edit = function () {
-        };
-
-        $scope.show_hidden = function (show_param) {
-            var display_value = show_param == null ? 'none' : 'initial';
-            $('.mdcontent').css('display', display_value)
-        };
-
         $scope.model = {editState: $window.editMode};
-
-        $scope.$watch('model.editState', function (newVal, oldVal, scope) {
-            $window.editMode = newVal;
-            $('.editmode').removeClass('editmode');
-
-            if (oldVal === "par" && newVal === null) {
-                $scope.enable_par_edit();
-                $scope.enable_area_edit_passive();
-            } else if (newVal === "par") {
-                $scope.enable_par_edit();
-                $scope.disable_area_edit();
-                $('.par').addClass('editmode');
-            } else if (newVal === "area") {
-                $('.editline').removeClass('editline').addClass('editline-disabled');
-                $scope.disable_par_edit();
-                $scope.enable_area_edit_active();
-                $('.area').addClass('editmode');
-            } else if (oldVal === "area" && newVal === null) {
-                $('.editline-disabled').removeClass('editline-disabled').addClass('editline');
-                $scope.enable_par_edit();
-                $scope.enable_area_edit_passive();
-            }
-            
-            $scope.show_hidden(newVal);
-        });
+        $scope.$watch('model.editState', $window.watchEditMode);
     }
 ])
 ;

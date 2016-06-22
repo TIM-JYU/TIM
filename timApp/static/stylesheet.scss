@@ -975,7 +975,7 @@ p.docsettings {
 }
 
 .wideButton {
-  @extend .btn, .btn-primary, .btn-block;
+    @extend .btn, .btn-primary, .btn-block;
 }
 
 body > .footer {

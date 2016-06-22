@@ -80,6 +80,9 @@ timApp.directive('popupMenu', ['$http', '$window', '$filter', function ($http, $
                 });
             };
 
+            $scope.model = {editState: $window.editMode};
+            $scope.$watch('model.editState', $window.watchEditMode);
+
             $element.css('position', 'absolute'); // IE needs this
         }
     };
