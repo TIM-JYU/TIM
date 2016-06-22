@@ -414,7 +414,7 @@ text = '\n'.join(a)
             sc.renameFormShowing = true;
             sc.duplicates = data.duplicates;
             sc.data = data;
-            var $editorTop = $('.docEditor');
+            var $editorTop = $('#documentEditorDiv');
             //var coords = {left: $editorTop.position().left, top: $editorTop.position().top};
             var $actionDiv = $("<div>", {class: "pluginRenameForm", id: "pluginRenameForm"});
             $actionDiv.css("position", "relative");

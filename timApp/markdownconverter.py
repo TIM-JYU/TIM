@@ -90,6 +90,9 @@ def par_list_to_html_list(pars,
     texts = [expand_macros(p.get_markdown(), settings.get_macros(), settings.get_macro_delimiter()) for p in pars]
     raw = call_dumbo(texts)
 
+    # Edit html after dumbo
+    raw = edit_html_with_own_syntax(raw)
+
     if auto_macros:
         processed = []
         for pre_html, m, attrs in zip(raw, auto_macros, (p.get_attrs() for p in pars)):
@@ -102,6 +105,86 @@ def par_list_to_html_list(pars,
         raw = processed
 
     return raw
+
+
+# Does changes to html after Dumbo and returns edited html
+def edit_html_with_own_syntax(raw: list) -> list:
+    # HTML element that has content surrounded with fragment_string will have it's class set to fragment
+    fragment_string = "§§"
+    index = 0
+    # Gets edited html if content is surrounded with given string
+    while index < len(raw):
+        text = raw[index]
+        raw[index] = check_and_edit_html_if_surrounded_with(text, fragment_string, change_classes_to_fragment)
+        index += 1
+
+    return raw
+
+
+# Checks if html element's content is surrounded with given string and edits it accordingly
+def check_and_edit_html_if_surrounded_with(html_content: str, string_delimeter: str, editing_function) -> str:
+    # List of strings after splitting html from
+    html_list = html_content.split(string_delimeter)
+    if len(html_list) < 2:
+        return html_content
+    else:
+        # Edit the list with given function
+        new_html = editing_function(html_list)
+    return new_html
+
+
+def change_classes_to_fragment(html_list: list) -> str:
+    """
+    If found, html_list[1] will have the content that we need to make a fragment of
+    and html_list[0] might have the element tag that will have "fragment" added to it's class.
+    There might be multiple fragments in the html list.
+    """
+    # Start from 1, the previous will contain the html tag to change
+    index = 1
+    while index < len(html_list):
+        # Changes html element's class to fragment
+        new_htmls = change_class(html_list[index-1], html_list[index], "fragment")
+        # Apply changes
+        html_list[index-1] = new_htmls[0]
+        html_list[index] = new_htmls[1]
+        index += 2
+
+    # Join the list into a string
+    new_html = "".join(html_list)
+
+    return new_html
+
+
+def change_class(text_containing_html_tag: str, text_content: str, new_class: str) -> list:
+    """
+    Find the last html tag in the list and change that element's class to new_class
+    or add the new class to element's classes or surround the new content with span element with the new class
+    """
+    try:
+        # Find where the html tag supposedly ends
+        index_of_tag_end = text_containing_html_tag.rfind(">")
+        # Find where the html tag starts
+        index_of_tag_start = text_containing_html_tag.rfind("<", 0, index_of_tag_end)
+        # If the previous text ends a html tag
+        if index_of_tag_end == len(text_containing_html_tag) - 1:
+            # Html tag content is between those 2 indices
+            html_tag = text_containing_html_tag[index_of_tag_start:index_of_tag_end]
+            # Check if element already has atleast one class, if it does then add new_class
+            if "class=" in html_tag:
+                # Add the new class to html element classes
+                index_of_class = html_tag.rfind("class=")
+                text_containing_html_tag = text_containing_html_tag[:(index_of_tag_start+index_of_class+7)] + new_class + " " + text_containing_html_tag[(index_of_tag_start+index_of_class+7):]
+            else:
+                # If there isn't class in html tag we add that and the new class
+                text_containing_html_tag = text_containing_html_tag[:index_of_tag_end] + ' class="' + new_class + '"' + text_containing_html_tag[index_of_tag_end:]
+        else:
+            text_content = '<span class="' + new_class + '">' + text_content + '</span>'
+    # If there is an error we do nothing but return the original text
+    except ValueError as e:
+        pass
+
+    return [text_containing_html_tag, text_content]
+
 
 
 def insert_heading_numbers(html_str, heading_info, auto_number_headings=True, heading_format=''):

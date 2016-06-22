@@ -593,7 +593,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             scope.question.title = "Untitled";
         }
         if (scope.question.question === undefined || scope.question.question.trim().length === 0 || scope.question.title === undefined || scope.question.title.trim().length === 0) {
-            scope.errorize("questionName", "Both title and question are required for a question.");
+            scope.errorize("questionName", "Question is required.");
         }
         if (scope.question.type === undefined) {
             scope.errorize("qType", "Question type must be selected.");
