@@ -301,7 +301,7 @@
                                                                             ng-disabled="!rights.manage"
                                                                             ng-click="changeAllVelpGroupSelections('default')">Default</label>
                                 </th>
-                                <th><span class="small">Group</span></th>
+                                <th><span class="small">Velp group</span></th>
                             </tr>
 
                             <tr ng-repeat="group in velpGroups" ng-hide="group.id<0">
@@ -318,11 +318,11 @@
                                 </td>
                             </tr>
                         </table>
-                        <input type="button" class="timButton" title="Resets current area selections to default"
-                               value="Reset current selections" ng-click="resetCurrentShowsToDefaults()"/>
+                        <input type="button" class="timButton" title="Shows only the default velp groups in current area (document or paragraph)"
+                               value="Show default groups" ng-click="resetCurrentShowsToDefaults()"/>
                         <input id="resetAllSelBtn" type="button" class="timButton"
-                               title="Resets document and all paragraph selections to default"
-                               value="Reset all selections" ng-click="resetAllShowsToDefaults()"/>
+                               title="Shows only the default velp groups in all areas"
+                               value="Show default groups in all areas" ng-click="resetAllShowsToDefaults()"/>
                     </form>
                     <hr>
                     <form ng-submit="addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
