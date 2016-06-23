@@ -1,5 +1,7 @@
 from typing import List, Tuple
 
+from timdb.tim_models import Lecture
+
 __author__ = 'localadmin'
 
 from timdb.timdbbase import TimDbBase
@@ -9,18 +11,13 @@ import json
 class Lectures(TimDbBase):
     def create_lecture(self, doc_id: int, lecturer: int, start_time: str, end_time: str,
                        lecture_code: str, password: str, options: str, commit: bool) -> int:
-        cursor = self.db.cursor()
-
-        cursor.execute("""
-                          INSERT INTO Lecture(lecture_code, doc_id,lecturer, start_time, end_time, password, options)
-                          VALUES (?,?,?,?,?,?,?)
-                          """, [lecture_code, doc_id, lecturer, start_time, end_time, password, options])
-
+        l = Lecture(lecture_code=lecture_code, lecturer=lecturer, start_time=start_time, end_time=end_time,
+                    password=password, options=options, doc_id=doc_id)
+        self.session.add(l)
+        self.session.flush()
         if commit:
-            self.db.commit()
-        lecture_id = cursor.lastrowid
-
-        return lecture_id
+            self.session.commit()
+        return l.lecture_id
 
 
     def update_lecture(self, lecture_id: int, doc_id: int, lecturer: int, start_time: str, end_time: str,
@@ -30,9 +27,9 @@ class Lectures(TimDbBase):
 
         cursor.execute("""
                         UPDATE Lecture
-                        SET lecture_code = ?, doc_id = ?, lecturer = ?, start_time = ?, end_time = ?, password = ?,
-                            options = ?
-                        WHERE lecture_id = ?
+                        SET lecture_code = %s, doc_id = %s, lecturer = %s, start_time = %s, end_time = %s, password = %s,
+                            options = %s
+                        WHERE lecture_id = %s
                         """, [lecture_code, doc_id, lecturer, start_time, end_time, password, options, lecture_id])
 
         self.db.commit()
@@ -45,7 +42,7 @@ class Lectures(TimDbBase):
             """
             DELETE
             FROM Lecture
-            WHERE lecture_id = ?
+            WHERE lecture_id = %s
             """, [lecture_id])
 
         if commit:
@@ -57,7 +54,7 @@ class Lectures(TimDbBase):
         cursor.execute(
             """
             DELETE FROM LectureUsers
-            WHERE lecture_id = ?
+            WHERE lecture_id = %s
             """, [lecture_id]
         )
 
@@ -71,7 +68,7 @@ class Lectures(TimDbBase):
             """
             SELECT *
             FROM Lecture
-            WHERE lecture_id = ?
+            WHERE lecture_id = %s
             """, [lecture_id]
         )
 
@@ -84,7 +81,7 @@ class Lectures(TimDbBase):
             """
             SELECT *
             FROM Lecture
-            WHERE lecture_code = ? AND doc_id = ?
+            WHERE lecture_code = %s AND doc_id = %s
             """, [lecture_code, doc_id]
         )
 
@@ -97,7 +94,7 @@ class Lectures(TimDbBase):
             """
             SELECT *
             FROM Lecture
-            WHERE doc_id = ?
+            WHERE doc_id = %s
             """, [document_id]
         )
 
@@ -108,7 +105,7 @@ class Lectures(TimDbBase):
 
         cursor.execute("""
                        INSERT INTO LectureUsers(lecture_id, user_id)
-                       VALUES (?,?)
+                       VALUES (%s,%s)
                        """, [lecture_id, user_id])
         if commit:
             self.db.commit()
@@ -119,7 +116,7 @@ class Lectures(TimDbBase):
         cursor.execute("""
                        DELETE
                        FROM LectureUsers
-                       WHERE lecture_id = ? AND user_id = ?
+                       WHERE lecture_id = %s AND user_id = %s
                        """, [lecture_id, user_id])
 
         if commit:
@@ -131,7 +128,7 @@ class Lectures(TimDbBase):
         cursor.execute("""
                         SELECT lecture_code, start_time,end_time, password
                         FROM Lecture
-                        WHERE doc_id = ? AND end_time > ?
+                        WHERE doc_id = %s AND end_time > %s
                         ORDER BY lecture_code
                         """, [doc_id, time])
 
@@ -143,7 +140,7 @@ class Lectures(TimDbBase):
         cursor.execute("""
                         SELECT lecture_code, start_time,end_time, password, lecturer
                         FROM Lecture
-                        WHERE end_time > ?
+                        WHERE end_time > %s
                         ORDER BY lecture_code
                         """, [time])
 
@@ -155,7 +152,7 @@ class Lectures(TimDbBase):
         cursor.execute("""
                         SELECT lecture_id, password
                         FROM Lecture
-                        WHERE lecture_code = ? AND doc_id = ?
+                        WHERE lecture_code = %s AND doc_id = %s
                         """, [lecture_code, doc_id])
 
         return cursor.fetchone()[0]
@@ -166,7 +163,7 @@ class Lectures(TimDbBase):
         cursor.execute("""
                         SELECT lecture_id
                         FROM Lecture
-                        WHERE lecture_code = ? AND doc_id = ? AND lecture_id != ?
+                        WHERE lecture_code = %s AND doc_id = %s AND lecture_id != %s
                         """, [lecture_code, doc_id, lecture_id])
 
         answer = cursor.fetchall()
@@ -182,8 +179,8 @@ class Lectures(TimDbBase):
         cursor.execute(
             """
             UPDATE Lecture
-            SET end_time = ?
-            WHERE lecture_id = ?
+            SET end_time = %s
+            WHERE lecture_id = %s
             """, [end_time, lecture_id]
         )
 
@@ -196,7 +193,7 @@ class Lectures(TimDbBase):
             """
             SELECT lecture_id
             FROM Lecture
-            WHERE lecture_id = ? AND end_time > ?
+            WHERE lecture_id = %s AND end_time > %s
             """, [lecture_id, now]
         )
 
@@ -213,7 +210,7 @@ class Lectures(TimDbBase):
             """
             SELECT COUNT(*)
             FROM LectureUsers
-            WHERE lecture_id == ?;
+            WHERE lecture_id == %s;
             """, [lecture_id]
         )
 
@@ -223,7 +220,7 @@ class Lectures(TimDbBase):
             """
             SELECT options
             FROM Lecture
-            WHERE Lecture_id == ?
+            WHERE Lecture_id == %s
             """, [lecture_id]
         )
 
@@ -252,7 +249,7 @@ class Lectures(TimDbBase):
         cursor.execute("""
                            SELECT lecture_id
                            FROM Lecture
-                           WHERE doc_id = ?
+                           WHERE doc_id = %s
                            """, [doc_id])
 
         lecture_ids = cursor.fetchall()
@@ -271,7 +268,7 @@ class Lectures(TimDbBase):
         cursor.execute("""
                            SELECT lecture_id, user_id
                            FROM LectureUsers
-                           WHERE lecture_id IN """ + "(" + string_of_lectures + ")" + """ AND user_id = ?
+                           WHERE lecture_id IN """ + "(" + string_of_lectures + ")" + """ AND user_id = %s
                             """, [user_id])
 
         result = cursor.fetchall()
@@ -293,7 +290,7 @@ class Lectures(TimDbBase):
         cursor.execute("""
                            SELECT lecture_id, user_id
                            FROM LectureUsers
-                           WHERE user_id = ?
+                           WHERE user_id = %s
                             """, [user_id])
 
         result = cursor.fetchall()
@@ -308,7 +305,7 @@ class Lectures(TimDbBase):
         cursor.execute("""
                             SELECT user_id
                             FROM LectureUsers
-                            WHERE lecture_id = ?
+                            WHERE lecture_id = %s
                       """, [lecture_id])
 
         return self.resultAsDictionary(cursor)
@@ -318,8 +315,8 @@ class Lectures(TimDbBase):
 
         cursor.execute("""
                         UPDATE Lecture
-                        SET start_time = ?
-                        WHERE lecture_id = ?
+                        SET start_time = %s
+                        WHERE lecture_id = %s
         """, [start_time, lecture_id])
 
         if commit:
@@ -328,7 +325,7 @@ class Lectures(TimDbBase):
         cursor.execute("""
                       SELECT *
                       FROM Lecture
-                      WHERE lecture_id = ?
+                      WHERE lecture_id = %s
         """, [lecture_id])
 
         return self.resultAsDictionary(cursor)[0]
@@ -338,8 +335,8 @@ class Lectures(TimDbBase):
 
         cursor.execute("""
                         UPDATE Lecture
-                        SET end_time = ?
-                        WHERE lecture_id = ?
+                        SET end_time = %s
+                        WHERE lecture_id = %s
         """,[new_end_time, lecture_id])
 
         if commit:

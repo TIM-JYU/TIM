@@ -34,7 +34,7 @@ class Notes(TimDbBase):
         cursor.execute(
             """
                 SELECT UserGroup_id FROM UserNotes
-                WHERE id = ?
+                WHERE id = %s
             """, [note_id])
         row = cursor.fetchone()
         return row is not None and int(row[0]) == usergroup_id
@@ -58,7 +58,7 @@ class Notes(TimDbBase):
                 INSERT INTO UserNotes
                 (UserGroup_id, doc_id, par_id, par_hash,
                 content, created, modified, access, tags, html)
-                VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP, NULL, %s, %s, %s)
             """, [usergroup_id, doc.doc_id, par.get_id(), par.get_hash(),
                   content, access, self.__tagstostr(tags), note_html])
 
@@ -79,8 +79,8 @@ class Notes(TimDbBase):
         cursor.execute(
             """
                 UPDATE UserNotes
-                SET content = ?, tags = ?, access = ?, html = ?, modified = CURRENT_TIMESTAMP
-                WHERE id = ?
+                SET content = %s, tags = %s, access = %s, html = %s, modified = CURRENT_TIMESTAMP
+                WHERE id = %s
             """, [new_content, self.__tagstostr(new_tags), access, new_html, note_id])
 
         self.db.commit()
@@ -95,7 +95,7 @@ class Notes(TimDbBase):
         :param commit Whether to commit changes to database
         """
         cursor = self.db.cursor()
-        cursor.execute("UPDATE UserNotes SET doc_id = ?, par_id = ? WHERE doc_id = ? AND par_id = ?",
+        cursor.execute("UPDATE UserNotes SET doc_id = %s, par_id = %s WHERE doc_id = %s AND par_id = %s",
                        [dest_par.doc.doc_id, dest_par.get_id(), src_par.doc.doc_id, src_par.get_id()])
 
         if commit:
@@ -111,7 +111,7 @@ class Notes(TimDbBase):
         cursor.execute(
             """
                 DELETE FROM UserNotes
-                WHERE id = ?
+                WHERE id = %s
             """, [note_id])
 
         self.db.commit()
@@ -124,30 +124,31 @@ class Notes(TimDbBase):
         """
         ids = doc.get_referenced_document_ids()
         ids.add(doc.doc_id)
-        template = ','.join('?' * len(ids))
+        template = ','.join(['%s'] * len(ids))
         include_public_sql = ''
         if include_public:
             include_public_sql = "OR access = 'everyone'"
-        result = self.resultAsDictionary(
-            self.db.execute("""SELECT UserNotes.id, par_id, doc_id, par_hash, content,
-                                      datetime(created, 'localtime') as created,
-                                      datetime(modified, 'localtime') as modified,
-                                      access, tags, html,
-                                      UserNotes.UserGroup_id, User.name as user_name,
-                                      User.real_name, User.email as user_email
-                               FROM UserNotes
-                               JOIN UserGroupMember ON UserNotes.UserGroup_id = UserGroupMember.UserGroup_id
-                               JOIN User ON UserGroupMember.User_id = User.id
-                               WHERE (UserNotes.UserGroup_id = ? %s) AND doc_id IN (%s)""" % (include_public_sql, template),
-                            [usergroup_id] + list(ids)))
-
+        c = self.db.cursor()
+        c.execute("""SELECT UserNotes.id, par_id, doc_id, par_hash, content,
+                            created,
+                            modified,
+                            access, tags, html,
+                            UserNotes.UserGroup_id, UserAccount.name as user_name,
+                            UserAccount.real_name, UserAccount.email as user_email
+                     FROM UserNotes
+                     JOIN UserGroupMember ON UserNotes.UserGroup_id = UserGroupMember.UserGroup_id
+                     JOIN UserAccount ON UserGroupMember.User_id = UserAccount.id
+                     WHERE (UserNotes.UserGroup_id = %s {}) AND doc_id IN ({})""".format(include_public_sql, template),
+                  [usergroup_id] + list(ids))
+        result = self.resultAsDictionary(c)
         return self.process_notes(result)
 
     def get_note(self, note_id: int) -> dict:
-        result = self.resultAsDictionary(
-            self.db.execute('SELECT id, doc_id, par_id, par_hash, content, created, modified, access, tags, html, UserGroup_id '
-                            'FROM UserNotes '
-                            'WHERE id = ?', [note_id]))
+        c = self.db.cursor()
+        c.execute('SELECT id, doc_id, par_id, par_hash, content, created, modified, access, tags, html, UserGroup_id '
+                  'FROM UserNotes '
+                  'WHERE id = %s', [note_id])
+        result = self.resultAsDictionary(c)
 
         return self.process_notes(result)[0]
 
@@ -156,8 +157,7 @@ class Notes(TimDbBase):
             note["tags"] = self.__strtotags(note["tags"])
             if note['html'] is None:
                 note['html'] = md_to_html(note['content'])
-                self.db.execute('UPDATE UserNotes SET html = ? '
-                                'WHERE id = ?', [note['html'], note['id']])
+                self.db.execute('UPDATE UserNotes SET html = %s '
+                                'WHERE id = %s', [note['html'], note['id']])
                 self.db.commit()
         return result
-

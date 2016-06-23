@@ -165,8 +165,7 @@ def get_updates():
 
                     for message in messages:
                         user = timdb.users.get_user(message.get('user_id'))
-                        time_as_time = datetime.datetime.fromtimestamp(
-                            mktime(time.strptime(message.get("timestamp"), "%Y-%m-%d %H:%M:%S.%f")))
+                        time_as_time = message.get("timestamp")
                         list_of_new_messages.append(
                             {"sender": user.get('name'),
                              "time": time_as_time.strftime('%H:%M:%S'),
@@ -317,8 +316,7 @@ def check_if_lecture_is_ending(current_user, timdb, lecture_id):
     lecture_ending = 100
     if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
         time_now = datetime.datetime.now()
-        ending_time = datetime.datetime.fromtimestamp(
-            mktime(time.strptime(lecture[0].get("end_time"), "%Y-%m-%d %H:%M")))
+        ending_time = lecture[0].get("end_time")
         time_left = str(ending_time - time_now)
         splitted_time = time_left.split(",")
         if len(splitted_time) == 1:

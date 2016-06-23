@@ -69,10 +69,8 @@ fi
 
 if param postgre; then
   docker run --net=timnet -d --name postgre \
-  -v /opt/postgre/data:/var/lib/postgresql/9.3 \
-  -v /opt/postgre/log:/var/log/postgresql \
-  -v /opt/postgre/conf:/etc/postgresql/9.3 \
-  -t -i postgre /bin/bash -c '/etc/postgresql/9.3/ownership.sh && sudo -u postgres /usr/lib/postgresql/9.3/bin/postgres -D /var/lib/postgresql/9.3/main -c config_file=/etc/postgresql/9.3/main/postgresql.conf ; /bin/bash'
+  -v /home/docker/pg_data:/var/lib/postgresql/data \
+  -t -i postgres:9.5
   ./wait_for_postgre.sh
 fi
 

@@ -1,5 +1,7 @@
 from typing import Optional, List, Set
 
+from tim_app import db
+from timdb.tim_models import User, UserGroup
 from timdb.timdbbase import TimDbBase, TimDbException
 
 import hashlib
@@ -42,16 +44,23 @@ class Users(TimDbBase):
         ADMIN_GROUPID = 4
 
         cursor = self.db.cursor()
-        cursor.execute('INSERT INTO User (id, name) VALUES (?, ?)', [ANONYMOUS_USERID, ANONYMOUS_USERNAME])
-        cursor.execute('INSERT INTO User (id, name) VALUES (?, ?)', [LOGGED_IN_USERID, LOGGED_IN_USERNAME])
-        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [ANONYMOUS_GROUPID, ANONYMOUS_GROUPNAME])
-        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [LOGGED_IN_GROUPID, LOGGED_IN_GROUPNAME])
-        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [KORPPI_GROUPID, KORPPI_GROUPNAME])
-        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [ADMIN_GROUPID, ADMIN_GROUPNAME])
-        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (?, ?)',
+        cursor.execute('INSERT INTO UserAccount (id, name) VALUES (%s, %s)', [ANONYMOUS_USERID, ANONYMOUS_USERNAME])
+        cursor.execute('INSERT INTO UserAccount (id, name) VALUES (%s, %s)', [LOGGED_IN_USERID, LOGGED_IN_USERNAME])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (%s, %s)', [ANONYMOUS_GROUPID, ANONYMOUS_GROUPNAME])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (%s, %s)', [LOGGED_IN_GROUPID, LOGGED_IN_GROUPNAME])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (%s, %s)', [KORPPI_GROUPID, KORPPI_GROUPNAME])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (%s, %s)', [ADMIN_GROUPID, ADMIN_GROUPNAME])
+        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (%s, %s)',
                        [ANONYMOUS_USERID, ANONYMOUS_GROUPID])
-        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (?, ?)',
+        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (%s, %s)',
                        [LOGGED_IN_USERID, LOGGED_IN_GROUPID])
+        cursor.execute('SELECT MAX(id) FROM UserAccount')
+        max_ua_id = cursor.fetchone()[0]
+        cursor.execute('SELECT MAX(id) FROM UserGroup')
+        max_ug_id = cursor.fetchone()[0]
+        cursor.execute("SELECT setval('useraccount_id_seq', %s)", (max_ua_id,))
+        cursor.execute("SELECT setval('usergroup_id_seq', %s)", (max_ug_id,))
+
         self.db.commit()
         return 0
 
@@ -65,13 +74,15 @@ class Users(TimDbBase):
         :param password: The password for the user (not used on Korppi login).
         :returns: The id of the newly created user.
         """
-        cursor = self.db.cursor()
+
         hash = self.hash_password(password) if password != '' else ''
-        cursor.execute('INSERT INTO User (name, real_name, email, pass) VALUES (?, ?, ?, ?)',
-                       [name, real_name, email, hash])
+        user = User(name=name, real_name=real_name, email=email, pass_=hash)
+        self.session.add(user)
+        self.session.flush()
         if commit:
-            self.db.commit()
-        user_id = cursor.lastrowid
+            self.session.commit()
+        user_id = user.id
+        assert user_id != 0
         return user_id
 
     def create_anonymous_user(self, name: str, real_name: str, commit: bool = True) -> int:
@@ -84,7 +95,7 @@ class Users(TimDbBase):
         next_id = self.get_next_anonymous_user_id()
 
         cursor = self.db.cursor()
-        cursor.execute('INSERT INTO User (id, name, real_name) VALUES (?, ?, ?)', [next_id, name, real_name])
+        cursor.execute('INSERT INTO UserAccount (id, name, real_name) VALUES (%s, %s, %s)', [next_id, name, real_name])
         if commit:
             self.db.commit()
         user_id = cursor.lastrowid
@@ -96,7 +107,7 @@ class Users(TimDbBase):
         :returns: The next unused negative id.
         """
         cursor = self.db.cursor()
-        cursor.execute('SELECT MIN(id) AS next_id FROM User')
+        cursor.execute('SELECT MIN(id) AS next_id FROM UserAccount')
         user_id = min(self.resultAsDictionary(cursor)[0]['next_id'], 0)
         return user_id - 1
 
@@ -113,7 +124,7 @@ class Users(TimDbBase):
 
         cursor = self.db.cursor()
         pass_hash = self.hash_password(password) if password != '' else ''
-        cursor.execute('UPDATE User SET name = ?, real_name = ?, email = ?, pass = ? WHERE id = ?',
+        cursor.execute('UPDATE UserAccount SET name = %s, real_name = %s, email = %s, pass = %s WHERE id = %s',
                        [name, real_name, email, pass_hash, user_id])
         if commit:
             self.db.commit()
@@ -127,7 +138,7 @@ class Users(TimDbBase):
         if re.match('^[a-zA-Z_-]+$', field_name) is None:
             raise TimDbException('update_user_field: passed field name ' + field_name)
 
-        cursor.execute('UPDATE User SET {} = ? WHERE id = ?'.format(field_name), [field_value, user_id])
+        cursor.execute('UPDATE UserAccount SET {} = %s WHERE id = %s'.format(field_name), [field_value, user_id])
         if commit:
             self.db.commit()
 
@@ -138,12 +149,14 @@ class Users(TimDbBase):
         :param name: The name of the user group.
         :returns: The id of the created user group.
         """
-        cursor = self.db.cursor()
-        cursor.execute('INSERT INTO UserGroup (name) VALUES (?)', [name])
-        group_id = cursor.lastrowid
-        assert group_id is not None, 'group_id was None'
+
+        ug = UserGroup(name=name)
+        self.session.add(ug)
+        self.session.flush()
+        group_id = ug.id
+        assert group_id is not None and group_id != 0, 'group_id was None'
         if commit:
-            self.db.commit()
+            self.session.commit()
         return group_id
 
     def add_user_to_group(self, group_id: int, user_id: int, commit: bool = True):
@@ -153,7 +166,7 @@ class Users(TimDbBase):
         :param user_id: The id of the user.
         """
         cursor = self.db.cursor()
-        cursor.execute('INSERT INTO UserGroupMember (UserGroup_id, User_id) VALUES (?, ?)', [group_id, user_id])
+        cursor.execute('INSERT INTO UserGroupMember (UserGroup_id, User_id) VALUES (%s, %s)', [group_id, user_id])
         if commit:
             self.db.commit()
 
@@ -178,7 +191,7 @@ class Users(TimDbBase):
         """
         cursor = self.db.cursor()
         hash = self.hash_password(password)
-        cursor.execute('REPLACE INTO NewUser (email, pass) VALUES (?, ?)', [email, hash])
+        cursor.execute('REPLACE INTO NewUser (email, pass) VALUES (%s, %s)', [email, hash])
         if commit:
             self.db.commit()
 
@@ -188,7 +201,7 @@ class Users(TimDbBase):
         :param email: The email address of the user.
         """
         cursor = self.db.cursor()
-        cursor.execute('DELETE FROM NewUser WHERE email=?', [email])
+        cursor.execute('DELETE FROM NewUser WHERE email=%s', [email])
         if commit:
             self.db.commit()
 
@@ -202,7 +215,7 @@ class Users(TimDbBase):
 
         cursor = self.db.cursor()
         hash = self.hash_password(password)
-        cursor.execute('SELECT email FROM NewUser WHERE email=? AND pass=?', [email, hash])
+        cursor.execute('SELECT email FROM NewUser WHERE email=%s AND pass=%s', [email, hash])
         return cursor.fetchone() is not None
 
     def test_user(self, email: str, password: str) -> bool:
@@ -215,7 +228,7 @@ class Users(TimDbBase):
 
         cursor = self.db.cursor()
         hash = self.hash_password(password)
-        cursor.execute('SELECT email FROM User WHERE email=? AND pass=?', [email, hash])
+        cursor.execute('SELECT email FROM UserAccount WHERE email=%s AND pass=%s', [email, hash])
         return cursor.fetchone() is not None
 
     def hash_password(self, password: str) -> str:
@@ -226,7 +239,7 @@ class Users(TimDbBase):
         cursor.execute("""SELECT b.UserGroup_id as gid, u.name as name, a.id as access_type, a.name as access_name FROM BlockAccess b
                           JOIN UserGroup u ON b.UserGroup_id = u.id
                           JOIN AccessType a ON b.type = a.id
-                          WHERE Block_id = ?""", [block_id])
+                          WHERE Block_id = %s""", [block_id])
         return self.resultAsDictionary(cursor)
 
     def get_owner_group(self, block_id: int):
@@ -236,7 +249,7 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT id, name FROM UserGroup WHERE id IN (SELECT UserGroup_id FROM Block WHERE id = ?)',
+        cursor.execute('SELECT id, name FROM UserGroup WHERE id IN (SELECT UserGroup_id FROM Block WHERE id = %s)',
                        [block_id])
         return self.resultAsDictionary(cursor)[0]
 
@@ -248,7 +261,7 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT * FROM User WHERE id = ?', [user_id])
+        cursor.execute('SELECT * FROM UserAccount WHERE id = %s', [user_id])
         result = self.resultAsDictionary(cursor)
         return result[0] if len(result) > 0 else None
 
@@ -260,21 +273,17 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM User WHERE id >= 0 AND name = ?', [name])
+        cursor.execute('SELECT id FROM UserAccount WHERE id >= 0 AND name = %s', [name])
         result = cursor.fetchone()
         return result[0] if result is not None else None
 
-    def get_user_by_name(self, name: str) -> Optional[dict]:
+    def get_user_by_name(self, name: str) -> User:
         """Gets the user information of the specified username.
 
         :param name: The name of the user.
         :returns: The user information or None if the user does not exist.
         """
-
-        cursor = self.db.cursor()
-        cursor.execute('SELECT * FROM User WHERE name = ?', [name])
-        result = cursor.fetchone()
-        return result
+        return self.session.query(User).filter(User.name==name).one()
 
     def get_user_by_email(self, email: str) -> Optional[dict]:
         """Gets the data of the specified user email address.
@@ -284,7 +293,7 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT * FROM User WHERE email = ?', [email])
+        cursor.execute('SELECT * FROM UserAccount WHERE email = %s', [email])
         result = self.resultAsDictionary(cursor)
         return result[0] if len(result) > 0 else None
 
@@ -296,7 +305,7 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM UserGroup WHERE name = ?', [group_name])
+        cursor.execute('SELECT id FROM UserGroup WHERE name = %s', [group_name])
         return cursor.fetchone() is not None
 
     def get_user_group_name(self, group_id: int) -> Optional[str]:
@@ -305,7 +314,7 @@ class Users(TimDbBase):
         :returns: The name of the group.
         """
         cursor = self.db.cursor()
-        cursor.execute('SELECT name FROM UserGroup WHERE id = ?', [group_id])
+        cursor.execute('SELECT name FROM UserGroup WHERE id = %s', [group_id])
         result = cursor.fetchone()
         return result[0] if result is not None else None
 
@@ -316,12 +325,12 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM UserGroup WHERE name = ?', [name])
+        cursor.execute('SELECT id FROM UserGroup WHERE name = %s', [name])
         return self.resultAsDictionary(cursor)
 
     def get_usergroup_by_name(self, name: str) -> Optional[int]:
         cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM UserGroup WHERE name = ?', [name])
+        cursor.execute('SELECT id FROM UserGroup WHERE name = %s', [name])
         groups = cursor.fetchall()
 
         if groups is None or len(groups) == 0:
@@ -369,7 +378,7 @@ class Users(TimDbBase):
             cursor.execute("""SELECT id, name FROM UserGroup ORDER BY id ASC""")
         else:
             cursor.execute("""SELECT id, name FROM UserGroup WHERE id IN
-                              (SELECT UserGroup_id FROM UserGroupMember WHERE User_id = ?)
+                              (SELECT UserGroup_id FROM UserGroupMember WHERE User_id = %s)
                               ORDER BY id ASC""", [user_id])
 
         return self.resultAsDictionary(cursor)
@@ -388,19 +397,19 @@ class Users(TimDbBase):
 
     def get_users_in_group(self, group_id: int, limit:int=1000) -> List[dict]:
         cursor = self.db.cursor()
-        cursor.execute("""SELECT UserGroupMember.User_id as id, User.real_name as name, User.email as email
+        cursor.execute("""SELECT UserGroupMember.User_id as id, UserAccount.real_name as name, UserAccount.email as email
                           FROM UserGroupMember
-                          INNER JOIN User ON UserGroupMember.User_id=User.id
-                          WHERE UserGroupMember.UserGroup_id=?
-                          LIMIT ?
+                          INNER JOIN UserAccount ON UserGroupMember.User_id=UserAccount.id
+                          WHERE UserGroupMember.UserGroup_id=%s
+                          LIMIT %s
                        """, [group_id, limit])
         return self.resultAsDictionary(cursor)
 
     def get_group_users(self, group_id: int) -> List[dict]:
         cursor = self.db.cursor()
         cursor.execute("""SELECT User_id as id, User_name FROM UserGroupMember WHERE
-                          User_name = (SELECT name FROM User WHERE id = ?) AND
-                          User_id   = (SELECT id FROM UserGroup WHERE UserGroup_id = ?)
+                          User_name = (SELECT name FROM UserAccount WHERE id = %s) AND
+                          User_id   = (SELECT id FROM UserGroup WHERE UserGroup_id = %s)
                        """)
 
         return len(cursor.fetchall()) > 0
@@ -408,14 +417,16 @@ class Users(TimDbBase):
     def is_user_id_in_group(self, user_id: int, usergroup_name: str) -> bool:
         cursor = self.db.cursor()
         cursor.execute("""SELECT User_id FROM UserGroupMember WHERE
-                          User_id      = ? AND
-                          UserGroup_id = (SELECT id FROM UserGroup WHERE name = ?)
+                          User_id      = %s AND
+                          UserGroup_id = (SELECT id FROM UserGroup WHERE name = %s)
                        """, [user_id, usergroup_name])
         return len(cursor.fetchall()) > 0
 
     def is_user_id_in_group_id(self, user_id: int, usergroup_id: int) -> bool:
-        return self.db.execute("""SELECT User_id FROM UserGroupMember
-                           WHERE User_id = ? AND UserGroup_id = ?""", (user_id, usergroup_id)).fetchone() is not None
+        c = self.db.cursor()
+        c.execute("""SELECT User_id FROM UserGroupMember
+                           WHERE User_id = %s AND UserGroup_id = %s""", (user_id, usergroup_id))
+        return c.fetchone() is not None
 
     def grant_access(self, group_id: int, block_id: int, access_type: str):
         """Grants access to a group for a block.
@@ -429,8 +440,8 @@ class Users(TimDbBase):
         access_id = self.get_access_type_id(access_type)
         cursor = self.db.cursor()
         if access_id is not None:
-            cursor.execute("""INSERT OR IGNORE INTO BlockAccess (Block_id,UserGroup_id,accessible_from,type)
-                              VALUES (?,?,CURRENT_TIMESTAMP, ?)""", [block_id, group_id, access_id])
+            cursor.execute("""INSERT INTO BlockAccess (Block_id,UserGroup_id,accessible_from,type)
+                              VALUES (%s,%s,CURRENT_TIMESTAMP, %s)""", [block_id, group_id, access_id])
         self.db.commit()
 
     def grant_view_access(self, group_id: int, block_id: int):
@@ -456,7 +467,7 @@ class Users(TimDbBase):
 
     def remove_access(self, group_id: int, block_id: int, access_type: str):
         cursor = self.db.cursor()
-        cursor.execute("DELETE FROM BlockAccess WHERE UserGroup_id = ? AND Block_id = ? AND type = ?",
+        cursor.execute("DELETE FROM BlockAccess WHERE UserGroup_id = %s AND Block_id = %s AND type = %s",
                        [group_id, block_id, self.get_access_type_id(access_type)])
         self.db.commit()
 
@@ -525,28 +536,34 @@ class Users(TimDbBase):
         if user_id > 0:
             user_ids.append(self.get_logged_user_id())
         whole_sql = """
-{} INTERSECT
+({}) INTERSECT
 SELECT User_id
 FROM UserGroupMember
 WHERE UserGroup_id IN
       (SELECT UserGroup_id
        FROM BlockAccess
-       WHERE Block_id = ? AND type IN ({})
+       WHERE Block_id = %s AND type IN ({})
        UNION SELECT UserGroup_id
              FROM Block
-             WHERE id = ?
+             WHERE id = %s
       )
-""".format(' UNION '.join('SELECT ' + str(x) for x in user_ids), ','.join('?' * len(access_ids)))
-        result = self.db.execute(whole_sql, [block_id] + list(access_ids) + [block_id]).fetchone()
+""".format(' UNION '.join('SELECT ' + str(x) for x in user_ids), ','.join(['%s'] * len(access_ids)))
+        c = self.db.cursor()
+        # print(whole_sql)
+        c.execute(whole_sql, [block_id] + list(access_ids) + [block_id])
+        result = c.fetchone()
         return result is not None
 
     def get_accessible_blocks(self, user_id: int, access_types: List[int]) -> Set[int]:
         if self.has_admin_access(user_id):
-            return set(row[0] for row in self.db.execute("""SELECT id FROM Block""").fetchall())
+            c = self.db.cursor()
+            c.execute("""SELECT id FROM Block""")
+            return set(row[0] for row in c.fetchall())
         user_ids = [user_id, self.get_anon_user_id()]
         if user_id > 0:
             user_ids.append(self.get_logged_user_id())
-        r = self.db.execute("""
+        c = self.db.cursor()
+        c.execute("""
 SELECT Block_id as id FROM BlockAccess
 WHERE UserGroup_id IN (SELECT UserGroup_id
 FROM UserGroupMember
@@ -560,7 +577,7 @@ WHERE User_id IN ({}))
         """.format(self.get_sql_template(user_ids),
                    self.get_sql_template(access_types),
                    self.get_sql_template(user_ids)), user_ids + access_types + user_ids)
-        return set(row[0] for row in r.fetchall())
+        return set(row[0] for row in c.fetchall())
 
     def get_viewable_blocks(self, user_id: int) -> Set[int]:
         return self.get_accessible_blocks(user_id, [self.get_view_access_id(),
@@ -596,11 +613,11 @@ WHERE User_id IN ({}))
             return True
 
         cursor = self.db.cursor()
-        cursor.execute("""SELECT id FROM User WHERE
-                          id = ?
+        cursor.execute("""SELECT id FROM UserAccount WHERE
+                          id = %s
                           AND (id IN
                               (SELECT User_id FROM UserGroupMember WHERE UserGroup_id IN
-                              (SELECT UserGroup_id FROM Block WHERE id = ?))
+                              (SELECT UserGroup_id FROM Block WHERE id = %s))
                               )""", [user_id, block_id])
         result = cursor.fetchall()
         assert len(result) <= 1, 'rowcount should be 1 at most'
@@ -613,7 +630,7 @@ WHERE User_id IN ({}))
         :returns: The user preferences as a string.
         """
         cursor = self.db.cursor()
-        cursor.execute("""SELECT prefs FROM User WHERE id = ?""", [user_id])
+        cursor.execute("""SELECT prefs FROM UserAccount WHERE id = %s""", [user_id])
         result = self.resultAsDictionary(cursor)
         return result[0]['prefs']
 
@@ -624,27 +641,31 @@ WHERE User_id IN ({}))
         :param prefs: The preferences to set.
         """
         cursor = self.db.cursor()
-        cursor.execute("""UPDATE User SET prefs = ? WHERE id = ?""", [prefs, user_id])
+        cursor.execute("""UPDATE UserAccount SET prefs = %s WHERE id = %s""", [prefs, user_id])
         self.db.commit()
 
     def get_users_for_group(self, usergroup_name, order=False):
-        order_sql = ' ORDER BY User.name' if order else ''
-        return self.resultAsDictionary(
-            self.db.execute("""SELECT User.id, User.name, real_name, email
-                           FROM User
-                           JOIN UserGroupMember ON User.id = UserGroupMember.User_id
-                           JOIN UserGroup ON UserGroup.id = UserGroupMember.UserGroup_id
-                           WHERE UserGroup.name = ?{}""".format(order_sql), [usergroup_name]))
+        c = self.db.cursor()
+        order_sql = ' ORDER BY UserAccount.name' if order else ''
+        c.execute("""SELECT UserAccount.id, UserAccount.name, real_name, email
+            FROM UserAccount
+            JOIN UserGroupMember ON UserAccount.id = UserGroupMember.User_id
+            JOIN UserGroup ON UserGroup.id = UserGroupMember.UserGroup_id
+            WHERE UserGroup.name = %s{}""".format(order_sql), [usergroup_name])
+        return self.resultAsDictionary(c)
 
     def get_access_type_id(self, access_type):
         if not self.access_type_map:
-            result = self.db.execute("""SELECT id, name FROM AccessType""").fetchall()
+            c = self.db.cursor()
+            c.execute("""SELECT id, name FROM AccessType""")
+            result = c.fetchall()
             for row in result:
                 self.access_type_map[row[1]] = row[0]
         return self.access_type_map[access_type]
 
     def get_access_types(self):
-        return self.resultAsDictionary(self.db.execute("""SELECT id, name FROM AccessType"""))
+        c = self.db.cursor()
+        return self.resultAsDictionary(c.execute("""SELECT id, name FROM AccessType"""))
 
     def remove_membership(self, uid: int, gid: int, commit: bool=True) -> int:
         """Removes membership of a user from a group.
@@ -653,7 +674,7 @@ WHERE User_id IN ({}))
         :returns: The number of affected rows (0 or 1).
         """
         c = self.db.cursor()
-        c.execute("""DELETE FROM UserGroupMember WHERE User_id = ? and UserGroup_id = ?""", [uid, gid])
+        c.execute("""DELETE FROM UserGroupMember WHERE User_id = %s and UserGroup_id = %s""", [uid, gid])
         if commit:
             self.db.commit()
         return c.rowcount
@@ -709,5 +730,5 @@ WHERE User_id IN ({}))
         return ADMIN_GROUP_ID
 
     def set_usergroup_name(self, group_id: int, user_name: str):
-        self.db.execute("""UPDATE UserGroup SET name = ? WHERE id = ?""", (user_name, group_id))
+        self.db.execute("""UPDATE UserGroup SET name = %s WHERE id = %s""", (user_name, group_id))
         self.db.commit()

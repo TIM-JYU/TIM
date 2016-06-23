@@ -9,7 +9,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 from routes.filters import map_format
-from utils import datestr_to_relative
+from utils import datestr_to_relative, date_to_relative
 
 sys.setrecursionlimit(10000)
 app = Flask(__name__)
@@ -29,5 +29,6 @@ db = SQLAlchemy(app)
 
 app.jinja_env.filters['map_format'] = map_format
 app.jinja_env.filters['datestr_to_relative'] = datestr_to_relative
+app.jinja_env.filters['date_to_relative'] = date_to_relative
 
 mimetypes.add_type('text/plain', '.scss')

@@ -18,7 +18,7 @@ NEWEST_DB_VERSION = 8
 
 
 def postgre_create_database(db_name):
-    engine = sqlalchemy.create_engine("postgresql://docker:docker@postgre:5432/postgres")
+    engine = sqlalchemy.create_engine("postgresql://postgres@postgre:5432/postgres")
     conn = engine.connect()
     conn.execute("commit")
     try:
@@ -59,7 +59,11 @@ def initialize_database(create_docs=True, print_progress=True):
     sess.add(AccessType(id=4, name='manage'))
     sess.add(AccessType(id=5, name='see answers'))
     sess.add(Version(version_id=NEWEST_DB_VERSION))
-    sess.commit()
+    try:
+        sess.commit()
+    except sqlalchemy.exc.IntegrityError:
+        # Initial data already exists
+        pass
     sess.remove()
     timdb.users.create_special_usergroups()
     anon_group = timdb.users.get_anon_group_id()

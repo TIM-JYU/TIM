@@ -85,7 +85,7 @@ def doc_export(doc_id: int, out_dir: str):
 
     stdout('Creating a temporary database...')
     targetdb_path = os.path.join(out_dir, 'tim_part.db')
-    targetdb = create_db(targetdb_path, timdb.db, ['Block', 'BlockAccess', 'DocEntry', 'ReadParagraphs', 'User',
+    targetdb = create_db(targetdb_path, timdb.db, ['Block', 'BlockAccess', 'DocEntry', 'ReadParagraphs', 'UserAccount',
                                                    'UserGroup', 'UserGroupMember', 'UserNotes', 'Version'])
     src_cursor = timdb.db.cursor()
     dest_cursor = targetdb.cursor()
@@ -105,7 +105,7 @@ UNION SELECT UserGroup_id FROM UserNotes WHERE doc_id = "{0}"
 
     dest_cursor.execute('SELECT User_id FROM UserGroupMember')
     users = list(set([str(row[0]) for row in dest_cursor.fetchall() or []]))
-    copy_values(src_cursor, dest_cursor, 'User', 'WHERE id IN ({})'.format(', '.join(users)))
+    copy_values(src_cursor, dest_cursor, 'UserAccount', 'WHERE id IN ({})'.format(', '.join(users)))
     targetdb.commit()
 
     stdout('Copying metadata...')

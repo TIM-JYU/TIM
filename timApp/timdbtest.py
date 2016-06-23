@@ -4,13 +4,14 @@ import unittest
 import dumboclient
 import initdb2
 from filemodehelper import change_permission_and_retry
+from tim_app import db, app
 from timdb.timdb2 import TimDb
 from utils import del_content
 
 
 class TimDbTest(unittest.TestCase):
     test_files_path = '/tmp/doctest_files'
-    db_path = os.path.join(test_files_path, 'tim.db')
+    db_path = app.config['DATABASE']
     dumbo = None
 
     @classmethod
@@ -26,6 +27,10 @@ class TimDbTest(unittest.TestCase):
         else:
             os.mkdir(cls.test_files_path)
         initdb2.initialize_temp_database(print_progress=False)
+        # Safety mechanism
+        assert app.config['SQLALCHEMY_BINDS']['tim_main'] == "postgresql://postgres@postgre:5432/tempdb_" + 'timtest'
+        db.session.commit()
+        db.drop_all(bind='tim_main')
         initdb2.initialize_database(create_docs=False, print_progress=False)
         cls.dumbo = dumboclient.launch_dumbo()
 

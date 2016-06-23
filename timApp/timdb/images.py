@@ -57,7 +57,7 @@ class Images(TimDbBase):
         # TODO: Should file name be unique among images?
         cursor = self.db.cursor()
         file_id, file_path = self.get_file_path(path, filename)
-        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (?,?,?)',
+        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (%s,%s,%s)',
                        [file_path, owner_group_id, blocktypes.IMAGE])
 
         with open(file_path, 'wb') as f:
@@ -79,7 +79,7 @@ class Images(TimDbBase):
         # TODO: Use imghdr module to do basic validation of the file contents.
         # TODO: Should file name be unique among images?
         cursor = self.db.cursor()
-        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (?,?,?)',
+        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (%s,%s,%s)',
                        [image_filename, owner_group_id, blocktypes.IMAGE])
         img_id = cursor.lastrowid
         img_path = self.getImagePath(img_id, image_filename)
@@ -95,9 +95,9 @@ class Images(TimDbBase):
         """Deletes an image from the database."""
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT description FROM Block WHERE type_id = ? AND id = ?', [blocktypes.IMAGE, image_id])
+        cursor.execute('SELECT description FROM Block WHERE type_id = %s AND id = %s', [blocktypes.IMAGE, image_id])
         image_filename = cursor.fetchone()[0]
-        cursor.execute('DELETE FROM Block WHERE type_id = ? AND id = ?', [blocktypes.IMAGE, image_id])
+        cursor.execute('DELETE FROM Block WHERE type_id = %s AND id = %s', [blocktypes.IMAGE, image_id])
         if cursor.rowcount == 0:
             raise TimDbException('The image was not found.')
 
@@ -125,7 +125,7 @@ class Images(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT id, id || \'/\' || description AS file FROM Block WHERE type_id = ?', [blocktypes.IMAGE])
+        cursor.execute('SELECT id, id || \'/\' || description AS file FROM Block WHERE type_id = %s', [blocktypes.IMAGE])
         images = self.resultAsDictionary(cursor)
         return images
 

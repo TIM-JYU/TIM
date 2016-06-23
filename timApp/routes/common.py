@@ -326,8 +326,8 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
         key = (n['par_id'], n['doc_id'])
         pars = pars_dict.get(key)
         if pars:
-            n['editable'] = n['UserGroup_id'] == group or timdb.users.user_is_owner(getCurrentUserId(), doc.doc_id)
-            n.pop('UserGroup_id', None)
+            n['editable'] = n['usergroup_id'] == group or timdb.users.user_is_owner(getCurrentUserId(), doc.doc_id)
+            n.pop('usergroup_id', None)
             n['private'] = n['access'] == 'justme'
             for p in pars:
                 if 'notes' not in p:

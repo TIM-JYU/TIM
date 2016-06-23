@@ -16,21 +16,23 @@ class Readings(TimDbBase):
         """
         ids = doc.get_referenced_document_ids()
         ids.add(doc.doc_id)
-        template = ','.join('?' * len(ids))
-        return self.resultAsDictionary(self.db.execute("""SELECT par_id, doc_id, par_hash, timestamp FROM ReadParagraphs
-                           WHERE doc_id IN (%s) AND UserGroup_id = ?""" % template, list(ids) + [usergroup_id]))
+        template = ','.join(['%s'] * len(ids))
+        c = self.db.cursor()
+        c.execute("""SELECT par_id, doc_id, par_hash, timestamp FROM ReadParagraphs
+                     WHERE doc_id IN ({}) AND UserGroup_id = %s""".format(template), list(ids) + [usergroup_id])
+        return self.resultAsDictionary(c)
 
     def mark_read(self, usergroup_id: int, doc: Document, par: DocParagraph, commit: bool=True):
         cursor = self.db.cursor()
         # Remove previous markings for this paragraph to reduce clutter
         cursor.execute(
-            'DELETE FROM ReadParagraphs WHERE UserGroup_id = ? AND doc_id = ? AND par_id = ?',
+            'DELETE FROM ReadParagraphs WHERE UserGroup_id = %s AND doc_id = %s AND par_id = %s',
             [usergroup_id, doc.doc_id, par.get_id()])
 
         # Set current version as read
         cursor.execute(
             'INSERT INTO ReadParagraphs (UserGroup_id, doc_id, par_id, timestamp, par_hash)'
-            'VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?)',
+            'VALUES (%s, %s, %s, CURRENT_TIMESTAMP, %s)',
             [usergroup_id, doc.doc_id, par.get_id(), par.get_hash()])
 
         if commit:
@@ -60,9 +62,9 @@ DELETE FROM ReadParagraphs WHERE doc_id = ? AND par_id = ? AND UserGroup_id IN
         cursor.execute(
             """
 INSERT INTO ReadParagraphs (UserGroup_id, doc_id, par_id, timestamp, par_hash)
-SELECT UserGroup_id, ?, ?, timestamp, par_hash
+SELECT UserGroup_id, %s, %s, timestamp, par_hash
 FROM ReadParagraphs
-WHERE doc_id = ? AND par_id = ?
+WHERE doc_id = %s AND par_id = %s
             """, [dest_par.doc.doc_id, dest_par.get_id(), src_par.doc.doc_id, src_par.get_id()]
         )
 

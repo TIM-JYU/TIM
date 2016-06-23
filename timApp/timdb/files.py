@@ -38,7 +38,7 @@ class Files(TimDbBase):
         # TODO: Use imghdr module to do basic validation of the file contents.
         # TODO: Should file name be unique among files?
         cursor = self.db.cursor()
-        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (?,?,?)',
+        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (%s,%s,%s)',
                        [file_filename, owner_group_id, blocktypes.FILE])
         img_id = cursor.lastrowid
         img_path = self.getFilePath(img_id, file_filename)
@@ -54,9 +54,9 @@ class Files(TimDbBase):
         """Deletes an file from the database."""
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT description FROM Block WHERE type_id = ? AND id = ?', [blocktypes.FILE, file_id])
+        cursor.execute('SELECT description FROM Block WHERE type_id = %s AND id = %s', [blocktypes.FILE, file_id])
         file_filename = cursor.fetchone()[0]
-        cursor.execute('DELETE FROM Block WHERE type_id = ? AND id = ?', [blocktypes.FILE, file_id])
+        cursor.execute('DELETE FROM Block WHERE type_id = %s AND id = %s', [blocktypes.FILE, file_id])
         if cursor.rowcount == 0:
             raise TimDbException('The file was not found.')
 
@@ -84,7 +84,7 @@ class Files(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT id, id || \'/\' || description AS file FROM Block WHERE type_id = ?', [blocktypes.FILE])
+        cursor.execute('SELECT id, id || \'/\' || description AS file FROM Block WHERE type_id = %s', [blocktypes.FILE])
         files = self.resultAsDictionary(cursor)
         return files
 

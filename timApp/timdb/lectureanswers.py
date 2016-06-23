@@ -25,7 +25,7 @@ class LectureAnswers(TimDbBase):
 
         cursor.execute("""
             INSERT INTO LectureAnswer(user_id, question_id,lecture_id, answer, answered_on,points)
-            VALUES (?,?,?,?,?,?)
+            VALUES (%s,%s,%s,%s,%s,%s)
         """, [user_id, question_id, lecture_id, answer, answered_on, points])
 
         if commit:
@@ -49,8 +49,8 @@ class LectureAnswers(TimDbBase):
 
         cursor.execute("""
             UPDATE LectureAnswer
-            SET user_id = ?, question_id = ?, lecture_id = ?, answer = ?, answered_on = ?, points = ?
-            WHERE answer_id = ?
+            SET user_id = %s, question_id = %s, lecture_id = %s, answer = %s, answered_on = %s, points = %s
+            WHERE answer_id = %s
         """, [user_id, question_id, lecture_id, answer, answered_on, points, answer_id])
 
         if commit:
@@ -68,8 +68,8 @@ class LectureAnswers(TimDbBase):
 
         cursor.execute("""
             UPDATE LectureAnswer
-            SET points = ?
-            WHERE answer_id = ?
+            SET points = %s
+            WHERE answer_id = %s
         """, [points, answer_id])
 
         if commit:
@@ -88,13 +88,13 @@ class LectureAnswers(TimDbBase):
             cursor.execute("""
             SELECT answer_id, answer
             FROM LectureAnswer
-            WHERE question_id = ?
+            WHERE question_id = %s
         """, [question_id])
         else:
             cursor.execute("""
             SELECT answer_id, answer
             FROM LectureAnswer
-            WHERE question_id = ? AND answered_on > ?
+            WHERE question_id = %s AND answered_on > %s
         """, [question_id, timestamp])
 
         return self.resultAsDictionary(cursor)
@@ -111,7 +111,7 @@ class LectureAnswers(TimDbBase):
         cursor.execute("""
             SELECT answer_id, answer
             FROM LectureAnswer
-            WHERE question_id = ? AND user_id = ?
+            WHERE question_id = %s AND user_id = %s
         """, [asked_id, user_id])
 
         return self.resultAsDictionary(cursor)
@@ -128,7 +128,7 @@ class LectureAnswers(TimDbBase):
         cursor.execute("""
                         SELECT *
                         FROM LectureAnswer
-                        WHERE lecture_id = ?
+                        WHERE lecture_id = %s
         """, [lecture_id])
 
         return self.resultAsDictionary(cursor)
@@ -144,7 +144,7 @@ class LectureAnswers(TimDbBase):
         cursor.execute("""
                         SELECT *
                         FROM LectureAnswer
-                        WHERE lecture_id = ? AND user_id = ?
+                        WHERE lecture_id = %s AND user_id = %s
         """, [lecture_id, user_id])
 
         return self.resultAsDictionary(cursor)
@@ -160,7 +160,7 @@ class LectureAnswers(TimDbBase):
 
         cursor.execute("""
                     DELETE FROM LectureAnswer
-                    WHERE question_id = ?
+                    WHERE question_id = %s
         """, [question_id])
 
         if commit:

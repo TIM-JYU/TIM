@@ -61,7 +61,7 @@ class ClipboardTest(TimDbTest):
 
     def test_copy(self):
         db = self.get_db()
-        doc = db.documents.create('Lähdedokumentti', 1)
+        doc = db.documents.create('Lähdedokumentti', db.users.get_anon_group_id())
 
         pars = [doc.add_paragraph('Kappale {}'.format(i), attrs={'kappale': str(i)}) for i in range(0, 10)]
 
@@ -81,7 +81,7 @@ class ClipboardTest(TimDbTest):
         clip.write(pars)
 
         db = self.get_db()
-        doc = db.documents.create('Kohdedokumentti', 1)
+        doc = db.documents.create('Kohdedokumentti', db.users.get_anon_group_id())
         dest_pars = [doc.add_paragraph('Kohdekappale {}'.format(i), attrs={'kkappale': str(i)}) for i in range(0, 10)]
 
         ver_before = doc.get_version()

@@ -17,7 +17,7 @@ class Questions(TimDbBase):
         cursor.execute("""
                           SELECT question_id, question, answer
                           FROM Question
-                          WHERE doc_id = ? AND par_id = ?
+                          WHERE doc_id = %s AND par_id = %s
                        """, [doc_id, par_index])
         return self.resultAsDictionary(cursor)
 
@@ -32,7 +32,7 @@ class Questions(TimDbBase):
         cursor.execute(
             """
                 DELETE FROM Question
-                WHERE question_id = ?
+                WHERE question_id = %s
             """, [question_id])
 
         if commit:
@@ -50,7 +50,7 @@ class Questions(TimDbBase):
             """
             SELECT *
             FROM Question
-            WHERE question_id = ?
+            WHERE question_id = %s
             """, [question_id])
 
         return self.resultAsDictionary(cursor)
@@ -82,7 +82,7 @@ class Questions(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                        INSERT INTO AskedQuestion (lecture_id, doc_id, par_id, asked_time, points, asked_json_id, expl)
-                       VALUES(?,?,?,?,?,?,?)
+                       VALUES(%s,%s,%s,%s,%s,%s,%s)
                        """, [lecture_id, doc_id, par_id, asked_time, points, asked_json_id, expl])
         if commit:
             self.db.commit()
@@ -100,8 +100,8 @@ class Questions(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                        UPDATE AskedQuestion
-                       SET points = ?
-                       WHERE asked_id = ?
+                       SET points = %s
+                       WHERE asked_id = %s
                        """, [points, asked_id])
         if commit:
             self.db.commit()
@@ -118,7 +118,7 @@ class Questions(TimDbBase):
             SELECT *
             FROM AskedQuestion a
             INNER JOIN AskedJson j
-            WHERE a.asked_id = ? AND a.asked_json_id == j.asked_json_id
+            WHERE a.asked_id = %s AND a.asked_json_id == j.asked_json_id
             """, [asked_id])
 
         return self.resultAsDictionary(cursor)
@@ -132,7 +132,7 @@ class Questions(TimDbBase):
         cursor.execute(
             """
             INSERT INTO AskedJson (json, hash)
-            VALUES (?, ?)
+            VALUES (%s, %s)
             """, [json, hash])
 
         if commit:
@@ -150,7 +150,7 @@ class Questions(TimDbBase):
             """
             SELECT *
             FROM AskedJson
-            WHERE asked_json_id = ?
+            WHERE asked_json_id = %s
             """, [asked_json_id])
 
         return self.resultAsDictionary(cursor)
@@ -165,7 +165,7 @@ class Questions(TimDbBase):
             """
             SELECT *
             FROM AskedJson
-            WHERE hash = ?
+            WHERE hash = %s
             """, [asked_hash])
 
         return self.resultAsDictionary(cursor)
@@ -183,7 +183,7 @@ class Questions(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                        INSERT INTO Question (doc_id, par_id, question_title, answer, questionJson, points, expl)
-                       VALUES(?,?,?,?,?,?,?)
+                       VALUES(%s,%s,%s,%s,%s,%s,%s)
                        """, [doc_id, par_id, question_title, answer, questionJson, points, expl])
         if commit:
             self.db.commit()
@@ -200,8 +200,8 @@ class Questions(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                        UPDATE Question
-                       SET doc_id = ?, par_id = ?, question_title = ?, answer = ?, questionJson = ?, points = ?, expl = ?
-                       WHERE question_id = ?
+                       SET doc_id = %s, par_id = %s, question_title = %s, answer = %s, questionJson = %s, points = %s, expl = %s
+                       WHERE question_id = %s
                        """, [doc_id, par_id, question_title, answer, questionJson, points, expl, question_id])
 
         self.db.commit()
@@ -215,7 +215,7 @@ class Questions(TimDbBase):
         cursor.execute("""
                       SELECT *
                       FROM Question
-                      WHERE doc_id = ?
+                      WHERE doc_id = %s
                       """, [doc_id])
 
         return self.resultAsDictionary(cursor)

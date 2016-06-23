@@ -27,13 +27,13 @@ class LectureTest(TimRouteTest):
         j = self.get('/checkLecture', as_json=True, expect_status=200, query_string=dict(doc_id=doc.doc_id))
 
         self.assertDictEqual({'doc_name': name,
-                              'endTime': end_time_str,
+                              'endTime': end_time_str + ':00',
                               'isInLecture': True,
                               'isLecturer': True,
                               'lectureCode': lecture_code,
                               'lectureId': lecture_id,
                               'lecturers': [],  # TODO This is probably wrong, should have one element
-                              'startTime': start_time_str,
+                              'startTime': start_time_str + ':00',
                               'students': [],
                               'useQuestions': True,
                               'useWall': True}, j)

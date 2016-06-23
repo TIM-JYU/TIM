@@ -6,6 +6,8 @@ import sqlite3
 from sqlalchemy.orm import scoped_session
 
 from tim_app import db
+
+import psycopg2
 from timdb.notes import Notes
 from timdb.uploads import Uploads
 from timdb.users import Users
@@ -45,13 +47,14 @@ class TimDb(object):
             if not os.path.exists(path):
                 os.makedirs(path)
         
-        self.db = sqlite3.connect(db_path)
-        self.db.row_factory = sqlite3.Row
+        # self.db = sqlite3.connect(db_path)
+        # self.db.row_factory = sqlite3.Row
 
         self.session = session
         if session is None:
             self.session = db.create_scoped_session()
 
+        self.db = psycopg2.connect(db_path)
         self.notes = Notes(self.db, files_root_path, 'notes', current_user_name, self.session)
         self.readings = Readings(self.db, files_root_path, 'notes', current_user_name, self.session)
         self.users = Users(self.db, files_root_path, 'users', current_user_name, self.session)
@@ -69,6 +72,7 @@ class TimDb(object):
     def __del__(self):
         """Release the database connection when the object is deleted."""
         if self.db is not None:
+            self.session.remove()
             self.close()
 
     def commit(self):
@@ -79,6 +83,7 @@ class TimDb(object):
         """Closes the database connection."""
         if self.db is not None:
             self.db.close()
+            self.session.remove()
             self.db = None
 
     def initialize_tables(self):
@@ -119,5 +124,5 @@ class TimDb(object):
     def table_exists(self, table_name):
         """Checks whether a table with the specified name exists in the database.
         """
-        return bool(self.db.execute("SELECT EXISTS(SELECT name from sqlite_master WHERE type = 'table' AND name = ?)",
+        return bool(self.db.execute("SELECT EXISTS(SELECT name from sqlite_master WHERE type = 'table' AND name = %s)",
                                [table_name]).fetchone()[0])

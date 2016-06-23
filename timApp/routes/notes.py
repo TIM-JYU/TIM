@@ -27,7 +27,7 @@ def get_note(note_id):
     if not (timdb.notes.has_edit_access(getCurrentUserGroup(), note_id) or timdb.users.user_is_owner(getCurrentUserId(),
                                                                                                      note['doc_id'])):
         abort(403)
-    note.pop('UserGroup_id')
+    note.pop('usergroup_id')
     tags = note['tags']
     note['tags'] = {}
     for tag in KNOWN_TAGS:

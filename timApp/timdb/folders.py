@@ -24,7 +24,7 @@ class Folders(TimDbBase):
         block_id = self.insertBlockToDb(name, owner_group_id, blocktypes.FOLDER)
 
         rel_path, rel_name = self.split_location(name)
-        cursor.execute("INSERT INTO Folder (id, name, location) VALUES (?, ?, ?)", [block_id, rel_name, rel_path])
+        cursor.execute("INSERT INTO Folder (id, name, location) VALUES (%s, %s, %s)", [block_id, rel_name, rel_path])
         self.db.commit()
 
         # Make sure that the parent folder exists
@@ -40,7 +40,7 @@ class Folders(TimDbBase):
         :returns: Integer block identifier.
         """
         cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM Folder WHERE name = ?', [name])
+        cursor.execute('SELECT id FROM Folder WHERE name = %s', [name])
         row = cursor.fetchone()
         return row[0] if row is not None else None
 
@@ -51,7 +51,7 @@ class Folders(TimDbBase):
         :returns: A row representing the folder.
         """
         cursor = self.db.cursor()
-        cursor.execute('SELECT id, name, location FROM Folder WHERE id = ?', [block_id])
+        cursor.execute('SELECT id, name, location FROM Folder WHERE id = %s', [block_id])
 
         for folder in self.resultAsDictionary(cursor):
             folder['fullname'] = self.join_location(folder['location'], folder['name'])
@@ -66,7 +66,7 @@ class Folders(TimDbBase):
         :returns: True if the folder exists, false otherwise.
         """
         cursor = self.db.cursor()
-        cursor.execute('SELECT EXISTS(SELECT id FROM Folder WHERE id = ?)', [folder_id])
+        cursor.execute('SELECT EXISTS(SELECT id FROM Folder WHERE id = %s)', [folder_id])
         return bool(int(cursor.fetchone()[0]))
 
     def get_folder_id(self, folder_name: str, create_with_owner_id: Optional[int] = None) -> Optional[int]:
@@ -75,7 +75,7 @@ class Folders(TimDbBase):
 
         cursor = self.db.cursor()
         rel_loc, rel_name = self.split_location(folder_name)
-        cursor.execute('SELECT id FROM Folder WHERE name = ? AND location = ?', [rel_name, rel_loc])
+        cursor.execute('SELECT id FROM Folder WHERE name = %s AND location = %s', [rel_name, rel_loc])
         result = cursor.fetchone()
         if result is None and create_with_owner_id is not None:
             #print("I created a folder record for " + folderName)
@@ -87,7 +87,7 @@ class Folders(TimDbBase):
         :returns: A list of dictionaries of the form {'id': <folder_id>, 'name': 'folder_name', 'fullname': 'folder_path'}
         """
         cursor = self.db.cursor()
-        cursor.execute("SELECT id, name FROM Folder WHERE location = ?", [root_path])
+        cursor.execute("SELECT id, name FROM Folder WHERE location = %s", [root_path])
         folders = self.resultAsDictionary(cursor)
         for folder in folders:
            folder['fullname'] = self.join_location(root_path, folder['name'])
@@ -107,23 +107,23 @@ class Folders(TimDbBase):
 
         # Rename folder itself
         cursor = self.db.cursor()
-        cursor.execute('UPDATE Folder SET name = ?, location = ? WHERE id = ?',
+        cursor.execute('UPDATE Folder SET name = %s, location = %s WHERE id = %s',
                        [new_rel_name, new_rel_path, block_id])
 
         # Rename contents
-        cursor.execute('SELECT name FROM DocEntry WHERE name LIKE ?', [old_name + '/%'])
+        cursor.execute('SELECT name FROM DocEntry WHERE name LIKE %s', [old_name + '/%'])
         for row in cursor.fetchall():
             old_docname = row[0]
             new_docname = old_docname.replace(old_name, new_name)
-            cursor.execute('UPDATE DocEntry SET name = ? WHERE name = ?',
+            cursor.execute('UPDATE DocEntry SET name = %s WHERE name = %s',
                            [new_docname, old_docname])
 
-        cursor.execute('UPDATE Folder SET location = ? WHERE location = ?', [new_name, old_name])
-        cursor.execute('SELECT location FROM Folder WHERE location LIKE ?', [old_name + '/%'])
+        cursor.execute('UPDATE Folder SET location = %s WHERE location = %s', [new_name, old_name])
+        cursor.execute('SELECT location FROM Folder WHERE location LIKE %s', [old_name + '/%'])
         for row in cursor.fetchall():
             old_docname = row[0]
             new_docname = old_docname.replace(old_name, new_name)
-            cursor.execute('UPDATE Folder SET location = ? WHERE location = ?',
+            cursor.execute('UPDATE Folder SET location = %s WHERE location = %s',
                            [new_docname, old_docname])
 
 
@@ -135,7 +135,7 @@ class Folders(TimDbBase):
         folder_name = folder_info['fullname']
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT exists(SELECT name FROM DocEntry WHERE name LIKE ?)', [folder_name + '/%'])
+        cursor.execute('SELECT exists(SELECT name FROM DocEntry WHERE name LIKE %s)', [folder_name + '/%'])
         return cursor.fetchone()[0] == 0
 
     def delete(self, block_id: int) -> None:
@@ -150,8 +150,8 @@ class Folders(TimDbBase):
 
         # Delete it
         cursor = self.db.cursor()
-        cursor.execute('DELETE FROM Folder WHERE id = ?',
+        cursor.execute('DELETE FROM Folder WHERE id = %s',
                        [block_id])
-        cursor.execute('DELETE FROM Block WHERE type_id = ? AND id = ?',
+        cursor.execute('DELETE FROM Block WHERE type_id = %s AND id = %s',
                        [blocktypes.FOLDER, block_id])
         self.db.commit()

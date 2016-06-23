@@ -1,5 +1,7 @@
 from typing import List
 
+from timdb.tim_models import Message
+
 __author__ = 'hajoviin'
 from timdb.timdbbase import TimDbBase
 
@@ -12,7 +14,7 @@ class Messages(TimDbBase):
         cursor.execute(
             """
             DELETE FROM Message
-            WHERE lecture_id = ?
+            WHERE lecture_id = %s
             """, [lecture_id]
         )
 
@@ -24,7 +26,7 @@ class Messages(TimDbBase):
         cursor.execute("""
                       SELECT user_id,msg_id, message, timestamp
                       FROM Message
-                      WHERE msg_id = ?
+                      WHERE msg_id = %s
                       """, [msg_id])
 
         return self.resultAsDictionary(cursor)
@@ -38,7 +40,7 @@ class Messages(TimDbBase):
         cursor.execute("""
                       SELECT msg_id, user_id, message, timestamp
                       FROM Message
-                      WHERE lecture_id = ?
+                      WHERE lecture_id = %s
                       """, [lecture_id]
         )
 
@@ -49,7 +51,7 @@ class Messages(TimDbBase):
         cursor.execute("""
                       SELECT *
                       FROM Message
-                      WHERE lecture_id = ? AND msg_id > ?
+                      WHERE lecture_id = %s AND msg_id > %s
                       ORDER BY msg_id
                       DESC
                       """, [lecture_id,client_last_message ])
@@ -61,7 +63,7 @@ class Messages(TimDbBase):
         cursor.execute("""
                       SELECT *
                       FROM Message
-                      WHERE lecture_id = (?)
+                      WHERE lecture_id = (%s)
                       ORDER BY msg_id
                       DESC
                       LIMIT 1
@@ -74,13 +76,9 @@ class Messages(TimDbBase):
         """ Creates a new message
         """
 
-        cursor = self.db.cursor()
-        cursor.execute("""
-                       INSERT INTO
-                       Message(user_id,lecture_id,message,timestamp)
-                       VALUES(?,?,?,?)
-                       """, [user_id, lecture_id, message, timestamp])
+        m = Message(user_id=user_id, lecture_id=lecture_id, message=message, timestamp=timestamp)
+        self.session.add(m)
+        self.session.flush()
         if commit:
-            self.db.commit()
-        msg_id = cursor.lastrowid
-        return msg_id
+            self.session.commit()
+        return m.msg_id
