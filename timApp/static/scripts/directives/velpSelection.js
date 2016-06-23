@@ -554,12 +554,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         });
         // For testing VVV
         $scope.isVelpGroupShownHere(20, "cffRVcTQfdCt");
-        if ($scope.checkCollectionForSelected(113, "f21134r", {
+        $scope.checkCollectionForSelected(113, "f21134r", {
                 tVASFsAF: [{id: 113, selected: true}, {id: 666, selected: false}],
                 f21r134r: [{id: 113, selected: false}],
                 0: [{id: 123, selected: true}]
-            })===null)
-            alert("jee");
+            });
         // For testing ^^^
     };
 
