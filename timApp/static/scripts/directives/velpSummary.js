@@ -38,7 +38,8 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
         for (var i = 0; i < $scope.annotations.length; i++) {
             p += $scope.annotations[i].points;
         }
-        return Math.round(p);
+        //cast back to a number so that the trailing zeroes disappear.
+        return Number(p.toPrecision(4));
     };
 
     $scope.checkAll = function () {
