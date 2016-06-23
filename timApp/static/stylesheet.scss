@@ -376,6 +376,10 @@ p.caption {
     height: 100%;
     top: 0;
 
+    @media (max-width: $screen-xs-max) {
+        left: 0;
+    }
+
     &:hover, &.menuopen {
         opacity: 0.5;
         background: $editline-bg-color;
