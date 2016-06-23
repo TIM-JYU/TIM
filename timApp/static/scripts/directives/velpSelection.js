@@ -26,6 +26,30 @@ timApp.directive('velpSelection', function () {
 /**
  * Controller for velp selection
  */
+timApp.filter('filterByVelpGroups', function () {
+    "use strict";
+    return function (velps, groups) {
+
+        var selected = [];
+        var checkedGroups = [];
+
+        if (typeof groups === UNDEFINED || typeof velps === UNDEFINED)
+            return velps;
+
+        for (var j = 0; j < groups.length; j++)
+            if (groups[j].show) checkedGroups.push(groups[j].id);
+
+        for (var i = 0; i < velps.length; i++) {
+            for (var k = 0; k < checkedGroups.length; k++) {
+                if (velps[i].velp_groups.indexOf(checkedGroups[k]) >= 0 && selected.indexOf(velps[i]) < 0)
+                    selected.push(velps[i]);
+            }
+        }
+
+        return selected;
+    };
+});
+
 timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', function ($scope, $window, $http) {
     "use strict";
     var console = $window.console;
@@ -119,20 +143,20 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         });
 
         /*
-        $http.get('/get_default_personal_velp_group').success(function (data) {
-            default_personal_velp_group = {id: data.id, name: data.name};
-            if (data.created_new_group) {
-                $scope.velpGroups.push(data);
-            }
-            if (!default_velp_group.edit_access) {
-                $scope.newVelp.velp_groups.push(default_personal_velp_group.id);
-                $scope.velpGroups.some(function (g) {
-                    if (g.id === default_personal_velp_group.id)
-                        return g.selected = true;
-                });
-            }
-        });
-        */
+         $http.get('/get_default_personal_velp_group').success(function (data) {
+         default_personal_velp_group = {id: data.id, name: data.name};
+         if (data.created_new_group) {
+         $scope.velpGroups.push(data);
+         }
+         if (!default_velp_group.edit_access) {
+         $scope.newVelp.velp_groups.push(default_personal_velp_group.id);
+         $scope.velpGroups.some(function (g) {
+         if (g.id === default_personal_velp_group.id)
+         return g.selected = true;
+         });
+         }
+         });
+         */
 
         $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) {
             $scope.annotations = data;
@@ -167,7 +191,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         $http.get('/{0}/get_velp_group_default_selections'.replace('{0}', doc_id)).success(function (data) {
 
             $scope.groupDefaults = data;
-            $scope.groupDefaults["0"].push(173);
 
             var docDefaults = $scope.groupDefaults["0"];
 
@@ -478,7 +501,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
      * @param elementId selected element id
      * @returns groups to show
      */
-    $scope.updateShowDataForElement = function (elementId){
+    $scope.updateShowDataForElement = function (elementId) {
 
         // TODO: Check if element has stored info
         // if it has, loop through velp groups, and check if spesific group has stored info
@@ -492,7 +515,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         var showGroupsInPar = [];
         var defaultGroupsInPar = [];
 
-        //console.log($scope.selectedElement.id);
 
         if ($scope.selectedElement !== null && $scope.groupAttachment.target_type === 1) {
 
@@ -507,10 +529,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                 console.log($scope.groupSelections[$scope.selectedElement.id]);
                 showGroupsInPar = $scope.groupSelections[$scope.selectedElement.id];
                 /*for (var i = 0; i < $scope.velpGroups.length; i++) {
-                    if (showGroupsInPar.indexOf[$scope.velpGroups[i].id] < 0 &&
-                        $scope.groupDefaults["0"].indexOf[$scope.velpGroups[i].id] >= 0)
-                        showGroupsInPar.push($scope.velpGroups[i].id);
-                }*/
+                 if (showGroupsInPar.indexOf[$scope.velpGroups[i].id] < 0 &&
+                 $scope.groupDefaults["0"].indexOf[$scope.velpGroups[i].id] >= 0)
+                 showGroupsInPar.push($scope.velpGroups[i].id);
+                 }*/
             } else {
                 showGroupsInPar = defaultGroupsInPar;
             }
@@ -530,7 +552,84 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             g.show = showGroupsInPar.indexOf(g.id) >= 0;
             g.default = defaultGroupsInPar.indexOf(g.id) >= 0;
         });
+        // For testing VVV
+        $scope.isVelpGroupShownHere(20, "cffRVcTQfdCt");
+        if ($scope.checkCollectionForSelected(113, "f21134r", {
+                tVASFsAF: [{id: 113, selected: true}, {id: 666, selected: false}],
+                f21r134r: [{id: 113, selected: false}],
+                0: [{id: 123, selected: true}]
+            })===null)
+            alert("jee");
+        // For testing ^^^
+    };
 
+    /**
+     * Decides whether the group is shown based on the various selected and default values.
+     * @param groupId
+     * @param paragraph_id either a real paragraph id or "0" for the document.
+     * @returns {boolean}
+     */
+    $scope.isVelpGroupShownHere = function (groupId, paragraph_id) {
+        var returnValue;
+        // Are we checking for the whole document? This check might be unnecessary.
+        if (paragraph_id === "0") {
+            returnValue = $scope.lazyIsVelpGroupSelectedInParagraph(groupId, paragraph_id);
+            if (returnValue !== null)
+                return returnValue;
+            // Not set for the document, we'll try the defaults instead.
+            returnValue = $scope.lazyIsVelpGroupDefaultInParagraph(groupId, paragraph_id);
+            if (returnValue !== null)
+                return returnValue;
+        }
+        else {
+            // First check "selected" attributes for paragraph.
+            returnValue = $scope.lazyIsVelpGroupSelectedInParagraph(groupId, paragraph_id);
+            if (returnValue !== null)
+                return returnValue;
+            // We tried to find paragraph specific, but found nothing. We try the paragraph defaults instead.
+            returnValue = $scope.lazyIsVelpGroupDefaultInParagraph(groupId, paragraph_id);
+            if (returnValue !== null)
+                return returnValue;
+            // Still nothing, now we try the document defaults.
+            returnValue = $scope.lazyIsVelpGroupDefaultInParagraph(groupId, "0");
+            if (returnValue !== null)
+                return returnValue;
+        }
+        // Ok, hard coded ones left:
+        return (groupId === default_personal_velp_group.id || groupId === default_velp_group.id);
+    };
+
+    /**
+     * Despite the name, can check document selections as well.
+     * @param groupId
+     * @param paragraphId pass "0" for document.
+     * @returns true/false/null
+     */
+    $scope.lazyIsVelpGroupSelectedInParagraph = function (groupId, paragraphId) {
+        return $scope.checkCollectionForSelected(groupId, paragraphId, $scope.groupSelections);
+    };
+
+    /**
+     * Despite the name, can check document selections as well.
+     * @param groupId
+     * @param paragraphId pass "0" for document.
+     * @returns true/false/null
+     */
+    $scope.lazyIsVelpGroupDefaultInParagraph = function (groupId, paragraphId) {
+        return $scope.checkCollectionForSelected(groupId, paragraphId, $scope.groupDefaults);
+    };
+
+    $scope.checkCollectionForSelected = function (groupId, paragraphId, collection) {
+        if (collection.hasOwnProperty(paragraphId)) {
+            var index;
+            var selectionsHere = collection[paragraphId]
+            for (var i = 0; i < selectionsHere.length; ++i) {
+                if (selectionsHere[i]["id"] === groupId) {
+                    return selectionsHere[i]["selected"];
+                }
+            }
+        }
+        return null;
     };
 
     $scope.addVelpGroup = function (form) {
@@ -737,30 +836,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         }
     };
 }]);
-
-timApp.filter('filterByVelpGroups', function () {
-    "use strict";
-    return function (velps, groups) {
-
-        var selected = [];
-        var checkedGroups = [];
-
-        if (typeof groups === UNDEFINED || typeof velps === UNDEFINED)
-            return velps;
-
-        for (var j = 0; j < groups.length; j++)
-            if (groups[j].show) checkedGroups.push(groups[j].id);
-
-        for (var i = 0; i < velps.length; i++) {
-            for (var k = 0; k < checkedGroups.length; k++) {
-                if (velps[i].velp_groups.indexOf(checkedGroups[k]) >= 0 && selected.indexOf(velps[i]) < 0)
-                    selected.push(velps[i]);
-            }
-        }
-
-        return selected;
-    };
-});
 
 /**
  * Filter for ordering velps

@@ -38,7 +38,7 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
         for (var i = 0; i < $scope.annotations.length; i++) {
             p += $scope.annotations[i].points;
         }
-        //cast back to a number so that the trailing zeroes disappear.
+        //cast back to a number, the string has trailing zeros.
         return Number(p.toPrecision(4));
     };
 
