@@ -2,13 +2,14 @@
 Defines the TimDb database class.
 """
 
-import sqlite3
+from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import scoped_session
 
 from tim_app import db
 
 import psycopg2
 from timdb.notes import Notes
+from timdb.tim_models import Version
 from timdb.uploads import Uploads
 from timdb.users import Users
 from timdb.images import Images
@@ -54,7 +55,7 @@ class TimDb(object):
         if session is None:
             self.session = db.create_scoped_session()
 
-        self.db = psycopg2.connect(db_path)
+        self.db = psycopg2.connect(db_path)  # type: psycopg2.extensions.connection
         self.notes = Notes(self.db, files_root_path, 'notes', current_user_name, self.session)
         self.readings = Readings(self.db, files_root_path, 'notes', current_user_name, self.session)
         self.users = Users(self.db, files_root_path, 'users', current_user_name, self.session)
@@ -106,23 +107,24 @@ class TimDb(object):
         self.db.cursor().executescript(sql)
         self.db.commit()
 
-    def get_version(self):
+    def get_version(self) -> int:
         """Gets the current database version.
         :return: The database version as an integer.
         """
-        try:
-            return self.db.execute("""SELECT MAX(id) FROM Version""").fetchone()[0]
-        except sqlite3.OperationalError:
-            return 0
+        ver = self.session.query(db.func.max(Version.id)).scalar()
+        assert isinstance(ver, int)
+        return ver
 
     def update_version(self):
         """Updates the database version by inserting a new sequential entry in the Version table.
         """
-        self.db.execute("""INSERT INTO Version(updated_on) VALUES (CURRENT_TIMESTAMP)""")
+        c = self.db.cursor()
+        c.execute("""INSERT INTO Version(updated_on) VALUES (CURRENT_TIMESTAMP)""")
         self.db.commit()
 
     def table_exists(self, table_name):
         """Checks whether a table with the specified name exists in the database.
         """
-        return bool(self.db.execute("SELECT EXISTS(SELECT name from sqlite_master WHERE type = 'table' AND name = %s)",
-                               [table_name]).fetchone()[0])
+        c = self.db.cursor()
+        c.execute("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name = %s)", (table_name,))
+        return c.fetchone()[0]

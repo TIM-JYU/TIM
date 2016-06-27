@@ -4,7 +4,6 @@ from datetime import timedelta
 COMPRESS_DEBUG     = True
 COMPRESS_MIMETYPES = ['text/html', 'text/css', 'text/xml', 'application/json', 'application/javascript']
 COMPRESS_MIN_SIZE  = 50
-DATABASE           = 'tim_files/tim.db'
 DEBUG              = False
 FILES_PATH         = 'tim_files'
 LOG_DIR            = "../tim_logs/"
@@ -22,8 +21,9 @@ LIBSASS_INCLUDES   = ["static/scripts/bower_components/bootstrap-sass/assets/sty
                       "static/scripts/bower_components/jquery-ui/themes/base",
                       "static"]
 TIM_NAME = os.environ.get('TIM_NAME', 'tim')
+DATABASE           = "postgresql://postgres@postgre:5432/" + TIM_NAME
 SQLALCHEMY_BINDS = {
-    'tim_main': 'sqlite:///' + DATABASE,
-    'tempdb': "postgresql://docker:docker@postgre:5432/tempdb_" + TIM_NAME
+    'tim_main': DATABASE,
+    'tempdb': "postgresql://postgres:postgres@postgre:5432/tempdb_" + TIM_NAME
 }
 SASS_GEN_PATH = 'gen'

@@ -153,11 +153,13 @@ class Notes(TimDbBase):
         return self.process_notes(result)[0]
 
     def process_notes(self, result: List[dict]) -> List[dict]:
+        c = self.db.cursor()
         for note in result:
             note["tags"] = self.__strtotags(note["tags"])
             if note['html'] is None:
                 note['html'] = md_to_html(note['content'])
-                self.db.execute('UPDATE UserNotes SET html = %s '
+                c.execute('UPDATE UserNotes SET html = %s '
                                 'WHERE id = %s', [note['html'], note['id']])
-                self.db.commit()
+
+        self.db.commit()
         return result

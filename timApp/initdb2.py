@@ -42,6 +42,7 @@ def initialize_database(create_docs=True, print_progress=True):
     files_root_path = app.config['FILES_PATH']
     Document.default_files_root = files_root_path
     DocParagraph.default_files_root = files_root_path
+    postgre_create_database(app.config['TIM_NAME'])
     if os.path.exists(db_path):
         if print_progress:
             print('{} already exists, no need to initialize'.format(files_root_path))
@@ -64,24 +65,27 @@ def initialize_database(create_docs=True, print_progress=True):
     except sqlalchemy.exc.IntegrityError:
         # Initial data already exists
         pass
-    sess.remove()
-    timdb.users.create_special_usergroups()
-    anon_group = timdb.users.get_anon_group_id()
-    timdb.users.create_user_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
-    timdb.users.create_user_with_group('tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi', is_admin=True)
-    timdb.users.create_user_with_group('testuser1', 'Test user 1', 'test1@example.com', password='test1pass')
-    timdb.users.create_user_with_group('testuser2', 'Test user 2', 'test2@example.com', password='test2pass')
+    else:
+        timdb.users.create_special_usergroups()
+        anon_group = timdb.users.get_anon_group_id()
+        timdb.users.create_user_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
+        timdb.users.create_user_with_group('tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi', is_admin=True)
+        timdb.users.create_user_with_group('testuser1', 'Test user 1', 'test1@example.com', password='test1pass')
+        timdb.users.create_user_with_group('testuser2', 'Test user 2', 'test2@example.com', password='test2pass')
 
-    if create_docs:
-        timdb.documents.create('Testaus 1', anon_group)
-        timdb.documents.create('Testaus 2', anon_group)
-        timdb.documents.import_document_from_file('example_docs/programming_examples.md',
-                                                  'Programming examples',
-                                                  anon_group)
-        timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
-                                                  'Multiple choice plugin example',
-                                                  anon_group)
-    timdb.close()
+        if create_docs:
+            timdb.documents.create('Testaus 1', anon_group)
+            timdb.documents.create('Testaus 2', anon_group)
+            timdb.documents.import_document_from_file('example_docs/programming_examples.md',
+                                                      'Programming examples',
+                                                      anon_group)
+            timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
+                                                      'Multiple choice plugin example',
+                                                      anon_group)
+    finally:
+        sess.remove()
+        timdb.close()
+
     if print_progress:
         print(' done.')
 

@@ -78,6 +78,8 @@ class Answers(TimDbBase):
         return answers
 
     def set_collaborators(self, answers):
+        if not answers:
+            return
         answer_dict = defaultdict(list)
         c = self.db.cursor()
         c.execute("""SELECT answer_id, user_id, real_name FROM UserAnswer
@@ -121,18 +123,21 @@ class Answers(TimDbBase):
         minmax = "max"
         if age == "min":
             minmax = "min"
-        answs = self.db.execute("""
-select u.name, a.task_id, a.content, """ + minmax + """(a.answered_on) as t, count(a.answered_on) as n
-from answer as a, userAnswer as ua, user as u
-where a.task_id like %s and ua.answer_id = a.id and u.id = ua.user_id and a.answered_on > %s
-group by a.task_id, u.id
-order by u.id,a.task_id;
-        """, [task_id, time_limit])
+        c = self.db.cursor()
+        c.execute("""
+SELECT u.name, a.task_id, a.content, a.answered_on, n
+FROM
+(SELECT {}(a.id) AS id, COUNT(a.id) as n
+FROM answer AS a, userAnswer AS ua, useraccount AS u
+WHERE a.task_id LIKE %s AND ua.answer_id = a.id AND u.id = ua.user_id AND a.answered_on > %s
+GROUP BY a.task_id, u.id
+ORDER BY u.id,a.task_id) t
+JOIN answer a ON a.id = t.id JOIN useranswer ua ON ua.answer_id = a.id JOIN useraccount u ON u.id = ua.user_id
+        """.format(minmax), [task_id, time_limit])
 
         result = []
-        if answs is None: return result
 
-        for row in answs:
+        for row in c.fetchall():
             header = row[0] + ": " + row[1] + "; " + row[3] + "; " + str(row[4])
             if hide_names: header = ""
             # print(separator + header)
@@ -140,7 +145,6 @@ order by u.id,a.task_id;
             if not isinstance(line, list):
                 answ = line.get("usercode", "-")
                 result.append(header + "\n" + answ)
-
         return result
 
 
@@ -180,7 +184,7 @@ order by u.id,a.task_id;
             return []
         cursor = self.db.cursor()
         task_id_template = ','.join(['%s']*len(task_ids))
-        user_restrict_sql = '' if user_ids is None else 'AND UserAccount.id IN (%s)' % ','.join(['%s']*len(user_ids))
+        user_restrict_sql = '' if user_ids is None else 'AND UserAccount.id IN ({})'.format(','.join(['%s']*len(user_ids)))
         if user_ids is None:
             user_ids = []
         cursor.execute(
@@ -239,12 +243,14 @@ order by u.id,a.task_id;
 
 
     def get_users_by_taskid(self, task_id: str):
-        result = self.resultAsDictionary(self.db.execute("""SELECT DISTINCT UserAccount.id, name, real_name
-                           FROM UserAccount
-                           JOIN UserAnswer ON UserAnswer.user_id = User.id
-                           JOIN Answer on Answer.id = UserAnswer.answer_id
-                           WHERE task_id = %s
-                           ORDER BY real_name ASC""", [task_id]))
+        c = self.db.cursor()
+        c.execute("""SELECT DISTINCT UserAccount.id, name, real_name
+            FROM UserAccount
+            JOIN UserAnswer ON UserAnswer.user_id = UserAccount.id
+            JOIN Answer on Answer.id = UserAnswer.answer_id
+            WHERE task_id = %s
+            ORDER BY real_name ASC""", [task_id])
+        result = self.resultAsDictionary(c)
         return result
 
     def get_answer(self, answer_id: int) -> Optional[dict]:

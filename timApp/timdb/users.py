@@ -1,6 +1,5 @@
 from typing import Optional, List, Set
 
-from tim_app import db
 from timdb.tim_models import User, UserGroup
 from timdb.timdbbase import TimDbBase, TimDbException
 
@@ -730,5 +729,6 @@ WHERE User_id IN ({}))
         return ADMIN_GROUP_ID
 
     def set_usergroup_name(self, group_id: int, user_name: str):
-        self.db.execute("""UPDATE UserGroup SET name = %s WHERE id = %s""", (user_name, group_id))
+        c = self.db.cursor()
+        c.execute("""UPDATE UserGroup SET name = %s WHERE id = %s""", (user_name, group_id))
         self.db.commit()
