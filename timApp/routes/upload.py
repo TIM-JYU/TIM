@@ -53,7 +53,13 @@ def get_upload(relfilename: str):
     if not block or (block.description != relfilename and not relfilename.endswith('/')):
         abort(404, 'The requested upload was not found.')
     if not verify_view_access(block.id, require=False):
-        answer = block.answerupload.first().answer
+        answerupload = block.answerupload.first()
+        
+        # Answerupload may only be None for early test uploads (before the AnswerUpload model was implemented)
+        # or if the upload process was interrupted at a specific point
+        if answerupload is None:
+            abort(403)
+        answer = answerupload.answer
         doc_id, task_name, _ = Plugin.parse_task_id(answer.task_id)
         verify_seeanswers_access(doc_id)
 
