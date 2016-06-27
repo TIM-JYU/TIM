@@ -31,8 +31,9 @@ $heading-outdent: -1em;
 $icon-color: $basic-color;
 $icon-hover-color: darken($basic-color, 10%);
 $link-visited-color: #5242CE;
+$paragraph-preferred-width: 57.4em;
 
-// these column variables must match the ones in base.html
+// TODO decide if these two are necessary
 $left-side-columns: 2;
 $right-side-columns: 3;
 
