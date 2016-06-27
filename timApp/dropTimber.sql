@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS Annotation;
 DROP TABLE IF EXISTS AnnotationComment;
 DROP TABLE IF EXISTS VelpGroup;
 DROP TABLE IF EXISTS VelpInGroup;
+DROP TABLE IF EXISTS VelpGroupsInDocument;
 DROP TABLE IF EXISTS VelpGroupSelection;
 DROP TABLE IF EXISTS ImportedVelpGroups;
 DROP TABLE IF EXISTS VelpGroupDefaults;

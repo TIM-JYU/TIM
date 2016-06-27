@@ -41,6 +41,8 @@ def get_default_velp_group(doc_id: int) -> dict():
                 jsonResponse({"id": -1, "name": "No access to default group", "edit_access": edit_access}))
         timdb.velp_groups.make_document_a_velp_group(doc_name, doc_id)
         velp_group = [{'target_type': '0', 'target_id': 0, 'id': doc_id}]
+
+        timdb.velp_groups.add_groups_to_document(velp_group, doc_id, user_id)
         timdb.velp_groups.add_groups_to_selection_table(velp_group, doc_id, user_id)
         print("Document is a velp group, made default velp group to point itself")
         return set_no_cache_headers(jsonResponse({"id": doc_id, "name": doc_name, "edit_access": edit_access}))
@@ -132,16 +134,16 @@ def get_velp_groups(doc_id: int):
     user_id = getCurrentUserId()
 
     velp_groups = get_velp_groups_from_tree(doc_id)
-    timdb.velp_groups.add_groups_to_selection_table(velp_groups, doc_id, user_id)
+    timdb.velp_groups.add_groups_to_document(velp_groups, doc_id, user_id)
 
     user_groups = timdb.users.get_user_groups(user_id)
     user_group_list = []
     for group in user_groups:
         user_group_list.append(group['id'])
     imported_groups = timdb.velp_groups.get_groups_from_imported_table(user_group_list, doc_id)
-    timdb.velp_groups.add_groups_to_selection_table(imported_groups, doc_id, user_id)
+    timdb.velp_groups.add_groups_to_document(imported_groups, doc_id, user_id)
 
-    all_velp_groups = timdb.velp_groups.get_groups_from_selection_table(doc_id, user_id)
+    all_velp_groups = timdb.velp_groups.get_groups_from_document_table(doc_id, user_id)
 
     # if timdb.users.has_manage_access(user_id, doc_id):
     #    timdb.velp_groups.add_groups_to_default_table(all_velp_groups, doc_id)
@@ -309,7 +311,7 @@ def update_velp(doc_id: int):
     groups_to_add = []
 
     # Add all velp group ids user has edit access to in a document to a remove list
-    doc_groups = timdb.velp_groups.get_groups_from_selection_table(doc_id, user_id)
+    doc_groups = timdb.velp_groups.get_groups_from_document_table(doc_id, user_id)
     for group in doc_groups:
         if timdb.users.has_edit_access(user_id, group['id']):
             groups_to_remove.append(group['id'])
@@ -601,7 +603,10 @@ def create_velp_group(doc_id: int) -> dict():
     created_velp_group['edit_access'] = True
     created_velp_group['default_group'] = False
 
-    timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, getCurrentUserId())
+
+    timdb.velp_groups.add_groups_to_document([created_velp_group], doc_id, user_id)
+    # TODO Do we want to make just created velp group selected in document immediately?
+    timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, user_id)
 
     response = jsonResponse(created_velp_group)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
@@ -668,7 +673,10 @@ def create_default_velp_group(doc_id: int):
     created_velp_group['default_group'] = True
     created_velp_group['created_new_group'] = created_new_group
 
-    timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, getCurrentUserId())
+    timdb.velp_groups.add_groups_to_document([created_velp_group], doc_id, user_id)
+
+    # TODO Do we want to make just created default velp group selected in document immediately?
+    timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, user_id)
 
     return jsonResponse(created_velp_group)
 

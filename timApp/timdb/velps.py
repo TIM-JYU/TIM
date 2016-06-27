@@ -237,7 +237,7 @@ class Velps(TimDbBase):
     def get_velp_content_for_document(self, doc_id: int, user_id: int, language_id: str = 'FI') -> dict():
         """Gets velp content including labels and velp groups for document.
 
-        Uses VelpGroupSelection table data to determine which velp groups are usable
+        Uses VelpGroupsInDocument table data to determine which velp groups are usable
         for specific user in specific document.
         :param doc_id: ID of document in question
         :param user_id: ID of current user
@@ -295,7 +295,7 @@ class Velps(TimDbBase):
     def get_velps_for_document(self, doc_id: int, user_id: int, language_id: str = 'FI') -> dict():
         """Gets velps for document.
 
-        Uses VelpGroupSelection table data to determine which velp groups and via those which velps are usable
+        Uses VelpGroupsInDocument table data to determine which velp groups and via those which velps are usable
         for specific user in specific document.
         :param doc_id: ID of document in question
         :param user_id: ID of current user
@@ -324,7 +324,7 @@ class Velps(TimDbBase):
                           FROM VelpInGroup
                           WHERE VelpInGroup.velp_group_id IN (
                             SELECT velp_group_id
-                            FROM VelpGroupSelection
+                            FROM VelpGroupsInDocument
                             WHERE user_id = ? AND doc_id = ?
                           )
                         )
@@ -338,7 +338,7 @@ class Velps(TimDbBase):
     def get_velp_group_ids_for_document(self, doc_id: int, user_id: int) -> dict():
         """Gets velp group ids for document.
 
-        Uses VelpGroupSelection table data to determine which velp groups are usable
+        Uses VelpGroupsInDocument table data to determine which velp groups are usable
         for specific user in specific document.
         :param doc_id: ID of document in question
         :param user_id: ID of current user
@@ -358,7 +358,7 @@ class Velps(TimDbBase):
                           FROM VelpInGroup
                           WHERE VelpInGroup.velp_group_id IN (
                             SELECT velp_group_id
-                            FROM VelpGroupSelection
+                            FROM VelpGroupsInDocument
                             WHERE doc_id = ? AND user_id = ?
                           )
                         )
@@ -372,7 +372,7 @@ class Velps(TimDbBase):
     def get_velp_label_ids_for_document(self, doc_id: int, user_id: int) -> dict():
         """Gets velp labels ids for document.
 
-        Uses VelpGroupSelection table data to determine which velp groups and via those which velp labels are usable
+        Uses VelpGroupsInDocument table data to determine which velp groups and via those which velp labels are usable
         for specific user in specific document.
         :param doc_id: ID of document in question
         :param user_id: ID of current user
@@ -393,7 +393,7 @@ class Velps(TimDbBase):
                           FROM VelpInGroup
                           WHERE VelpInGroup.velp_group_id IN (
                             SELECT velp_group_id
-                            FROM VelpGroupSelection
+                            FROM VelpGroupsInDocument
                             WHERE doc_id = ? AND user_id = ?
                           )
                         )
@@ -407,7 +407,7 @@ class Velps(TimDbBase):
     def get_velp_label_content_for_document(self, doc_id: int, user_id: int, language_id: str = 'FI') -> dict():
         """Gets velp label content for document.
 
-        Uses VelpGroupSelection table data to determine which velp groups and via those which velp labels are usable
+        Uses VelpGroupsInDocument table data to determine which velp groups and via those which velp labels are usable
         for specific user in specific document.
         :param doc_id: ID of document in question
         :param user_id: ID of current user
@@ -429,7 +429,7 @@ class Velps(TimDbBase):
                               FROM VelpInGroup
                               WHERE VelpInGroup.velp_group_id IN (
                                 SELECT velp_group_id
-                                FROM VelpGroupSelection
+                                FROM VelpGroupsInDocument
                                 WHERE doc_id = ? AND user_id = ?
                               )
                             )

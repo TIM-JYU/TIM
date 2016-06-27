@@ -186,6 +186,16 @@ CREATE TABLE VelpInGroup (
 );
 
 
+CREATE TABLE VelpGroupsInDocument (
+  user_id       INTEGER NOT NULL,
+  doc_id        INTEGER NOT NULL,
+  velp_group_id INTEGER NOT NULL,
+
+  CONSTRAINT VelpGroupsInDocument_PK
+  PRIMARY KEY (user_id, doc_id, velp_group_id)
+);
+
+
 CREATE TABLE VelpGroupSelection (
   user_id       INTEGER NOT NULL,
   doc_id        INTEGER NOT NULL,
