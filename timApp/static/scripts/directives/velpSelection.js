@@ -208,8 +208,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
 
             $scope.velpGroups.forEach(function (g) {
 
-                for (var i= 0; i< $scope.groupDefaults.length; i++){
-                    if ($scope.groupDefaults[i].id === g.id && $scope.groupDefaults[i].selected){
+                for (var i = 0; i < $scope.groupDefaults.length; i++) {
+                    if ($scope.groupDefaults[i].id === g.id && $scope.groupDefaults[i].selected) {
                         g.default = true;
                         break;
                     }
@@ -527,72 +527,15 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
     /** Velpgroup methods **/
 
     $scope.updateVelpList = function () {
-        //var showGroupsInPar = [];
-        //var defaultGroupsInPar = [];
-
-
-        /*
-        if ($scope.selectedElement !== null && $scope.groupAttachment.target_type === 1) {
-            console.log("UPDATED VELP LIST");
-            if ($scope.groupDefaults.hasOwnProperty($scope.selectedElement.id)) {
-                defaultGroupsInPar = $scope.groupDefaults[$scope.selectedElement.id];
-            } else {
-                defaultGroupsInPar = $scope.groupDefaults["0"];
-            }
-
-            if ($scope.groupSelections.hasOwnProperty($scope.selectedElement.id)) {
-                console.log($scope.groupSelections[$scope.selectedElement.id]);
-                showGroupsInPar = $scope.groupSelections[$scope.selectedElement.id];
-                for (var i = 0; i < $scope.velpGroups.length; i++) {
-                    if (showGroupsInPar.indexOf[$scope.velpGroups[i].id] < 0 &&
-                        $scope.groupDefaults["0"].indexOf[$scope.velpGroups[i].id] >= 0)
-                        showGroupsInPar.push($scope.velpGroups[i].id);
-                }
-            } else {
-                showGroupsInPar = defaultGroupsInPar;
-            }
-        }
-        else if ($scope.groupAttachment.target_type === 0) {
-            showGroupsInPar = $scope.groupSelections["0"];
-            defaultGroupsInPar = $scope.groupDefaults["0"];
-        }
-        */
-
-        /*
-        console.log(showGroupsInPar);
-        console.log(defaultGroupsInPar);
-        */
-
         $scope.velpGroups.forEach(function (g) {
             if ($scope.selectedElement !== null && $scope.groupAttachment.target_type === 1) {
                 g.show = $scope.isVelpGroupShownHere(g.id, $scope.selectedElement.id);
                 g.default = $scope.isVelpGroupDefaultHere(g.id, $scope.selectedElement.id);
-            } else if ($scope.groupAttachment.target_type === 0){
+            } else if ($scope.groupAttachment.target_type === 0) {
                 g.show = $scope.isVelpGroupShownHere(g.id, 0);
                 g.default = $scope.isVelpGroupDefaultHere(g.id, $scope.selectedElement.id);
             }
-
-            //if ($scope.selectedElement !== null && $scope.groupAttachment.target_type === 1){
-            //    g.show = $scope.isVelpGroupShownHere(g.id, $scope.selectedElement.id);
-            //}
-
-           //g.show = showGroupsInPar.indexOf(g.id) >= 0;
-           //g.default = defaultGroupsInPar.indexOf(g.id) >= 0;
-
         });
-
-        // For testing VVV
-        /*
-        $scope.isVelpGroupShownHere(20, "cffRVcTQfdCt");
-        $scope.checkCollectionForSelected(113, "f21134r", {
-
-                tVASFsAF: [{id: 113, selected: true}, {id: 666, selected: false}],
-                f21r134r: [{id: 113, selected: false}],
-                0: [{id: 123, selected: true}]
-            });
-        */
-
-        // For testing ^^^
     };
 
     /**
@@ -710,7 +653,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
 
     $scope.changeVelpGroupSelection = function (group, type) {
 
-       $scope.groupAttachment.target_type = parseInt($scope.groupAttachment.target_type);
+        $scope.groupAttachment.target_type = parseInt($scope.groupAttachment.target_type);
 
         if ($scope.groupAttachment.target_type === 1) {
             group.target_id = $scope.selectedElement.id;
@@ -730,14 +673,17 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                 $scope.groupSelections[group.target_id] = [];
 
             var groups = $scope.groupSelections[group.target_id];
-
-            // TODO: väärä tarkistus??
-
-            if (groups.indexOf(group.id) < 0)
-                $scope.groupSelections[group.target_id].push(group.id);
-            else
-                $scope.groupSelections[group.target_id].splice(groups.indexOf(group.id), 1);
-
+            var found = false;
+            for (var i = 0; i < groups.length; ++i) {
+                if (groups[i].id === group.id) {
+                    groups[i].selected = group.show;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                $scope.groupSelections[group.target_id].push({id: group.id, selected: group.show})
+            }
         }
         else if (type === "default") {
             $scope.makePostRequest("/{0}/change_selection".replace('{0}', doc_id), group, function (json) {
@@ -747,11 +693,23 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                 $scope.groupDefaults[group.target_id] = [];
 
             var defGroups = $scope.groupDefaults[group.target_id];
-
+            found = false;
+            for (i = 0; i < defGroups.length; ++i) {
+                if (defGroups[i].id === group.id) {
+                    defGroups[i].selected = group.show;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                $scope.groupDefaults[group.target_id].push({id: group.id, selected: group.default});
+            }
+            /*
             if (defGroups.indexOf(group.id) < 0)
                 $scope.groupDefaults[group.target_id].push(group.id);
             else
                 $scope.groupDefaults[group.target_id].splice(defGroups.indexOf(group.id), 1);
+            */
         }
 
         //$scope.updateVelpList();
