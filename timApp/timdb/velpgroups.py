@@ -343,17 +343,17 @@ class VelpGroups(Documents):
                     del list_help[:]
                     group_dict['id'] = results[i]['velp_group_id']
                     if results[i]['selected']:
-                        group_dict['selected'] = 'true'
+                        group_dict['selected'] = True
                     else:
-                        group_dict['selected'] = 'false'
+                        group_dict['selected'] = False
                     list_help.append(copy.deepcopy(group_dict))
                     group_dict.clear()
                 else:
                     group_dict['id'] = results[i]['velp_group_id']
                     if results[i]['selected']:
-                        group_dict['selected'] = 'true'
+                        group_dict['selected'] = True
                     else:
-                        group_dict['selected'] = 'false'
+                        group_dict['selected'] = False
                     list_help.append(copy.deepcopy(group_dict))
                     group_dict.clear()
                 if i == len(results) - 1:
@@ -399,17 +399,17 @@ class VelpGroups(Documents):
                     del list_help[:]
                     group_dict['id'] = results[i]['velp_group_id']
                     if results[i]['selected']:
-                        group_dict['selected'] = 'true'
+                        group_dict['selected'] = True
                     else:
-                        group_dict['selected'] = 'false'
+                        group_dict['selected'] = False
                     list_help.append(copy.deepcopy(group_dict))
                     group_dict.clear()
                 else:
                     group_dict['id'] = results[i]['velp_group_id']
                     if results[i]['selected']:
-                        group_dict['selected'] = 'true'
+                        group_dict['selected'] = True
                     else:
-                        group_dict['selected'] = 'false'
+                        group_dict['selected'] = False
                     list_help.append(copy.deepcopy(group_dict))
                     group_dict.clear()
                 if i == len(results) - 1:
