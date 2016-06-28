@@ -1,3 +1,4 @@
+from typing import Dict
 from flask import Blueprint
 from .common import *
 from timdb.annotations import Annotations
@@ -9,7 +10,7 @@ annotations = Blueprint('annotations',
 
 # TODO connect the routes in this file to the ui.
 @annotations.route("/add_annotation", methods=['POST'])
-def add_annotation() -> dict():
+def add_annotation() -> Dict:
     """Creates a new annotation.
 
     :return:
@@ -141,7 +142,7 @@ def invalidate_annotation():
 
 
 @annotations.route("/add_annotation_comment", methods=['POST'])
-def add_comment() -> dict():
+def add_comment() -> Dict:
     """Adds new comment to annotation.
 
     :return: Dictionary of information about user who added the comment

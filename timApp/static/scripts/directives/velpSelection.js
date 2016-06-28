@@ -566,10 +566,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         $scope.velpGroups.forEach(function (g) {
             if ($scope.selectedElement !== null && $scope.groupAttachment.target_type === 1) {
                 g.show = $scope.isVelpGroupShownHere(g.id, $scope.selectedElement.id);
-                //g.default = false;
+                g.default = $scope.isVelpGroupDefaultHere(g.id, $scope.selectedElement.id);
             } else if ($scope.groupAttachment.target_type === 0){
                 g.show = $scope.isVelpGroupShownHere(g.id, 0);
-                //g.default = false;
+                g.default = $scope.isVelpGroupDefaultHere(g.id, $scope.selectedElement.id);
             }
 
             //if ($scope.selectedElement !== null && $scope.groupAttachment.target_type === 1){
@@ -585,47 +585,74 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         /*
         $scope.isVelpGroupShownHere(20, "cffRVcTQfdCt");
         $scope.checkCollectionForSelected(113, "f21134r", {
+
                 tVASFsAF: [{id: 113, selected: true}, {id: 666, selected: false}],
                 f21r134r: [{id: 113, selected: false}],
                 0: [{id: 123, selected: true}]
             });
         */
+
         // For testing ^^^
     };
 
     /**
      * Decides whether the group is shown based on the various selected and default values.
      * @param groupId
-     * @param paragraph_id either a real paragraph id or "0" for the document.
+     * @param paragraphId either a real paragraph id or "0" for the document.
      * @returns {boolean}
      */
-    $scope.isVelpGroupShownHere = function (groupId, paragraph_id) {
+    $scope.isVelpGroupShownHere = function (groupId, paragraphId) {
         var returnValue;
-        // Are we checking for the whole document? This check might be unnecessary.
-        if (paragraph_id === "0") {
-            returnValue = $scope.lazyIsVelpGroupSelectedInParagraph(groupId, paragraph_id);
+        // Are we checking for the whole document? This "if" might be unnecessary.
+        if (paragraphId === "0") {
+            returnValue = $scope.lazyIsVelpGroupSelectedInParagraph(groupId, paragraphId);
             if (returnValue !== null)
                 return returnValue;
             // Not set for the document, we'll try the defaults instead.
-            returnValue = $scope.lazyIsVelpGroupDefaultInParagraph(groupId, paragraph_id);
+            returnValue = $scope.lazyIsVelpGroupDefaultInParagraph(groupId, paragraphId);
             if (returnValue !== null)
                 return returnValue;
         }
         else {
             // First check "selected" attributes for paragraph.
-            returnValue = $scope.lazyIsVelpGroupSelectedInParagraph(groupId, paragraph_id);
+            returnValue = $scope.lazyIsVelpGroupSelectedInParagraph(groupId, paragraphId);
             if (returnValue !== null)
                 return returnValue;
-            // We tried to find paragraph specific, but found nothing. We try the paragraph defaults instead.
-            returnValue = $scope.lazyIsVelpGroupDefaultInParagraph(groupId, paragraph_id);
-            if (returnValue !== null)
-                return returnValue;
-            // Still nothing, now we try the document defaults.
-            returnValue = $scope.lazyIsVelpGroupDefaultInParagraph(groupId, "0");
+            // Found nothing, we try the defaults instead.
+            returnValue = $scope.isVelpGroupDefaultHere(groupId, paragraphId);
             if (returnValue !== null)
                 return returnValue;
         }
         // Ok, hard coded ones left:
+        return $scope.isVelpGroupDefaultFallBack(groupId);
+    };
+
+    /**
+     *
+     * @param groupId
+     * @param paragraphId
+     * @returns {boolean}
+     */
+    $scope.isVelpGroupDefaultHere = function (groupId, paragraphId) {
+        var returnValue;
+        // First check defaults here
+        returnValue = $scope.lazyIsVelpGroupDefaultInParagraph(groupId, paragraphId);
+        if (returnValue !== null)
+            return returnValue;
+        // and then try document instead. If we started with a document, this is wasted work.
+        returnValue = $scope.lazyIsVelpGroupDefaultInParagraph(groupId, "0");
+        if (returnValue !== null)
+            return returnValue;
+        return $scope.isVelpGroupDefaultFallBack(groupId);
+    };
+
+    /**
+     * Personal default group and the document default group have always default, unless the user has
+     * specified otherwise.
+     * @param groupId
+     * @returns {boolean}
+     */
+    $scope.isVelpGroupDefaultFallBack = function (groupId) {
         return (groupId === default_personal_velp_group.id || groupId === default_velp_group.id);
     };
 
