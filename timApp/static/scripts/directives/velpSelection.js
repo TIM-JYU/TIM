@@ -704,12 +704,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             if (!found) {
                 $scope.groupDefaults[group.target_id].push({id: group.id, selected: group.default});
             }
-            /*
-            if (defGroups.indexOf(group.id) < 0)
-                $scope.groupDefaults[group.target_id].push(group.id);
-            else
-                $scope.groupDefaults[group.target_id].splice(defGroups.indexOf(group.id), 1);
-            */
         }
 
         //$scope.updateVelpList();
