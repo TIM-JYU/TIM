@@ -1,3 +1,4 @@
+from typing import Dict
 from flask import Blueprint
 from .common import *
 
@@ -12,7 +13,7 @@ velps = Blueprint('velps',
 
 
 @velps.route("/<int:doc_id>/get_default_velp_group", methods=['GET'])
-def get_default_velp_group(doc_id: int) -> dict():
+def get_default_velp_group(doc_id: int) -> Dict:
     """Get default velp group id and if default velp group doesn't exist yet, create one.
 
     :param doc_id: ID of document
@@ -65,7 +66,7 @@ def get_default_velp_group(doc_id: int) -> dict():
 
 
 @velps.route("/get_default_personal_velp_group", methods=['GET'])
-def get_default_personal_velp_group() -> dict():
+def get_default_personal_velp_group() -> Dict:
     timdb = getTimDb()
     user_name = getCurrentUserName()
 
@@ -158,7 +159,7 @@ def get_velp_groups(doc_id: int):
 
 
 @velps.route("/<int:doc_id>/get_velp_group_personal_selections", methods=['GET'])
-def get_velp_group_personal_selections(doc_id: int) -> dict():
+def get_velp_group_personal_selections(doc_id: int) -> Dict:
     """Gets default velp group selections for velp groups user has access to in document.
 
     :param doc_id: ID of document
@@ -174,7 +175,7 @@ def get_velp_group_personal_selections(doc_id: int) -> dict():
 
 
 @velps.route("/<int:doc_id>/get_velp_group_default_selections", methods=['GET'])
-def get_velp_group_default_selections(doc_id: int) -> dict():
+def get_velp_group_default_selections(doc_id: int) -> Dict:
     """Gets default velp group selections for velp groups user has access to in document
 
     :param doc_id: ID of document
@@ -525,7 +526,7 @@ def reset_all_selections_to_defaults(doc_id: int):
 
 
 @velps.route("/<int:doc_id>/create_velp_group", methods=['POST'])
-def create_velp_group(doc_id: int) -> dict():
+def create_velp_group(doc_id: int) -> Dict:
     """Creates a new velp group
 
     :param doc_id: ID of document
