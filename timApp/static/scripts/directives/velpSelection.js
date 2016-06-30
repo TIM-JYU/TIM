@@ -71,15 +71,15 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
     $scope.settings = {selectedAllShows: false, selectedAllDefault: false};
     $scope.submitted = {velp: false, velpGroup: false};
 
-    $scope.groupAttachment = {target_type: 0, id: null};
+    $scope.groupAttachment = {target_type: 1, id: null};
 
     $scope.groupSelections = {};
     $scope.groupDefaults = {};
 
     // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
     var doc_id = $scope.docId;
-    var default_velp_group = {id: -1, name: "No access to default group", edit_access: false}; // TODO Use route to add this information
-    var default_personal_velp_group = {id: -2, name: "No personal default"};
+    var default_velp_group = {id: -1, name: "No access to default group", edit_access: false, show: true, default: true}; // TODO Use route to add this information
+    var default_personal_velp_group = {id: -2, name: "Personal default"};
 
     $scope.annotations = [];
 
@@ -92,6 +92,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             console.log("Get default velp group");
             console.log(data);
             default_velp_group = data;
+
             // If doc_default exists already for some reason but isn't a velp group yet, remove it from fetched velp groups
             $scope.velpGroups.some(function (g) {
                 if (g.name === default_velp_group.name && default_velp_group.id < 0) {
@@ -115,9 +116,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             // Get personal velp group data
             $http.get('/get_default_personal_velp_group').success(function (data) {
                 default_personal_velp_group = {id: data.id, name: data.name};
+
                 if (data.created_new_group) {
                     $scope.velpGroups.push(data);
                 }
+
                 if (!default_velp_group.edit_access) {
                     $scope.newVelp.velp_groups.push(default_personal_velp_group.id);
                     $scope.velpGroups.some(function (g) {
@@ -125,7 +128,23 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                             g.selected = true;
                     });
                 }
+
+                if (default_personal_velp_group.id < 0)
+                    $scope.velpGroups.push(default_velp_group);
+
+                $scope.velpGroups.forEach(function(g) {
+                    if (g.id === default_personal_velp_group.id || g.id === default_velp_group.id){
+                        g.show = true;
+                        g.default = true;
+                        console.log("onnistuuko");
+                    }
+                });
+
             });
+
+            if (default_velp_group.id < 0)
+                $scope.velpGroups.push(default_velp_group);
+
 
             console.log("VELP GROUPS");
             console.log($scope.velpGroups);
@@ -187,7 +206,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             $scope.velpGroups.forEach(function (g) {
                 g.show = false;
                 for (var i = 0; i < docSelections.length; i++) {
-                    console.log(typeof docSelections[i].selected);
                     if (docSelections[i].id === g.id && docSelections[i].selected) {
                         g.show = true;
                         break;
@@ -198,23 +216,25 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         });
 
         $http.get('/{0}/get_velp_group_default_selections'.replace('{0}', doc_id)).success(function (data) {
-
             $scope.groupDefaults = data;
 
             var docDefaults = $scope.groupDefaults["0"];
 
             console.log("DEFAULTS: ");
             console.log($scope.groupDefaults);
+            console.log(default_personal_velp_group);
 
             $scope.velpGroups.forEach(function (g) {
 
-                for (var i = 0; i < $scope.groupDefaults.length; i++) {
-                    if ($scope.groupDefaults[i].id === g.id && $scope.groupDefaults[i].selected) {
+                for (var i = 0; i < docDefaults.length; i++) {
+                    console.log(g);
+                    if (docDefaults[i].id === g.id && docDefaults[i].selected) {
                         g.default = true;
                         break;
                     }
                 }
             });
+
         });
     });
 
@@ -315,6 +335,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         } else if ($scope.newVelp.velp_groups.length > 0) {
             addNewVelpToDatabase();
         }
+
+        $scope.updateVelpList();
     };
 
     var addNewVelpToDatabase = function () {
@@ -456,6 +478,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                     $scope.velpGroups.push(new_default_velp_group);
 
                 default_velp_group = new_default_velp_group;
+
                 method();
             });
         }
@@ -531,9 +554,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             if ($scope.selectedElement !== null && $scope.groupAttachment.target_type === 1) {
                 g.show = $scope.isVelpGroupShownHere(g.id, $scope.selectedElement.id);
                 g.default = $scope.isVelpGroupDefaultHere(g.id, $scope.selectedElement.id);
-            } else if ($scope.groupAttachment.target_type === 0) {
+            }
+            else {
                 g.show = $scope.isVelpGroupShownHere(g.id, 0);
-                g.default = $scope.isVelpGroupDefaultHere(g.id, $scope.selectedElement.id);
+                g.default = $scope.isVelpGroupDefaultHere(g.id, 0);
             }
         });
     };
@@ -664,6 +688,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         }
         group.selection_type = type;
 
+        var found = false;
+
         if (type === "show") {
             $scope.makePostRequest("/{0}/change_selection".replace('{0}', doc_id), group, function (json) {
                 console.log(json);
@@ -673,8 +699,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                 $scope.groupSelections[group.target_id] = [];
 
             var groups = $scope.groupSelections[group.target_id];
-            var found = false;
-            for (var i = 0; i < groups.length; ++i) {
+            for (var i = 0; i < groups.length; i++) {
                 if (groups[i].id === group.id) {
                     groups[i].selected = group.show;
                     found = true;
@@ -682,7 +707,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                 }
             }
             if (!found) {
-                $scope.groupSelections[group.target_id].push({id: group.id, selected: group.show})
+                $scope.groupSelections[group.target_id].push({id: group.id, selected: group.show});
             }
         }
         else if (type === "default") {
@@ -694,9 +719,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
 
             var defGroups = $scope.groupDefaults[group.target_id];
             found = false;
-            for (i = 0; i < defGroups.length; ++i) {
-                if (defGroups[i].id === group.id) {
-                    defGroups[i].selected = group.show;
+            for (var j = 0; j < defGroups.length; j++) {
+                if (defGroups[j].id === group.id) {
+                    defGroups[j].selected = group.show;
                     found = true;
                     break;
                 }
