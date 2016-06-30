@@ -327,6 +327,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                 var oldGroupIndex = $scope.newVelp.velp_groups.indexOf(old_default_group.id); // -1 = old
                 if (oldGroupIndex >= 0)
                     $scope.newVelp.velp_groups.splice(oldGroupIndex, 1);
+
+
                 $scope.newVelp.velp_groups.push(default_velp_group.id);
 
                 addNewVelpToDatabase();
@@ -470,6 +472,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         if (default_velp_group.edit_access) {
             $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), null, function (json) {
                 var new_default_velp_group = json.data;
+                new_default_velp_group.default = true;
 
                 var index = $scope.velpGroups.indexOf(default_velp_group);
                 $scope.velpGroups.splice(index, 1);
