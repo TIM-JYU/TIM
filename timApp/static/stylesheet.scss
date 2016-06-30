@@ -73,6 +73,9 @@ a .glyphicon {
     }
     .parContent {
         text-align: $body-text-align;
+        @media (max-width: $screen-xs-max) {
+            text-align: $body-text-align-xs;
+        }
         font-size: 16px;
 
         & > h1 {
