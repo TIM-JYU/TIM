@@ -384,6 +384,7 @@ p.caption {
 
     @media (max-width: $screen-xs-max) {
         left: 0;
+        width: $editline-width / 4;
     }
 
     &:hover, &.menuopen {
