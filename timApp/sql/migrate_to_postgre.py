@@ -6,13 +6,15 @@ from typing import Optional, Dict
 
 import psycopg2
 
+from routes.logger import log_info
+
 
 def perform_migration(sqlite_path: str, postgre_path: str):
     sq3 = sqlite3.connect(sqlite_path)
     pg = psycopg2.connect(postgre_path)
     sq3c = sq3.cursor()
     pgc = pg.cursor()
-    print('Migration from SQLite3 to PostgreSQL started.')
+    log_info('Migration from SQLite3 to PostgreSQL started.')
 
     migrate_table(sq3c, pgc, 'user', 'useraccount')
     migrate_table(sq3c, pgc, 'accesstype')
@@ -57,7 +59,7 @@ def perform_migration(sqlite_path: str, postgre_path: str):
     sq3.close()
     os.rename(sqlite_path, sqlite_path + '.bak')
     pg.commit()
-    print('Migration finished.')
+    log_info('Migration finished.')
 
 
 def migrate_table(sq3c, pgc,
@@ -66,7 +68,7 @@ def migrate_table(sq3c, pgc,
                   placeholders: Optional[Dict[str, str]] = None,
                   id_column: Optional[str] = 'id',
                   extra_clause=''):
-    print('Migrating table: {}...'.format(old_table))
+    log_info('Migrating table {}...'.format(old_table))
     if new_table is None:
         new_table = old_table
     sq3c.execute("SELECT * FROM {} {}".format(old_table, extra_clause))
@@ -89,7 +91,7 @@ def migrate_table(sq3c, pgc,
         i += 1
     if id_column is not None:
         update_seq_val(pgc, new_table, id_column)
-    print('Migrated table {} ({} rows)'.format(old_table, i))
+    log_info('Migrated table {} ({} rows)'.format(old_table, i))
 
 
 def update_seq_val(pgc, tablename, id_col_name='id'):
