@@ -8,7 +8,7 @@ import time
 
 
 class Readings(TimDbBase):
-    def getReadings(self, usergroup_id: int, doc: Document) -> List[dict]:
+    def get_readings(self, usergroup_id: int, doc: Document) -> List[dict]:
         """Gets the reading info for a document for a user.
 
         :param doc: The document for which to get the readings.
@@ -20,7 +20,7 @@ class Readings(TimDbBase):
         return self.resultAsDictionary(self.db.execute("""SELECT par_id, doc_id, par_hash, timestamp FROM ReadParagraphs
                            WHERE doc_id IN (%s) AND UserGroup_id = ?""" % template, list(ids) + [usergroup_id]))
 
-    def setAsRead(self, usergroup_id: int, doc: Document, par: DocParagraph, commit: bool=True):
+    def mark_read(self, usergroup_id: int, doc: Document, par: DocParagraph, commit: bool=True):
         cursor = self.db.cursor()
         # Remove previous markings for this paragraph to reduce clutter
         cursor.execute(
@@ -36,11 +36,11 @@ class Readings(TimDbBase):
         if commit:
             self.db.commit()
 
-    def setAllAsRead(self, usergroup_id: int,
-                     doc: Document,
-                     commit: bool=True):
+    def mark_all_read(self, usergroup_id: int,
+                      doc: Document,
+                      commit: bool=True):
         for i in doc:
-            self.setAsRead(usergroup_id, doc, i, commit=False)
+            self.mark_read(usergroup_id, doc, i, commit=False)
         if commit:
             self.db.commit()
 

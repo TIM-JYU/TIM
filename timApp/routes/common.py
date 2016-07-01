@@ -308,7 +308,7 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
 
     group = timdb.users.get_personal_usergroup(user) if user is not None else timdb.users.get_anon_group_id()
     if user is not None:
-        readings = timdb.readings.getReadings(group, doc)
+        readings = timdb.readings.get_readings(group, doc)
         for r in readings:
             key = (r['par_id'], r['doc_id'])
             pars = pars_dict.get(key)
