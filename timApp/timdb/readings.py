@@ -45,7 +45,17 @@ class Readings(TimDbBase):
             self.db.commit()
 
     def copy_readings(self, src_par: DocParagraph, dest_par: DocParagraph, commit: bool = False):
+        if str(src_par.doc.doc_id) == str(dest_par.doc.doc_id) and str(src_par.get_id()) == str(dest_par.get_id()):
+            return
+
         cursor = self.db.cursor()
+
+        cursor.execute(
+            """
+DELETE FROM ReadParagraphs WHERE doc_id = ? AND par_id = ? AND UserGroup_id IN
+(SELECT UserGroup_id FROM ReadParagraphs WHERE doc_id = ? AND par_id = ?)
+            """, [dest_par.doc.doc_id, dest_par.get_id(), src_par.doc.doc_id, src_par.get_id()]
+        )
 
         cursor.execute(
             """

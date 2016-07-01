@@ -72,14 +72,18 @@ def paste_from_clipboard(doc_id):
     src_doc = None
     parrefs = clip.read(as_ref=True, force_parrefs=True)
     for (src_par_dict, dest_par) in zip(parrefs, pars):
-        src_docid = src_par_dict['attrs']['rd']
-        src_parid = src_par_dict['attrs']['rp']
-        par_id = dest_par.get_id()
-        if (doc_id, par_id) != (src_docid, src_parid):
-            if src_doc is None or str(src_doc.doc_id) != str(src_docid):
-                src_doc = Document(src_docid)
-            src_par = DocParagraph.get_latest(src_doc, src_parid)
-            timdb.readings.copy_readings(src_par, dest_par)
+        try:
+            src_docid = int(src_par_dict['attrs']['rd'])
+            src_parid = int(src_par_dict['attrs']['rp'])
+            par_id = dest_par.get_id()
+            if (doc_id, par_id) != (src_docid, src_parid):
+                if src_doc is None or str(src_doc.doc_id) != str(src_docid):
+                    src_doc = Document(src_docid)
+                src_par = DocParagraph.get_latest(src_doc, src_parid)
+                timdb.readings.copy_readings(src_par, dest_par)
+
+        except ValueError:
+            pass
 
     timdb.commit()
     return par_response(pars, doc)
