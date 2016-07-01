@@ -134,16 +134,5 @@
             <p ng-show="studentTable.length == 0">No students</p>
             {% endraw %}
         </uib-tab>
-        {% if rights and rights.editable %}
-            <uib-tab>
-                <uib-tab-heading>
-                    <i class="glyphicon glyphicon-pencil"></i>
-                </uib-tab-heading>
-                <button class="timButton parEditButton" ng-model="model.editState" uib-btn-radio="'par'" uncheckable="true" title="Toggle paragraph edit mode">
-                    <i class="glyphicon glyphicon-minus"></i>
-                    <i class="glyphicon glyphicon-pencil"></i>
-                </button>
-            </uib-tab>
-        {% endif %}
     </uib-tabset>
 </div>

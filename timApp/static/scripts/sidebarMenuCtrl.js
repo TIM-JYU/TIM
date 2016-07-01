@@ -95,9 +95,6 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
                     console.log("Couldn't fetch the questions");
                 });
         };
-
-        $scope.model = {editState: $window.editMode};
-        $scope.$watch('model.editState', $window.watchEditMode);
     }
 ])
 ;
