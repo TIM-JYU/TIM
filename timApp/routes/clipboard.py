@@ -67,14 +67,14 @@ def paste_from_clipboard(doc_id):
     elif par_before == '' and par_after != '':
         pars = clip.paste_after(doc, par_after, as_ref)
     else:
-        abort(400, 'Missing required parameter in request: par_before or par_after (not both)')
+        return abort(400, 'Missing required parameter in request: par_before or par_after (not both)')
 
     src_doc = None
     parrefs = clip.read(as_ref=True, force_parrefs=True)
     for (src_par_dict, dest_par) in zip(parrefs, pars):
         try:
             src_docid = int(src_par_dict['attrs']['rd'])
-            src_parid = int(src_par_dict['attrs']['rp'])
+            src_parid = src_par_dict['attrs']['rp']
             par_id = dest_par.get_id()
             if (doc_id, par_id) != (src_docid, src_parid):
                 if src_doc is None or str(src_doc.doc_id) != str(src_docid):
