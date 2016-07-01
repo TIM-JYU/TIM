@@ -86,6 +86,22 @@ class Notes(TimDbBase):
 
         self.db.commit()
 
+    def move_notes(self, src_par: DocParagraph, dest_par: DocParagraph, commit: bool = True):
+        if str(src_par.doc.doc_id) == str(dest_par.doc.doc_id) and str(src_par.get_id()) == str(dest_par.get_id()):
+            return
+
+        """Moves all notes from one paragraph to another.
+        :param src_par: Source paragraph
+        :param dest_par: Destination paragraph
+        :param commit Whether to commit changes to database
+        """
+        cursor = self.db.cursor()
+        cursor.execute("UPDATE UserNotes SET doc_id = ?, par_id = ? WHERE doc_id = ? AND par_id = ?",
+                       [dest_par.doc.doc_id, dest_par.get_id(), src_par.doc.doc_id, src_par.get_id()])
+
+        if commit:
+            self.db.commit()
+
     def deleteNote(self, note_id: int):
         """Deletes a note.
 
@@ -146,3 +162,4 @@ class Notes(TimDbBase):
                                 'WHERE id = ?', [note['html'], note['id']])
                 self.db.commit()
         return result
+

@@ -56,10 +56,12 @@ def paste_from_clipboard(doc_id):
     timdb = getTimDb()
     doc = Document(doc_id)
     clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
+    meta = clip.read_metadata()
+    was_cut = meta.get('last_action') == 'cut'
 
-    if clip.read(as_ref=False) is None:
+    if meta.get('empty', True):
         abort(400, 'The clipboard is empty.')
-    if as_ref and clip.read_metadata().get('disable_ref'):
+    if as_ref and meta.get('disable_ref'):
         abort(400, 'The contents of the clipboard cannot be pasted as a reference.')
 
     if par_before != '' and par_after == '':
@@ -81,6 +83,8 @@ def paste_from_clipboard(doc_id):
                     src_doc = Document(src_docid)
                 src_par = DocParagraph.get_latest(src_doc, src_parid)
                 timdb.readings.copy_readings(src_par, dest_par)
+                if was_cut:
+                    timdb.notes.move_notes(src_par, dest_par)
 
         except ValueError:
             pass
