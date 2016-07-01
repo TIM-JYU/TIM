@@ -153,7 +153,7 @@ class LectureAnswer(db.Model):
     __tablename__ = 'lectureanswer'
     answer_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)  # NOTE Added foreign key
-    question_id = db.Column(db.Integer, db.ForeignKey('question.question_id'), nullable=False)  # NOTE Added foreign key
+    question_id = db.Column(db.Integer, db.ForeignKey('askedquestion.asked_id'), nullable=False)  # NOTE Added foreign key
     lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'), nullable=False)  # NOTE Added foreign key
     answer = db.Column(db.Text, nullable=False)
     answered_on = db.Column(db.DateTime, nullable=False)

@@ -54,7 +54,7 @@ def perform_migration(sqlite_path: str, postgre_path: str):
     migrate_table(sq3c, pgc, 'version')
     migrate_table(sq3c, pgc, 'lectureanswer', id_column='answer_id',
                   placeholders={'answered_on': "to_timestamp(%s, 'YYYY-MM-DD HH24:MI:SS:US')"},
-                  extra_clause='WHERE question_id IN (SELECT question_id FROM question WHERE doc_id IN (SELECT id FROM block)) '
+                  extra_clause='WHERE question_id IN (SELECT asked_id FROM askedquestion WHERE doc_id IN (SELECT id FROM block)) '
                                'AND lecture_id IN (SELECT lecture_id FROM lecture WHERE doc_id IN (SELECT id FROM block))')
     sq3.close()
     os.rename(sqlite_path, sqlite_path + '.bak')
