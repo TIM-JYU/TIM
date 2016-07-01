@@ -123,22 +123,33 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
 
                 if (!default_velp_group.edit_access) {
                     $scope.newVelp.velp_groups.push(default_personal_velp_group.id);
-                    $scope.velpGroups.some(function (g) {
+                    /*$scope.velpGroups.some(function (g) {
                         if (g.id === default_personal_velp_group.id)
                             g.selected = true;
-                    });
+                    });*/
                 }
 
                 if (default_personal_velp_group.id < 0)
                     $scope.velpGroups.push(default_velp_group);
 
+                /*
                 $scope.velpGroups.forEach(function(g) {
-                    if (g.id === default_personal_velp_group.id || g.id === default_velp_group.id){
-                        g.show = true;
-                        g.default = true;
-                        console.log("onnistuuko");
+                    if (g.id === default_personal_velp_group.id){
+                        if (typeof g.default === UNDEFINED){
+                            g.default = true;
+                        }
+
+                    } else if (g.id === default_velp_group.id){
+
+                        if (typeof g.default === UNDEFINED){
+                            g.default = true;
+                        }
+
+                        //g.show = true;
+                        //g.default = true;
                     }
                 });
+                */
 
             });
 
@@ -707,6 +718,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                 console.log(json);
             });
 
+            $scope.groupSelections[group.target_id] = [];
+
+                $scope.velpGroups.forEach(function (g) {
+                    $scope.groupSelections[group.target_id].push({id: g.id, selected: g.show});
+                });
+
+
+            /*
             if (!$scope.groupSelections.hasOwnProperty(group.target_id))
                 $scope.groupSelections[group.target_id] = [];
 
@@ -721,12 +740,21 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             if (!found) {
                 $scope.groupSelections[group.target_id].push({id: group.id, selected: group.show});
             }
+            */
         }
         else if (type === "default") {
             $scope.makePostRequest("/{0}/change_selection".replace('{0}', doc_id), group, function (json) {
                 console.log(json);
             });
-            if (!$scope.groupDefaults.hasOwnProperty(group.target_id))
+
+            $scope.groupDefaults[group.target_id] = [];
+
+            $scope.velpGroups.forEach(function (g) {
+                $scope.groupDefaults[group.target_id].push({id: g.id, selected: g.default});
+            });
+
+
+            /*if (!$scope.groupDefaults.hasOwnProperty(group.target_id))
                 $scope.groupDefaults[group.target_id] = [];
 
             var defGroups = $scope.groupDefaults[group.target_id];
@@ -741,9 +769,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             if (!found) {
                 $scope.groupDefaults[group.target_id].push({id: group.id, selected: group.default});
             }
+            */
         }
 
-        //$scope.updateVelpList();
+        $scope.updateVelpList();
     };
 
     /**
@@ -825,14 +854,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         var targetID;
         $scope.groupAttachment.target_type = parseInt($scope.groupAttachment.target_type);
 
-        if ($scope.groupAttachment.target_type === 1) {
+        if ($scope.groupAttachment.target_type === 1 && $scope.selectedElement !== null) {
             targetID = $scope.selectedElement.id;
         } else {
             targetID = "0";
         }
 
         $scope.groupSelections[targetID] = JSON.parse(JSON.stringify($scope.groupDefaults[targetID]));
-
+        console.log($scope.groupDefaults[targetID] );
         $scope.makePostRequest("/{0}/reset_target_area_selections_to_defaults".replace('{0}', doc_id), {'target_id': targetID}, function (json) {
             console.log(json);
             $scope.updateVelpList();
