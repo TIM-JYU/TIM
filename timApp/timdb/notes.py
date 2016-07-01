@@ -1,4 +1,3 @@
-from sqlite3 import Connection
 from typing import List
 
 from documentmodel.docparagraph import DocParagraph
@@ -24,7 +23,7 @@ class Notes(TimDbBase):
             tags.append("unclear")
         return tags
 
-    def hasEditAccess(self, usergroup_id: int, note_id: int) -> bool:
+    def has_edit_access(self, usergroup_id: int, note_id: int) -> bool:
         """Checks whether the specified usergroup has access to the specified note.
 
         :param usergroup_id: The usergroup id for which to check access.
@@ -40,8 +39,8 @@ class Notes(TimDbBase):
         row = cursor.fetchone()
         return row is not None and int(row[0]) == usergroup_id
 
-    def addNote(self, usergroup_id: int, doc: Document, par: DocParagraph, content: str, access: str,
-                tags: List[str], commit: bool=True):
+    def add_note(self, usergroup_id: int, doc: Document, par: DocParagraph, content: str, access: str,
+                 tags: List[str], commit: bool=True):
         """Adds a note to the document.
 
         :param commit:
@@ -66,8 +65,8 @@ class Notes(TimDbBase):
         if commit:
             self.db.commit()
 
-    def modifyNote(self, note_id: int, new_content: str,
-                   access: str, new_tags: List[str]):
+    def modify_note(self, note_id: int, new_content: str,
+                    access: str, new_tags: List[str]):
         """Modifies an existing note.
 
         :param note_id: The id of the note.
@@ -102,7 +101,7 @@ class Notes(TimDbBase):
         if commit:
             self.db.commit()
 
-    def deleteNote(self, note_id: int):
+    def delete_note(self, note_id: int):
         """Deletes a note.
 
         :param note_id: The id of the note.
@@ -117,7 +116,7 @@ class Notes(TimDbBase):
 
         self.db.commit()
 
-    def getNotes(self, usergroup_id: int, doc: Document, include_public=True) -> List[dict]:
+    def get_notes(self, usergroup_id: int, doc: Document, include_public=True) -> List[dict]:
         """Gets all notes for a document a particular user has access to.
 
         :param usergroup_id: The usergroup id.
@@ -141,7 +140,6 @@ class Notes(TimDbBase):
                                JOIN User ON UserGroupMember.User_id = User.id
                                WHERE (UserNotes.UserGroup_id = ? %s) AND doc_id IN (%s)""" % (include_public_sql, template),
                             [usergroup_id] + list(ids)))
-
 
         return self.process_notes(result)
 

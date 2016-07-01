@@ -320,7 +320,7 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
                         # elif is here so not to overwrite an existing 'read' marking
                         p['status'] = 'modified'
 
-    notes = timdb.notes.getNotes(group, doc)
+    notes = timdb.notes.get_notes(group, doc)
 
     for n in notes:
         key = (n['par_id'], n['doc_id'])
