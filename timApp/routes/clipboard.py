@@ -126,3 +126,12 @@ def show_clipboard():
     pars = [DocParagraph.from_dict(doc, par) for par in clip.read() or []]
     return par_response(pars, doc, edit_window=True)
 
+
+@clipboard.route('/clipboardstatus', methods=['GET'])
+def get_clipboard_status():
+    verifyLoggedIn()
+    timdb = getTimDb()
+    clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
+    status = clip.read_metadata()
+    return jsonResponse(status)
+

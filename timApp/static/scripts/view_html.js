@@ -1169,6 +1169,7 @@ timApp.controller("ViewCtrl", [
         }, true);
 
         sc.showOptionsWindow = function (e, $pars, coords) {
+            sc.updateClipboardStatus();
             $pars.children('.editline').addClass('menuopen');
             sc.showPopupMenu(e, $pars, coords,
                 {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'});
@@ -1753,7 +1754,26 @@ timApp.controller("ViewCtrl", [
             ];
         };
 
+        sc.updateClipboardStatus = function() {
+            http.get('/clipboardstatus', {
+            }).success(function (data, status, headers, config) {
+                if (!'empty' in data || data.empty) {
+                    sc.allowPasteContent = false;
+                    sc.allowPasteRef = false;
+                } else {
+                    sc.allowPasteContent = true;
+                    sc.allowPasteRef = !('disable_ref' in data && data.disable_ref);
+                }
+            }).error(function (data, status, headers, config) {
+                $window.alert(data.error);
+                sc.allowPasteContent = false;
+                sc.allowPasteRef = false;
+            });
+        };
+        
+        
         sc.getPasteFunctions = function () {
+            sc.updateClipboardStatus();
             return [
                 {func: sc.pasteRefAbove, desc: 'Above, as a reference', show: sc.allowPasteRef},
                 {func: sc.pasteContentAbove, desc: 'Above, as content', show: sc.allowPasteContent},

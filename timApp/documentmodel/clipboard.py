@@ -42,7 +42,7 @@ class Clipboard:
             return os.path.join(self.path, 'ref-parcontent')
 
         def clear(self):
-            for name in (self.get_clipfilename(), self.get_reffilename(), self.get_parreffilename()):
+            for name in (self.get_clipfilename(), self.get_reffilename(), self.get_parreffilename(), self.get_metafilename()):
                 if os.path.isfile(name):
                     os.remove(name)
 
@@ -54,9 +54,11 @@ class Clipboard:
         def read_metadata(self) -> Dict[str, str]:
             try:
                 with open(self.get_metafilename(), 'rt', encoding='utf-8') as metafile:
-                    return json.loads(metafile.read())
+                    metadata = json.loads(metafile.read())
+                metadata['empty'] = False
+                return metadata
             except FileNotFoundError:
-                return {}
+                return {'empty': True}
 
         def read(self, as_ref: Optional[bool] = False, force_parrefs: Optional[bool] = False)\
                 -> Optional[List[Dict[str, str]]]:
