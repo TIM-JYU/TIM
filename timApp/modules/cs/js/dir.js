@@ -92,8 +92,8 @@ ConsolePWD.getPWD = function() {
 
 var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage","simcir","xml","r", "octave"];
-languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python","json","xml","r","octave"];
+languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage","simcir","xml","r", "octave","lua"];
+languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python","json","xml","r","octave","lua"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
@@ -276,7 +276,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 					"" : "") +   
                   '<div ng-if="upload" class="form-inline small">' +  
                   '<div class="form-group small">' +
-                  '    Upload image/file: <input type="file" ngf-select="onFileSelect($file)" >' +
+                  '    {{uploadstem}}: <input type="file" ngf-select="onFileSelect($file)" >' +
                   '            <span ng-show="file.progress >= 0 && !file.error"' +
                   '                  ng-bind="file.progress < 100 ? \'Uploading... \' + file.progress + \'%\' : \'Done!\'"></span>' +
                   '</div>' +
@@ -324,14 +324,14 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<p class="csRunSnippets" ng-if="buttons">' + // && viewCode">' +
 				  '<button ng-repeat="item in buttons" ng-click="addText(item);">{{addTextHtml(item)}}</button> &nbsp;&nbsp;' +
                   '</p>' +
-                  '<div class="csRunMenuArea">'+
+                  '<div class="csRunMenuArea" ng-if="!forcedupload">'+
 				  '<p class="csRunMenu" >' +
 				  '<button ng-if="isRun"  ng-disabled="isRunning" ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
 				  '<button ng-if="isTest" ng-disabled="isRunning" ng-click="runTest();">Test</button>&nbsp&nbsp'+
 				  '<button ng-if="isUnitTest" ng-disabled="isRunning" ng-click="runUnitTest();">UTest</button>&nbsp&nbsp'+
 				  '<span ng-if="isDocument"><a href="" ng-disabled="isRunning" ng-click="runDocument();">{{docLink}}</a>&nbsp&nbsp</span>'+
-				  '<a href="" ng-if="!attrs.nocode && (file || attrs.program)" ng-click="showCode();">{{showCodeLink}}</a>&nbsp&nbsp'+
-				  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>' +
+				  '<a href="" ng-if="!nocode && (file || attrs.program)" ng-click="showCode();">{{showCodeLink}}</a>&nbsp&nbsp'+
+				  '<a href="" ng-if="muokattu && showReset" ng-click="initCode();">{{resetText}}</a>' +
 				  ' <a href="" ng-if="toggleEditor" ng-click="hideShowEditor();">{{toggleEditorText[noeditor?0:1]}}</a>' +
 				  ' <a href="" ng-if="!noeditor" ng-click="showOtherEditor();">{{editorText[editorModeIndecies[editorMode+1]]}}</a>' +
                   '</p>'+
@@ -360,7 +360,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  // '<a ng-if="docURL" class="docurl" href="{{docURL}}" target="csdocument" >Go to document</a>' +
 				  '<div ng-if="docURL" class="docurl">'+
 				  '<p align="right" style="position: absolute; margin-left: 790px;"><a ng-click="closeDocument()" >X</a></p>' +
-				  '<iframe width="800" height="600"  ng-src="{{docURL}}" target="csdocument" />' +
+				  '<iframe width="800" height="600"  ng-src="{{docURL}}" target="csdocument" allowfullscreen/>' +
 				  '</div>' +
 				  //(t == "jypeli" ? '<img  class="grconsole" ng-src="{{imgURL}}" alt=""  ng-if="runSuccess"  />' : "") +
                   //  '<div class="userlist" tim-draggable-fixed="" style="top: 39px; right: 408px;">' +
@@ -424,6 +424,15 @@ csApp.directiveFunction = function(t,isInput) {
             
 			csApp.set(scope,attrs,"type","cs");
             var rt = languageTypes.getRunType(scope.type,false);
+            var iupload = false;
+            var inoeditor = false;
+            var inocode = false;
+            if ( scope.type === "upload" ) {
+                iupload = true;
+                inoeditor = true;
+                inocode = true;
+                scope.forcedupload = true;
+            }
             scope.isText = rt == "text" || rt == "xml" || rt == "css";
             scope.isSage = languageTypes.getRunType(scope.type,false) == "sage";
             scope.isSimcir = t === "simcir";
@@ -431,7 +440,9 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"file");
 			csApp.set(scope,attrs,"viewCode",false);
 			csApp.set(scope,attrs,"filename");
-			csApp.set(scope,attrs,"upload");
+			csApp.set(scope,attrs,"upload",iupload); if ( scope.attrs.uploadbycode ) scope.upload = true;
+			csApp.set(scope,attrs,"uploadstem");
+			csApp.set(scope,attrs,"nocode",inocode);
 			csApp.set(scope,attrs,"lang");
 			csApp.set(scope,attrs,"width");
 			csApp.set(scope,attrs,"height");
@@ -466,7 +477,7 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"canvasWidth",700);
             csApp.set(scope,attrs,"canvasHeight",300);
             csApp.set(scope,attrs,"button","");
-            csApp.set(scope,attrs,"noeditor",scope.isSimcir ? "True" : false);
+            csApp.set(scope,attrs,"noeditor",scope.isSimcir ? "True" : inoeditor);
             csApp.set(scope,attrs,"norun",false);
             csApp.set(scope,attrs,"normal",english ? "Normal": "Tavallinen");
             csApp.set(scope,attrs,"highlight","Highlight");
@@ -524,6 +535,7 @@ csApp.directiveFunction = function(t,isInput) {
 
             scope.showInput = (scope.type.indexOf("input") >= 0);
             scope.showArgs = (scope.type.indexOf("args") >= 0);
+            if ( !scope.uploadstem ) scope.uploadstem = english ? "Upload image/file" : "Lataa kuva/tiedosto";
             scope.buttonText = english ? "Run": "Aja";
             if ( scope.type.indexOf("text") >= 0 || scope.isSimcir || scope.justSave ) { // || scope.isSage ) {
                 scope.isRun = true;
@@ -815,6 +827,21 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         console.log(file);
 
         if (file) {
+            if ( $scope.attrs.uploadbycode ) {
+                console.log("bycode");
+                var reader = new FileReader();
+                reader.onload = (function(theFile) {
+                    // showTrack(theFile.target.result,type);  
+                    // console.log(theFile.target.result);
+                    $scope.usercode = theFile.target.result;
+                  });
+                reader.readAsText(file);  
+
+                return;
+            }
+            
+            
+            
             $scope.ufile.progress = 0;
             $scope.ufile.error = null;
             $scope.uploadedFile = null;
@@ -852,12 +879,12 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         $scope.uploadedFile = file;
         $scope.uploadedType = type;
             var html = '<p class="smalllink"><a href="' + file +'">' + file + '</a> (' + type + ')</p>';
-        if (type.startsWith("image")) {
+        if (type.indexOf("image") == 0) {
             html += '<img src="'+$scope.uploadedFile+'"/>';
             $scope.uploadresult = $sce.trustAsHtml(html);
         } else {
             html += '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:900px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;"  width:1200px>';
-            html += '<iframe width="700" height="900"  src="' + file +'" target="csdocument" />';
+            html += '<iframe width="700" height="900"  src="' + file +'" target="csdocument" allowfullscreen/>';
             //html += '<embed  width="800" height="16000"  src="' + file +'" />';
             //html += '<object width="800" height="600"   data="' + file +'" type="' + type +'"  ></object>';
             html += '</div>';
@@ -1631,7 +1658,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         var aceHtml = '<div class="no-popup-menu"><div ng-show="mode" ui-ace="{onLoad:aceLoaded,  mode: \'{{mode}}\', require: [\'ace/ext/language_tools\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
         // var aceHtml = '<div ng-show="mode" ui-ace="{  mode: \'{{mode}}\',    require: [\'/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
                    // ' style="left:-6em; height:{{rows*1.17}}em;" class="csRunArea csEditArea" ng-hide="noeditor"  ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
-                   ' class="csRunArea csEditArea" ng-hide="noeditor"  ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
+                   ' style="left:-1em; width: 105% !important;" class="csRunArea csEditArea" ng-hide="noeditor"  ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
                    /*
                    '<div style="right:0px;">'+
                    '<button ng-click="moveCursor(-1, 0);">&#x21d0;</button>'+

@@ -888,6 +888,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 pngname = "/csimages/%s.png" % rndname
                 imgsource = get_imgsource(query)
 
+            if ttype == "lua":
+                csfname = "/tmp/%s/%s.lua" % (basename, filename)
+                exename = csfname
+                pure_exename = "./%s.lua" % filename
+                fileext = "lua"
+                pngname = "/csimages/%s.png" % rndname
+                imgsource = get_imgsource(query)
+
             if ttype == "octave":
                 csfname = "/tmp/%s/%s.oct" % (basename, filename)
                 exename = csfname
@@ -1168,6 +1176,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "c++":
                     cmdline = "g++ -std=c++11 -Wall %s %s -o %s -lm" % (opt, csfname, exename)
                 elif ttype == "py":
+                    cmdline = ""
+                elif ttype == "lua":
                     cmdline = ""
                 elif ttype == "clisp":
                     cmdline = ""
@@ -1593,6 +1603,18 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "py":
                     print("py: ", exename)
                     code, out, err, pwd = run2(["python3", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
+                                               uargs=userargs)
+                    if imgsource and pngname:
+                        image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
+                        if e: err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
+                        # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
+                        print(is_optional_image, image_ok)
+                        remove(imgsource)
+                        if image_ok: web["image"] = "/csimages/cs/" + rndname + ".png"
+                        
+                elif ttype == "lua":
+                    print("lua: ", exename)
+                    code, out, err, pwd = run2(["lua", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                                uargs=userargs)
                     if imgsource and pngname:
                         image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)

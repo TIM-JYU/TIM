@@ -13,7 +13,12 @@ docker rm $dockername > /dev/null 2>&1
 
 if [ "$2" != "p" ]
 then
-sudo apt-get install acl
+
+if hash setfacl; then
+    echo "ACL ok"
+else
+    sudo apt-get install -y acl
+fi
 sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp
 
 
