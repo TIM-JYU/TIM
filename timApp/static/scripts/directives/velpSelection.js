@@ -454,6 +454,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                     console.log(json);
                 });
             });
+
+
         } else if ($scope.velpToEdit.velp_groups.length > 0) {
             $scope.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), $scope.velpToEdit, function (json) {
                 console.log(json);
@@ -467,6 +469,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                 break;
             }
         }
+
+        $scope.resetEditVelp();
     };
 
     $scope.generateDefaultVelpGroup = function (method) {
@@ -526,6 +530,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             id: -2,
             velp_groups: $scope.newVelp.velp_groups
         };
+    };
+
+    $scope.resetEditVelp = function(){
+            $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: []};
     };
 
     /**

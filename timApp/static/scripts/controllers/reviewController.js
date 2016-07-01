@@ -581,6 +581,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param velp velp selected in velpSelection directive
      */
     $scope.useVelp = function (velp) {
+console.log("toimiiko");
 
         if ($scope.velpToEdit.id >= 0) return;
 
