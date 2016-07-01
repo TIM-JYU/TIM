@@ -350,10 +350,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             language_id: "FI",
             icon_id: null,
             valid_until: null,
-            velp_groups: $scope.newVelp.velp_groups
+            velp_groups: JSON.parse(JSON.stringify($scope.newVelp.velp_groups))
 
         };
         console.log(velpToAdd);
+
         $scope.makePostRequest("/add_velp", velpToAdd, function (json) {
             velpToAdd.id = parseInt(json.data);
             console.log(velpToAdd);
@@ -682,7 +683,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
 
         $scope.groupAttachment.target_type = parseInt($scope.groupAttachment.target_type);
 
-        if ($scope.groupAttachment.target_type === 1) {
+        if ($scope.groupAttachment.target_type === 1 && $scope.selectedElement !== null) {
             group.target_id = $scope.selectedElement.id;
             group.target_type = 1;
         } else {
@@ -747,7 +748,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
 
         var targetID, targetType;
 
-        if ($scope.groupAttachment.target_type === 1) {
+        if ($scope.groupAttachment.target_type === 1 && $scope.selectedElement !== null) {
             targetID = $scope.selectedElement.id;
             targetType = 1;
         } else {
@@ -756,18 +757,26 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         }
 
         if (type === "show") {
+            $scope.groupSelections[targetID] = [];
             if (!$scope.settings.selectedAllShows) {
-                $scope.groupSelections[targetID] = [];
+
+                $scope.velpGroups.forEach(function (g) {
+                    $scope.groupSelections[targetID].push({id: g.id, selected: false});
+                });
             } else {
                 $scope.velpGroups.forEach(function (g) {
-                    $scope.groupSelections[targetID].push(g.id);
+                    $scope.groupSelections[targetID].push({id: g.id, selected: true});
                 });
             }
+
+            console.log("SHOWS: target ID: " + targetID + " target type: " + targetType);
 
             $scope.makePostRequest("/{0}/change_all_selections".replace('{0}', doc_id), {
                 'target_id': targetID, 'target_type': targetType, 'selection': $scope.settings.selectedAllShows,
                 'selection_type': type
             }, function (json) {
+                console.log("Select all");
+                console.log($scope.settings.selectedAllShows);
                 console.log(json);
             });
 
@@ -775,13 +784,20 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         }
         else if (type === "default") {
             console.log("DEFAULT " + $scope.settings.selectedAllDefault);
+            $scope.groupDefaults[targetID] = [];
+
             if (!$scope.settings.selectedAllDefault) {
-                $scope.groupDefaults[targetID] = [];
+                $scope.velpGroups.forEach(function (g) {
+                    $scope.groupDefaults[targetID].push({id: g.id, selected: false});
+                });
             } else {
-                $scope.groupDefaults[targetID] = [];
-                for (var i = 0; i < $scope.velpGroups.length; i++)
-                    $scope.groupDefaults[targetID].push($scope.velpGroups[i].id);
+
+                $scope.velpGroups.forEach(function (g) {
+                    $scope.groupDefaults[targetID].push({id: g.id, selected: true});
+                });
             }
+
+            console.log("DEFAULTS: target ID: " + targetID + " target type: " + targetType);
 
             $scope.makePostRequest("/{0}/change_all_selections".replace('{0}', doc_id), {
                 'target_id': targetID, 'target_type': targetType, 'selection': $scope.settings.selectedAllDefault,
