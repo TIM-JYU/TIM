@@ -53,8 +53,8 @@ class Readings(TimDbBase):
 
         cursor.execute(
             """
-DELETE FROM ReadParagraphs WHERE doc_id = ? AND par_id = ? AND UserGroup_id IN
-(SELECT UserGroup_id FROM ReadParagraphs WHERE doc_id = ? AND par_id = ?)
+DELETE FROM ReadParagraphs WHERE doc_id = %s AND par_id = %s AND UserGroup_id IN
+(SELECT UserGroup_id FROM ReadParagraphs WHERE doc_id = %s AND par_id = %s)
             """, [dest_par.doc.doc_id, dest_par.get_id(), src_par.doc.doc_id, src_par.get_id()]
         )
 
