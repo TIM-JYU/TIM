@@ -1,3 +1,4 @@
+import logging
 import os
 
 DEBUG = True
@@ -7,6 +8,8 @@ DATABASE = "postgresql://postgres@postgre:5432/tempdb_" + 'timtest'
 FILES_PATH = '/tmp/doctest_files'
 LOG_DIR = "/tmp/tim_logs"
 LOG_FILE = "timLog.log"
+LOG_LEVEL = logging.ERROR
+LOG_LEVEL_STDOUT = logging.ERROR
 LOG_PATH = os.path.join(LOG_DIR, LOG_FILE)
 TESTING = True
 TIM_NAME = 'timtest'
