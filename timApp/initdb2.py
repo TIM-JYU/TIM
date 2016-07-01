@@ -8,6 +8,7 @@ import sqlalchemy.exc
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from routes.logger import log_info
+from sql.migrate_to_postgre import perform_migration
 from tim_app import app, db
 from timdb import tempdb_models
 from timdb.tim_models import Version, AccessType
@@ -50,10 +51,13 @@ def initialize_database(create_docs=True):
     log_info('Database {} {}.'.format(app.config['TIM_NAME'], 'was created' if was_created else 'exists'))
     timdb = TimDb(db_path=db_path, files_root_path=files_root_path)
     db.create_all(bind='tim_main')
-    sess = db.create_scoped_session()
+    sess = timdb.session
     if sess.query(AccessType).count() > 0:
         log_info('Initial data already exists, skipping DB initialization.')
     else:
+        if os.path.exists(app.config['OLD_SQLITE_DATABASE']):
+            perform_migration(app.config['OLD_SQLITE_DATABASE'], app.config['DATABASE'])
+            return
         sess.add(AccessType(id=1, name='view'))
         sess.add(AccessType(id=2, name='edit'))
         sess.add(AccessType(id=3, name='teacher'))
@@ -79,9 +83,6 @@ def initialize_database(create_docs=True):
                                                       'Multiple choice plugin example',
                                                       anon_group)
         log_info('Database initialization done.')
-
-    sess.remove()
-    timdb.close()
 
 
 def update_database():

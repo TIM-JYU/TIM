@@ -71,9 +71,7 @@ class TimDb(object):
 
     def __del__(self):
         """Release the database connection when the object is deleted."""
-        if self.db is not None:
-            self.session.remove()
-            self.close()
+        self.close()
 
     def commit(self):
         """Commits any changes to the database."""

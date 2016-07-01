@@ -68,8 +68,9 @@ if param plugins; then
 fi
 
 if param postgre; then
+  docker volume create --name pg_data
   docker run --net=timnet -d --name postgre \
-  -v /home/docker/pg_data:/var/lib/postgresql/data \
+  -v pg_data:/var/lib/postgresql/data \
   -t -i postgres:9.5
   ./wait_for_postgre.sh
 fi
