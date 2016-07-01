@@ -51,17 +51,17 @@ def initialize_database(create_docs=True):
     timdb = TimDb(db_path=db_path, files_root_path=files_root_path)
     db.create_all(bind='tim_main')
     sess = db.create_scoped_session()
-    sess.add(AccessType(id=1, name='view'))
-    sess.add(AccessType(id=2, name='edit'))
-    sess.add(AccessType(id=3, name='teacher'))
-    sess.add(AccessType(id=4, name='manage'))
-    sess.add(AccessType(id=5, name='see answers'))
-    sess.add(Version(version_id=NEWEST_DB_VERSION))
-    try:
-        sess.commit()
-    except sqlalchemy.exc.IntegrityError:
+    if sess.query(AccessType).count() > 0:
         log_info('Initial data already exists, skipping DB initialization.')
     else:
+        sess.add(AccessType(id=1, name='view'))
+        sess.add(AccessType(id=2, name='edit'))
+        sess.add(AccessType(id=3, name='teacher'))
+        sess.add(AccessType(id=4, name='manage'))
+        sess.add(AccessType(id=5, name='see answers'))
+        sess.add(Version(version_id=NEWEST_DB_VERSION))
+        sess.commit()
+
         timdb.users.create_special_usergroups()
         anon_group = timdb.users.get_anon_group_id()
         timdb.users.create_user_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
@@ -78,11 +78,10 @@ def initialize_database(create_docs=True):
             timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
                                                       'Multiple choice plugin example',
                                                       anon_group)
-    finally:
-        sess.remove()
-        timdb.close()
+        log_info('Database initialization done.')
 
-    log_info('Database initialization done.')
+    sess.remove()
+    timdb.close()
 
 
 def update_database():
