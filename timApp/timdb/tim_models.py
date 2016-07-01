@@ -79,7 +79,7 @@ class AskedQuestion(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'askedquestion'
     asked_id = db.Column(db.Integer, primary_key=True)
-    lecture_id = db.Column(db.Integer, nullable=False)
+    lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'), nullable=False)  # NOTE Added foreign key
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'))  # NOTE Added foreign key
     par_id = db.Column(db.Text)
     asked_time = db.Column(db.DateTime, nullable=False)
@@ -206,7 +206,7 @@ class Question(db.Model):
     par_id = db.Column(db.Text, nullable=False)
     question_title = db.Column(db.Text, nullable=False)
     answer = db.Column(db.Text)
-    questionJson = db.Column(db.Text)
+    questionjson = db.Column(db.Text)
     points = db.Column(db.Text)
     expl = db.Column(db.Text)
 
@@ -226,7 +226,7 @@ class Translation(db.Model):
     __tablename__ = 'translation'
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     src_docid = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
-    lang_id = db.Column(db.Integer, nullable=False)
+    lang_id = db.Column(db.Text, nullable=False)
     doc_title = db.Column(db.Text)
 
 

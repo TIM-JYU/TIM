@@ -11,8 +11,8 @@ class UserTest(TimDbTest):
         gid = db.users.create_usergroup(name)
         gid2 = db.users.create_usergroup('dummy')
         db.users.add_user_to_group(gid, user_id)
-        test_block_id = db.documents.insertBlockToDb(name='test', owner_group_id=gid2, block_type=0)
-        test_block_id2 = db.documents.insertBlockToDb(name='test', owner_group_id=gid, block_type=0)
+        test_block_id = db.documents.insertBlockToDb(description='test', owner_group_id=gid2, block_type=0)
+        test_block_id2 = db.documents.insertBlockToDb(description='test', owner_group_id=gid, block_type=0)
 
         saved_user = db.users.get_user(user_id)
         self.assertEqual(saved_user['name'], name)

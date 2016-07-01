@@ -1,5 +1,6 @@
 from typing import List, Tuple
 
+from timdb.tim_models import Block
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 import os
 
@@ -37,17 +38,14 @@ class Files(TimDbBase):
         # TODO: Check that the file extension is allowed.
         # TODO: Use imghdr module to do basic validation of the file contents.
         # TODO: Should file name be unique among files?
-        cursor = self.db.cursor()
-        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (%s,%s,%s)',
-                       [file_filename, owner_group_id, blocktypes.FILE])
-        img_id = cursor.lastrowid
+        img_id = self.insertBlockToDb(file_filename, owner_group_id, blocktypes.FILE, commit=False)
         img_path = self.getFilePath(img_id, file_filename)
         os.makedirs(os.path.dirname(img_path))  # TODO: Set mode.
 
         with open(img_path, 'wb') as f:
             f.write(file_data)
 
-        self.db.commit()
+        self.session.commit()
         return img_id, file_filename
 
     def deleteFile(self, file_id: int):

@@ -26,12 +26,12 @@ class TimDbTest(unittest.TestCase):
             del_content(cls.test_files_path, onerror=change_permission_and_retry)
         else:
             os.mkdir(cls.test_files_path)
-        initdb2.initialize_temp_database(print_progress=False)
+        initdb2.initialize_temp_database()
         # Safety mechanism
         assert app.config['SQLALCHEMY_BINDS']['tim_main'] == "postgresql://postgres@postgre:5432/tempdb_" + 'timtest'
         db.session.commit()
         db.drop_all(bind='tim_main')
-        initdb2.initialize_database(create_docs=False, print_progress=False)
+        initdb2.initialize_database(create_docs=False)
         cls.dumbo = dumboclient.launch_dumbo()
 
     @classmethod

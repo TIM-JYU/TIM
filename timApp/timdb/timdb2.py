@@ -2,12 +2,12 @@
 Defines the TimDb database class.
 """
 
-from flask.ext.sqlalchemy import SQLAlchemy
+import sqlalchemy
 from sqlalchemy.orm import scoped_session
 
+from routes.logger import log_info
 from tim_app import db
 
-import psycopg2
 from timdb.notes import Notes
 from timdb.tim_models import Version
 from timdb.uploads import Uploads
@@ -46,16 +46,15 @@ class TimDb(object):
         self.blocks_path = os.path.join(self.files_root_path, 'blocks')
         for path in [self.blocks_path]:
             if not os.path.exists(path):
+                log_info('Creating directory: {}'.format(path))
                 os.makedirs(path)
         
-        # self.db = sqlite3.connect(db_path)
-        # self.db.row_factory = sqlite3.Row
-
         self.session = session
         if session is None:
             self.session = db.create_scoped_session()
 
-        self.db = psycopg2.connect(db_path)  # type: psycopg2.extensions.connection
+        engine = sqlalchemy.create_engine(db_path)
+        self.db = engine.connect().connection  # psycopg2.connect(db_path)  # type: psycopg2.extensions.connection
         self.notes = Notes(self.db, files_root_path, 'notes', current_user_name, self.session)
         self.readings = Readings(self.db, files_root_path, 'notes', current_user_name, self.session)
         self.users = Users(self.db, files_root_path, 'users', current_user_name, self.session)

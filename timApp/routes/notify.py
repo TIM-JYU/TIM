@@ -1,14 +1,13 @@
 import http.client
 import socket
-import os
-
-from flask import Blueprint, abort, request
-from decorators import async
-from routes.common import *
-from routes.logger import log_message
-from tim_app import app
 from typing import Optional
 
+from flask import Blueprint
+
+from decorators import async
+from routes.common import *
+from routes.logger import log_info, log_error
+from tim_app import app
 
 FUNNEL_HOST = "funnel"
 FUNNEL_PORT = 80
@@ -59,14 +58,14 @@ def send_email(rcpt: str, subject: str, msg: str, mail_from: Optional[str] = Non
 
             conn = http.client.HTTPConnection(FUNNEL_HOST, port=FUNNEL_PORT)
             conn.request("POST", "/mail", body=msg.replace('\n', '<br>').encode('utf-8'), headers=headers)
-            log_message("Sending email to " + rcpt, 'INFO')
+            log_info("Sending email to " + rcpt)
 
             response = conn.getresponse()
             if response.status != 200:
-                log_message('Response from funnel: {} {}'.format(response.status, response.reason), 'ERROR')
+                log_error('Response from funnel: {} {}'.format(response.status, response.reason))
 
         except (ConnectionError, socket.error, http.client.error) as e:
-            log_message("Couldn't connect to funnel: " + str(e), 'ERROR')
+            log_error("Couldn't connect to funnel: " + str(e))
 
         finally:
             if conn is not None:

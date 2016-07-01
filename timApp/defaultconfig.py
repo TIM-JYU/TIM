@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import timedelta
 
@@ -8,6 +9,8 @@ DEBUG              = False
 FILES_PATH         = 'tim_files'
 LOG_DIR            = "../tim_logs/"
 LOG_FILE           = "timLog.log"
+LOG_LEVEL          = logging.DEBUG
+LOG_LEVEL_STDOUT   = logging.INFO
 LOG_PATH           = os.path.join(LOG_DIR, LOG_FILE)
 MAX_CONTENT_LENGTH = 50 * 1024 * 1024
 PROFILE            = False

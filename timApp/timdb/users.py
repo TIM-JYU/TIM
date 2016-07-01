@@ -92,12 +92,12 @@ class Users(TimDbBase):
         """
 
         next_id = self.get_next_anonymous_user_id()
-
-        cursor = self.db.cursor()
-        cursor.execute('INSERT INTO UserAccount (id, name, real_name) VALUES (%s, %s, %s)', [next_id, name, real_name])
+        u = User(id=next_id, name=name, real_name=real_name)
+        self.session.add(u)
+        self.session.flush()
         if commit:
-            self.db.commit()
-        user_id = cursor.lastrowid
+            self.session.commit()
+        user_id = u.id
         self.add_user_to_group(self.get_anon_group_id(), user_id)
         return user_id
 
@@ -190,7 +190,7 @@ class Users(TimDbBase):
         """
         cursor = self.db.cursor()
         hash = self.hash_password(password)
-        cursor.execute('REPLACE INTO NewUser (email, pass) VALUES (%s, %s)', [email, hash])
+        cursor.execute('REPLACE INTO NewUser (email, pass, created) VALUES (%s, %s, CURRENT_TIMESTAMP)', [email, hash])
         if commit:
             self.db.commit()
 
@@ -631,7 +631,7 @@ WHERE User_id IN ({}))
         cursor = self.db.cursor()
         cursor.execute("""SELECT prefs FROM UserAccount WHERE id = %s""", [user_id])
         result = self.resultAsDictionary(cursor)
-        return result[0]['prefs']
+        return result[0]['prefs'] if result else None
 
     def set_preferences(self, user_id: int, prefs: str):
         """Sets the preferences for a user.

@@ -1,5 +1,7 @@
 from typing import List, Optional
 
+from timdb.tim_models import AskedQuestion, AskedJson, Question
+
 __author__ = 'hajoviin'
 from timdb.timdbbase import TimDbBase
 
@@ -79,14 +81,13 @@ class Questions(TimDbBase):
         :return: The id of the newly created asked question
         """
 
-        cursor = self.db.cursor()
-        cursor.execute("""
-                       INSERT INTO AskedQuestion (lecture_id, doc_id, par_id, asked_time, points, asked_json_id, expl)
-                       VALUES(%s,%s,%s,%s,%s,%s,%s)
-                       """, [lecture_id, doc_id, par_id, asked_time, points, asked_json_id, expl])
+        aq = AskedQuestion(lecture_id=lecture_id, doc_id=doc_id, par_id=par_id, asked_time=asked_time, points=points,
+                           asked_json_id=asked_json_id, expl=expl)
+        self.session.add(aq)
+        self.session.flush()
         if commit:
-            self.db.commit()
-        question_id = cursor.lastrowid
+            self.session.commit()
+        question_id = aq.asked_id
         return question_id
 
     def update_asked_question_points(self, asked_id: int, points: str, commit: bool=True) -> int:
@@ -128,17 +129,12 @@ class Questions(TimDbBase):
         Gets the asked question by id
         :return: Questions as a list
         """
-        cursor = self.db.cursor()
-        cursor.execute(
-            """
-            INSERT INTO AskedJson (json, hash)
-            VALUES (%s, %s)
-            """, [json, hash])
-
+        aj = AskedJson(json=json, hash=hash)
+        self.session.add(aj)
+        self.session.flush()
         if commit:
-            self.db.commit()
-        asked_json_id = cursor.lastrowid
-        return asked_json_id
+            self.session.commit()
+        return aj.asked_json_id
 
     def get_asked_json_by_id(self, asked_json_id: int) -> List[dict]:
         """
@@ -180,15 +176,13 @@ class Questions(TimDbBase):
         :return: The id of the newly creater question
         """
 
-        cursor = self.db.cursor()
-        cursor.execute("""
-                       INSERT INTO Question (doc_id, par_id, question_title, answer, questionJson, points, expl)
-                       VALUES(%s,%s,%s,%s,%s,%s,%s)
-                       """, [doc_id, par_id, question_title, answer, questionJson, points, expl])
+        q = Question(doc_id=doc_id, par_id=par_id, question_title=question_title, answer=answer,
+                     questionjson=questionJson, points=points, expl=expl)
+        self.session.add(q)
+        self.session.flush()
         if commit:
-            self.db.commit()
-        question_id = cursor.lastrowid
-        return question_id
+            self.session.commit()
+        return q.question_id
 
 
     def update_question(self, question_id: int, doc_id: int, par_id: str, question_title: str, answer: str,

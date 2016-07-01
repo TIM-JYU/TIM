@@ -7,6 +7,7 @@ import sqlalchemy.exc
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
+from routes.logger import log_info
 from tim_app import app, db
 from timdb import tempdb_models
 from timdb.tim_models import Version, AccessType
@@ -23,18 +24,21 @@ def postgre_create_database(db_name):
     conn.execute("commit")
     try:
         conn.execute("create database " + db_name)
+        return True
     except sqlalchemy.exc.ProgrammingError as e:
         if 'already exists' not in str(e):
             raise e
-    conn.close()
+        return False
+    finally:
+        conn.close()
 
 
-def initialize_temp_database(print_progress=True):
+def initialize_temp_database():
     postgre_create_database('tempdb_' + app.config['TIM_NAME'])
-    tempdb_models.initialize_temp_database(print_progress=print_progress)
+    tempdb_models.initialize_temp_database()
 
 
-def initialize_database(create_docs=True, print_progress=True):
+def initialize_database(create_docs=True):
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
@@ -42,15 +46,8 @@ def initialize_database(create_docs=True, print_progress=True):
     files_root_path = app.config['FILES_PATH']
     Document.default_files_root = files_root_path
     DocParagraph.default_files_root = files_root_path
-    postgre_create_database(app.config['TIM_NAME'])
-    if os.path.exists(db_path):
-        if print_progress:
-            print('{} already exists, no need to initialize'.format(files_root_path))
-        # Even if the db exists, we can still call create_all that will create any nonexisting tables
-        db.create_all(bind='tim_main')
-        return
-    if print_progress:
-        print('initializing the database in {}...'.format(files_root_path), end='')
+    was_created = postgre_create_database(app.config['TIM_NAME'])
+    log_info('Database {} {}.'.format(app.config['TIM_NAME'], 'was created' if was_created else 'exists'))
     timdb = TimDb(db_path=db_path, files_root_path=files_root_path)
     db.create_all(bind='tim_main')
     sess = db.create_scoped_session()
@@ -63,8 +60,7 @@ def initialize_database(create_docs=True, print_progress=True):
     try:
         sess.commit()
     except sqlalchemy.exc.IntegrityError:
-        # Initial data already exists
-        pass
+        log_info('Initial data already exists, skipping DB initialization.')
     else:
         timdb.users.create_special_usergroups()
         anon_group = timdb.users.get_anon_group_id()
@@ -86,8 +82,7 @@ def initialize_database(create_docs=True, print_progress=True):
         sess.remove()
         timdb.close()
 
-    if print_progress:
-        print(' done.')
+    log_info('Database initialization done.')
 
 
 def update_database():
@@ -116,18 +111,18 @@ def update_database():
                    7: add_yubikey}
     while ver in update_dict:
         # TODO: Take automatic backup of the db (tim_files) before updating
-        print('Starting update {}'.format(update_dict[ver].__name__))
+        log_info('Starting update {}'.format(update_dict[ver].__name__))
         result = update_dict[ver](timdb)
         if not result:
-            print('Update {} was skipped.'.format(update_dict[ver].__name__))
+            log_info('Update {} was skipped.'.format(update_dict[ver].__name__))
         else:
-            print('Update {} was completed.'.format(update_dict[ver].__name__))
+            log_info('Update {} was completed.'.format(update_dict[ver].__name__))
         timdb.update_version()
         ver = timdb.get_version()
     if ver_old == ver:
-        print('Database is up to date.')
+        log_info('Database is up to date.')
     else:
-        print('Database was updated from version {} to {}.'.format(ver_old, ver))
+        log_info('Database was updated from version {} to {}.'.format(ver_old, ver))
     timdb.close()
 
 

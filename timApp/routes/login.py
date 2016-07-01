@@ -1,19 +1,17 @@
 """Routes for login view."""
-from .common import *
-from .logger import log_message
-from flask import Blueprint, flash, redirect, render_template, request, url_for
-from routes.notify import send_email
+import codecs
+import random
+import string
+
+import requests
+import requests.exceptions
+from flask import Blueprint, render_template
 from yubico_client import Yubico
 from yubico_client.yubico_exceptions import YubicoError
 
-import codecs
-import os
-import string
-import random
-import re
-import requests
-import requests.exceptions
-
+from routes.notify import send_email
+from .common import *
+from .logger import log_error
 
 login_page = Blueprint('login_page',
                        __name__,
@@ -164,7 +162,7 @@ def alt_signup():
         send_email(email, 'Your new TIM password', 'Your password is {}'.format(password))
         flash("A password has been sent to you. Please check your email.")
     except Exception as e:
-        log_message('Could not send login email (user: {}, password: {}, exception: {})'.format(email, password, str(e)), 'ERROR')
+        log_error('Could not send login email (user: {}, password: {}, exception: {})'.format(email, password, str(e)))
         flash('Could not send the email, please try again later. The error was: {}'.format(str(e)))
 
     return finish_login(ready=False)

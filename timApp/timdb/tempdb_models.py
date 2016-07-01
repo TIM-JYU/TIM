@@ -6,6 +6,7 @@ Each model MUST have 'tempdb' as the __bind_key__ attribute.
 from sqlalchemy.orm import scoped_session
 from typing import Optional
 
+from routes.logger import log_info
 from timdb.runningquestion import RunningQuestions
 from timdb.useractivity import UserActivity
 from timdb.newanswers import NewAnswers
@@ -150,10 +151,8 @@ class TempDb(object):
         self.slidestatuses = SlideStatuses(session, SlideStatus)
 
 
-def initialize_temp_database(print_progress=True):
-    if print_progress:
-        print('initializing the temp database...', end='')
+def initialize_temp_database():
+    log_info('initializing the temp database...')
     db.drop_all(bind='tempdb')
     db.create_all(bind='tempdb')
-    if print_progress:
-        print(' done.')
+    log_info('...done.')

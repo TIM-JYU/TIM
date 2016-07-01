@@ -1,29 +1,15 @@
-# Python:
-
 import hashlib
-import sqlite3
+
+from tim_app import app
+from timdb.timdb2 import TimDb
 
 realname = input("Real name: ")
 email = input("Email: ")
 password = input("Password: ")
 hash = hashlib.sha256(password.encode()).hexdigest()
 
-conn = sqlite3.connect('tim.db')
-c = conn.cursor()
-
-c.execute('INSERT INTO UserAccount (name, real_name, email, pass) VALUES (%s, %s, %s, %s)', [email, realname, email, hash])
-user_id = c.lastrowid
-conn.commit()
-
-c.execute('INSERT INTO UserGroup (name) VALUES (%s)', [email])
-group_id = c.lastrowid
-conn.commit()
-
-c.execute('INSERT INTO UserGroupMember (UserGroup_id, User_id) VALUES (%s, %s)', [group_id, user_id])
-c.execute('INSERT INTO UserGroupMember (UserGroup_id, User_id) VALUES (%s, %s)', [4, user_id])
-conn.commit()
-c.close()
-conn.close()
+db = TimDb(app.config['DATABASE'], app.config['FILES_PATH'])
+db.users.create_user_with_group(email, realname, email, password, is_admin=True)
 
 print('UserAccount ', email, " created")
 print('Use ', email, " and password you entered to login.")
