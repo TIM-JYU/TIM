@@ -340,7 +340,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<button ng-if="isUnitTest" ng-disabled="isRunning" ng-click="runUnitTest();">UTest</button>&nbsp&nbsp'+
 				  '<span ng-if="isDocument"><a href="" ng-disabled="isRunning" ng-click="runDocument();">{{docLink}}</a>&nbsp&nbsp</span>'+
 				  '<a href="" ng-if="!nocode && (file || attrs.program)" ng-click="showCode();">{{showCodeLink}}</a>&nbsp&nbsp'+
-				  '<a href="" ng-if="muokattu && showReset" ng-click="initCode();">{{resetText}}</a>' +
+				  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>' +
 				  ' <a href="" ng-if="toggleEditor" ng-click="hideShowEditor();">{{toggleEditorText[noeditor?0:1]}}</a>' +
 				  ' <a href="" ng-if="!noeditor" ng-click="showOtherEditor();">{{editorText[editorModeIndecies[editorMode+1]]}}</a>' +
                   '</p>'+
@@ -1778,6 +1778,13 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
     }
     
     
+    $scope.closeFrame = function() {
+        if ( !$scope.canvas ) return;
+        $scope.canvas.remove();
+        $scope.canvas = null;
+        $scope.lastJS = "";
+    }
+    
    $scope.lastJS = "";
     $scope.iframeClientHeight = -1;
 	$scope.showJS = function() {
@@ -1791,13 +1798,13 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
                 if ( $scope.glowscript ) {
                     fsrc = "/cs/gethtml/GlowScript.html" 
                     dh = '430';
-                    dw = '720';
+                    dw = '800';
                     if ( $scope.type == "glowscript" ) $scope.gsDefaultLanguage = "GlowScript 2.1 JavaScript";
                 }
                 var v = $scope.getVid(dw,dh);
                 $scope.irrotaKiinnita = "Irrota";
                 $scope.canvas = angular.element('<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px; z-index: 20" >'+
-                  '<span class="csRunMenu"><div><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a></div></span>'+
+                  '<span class="csRunMenu"><div><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a><a href ng-click="closeFrame()" style="float: right" >[X]</a></div></span>'+
                   '<iframe id="'+v.vid+'" class="jsCanvas" src="' + fsrc + '?scripts='+($scope.attrs.scripts||"") + '" ' + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin"></iframe>'+
                   '</div>');
                 // $scope.canvas = angular.element('<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html" ' + v.w + v.h + ' style="border:0" seamless="seamless" ></iframe>');
