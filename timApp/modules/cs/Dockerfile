@@ -6,11 +6,11 @@ maintainer vesal "vesal@jyu.fi"
 run ln -fs /bin/true /usr/bin/chfn
 
 # Aikavyöhyke ja merkistöt kuntoon
-#run locale-gen en_US.UTF-8
-#env LANG en_US.UTF-8
-#env LANGUAGE en_US:en
-#env LC_ALL en_US.UTF-8
-#run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
+run locale-gen en_US.UTF-8
+env LANG en_US.UTF-8
+env LANGUAGE en_US:en
+env LC_ALL en_US.UTF-8
+run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
 
 
 # Asennetaan python, pip ja flask 
