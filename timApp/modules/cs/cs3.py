@@ -802,7 +802,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 self.wout(file_to_string('end.html'))
                 return
 
-            if is_iframe and not print_file and not ttype == "js":
+            if is_iframe and not print_file and not ttype in ["js", "glowscript", "vpython"]:
                 s = string_to_string_replace_url(
                     '<iframe frameborder="0"  src="https://tim.it.jyu.fi/cs/fullhtml?##QUERYPARAMS##" ' +
                     'style="overflow:hidden;" height="##HEIGHT##" width="100%"  seamless></iframe>',
@@ -1204,6 +1204,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "md":
                     cmdline = ""
                 elif ttype == "js":
+                    cmdline = ""
+                elif ttype == "glowscript":
+                    cmdline = ""
+                elif ttype == "vpython":
                     cmdline = ""
                 elif ttype == "simcir":
                     cmdline = ""
@@ -1665,6 +1669,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "md":
                     code, out, err = (0, "".encode(), "".encode())
                 elif ttype == "js":
+                    code, out, err = (0, "".encode(), "".encode())
+                elif ttype == "glowscript":
+                    code, out, err = (0, "".encode(), "".encode())
+                elif ttype == "vpython":
                     code, out, err = (0, "".encode(), "".encode())
                 elif ttype == "simcir":
                     code, out, err = (0, "".encode(), "".encode())

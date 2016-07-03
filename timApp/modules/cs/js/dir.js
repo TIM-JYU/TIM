@@ -86,14 +86,15 @@ ConsolePWD.getPWD = function() {
 //==============================================================
 
 
+var csJSTypes = ["js", "glowscript", "vpython"];
 
 // =================================================================================================================
 // Things for known languages
 
 var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage","simcir","xml","r", "octave","lua"];
-languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python","json","xml","r","octave","lua"];
+languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","vpython","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","glowscript","sage","simcir","xml","r", "octave","lua"];
+languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","javascript","python","json","xml","r","octave","lua"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
@@ -164,6 +165,14 @@ languageTypes.getUnitTestType = function(type,language,def) {
     if ( impt ) return impt;
     return t;     
 };
+
+languageTypes.isInArray = function(word,array) {
+    for (var i=0; i< array.length; i++)
+        if ( word === array[i] ) return true;
+    return false;
+    
+}
+
 // =================================================================================================================
 
 var removeXML = function(s) {
@@ -420,6 +429,17 @@ csApp.directiveFunction = function(t,isInput) {
                 scope.copyToSimCirText = english ? "copy to SimCir" : "kopioi SimCiriin";  
             }
             
+            $(element[0]).bind('keydown', function(event) {
+                if (event.ctrlKey || event.metaKey) {
+                    switch (String.fromCharCode(event.which).toLowerCase()) {
+                    case 's':
+                        event.preventDefault();
+                        if ( scope.isRun ) scope.runCode();
+                        break;
+                    }
+                }
+            });
+            
             scope.languageText = english ? "language: " : "kieli: ";  
             
 			csApp.set(scope,attrs,"type","cs");
@@ -433,6 +453,8 @@ csApp.directiveFunction = function(t,isInput) {
                 inocode = true;
                 scope.forcedupload = true;
             }
+            
+
             scope.isText = rt == "text" || rt == "xml" || rt == "css";
             scope.isSage = languageTypes.getRunType(scope.type,false) == "sage";
             scope.isSimcir = t === "simcir";
@@ -453,6 +475,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"taunotype");
 			csApp.set(scope,attrs,"stem");
 			csApp.set(scope,attrs,"iframe",false);
+            if ( languageTypes.isInArray(rt,["glowscript", "vpython"]) ) { scope.glowscript = true; scope.iframe = true; }
 			// csApp.set(scope,attrs,"usercode","");
 			csApp.set(scope,attrs,"codeunder",false);
 			csApp.set(scope,attrs,"codeover",false);
@@ -932,7 +955,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
     {
 		var t = languageTypes.getRunType($scope.selectedLanguage,"cs");  
         if ( t == "md" ) { $scope.showMD(); if (nosave) return; }
-        if ( t == "js" ) { $scope.showJS(); if (nosave) return; } 
+        if ( languageTypes.isInArray(t, csJSTypes ) ) { $scope.jstype = t; $scope.showJS(); if (nosave) return; } 
 		$scope.doRunCode(t,nosave);
     }
     
@@ -1051,7 +1074,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 		$scope.imgURL = "";
 		$scope.wavURL = "";
 		$scope.runSuccess = false;
-		if ( runType != "js" ) $scope.result = "";
+		if ( !languageTypes.isInArray(runType, csJSTypes ) ) $scope.result = "";
 		$scope.runTestGreen = false;
 		$scope.runTestRed = false;
         var isInput = false;
@@ -1138,7 +1161,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
                     if ( $scope.isHtml )
                         $scope.htmlresult = removeXML(data.web.console);
                     else
-                        if ( runType != "js" ) $scope.result = data.web.console;
+                        if ( !languageTypes.isInArray(runType, csJSTypes ) ) $scope.result = data.web.console;
 				else   
 				   $scope.error = data.web.error;
 			}
@@ -1225,12 +1248,14 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 	};
 
     // Returns the visible index for next item and the desired size
-    $scope.getVid = function() {
+    $scope.getVid = function(dw, dh) {
 		csApp.taunoNr++;
 		var vid = 'tauno'+csApp.taunoNr;
 		$scope.taunoId = vid;
-		var w = csApp.ifIs($scope.width,"width","100% ");
-		var h = csApp.ifIs($scope.height,"height",500);
+        if ( dw === undefined ) dw = "100%"
+        if ( dh === undefined ) dh = 500
+		var w = csApp.ifIs($scope.width,"width",dw);
+		var h = csApp.ifIs($scope.height,"height",dh);
         return {vid:vid,w:w,h:h};
     }
 
@@ -1759,13 +1784,21 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         var wantsConsole = false;
         if ( $scope.type.indexOf("/c") >= 0 ) wantsConsole = true;
         if ( !$scope.attrs.runeverytime && !$scope.usercode && !$scope.userargs && !$scope.userinput ) return;
-        if ( !$scope.canvas ) { // cerate a canvas on first time
+        if ( !$scope.canvas ) { // create a canvas on first time
             if ( $scope.iframe ) {
-                var v = $scope.getVid();
+                var dw,dh;
+                var fsrc = "/cs/gethtml/canvas.html";
+                if ( $scope.glowscript ) {
+                    fsrc = "/cs/gethtml/GlowScript.html" 
+                    dh = '430';
+                    dw = '720';
+                    if ( $scope.type == "glowscript" ) $scope.gsDefaultLanguage = "GlowScript 2.1 JavaScript";
+                }
+                var v = $scope.getVid(dw,dh);
                 $scope.irrotaKiinnita = "Irrota";
-                $scope.canvas = angular.element('<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px;" >'+
+                $scope.canvas = angular.element('<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px; z-index: 20" >'+
                   '<span class="csRunMenu"><div><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a></div></span>'+
-                  '<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html?scripts='+($scope.attrs.scripts||"") + '" ' + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin"></iframe>'+
+                  '<iframe id="'+v.vid+'" class="jsCanvas" src="' + fsrc + '?scripts='+($scope.attrs.scripts||"") + '" ' + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin"></iframe>'+
                   '</div>');
                 // $scope.canvas = angular.element('<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html" ' + v.w + v.h + ' style="border:0" seamless="seamless" ></iframe>');
                 $scope.iframeLoadTries = 10;
@@ -1804,6 +1837,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
                return;
             }
             if ( $scope.iframeClientHeight < 0 ) $scope.iframeClientHeight = f.clientHeight;
+            if ( $scope.gsDefaultLanguage ) f.contentWindow.setDefLanguage($scope.gsDefaultLanguage);
             var s = f.contentWindow.runJavaScript(text,$scope.userargs,$scope.userinput, wantsConsole);
             var ch = f.contentWindow.getConsoleHeight();
             if ( ch < $scope.iframeClientHeight ) ch = $scope.iframeClientHeight;
