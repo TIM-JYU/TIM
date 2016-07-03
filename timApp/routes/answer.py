@@ -245,6 +245,7 @@ def get_all_answers(task_id):
     timdb = getTimDb()
     doc_id, _, _ = Plugin.parse_task_id(task_id)
     usergroup = request.args.get('group')
+    age = request.args.get('age')
     if not usergroup:
         usergroup = 0
     if not timdb.documents.exists(doc_id):
@@ -252,7 +253,7 @@ def get_all_answers(task_id):
 
     # Require full teacher rights for getting all answers
     verify_teacher_access(doc_id)
-    all_answers = timdb.answers.get_all_answers(task_id, usergroup, hide_names_in_teacher(doc_id))
+    all_answers = timdb.answers.get_all_answers(task_id, usergroup, hide_names_in_teacher(doc_id), age)
     return jsonResponse(all_answers)
 
 
