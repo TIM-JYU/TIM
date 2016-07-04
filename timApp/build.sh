@@ -1,2 +1,2 @@
 #!/bin/bash
-docker build --tag=tim:$(../get_latest_date.sh) $@ .
+docker build --tag=timimages/tim:$(../get_latest_date.sh) $@ .
