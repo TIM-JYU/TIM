@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional
 
 from timdb.tim_models import AskedQuestion, AskedJson, Question
@@ -68,7 +69,7 @@ class Questions(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    def add_asked_questions(self, lecture_id: int, doc_id: int, par_id: Optional[str], asked_time: str,
+    def add_asked_questions(self, lecture_id: int, doc_id: int, par_id: Optional[str], asked_time: datetime,
                             points: str, asked_json_id: int, expl: str, commit: bool=True) -> int:
 
         """

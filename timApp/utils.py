@@ -2,7 +2,7 @@
 import os
 import re
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 
 import yaml
 from typing import List
@@ -22,7 +22,7 @@ def date_to_relative(d):
     :param d: The datetime object to convert.
     :return: A string representing the given date relative to current time.
     """
-    diff = datetime.now() - d
+    diff = datetime.now(timezone.utc) - d
     s = diff.seconds
     if diff.days > 7 or diff.days < 0:
         return d.strftime('%d %b %y')

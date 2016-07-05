@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional
 
 __author__ = 'hajoviin'
@@ -8,7 +9,7 @@ class LectureAnswers(TimDbBase):
     """
     LectureAnswer class to handle database for lecture answers
     """
-    def add_answer(self, user_id: int, question_id: int, lecture_id: int, answer: str, answered_on: str,
+    def add_answer(self, user_id: int, question_id: int, lecture_id: int, answer: str, answered_on: datetime,
                    points: float, commit: bool=True):
         """
         Adds answer to lecture question
@@ -32,7 +33,7 @@ class LectureAnswers(TimDbBase):
             self.db.commit()
 
     def update_answer(self, answer_id: int, user_id: int, question_id: int, lecture_id: int, answer: str,
-                      answered_on: str, points: float, commit: bool=True):
+                      answered_on: datetime, points: float, commit: bool=True):
         """
         Update users answer to question
         :param answer_id: answer id

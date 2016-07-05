@@ -1,8 +1,6 @@
 import datetime
 import json
 
-import pytz
-
 from documentmodel.docparagraph import DocParagraph
 
 
@@ -16,5 +14,5 @@ class DocParagraphEncoder(json.JSONEncoder):
                     'attrs': o.get_attrs()}
         if isinstance(o, datetime.datetime):
             if o.tzinfo is None:
-                o = o.replace(tzinfo=pytz.UTC)
+                o = o.replace(tzinfo=datetime.timezone.utc)
             return o.isoformat()

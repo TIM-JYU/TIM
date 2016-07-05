@@ -46,7 +46,8 @@ run pip3 install git+git://github.com/miracle2k/webassets.git
 run pip3 install libsass
 run pip3 install flask-assets
 run pip3 install yubico-client
-run pip3 install pytz
+run pip3 install pytz  # Not necessarily needed after all, as Python's stdlib supports UTC
+run pip3 install python-dateutil
 
 # requests must be the last package to be installed!
 # After this, pip3 stops working because it depends

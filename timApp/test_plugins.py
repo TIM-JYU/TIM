@@ -1,5 +1,6 @@
-import datetime
+from datetime import timezone, datetime, timedelta
 import json
+import dateutil.parser
 
 import io
 from flask import session
@@ -89,7 +90,9 @@ class PluginTest(TimRouteTest):
               'id': 1, 'points': '2', 'task_id': task_id, 'valid': 1}],
             [{k: v for k, v in ans.items() if k != 'answered_on'} for ans in answer_list])
         for ans in answer_list:
-            datetime.datetime.strptime(ans['answered_on'], '%Y-%m-%d %H:%M:%S')
+            d = dateutil.parser.parse(ans['answered_on'])
+            self.assertLess(d - datetime.now(tz=timezone.utc), timedelta(seconds=5))
+
         resp = self.post_answer(plugin_type, task_id, [True, True, False],
                                 save_teacher=False, teacher=True, answer_id=answer_list[0]['id'],
                                 user_id=session['user_id'] - 1)

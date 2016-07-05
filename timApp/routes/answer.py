@@ -1,5 +1,5 @@
 """Answer-related routes."""
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Blueprint
 
@@ -27,9 +27,9 @@ def is_answer_valid(plugin, old_answers, tim_info):
     answer_limit = plugin.answer_limit()
     if answer_limit is not None and (answer_limit <= len(old_answers)):
         return False, 'You have exceeded the answering limit.'
-    if plugin.starttime(default=datetime(1970, 1, 1)) > datetime.now():
+    if plugin.starttime(default=datetime(1970, 1, 1, tzinfo=timezone.utc)) > datetime.now(timezone.utc):
         return False, 'You cannot submit answers yet.'
-    if plugin.deadline(default=datetime.max) < datetime.now():
+    if plugin.deadline(default=datetime.max.replace(tzinfo=timezone.utc)) < datetime.now(timezone.utc):
         return False, 'The deadline for submitting answers has passed.'
     return True, 'ok'
 

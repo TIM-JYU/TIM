@@ -92,7 +92,7 @@ class Useractivity(db.Model):
     __bind_key__ = 'tempdb'
     lecture_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
-    active = db.Column(db.Text)
+    active = db.Column(db.Text)  # TODO: Change to Timestamp
 
     def __init__(self, lecture_id, user_id, active):
         self.lecture_id = lecture_id

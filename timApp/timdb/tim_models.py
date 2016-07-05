@@ -14,6 +14,7 @@ NEWEST_DB_VERSION constant.
 TODO: Use Flask-Migrate <http://flask-migrate.readthedocs.io/en/latest/> instead of homebrew update mechanism.
 """
 import datetime
+from datetime import timezone
 
 import inspect
 import sys
@@ -35,7 +36,7 @@ class Answer(db.Model):
     task_id = db.Column(db.Text, nullable=False)
     content = db.Column(db.Text, nullable=False)
     points = db.Column(db.Text)  # TODO Should possibly be numeric
-    answered_on = db.Column(db.DateTime, nullable=False)
+    answered_on = db.Column(db.DateTime(timezone=True), nullable=False)
     valid = db.Column(db.Boolean, nullable=False)
 
     def __init__(self, task_id, content, points, valid):
@@ -43,7 +44,8 @@ class Answer(db.Model):
         self.content = content
         self.points = points
         self.valid = valid
-        self.answered_on = datetime.datetime.now()
+        self.answered_on = datetime.datetime.now(timezone.utc)
+
 
 class AnswerTag(db.Model):
     __bind_key__ = 'tim_main'
@@ -82,7 +84,7 @@ class AskedQuestion(db.Model):
     lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'), nullable=False)  # NOTE Added foreign key
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'))  # NOTE Added foreign key
     par_id = db.Column(db.Text)
-    asked_time = db.Column(db.DateTime, nullable=False)
+    asked_time = db.Column(db.DateTime(timezone=True), nullable=False)
     points = db.Column(db.Text)  # TODO Should possibly be numeric
     asked_json_id = db.Column(db.Integer, db.ForeignKey('askedjson.asked_json_id'), nullable=False)
     expl = db.Column(db.Text)
@@ -95,8 +97,8 @@ class Block(db.Model):
     latest_revision_id = db.Column(db.Integer)
     type_id = db.Column(db.Integer, nullable=False)
     description = db.Column(db.Text)
-    created = db.Column(db.DateTime, nullable=False)
-    modified = db.Column(db.DateTime)
+    created = db.Column(db.DateTime(timezone=True), nullable=False)
+    modified = db.Column(db.DateTime(timezone=True))
     usergroup_id = db.Column(db.Integer, db.ForeignKey('usergroup.id'), nullable=False)
 
     owner = db.relationship('UserGroup', backref=db.backref('owned_blocks', lazy='dynamic'))
@@ -105,7 +107,7 @@ class Block(db.Model):
         self.type_id = type_id
         self.usergroup_id = usergroup_id
         self.description = description
-        self.created = datetime.datetime.now()
+        self.created = datetime.datetime.now(timezone.utc)
         self.modified = self.created
 
 
@@ -115,8 +117,8 @@ class BlockAccess(db.Model):
     block_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     usergroup_id = db.Column(db.Integer, db.ForeignKey('usergroup.id'), primary_key=True)
     type = db.Column(db.Integer, db.ForeignKey('accesstype.id'), primary_key=True)
-    accessible_from = db.Column(db.DateTime)
-    accessible_to = db.Column(db.DateTime)
+    accessible_from = db.Column(db.DateTime(timezone=True))
+    accessible_to = db.Column(db.DateTime(timezone=True))
 
 
 class DocEntry(db.Model):
@@ -142,8 +144,8 @@ class Lecture(db.Model):
     lecture_code = db.Column(db.Text)
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)  # NOTE Added foreign key
     lecturer = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)  # NOTE Added foreign key
-    start_time = db.Column(db.DateTime, nullable=False)
-    end_time = db.Column(db.DateTime)
+    start_time = db.Column(db.DateTime(timezone=True), nullable=False)
+    end_time = db.Column(db.DateTime(timezone=True))
     password = db.Column(db.Text)
     options = db.Column(db.Text)
 
@@ -153,10 +155,11 @@ class LectureAnswer(db.Model):
     __tablename__ = 'lectureanswer'
     answer_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)  # NOTE Added foreign key
-    question_id = db.Column(db.Integer, db.ForeignKey('askedquestion.asked_id'), nullable=False)  # NOTE Added foreign key
+    question_id = db.Column(db.Integer, db.ForeignKey('askedquestion.asked_id'),
+                            nullable=False)  # NOTE Added foreign key
     lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'), nullable=False)  # NOTE Added foreign key
     answer = db.Column(db.Text, nullable=False)
-    answered_on = db.Column(db.DateTime, nullable=False)
+    answered_on = db.Column(db.DateTime(timezone=True), nullable=False)
     points = db.Column(db.Float)
 
 
@@ -177,7 +180,7 @@ class Message(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'),
                         nullable=False)  # NOTE The foreign key was wrong in schema2
     message = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=False)
+    timestamp = db.Column(db.DateTime(timezone=True), nullable=False)
 
 
 class NewUser(db.Model):
@@ -185,7 +188,7 @@ class NewUser(db.Model):
     __tablename__ = 'newuser'
     email = db.Column(db.Text, primary_key=True)
     pass_ = db.Column('pass', db.Text, nullable=False)
-    created = db.Column(db.DateTime, nullable=False)
+    created = db.Column(db.DateTime(timezone=True), nullable=False)
 
 
 class Notification(db.Model):
@@ -218,7 +221,7 @@ class ReadParagraphs(db.Model):
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)  # NOTE Added foreign key
     par_id = db.Column(db.Text, primary_key=True)
     par_hash = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=False)
+    timestamp = db.Column(db.DateTime(timezone=True), nullable=False)
 
 
 class Translation(db.Model):
@@ -273,8 +276,8 @@ class UserNotes(db.Model):
     par_id = db.Column(db.Text, nullable=False)
     par_hash = db.Column(db.Text, nullable=False)
     content = db.Column(db.Text, nullable=False)
-    created = db.Column(db.DateTime, nullable=False)
-    modified = db.Column(db.DateTime)
+    created = db.Column(db.DateTime(timezone=True), nullable=False)
+    modified = db.Column(db.DateTime(timezone=True))
     access = db.Column(db.Text, nullable=False)
     tags = db.Column(db.Text, nullable=False)
     html = db.Column(db.Text)
@@ -284,11 +287,11 @@ class Version(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'version'
     id = db.Column(db.Integer, primary_key=True)
-    updated_on = db.Column(db.DateTime)
+    updated_on = db.Column(db.DateTime(timezone=True))
 
     def __init__(self, version_id):
         self.id = version_id
-        self.updated_on = datetime.datetime.now()
+        self.updated_on = datetime.datetime.now(timezone.utc)
 
 
 def print_schema(bind: str = 'tim_main'):

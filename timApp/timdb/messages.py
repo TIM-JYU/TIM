@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 
 from timdb.tim_models import Message
@@ -71,7 +72,7 @@ class Messages(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    def add_message(self, user_id: int, lecture_id: int, message: str, timestamp: str,
+    def add_message(self, user_id: int, lecture_id: int, message: str, timestamp: datetime,
                     commit: bool=True) -> int:
         """ Creates a new message
         """

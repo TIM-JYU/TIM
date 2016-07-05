@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Tuple
 
 from timdb.tim_models import Lecture
@@ -122,7 +123,7 @@ class Lectures(TimDbBase):
         if commit:
             self.db.commit()
 
-    def get_document_lectures(self, doc_id: int, time: str):
+    def get_document_lectures(self, doc_id: int, time: datetime):
         cursor = self.db.cursor()
 
         cursor.execute("""
@@ -173,7 +174,7 @@ class Lectures(TimDbBase):
 
         return True
 
-    def set_end_for_lecture(self, lecture_id: int, end_time: str):
+    def set_end_for_lecture(self, lecture_id: int, end_time: datetime):
         cursor = self.db.cursor()
 
         cursor.execute(
@@ -186,7 +187,7 @@ class Lectures(TimDbBase):
 
         self.db.commit()
 
-    def check_if_lecture_is_running(self, lecture_id: int, now=str) -> bool:
+    def check_if_lecture_is_running(self, lecture_id: int, now: datetime) -> bool:
         cursor = self.db.cursor()
 
         cursor.execute(
@@ -310,7 +311,7 @@ class Lectures(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    def update_lecture_starting_time(self, lecture_id: int, start_time: str, commit: bool=True) -> dict:
+    def update_lecture_starting_time(self, lecture_id: int, start_time: datetime, commit: bool=True) -> dict:
         cursor = self.db.cursor()
 
         cursor.execute("""

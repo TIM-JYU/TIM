@@ -3,6 +3,7 @@ import json
 import threading
 import time
 from time import mktime
+from datetime import timezone
 
 from flask import Blueprint, request, abort, session, render_template, current_app
 
@@ -143,7 +144,7 @@ def get_updates():
     lecturers = []
     students = []
 
-    time_now = str(datetime.datetime.now().strftime("%H:%M:%S"))
+    time_now = str(datetime.datetime.now(timezone.utc).strftime("%H:%M:%S"))
     tempdb.useractivity.update_or_add_activity(lecture_id, getCurrentUserId(), time_now)
 
     lecture = timdb.lectures.get_lecture(lecture_id)
@@ -315,18 +316,13 @@ def check_if_lecture_is_ending(current_user, timdb, lecture_id):
     lecture = timdb.lectures.get_lecture(lecture_id)
     lecture_ending = 100
     if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
-        time_now = datetime.datetime.now()
+        time_now = datetime.datetime.now(timezone.utc)
         ending_time = lecture[0].get("end_time")
-        time_left = str(ending_time - time_now)
-        splitted_time = time_left.split(",")
-        if len(splitted_time) == 1:
-            h, m, s = splitted_time[0].split(":")
-            hours_as_min = int(h) * 60
-            if hours_as_min + int(m) < 1:
-                lecture_ending = 1
-            elif hours_as_min + int(m) < 5:
-                lecture_ending = 5
-
+        time_left = ending_time - time_now
+        if time_left.total_seconds() <= 60:
+            return 1
+        elif time_left.total_seconds() <= 60 * 5:
+            return 5
     return lecture_ending
 
 
@@ -337,7 +333,7 @@ def send_message():
     new_message = request.args.get("message")
     lecture_id = int(request.args.get("lecture_id"))
 
-    new_timestamp = str(datetime.datetime.now())
+    new_timestamp = datetime.datetime.now(timezone.utc)
     msg_id = timdb.messages.add_message(getCurrentUserId(), lecture_id, new_message, new_timestamp, True)
     return jsonResponse({'id': msg_id, 'time': new_timestamp})
 
@@ -445,7 +441,7 @@ def start_future_lecture():
     doc_id = int(request.args.get("doc_id"))
     verify_ownership(doc_id)
     lecture = timdb.lectures.get_lecture_by_code(lecture_code, doc_id)
-    time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+    time_now = datetime.datetime.now(timezone.utc)
     lecture = timdb.lectures.update_lecture_starting_time(lecture, time_now)
     timdb.lectures.join_lecture(lecture.get("lecture_id"), getCurrentUserId(), True)
     students, lecturers = get_lecture_users(timdb, tempdb, lecture.get("lecture_id"))
@@ -464,7 +460,7 @@ def get_all_lectures():
     timdb = getTimDb()
 
     lectures = timdb.lectures.get_all_lectures_from_document(doc_id)
-    time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+    time_now = datetime.datetime.now(timezone.utc)
     current_lectures = []
     past_lectures = []
     future_lectures = []
@@ -566,7 +562,7 @@ def get_lecture_users(timdb, tempdb, lecture_id):
 
 def check_if_lecture_is_running(lecture_id):
     timdb = getTimDb()
-    time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+    time_now = datetime.datetime.now(timezone.utc)
     return timdb.lectures.check_if_lecture_is_running(lecture_id, time_now)
 
 
@@ -580,7 +576,7 @@ def get_running_lectures(doc_id=None):
     :param doc_id: The document id for which to get lectures.
     """
     timdb = getTimDb()
-    time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+    time_now = datetime.datetime.now(timezone.utc)
     lecture_code = "Not running"
     list_of_lectures = []
     is_lecturer = False
@@ -640,8 +636,9 @@ def create_lecture():
         timdb.lectures.update_lecture(lecture_id, doc_id, current_user, start_time, end_time, lecture_code, password,
                                       options)
 
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    current_time = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
 
+    # TODO Perform this comparison using datetime objects
     if start_time <= current_time <= end_time:
         timdb.lectures.join_lecture(lecture_id, current_user, True)
     return jsonResponse({"lectureId": lecture_id})
@@ -658,8 +655,8 @@ def end_lecture():
     timdb = getTimDb()
     timdb.lectures.delete_users_from_lecture(lecture_id)
 
-    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-    timdb.lectures.set_end_for_lecture(lecture_id, str(now))
+    now = datetime.datetime.now(timezone.utc)
+    timdb.lectures.set_end_for_lecture(lecture_id, now)
 
     clean_dictionaries_by_lecture(lecture_id)
 
@@ -753,7 +750,7 @@ def join_lecture():
         leave_lecture_function(current_lecture_id)
     timdb.lectures.join_lecture(lecture_id, current_user, True)
 
-    time_now = str(datetime.datetime.now().strftime("%H:%M:%S"))
+    time_now = str(datetime.datetime.now(timezone.utc).strftime("%H:%M:%S"))
     tempdb.useractivity.update_or_add_activity(lecture_id, current_user, time_now)
 
     session['in_lecture'] = [lecture_id]
@@ -853,7 +850,7 @@ def ask_question():
             asked_json_id = asked_hash[0].get("asked_json_id")
         else:
             asked_json_id = timdb.questions.add_asked_json(question_json_str, question_hash)
-        asked_time = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
+        asked_time = datetime.datetime.now(timezone.utc)
         asked_id = timdb.questions.add_asked_questions(lecture_id, doc_id, None, asked_time, question.get("points"),
                                                        asked_json_id, question.get("expl"))
     else:
@@ -1056,7 +1053,7 @@ def get_lecture_answers():
     for user_id in user_ids:
         lecture_answers.append(timdb.lecture_answers.get_user_answer_to_question(asked_id, user_id)[0])
 
-    latest_answer = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
+    latest_answer = datetime.datetime.now(timezone.utc)
 
     return jsonResponse({"answers": lecture_answers, "askedId": asked_id, "latestAnswer": latest_answer})
 
@@ -1087,7 +1084,7 @@ def answer_to_question():
     tempdb.usersanswered.add_user_info(lecture_id, asked_id, current_user)
 
     if (not lecture_answer) or (lecture_answer and answer != lecture_answer[0]["answer"]):
-        time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
+        time_now = datetime.datetime.now(timezone.utc)
         question_points = timdb.questions.get_asked_question(asked_id)[0].get("points")
         points_table = create_points_table(question_points)
         points = calculate_points(answer, points_table)
