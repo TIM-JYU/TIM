@@ -138,7 +138,7 @@ JOIN answer a ON a.id = t.id JOIN useranswer ua ON ua.answer_id = a.id JOIN user
         result = []
 
         for row in c.fetchall():
-            header = row[0] + ": " + row[1] + "; " + row[3] + "; " + str(row[4])
+            header = row[0] + ": " + row[1] + "; " + str(row[3]) + "; " + str(row[4])
             if hide_names: header = ""
             # print(separator + header)
             line = json.loads(row[2])

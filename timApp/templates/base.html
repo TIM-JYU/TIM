@@ -67,6 +67,14 @@
                     return encodeURIComponent(str).replace(/%2F/g, '/');
                 };
             });
+
+            timApp.filter('timdate', function ($filter) {
+                var dateFilter = $filter('date');
+                return function (date) {
+                    return dateFilter(date, 'dd.MM.yyyy HH:mm:ss');
+                }
+            });
+
             var current_user = {{ current_user|tojson }};
         </script>
         <!-- HTML5 shiv and Respond.js for IE8 support of HTML5 elements and media queries -->
