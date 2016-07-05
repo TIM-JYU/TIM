@@ -144,6 +144,7 @@ class Mailer(Updatable):
         logging.getLogger('mailer').info("Mail to {}: {}".format(msg['Rcpt-To'], msg['Body'] + self.mail_signature))
         if self.dry_run:
             logging.getLogger('mailer').info("Dry run mode specified, not sending")
+            logging.getLogger('mailer').info("The message body was:\n" + msg['Body'])
             return
 
         mime_msg = MIMEText(msg['Body'] + self.mail_signature)
