@@ -13,6 +13,7 @@ LOG_LEVEL_STDOUT = logging.ERROR
 LOG_PATH = os.path.join(LOG_DIR, LOG_FILE)
 TESTING = True
 TIM_NAME = 'timtest'
+OLD_SQLITE_DATABASE = None
 SQLALCHEMY_BINDS = {
     'tim_main': DATABASE,
     'tempdb': "postgresql://postgres@postgre:5432/tempdb_" + TIM_NAME

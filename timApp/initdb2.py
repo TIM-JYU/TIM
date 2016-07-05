@@ -55,7 +55,8 @@ def initialize_database(create_docs=True):
     if sess.query(AccessType).count() > 0:
         log_info('Initial data already exists, skipping DB initialization.')
     else:
-        if os.path.exists(app.config['OLD_SQLITE_DATABASE']):
+        old_db = app.config['OLD_SQLITE_DATABASE']
+        if old_db and os.path.exists(old_db):
             perform_migration(app.config['OLD_SQLITE_DATABASE'], app.config['DATABASE'])
             return
         sess.add(AccessType(id=1, name='view'))
