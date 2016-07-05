@@ -18,7 +18,7 @@ HASKELLPLUGIN_NAME = 'haskellplugins2'
 PALIPLUGIN_NAME = 'pali'
 
 
-TIM_HOST = os.environ.get('TIM_HOST', default='localhost')
+TIM_HOST = os.environ.get('TIM_HOST', default='http://localhost')
 
 if TIM_HOST != 'localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'nginx':
     # To use this, put your IP in TIM_HOST environment variable
@@ -26,17 +26,17 @@ if TIM_HOST != 'localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'nginx':
     # and set PLUGIN_CONNECTIONS = "nginx" in the flask config file
     print("Using nginx for plugins")
     PLUGINS = {
-        "csPlugin":      {"host": "http://" + TIM_HOST + ":56000/cs/"},
-        "taunoPlugin":   {"host": "http://" + TIM_HOST + ":56000/cs/tauno/"},
-        "simcirPlugin":  {"host": "http://" + TIM_HOST + ":56000/cs/simcir/"},
-        "csPluginRikki": {"host": "http://" + TIM_HOST + ":56000/cs/rikki/"},  # demonstrates a broken plugin
-        "showCode":      {"host": "http://" + TIM_HOST + ":55000/svn/", "browser": False},
-        "showImage":     {"host": "http://" + TIM_HOST + ":55000/svn/image/", "browser": False},
-        "showVideo":     {"host": "http://" + TIM_HOST + ":55000/svn/video/", "browser": False},
-        "mcq":           {"host": "http://" + TIM_HOST + ":57000/"},
-        "mmcq":          {"host": "http://" + TIM_HOST + ":58000/"},
-        "shortNote":     {"host": "http://" + TIM_HOST + ":59000/"},
-        "graphviz":      {"host": "http://" + TIM_HOST + ":60000/", "browser": False},
+        "csPlugin":      {"host": TIM_HOST + ":56000/cs/"},
+        "taunoPlugin":   {"host": TIM_HOST + ":56000/cs/tauno/"},
+        "simcirPlugin":  {"host": TIM_HOST + ":56000/cs/simcir/"},
+        "csPluginRikki": {"host": TIM_HOST + ":56000/cs/rikki/"},  # demonstrates a broken plugin
+        "showCode":      {"host": TIM_HOST + ":55000/svn/", "browser": False},
+        "showImage":     {"host": TIM_HOST + ":55000/svn/image/", "browser": False},
+        "showVideo":     {"host": TIM_HOST + ":55000/svn/video/", "browser": False},
+        "mcq":           {"host": TIM_HOST + ":57000/"},
+        "mmcq":          {"host": TIM_HOST + ":58000/"},
+        "shortNote":     {"host": TIM_HOST + ":59000/"},
+        "graphviz":      {"host": TIM_HOST + ":60000/", "browser": False},
     }
 else:
     print("Using container network for plugins")
