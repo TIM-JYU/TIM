@@ -10,6 +10,7 @@ from markdownconverter import md_to_html
 from routes import logger
 from routes.notify import notify_doc_owner
 from timdb.timdbbase import TimDbException
+from typing import List
 from utils import get_error_html
 from .common import *
 
@@ -76,7 +77,7 @@ def update_document(doc_id):
     ver_before = doc.get_version()
     try:
         # To verify view rights for possible referenced paragraphs, we call this first:
-        editor_pars = get_pars_from_editor_text(doc, content, break_on_elements=True)
+        editor_pars = get_pars_from_editor_text(doc, content, break_on_elements=True, skip_access_check=True)
         d = timdb.documents.update_document(doc, content, original, strict_validation)
         check_and_rename_pluginnamehere(editor_pars, d)
         old_pars = d.get_paragraphs()
@@ -203,7 +204,7 @@ def modify_paragraph():
     area_end = request.get_json().get('area_end')
     editing_area = area_start and area_end
     try:
-        editor_pars = get_pars_from_editor_text(doc, md, break_on_elements=editing_area)
+        editor_pars = get_pars_from_editor_text(doc, md, break_on_elements=editing_area, skip_access_check=True)
     except ValidationException as e:
         return abort(400, str(e))
 
@@ -345,7 +346,9 @@ def par_response(blocks, doc, edit_window=False, update_cache=False, context_par
                          'duplicates': duplicates})
 
 
-def get_pars_from_editor_text(doc, text, break_on_elements=False):
+def get_pars_from_editor_text(doc: Document, text: str,
+                              break_on_elements: bool = False, skip_access_check: bool = False) -> List[DocParagraph]:
+
     options = DocumentParserOptions()
     options.break_on_code_block = break_on_elements
     options.break_on_header = break_on_elements
@@ -359,7 +362,7 @@ def get_pars_from_editor_text(doc, text, break_on_elements=False):
                 refdoc = int(p.get_attr('rd'))
             except (ValueError, TypeError):
                 continue
-            if getTimDb().documents.exists(refdoc)\
+            if not skip_access_check and getTimDb().documents.exists(refdoc)\
                     and not getTimDb().users.has_view_access(getCurrentUserId(), refdoc):
                 raise ValidationException("You don't have view access to document {}".format(refdoc))
     return blocks
