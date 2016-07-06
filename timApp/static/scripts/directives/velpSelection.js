@@ -1,5 +1,5 @@
 /**
- * Created by sevitarv on 8.3.2016.
+ *
  * @module velpSelection
  * @licence MIT
  * @copyright 2016 Timber project authors
@@ -252,7 +252,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
     // Methods
     /**
      * Get color for object.
-     * @param index index of the color in color palette. (modulo by lenght of color palette)
+     * @param index - Index of the color in color palette. (modulo by lenght of color palette)
      * @returns {string}
      */
     $scope.getColor = function (index) {
@@ -261,7 +261,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
 
     /**
      * Toggles label selected attribute
-     * @param label label to toggle
+     * @param label - Label to toggle
      */
     $scope.toggleLabel = function (label) {
         label.selected = !label.selected;
@@ -274,6 +274,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
 
     };
 
+    /**
+     * Toggles label edit
+     * @param label - Label to edit
+     */
     $scope.toggleLabelToEdit = function (label) {
         label.edit = !label.edit;
     };
@@ -287,7 +291,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
 
     /**
      * Adds new label
-     * @param velp velp where label is added
+     * @param velp - Velp where label is added
      */
     $scope.addLabel = function (velp) {
 
@@ -312,13 +316,19 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
 
     };
 
+    /**
+     * Returns the boolean value wheter a label is in velp or not.
+     * @param velp - Velp to check
+     * @param label - Label to check
+     * @returns {boolean} wheter label is in velp
+     */
     $scope.isLabelInVelp = function (velp, label) {
         return velp.labels.indexOf(label.id) >= 0;
     };
 
     /**
      * Adds new velp on form submit
-     * @param form form information
+     * @param form - Form information
      */
     $scope.addVelp = function (form) {
         var valid = form.$valid;
@@ -352,6 +362,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         $scope.updateVelpList();
     };
 
+    /**
+     * Adds new velp to database. Requires values in $scope.newVelp variable.
+     */
     var addNewVelpToDatabase = function () {
         var velpToAdd = {
             labels: $scope.newVelp.labels,
@@ -378,6 +391,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
     };
 
 
+    /**
+     * Deselcts all labels
+     */
     $scope.deselectLabels = function () {
         for (var i = 0; i < $scope.labels.length; i++) {
             if ($scope.labels[i].selected) {
@@ -386,6 +402,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         }
     };
 
+    /**
+     * Selects label for edit
+     * @param label - Label to edit
+     */
     $scope.selectLabelToEdit = function (label) {
         if (label.id === $scope.labelToEdit.id && label.edit) {
             label.edit = false;
@@ -405,6 +425,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
     };
 
 
+    /**
+     * Updates labels in velp
+     * @param velp - Velp to update
+     * @param label - Label to add or remove
+     */
     $scope.updateVelpLabels = function (velp, label) {
 
         var index = velp.labels.indexOf(label.id);
@@ -416,6 +441,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         }
     };
 
+    /**
+     * Selects velp to edit
+     * @param velp - Velp to edit
+     */
     $scope.selectVelpToEdit = function (velp) {
 
         if (velp.id === $scope.velpToEdit.id && velp.edit) {
@@ -439,7 +468,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
 
     /**
      * Edit velp
-     * @param form velp form
+     * @param form - Velp form
      */
     $scope.editVelp = function (form) {
         var valid = form.$valid;
@@ -484,6 +513,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         $scope.resetEditVelp();
     };
 
+    /**
+     * Generates default velp group and runs custom method.
+     * @param method - Method to run after this mehtod.
+     */
     $scope.generateDefaultVelpGroup = function (method) {
         if (default_velp_group.edit_access) {
             $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), null, function (json) {
@@ -505,7 +538,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
     };
 
     /**
-     * Edit label
+     * Edits label. Requires $scope.labelToedit variable.
      */
     $scope.editLabel = function () {
         if ($scope.labelToEdit.content.length < 1) {
@@ -543,6 +576,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         };
     };
 
+    /**
+     * Resets $scope.velpToEdit variable.
+     */
     $scope.resetEditVelp = function(){
             $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: []};
     };
@@ -555,12 +591,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
     };
 
     /**
-
-     * TODO: Complete this
-     * @param defaults
-     * @param shows
-     * @param elementId selected element id
-     * @returns groups to show
+     * Updates show and default checkboxes
+     * @param elementId - Selected element id
+     * @returns Array to show
      */
     $scope.updateShowDataForElement = function (elementId) {
 
@@ -572,6 +605,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
     };
     /** Velpgroup methods **/
 
+    /**
+     * Updates velp list.
+     */
     $scope.updateVelpList = function () {
         $scope.velpGroups.forEach(function (g) {
             if ($scope.selectedElement !== null && $scope.groupAttachment.target_type === 1) {
@@ -587,8 +623,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
 
     /**
      * Decides whether the group is shown based on the various selected and default values.
-     * @param groupId
-     * @param paragraphId either a real paragraph id or "0" for the document.
+     * @param groupId - VelpGroup ID.
+     * @param paragraphId - Either a real paragraph id or "0" for the document.
      * @returns {boolean}
      */
     $scope.isVelpGroupShownHere = function (groupId, paragraphId) {
@@ -618,9 +654,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
     };
 
     /**
-     *
-     * @param groupId
-     * @param paragraphId
+     * Returns wheter a velp group is shown in specified paragraph (or document) or not.
+     * @param groupId - Velp group ID
+     * @param paragraphId - Paragraph ID
      * @returns {boolean}
      */
     $scope.isVelpGroupDefaultHere = function (groupId, paragraphId) {
@@ -639,7 +675,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
     /**
      * Personal default group and the document default group have always default, unless the user has
      * specified otherwise.
-     * @param groupId
+     * @param groupId - Velp group ID
      * @returns {boolean}
      */
     $scope.isVelpGroupDefaultFallBack = function (groupId) {
@@ -648,8 +684,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
 
     /**
      * Despite the name, can check document selections as well.
-     * @param groupId
-     * @param paragraphId pass "0" for document.
+     * @param groupId - Velp group ID
+     * @param paragraphId - Pass "0" for document.
      * @returns true/false/null
      */
     $scope.lazyIsVelpGroupSelectedInParagraph = function (groupId, paragraphId) {
@@ -658,14 +694,21 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
 
     /**
      * Despite the name, can check document selections as well.
-     * @param groupId
-     * @param paragraphId pass "0" for document.
+     * @param groupId - Velp group ID
+     * @param paragraphId - Pass "0" for document
      * @returns true/false/null
      */
     $scope.lazyIsVelpGroupDefaultInParagraph = function (groupId, paragraphId) {
         return $scope.checkCollectionForSelected(groupId, paragraphId, $scope.groupDefaults);
     };
 
+    /**
+     * Checks whether the collection is selected or not.
+     * @param groupId - Velp group ID
+     * @param paragraphId - Pass "0" for document
+     * @param collection - shows or defaults
+     * @returns {*}
+     */
     $scope.checkCollectionForSelected = function (groupId, paragraphId, collection) {
         if (collection.hasOwnProperty(paragraphId)) {
             var index;
@@ -679,6 +722,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         return null;
     };
 
+    /**
+     * Adds velp group
+     * @param form - Velp group form
+     */
     $scope.addVelpGroup = function (form) {
         var valid = form.$valid;
         $scope.submitted.velpGroup = true;
@@ -698,6 +745,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         });
     };
 
+    /**
+     * Changes velp group selection.
+     * @param group - Velp group
+     * @param type - Paragraph or document
+     */
     $scope.changeVelpGroupSelection = function (group, type) {
 
         $scope.groupAttachment.target_type = parseInt($scope.groupAttachment.target_type);
