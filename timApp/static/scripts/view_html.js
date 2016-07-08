@@ -1708,8 +1708,6 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getEditorFunctions = function () {
-            sc.activeMenu = "";
-
             if (sc.editing) {
                 return [
                     {func: sc.goToEditor, desc: 'Go to editor', show: true},
@@ -1815,6 +1813,7 @@ timApp.controller("ViewCtrl", [
         sc.addParagraphFunctions = sc.getAddParagraphFunctions();
         sc.pasteFunctions = sc.getPasteFunctions();
         sc.popupMenuAttrs = {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'};
+        sc.updatePopupMenu();
 
         sc.$storage = $localStorage.$default({
             defaultAction: "Show options window",
