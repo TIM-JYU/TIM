@@ -1177,8 +1177,7 @@ timApp.controller("ViewCtrl", [
         sc.showOptionsWindow = function (e, $pars, coords) {
             sc.updateClipboardStatus();
             $pars.children('.editline').addClass('menuopen');
-            sc.showPopupMenu(e, $pars, coords,
-                {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'});
+            sc.showPopupMenu(e, $pars, coords, sc.popupMenuAttrs);
         };
 
         sc.closeOptionsWindow = function () {
@@ -1470,7 +1469,7 @@ timApp.controller("ViewCtrl", [
         sc.selection = {start: null, end: null};
         sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end', 'editing', 'getEditMode()',
                         'allowPasteContent', 'allowPasteRef', 'getAllowMove()'], function (newValues, oldValues, scope) {
-            sc.editorFunctions = sc.getEditorFunctions();
+            sc.updatePopupMenu();
             if (sc.editing) {
                 sc.notification = "Editor is already open.";
             } else {
@@ -1709,6 +1708,8 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getEditorFunctions = function () {
+            sc.activeMenu = "";
+
             if (sc.editing) {
                 return [
                     {func: sc.goToEditor, desc: 'Go to editor', show: true},
@@ -1749,6 +1750,17 @@ timApp.controller("ViewCtrl", [
                     },
                     {func: sc.nothing, desc: 'Close menu', show: true}
                 ];
+            }
+        };
+
+        sc.updatePopupMenu = function() {
+            sc.editorFunctions = sc.getEditorFunctions();
+            if (sc.selection.start !== null && $window.editMode) {
+                sc.popupMenuAttrs.save = null;
+                sc.popupMenuAttrs.editbutton = false;
+            } else {
+                sc.popupMenuAttrs.save = 'defaultAction';
+                sc.popupMenuAttrs.editbutton = true;
             }
         };
 
@@ -1800,9 +1812,9 @@ timApp.controller("ViewCtrl", [
         // call marktree.js initialization function so that TOC clicking works
         $window.addEvents();
 
-        sc.editorFunctions = sc.getEditorFunctions();
         sc.addParagraphFunctions = sc.getAddParagraphFunctions();
         sc.pasteFunctions = sc.getPasteFunctions();
+        sc.popupMenuAttrs = {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'};
 
         sc.$storage = $localStorage.$default({
             defaultAction: "Show options window",
