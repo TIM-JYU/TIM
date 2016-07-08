@@ -49,10 +49,9 @@
     {# without this, lazy loading embedded_sagecell won't work because it doesn't know URL root #}
     <link property="sagecell-root" href="//sagecell.sagemath.org/"/>
 
-    {{ (doc_css | safe ) if doc_css }}
-    <style type="text/css">
-        {{ prefs.custom_css }}
-    </style>
+    {% block viewhtml_customcss %}
+        {% include 'doc_customcss.html' %}
+    {% endblock %}
     <script>
         var noBrowser = {{ no_browser|tojson }};
         var showIndex = {{(headers|length > 0)|tojson}};

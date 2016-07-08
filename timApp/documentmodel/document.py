@@ -11,7 +11,7 @@ from typing import List, Optional, Set, Tuple, Union
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.docsettings import DocSettings
-from documentmodel.documentparser import DocumentParser
+from documentmodel.documentparser import DocumentParser, AttributesAtEndOfCodeBlockException, ValidationException
 from documentmodel.documentwriter import DocumentWriter
 from documentmodel.exceptions import DocExistsError
 from timdb.timdbbase import TimDbException
@@ -562,8 +562,15 @@ class Document:
         :param strict_validation: Whether to use stricter validation rules for areas etc.
         """
         new_pars = DocumentParser(text).add_missing_attributes().validate_structure(is_whole_document=strict_validation).get_blocks()
-        old_pars = [DocParagraph.from_dict(doc=self, d=d)
-                    for d in DocumentParser(original).add_missing_attributes().get_blocks()]
+
+        # If the original document has validation errors, it probably means the document export routine has a bug.
+        try:
+            old_pars = [DocParagraph.from_dict(doc=self, d=d)
+                        for d in DocumentParser(original).add_missing_attributes().validate_structure(is_whole_document=strict_validation).get_blocks()]
+        except AttributesAtEndOfCodeBlockException as e:
+            raise ValidationException('The original document contained a syntax error. '
+                                      'This is probably a TIM bug; please report it. '
+                                      'Additional information: {}'.format(e))
 
         self._perform_update(new_pars, old_pars)
 

@@ -1177,8 +1177,7 @@ timApp.controller("ViewCtrl", [
         sc.showOptionsWindow = function (e, $pars, coords) {
             sc.updateClipboardStatus();
             $pars.children('.editline').addClass('menuopen');
-            sc.showPopupMenu(e, $pars, coords,
-                {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'});
+            sc.showPopupMenu(e, $pars, coords, sc.popupMenuAttrs);
         };
 
         sc.closeOptionsWindow = function () {
@@ -1470,7 +1469,7 @@ timApp.controller("ViewCtrl", [
         sc.selection = {start: null, end: null};
         sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end', 'editing', 'getEditMode()',
                         'allowPasteContent', 'allowPasteRef', 'getAllowMove()'], function (newValues, oldValues, scope) {
-            sc.editorFunctions = sc.getEditorFunctions();
+            sc.updatePopupMenu();
             if (sc.editing) {
                 sc.notification = "Editor is already open.";
             } else {
@@ -1752,6 +1751,17 @@ timApp.controller("ViewCtrl", [
             }
         };
 
+        sc.updatePopupMenu = function() {
+            sc.editorFunctions = sc.getEditorFunctions();
+            if (sc.selection.start !== null && $window.editMode) {
+                sc.popupMenuAttrs.save = null;
+                sc.popupMenuAttrs.editbutton = false;
+            } else {
+                sc.popupMenuAttrs.save = 'defaultAction';
+                sc.popupMenuAttrs.editbutton = true;
+            }
+        };
+
         sc.getAddParagraphFunctions = function () {
             return [
                 {func: sc.showAddParagraphAbove, desc: 'Above', show: true},
@@ -1800,9 +1810,10 @@ timApp.controller("ViewCtrl", [
         // call marktree.js initialization function so that TOC clicking works
         $window.addEvents();
 
-        sc.editorFunctions = sc.getEditorFunctions();
         sc.addParagraphFunctions = sc.getAddParagraphFunctions();
         sc.pasteFunctions = sc.getPasteFunctions();
+        sc.popupMenuAttrs = {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'};
+        sc.updatePopupMenu();
 
         sc.$storage = $localStorage.$default({
             defaultAction: "Show options window",
