@@ -132,8 +132,11 @@
                                     <p class="error" ng-show="!isSomeVelpGroupSelected(newVelp)">
                                         You need to select at least one velpgroup.
                                     </p>
-                                    <p><input id="addVelpBtn" class="timButton" type="submit" value="Create velp" ng-dblclick="return false"
-                                              ng-disabled="!isVelpValid(newVelp)"/></p>
+                                    <p>
+                                        <!-- The double click handler prevents adding two velps by accident. -->
+                                        <input id="addVelpBtn" class="timButton" type="submit" value="Create velp" ng-dblclick="return false"
+                                              ng-disabled="!isVelpValid(newVelp)"/>
+                                    </p>
                                 </form>
                             </div>
                         </div>
@@ -219,9 +222,8 @@
                                                     </span>
                                                     <input class="addLabelField" placeholder="Add label"
                                                            ng-model="newLabel['content']">
-                                                    <!-- The double click handler prevents adding two velps by accident. -->
                                                     <input class="addLabelBtn" type="button" value="Add"
-                                                           ng-click="addLabel(velpToEdit)" ng-dblclick="return false">
+                                                           ng-click="addLabel(velpToEdit)">
                                                     <span ng-hide="newLabel['valid']" class="error">Label content too short</span>
                                                 </fieldset>
 
