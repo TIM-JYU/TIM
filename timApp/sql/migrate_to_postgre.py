@@ -18,11 +18,27 @@ def perform_migration(sqlite_path: str, postgre_path: str):
 
     migrate_table(sq3c, pgc, 'user', 'useraccount')
     migrate_table(sq3c, pgc, 'accesstype')
-    migrate_table(sq3c, pgc, 'answer', placeholders={'valid': 'cast(%s as boolean)'})
+    migrate_table(sq3c, pgc, 'usergroup')
+
+    # For the column last_points_modifier, any valid non-null value is fine; we'll update the correct value in the next step.
+    migrate_table(sq3c, pgc, 'answer',
+                  placeholders={'valid': 'cast(%s as boolean)',
+                                'last_points_modifier': "case when %s like '%% ' then 4 else NULL end",
+                                'points': "cast(replace(replace(%s, ',', '.'), 'p', '') as double precision)"},
+                  new_columns={'points': 'last_points_modifier'})
+    migrate_table(sq3c, pgc, 'useranswer', extra_clause='WHERE user_id IN (SELECT id FROM user)')
+
+    log_info('Setting last_points_modifier for table answer...')
+
+    # Some answers have more than 2 authors (often in case a teacher has checked and fixed an answer). In such cases,
+    # we pick the minimum of the usergroup ids of the authors because it is more likely that the teacher's id is smaller.
+    pgc.execute("""UPDATE answer a SET last_points_modifier =
+                   (SELECT MIN(ug.id) FROM usergroup ug JOIN useraccount u ON ug.name = u.name JOIN useranswer ua ON ua.user_id = u.id WHERE ua.answer_id = a.id)
+                   WHERE last_points_modifier IS NOT NULL""")
+    log_info('...done.')
 
     migrate_table(sq3c, pgc, 'answertag')
     migrate_table(sq3c, pgc, 'askedjson', id_column='asked_json_id')
-    migrate_table(sq3c, pgc, 'usergroup')
     migrate_table(sq3c, pgc, 'block', placeholders={'created': "coalesce(%s, '2014-06-01 00:00:00'::timestamp)"})
 
     migrate_table(sq3c, pgc, 'lecture', extra_clause='WHERE doc_id IN (SELECT id FROM block)', id_column='lecture_id')
@@ -48,7 +64,6 @@ def perform_migration(sqlite_path: str, postgre_path: str):
     migrate_table(sq3c, pgc, 'question', id_column='question_id', extra_clause='WHERE doc_id IN (SELECT id FROM block)')
     migrate_table(sq3c, pgc, 'readparagraphs', id_column=None, extra_clause='WHERE doc_id IN (SELECT id FROM block)')
     migrate_table(sq3c, pgc, 'translation', id_column=None)
-    migrate_table(sq3c, pgc, 'useranswer', extra_clause='WHERE user_id IN (SELECT id FROM user)')
     migrate_table(sq3c, pgc, 'usergroupmember', id_column=None)
     migrate_table(sq3c, pgc, 'usernotes')
     migrate_table(sq3c, pgc, 'version')
@@ -67,11 +82,16 @@ def migrate_table(sq3c, pgc,
                   new_table: Optional[str] = None,
                   placeholders: Optional[Dict[str, str]] = None,
                   id_column: Optional[str] = 'id',
-                  extra_clause=''):
+                  extra_clause='',
+                  new_columns=None):
     log_info('Migrating table {}...'.format(old_table))
     if new_table is None:
         new_table = old_table
-    sq3c.execute("SELECT * FROM {} {}".format(old_table, extra_clause))
+    if new_columns is None:
+        new_columns = {}
+    sq3c.execute("SELECT * {} FROM {} {}".format(
+        ', {}'.format(','.join((k + ' as ' + v for k, v in new_columns.items()))) if new_columns else '',
+        old_table, extra_clause))
     columns = list(map(lambda x: x[0], sq3c.description))
     if placeholders is None:
         placeholders = {}
