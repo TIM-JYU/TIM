@@ -33,7 +33,7 @@ class Answer(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'answer'
     id = db.Column(db.Integer, primary_key=True)
-    task_id = db.Column(db.Text, nullable=False)
+    task_id = db.Column(db.Text, nullable=False, index=True)
     content = db.Column(db.Text, nullable=False)
     points = db.Column(db.Float)
     answered_on = db.Column(db.DateTime(timezone=True), nullable=False)
@@ -239,7 +239,7 @@ class User(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'useraccount'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Text, nullable=False)
+    name = db.Column(db.Text, nullable=False)  # TODO Should be unique?
     real_name = db.Column(db.Text)
     email = db.Column(db.Text)
     prefs = db.Column(db.Text)
@@ -253,13 +253,14 @@ class UserAnswer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     answer_id = db.Column(db.Integer, db.ForeignKey('answer.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)
+    __table_args__ = (db.UniqueConstraint('answer_id', 'user_id'),)
 
 
 class UserGroup(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'usergroup'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Text, nullable=False)
+    name = db.Column(db.Text, nullable=False, unique=True)
 
 
 class UserGroupMember(db.Model):
