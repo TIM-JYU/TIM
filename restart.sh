@@ -107,9 +107,9 @@ docker run --net=timnet -dti --name funnel \
 fi
 
 if param postgre ; then
-# Restart postgre container
+docker volume create --name pg_data
 docker run --net=timnet -d --name postgre \
-  -v $PWD/pg_data:/var/lib/postgresql/data \
+  -v pg_data:/var/lib/postgresql/data \
   -t -i postgres:9.5
   ./wait_for_postgre.sh
 fi
