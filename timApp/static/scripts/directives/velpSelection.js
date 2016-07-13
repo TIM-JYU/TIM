@@ -379,6 +379,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         };
         console.log(velpToAdd);
         $scope.velpToEdit.edit = false;
+        $scope.newVelp.edit = false;
 
         $scope.makePostRequest("/add_velp", velpToAdd, function (json) {
             velpToAdd.id = parseInt(json.data);
