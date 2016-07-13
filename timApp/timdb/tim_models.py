@@ -35,15 +35,17 @@ class Answer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     task_id = db.Column(db.Text, nullable=False)
     content = db.Column(db.Text, nullable=False)
-    points = db.Column(db.Text)  # TODO Should possibly be numeric
+    points = db.Column(db.Float)
     answered_on = db.Column(db.DateTime(timezone=True), nullable=False)
     valid = db.Column(db.Boolean, nullable=False)
+    last_points_modifier = db.Column(db.Integer, db.ForeignKey('usergroup.id'))
 
-    def __init__(self, task_id, content, points, valid):
+    def __init__(self, task_id, content, points, valid, last_points_modifier=None):
         self.task_id = task_id
         self.content = content
         self.points = points
         self.valid = valid
+        self.last_points_modifier = last_points_modifier
         self.answered_on = datetime.datetime.now(timezone.utc)
 
 

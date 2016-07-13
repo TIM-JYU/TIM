@@ -104,8 +104,8 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
 
                 $scope.updatePoints = function () {
                     $scope.points = $scope.selectedAnswer.points;
-                    if ($scope.points !== null && $scope.points.length > 0) {
-                        $scope.giveCustomPoints = $scope.points.slice(-1) === " ";
+                    if ($scope.points !== null) {
+                        $scope.giveCustomPoints = $scope.selectedAnswer.last_points_modifier !== null;
                     } else {
                         $scope.giveCustomPoints = false;
                     }

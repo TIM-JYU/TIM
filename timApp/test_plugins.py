@@ -77,17 +77,17 @@ class PluginTest(TimRouteTest):
         answer_list = self.assertResponseStatus(resp, expect_status=200, return_json=True)  # type: list(dict)
         self.assertListEqual(
             [{'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, true]',
-              'id': 6, 'points': '9', 'task_id': task_id, 'valid': 1},
+              'id': 6, 'points': 9.0, 'task_id': task_id, 'valid': 1, 'last_points_modifier': None},
              {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[false, false, true]',
-              'id': 5, 'points': None, 'task_id': task_id, 'valid': 1},
+              'id': 5, 'points': None, 'task_id': task_id, 'valid': 1, 'last_points_modifier': None},
              {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, true, true]',
-              'id': 4, 'points': '2', 'task_id': task_id, 'valid': 1},
+              'id': 4, 'points': 2.0, 'task_id': task_id, 'valid': 1, 'last_points_modifier': None},
              {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, false]',
-              'id': 3, 'points': '2', 'task_id': task_id, 'valid': 0},
+              'id': 3, 'points': 2.0, 'task_id': task_id, 'valid': 0, 'last_points_modifier': None},
              {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, true, false]',
-              'id': 2, 'points': '1', 'task_id': task_id, 'valid': 1},
+              'id': 2, 'points': 1.0, 'task_id': task_id, 'valid': 1, 'last_points_modifier': None},
              {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, false]',
-              'id': 1, 'points': '2', 'task_id': task_id, 'valid': 1}],
+              'id': 1, 'points': 2.0, 'task_id': task_id, 'valid': 1, 'last_points_modifier': None}],
             [{k: v for k, v in ans.items() if k != 'answered_on'} for ans in answer_list])
         for ans in answer_list:
             d = dateutil.parser.parse(ans['answered_on'])
@@ -152,9 +152,10 @@ class PluginTest(TimRouteTest):
         self.assertListEqual([{'collaborators': [{'real_name': None, 'user_id': anon_id}],
                                'content': '[true, false, false]',
                                'id': 7,
-                               'points': '6',
+                               'points': 6.0,
                                'task_id': task_id,
-                               'valid': 1}],
+                               'valid': 1,
+                               'last_points_modifier': None}],
                              [{k: v for k, v in ans.items() if k != 'answered_on'} for ans in anon_answers])
 
         self.assertResponseStatus(self.app.get('/getState',

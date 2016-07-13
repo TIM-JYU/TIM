@@ -1,10 +1,10 @@
 """"""
+import json
 from collections import defaultdict
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from timdb.tim_models import Answer, UserAnswer, AnswerTag
 from timdb.timdbbase import TimDbBase
-import json
 
 
 class Answers(TimDbBase):
@@ -12,12 +12,14 @@ class Answers(TimDbBase):
                    user_ids: List[int],
                    task_id: str,
                    content: str,
-                   points: Union[str, int, float, None],
+                   points: Optional[float],
                    tags: List[str],
-                   valid: bool=True):
+                   valid: bool=True,
+                   points_given_by=None):
         """
         Saves an answer to the database.
         
+        :param points_given_by: The usergroup id who gave the points, or None if they were given by a plugin.
         :param tags: Tags for the answer.
         :param valid: Whether the answer is considered valid (e.g. sent before deadline, etc.)
         :param user_ids: The id of the usergroup to which the answer belongs.
@@ -26,17 +28,16 @@ class Answers(TimDbBase):
         :param points: Points for the task.
         """
 
-        cursor = self.db.cursor()
-
         existing_answers = self.get_common_answers(user_ids, task_id)
         if len(existing_answers) > 0 and existing_answers[0]['content'] == content:
             existing_id = existing_answers[0]['id']
             a = Answer.query.filter(Answer.id == existing_id).one()
             a.points = points
+            a.last_points_modifier = points_given_by
             self.session.commit()
             return False, existing_id
 
-        a = Answer(task_id=task_id, content=content, points=points, valid=valid)
+        a = Answer(task_id=task_id, content=content, points=points, valid=valid, last_points_modifier=points_given_by)
         self.session.add(a)
         self.session.flush()
         answer_id = a.id
@@ -63,7 +64,7 @@ class Answers(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute("""SELECT Answer.id, task_id, content, points,
-                                 answered_on, valid
+                                 answered_on, valid, last_points_modifier
                           FROM Answer
                           JOIN UserAnswer ON Answer.id = UserAnswer.answer_id
                           WHERE task_id = %s
