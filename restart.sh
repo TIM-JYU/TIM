@@ -73,7 +73,7 @@ if param timdev ; then
 fi
 
 if param postgre ; then
-    docker rm postgre > /dev/null 2>&1 &
+    docker rm postgresql > /dev/null 2>&1 &
 fi
 
 if param funnel; then
@@ -108,7 +108,7 @@ fi
 
 if param postgre ; then
 docker volume create --name pg_data
-docker run --net=timnet -d --name postgre \
+docker run --net=timnet -d --name postgresql \
   -v pg_data:/var/lib/postgresql/data \
   -t -i postgres:9.5
   ./wait_for_postgre.sh

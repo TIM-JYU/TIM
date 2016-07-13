@@ -28,7 +28,7 @@ class TimDbTest(unittest.TestCase):
             os.mkdir(cls.test_files_path)
         initdb2.initialize_temp_database()
         # Safety mechanism
-        assert app.config['SQLALCHEMY_BINDS']['tim_main'] == "postgresql://postgres@postgre:5432/tempdb_" + 'timtest'
+        assert app.config['SQLALCHEMY_BINDS']['tim_main'] == "postgresql://postgres@postgresql:5432/tempdb_" + 'timtest'
         db.session.commit()
         db.drop_all(bind='tim_main')
         initdb2.initialize_database(create_docs=False)

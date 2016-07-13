@@ -4,7 +4,7 @@ import os
 DEBUG = True
 PROFILE = False
 PLUGIN_CONNECTIONS = "nginx"
-DATABASE = "postgresql://postgres@postgre:5432/tempdb_" + 'timtest'
+DATABASE = "postgresql://postgres@postgresql:5432/tempdb_" + 'timtest'
 FILES_PATH = '/tmp/doctest_files'
 LOG_DIR = "/tmp/tim_logs"
 LOG_FILE = "timLog.log"
@@ -16,7 +16,7 @@ TIM_NAME = 'timtest'
 OLD_SQLITE_DATABASE = None
 SQLALCHEMY_BINDS = {
     'tim_main': DATABASE,
-    'tempdb': "postgresql://postgres@postgre:5432/tempdb_" + TIM_NAME
+    'tempdb': "postgresql://postgres@postgresql:5432/tempdb_" + TIM_NAME
 }
 SASS_GEN_PATH = 'testgen'
 

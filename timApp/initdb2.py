@@ -20,7 +20,7 @@ NEWEST_DB_VERSION = 8
 
 
 def postgre_create_database(db_name):
-    engine = sqlalchemy.create_engine("postgresql://postgres@postgre:5432/postgres")
+    engine = sqlalchemy.create_engine("postgresql://postgres@postgresql:5432/postgres")
     conn = engine.connect()
     conn.execute("commit")
     try:

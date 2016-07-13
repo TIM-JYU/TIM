@@ -25,9 +25,9 @@ LIBSASS_INCLUDES   = ["static/scripts/bower_components/bootstrap-sass/assets/sty
                       "static"]
 TIM_NAME = os.environ.get('TIM_NAME', 'tim')
 OLD_SQLITE_DATABASE       = 'tim_files/tim.db'
-DATABASE           = "postgresql://postgres@postgre:5432/" + TIM_NAME
+DATABASE           = "postgresql://postgres@postgresql:5432/" + TIM_NAME
 SQLALCHEMY_BINDS = {
     'tim_main': DATABASE,
-    'tempdb': "postgresql://postgres:postgres@postgre:5432/tempdb_" + TIM_NAME
+    'tempdb': "postgresql://postgres:postgres@postgresql:5432/tempdb_" + TIM_NAME
 }
 SASS_GEN_PATH = 'gen'
