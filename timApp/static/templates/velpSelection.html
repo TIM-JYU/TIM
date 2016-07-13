@@ -132,8 +132,11 @@
                                     <p class="error" ng-show="!isSomeVelpGroupSelected(newVelp)">
                                         You need to select at least one velpgroup.
                                     </p>
-                                    <p><input id="addVelpBtn" class="timButton" type="submit" value="Create velp"
-                                              ng-disabled="!isVelpValid(newVelp)"/></p>
+                                    <p>
+                                        <!-- The double click handler prevents adding two velps by accident. -->
+                                        <input id="addVelpBtn" class="timButton" type="submit" value="Create velp" ng-dblclick="return false"
+                                              ng-disabled="!isVelpValid(newVelp)"/>
+                                    </p>
                                 </form>
                             </div>
                         </div>
