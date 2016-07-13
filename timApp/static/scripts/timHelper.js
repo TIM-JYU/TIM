@@ -1,3 +1,4 @@
+if (!timHelper)
 var timHelper = {};
 
 timHelper.initAttributes = function(clone, $scope) {
