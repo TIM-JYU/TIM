@@ -81,11 +81,13 @@ def replace_macros(msg: str, doc_id: int, par_id: Optional[str]) -> str:
     if '[doc_name]' in msg or '[doc_url]' in msg:
         doc_name = timdb.documents.get_first_document_name(doc_id)
         par_part = '' if par_id is None else '#' + par_id
-        doc_url = 'http://{}/view/{}{}'.format(os.environ.get("TIM_HOST", "localhost"), doc_name.replace(' ', '%20'),
+        doc_url = '{}/view/{}{}'.format(os.environ.get("TIM_HOST", "http://localhost"), doc_name.replace(' ', '%20'),
                                                par_part)
         new_msg = new_msg.replace('[doc_name]', doc_name).replace('[doc_url]', doc_url)
     if '[doc_id]' in msg:
         new_msg = new_msg.replace('[doc_id]', str(doc_id))
+    if '[base_url]' in msg:
+        new_msg = new_msg.replace('[base_url]', os.environ.get("TIM_HOST", "http://localhost"))
 
     return new_msg
 

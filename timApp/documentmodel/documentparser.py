@@ -18,6 +18,9 @@ class ValidationException(Exception):
 class ValidationWarning(ValidationException):
     pass
 
+class AttributesAtEndOfCodeBlockException(ValidationException):
+    pass
+
 class DocReader:
     """
     :type lines: list[str]
@@ -96,7 +99,7 @@ class DocumentParser:
                     if last_line.startswith('`'*num_ticks):
                         attrs, start_index = AttributeParser(last_line).get_attributes()
                         if start_index is not None:
-                            raise ValidationException('The end of code block contains attributes: {}'.format(attrs))
+                            raise AttributesAtEndOfCodeBlockException('The end of code block contains attributes: {}'.format(attrs))
                 except ValueError:
                     pass
             curr_id = r.get('id')
@@ -230,6 +233,30 @@ class DocumentParser:
             block_lines.append(line)
         if not is_atom and line is not None and line.startswith(code_block_marker):
             block_lines.append(line)
+        elif line is None and not is_atom:
+            # If the document ended abruptly, we insert the code block end marker automatically
+            block_lines.append(code_block_marker)
+        elif not is_atom:
+            # Fill an incomplete code block end marker if needed.
+            # For example, the paragraph
+            #
+            # ```
+            # a
+            # `
+            #
+            # becomes
+            #
+            # ```
+            # a
+            # ```
+            #
+            single_mark = code_block_marker[0]
+            last_line_code_chars = count_chars(block_lines[-1], single_mark)
+            if last_line_code_chars > 0 or len(line) == 0:
+                block_lines[-1] = single_mark*(len(code_block_marker) - last_line_code_chars) + block_lines[-1]
+            else:
+                block_lines.append(code_block_marker)
+
         result = {'md': '\n'.join(block_lines), 'type': 'atom' if is_atom else 'code'}
         self.extract_attrs(result, tokens)
         return result

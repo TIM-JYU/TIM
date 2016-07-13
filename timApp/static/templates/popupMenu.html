@@ -3,21 +3,21 @@
     <div id="content" class="actionButtonContent"></div>
 
     <div class="row" ng-repeat="f in actions | filter:{show: true}">
-        <div class="col-xs-10">
+        <div ng-class="colClass">
             <button class="wideButton btn-sm" ng-bind="f.desc" ng-click="callFunc($event, f)">
             </button>
         </div>
-        <div class="col-xs-1">
-            <input ng-if="storageAttribute"
-                   ng-checked="getChecked(f.desc)"
+
+        <div class="col-xs-1" ng-if="storageAttribute">
+            <input ng-checked="getChecked(f.desc)"
                    ng-click="clicked(f.desc)"
                    class="valign"
                    type="radio">
         </div>
     </div>
 
-    <div class="row" style="padding-top: 6px" ng-show="rights.editable">
-        <div class="col-xs-10">
+    <div class="row" style="padding-top: 6px" ng-show="editButton && rights.editable">
+        <div ng-class="colClass">
             <button class="wideButton parEditButton"
                     onclick="this.blur()"
                     ng-model="model.editState"

@@ -1,5 +1,4 @@
 #!/bin/bash
-docker tag tim:$(./get_latest_date.sh) timimages/tim:$(./get_latest_date.sh)
 docker tag svn timimages/svn
 docker tag cs3 timimages/cs3
 docker tag haskelldev timimages/haskelldev
