@@ -80,8 +80,7 @@ def get_all_messages(param_lecture_id=-1):
         list_of_new_messages = []
         for message in messages:
             user = timdb.users.get_user(message.get('user_id'))
-            time_as_time = datetime.datetime.fromtimestamp(
-                mktime(time.strptime(message.get("timestamp"), "%Y-%m-%d %H:%M:%S.%f")))
+            time_as_time = message.get("timestamp")
             list_of_new_messages.append(
                 {"sender": user.get('name'),
                  "time": time_as_time.strftime('%H:%M:%S'),
@@ -282,7 +281,7 @@ def get_new_question(lecture_id, current_question_id=None, current_points_id=Non
                 answer = answer[0]['answer']
             else:
                 answer = ''
-            return {'question': True, 'askedId': asked_id, 'asked': ask_time, 'questionJson': question_json,
+            return {'question': True, 'askedId': asked_id, 'asked': ask_time, 'questionjson': question_json,
                     "answer": answer}
     else:
         question_to_show_points = tempdb.showpoints.get_currently_shown_points(lecture_id)
@@ -301,7 +300,7 @@ def get_new_question(lecture_id, current_question_id=None, current_points_id=Non
                 answer = timdb.lecture_answers.get_user_answer_to_question(asked_id, current_user)
                 if answer:
                     answer = answer[0]['answer']
-                    return {"result": True, 'askedId': asked_id, "questionJson": question["json"], "answer": answer,
+                    return {"result": True, 'askedId': asked_id, "questionjson": question["json"], "answer": answer,
                             "expl": question["expl"]}
         return None
 
@@ -373,7 +372,7 @@ def add_question():
     expl = request.args.get('expl')
     if expl is None:
         expl = '{}'
-    question_json = request.args.get('questionJson')
+    question_json = request.args.get('questionjson')
 
     if not question_id:
         questions = timdb.questions.add_questions(doc_id, par_id, question_title, answer, question_json, points, expl)
@@ -843,8 +842,8 @@ def ask_question():
     timdb = getTimDb()
     if question_id:
         question = timdb.questions.get_question(question_id)[0]
-        question_json_str = question.get("questionJson")
-        question_hash = hashfunc(question.get("questionJson"))
+        question_json_str = question.get("questionjson")
+        question_hash = hashfunc(question.get("questionjson"))
         asked_hash = timdb.questions.get_asked_json_by_hash(question_hash)
         if asked_hash:
             asked_json_id = asked_hash[0].get("asked_json_id")

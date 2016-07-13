@@ -672,7 +672,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             rowsJson.push(row);
         }
 
-        var questionJson = {
+        var questionjson = {
             'QUESTION': scope.question.question,
             'TITLE': scope.question.title,
             'TYPE': scope.question.type,
@@ -682,9 +682,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             'DATA': {'HEADERS': headersJson, 'ROWS': rowsJson}
         };
 
-        scope.json = questionJson;
+        scope.json = questionjson;
         scope.dynamicAnswerSheetControl.createAnswer();
-        return questionJson;
+        return questionjson;
     };
 
     /**
@@ -692,8 +692,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
      * @memberof module:questionController
      */
     scope.createQuestion = function (ask) {
-        var questionJson = scope.createJson();
-        if (!questionJson) return;
+        var questionjson = scope.createJson();
+        if (!questionjson) return;
         var points = scope.createPoints();
         var expl = scope.createExplanation();
         var doc_id = scope.docId;
@@ -701,9 +701,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         var par_id = scope.getParId($par);
 
         // Without timeout 'timelimit' won't be saved in settings session variable. Thread issue?
-        scope.settings['timelimit'] = questionJson.TIMELIMIT.toString();
+        scope.settings['timelimit'] = questionjson.TIMELIMIT.toString();
         setTimeout(function () {
-            setsetting('timelimit', questionJson.TIMELIMIT.toString());
+            setsetting('timelimit', questionjson.TIMELIMIT.toString());
         }, 1000);
 
         http({
@@ -717,7 +717,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 'doc_id': doc_id,
                 'points': points,
                 'expl': JSON.stringify(expl),
-                'questionJson': JSON.stringify(questionJson),
+                'questionjson': JSON.stringify(questionjson),
                 'buster': new Date().valueOf()
             }
         })
@@ -727,7 +727,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 //TODO: This can be optimized to get only the new one.
                 scope.$parent.getQuestions();
                 if (ask) {
-                    scope.json = JSON.parse(data.questionJson);
+                    scope.json = JSON.parse(data.questionjson);
                     scope.qId = data.question_id;
                     scope.$emit('askQuestion', {
                         "lecture_id": scope.lectureId,

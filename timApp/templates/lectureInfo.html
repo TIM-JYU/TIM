@@ -8,8 +8,8 @@
     <script>
         var lectureId = {{lectureId|tojson}};
         var lectureCode = {{lectureCode|tojson}};
-        var lectureStartTime = {{lectureStartTime|tojson}};
-        var lectureEndTime = {{lectureEndTime|tojson}};
+        var lectureStartTime = {{lectureStartTime|timdate|tojson}};
+        var lectureEndTime = {{lectureEndTime|timdate|tojson}};
         var inLecture = {{in_lecture|tojson}};
     </script>
 
@@ -29,11 +29,11 @@
 
                 <strong>Start time:</strong>
 
-                <p ng-bind="lectureStartTime"></p>
+                <p ng-bind="lectureStartTime | timdate"></p>
 
                 <strong>End time:</strong>
 
-                <p ng-bind="lectureEndTime"></p>
+                <p ng-bind="lectureEndTime | timdate"></p>
 
                 <div ng-show="isLecturer">
                     <!--TODO: Preview questions. Needs directive from the question preview and then just use it.-->

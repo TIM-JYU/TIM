@@ -211,7 +211,7 @@ class Lectures(TimDbBase):
             """
             SELECT COUNT(*)
             FROM LectureUsers
-            WHERE lecture_id == %s;
+            WHERE lecture_id = %s;
             """, [lecture_id]
         )
 
@@ -221,7 +221,7 @@ class Lectures(TimDbBase):
             """
             SELECT options
             FROM Lecture
-            WHERE Lecture_id == %s
+            WHERE Lecture_id = %s
             """, [lecture_id]
         )
 

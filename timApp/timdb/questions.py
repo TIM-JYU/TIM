@@ -119,8 +119,9 @@ class Questions(TimDbBase):
             """
             SELECT *
             FROM AskedQuestion a
-            INNER JOIN AskedJson j
-            WHERE a.asked_id = %s AND a.asked_json_id == j.asked_json_id
+            JOIN AskedJson j
+            ON a.asked_json_id = j.asked_json_id
+            WHERE a.asked_id = %s
             """, [asked_id])
 
         return self.resultAsDictionary(cursor)
@@ -167,7 +168,7 @@ class Questions(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    def add_questions(self, doc_id: int, par_id: str, question_title: str, answer: str, questionJson: str,
+    def add_questions(self, doc_id: int, par_id: str, question_title: str, answer: str, questionjson: str,
                       points: str, expl: str, commit: bool=True) -> int:
         """
         Creates a new questions
@@ -178,7 +179,7 @@ class Questions(TimDbBase):
         """
 
         q = Question(doc_id=doc_id, par_id=par_id, question_title=question_title, answer=answer,
-                     questionjson=questionJson, points=points, expl=expl)
+                     questionjson=questionjson, points=points, expl=expl)
         self.session.add(q)
         self.session.flush()
         if commit:
@@ -187,7 +188,7 @@ class Questions(TimDbBase):
 
 
     def update_question(self, question_id: int, doc_id: int, par_id: str, question_title: str, answer: str,
-                        questionJson: str, points: str, expl: str,) -> int:
+                        questionjson: str, points: str, expl: str,) -> int:
         """
         Updates the question with particular id
         """
@@ -195,9 +196,9 @@ class Questions(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                        UPDATE Question
-                       SET doc_id = %s, par_id = %s, question_title = %s, answer = %s, questionJson = %s, points = %s, expl = %s
+                       SET doc_id = %s, par_id = %s, question_title = %s, answer = %s, questionjson = %s, points = %s, expl = %s
                        WHERE question_id = %s
-                       """, [doc_id, par_id, question_title, answer, questionJson, points, expl, question_id])
+                       """, [doc_id, par_id, question_title, answer, questionjson, points, expl, question_id])
 
         self.db.commit()
         return question_id
@@ -215,7 +216,7 @@ class Questions(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    def get_multiple_questions(self, question_ids: 'int[]') -> List[dict]:
+    def get_multiple_questions(self, question_ids: List[int]) -> List[dict]:
         """
         Gets multiple questions
         :param question_ids: quesitons ids as integet array
@@ -234,12 +235,14 @@ class Questions(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    def get_multiple_asked_questions(self, asked_ids: 'int[]') -> List[dict]:
+    def get_multiple_asked_questions(self, asked_ids: List[int]) -> List[dict]:
         """
         Gets multiple questions
-        :param question_ids: quesitons ids as integet array
-        :return: list of dictionaries of the matching questions.
+        :param asked_ids: question ids as integer array
+        :return: list of dictionaries of the matching questions
         """
+        if not asked_ids:
+            return []
 
         cursor = self.db.cursor()
         for_db = str(asked_ids)
@@ -248,8 +251,8 @@ class Questions(TimDbBase):
         cursor.execute("""
                       SELECT *
                       FROM AskedQuestion q
-                      INNER JOIN AskedJson j
-                      ON q.asked_json_id == j.asked_json_id
+                      JOIN AskedJson j
+                      ON q.asked_json_id = j.asked_json_id
                       WHERE q.asked_id IN (""" + for_db + """)
                       """)
 

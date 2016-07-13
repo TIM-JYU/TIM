@@ -39,7 +39,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         $scope.earlyJoining = true;
         var date = new Date();
         $scope.editMode = false;
-        $scope.startDate = date.getDate() + "." + (date.getMonth() + 1) + "." + date.getFullYear();
+        $scope.startDate = date.getUTCDate() + "." + (date.getUTCMonth() + 1) + "." + date.getUTCFullYear();
         angular.element('#startDate').datepicker({dateFormat: 'dd.m.yy'}); //calendar for start date initalized
         angular.element('#endDate').datepicker({dateFormat: 'dd.m.yy'}); //calendar for start date initalized
 
@@ -57,14 +57,15 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
 
             $scope.hostName = encodeURIComponent(location.host);
             $scope.lectureId = data.lecture_id;
-            var splittedStart = data.start_date.split(" ");
-            var splittedStartTime = splittedStart[1].split(":");
+            // start_date is of the form: 2016-07-13T12:33:00+00:00
+            var splittedStart = data.start_date.split("T");
+            var splittedStartTime = splittedStart[1].split('+')[0].split(":");
             var splittedStartDate = splittedStart[0].split("-");
             $scope.startMin = splittedStartTime[1];
             $scope.startHour = splittedStartTime[0];
             $scope.startDate = splittedStartDate[2] + "." + splittedStartDate[1] + "." + splittedStartDate[0];
-            var splittedEnd = data.end_date.split(" ");
-            var splittedEndTime = splittedEnd[1].split(":");
+            var splittedEnd = data.end_date.split("T");
+            var splittedEndTime = splittedEnd[1].split('+')[0].split(":");
             var splittedEndDate = splittedEnd[0].split("-");
             $scope.enableDate2();
             $scope.endMin = splittedEndTime[1];
@@ -83,9 +84,9 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         $scope.initLectureForm = function () {
             $window.console.log("Lecture initialized.");
             var date = new Date();
-            $scope.startDate = date.getDate() + "." + (date.getMonth() + 1) + "." + date.getFullYear();
-            $scope.startHour = $scope.leftPadder(date.getHours(), 2);
-            $scope.startMin = $scope.leftPadder(date.getMinutes(), 2);
+            $scope.startDate = date.getUTCDate() + "." + (date.getUTCMonth() + 1) + "." + date.getUTCFullYear();
+            $scope.startHour = $scope.leftPadder(date.getUTCHours(), 2);
+            $scope.startMin = $scope.leftPadder(date.getUTCMinutes(), 2);
             $scope.dueCheck = true;
             $scope.earlyJoining = true;
             $scope.enableDue2();
@@ -207,12 +208,12 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @memberof module:createLectureCtrl
          */
         $scope.dateObjectToString = function (input, include_time) {
-            var output = $scope.leftPadder(input.getFullYear(), 4) + "-" +
-                $scope.leftPadder(input.getMonth() + 1, 2) + "-" +
-                $scope.leftPadder(input.getDate(), 2);
+            var output = $scope.leftPadder(input.getUTCFullYear(), 4) + "-" +
+                $scope.leftPadder(input.getUTCMonth() + 1, 2) + "-" +
+                $scope.leftPadder(input.getUTCDate(), 2);
             if (include_time) {
-                output += " " + $scope.leftPadder(input.getHours(), 2) + ":" +
-                    $scope.leftPadder(input.getMinutes(), 2);
+                output += " " + $scope.leftPadder(input.getUTCHours(), 2) + ":" +
+                    $scope.leftPadder(input.getUTCMinutes(), 2);
             }
             return output;
         };
@@ -242,7 +243,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             }
             var hours = parseInt(time_hours, 10);
             var mins = parseInt(time_mins, 10);
-            return new Date(yyyy, mm - 1, dd, hours, mins, 0);
+            return new Date(Date.UTC(yyyy, mm - 1, dd, hours, mins, 0));
         };
 
         /**
@@ -281,8 +282,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.isNumber($scope.maxStudents, "maxStudents");
 
             if ($scope.start_date !== undefined) {
-                var now_hours = date.getHours();
-                var now_minutes = date.getMinutes();
+                var now_hours = date.getUTCHours();
+                var now_minutes = date.getUTCMinutes();
                 var now_date_object = $scope.translateToDateObject($scope.dateObjectToString(date, false), now_hours, now_minutes, "-");
                 var lecture_starting_in_past = $scope.start_date - now_date_object < 0;
                 var lecture_ending_in_past;
@@ -311,8 +312,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                         $scope.errorize("durationDiv", "Please give a duration.");
                     }
                     $scope.end_date = new Date($scope.start_date.getTime());
-                    $scope.end_date.setHours($scope.start_date.getHours() + parseInt($scope.durationHour));
-                    $scope.end_date.setMinutes($scope.start_date.getMinutes() + parseInt($scope.durationMin));
+                    $scope.end_date.setUTCHours($scope.start_date.getUTCHours() + parseInt($scope.durationHour));
+                    $scope.end_date.setUTCMinutes($scope.start_date.getUTCMinutes() + parseInt($scope.durationMin));
                     if ($scope.end_date - $scope.start_date < 120000) {
                         $scope.errorize("durationDiv", "Lecture has to last at least two minutes.");
                     }

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from jinja2.utils import soft_unicode
 
 
@@ -9,3 +11,7 @@ def map_format(value, pattern):
             -> Hello? - Foo!
     """
     return soft_unicode(pattern) % value
+
+
+def timdate(value: datetime):
+    return value.isoformat()

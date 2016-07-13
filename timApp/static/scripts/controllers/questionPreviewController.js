@@ -28,8 +28,8 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
         $scope.$on("setPreviewJson", function (event, args) {
             $scope.questionId = args.questionId;
             $scope.isLecturer = args.isLecturer;
-            $scope.json = args.questionJson;
-            $scope.questionTitle = args.questionJson.TITLE;
+            $scope.json = args.questionjson;
+            $scope.questionTitle = args.questionjson.TITLE;
             $scope.points = args.points;
             $scope.expl = args.expl;
             $scope.dynamicAnswerSheetControl.createAnswer();

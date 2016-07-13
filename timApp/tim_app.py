@@ -8,7 +8,7 @@ import sys
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-from routes.filters import map_format
+from routes.filters import map_format, timdate
 from routes.logger import setup_logging, log_info, log_warning
 from utils import datestr_to_relative, date_to_relative
 
@@ -32,5 +32,6 @@ db = SQLAlchemy(app)
 app.jinja_env.filters['map_format'] = map_format
 app.jinja_env.filters['datestr_to_relative'] = datestr_to_relative
 app.jinja_env.filters['date_to_relative'] = date_to_relative
+app.jinja_env.filters['timdate'] = timdate
 
 mimetypes.add_type('text/plain', '.scss')
