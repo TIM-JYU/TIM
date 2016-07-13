@@ -64,7 +64,7 @@ def perform_migration(sqlite_path: str, postgre_path: str):
     migrate_table(sq3c, pgc, 'question', id_column='question_id', extra_clause='WHERE doc_id IN (SELECT id FROM block)')
     migrate_table(sq3c, pgc, 'readparagraphs', id_column=None, extra_clause='WHERE doc_id IN (SELECT id FROM block)')
     migrate_table(sq3c, pgc, 'translation', id_column=None)
-    migrate_table(sq3c, pgc, 'usergroupmember', id_column=None)
+    migrate_table(sq3c, pgc, 'usergroupmember', id_column=None, extra_clause='WHERE usergroup_id IN (SELECT id FROM usergroup)')
     migrate_table(sq3c, pgc, 'usernotes')
     migrate_table(sq3c, pgc, 'version')
     migrate_table(sq3c, pgc, 'lectureanswer', id_column='answer_id',
