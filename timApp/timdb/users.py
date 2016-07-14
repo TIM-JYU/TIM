@@ -664,7 +664,8 @@ WHERE User_id IN ({}))
 
     def get_access_types(self):
         c = self.db.cursor()
-        return self.resultAsDictionary(c.execute("""SELECT id, name FROM AccessType"""))
+        c.execute("""SELECT id, name FROM AccessType""")
+        return self.resultAsDictionary(c)
 
     def remove_membership(self, uid: int, gid: int, commit: bool=True) -> int:
         """Removes membership of a user from a group.
