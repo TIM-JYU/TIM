@@ -1,5 +1,12 @@
 /**
- * Created by localadmin on 13.4.2016.
+ * Handles velp summary. Requires reviewController.
+ *
+ * @module velpSummary
+ * @author Joonas Lattu
+ * @author Petteri Palojärvi
+ * @author Seppo Tarvainen
+ * @licence MIT
+ * @copyright 2016 Timber project authors
  */
 
 var angular;
@@ -42,6 +49,9 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
         return Number(p.toPrecision(4));
     };
 
+    /**
+     * Check all annotations in velp summary.
+     */
     $scope.checkAll = function () {
         angular.forEach($scope.annotations, function (a) {
             a.selected = $scope.settings.selectedAll;
