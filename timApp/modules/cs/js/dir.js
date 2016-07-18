@@ -659,6 +659,7 @@ function lataaSage(scope,firstTime, readyFunction) {
         dataType: "script",
         cache: true,
         url: "//sagecell.sagemath.org/static/embedded_sagecell.js"
+        // url: "https://cosmos.mat.uam.es:8888/static/embedded_sagecell.js"
     });
     sageLoading.done(function() {
         sageLoaded = true;
@@ -1477,7 +1478,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 			var s = st[i];
 			// if ( s.indexOf($scope.replace) >= 0 ) {
             if ( needReplace && regexp.test(s) ) {
-				r += nl + $scope.usercode;
+				r += nl + $scope.usercode + "\n";
 				if ( step === 0 ) { step++; nls = ""; continue; }
 			} else { 
 				r += nl + s;
