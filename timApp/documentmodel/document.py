@@ -672,9 +672,14 @@ class Document:
                 if p.get_attr('taskId') == task_id_name:
                     return p
                 if p.is_reference():
-                    for rp in p.get_referenced_pars():
-                        if rp.get_attr('taskId') == task_id_name:
-                            return rp
+                    try:
+                        ref_pars = p.get_referenced_pars()
+                    except TimDbException:  # Ignore invalid references
+                        continue
+                    else:
+                        for rp in ref_pars:
+                            if rp.get_attr('taskId') == task_id_name:
+                                return rp
         return None
 
     def get_last_modified(self) -> Optional[datetime]:
