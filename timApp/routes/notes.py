@@ -84,7 +84,7 @@ def edit_note():
     sent_tags = jsondata.get('tags', {})
     tags = []
     for tag in KNOWN_TAGS:
-        if sent_tags[tag]:
+        if sent_tags.get(tag):
             tags.append(tag)
     timdb = getTimDb()
     if not (timdb.notes.has_edit_access(group_id, note_id) or timdb.users.user_is_owner(getCurrentUserId(), doc_id)):
