@@ -487,7 +487,7 @@ class Documents(TimDbBase):
 
         if row_exists:
             update_statement = 'UPDATE Notification SET ' \
-                               + ', '.join(['{}={}'.format(k, int(settings[k])) for k in keys]) \
+                               + ', '.join(['{}={}'.format(k, settings[k]) for k in keys]) \
                                + ' WHERE user_id = %s AND doc_id = %s'
             cursor.execute(update_statement, [user_id, doc_id])
         else:
