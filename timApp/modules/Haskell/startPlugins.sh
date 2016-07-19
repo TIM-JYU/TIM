@@ -12,7 +12,7 @@ dockerOptions="--name $dockername --net=timnet \
    -p 58000:5002\
    -p 59000:5003\
    -p 60000:5004\
-   haskellrun  /bin/bash"
+   timimages/haskellrun  /bin/bash"
 
 
 docker stop haskellplugins2 > /dev/null 2>&1

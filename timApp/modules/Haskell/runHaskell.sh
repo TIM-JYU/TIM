@@ -4,4 +4,4 @@ IFS=$'\n\t'
 
 # This runs the haskell development environment
 
-docker run -v $PWD/:/Haskell/ -i -t haskelldev /bin/bash
+docker run -v $PWD/:/Haskell/ -i -t timimages/haskelldev /bin/bash
