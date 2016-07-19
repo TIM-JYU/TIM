@@ -1,8 +1,6 @@
 #!/bin/bash
 docker tag svn timimages/svn
 docker tag cs3 timimages/cs3
-docker tag haskelldev timimages/haskelldev
-docker tag haskellrun timimages/haskellrun
 docker tag stackage_builder timimages/stackage_builder
 docker tag postgre timimages/postgre
 docker tag pali timimages/pali
