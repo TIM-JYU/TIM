@@ -50,7 +50,7 @@ timApp.filter('filterByVelpGroups', function () {
     };
 });
 
-timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', function ($scope, $window, $http) {
+timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q', function ($scope, $window, $http, $q) {
     "use strict";
     var console = $window.console;
 
@@ -84,11 +84,18 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
     $scope.annotations = [];
 
     // Get velpgroup data
-    $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id)).success(function (data) {
+    var promises = [];
+    promises.push();
+    var p = $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id));
+    promises.push(p);
+    p.success(function (data) {
         $scope.velpGroups = data;
 
         // Get default velp group data
-        $http.get('/{0}/get_default_velp_group'.replace('{0}', doc_id)).success(function (data) {
+
+        p = $http.get('/{0}/get_default_velp_group'.replace('{0}', doc_id));
+        promises.push(p);
+        p.success(function (data) {
             console.log("Get default velp group");
             console.log(data);
             default_velp_group = data;
@@ -114,7 +121,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             // $scope.groupDefaults["0"] = [default_velp_group];
 
             // Get personal velp group data
-            $http.get('/get_default_personal_velp_group').success(function (data) {
+            p = $http.get('/get_default_personal_velp_group');
+            promises.push(p);
+            p.success(function (data) {
                 default_personal_velp_group = {id: data.id, name: data.name};
 
                 if (data.created_new_group) {
@@ -150,7 +159,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                     }
                 });
                 */
-
+                $scope.updateVelpList();
             });
 
             if (default_velp_group.id < 0)
@@ -162,7 +171,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         });
 
         // Get velp and annotation data
-        $http.get('/{0}/get_velps'.replace('{0}', doc_id)).success(function (data) {
+        p = $http.get('/{0}/get_velps'.replace('{0}', doc_id));
+        promises.push(p);
+        p.success(function (data) {
             $scope.velps = data;
             $scope.velps.forEach(function (v) {
                 v.used = 0;
@@ -188,7 +199,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
          });
          */
 
-        $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) {
+        p = $http.get('/{0}/get_annotations'.replace('{0}', doc_id));
+        promises.push(p);
+        p.success(function (data) {
             $scope.annotations = data;
             $scope.loadDocumentAnnotations();
             console.log("ANNOTATIONS");
@@ -196,7 +209,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
         });
 
         // Get label data
-        $http.get('/{0}/get_velp_labels'.replace('{0}', doc_id)).success(function (data) {
+        p = $http.get('/{0}/get_velp_labels'.replace('{0}', doc_id));
+        promises.push(p);
+        p.success(function (data) {
             $scope.labels = data;
             $scope.labels.forEach(function (l) {
                 l.edit = false;
@@ -206,12 +221,15 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
             console.log($scope.labels);
         });
 
-        $http.get('/{0}/get_velp_group_personal_selections'.replace('{0}', doc_id)).success(function (data) {
+        p = $http.get('/{0}/get_velp_group_personal_selections'.replace('{0}', doc_id));
+        promises.push(p);
+        p.success(function (data) {
             $scope.groupSelections = data;
             if (!$scope.groupSelections.hasOwnProperty("0"))
                 $scope.groupSelections["0"] = [];
 
             var docSelections = $scope.groupSelections["0"];
+            console.log("PERSONAL: ");
             console.log($scope.groupSelections);
 
             $scope.velpGroups.forEach(function (g) {
@@ -223,10 +241,13 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                     }
                 }
             });
+            //$scope.updateVelpList();
 
         });
 
-        $http.get('/{0}/get_velp_group_default_selections'.replace('{0}', doc_id)).success(function (data) {
+        p = $http.get('/{0}/get_velp_group_default_selections'.replace('{0}', doc_id));
+        promises.push(p);
+        p.success(function (data) {
             $scope.groupDefaults = data;
 
             var docDefaults = $scope.groupDefaults["0"];
@@ -245,8 +266,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', func
                     }
                 }
             });
+            //$scope.updateVelpList();
 
         });
+
+        $q.all(promises).then(function(){
+            $scope.updateVelpList();
+        });
+
     });
 
     // Methods
