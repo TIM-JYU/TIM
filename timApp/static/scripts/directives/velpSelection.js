@@ -1,6 +1,11 @@
 /**
- *
+ * VelpSelection directive retrieves all the data from the server including velps, labels, velp groups, and annotations.
+ * This directive also handles majority of the functionality that is relevant in handling velps, labels and velp groups.
+ * 
  * @module velpSelection
+ * @author Joonas Lattu
+ * @author Petteri Palojärvi
+ * @author Seppo Tarvainen
  * @licence MIT
  * @copyright 2016 Timber project authors
  */
@@ -277,6 +282,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     });
 
     // Methods
+
     /**
      * Get color for object.
      * @param index - Index of the color in color palette. (modulo by lenght of color palette)
@@ -637,7 +643,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     /** Velpgroup methods **/
 
     /**
-     * Updates velp list.
+     * Updates velp list according to how velpgroups are selected in area.
      */
     $scope.updateVelpList = function () {
         $scope.velpGroups.forEach(function (g) {
@@ -859,7 +865,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     };
 
     /**
-     *
+     * Changes all velp group selections, defaults and shows.
      * @param type
      */
     $scope.changeAllVelpGroupSelections = function (type) {
@@ -932,6 +938,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
     };
 
+    /**
+     * Sets all velp group selections (shows and defaults) in selected area.
+     */
     $scope.resetCurrentShowsToDefaults = function () {
 
         var targetID;
@@ -951,6 +960,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         });
     };
 
+    /**
+     * Sets all show checkboxes the same as defaults.
+     */
     $scope.resetAllShowsToDefaults = function () {
         $scope.groupSelections = JSON.parse(JSON.stringify($scope.groupDefaults));
 
@@ -960,6 +972,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         });
     };
 
+    /**
+     * Changes checkboxes according to selected paragraph or document.
+     * @param type - Paragraph ID or document "0".
+     * @returns {boolean}
+     */
     $scope.checkCheckBoxes = function (type) {
         var targetID = null;
 
@@ -976,6 +993,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         }
     };
 
+    /**
+     * Get alla velp groups of specifiv velp.
+     * @param velp - Velp in question
+     * @returns {Array}
+     */
     $scope.getVelpsVelpGroups = function (velp) {
         var groups = [];
 
@@ -988,25 +1010,45 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         return groups;
     };
 
+    /**
+     * Checks if some velpGroup is selected.
+     * @param velp - Velp which velp groups are checked
+     * @returns {boolean}
+     */
     $scope.isSomeVelpGroupSelected = function (velp) {
         if (typeof velp.velp_groups === UNDEFINED)
             return false;
         return velp.velp_groups.length > 0;
     };
 
+    /**
+     * Checks if velp can be added or modified. Velp has to have a name and at least one velp group.
+     * @param velp - Velp in question
+     * @returns {boolean}
+     */
     $scope.isVelpValid = function (velp) {
         if (typeof velp.content === UNDEFINED)
             return false;
         return $scope.isSomeVelpGroupSelected(velp) && velp.content.length > 0;
     };
 
+    /**
+     * Checks whether a group belongs to a velp.
+     * @param velp - Velp to check
+     * @param group - Velp group to check
+     * @returns {boolean}
+     */
     $scope.isGroupInVelp = function (velp, group) {
         if (typeof velp.velp_groups === UNDEFINED || typeof group.id === UNDEFINED)
             return false;
         return velp.velp_groups.indexOf(group.id) >= 0;
     };
 
-
+    /**
+     * Updates velp's velp groups
+     * @param velp - Velp to update
+     * @param group - Group to add or to remove
+     */
     $scope.updateVelpGroups = function (velp, group) {
         var index = velp.velp_groups.indexOf(group.id);
         if (index < 0) {

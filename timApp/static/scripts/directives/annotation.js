@@ -1,8 +1,13 @@
 /**
- * Created by localadmin on 4.4.2016.
- *
- * Annotations uses attribute as a directive declaration, because IE does not support
- * custom elements reliably.
+ * Handles logic behind single annotation. Annotations uses attribute as a directive declaration, 
+ * because IE does not support custom elements reliably.
+ * 
+ * @module velpSummary
+ * @author Joonas Lattu
+ * @author Petteri Palojärvi
+ * @author Seppo Tarvainen
+ * @licence MIT
+ * @copyright 2016 Timber project authors
  */
 
 /*
@@ -63,6 +68,9 @@ timApp.directive("annotation", ['$window', function ($window) {
                 }
             };
 
+            /**
+             * Update annotation z-index attribute.
+             */
             scope.updateVelpZIndex = function () {
                 if (scope.velpElement === null) {
                     scope.velpElement = element[0].getElementsByClassName("annotation-info")[0];
@@ -140,10 +148,18 @@ timApp.directive("annotation", ['$window', function ($window) {
                 });
             };
 
+            /**
+             * Check if user has rights to edit annoatation.
+             * @returns {boolean} if user has rights or not.
+             */
             scope.checkRights = function () {
                 return scope.editaccess !== 1;
             };
 
+            /**
+             * Check if annotation is changed comparing to last saved state.
+             * @returns {boolean}
+             */
             scope.checkIfChanged = function () {
                 if (scope.original.points !== scope.points)
                     return true;
