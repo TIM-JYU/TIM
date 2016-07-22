@@ -33,7 +33,7 @@ CREATE TABLE VelpLabel (
   content     TEXT,
 
   CONSTRAINT VelpLabel_PK
-  PRIMARY KEY (id, language_id)
+  PRIMARY KEY (id)
 );
 
 
