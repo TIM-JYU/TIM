@@ -135,7 +135,7 @@ timApp.directive("annotation", ['$window', function ($window) {
                     });
                 }
                 scope.newComment = "";
-                if (scope.visible_options.value != scope.original.visible_to) {
+                if (scope.visible_options.value !== scope.original.visible_to) {
                     scope.$parent.changeVisibility(scope.aid, scope.visible_options.value);
                 }
                 scope.original = {
