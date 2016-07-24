@@ -415,6 +415,28 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
     };
 
+     $scope.addComment = function (id, name, comment) {
+        for (var i = 0; i < $scope.annotations.length; i++) {
+            if ($scope.annotations[i].id === id) {
+                $scope.annotations[i].comments.push({
+                    commenter_username: name,
+                    content: comment,
+                    comment_time: "now",
+                    comment_relative_time: "just now"
+                });
+                break;
+            }
+        }
+    };
+    $scope.changeVisibility = function (id, visiblity) {
+        for (var i = 0; i < $scope.annotations.length; i++) {
+            if ($scope.annotations[i].id === id) {
+                 $scope.annotations[i].visible_to = visiblity;
+                break;
+            }
+        }
+    };
+
     /**
      * Select text range.
      * TODO: When annotations can break tags, check annotations from all elements in selection

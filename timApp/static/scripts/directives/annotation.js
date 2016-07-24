@@ -131,10 +131,13 @@ timApp.directive("annotation", ['$window', function ($window) {
                             comment_time: "now",
                             comment_relative_time: "just now"
                         });
+                        scope.$parent.addComment(scope.aid, json.data.name, comment);
                     });
                 }
                 scope.newComment = "";
-
+                if (scope.visible_options.value != scope.original.visible_to) {
+                    scope.$parent.changeVisibility(scope.aid, scope.visible_options.value);
+                }
                 scope.original = {
                     points: scope.points,
                     annotation_id: id,
