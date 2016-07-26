@@ -1,6 +1,7 @@
 import copy
 from typing import Optional, List
 from timdb.timdbbase import TimDbBase
+from timdb.velp_models import Velp, VelpVersion, VelpLabel
 
 
 class Velps(TimDbBase):
@@ -37,16 +38,14 @@ class Velps(TimDbBase):
         :param valid_until: Time after velp becomes unusable.
         :return: ID of velp that was just created.
         """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      INSERT INTO
-                      Velp(creator_id, default_points, icon_id, valid_until)
-                      VALUES(%s, %s, %s, %s)
-                      """, [creator_id, default_points, icon_id, valid_until]
-                       )
-        self.db.commit()
-        velp_id = cursor.lastrowid
-        return velp_id
+
+        v = Velp(creator_id=creator_id,
+                 default_points=default_points,
+                 icon_id=icon_id,
+                 valid_until=valid_until)
+        self.session.add(v)
+        self.session.commit()
+        return v.id
 
     def create_velp_version(self, velp_id: int):
         """Creates a new version for a velp to use.
@@ -54,16 +53,11 @@ class Velps(TimDbBase):
         :param velp_id: ID of velp we're adding version for
         :return: ID of version that was just created
         """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      INSERT INTO
-                      VelpVersion(velp_id)
-                      VALUES(%s)
-                      """, [velp_id]
-                       )
-        self.db.commit()
-        version_id = cursor.lastrowid
-        return version_id
+
+        vv = VelpVersion(velp_id=velp_id)
+        self.session.add(vv)
+        self.session.commit()
+        return vv.id
 
     def create_velp_content(self, version_id: int, language_id: str, content: str):
         """Method to create content (text) for velp.
@@ -126,16 +120,12 @@ class Velps(TimDbBase):
         :param content: Label content
         :return: id of the new label
         """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      INSERT INTO
-                      VelpLabel(language_id, content)
-                      VALUES (%s, %s)
-                      """, [language_id, content]
-                       )
-        self.db.commit()
-        label_id = cursor.lastrowid
-        return label_id
+
+        vl = VelpLabel(language_id=language_id,
+                       content=content)
+        self.session.add(vl)
+        self.session.commit()
+        return vl.id
 
     def add_velp_label_translation(self, label_id: int, language_id: str, content: str):
         """Adds new translation to an existing label.

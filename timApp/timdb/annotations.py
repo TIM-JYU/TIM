@@ -3,6 +3,7 @@ from enum import Enum, unique
 from datetime import timedelta
 from typing import Dict, List, Optional
 from timdb.timdbbase import TimDbBase
+from timdb.velp_models import Annotation, AnnotationComment
 from utils import diff_to_relative
 
 
@@ -51,20 +52,30 @@ class Annotations(TimDbBase):
         :return: ID of the new, just added annotation.
         """
 
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      INSERT INTO
-                      Annotation(velp_version_id, visible_to, points, valid_until, icon_id, annotator_id,
-                      document_id, answer_id, paragraph_id_start, paragraph_id_end,
-                      offset_start, node_start, depth_start, offset_end, node_end, depth_end, hash_start, hash_end,
-                      element_path_start, element_path_end)
-                      VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                      """, [velp_version_id, visible_to.value, points, valid_until, icon_id, annotator_id, document_id,
-                            answer_id, paragraph_id_start, paragraph_id_end, offset_start, node_start, depth_start,
-                            offset_end, node_end, depth_end, hash_start, hash_end, element_path_start, element_path_end]
-                       )
-        self.db.commit()
-        return cursor.lastrowid
+        a = Annotation(velp_version_id=velp_version_id,
+                       visible_to=visible_to.value,
+                       points=points,
+                       valid_until=valid_until,
+                       icon_id=icon_id,
+                       annotator_id=annotator_id,
+                       document_id=document_id,
+                       answer_id=answer_id,
+                       paragraph_id_start=paragraph_id_start,
+                       paragraph_id_end=paragraph_id_end,
+                       offset_start=offset_start,
+                       offset_end=offset_end,
+                       node_start=node_start,
+                       node_end=node_end,
+                       depth_start=depth_start,
+                       depth_end=depth_end,
+                       hash_start=hash_start,
+                       hash_end=hash_end,
+                       element_path_start=element_path_start,
+                       element_path_end=element_path_end)
+
+        self.session.add(a)
+        self.session.commit()
+        return a.id
 
     def update_annotation(self, annotation_id: int, version_id: Optional[int], visible_to: AnnotationVisibility,
                           points: Optional[float], icon_id: Optional[int]):
@@ -140,15 +151,14 @@ class Annotations(TimDbBase):
         :param content: Text of comment
         :return: ID of the new comment.
         """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      INSERT INTO
-                      AnnotationComment(annotation_id, commenter_id, content)
-                      VALUES (%s, %s, %s)
-                      """, [annotation_id, commenter_id, content]
-                       )
+
+        ac = AnnotationComment(annotation_id=annotation_id,
+                               commenter_id=commenter_id,
+                               content=content)
+        self.session.add(ac)
+        self.session.commit()
         self.db.commit()
-        return cursor.lastrowid
+        return ac.id
 
     def get_annotations_with_comments_in_document(self, user_id: int, user_has_see_answers: bool,
                                                   user_has_teacher: bool,

@@ -1,4 +1,5 @@
 from timdb.timdbbase import TimDbBase
+from timdb.velp_models import VelpGroupLabel
 
 
 class VelpGroupLabels(TimDbBase):
@@ -9,15 +10,12 @@ class VelpGroupLabels(TimDbBase):
         :param content: Label content
         :return: id of the new label.
         """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      INSERT INTO
-                      VelpGroupLabel(language_id, content)
-                      VALUES (%s, %s)
-                      """, [language_id, content]
-                       )
-        self.db.commit()
-        return cursor.lastrowid
+
+        vgl = VelpGroupLabel(language_id=language_id,
+                             content=content)
+        self.session.add(vgl)
+        self.session.commit()
+        return vgl.id
 
     def add_translation(self, label_id: int, language_id: str, content: str):
         """
