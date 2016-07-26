@@ -110,7 +110,8 @@ class Velps(TimDbBase):
                       SELECT
                       MAX(id),content
                       FROM
-                      VelpInformation
+                      FROM VelpVersion
+                      JOIN VelpContent ON VelpVersion.id = VelpContent.version_id
                       WHERE velp_id = ? AND language_id = ?
                       """, [velp_id, language_id]
                        )
