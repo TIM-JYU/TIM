@@ -1,9 +1,10 @@
-<div id="pars">
+<div id="pars" ng-click="selectText()">
     {% include 'paragraphs.html' %}
     {% if rights.editable %}
-        <div class="addBottomContainer hidden-print">
+        <div class="addBottomContainer">
             <button class="addBottom timButton">Add paragraph</button>
         </div>
     {% endif %}
-<velp-selection id="velpMenu" ng-show="false"></velp-selection>
 </div>
+<velp-selection id="velpMenu"></velp-selection>
+<!-- velp-summary></velp-summary -->

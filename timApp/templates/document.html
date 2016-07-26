@@ -8,6 +8,7 @@
          <li role="presentation" {{ active('view_page.see_answers_view') }}><a id="headerAnswers" href="/answers/{{ doc.fullname }}">Answers</a></li>
     {% endif %}
      <li role="presentation" {{ active('view_page.lecture_view') }}><a id="headerLecture" href="/lecture/{{ doc.fullname }}">Lecture view</a></li>
+     <li role="presentation" {{ active('view_page.velp_view') }}><a id="headerVelp" href="/velp/{{ doc.fullname }}">Velp view</a></li>
      <li role="presentation" {{ active('view_page.slide_document') }}><a id="headerSlide" href="/slide/{{ doc.fullname }}">Slide view</a></li>
     {% if translations %}
         <span style="float: right;">

@@ -54,6 +54,9 @@
                     <label class="checkbox-inline" ng-show="showTeacher()">
                         <input type="checkbox" ng-model="saveTeacher">Save teacher's fix
                     </label>
+                    <label class="checkbox-inline">
+                        <input type="checkbox" ng-model="review">Velps
+                    </label>
                 </div>
             </div>
             <div class="row" ng-show="selectedAnswer.collaborators.length > 1">
@@ -63,6 +66,9 @@
                         <li ng-repeat="c in selectedAnswer.collaborators">{{ c.real_name }}</li>
                     </ul>
                 </div>
+            </div>
+            <div ng-show="review" class="review">
+
             </div>
         </div>
         <span ng-show="taskInfo.answerLimit">Tries left: {{ getTriesLeft() }}</span>

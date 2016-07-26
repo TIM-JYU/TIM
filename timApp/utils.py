@@ -22,12 +22,13 @@ def date_to_relative(d: Optional[datetime]):
     :param d: The datetime object to convert.
     :return: A string representing the given date relative to current time.
     """
+
     if d is None:
         return None
     diff = datetime.now(timezone.utc) - d
     s = diff.seconds
     if diff.days > 7 or diff.days < 0:
-        return d.strftime('%d %b %y')
+        return (datetime.now()-diff).strftime('%d %b %y')
     elif diff.days == 1:
         return '1 day ago'
     elif diff.days > 1:

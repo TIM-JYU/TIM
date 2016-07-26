@@ -9,8 +9,8 @@ from psycopg2._psycopg import connection
 
 from timdb.tim_models import Block
 
-BLOCKTYPES = collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE', 'ANSWER', 'IMAGE', 'READING', 'FOLDER', 'FILE', 'UPLOAD'))
-blocktypes = BLOCKTYPES(0, 1, 2, 3, 4, 5, 6, 7, 8)
+BLOCKTYPES = collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE', 'ANSWER', 'IMAGE', 'READING', 'FOLDER', 'FILE', 'UPLOAD', 'VELPGROUP', 'ANNOTATION'))
+blocktypes = BLOCKTYPES(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
 
 class TimDbException(Exception):

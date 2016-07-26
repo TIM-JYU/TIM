@@ -1,0 +1,86 @@
+[
+  {
+    "labels": [
+      0
+    ],
+    "used": 3,
+    "id": 0,
+    "points": -1,
+    "content": "Sentinel missing"
+  },
+  {
+    "labels": [
+      0
+    ],
+    "used": 0,
+    "id": 1,
+    "points": -1,
+    "content": "Does not terminate with sentinel"
+  },
+  {
+    "labels": [
+      0,
+      6
+    ],
+    "used": 2,
+    "id": 2,
+    "points": -1,
+    "content": "Sentinel counted in sum"
+  },
+  {
+    "labels": [1,5],
+    "used": 0,
+    "id": 3,
+    "points": -1,
+    "content": "Index out of bounds"
+  },
+  {
+    "labels": [1],
+    "used": 0,
+    "id": 4,
+    "points": -2,
+    "content": "Endless loop"
+  },
+  {
+    "labels": [2,3,7],
+    "used": 4,
+    "id": 5,
+    "points": 0,
+    "content": "Division by zero OK in some cases (many return-clauses)"
+  },
+  {
+    "labels": [3, 1],
+    "used": 0,
+    "id": 6,
+    "points": -1,
+    "content": "Checking division by i (not in scope anymore)"
+  },
+  {
+    "labels": [2, 3],
+    "used": 0,
+    "id": 7,
+    "points": -2,
+    "content": "Checking against division by zero totally missing"
+  },
+  {
+    "labels": [4, 6],
+    "used": 1,
+    "id": 8,
+    "points": -1,
+    "content": "Negative values in sum"
+  },
+  {
+    "labels": [2],
+    "used": 1,
+    "id": 9,
+    "points": 1,
+    "content": "Checkin division by zero OK"
+  },
+  {
+    "labels": [],
+    "used": 0,
+    "id": 10,
+    "points": 2,
+    "content": "Absolutely nothing to complain"
+  }
+]

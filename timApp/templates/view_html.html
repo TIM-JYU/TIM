@@ -21,6 +21,7 @@
     {% endfor %}
 {% endblock %}
 
+{% set velp_mode = route == "velp" %}
 {% set teacher_mode = route in ("teacher", "answers") %}
 {% set lecture_mode = route == "lecture" %}
 {% set slide_mode = route == "slide" %}
@@ -41,6 +42,12 @@
     {% if teacher_mode %}
         <script src="{{ url_for('static', filename='scripts/userlistController.js') }}"></script>
     {% endif %}
+
+    <!-- Timber project -->
+    <script src="{{ url_for('static', filename='scripts/directives/velpSelection.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/controllers/reviewController.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/directives/annotation.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/directives/velpSummary.js') }}"></script>
 
     {% for cssFile in cssFiles %}
         <link rel="stylesheet" href="{{ cssFile }}">
@@ -177,8 +184,15 @@
                 <iframe id="slideFrame" src="/show_slide/{{ doc.fullname }}" allowfullscreen></iframe>
                 <a id="showSlidesLink" href="/show_slide/{{ doc.fullname }}">Show slides only</a>
             </div>
+        {% endif %}
+        {% if velp_mode or teacher_mode %}
+            <div ng-controller="ReviewController">
+                {% include 'velp_view.html' %}
+            </div>
         {% else %}
-            {% include 'view_content.html' %}
+            <div ng-controller="ReviewController">
+                {% include 'view_content.html' %}
+            </div>
         {% endif %}
     </div>
     <p id="test"></p>

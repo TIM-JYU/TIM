@@ -42,20 +42,16 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
                 $scope.isValidTaskId = function (taskId) {
                     return taskId.slice(-1) !== ".";
                 };
-            },
-            
-            link: function ($scope, $element, $attrs) {
-                timLogTime("answerbrowserlazy link function","answ",1);
 
-                $element.parent().on('mouseenter touchstart', function () {
-                    var plugin = $element.parents('.par').find('.parContent');
+                $scope.loadAnswerBrowser = function () {
+                    var plugin = $scope.$element.parents('.par').find('.parContent');
                     if ( $scope.compiled ) return;
                     $scope.compiled = true;
                     if (!$scope.$parent.noBrowser && $scope.isValidTaskId($scope.taskId)) {
                         var newHtml = '<answerbrowser task-id="' + $scope.taskId + '"></answerbrowser>';
                         var newElement = $compile(newHtml);
-                        var parent = $element.parents(".par")[0];
-                        parent.replaceChild(newElement($scope.$parent)[0], $element[0]);
+                        var parent = $scope.$element.parents(".par")[0];
+                        parent.replaceChild(newElement($scope.$parent)[0], $scope.$element[0]);
                     }
                     // Next the inside of the plugin to non lazy
                     var origHtml = plugin[0].innerHTML;
@@ -68,7 +64,13 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
                         plugin.html(newPluginElement($scope));
                         $scope.$parent.processAllMathDelayed(plugin);
                     }
-                });
+                };
+            },
+            
+            link: function ($scope, $element, $attrs) {
+                timLogTime("answerbrowserlazy link function","answ",1);
+                $scope.$element = $element;
+                $element.parent().on('mouseenter touchstart', $scope.loadAnswerBrowser);
             }
         };
     }]);
@@ -125,7 +127,8 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                             doc_id: $scope.$parent.docId,
                             par_id: par_id,
                             user_id: $scope.user.id,
-                            answer_id: $scope.selectedAnswer.id
+                            answer_id: $scope.selectedAnswer.id,
+                            review: $scope.review
                         }
                     }).success(function (data, status, headers, config) {
                         var newhtml = makeNotLazy(data.html);
@@ -133,12 +136,22 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                         plugin.html($compile(newhtml)($scope));
                         plugin.css('opacity', '1.0');
                         $scope.$parent.processAllMathDelayed(plugin);
+                        if ($scope.review) {
+                            $scope.element.find('.review').html(data.reviewHtml);
+                        }
+                        $scope.$parent.loadAnnotationsToAnswer($scope.selectedAnswer.id, par_id, $scope.review);
+
                     }).error(function (data, status, headers, config) {
                         $scope.error = 'Error getting state: ' + data.error;
                     }).finally(function () {
                         $scope.loading--;
                     });
+
+
                 };
+
+                // Loads annotations to answer
+                setTimeout($scope.changeAnswer, 500); //TODO: Don't use timeout
 
                 $scope.next = function () {
                     var newIndex = $scope.findSelectedAnswerIndex() - 1;
@@ -162,6 +175,16 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     if ($scope.filteredAnswers.length > 0) {
                         $scope.selectedAnswer = $scope.filteredAnswers[0];
                         $scope.changeAnswer();
+                    }
+                };
+
+                $scope.setAnswerById = function(id) {
+                    for (var i=0; i<$scope.filteredAnswers.length; i++){
+                        if ($scope.filteredAnswers[i].id == id){
+                            $scope.selectedAnswer = $scope.filteredAnswers[i];
+                            $scope.changeAnswer();
+                            break;
+                        }
                     }
                 };
 
@@ -388,6 +411,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                 $scope.taskInfo = null;
                 $scope.anyInvalid = false;
                 $scope.giveCustomPoints = false;
+                $scope.review = false;
 
                 $scope.updateFiltered = function (newValues, oldValues, scope) {
                     $scope.anyInvalid = false;
@@ -403,6 +427,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     }
                 };
 
+                $scope.$watch('review', $scope.changeAnswer);
                 $scope.$watchGroup(['onlyValid', 'answers'], $scope.updateFiltered);
 
                 // call checkUsers automatically for now; suitable only for lazy mode!

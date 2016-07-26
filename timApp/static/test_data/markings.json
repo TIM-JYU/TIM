@@ -1,0 +1,100 @@
+[
+  {
+    "id": 0,
+    "points": -1,
+    "velp": 2,
+    "coord": {
+      "start":{
+        "par_id": "pnKujWTFQrZN",
+        "offset": 48,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [0],
+        "node": 0,
+        "depth": 1
+      },
+      "end":{
+        "par_id": "pnKujWTFQrZN",
+        "offset":62,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [0],
+        "depth": 1,
+        "node": 0
+      }
+    },
+    "comments": [{"author": "vesal", "content": "Kyseessä oli siis Napoleon I"},
+                 {"author": "sevitarv", "content": "Ahaa"}]
+  },
+  {
+    "id": 1,
+    "points": 0,
+    "velp": 6,
+    "coord": {
+       "start":{
+        "par_id": "pnKujWTFQrZN",
+        "offset": 0,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [2],
+        "depth": 1,
+        "node": 0
+      },
+      "end":{
+        "par_id": "pnKujWTFQrZN",
+        "offset":4,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [2],
+        "depth": 1,
+        "node": 2
+      }
+    },
+    "comments": [{"author": "vesal", "content": "Tämä on hieman epämääräisesti sanottu"}]
+  }
+  ,
+  {
+    "id": 2,
+    "points": 0,
+    "velp": 6,
+    "coord": {
+       "start":{
+        "par_id": "pnKujWTFQrZN",
+        "offset": 5,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [2],
+         "depth": 1,
+        "node": 2
+      },
+      "end":{
+        "par_id": "pnKujWTFQrZN",
+        "offset": 16,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [2],
+        "depth": 1,
+        "node": 2
+      }
+    },
+    "comments": [{"author": "vesal", "content": "Tämä on hieman epämääräisesti sanottu"}]
+  },
+    {
+    "id": 3,
+    "points": 0,
+    "velp": 6,
+    "coord": {
+       "start":{
+        "par_id": "pnKujWTFQrZN",
+        "offset": 1,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [2,1],
+         "depth": 2,
+        "node": 0
+      },
+      "end":{
+        "par_id": "pnKujWTFQrZN",
+        "offset": 5,
+        "t": "LTB4M2JkMTBiMWQ=",
+        "el_path": [2,1],
+        "depth": 2,
+        "node": 0
+      }
+    },
+    "comments": [{"author": "vesal", "content": "Tämä on hieman epämääräisesti sanottu"}]
+  }
+]

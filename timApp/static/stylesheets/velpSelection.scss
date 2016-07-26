@@ -1,0 +1,560 @@
+/* app css stylesheet */
+/*
+.container{
+    padding: 0;
+    max-width: 75%;
+}
+
+@media (max-width: 768px) {
+    .container{
+        margin-left: 5%;
+    }
+}
+*/
+/** Layout styles **/
+.fulldiv {
+    width: 100%;
+    float: left;
+}
+
+.div-90 {
+    width: 90%;
+    float: left;
+}
+
+.div-80 {
+    width: 80%;
+    float: left;
+}
+
+.div-20 {
+    width: 20%;
+    float: left;
+}
+
+.div-10 {
+    width: 10%;
+    float: left;
+}
+
+.float-left{
+    float: left;
+}
+
+.float-right{
+    float: right;
+}
+
+/** Velp area styles **/
+.velpMenu {
+    position: fixed;
+    min-width: 19em;
+    max-width: 22.5em;
+    word-wrap: break-word;
+    right: 0;
+    top: 50px;
+    bottom: 0;
+    border: 1px solid gainsboro;
+    background: white;
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 0.5em;
+    border-top-left-radius: 8px;
+}
+
+#advView {
+    padding-top: 0.5em;
+    padding-left: 0.2em;
+}
+
+.velpMenu .nav-tabs {
+    margin-left: 0;
+    margin-top: 1em;
+}
+
+.velpMenu .nav-tabs > li.active > a {
+    color: white;
+    font-size: 0.8em;
+    background-color: #3cc;
+    border: 1px solid #B7B7B7;
+    border-bottom: none;
+    padding: 0.5em 1em;
+}
+
+.velpMenu .nav-tabs > li > a {
+    color: #333;
+    font-size: 0.8em;
+    background-color: #F6F6F6;
+    border: 1px solid #B7B7B7;
+    border-bottom: none;
+    padding: 0.5em 1em;
+}
+
+.velpArea {
+    width: 100%;
+    margin-bottom: 1em;
+    background-color: white;
+    border-top: solid 1px gainsboro;
+    float:left;
+    position: relative;
+    top: 0;
+    bottom: 0;
+}
+
+/* needs media queries */
+.velpArea .stack{
+    width: 98%;
+    height: auto;
+    margin: 1em 1%;
+    float: left;
+    height: 22em;
+    position: absolute;
+}
+/*
+#searchVelps {
+    width: 11em;
+}*/
+
+.adjustForm {
+    margin-top: 0.4em;
+    margin-bottom: 0.4em;
+}
+
+.adjustAnnForm {
+    margin-top: 0.6em;
+    margin-bottom: 0.9em;
+}
+
+.formLabel {
+    font-size: 0.9em;
+}
+
+.formInput {
+    max-width: 59%;
+    float: right;
+}
+
+/* Table styles*/
+.velpTable {
+    table-layout: fixed;
+    margin-left: 0;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    border-collapse: collapse;
+    border: none;
+    text-align: left;
+}
+
+.velpTable input {
+    border: solid 1px gainsboro;
+}
+.velpTable input[type="submit"] {
+    border: none;
+    margin: 6px;
+}
+
+.velpArea input[type="number"] {
+    width: 30%;
+}
+
+.velpArea legend {
+    font-size: 1.1em;
+    margin-top: 15px;
+    margin-bottom: 0.3em;
+}
+
+.velpTable td{
+    border: 0;
+    margin: 0;
+    padding: 4px;
+    width: 10em;
+    white-space: normal;
+}
+
+.glyphicon-pencil {
+    margin-left: 5px;
+}
+
+.pointsPen {
+    top: 5px;
+    right: 5px;
+    position: absolute;
+}
+
+.tag-true, .tag-false {
+    font-size: 0.85em;
+    word-wrap: break-word;
+    margin: 0.25em;
+    padding: 0.5em;
+    display: inline-block;
+    cursor: pointer;
+    max-width: 98%;
+    white-space: normal;
+}
+
+.tag-true {
+    border-bottom: solid 4px darkblue;
+}
+
+.tags {
+    top: 25px;
+    right: 5px;
+    position: absolute;
+    width: 3em;
+}
+
+.addLabelField {
+    display: inline;
+    width: 76%;
+    margin-bottom: 10px;
+}
+
+.addLabelBtn {
+    display: inline;
+}
+
+#addVelpBtn {
+    margin-top: 0.8em;
+}
+
+#createVelpButton {
+    margin-left: 0.2em;
+    margin-top: 1.3em;
+}
+
+.velp {
+    position: absolute;
+    line-height: 1.25em;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 10em;
+    width: 18em;
+}
+.velp-data {
+    position: relative;
+}
+
+.notes .velp-badge {
+    position: absolute;
+    top: 0;
+    left: -3em;
+    z-index: 10;
+}
+
+.velp:hover .emphasise{
+    margin-top: -1em;
+    -webkit-box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
+    -moz-box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
+    box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
+}
+
+.velp .emphasise{
+    position: relative;
+    top:0;
+    left:0;
+    bottom:0;
+    right:0;
+    width: 100%;
+    z-index: 0;
+    background: gainsboro;
+
+-webkit-box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
+-moz-box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
+box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
+}
+
+.velp-name {
+    width: 77%;
+    word-break: break-all;
+    overflow: hidden;
+    height: 2.5em;
+}
+
+.bottom-part{
+    padding-top: 8em;
+    width: 100%;
+}
+
+.velpPencil {
+    float: right;
+}
+
+.velp .edit{
+    margin-top: -1em;
+    z-index: 10;
+}
+
+.velp .content{
+    position: relative;
+    padding: 0.4em 0.25em;
+    z-index: 1;
+}
+
+.velp .content .right{
+    float: right;
+}
+
+.velp .content .left{
+    float: left;
+}
+
+/* Velp info and PopOver styles */
+.velpInfo {
+    float: left;
+    border: 0;
+}
+
+.velpInfo input.points{
+    background: transparent;
+    border: 0;
+    width: 50px;
+}
+
+.velp-content{
+    padding: 0.5em 0.25em;
+}
+
+.velp-bg {
+    position: relative;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.velpInfo textarea{
+    background-color: transparent;
+    border: none;
+}
+
+.missing-velps{
+    position: absolute;
+    left: 102%;
+    width: 17em;
+    top: 0;
+}
+
+.notes>span{
+    display: block;
+    margin-bottom: 0.25em;
+}
+
+/* Text selection */
+
+.text-selection{
+    background: cornflowerblue;
+    color: white;
+}
+
+/* Annotation styles */
+.has-annotation:before {
+    background: #3CC;
+    float: left;
+    content: "\2002 V\2002";
+    color: white;
+    padding: 0.1em;
+}
+
+.annotation-element {
+    display: inline;
+    position: relative;
+}
+
+.annotation {
+    cursor: pointer;
+}
+
+.annHeader {
+    font-size: 1.5rem;
+}
+
+.comment-info {
+    display: inline-block;
+}
+
+.annotation-info{
+    /*line-height: 20px;*/
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 1.3rem;
+    color: black;
+    font-style: normal;
+    font-weight: normal;
+    text-decoration: none;
+    text-align: left;
+    word-wrap: break-word;
+    white-space: normal;
+    width: 18em;
+    position: absolute;
+    display: inline-block;
+    padding: 0.5em 0.75em;
+    top: 1.25em;
+    -webkit-box-shadow: 2px 6px 16px -5px rgba(0,0,0,0.6);
+    -moz-box-shadow: 2px 6px 16px -5px rgba(0,0,0,0.6);
+    box-shadow: 2px 6px 16px -5px rgba(0,0,0,0.6);
+}
+
+.annotation-info em {
+    font-size: 0.9em;
+}
+
+label.disabled {
+    color: grey;
+}
+
+.annotation-info .comments li{
+    width: 100%;
+    font-size: 0.9em;
+    margin-bottom: 0.5em;
+
+}
+
+.annotation-info ul.comments {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.annotation-info p {
+  /*  padding: 0.5em 0;*/
+    margin: 0;
+}
+
+.annotation-info input, .annotation-info textarea {
+    background: transparent;
+}
+
+.annotation-info input[type="number"]{
+    width: 4em;
+    border: 0;
+}
+
+.annotation-info textarea {
+    width: 100%;
+    margin-top: 0.6em;
+    font-size: 0.9em;
+    resize: vertical;
+}
+
+.annotation-info .username {
+    font-size: 0.9rem;
+}
+
+.annotation-info .timestamp {
+    font-size: 0.9rem;
+    color: grey;
+}
+
+.annotation-info .popover.left > .arrow {
+    display: none;
+}
+
+.annotation-info .popover {
+    width: 25em;
+}
+
+.annTopSection {
+    line-height: 1.15em;
+}
+
+.annTable {
+    margin-left: 0;
+    text-align: left;
+}
+
+.annTable td {
+    border: hidden;
+}
+
+.annqmark {
+    margin-left: 0.2rem;
+    margin-top: 0.1rem;
+}
+
+.closeAnn {
+    float: right;
+}
+
+.delAnnotation {
+    float: right;
+    margin-top: 9px;
+}
+
+.saveChanges {
+    float: left;
+}
+
+.emphasise.default {
+    background: gainsboro;
+}
+
+.emphasise.positive {
+    background: palegreen;
+}
+
+.emphasise.neutral {
+    background: khaki;
+}
+
+.emphasise.negative {
+    background: lightpink;
+}
+
+.emphasise.new {
+    background: lightskyblue;
+}
+
+.clickable-icon {
+    cursor: pointer;
+    opacity: 0.6;
+}
+
+.clickable-icon:hover {
+    opacity: 1;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+#resetAllSelBtn {
+    margin-top: 1em;
+}
+
+.velpSummary {
+  /*  position: fixed;
+    max-width: 20em;*/
+    word-wrap: break-word;
+    /*right: 0;*/
+    top: 50px;
+    /*border: 1px solid gainsboro;
+    background: white;
+    z-index: 100000;
+    overflow-y: auto;
+    padding: 0.5em;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;*/
+}
+
+.velpSummary table {
+    margin-top: 1.3em;
+    margin-bottom: 2em;
+    margin-left: 0;
+    width: 98%;
+  /*  border: 1px solid gainsboro;*/
+}
+
+.summCheckbox {
+    border-right: 0;
+}
+
+.summSecColumn {
+    border-left: 0;
+}
+
+.summThiColumn {
+    text-align: center;
+}
+
+.paragraphs pre {
+    overflow: visible;
+}

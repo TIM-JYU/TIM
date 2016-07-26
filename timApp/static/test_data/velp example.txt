@@ -1,0 +1,60 @@
+
+
+root
+      velps
+          v:comments
+
+      demot
+
+          f:demo1
+          f:demo2
+
+          velps
+             v:demot.dir:
+
+             demo1:
+                v:demo.docu
+                v:p.1223g
+                v:p.3453m
+                v:a.oma
+                v:ekahello   123
+             demo2:
+                v:demo2.docu
+                v:T3
+
+
+      user
+
+          vesal
+               velps
+                      v: omatJavat
+                      v: omatCS      654
+
+
+
+
+demo2 T3
+
+[ ] omatJavat
+[x] omatCS
+[ ] demo2.docu
+[ ] demot.dir
+[ ] comments
+[x] ekahello
+[ ] T3
+
+Tietokanta
+=>  T3 123
+=>  T3 654
+
+=> uusi velppi
+
+
+
+
+
+
+
+
+
+

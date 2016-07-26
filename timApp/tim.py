@@ -18,6 +18,8 @@ from ReverseProxied import ReverseProxied
 from documentmodel.documentversion import DocumentVersion
 from plugin import PluginException
 from routes.answer import answers
+from routes.velp import velps
+from routes.annotation import annotations
 from routes.cache import cache
 from routes.clipboard import clipboard
 from routes.common import *
@@ -50,6 +52,8 @@ app.register_blueprint(edit_page)
 app.register_blueprint(view_page)
 app.register_blueprint(login_page)
 app.register_blueprint(answers)
+app.register_blueprint(velps)
+app.register_blueprint(annotations)
 app.register_blueprint(groups)
 app.register_blueprint(search_routes)
 app.register_blueprint(upload)

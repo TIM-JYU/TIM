@@ -22,6 +22,9 @@ from timdb.messages import Messages
 from timdb.lectures import Lectures
 from timdb.folders import Folders
 from timdb.lectureanswers import LectureAnswers
+from timdb.velps import Velps
+from timdb.velpgroups import VelpGroups
+from timdb.annotations import Annotations
 import os
 
 
@@ -48,7 +51,7 @@ class TimDb(object):
             if not os.path.exists(path):
                 log_info('Creating directory: {}'.format(path))
                 os.makedirs(path)
-        
+
         self.session = session
         if session is None:
             self.session = db.create_scoped_session()
@@ -68,6 +71,9 @@ class TimDb(object):
         self.lectures = Lectures(self.db, files_root_path, 'lectures', current_user_name, self.session)
         self.folders = Folders(self.db, files_root_path, 'folders', current_user_name, self.session)
         self.lecture_answers = LectureAnswers(self.db, files_root_path, 'lecture_answers', current_user_name, self.session)
+        self.velps = Velps(self.db, files_root_path, 'velps', current_user_name, self.session)
+        self.velp_groups = VelpGroups(self.db, files_root_path, 'velp_groups', current_user_name, self.session)
+        self.annotations = Annotations(self.db, files_root_path, 'annotations', current_user_name, self.session)
 
     def __del__(self):
         """Release the database connection when the object is deleted."""
@@ -86,14 +92,16 @@ class TimDb(object):
 
     def initialize_tables(self):
         """Initializes the database from the schema2.sql file.
-        NOTE: The database is emptied if it exists."""
+        NOTE: The database is emptied if it exists"""
         self.execute_script('schema2.sql')
+        self.execute_script('dropTimber.sql')
+        self.execute_script('schematimber.sql')
 
     def execute_script(self, sql_file):
         """Executes an SQL file on the database.
         :param sql_file: The SQL script to be executed.
         """
-        with open(sql_file, 'r') as schema_file:
+        with open(sql_file, 'r', encoding='utf-8') as schema_file:
             self.db.cursor().executescript(schema_file.read())
         self.db.commit()
 

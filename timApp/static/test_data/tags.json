@@ -1,0 +1,42 @@
+[
+  {
+    "id": 0,
+    "content": "Sentinel handling",
+    "selected": false
+  },
+  {
+    "id": 1,
+    "content": "Loops",
+    "selected": false
+  },
+  {
+    "id": 2,
+    "content": "Division against zero",
+    "selected": false
+  },
+  {
+    "id": 3,
+    "content": "Division error",
+    "selected": false
+  },
+  {
+    "id": 4,
+    "content": "Value error",
+    "selected": false
+  },
+  {
+    "id": 5,
+    "content": "Array handling",
+    "selected": false
+  },
+  {
+    "id": 6,
+    "content": "Counting error",
+    "selected": false
+  },
+  {
+    "id": 7,
+    "content": "Coding style",
+    "selected": false
+  }
+]

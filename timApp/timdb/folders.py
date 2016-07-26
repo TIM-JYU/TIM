@@ -47,7 +47,7 @@ class Folders(TimDbBase):
     def get(self, block_id: int) -> Optional[dict]:
         """Gets the metadata information of the specified folder.
 
-        :param document_id: The block id of the folder to be retrieved.
+        :param block_id: The block id of the folder to be retrieved.
         :returns: A row representing the folder.
         """
         cursor = self.db.cursor()
@@ -155,3 +155,71 @@ class Folders(TimDbBase):
         cursor.execute('DELETE FROM Block WHERE type_id = %s AND id = %s',
                        [blocktypes.FOLDER, block_id])
         self.db.commit()
+
+    def check_velp_group_folder_path(self, root_path: str, owner_group_id: int, doc_name: str):
+        """ Checks if velp group folder path exists and if not, creates it
+
+        :param root_path: Root path where method was called from
+        :param owner_group_id: Owner group ID for the new folder if one is to be created
+        :param doc_name:
+        :return: Path for velp group folder
+        """
+        group_folder_name = "velp groups"   # Name of the folder all velp groups end up in
+        if root_path != "":
+            velps_folder_path = root_path + "/" + group_folder_name
+        else:
+            velps_folder_path = group_folder_name
+        doc_folder_path = velps_folder_path + "/" + doc_name
+        velps_folder = False
+        doc_velp_folder = False
+        folders = self.get_folders(root_path)
+
+        # Check if velps folder exist
+        for folder in folders:
+            if folder['name'] == group_folder_name:
+                velps_folder = True
+
+        # If velps folder exists, check if folder for document exists
+        if velps_folder is True:
+            doc_folders = self.get_folders(velps_folder_path)
+            for folder in doc_folders:
+                if folder['name'] == doc_name:
+                    doc_velp_folder = True
+
+        # If velps folder doesn't exists, create one
+        if velps_folder is False:
+            new_block = self.create(velps_folder_path, owner_group_id)
+            print("Created new folder, id: " + str(new_block))
+
+        if doc_name == "":
+            return velps_folder_path
+
+        # If folder for document in velps folder doesn't exists, create one
+        if doc_velp_folder is False:
+            new_block = self.create(doc_folder_path, owner_group_id)
+            print("Created new folder, id: " + str(new_block))
+
+        return doc_folder_path
+
+    def check_personal_velp_folder(self, user: str, user_id: int):
+        """ Checks if personal velp group folder path exists and if not, creates it
+
+        :param user: Username of current user
+        :param user_id: ID of current user
+        :return:
+        """
+        group_folder_name = "velp groups"
+        user_folder = "users/" + user
+        user_velps_path = user_folder + "/" + group_folder_name
+        folders = self.get_folders(user_folder)
+        velps_folder = False
+
+        for folder in folders:
+            if folder['name'] == group_folder_name:
+                velps_folder = True
+
+        if velps_folder is False:
+            new_block = self.create(user_velps_path, user_id)
+            print("Created new folder, id: " + str(new_block))
+
+        return user_velps_path

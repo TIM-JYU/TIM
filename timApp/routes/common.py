@@ -211,6 +211,15 @@ def jsonResponse(jsondata, status_code=200):
     response.status_code = status_code
     return response
 
+def set_no_cache_headers(response: Response) -> Response:
+    """
+    Sets headers for the response that should prevent any caching of the result.
+    :param response: Response to be modified.
+    :return: We also return the modified object for convenience.
+    """
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return response
+
 
 def okJsonResponse():
     return jsonResponse({'status': 'ok'})

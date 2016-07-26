@@ -338,12 +338,13 @@ class Documents(TimDbBase):
         :param include_nonpublic: Whether to include non-public document names or not.
         :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
         """
-        timdb = getTimDb()
-        documents = get_documents(include_nonpublic=include_nonpublic)
+       # timdb = getTimDb()
+        documents = self.get_documents(include_nonpublic=include_nonpublic)
         results = []
 
+
         for document in documents:
-            document_path, _ = timdb.folders.split_location(document['name'])
+            document_path, _ = self.split_location(document['name'])
             if document_path == folder_pathname:
                 results.append(document)
 

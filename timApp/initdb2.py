@@ -109,7 +109,8 @@ def update_database():
                    4: add_translation_table,
                    5: add_logged_in_user,
                    6: add_notifications,
-                   7: add_yubikey}
+                   7: add_yubikey,
+                   8: add_timber}
     while ver in update_dict:
         # TODO: Take automatic backup of the db (tim_files) before updating
         log_info('Starting update {}'.format(update_dict[ver].__name__))
@@ -125,6 +126,14 @@ def update_database():
     else:
         log_info('Database was updated from version {} to {}.'.format(ver_old, ver))
     timdb.close()
+
+
+def add_timber(timdb: TimDb) -> bool:
+    if timdb.table_exists('Velp'):
+        return False
+    timdb.execute_script('schematimber.sql')
+    print('Timber stuff was added to the database.')
+    return True
 
 
 def add_notifications(timdb):
