@@ -1,16 +1,5 @@
-from typing import Optional, List
-
-from contracts import contract, new_contract
-from typing import Optional
-
-import os.path
-import hashlib
-import sqlite3
 import copy
 
-new_contract('row', sqlite3.Row)
-
-from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 from timdb.documents import *
 
 

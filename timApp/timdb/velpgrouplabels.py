@@ -1,18 +1,7 @@
-from sqlite3 import Connection
-from timdb.timdbbase import TimDbBase, TimDbException
+from timdb.timdbbase import TimDbBase
 
 
 class VelpGroupLabels(TimDbBase):
-    def __init__(self, db_path: 'Connection', files_root_path: str, type_name: str, current_user_name: str):
-        """Initializes TimDB with the specified database and root path.
-
-        :param type_name: The type name.
-        :param current_user_name: The name of the current user.
-        :param db_path: The path of the database file.
-        :param files_root_path: The root path where all the files will be stored.
-        """
-        TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
-
     def create_velp_group_label(self, language_id: str, content: str) -> int:
         """
         Creates a new label
