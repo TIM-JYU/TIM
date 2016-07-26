@@ -9,7 +9,7 @@ class Icons(TimDbBase):
         :return: A filename for the icon.
         """
         cursor = self.db.cursor()
-        cursor.execute('SELECT filename FROM Icon WHERE id=?', icon_id)
+        cursor.execute('SELECT filename FROM Icon WHERE id = %s', icon_id)
         results = cursor.fetchall()
         if not results:
             raise TimDbException('No icon with id ' + str(icon_id) + ' found.')

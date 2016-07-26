@@ -21,7 +21,7 @@ class VelpGroups(Documents):
         cursor.execute("""
                       INSERT OR IGNORE INTO
                       VelpGroup(id, name, valid_until, default_group)
-                      VALUES (?, ?, ?, ?)
+                      VALUES (%s, %s, %s, %s)
                       """, [new_group_id, name, valid_until, 1]
                        )
         self.db.commit()
@@ -44,7 +44,7 @@ class VelpGroups(Documents):
         cursor.execute("""
                       INSERT INTO
                       VelpGroup(id, name, valid_until)
-                      VALUES (?, ?, ?)
+                      VALUES (%s, %s, %s)
                       """, [new_group_id, name, valid_until]
                        )
         self.db.commit()
@@ -65,7 +65,7 @@ class VelpGroups(Documents):
         cursor.execute("""
                       INSERT OR IGNORE INTO
                       VelpGroup(id, name, valid_until, default_group)
-                      VALUES (?, ?, ?, ?)
+                      VALUES (%s, %s, %s, %s)
                       """, [velp_group_id, name, valid_until, default_group]
                        )
         self.db.commit()
@@ -81,7 +81,7 @@ class VelpGroups(Documents):
         cursor.execute("""
                       UPDATE VelpGroup
                       SET default_group = 1, valid_until = NULL
-                      WHERE id = ?
+                      WHERE id = %s
                       """, [velp_group_id]
                        )
         self.db.commit()
@@ -114,7 +114,7 @@ class VelpGroups(Documents):
         cursor.execute("""
                       INSERT OR IGNORE INTO
                       VelpInGroup(velp_group_id, velp_id)
-                      VALUES (?, ?)
+                      VALUES (%s, %s)
                       """, [velp_group_id, velp_id]
                        )
         self.db.commit()
@@ -131,7 +131,7 @@ class VelpGroups(Documents):
             cursor.execute("""
                           INSERT OR IGNORE INTO
                           VelpInGroup(velp_group_id, velp_id)
-                          VALUES (?, ?)
+                          VALUES (%s, %s)
                           """, [velp_group, velp_id]
                            )
         self.db.commit()
@@ -147,7 +147,7 @@ class VelpGroups(Documents):
         cursor.execute("""
                       DELETE
                       FROM VelpInGroup
-                      WHERE velp_id = ? AND velp_group_id = ?
+                      WHERE velp_id = %s AND velp_group_id = %s
                       """, [velp_id, velp_group_id]
                        )
         self.db.commit()
@@ -164,20 +164,20 @@ class VelpGroups(Documents):
             cursor.execute("""
                           DELETE
                           FROM VelpInGroup
-                          WHERE velp_id = ? AND velp_group_id = ?
+                          WHERE velp_id = %s AND velp_group_id = %s
                           """, [velp_id, velp_group]
                            )
         self.db.commit()
 
     def get_velp_group_name(self, velp_group_id: int) -> str:
         cursor = self.db.cursor()
-        cursor.execute('SELECT name FROM VelpGroup WHERE id = ?', [velp_group_id])
+        cursor.execute('SELECT name FROM VelpGroup WHERE id = %s', [velp_group_id])
         result = cursor.fetchone()
         return result[0] if result is not None else None
 
     def get_groups_for_velp(self, velp_id):
         cursor = self.db.cursor()
-        cursor.execute('SELECT velp_group_id AS id FROM VelpInGroup WHERE velp_id = ?', [velp_id])
+        cursor.execute('SELECT velp_group_id AS id FROM VelpInGroup WHERE velp_id = %s', [velp_id])
         result = cursor.fetchall()
         return result
 
@@ -188,7 +188,7 @@ class VelpGroups(Documents):
         :return: True if part of VelpGroup table, else False
         """
         cursor = self.db.cursor()
-        cursor.execute('SELECT name FROM VelpGroup WHERE id = ?', [doc_id])
+        cursor.execute('SELECT name FROM VelpGroup WHERE id = %s', [doc_id])
         result = cursor.fetchone()
         return True if result is not None else False
 
@@ -207,7 +207,7 @@ class VelpGroups(Documents):
         cursor.execute("""
                       INSERT OR IGNORE INTO
                       ImportedVelpGroups(user_group, doc_id, target_type, target_id, velp_group_id)
-                      VALUES (?, ?, ?, ?, ?)
+                      VALUES (%s, %s, %s, %s, %s)
                       """, [user_group, doc_id, target_type, target_id, velp_group_id]
                        )
         self.db.commit()
@@ -226,7 +226,7 @@ class VelpGroups(Documents):
                       SELECT
                       user_group, doc_id, target_type, target_id, velp_group_id as id
                       FROM ImportedVelpGroups
-                      WHERE doc_id = ? AND user_group IN ({})
+                      WHERE doc_id = %s AND user_group IN ({})
                       """.format(self.get_sql_template(user_groups)), [doc_id] + user_groups
                        )
         results = self.resultAsDictionary(cursor)
@@ -246,7 +246,7 @@ class VelpGroups(Documents):
             cursor.execute("""
                           INSERT OR IGNORE INTO
                           VelpGroupsInDocument(user_id, doc_id, velp_group_id)
-                          VALUES (?, ?, ?)
+                          VALUES (%s, %s, %s)
                           """, [user_id, doc_id, velp_group_id]
                            )
         self.db.commit()
@@ -270,7 +270,7 @@ class VelpGroups(Documents):
                        FROM VelpGroupsInDocument
                          INNER JOIN VelpGroup ON VelpGroup.id = VelpGroupsInDocument.velp_group_id
                          INNER JOIN DocEntry ON DocEntry.id = VelpGroupsInDocument.velp_group_id
-                       WHERE doc_id = ? AND user_id = ?
+                       WHERE doc_id = %s AND user_id = %s
                        GROUP BY velp_group_id
                        """, [doc_id, user_id]
                        )
@@ -294,7 +294,7 @@ class VelpGroups(Documents):
             cursor.execute("""
                           INSERT OR IGNORE INTO
                           VelpGroupSelection(user_id, doc_id, target_type, target_id, selected, velp_group_id)
-                          VALUES (?, ?, ?, ?, ?, ?)
+                          VALUES (%s, %s, %s, %s, %s, %s)
                           """, [user_id, doc_id, target_type, target_id, selected, velp_group_id]
                            )
         self.db.commit()
@@ -311,7 +311,7 @@ class VelpGroups(Documents):
                       SELECT
                       target_id, velp_group_id, selected
                       FROM VelpGroupSelection
-                      WHERE doc_id = ? AND user_id = ?
+                      WHERE doc_id = %s AND user_id = %s
                       ORDER BY target_id ASC
                       """, [doc_id, user_id]
                        )
@@ -366,7 +366,7 @@ class VelpGroups(Documents):
                       FROM VelpGroupDefaults
                       LEFT JOIN VelpGroupsInDocument ON VelpGroupsInDocument.doc_id = VelpGroupDefaults.doc_id
                       AND VelpGroupsInDocument.velp_group_id = VelpGroupDefaults.velp_group_id
-                      WHERE VelpGroupsInDocument.doc_id = ? AND VelpGroupsInDocument.user_id = ?
+                      WHERE VelpGroupsInDocument.doc_id = %s AND VelpGroupsInDocument.user_id = %s
                       AND VelpGroupsInDocument.doc_id = VelpGroupDefaults.doc_id
                       ORDER BY VelpGroupDefaults.target_id ASC
                       """, [doc_id, user_id]
@@ -426,13 +426,13 @@ class VelpGroups(Documents):
         cursor = self.db.cursor()
         cursor.execute("""
                       DELETE FROM VelpGroupSelection
-                      WHERE user_id = ? AND doc_id = ? AND velp_group_id = ? AND target_type = ? AND target_id = ?
+                      WHERE user_id = %s AND doc_id = %s AND velp_group_id = %s AND target_type = %s AND target_id = %s
                       """, [user_id, doc_id, velp_group_id, target_type, target_id]
                        )
         cursor.execute("""
                       INSERT INTO
                       VelpGroupSelection(user_id, doc_id, velp_group_id, target_type, target_id, selected)
-                      VALUES (?, ?, ?, ?, ?, ?)
+                      VALUES (%s, %s, %s, %s, %s, %s)
                         """, [user_id, doc_id, velp_group_id, target_type, target_id, selected]
                        )
         self.db.commit()
@@ -452,21 +452,21 @@ class VelpGroups(Documents):
         if target_type == 0:
             cursor.execute("""
                       UPDATE VelpGroupSelection
-                      SET selected = ?
-                      WHERE doc_id = ? AND target_id = ? AND user_id = ?
+                      SET selected = %s
+                      WHERE doc_id = %s AND target_id = %s AND user_id = %s
                       """, [selected, doc_id, target_id, user_id]
                         )
         elif target_type == 1:
             cursor.execute("""
                           DELETE FROM VelpGroupSelection
-                          WHERE user_id = ? AND doc_id = ? AND target_type = ? AND target_id = ?
+                          WHERE user_id = %s AND doc_id = %s AND target_type = %s AND target_id = %s
                           """, [user_id, doc_id, target_type, target_id]
                            )
             cursor.execute("""
                           INSERT INTO
                           VelpGroupSelection(user_id, doc_id, target_type, target_id, velp_group_id, selected)
-                          SELECT ?, ?, ?, ?, velp_group_id, ? FROM VelpGroupSelection WHERE doc_id = ? AND
-                          user_id = ? AND target_type = 0
+                          SELECT %s, %s, %s, %s, velp_group_id, %s FROM VelpGroupSelection WHERE doc_id = %s AND
+                          user_id = %s AND target_type = 0
                             """, [user_id, doc_id, target_type, target_id, selected, doc_id, user_id]
                            )
             # target_type is 0 because only 0 always contains all velp groups user has access to.
@@ -486,13 +486,13 @@ class VelpGroups(Documents):
         cursor = self.db.cursor()
         cursor.execute("""
                       DELETE FROM VelpGroupDefaults
-                      WHERE doc_id = ? AND velp_group_id = ? AND target_type = ? AND target_id = ?
+                      WHERE doc_id = %s AND velp_group_id = %s AND target_type = %s AND target_id = %s
                       """, [doc_id, velp_group_id, target_type, target_id]
                        )
         cursor.execute("""
                       INSERT OR IGNORE INTO
                       VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)
-                      SELECT ?, ?, ?, ?, ?
+                      SELECT %s, %s, %s, %s, %s
                       """, [doc_id, target_type, target_id, selected, velp_group_id]
                        )
         self.db.commit()
@@ -511,15 +511,15 @@ class VelpGroups(Documents):
         cursor = self.db.cursor()
         cursor.execute("""
                         DELETE FROM VelpGroupDefaults
-                        WHERE doc_id = ? AND target_type = ? AND target_id = ?
+                        WHERE doc_id = %s AND target_type = %s AND target_id = %s
                         """, [doc_id, target_type, target_id]
                        )
         cursor.execute("""
                         INSERT INTO
                         VelpGroupDefaults(doc_id, target_type, target_id, velp_group_id, selected)
-                        SELECT ?, ?, ?, velp_group_id, ?
+                        SELECT %s, %s, %s, velp_group_id, %s
                         FROM VelpGroupsInDocument
-                        WHERE doc_id = ? AND user_id = ?
+                        WHERE doc_id = %s AND user_id = %s
                           """, [doc_id, target_type, target_id, selected, doc_id, user_id]
                        )
         self.db.commit()
@@ -534,7 +534,7 @@ class VelpGroups(Documents):
         cursor = self.db.cursor()
         cursor.execute("""
                       DELETE FROM VelpGroupSelection
-                      WHERE user_id = ? AND doc_id = ? AND target_id = ?
+                      WHERE user_id = %s AND doc_id = %s AND target_id = %s
                       """, [user_id, doc_id, target_id]
                        )
         self.db.commit()
@@ -548,7 +548,7 @@ class VelpGroups(Documents):
         cursor = self.db.cursor()
         cursor.execute("""
                       DELETE FROM VelpGroupSelection
-                      WHERE user_id = ? AND doc_id = ?
+                      WHERE user_id = %s AND doc_id = %s
                       """, [user_id, doc_id]
                        )
         self.db.commit()
@@ -566,8 +566,8 @@ class VelpGroups(Documents):
         cursor = self.db.cursor()
         cursor.execute("""
                       UPDATE VelpGroup
-                      SET name = ? AND  valid_until = ?
-                      WHERE id = ?
+                      SET name = %s AND  valid_until = %s
+                      WHERE id = %s
                       """, [name, valid_until, velp_group_id]
                        )
         self.db.commit()
@@ -584,10 +584,10 @@ class VelpGroups(Documents):
         cursor.execute("""
                       DELETE
                       FROM VelpGroup
-                      WHERE  id = ?;
+                      WHERE  id = %s;
                       DELETE
                       FROM VelpInGroup
-                      WHERE velp_group_id = ?
+                      WHERE velp_group_id = %s
                       """, [velp_group_id, velp_group_id]
                        )
 
@@ -608,7 +608,7 @@ class VelpGroups(Documents):
             cursor.execute("""
                           INSERT OR IGNORE INTO
                           VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)
-                          VALUES (?, ?, ?, ?, ?)
+                          VALUES (%s, %s, %s, %s, %s)
                           """, [doc_id, target_type, target_id, selected, velp_group_id]
                            )
         self.db.commit()

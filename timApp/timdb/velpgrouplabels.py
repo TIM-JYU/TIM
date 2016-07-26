@@ -13,7 +13,7 @@ class VelpGroupLabels(TimDbBase):
         cursor.execute("""
                       INSERT INTO
                       VelpGroupLabel(language_id, content)
-                      VALUES (?, ?)
+                      VALUES (%s, %s)
                       """, [language_id, content]
                        )
         self.db.commit()
@@ -31,7 +31,7 @@ class VelpGroupLabels(TimDbBase):
         cursor.execute("""
                       INSERT INTO
                       VelpGroupLabel(id, language_id, content)
-                      VALUES (?, ?, ?)
+                      VALUES (%s, %s, %s)
                       """, [label_id, language_id, content]
                        )
         self.db.commit()
@@ -47,8 +47,8 @@ class VelpGroupLabels(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                       UPDATE VelpGroupLabel
-                      SET content = ?
-                      WHERE id = ? AND language_id = ?
+                      SET content = %s
+                      WHERE id = %s AND language_id = %s
                       """, [content, label_id, language_id]
                        )
         self.db.commit()
@@ -65,8 +65,8 @@ class VelpGroupLabels(TimDbBase):
         cursor.execute("""
                       SELECT *
                       FROM VelpGroupLabel
-                      WHERE language_id = ? AND (id IN
-                      (SELECT velp_id FROM LabelInVelpGroup WHERE velp_id = ?))
+                      WHERE language_id = %s AND (id IN
+                      (SELECT velp_id FROM LabelInVelpGroup WHERE velp_id = %s))
                       """, [language_id, velp_id]
                        )
         return self.resultAsDictionary(cursor)
@@ -81,6 +81,6 @@ class VelpGroupLabels(TimDbBase):
         cursor.execute("""
                       DELETE
                       FROM VelpGroupLabel
-                      WHERE id = ?
+                      WHERE id = %s
                       """, [label_id]
                        )

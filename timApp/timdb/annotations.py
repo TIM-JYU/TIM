@@ -1,7 +1,6 @@
 import copy
 from enum import Enum, unique
 from datetime import timedelta
-from sqlite3 import Connection
 from typing import Dict, List, Optional
 from timdb.timdbbase import TimDbBase
 from utils import diff_to_relative
@@ -59,7 +58,7 @@ class Annotations(TimDbBase):
                       document_id, answer_id, paragraph_id_start, paragraph_id_end,
                       offset_start, node_start, depth_start, offset_end, node_end, depth_end, hash_start, hash_end,
                       element_path_start, element_path_end)
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                      VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                       """, [velp_version_id, visible_to.value, points, valid_until, icon_id, annotator_id, document_id,
                             answer_id, paragraph_id_start, paragraph_id_end, offset_start, node_start, depth_start,
                             offset_end, node_end, depth_end, hash_start, hash_end, element_path_start, element_path_end]
@@ -81,11 +80,11 @@ class Annotations(TimDbBase):
         cursor.execute("""
                       UPDATE Annotation
                       SET
-                        velp_version_id = ?,
-                        visible_to      = ?,
-                        points          = ?,
-                        icon_id         = ?
-                      WHERE id = ?
+                        velp_version_id = %s,
+                        visible_to      = %s,
+                        points          = %s,
+                        icon_id         = %s
+                      WHERE id = %s
                       """, [version_id, visible_to.value, points, icon_id, annotation_id]
                        )
         self.db.commit()
@@ -100,7 +99,7 @@ class Annotations(TimDbBase):
         cursor.execute("""
                        SELECT *
                        FROM Annotation
-                       WHERE Annotation.id = ?
+                       WHERE Annotation.id = %s
         """, [annotation_id])
         return self.resultAsDictionary(cursor)
 
@@ -119,7 +118,7 @@ class Annotations(TimDbBase):
                           Annotation
                           SET
                           valid_until = current_timestamp
-                          WHERE Annotation.id = ?
+                          WHERE Annotation.id = %s
                           """, [annotation_id]
                            )
         else:  # Else invalidate at some specific time
@@ -127,8 +126,8 @@ class Annotations(TimDbBase):
                           UPDATE
                           Annotation
                           SET
-                          valid_until = ?
-                          WHERE Annotation.id = ?
+                          valid_until = %s
+                          WHERE Annotation.id = %s
                           """, [valid_until, annotation_id]
                            )
         self.db.commit()
@@ -145,7 +144,7 @@ class Annotations(TimDbBase):
         cursor.execute("""
                       INSERT INTO
                       AnnotationComment(annotation_id, commenter_id, content)
-                      VALUES (?, ?, ?)
+                      VALUES (%s, %s, %s)
                       """, [annotation_id, commenter_id, content]
                        )
         self.db.commit()
@@ -225,13 +224,13 @@ class Annotations(TimDbBase):
         """
         # Todo choose velp language. Have fun.
         language_id = 'FI'
-        check_annotation_access_right_sql = "Annotation.visible_to = ?"
+        check_annotation_access_right_sql = "Annotation.visible_to = %s"
         annotation_access_levels = [Annotations.AnnotationVisibility.everyone.value]
         if user_has_teacher:
-            check_annotation_access_right_sql += "OR\nAnnotation.visible_to = ?"
+            check_annotation_access_right_sql += "OR\nAnnotation.visible_to = %s"
             annotation_access_levels = annotation_access_levels + [Annotations.AnnotationVisibility.teacher.value]
         if user_has_owner:
-            check_annotation_access_right_sql += "OR\nAnnotation.visible_to = ?"
+            check_annotation_access_right_sql += "OR\nAnnotation.visible_to = %s"
             annotation_access_levels = annotation_access_levels + [Annotations.AnnotationVisibility.owner.value]
         check_annotation_access_right_sql += "\n"
 
@@ -250,7 +249,7 @@ class Annotations(TimDbBase):
                         annotation.valid_until,
                         annotation.icon_id,
                         annotation.annotator_id,
-                        Annotation.annotator_id = ? AS edit_access,
+                        Annotation.annotator_id = %s AS edit_access,
                         user.name AS annotator_name,
                         user.real_name AS annotator_real_name,
                         user.email,
@@ -272,12 +271,12 @@ class Annotations(TimDbBase):
                         INNER JOIN velpcontent ON velpcontent.version_id = annotation.velp_version_id
                         LEFT JOIN useranswer ON useranswer.answer_id = annotation.answer_id
                         INNER JOIN user ON user.id = annotation.annotator_id
-                      WHERE velpcontent.language_id = ? AND
+                      WHERE velpcontent.language_id = %s AND
                         (annotation.valid_until ISNULL OR annotation.valid_until >= current_timestamp)
-                        AND annotation.document_id = ? AND (
-                          annotation.annotator_id = ? OR (
+                        AND annotation.document_id = %s AND (
+                          annotation.annotator_id = %s OR (
                             """ + check_annotation_access_right_sql +
-                            """ AND (? OR UserAnswer.user_id = ? OR UserAnswer.user_id ISNULL)
+                            """ AND (%s OR UserAnswer.user_id = %s OR UserAnswer.user_id ISNULL)
                           )
                         )
                       ORDER BY depth_start DESC, node_start DESC, offset_start DESC

@@ -1,7 +1,6 @@
 import copy
-from sqlite3 import Connection
 from typing import Optional, List
-from timdb.timdbbase import TimDbBase, TimDbException
+from timdb.timdbbase import TimDbBase
 
 
 class Velps(TimDbBase):
@@ -42,7 +41,7 @@ class Velps(TimDbBase):
         cursor.execute("""
                       INSERT INTO
                       Velp(creator_id, default_points, icon_id, valid_until)
-                      VALUES(?, ?, ?, ?)
+                      VALUES(%s, %s, %s, %s)
                       """, [creator_id, default_points, icon_id, valid_until]
                        )
         self.db.commit()
@@ -59,7 +58,7 @@ class Velps(TimDbBase):
         cursor.execute("""
                       INSERT INTO
                       VelpVersion(velp_id)
-                      VALUES(?)
+                      VALUES(%s)
                       """, [velp_id]
                        )
         self.db.commit()
@@ -77,7 +76,7 @@ class Velps(TimDbBase):
         cursor.execute("""
                       INSERT INTO
                       VelpContent(version_id, language_id, content)
-                      VALUES (?, ?, ?)
+                      VALUES (%s, %s, %s)
                       """, [version_id, language_id, content]
                        )
         self.db.commit()
@@ -92,8 +91,8 @@ class Velps(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                        UPDATE Velp
-                       SET icon_id = ?, default_points = ?
-                       WHERE id = ?
+                       SET icon_id = %s, default_points = %s
+                       WHERE id = %s
                        """, [icon_id, default_points, velp_id]
                        )
         self.db.commit()
@@ -112,7 +111,7 @@ class Velps(TimDbBase):
                       FROM
                       FROM VelpVersion
                       JOIN VelpContent ON VelpVersion.id = VelpContent.version_id
-                      WHERE velp_id = ? AND language_id = ?
+                      WHERE velp_id = %s AND language_id = %s
                       """, [velp_id, language_id]
                        )
         row = cursor.fetchone()
@@ -131,7 +130,7 @@ class Velps(TimDbBase):
         cursor.execute("""
                       INSERT INTO
                       VelpLabel(language_id, content)
-                      VALUES (?, ?)
+                      VALUES (%s, %s)
                       """, [language_id, content]
                        )
         self.db.commit()
@@ -149,7 +148,7 @@ class Velps(TimDbBase):
         cursor.execute("""
                       INSERT INTO
                       VelpLabel(id, language_id, content)
-                      VALUES (?, ?, ?)
+                      VALUES (%s, %s, %s)
                       """, [label_id, language_id, content]
                        )
         self.db.commit()
@@ -165,8 +164,8 @@ class Velps(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                       UPDATE VelpLabel
-                      SET content = ?
-                      WHERE id = ? AND language_id = ?
+                      SET content = %s
+                      WHERE id = %s AND language_id = %s
                       """, [content, label_id, language_id]
                        )
         self.db.commit()
@@ -181,7 +180,7 @@ class Velps(TimDbBase):
         cursor.execute("""
                       SELECT LabelInVelp.label_id
                       FROM LabelInVelp
-                      WHERE LabelInVelp.velp_id = ?
+                      WHERE LabelInVelp.velp_id = %s
                       """, [velp_id]
                        )
         return self.resultAsDictionary(cursor)
@@ -198,7 +197,7 @@ class Velps(TimDbBase):
         for label_id in labels:
             cursor.execute("""
                            INSERT INTO LabelInVelp(label_id, velp_id)
-                           VALUES (?, ?)
+                           VALUES (%s, %s)
                            """, [label_id, velp_id]
                            )
         self.db.commit()
@@ -213,7 +212,7 @@ class Velps(TimDbBase):
         # First nuke existing labels.
         cursor.execute("""
                        DELETE FROM LabelInVelp
-                       WHERE velp_id=?
+                       WHERE velp_id=%s
                        """, [velp_id]
                        )
         # self.db.commit() # changes will be commited in add_labels_to_velp
@@ -305,7 +304,7 @@ class Velps(TimDbBase):
                           FROM VelpVersion GROUP BY VelpVersion.velp_id
                           ) AS x ON VelpContent.version_id = x.latest_version
                       ) AS y ON y.velp_id = velp.id
-                      WHERE y.language_id = ? AND velp_id IN (
+                      WHERE y.language_id = %s AND velp_id IN (
                         SELECT Velp.id
                         FROM Velp
                         WHERE (Velp.valid_until >= current_timestamp OR Velp.valid_until ISNULL) AND Velp.id IN (
@@ -314,7 +313,7 @@ class Velps(TimDbBase):
                           WHERE VelpInGroup.velp_group_id IN (
                             SELECT velp_group_id
                             FROM VelpGroupsInDocument
-                            WHERE user_id = ? AND doc_id = ?
+                            WHERE user_id = %s AND doc_id = %s
                           )
                         )
                       )
@@ -348,7 +347,7 @@ class Velps(TimDbBase):
                           WHERE VelpInGroup.velp_group_id IN (
                             SELECT velp_group_id
                             FROM VelpGroupsInDocument
-                            WHERE doc_id = ? AND user_id = ?
+                            WHERE doc_id = %s AND user_id = %s
                           )
                         )
                       )
@@ -383,7 +382,7 @@ class Velps(TimDbBase):
                           WHERE VelpInGroup.velp_group_id IN (
                             SELECT velp_group_id
                             FROM VelpGroupsInDocument
-                            WHERE doc_id = ? AND user_id = ?
+                            WHERE doc_id = %s AND user_id = %s
                           )
                         )
                       )
@@ -407,7 +406,7 @@ class Velps(TimDbBase):
         cursor.execute("""
                        SELECT VelpLabel.id, VelpLabel.content
                        FROM VelpLabel
-                       WHERE VelpLabel.language_id = ? AND VelpLabel.id IN (
+                       WHERE VelpLabel.language_id = %s AND VelpLabel.id IN (
                          SELECT DISTINCT LabelInVelp.label_id
                          FROM LabelInVelp
                          WHERE LabelInVelp.velp_id IN (
@@ -419,7 +418,7 @@ class Velps(TimDbBase):
                               WHERE VelpInGroup.velp_group_id IN (
                                 SELECT velp_group_id
                                 FROM VelpGroupsInDocument
-                                WHERE doc_id = ? AND user_id = ?
+                                WHERE doc_id = %s AND user_id = %s
                               )
                             )
                           )
