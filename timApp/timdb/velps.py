@@ -136,11 +136,15 @@ class Velps(TimDbBase):
         :param content: Label content
         :return: id of the new label
         """
+
+        #coalesce so that the first insert doesn't fail.
         cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO
-                      VelpLabel(language_id, content)
-                      VALUES (?, ?)
+                      VelpLabel(language_id, content, id)
+                      VALUES (?, ?, (SELECT
+                      coalesce(MAX(VelpLabel.id)+1,1)
+                      FROM VelpLabel))
                       """, [language_id, content]
                        )
         self.db.commit()
