@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import Dict, List, Optional
 from timdb.timdbbase import TimDbBase
 from timdb.velp_models import Annotation, AnnotationComment
-from utils import diff_to_relative
+from utils import date_to_relative
 
 
 class Annotations(TimDbBase):
@@ -178,7 +178,7 @@ class Annotations(TimDbBase):
         annotation_ids = []
         for annotation in annotations:
             annotation_ids.append(annotation['id'])
-            annotation['timesince'] = diff_to_relative(timedelta(seconds=annotation['seconds_since']))
+            annotation['timesince'] = date_to_relative(timedelta(seconds=annotation['seconds_since']))
 
         comment_data = self.get_comments_for_annotations(annotation_ids)
 
@@ -196,7 +196,7 @@ class Annotations(TimDbBase):
                     annotation_id = next_id
                     dict_help.clear()
                     del list_help[:]
-                dict_help['comment_relative_time'] = diff_to_relative(
+                dict_help['comment_relative_time'] = date_to_relative(
                     timedelta(seconds=comment_data[i]['seconds_since']))
                 dict_help['comment_time'] = comment_data[i]['comment_time']
                 dict_help['commenter_id'] = comment_data[i]['commenter_id']
