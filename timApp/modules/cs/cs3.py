@@ -850,6 +850,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             inputfilename = "/tmp/%s/%s" % (basename, ifilename)
             prgpath = "/tmp/%s" % basename
             filepath = prgpath
+            imgsource = ""
+            pngname = ""
 
             print("ttype: ", ttype)
             fileext = "cs"
