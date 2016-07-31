@@ -1,10 +1,9 @@
-DROP TABLE IF EXISTS BlockEditAccess;
+-- NOTE: This file is obsolete; do not edit!
+-- Put new table models in timdb/tim_models.py.
 
-DROP TABLE IF EXISTS BlockViewAccess;
+DROP TABLE IF EXISTS BlockAccess;
 
 DROP TABLE IF EXISTS UserGroupMember;
-
-DROP TABLE IF EXISTS BlockRelation;
 
 DROP TABLE IF EXISTS Block;
 
@@ -104,6 +103,7 @@ CREATE TABLE User (
   email     VARCHAR(100),
   prefs     TEXT,
   pass      VARCHAR(128),
+  yubikey   VARCHAR(12),
 
   CONSTRAINT User_PK
   PRIMARY KEY (id)
@@ -186,20 +186,6 @@ CREATE TABLE Folder (
   ON UPDATE CASCADE
 );
 
-CREATE TABLE BlockRelation (
-  parent_block_specifier   INTEGER NOT NULL,
-  parent_block_revision_id INTEGER,
-  parent_block_id          INTEGER NOT NULL,
-  Block_id                 INTEGER NOT NULL,
-
-  CONSTRAINT BlockRelation_PK
-  PRIMARY KEY (Block_id),
-  CONSTRAINT BlockRelation_id
-  FOREIGN KEY (Block_id)
-  REFERENCES Block (id)
-  ON DELETE NO ACTION
-  ON UPDATE CASCADE
-);
 
 CREATE TABLE UserGroupMember (
   UserGroup_id INTEGER NOT NULL,
@@ -391,4 +377,4 @@ CREATE TABLE Version (
   updated_on TIMESTAMP
 );
 
-INSERT INTO Version(id, updated_on) VALUES (7, CURRENT_TIMESTAMP);
+INSERT INTO Version(id, updated_on) VALUES (8, CURRENT_TIMESTAMP);

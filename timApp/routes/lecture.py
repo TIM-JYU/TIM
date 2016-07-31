@@ -7,11 +7,17 @@ from time import mktime
 
 from flask import Blueprint, render_template
 
-import models
 from documentmodel.randutils import hashfunc
-from models import db
+
+#from models import db
 from routes.common import *
 from plugin import parse_plugin_values
+
+from options import get_option
+from routes.common import getTimDb, getCurrentUserId, jsonResponse, verify_ownership, get_rights, has_ownership, \
+    get_user_settings
+from tim_app import db
+from timdb.tempdb_models import TempDb
 
 lecture_routes = Blueprint('lecture',
                            __name__,
@@ -104,8 +110,7 @@ def get_all_messages(param_lecture_id=-1):
 @lecture_routes.route('/getUpdates')
 def get_updates():
     """Gets updates from some lecture. Checks updates in 1 second frequently and answers if there is updates."""
-    if not request.args.get('client_message_id') or not request.args.get("lecture_id") or not request.args.get(
-            'is_lecturer'):
+    if not request.args.get('client_message_id') or not request.args.get("lecture_id"):
         abort(400, "Bad request")
     client_last_id = int(request.args.get('client_message_id'))
     current_question_id = None
@@ -115,19 +120,10 @@ def get_updates():
     if 'current_points_id' in request.args:
         current_points_id = int(request.args.get('current_points_id'))
 
-    use_wall = False
-    use_questions = False
-    if request.args.get('get_messages') == "true":
-        session['use_wall'] = True
-        use_wall = True
-    else:
-        session['use_wall'] = False
-
-    if request.args.get('get_questions') == "true":
-        session['use_questions'] = True
-        use_questions = True
-    else:
-        session['use_questions'] = False
+    use_wall = get_option(request, 'get_messages', False)
+    session['use_wall'] = use_wall
+    use_questions = get_option(request, 'get_questions', False)
+    session['use_questions'] = use_questions
 
     helper = request.args.get("lecture_id")
     if len(helper) > 0:
@@ -232,6 +228,10 @@ def get_updates():
                  "lectureEnding": lecture_ending})
 
         db.session.remove()
+
+        if current_app.config['TESTING']:
+            # Don't loop when testing
+            break
         # Myös tämä sleep kannattaa poistaa.
         time.sleep(1)
         step += 1
@@ -347,7 +347,7 @@ def send_message():
 
     new_timestamp = str(datetime.datetime.now())
     msg_id = timdb.messages.add_message(getCurrentUserId(), lecture_id, new_message, new_timestamp, True)
-    return jsonResponse(msg_id)
+    return jsonResponse({'id': msg_id, 'time': new_timestamp})
 
 
 @lecture_routes.route('/getQuestion')
@@ -1205,4 +1205,4 @@ def get_question_data_from_document(doc_id, par_id):
 
 
 def getTempDb():
-    return models.tempdb
+    return TempDb(session=db.session)

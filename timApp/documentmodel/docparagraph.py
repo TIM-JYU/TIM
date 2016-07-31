@@ -3,7 +3,6 @@ import shelve
 from collections import defaultdict
 from copy import copy
 
-from contracts import new_contract
 from documentmodel.documentparser import DocumentParser
 from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
@@ -125,7 +124,7 @@ class DocParagraph:
     def dict(self) -> Dict:
         return self.__data
 
-    def _mkhtmldata(self, from_preview: 'bool' = True):
+    def _mkhtmldata(self, from_preview: bool = True):
         self._cache_props()
 
         if self.original:
@@ -145,6 +144,9 @@ class DocParagraph:
 
         try:
             self.__htmldata['html'] = self.get_html(from_preview=from_preview)
+            if not self.__htmldata['html']:
+                self.__htmldata['md'] = self.get_markdown()
+
         except Exception as e:
             self.__htmldata['html'] = get_error_html(e)
 
@@ -751,6 +753,3 @@ class DocParagraph:
 
     def set_id(self, par_id: str):
         self.__data['id'] = par_id
-
-
-new_contract('DocParagraph', DocParagraph)

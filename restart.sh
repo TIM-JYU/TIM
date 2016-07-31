@@ -118,17 +118,17 @@ fi
 
 if param timdev ; then
 # Start timdev
-docker run --net=timnet --name timdev -p 50002:5000 -v /opt/tim-dev/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=timdev ; export TIM_HOST=tim-dev.it.jyu.fi ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
+docker run --net=timnet --name timdev -p 50002:5000 -v /opt/tim-dev/:/service ${DAEMON_FLAG} -t -i timimages/tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source /service/scripts/_initenv.sh ; export TIM_NAME=timdev ; export TIM_HOST=https://tim-dev.it.jyu.fi ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
 fi
 
 if param timbeta ; then
 # Start timbeta
-docker run --net=timnet --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=timbeta ; export TIM_HOST=tim-beta.it.jyu.fi ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
+docker run --net=timnet --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service ${DAEMON_FLAG} -t -i timimages/tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source /service/scripts/_initenv.sh ; export TIM_NAME=timbeta ; export TIM_HOST=https://tim-beta.it.jyu.fi ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
 fi
 
 if param tim ; then
 # Start tim
-docker run --net=timnet --name tim -p 50001:5000  -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=tim ; export TIM_HOST=tim.jyu.fi ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
+docker run --net=timnet --name tim -p 50001:5000  -v /opt/tim/:/service ${DAEMON_FLAG} -t -i timimages/tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source /service/scripts/_initenv.sh ; export TIM_NAME=tim ; export TIM_HOST=https://tim.jyu.fi ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
 fi
 
 if param wuff ; then

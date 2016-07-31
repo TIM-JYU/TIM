@@ -4,7 +4,7 @@
 
 docker pull ubuntu
 
-docker pull -a timimages/tim
+docker pull timimages/tim:$(./get_latest_date.sh)
 docker pull timimages/cs3
 docker pull timimages/svn
 docker pull timimages/haskellrun
@@ -15,11 +15,8 @@ docker pull timimages/pali
 docker pull timimages/local_nginx
 docker pull timimages/funnel
 
-docker tag timimages/tim:$(./get_latest_date.sh) tim:$(./get_latest_date.sh)
 docker tag timimages/cs3 cs3
 docker tag timimages/svn svn
-docker tag timimages/haskellrun haskellrun
-docker tag timimages/haskelldev haskelldev
 docker tag timimages/stackage_builder stackage_builder
 docker tag timimages/postgre postgre
 docker tag timimages/pali pali

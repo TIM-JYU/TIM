@@ -1,4 +1,10 @@
-from flask.ext.sqlalchemy import SQLAlchemy
+"""
+Defines the temporary data models used by TIM.
+
+Each model MUST have 'tempdb' as the __bind_key__ attribute.
+"""
+from sqlalchemy.orm import scoped_session
+from typing import Optional
 
 from timdb.runningquestion import RunningQuestions
 from timdb.useractivity import UserActivity
@@ -6,12 +12,11 @@ from timdb.newanswers import NewAnswers
 from timdb.showpoints import ShowPoints
 from timdb.slidestatus import SlideStatuses
 from timdb.temp_info_for_user import TempInfoUserQuestion
-from tim_app import app
-
-db = SQLAlchemy(app)
+from tim_app import db
 
 
 class Runningquestion(db.Model):
+    __bind_key__ = 'tempdb'
     asked_id = db.Column(db.Integer, primary_key=True)
     lecture_id = db.Column(db.Integer, primary_key=True)
     ask_time = db.Column(db.BigInteger, nullable=False)
@@ -25,6 +30,7 @@ class Runningquestion(db.Model):
 
 
 class Usershown(db.Model):
+    __bind_key__ = 'tempdb'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -36,6 +42,7 @@ class Usershown(db.Model):
 
 
 class Useranswered(db.Model):
+    __bind_key__ = 'tempdb'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -47,6 +54,7 @@ class Useranswered(db.Model):
 
 
 class Userextended(db.Model):
+    __bind_key__ = 'tempdb'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -58,6 +66,7 @@ class Userextended(db.Model):
 
 
 class Showpoints(db.Model):
+    __bind_key__ = 'tempdb'
     asked_id = db.Column(db.Integer, primary_key=True)
     lecture_id = db.Column(db.Integer, nullable=False)
 
@@ -67,6 +76,7 @@ class Showpoints(db.Model):
 
 
 class Newanswer(db.Model):
+    __bind_key__ = 'tempdb'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -78,6 +88,7 @@ class Newanswer(db.Model):
 
 
 class Useractivity(db.Model):
+    __bind_key__ = 'tempdb'
     lecture_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
     active = db.Column(db.Text)
@@ -89,6 +100,7 @@ class Useractivity(db.Model):
 
 
 class Pointsshown(db.Model):
+    __bind_key__ = 'tempdb'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -100,6 +112,7 @@ class Pointsshown(db.Model):
 
 
 class Pointsclosed(db.Model):
+    __bind_key__ = 'tempdb'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -111,6 +124,7 @@ class Pointsclosed(db.Model):
 
 
 class SlideStatus(db.Model):
+    __bind_key__ = 'tempdb'
     doc_id = db.Column(db.Integer, primary_key=True)
     status = db.Column(db.Text, nullable=False)
 
@@ -120,23 +134,26 @@ class SlideStatus(db.Model):
 
 
 class TempDb(object):
-    def __init__(self):
-        self.runningquestions = RunningQuestions(db, Runningquestion)
-        self.showpoints = ShowPoints(db, Showpoints)
-        self.useractivity = UserActivity(db, Useractivity)
-        self.newanswers = NewAnswers(db, Newanswer)
-        self.usersshown = TempInfoUserQuestion(db, Usershown)
-        self.usersextended = TempInfoUserQuestion(db, Userextended)
-        self.usersanswered = TempInfoUserQuestion(db, Useranswered)
-        self.pointsshown = TempInfoUserQuestion(db, Pointsshown)
-        self.pointsclosed = TempInfoUserQuestion(db, Pointsclosed)
-        self.slidestatuses = SlideStatuses(db, SlideStatus)
+    def __init__(self, session: Optional[scoped_session]=None):
+        if session is None:
+            session = db.create_scoped_session()
 
-tempdb = TempDb()
+        self.runningquestions = RunningQuestions(session, Runningquestion)
+        self.showpoints = ShowPoints(session, Showpoints)
+        self.useractivity = UserActivity(session, Useractivity)
+        self.newanswers = NewAnswers(session, Newanswer)
+        self.usersshown = TempInfoUserQuestion(session, Usershown)
+        self.usersextended = TempInfoUserQuestion(session, Userextended)
+        self.usersanswered = TempInfoUserQuestion(session, Useranswered)
+        self.pointsshown = TempInfoUserQuestion(session, Pointsshown)
+        self.pointsclosed = TempInfoUserQuestion(session, Pointsclosed)
+        self.slidestatuses = SlideStatuses(session, SlideStatus)
 
 
-def initialize_temp_database():
-    print('initializing the temp database...', end='')
-    db.drop_all()
-    db.create_all()
-    print(' done.')
+def initialize_temp_database(print_progress=True):
+    if print_progress:
+        print('initializing the temp database...', end='')
+    db.drop_all(bind='tempdb')
+    db.create_all(bind='tempdb')
+    if print_progress:
+        print(' done.')

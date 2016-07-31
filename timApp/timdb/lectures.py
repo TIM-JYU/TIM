@@ -1,14 +1,14 @@
+from typing import List, Tuple
+
 __author__ = 'localadmin'
 
-from contracts import contract
 from timdb.timdbbase import TimDbBase
 import json
 
 
 class Lectures(TimDbBase):
-    @contract
-    def create_lecture(self, doc_id: "int", lecturer: 'int', start_time: "string", end_time: "string",
-                       lecture_code: "string", password: "string", options: "string", commit: "bool") -> "int":
+    def create_lecture(self, doc_id: int, lecturer: int, start_time: str, end_time: str,
+                       lecture_code: str, password: str, options: str, commit: bool) -> int:
         cursor = self.db.cursor()
 
         cursor.execute("""
@@ -23,9 +23,8 @@ class Lectures(TimDbBase):
         return lecture_id
 
 
-    @contract
-    def update_lecture(self, lecture_id: "int", doc_id: "int", lecturer: 'int', start_time: "string", end_time: "string",
-                       lecture_code: "string", password: "string", options: "string"):
+    def update_lecture(self, lecture_id: int, doc_id: int, lecturer: int, start_time: str, end_time: str,
+                       lecture_code: str, password: str, options: str):
 
         cursor = self.db.cursor()
 
@@ -39,8 +38,7 @@ class Lectures(TimDbBase):
         self.db.commit()
         return lecture_id
 
-    @contract
-    def delete_lecture(self, lecture_id: 'int', commit: 'bool'):
+    def delete_lecture(self, lecture_id: int, commit: bool):
         cursor = self.db.cursor()
 
         cursor.execute(
@@ -53,8 +51,7 @@ class Lectures(TimDbBase):
         if commit:
             self.db.commit()
 
-    @contract
-    def delete_users_from_lecture(self, lecture_id: 'int', commit: 'bool'=True):
+    def delete_users_from_lecture(self, lecture_id: int, commit: bool=True):
         cursor = self.db.cursor()
 
         cursor.execute(
@@ -67,8 +64,7 @@ class Lectures(TimDbBase):
         if commit:
             self.db.commit()
 
-    @contract
-    def get_lecture(self, lecture_id: "int") -> 'list(dict)':
+    def get_lecture(self, lecture_id: int) -> List[dict]:
         cursor = self.db.cursor()
 
         cursor.execute(
@@ -81,8 +77,7 @@ class Lectures(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def get_lecture_by_name(self, lecture_code: "string", doc_id: "int") -> 'list(dict)':
+    def get_lecture_by_name(self, lecture_code: str, doc_id: int) -> List[dict]:
         cursor = self.db.cursor()
 
         cursor.execute(
@@ -95,8 +90,7 @@ class Lectures(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def get_all_lectures_from_document(self, document_id:"int") -> 'list(dict)':
+    def get_all_lectures_from_document(self, document_id:int) -> List[dict]:
         cursor = self.db.cursor()
 
         cursor.execute(
@@ -109,8 +103,7 @@ class Lectures(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def join_lecture(self, lecture_id: "int", user_id: "int", commit: "bool"=True):
+    def join_lecture(self, lecture_id: int, user_id: int, commit: bool=True):
         cursor = self.db.cursor()
 
         cursor.execute("""
@@ -120,8 +113,7 @@ class Lectures(TimDbBase):
         if commit:
             self.db.commit()
 
-    @contract
-    def leave_lecture(self, lecture_id: "int", user_id: "int", commit: "bool"=True):
+    def leave_lecture(self, lecture_id: int, user_id: int, commit: bool=True):
         cursor = self.db.cursor()
 
         cursor.execute("""
@@ -133,8 +125,7 @@ class Lectures(TimDbBase):
         if commit:
             self.db.commit()
 
-    @contract
-    def get_document_lectures(self, doc_id: 'int', time: 'string'):
+    def get_document_lectures(self, doc_id: int, time: str):
         cursor = self.db.cursor()
 
         cursor.execute("""
@@ -146,8 +137,7 @@ class Lectures(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def get_all_lectures(self, time: 'str'):
+    def get_all_lectures(self, time: str):
         cursor = self.db.cursor()
 
         cursor.execute("""
@@ -159,8 +149,7 @@ class Lectures(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def get_lecture_by_code(self, lecture_code: 'string', doc_id: 'int') -> 'int':
+    def get_lecture_by_code(self, lecture_code: str, doc_id: int) -> int:
         cursor = self.db.cursor()
 
         cursor.execute("""
@@ -171,8 +160,7 @@ class Lectures(TimDbBase):
 
         return cursor.fetchone()[0]
 
-    @contract
-    def check_if_correct_name(self, doc_id: 'int', lecture_code: 'string', lecture_id : 'int') -> 'int':
+    def check_if_correct_name(self, doc_id: int, lecture_code: str, lecture_id : int) -> int:
         cursor = self.db.cursor()
 
         cursor.execute("""
@@ -188,8 +176,7 @@ class Lectures(TimDbBase):
 
         return True
 
-    @contract
-    def set_end_for_lecture(self, lecture_id: "int", end_time: "string"):
+    def set_end_for_lecture(self, lecture_id: int, end_time: str):
         cursor = self.db.cursor()
 
         cursor.execute(
@@ -202,8 +189,7 @@ class Lectures(TimDbBase):
 
         self.db.commit()
 
-    @contract
-    def check_if_lecture_is_running(self, lecture_id: "int", now="string") -> bool:
+    def check_if_lecture_is_running(self, lecture_id: int, now=str) -> bool:
         cursor = self.db.cursor()
 
         cursor.execute(
@@ -220,8 +206,7 @@ class Lectures(TimDbBase):
 
         return True
 
-    @contract
-    def check_if_lecture_is_full(self, lecture_id: "int") -> bool:
+    def check_if_lecture_is_full(self, lecture_id: int) -> bool:
         cursor = self.db.cursor()
 
         cursor.execute(
@@ -254,8 +239,7 @@ class Lectures(TimDbBase):
         else:
             return students + 1 >= max
 
-    @contract
-    def check_if_in_lecture(self, doc_id: "int", user_id: "int") -> "tuple":
+    def check_if_in_lecture(self, doc_id: int, user_id: int) -> Tuple:
         """
         Check if user is in lecture from specific document
         :param doc_id: document id
@@ -296,8 +280,7 @@ class Lectures(TimDbBase):
         else:
             return False, -1
 
-    @contract
-    def check_if_in_any_lecture(self, user_id: "int") -> "tuple":
+    def check_if_in_any_lecture(self, user_id: int) -> Tuple:
         """
         Check if user is in lecture from specific document
         :param doc_id: document id
@@ -319,8 +302,7 @@ class Lectures(TimDbBase):
         else:
             return False, -1
 
-    @contract
-    def get_users_from_leture(self, lecture_id: "int") -> "list(dict)":
+    def get_users_from_leture(self, lecture_id: int) -> List[dict]:
         cursor = self.db.cursor()
 
         cursor.execute("""
@@ -331,8 +313,7 @@ class Lectures(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def update_lecture_starting_time(self, lecture_id: "int", start_time: "string", commit: "bool"=True) -> "dict":
+    def update_lecture_starting_time(self, lecture_id: int, start_time: str, commit: bool=True) -> dict:
         cursor = self.db.cursor()
 
         cursor.execute("""
@@ -352,8 +333,7 @@ class Lectures(TimDbBase):
 
         return self.resultAsDictionary(cursor)[0]
 
-    @contract
-    def extend_lecture(self, lecture_id: "int", new_end_time: "string", commit: "bool"=True):
+    def extend_lecture(self, lecture_id: int, new_end_time: str, commit: bool=True):
         cursor = self.db.cursor()
 
         cursor.execute("""

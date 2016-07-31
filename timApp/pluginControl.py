@@ -43,11 +43,9 @@ def find_task_ids(blocks):
     return task_ids
 
 
-def try_load_json(json_str):
+def try_load_json(json_str: str):
     """
 
-    :rtype : dict|list
-    :type json_str: str
     """
     try:
         if json_str is not None:

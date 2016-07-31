@@ -193,9 +193,10 @@ sagecell.init = function (callback) {
     sagecell.last_session = {};
 
     // many stylesheets that have been smashed together into all.min.css
-    var stylesheets = [sagecell.URLs.root + "static/jquery-ui/css/sagecell/jquery-ui-1.10.2.custom.min.css",
-                       sagecell.URLs.root + "static/colorpicker/css/colorpicker.css",
-                       sagecell.URLs.root + "static/all.min.css"]
+    //var stylesheets = [sagecell.URLs.root + "static/jquery-ui/css/sagecell/jquery-ui-1.10.2.custom.min.css",
+    //                   sagecell.URLs.root + "static/colorpicker/css/colorpicker.css",
+    //                   sagecell.URLs.root + "static/all.min.css"]
+    var stylesheets = [sagecell.URLs.root +"static/sagecell_embed.css"];
     for (var i = 0; i < stylesheets.length; i++) {
         document.head.appendChild(ce("link", {rel: "stylesheet", href: stylesheets[i]}));
     }
@@ -226,7 +227,8 @@ sagecell.init = function (callback) {
             $(function () {
                 sagecell.body = data;
                 // many prerequisites that have been smashed together into all.min.js
-                load({"src": sagecell.URLs.root + "static/all.min.js"})
+                //load({"src": sagecell.URLs.root + "static/all.min.js"})
+                load({"src": sagecell.URLs.root + "static/embedded_sagecell.js"})
             });
         }, undefined);
 };

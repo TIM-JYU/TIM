@@ -1,13 +1,13 @@
+from typing import List
+
 __author__ = 'hajoviin'
-from contracts import contract
 from timdb.timdbbase import TimDbBase
 
 # TODO: Also need to save the lecture_id to comfirm that we can only show specific question.
 
 
 class Messages(TimDbBase):
-    @contract
-    def delete_messages_from_lecture(self, lecture_id:"int", commit: "bool"):
+    def delete_messages_from_lecture(self, lecture_id:int, commit: bool):
         cursor = self.db.cursor()
         cursor.execute(
             """
@@ -19,8 +19,7 @@ class Messages(TimDbBase):
         if commit:
             self.db.commit()
 
-    @contract
-    def get_message(self, msg_id: 'int'):
+    def get_message(self, msg_id: int):
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT user_id,msg_id, message, timestamp
@@ -30,8 +29,7 @@ class Messages(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def get_messages(self, lecture_id: 'int') -> 'list(dict)':
+    def get_messages(self, lecture_id: int) -> List[dict]:
         """
         Gets the question
         :return: Questions as a list
@@ -46,8 +44,7 @@ class Messages(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def get_new_messages(self, lecture_id: 'int', client_last_message: 'int') -> 'list(dict)':
+    def get_new_messages(self, lecture_id: int, client_last_message: int) -> List[dict]:
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT *
@@ -59,7 +56,7 @@ class Messages(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    def get_last_message(self, lecture_id: "int") -> 'list(dict)':
+    def get_last_message(self, lecture_id: int) -> List[dict]:
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT *
@@ -72,9 +69,8 @@ class Messages(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def add_message(self, user_id: 'int', lecture_id: 'int', message: 'str', timestamp: 'str',
-                    commit: 'bool'=True) -> 'int':
+    def add_message(self, user_id: int, lecture_id: int, message: str, timestamp: str,
+                    commit: bool=True) -> int:
         """ Creates a new message
         """
 

@@ -42,7 +42,7 @@ class Clipboard:
             return os.path.join(self.path, 'ref-parcontent')
 
         def clear(self):
-            for name in (self.get_clipfilename(), self.get_reffilename(), self.get_parreffilename()):
+            for name in (self.get_clipfilename(), self.get_reffilename(), self.get_parreffilename(), self.get_metafilename()):
                 if os.path.isfile(name):
                     os.remove(name)
 
@@ -54,9 +54,11 @@ class Clipboard:
         def read_metadata(self) -> Dict[str, str]:
             try:
                 with open(self.get_metafilename(), 'rt', encoding='utf-8') as metafile:
-                    return json.loads(metafile.read())
+                    metadata = json.loads(metafile.read())
+                metadata['empty'] = False
+                return metadata
             except FileNotFoundError:
-                return {}
+                return {'empty': True}
 
         def read(self, as_ref: Optional[bool] = False, force_parrefs: Optional[bool] = False)\
                 -> Optional[List[Dict[str, str]]]:
@@ -76,6 +78,11 @@ class Clipboard:
             os.makedirs(self.path, exist_ok=True)
             with open(self.get_metafilename(), 'wt', encoding='utf-8') as metafile:
                 metafile.write(json.dumps(kwargs))
+
+        def update_metadata(self, **kwargs):
+            metadata = self.read_metadata()
+            metadata.update(kwargs)
+            self.write_metadata(**metadata)
 
         def write(self, pars: List[Dict[str, Generic]]):
             os.makedirs(self.path, exist_ok=True)
@@ -115,6 +122,7 @@ class Clipboard:
 
             pars = self.copy_pars(doc, par_start, par_end, area_name, doc, disable_ref=True)
             self.delete_from_source()
+            self.update_metadata(last_action='cut')
             return pars
 
         def copy_pars(self, doc: Document, par_start: str, par_end: str, area_name: Optional[str] = None,
@@ -144,7 +152,7 @@ class Clipboard:
             finally:
                 i.close()
 
-            self.write_metadata(area_name=area_name, disable_ref=disable_ref)
+            self.write_metadata(area_name=area_name, disable_ref=disable_ref, last_action='copy')
             self.write(pars)
             self.write_refs(par_objs, area_name)
 
@@ -171,6 +179,7 @@ class Clipboard:
                 doc_pars = [new_par] + doc_pars
                 par_before = new_par.get_id()
 
+            self.update_metadata(last_action='paste')
             return doc_pars
 
         def paste_after(self, doc: Document, par_id: str, as_ref: bool = False) -> List[DocParagraph]:

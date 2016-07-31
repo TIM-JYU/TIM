@@ -10,7 +10,7 @@ import shutil
 from flask import Blueprint
 from flask import render_template
 from flask import stream_with_context
-from flask.ext.assets import Environment
+from flask_assets import Environment
 from flask.helpers import send_file
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
@@ -38,6 +38,7 @@ from routes.view import view_page
 from tim_app import app
 
 # db.engine.pool.use_threadlocal = True # This may be needless
+from utils import datestr_to_relative
 
 cache.init_app(app)
 
@@ -141,7 +142,7 @@ def reset_css():
     assets_dir = os.path.join('static', '.webassets-cache')
     if os.path.exists(assets_dir):
         shutil.rmtree(assets_dir)
-    gen_dir = os.path.join('static', 'gen')
+    gen_dir = os.path.join('static', app.config['SASS_GEN_PATH'])
     if os.path.exists(gen_dir):
         shutil.rmtree(gen_dir)
     return okJsonResponse()
@@ -260,6 +261,7 @@ def get_documents(folder):
         doc['canEdit'] = timdb.users.has_edit_access(uid, doc['id'])
         doc['isOwner'] = timdb.users.user_is_owner(getCurrentUserId(), doc['id']) or timdb.users.has_admin_access(uid)
         doc['owner'] = timdb.users.get_owner_group(doc['id'])
+        doc['modified'] = datestr_to_relative(doc['modified'])
         final_docs.append(doc)
 
     final_docs.sort(key=lambda d: d['name'].lower())
@@ -413,7 +415,7 @@ def get_block(doc_id, par_id):
         return jsonResponse({"text": par.get_exported_markdown()})
 
 
-@app.route("/<plugin>/<filename>")
+@app.route("/<plugin>/<path:filename>")
 def plugin_call(plugin, filename):
     try:
         req = containerLink.call_plugin_resource(plugin, filename)

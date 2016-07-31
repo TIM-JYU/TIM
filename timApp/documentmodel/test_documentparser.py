@@ -126,7 +126,7 @@ test
         self.assertEqual([], DocumentParser('').get_blocks())
         self.assertEqual('', DocumentWriter([]).get_text())
         self.assertEqual('#- {a="b"}\n', DocumentWriter([{'md': '', 'attrs': {'a': 'b'}}]).get_text())
-        self.assertListEqual([{'md': '```', 'type': 'code', 'attrs': {}}],
+        self.assertListEqual([{'md': '```\n```', 'type': 'code', 'attrs': {}}],
                              DocumentParser('```').get_blocks())
 
         result = DocumentParser(doc_text).get_blocks(DocumentParserOptions.break_on_empty_lines())
@@ -186,8 +186,8 @@ test
         # ignore 'type' because some of them are now 'atom'
         self.assertListEqual([{'md': p['md'], 'attrs': p['attrs']} for p in expected],
                              [{'md': p['md'], 'attrs': p['attrs']} for p in DocumentParser(exported).get_blocks()])
-        self.assertListEqual([{'attrs': {}, 'type': 'code', 'md': '```\nasd'}], DocumentParser('```\nasd').get_blocks())
-        self.assertListEqual([{'attrs': {}, 'type': 'code', 'md': '```'}], DocumentParser('```').get_blocks())
+        self.assertListEqual([{'attrs': {}, 'type': 'code', 'md': '```\nasd\n```'}], DocumentParser('```\nasd').get_blocks())
+        self.assertListEqual([{'attrs': {}, 'type': 'code', 'md': '```\n```'}], DocumentParser('```').get_blocks())
 
     def test_validation(self):
         failures = [
@@ -251,6 +251,21 @@ test
                 DocumentParser(f).validate_structure()
         for o in oks:
             DocumentParser(o).validate_structure()
+
+    def test_incomplete_code(self):
+        for text, expected in (('```\n``', '```\n```'),
+                               ('```\na', '```\na\n```'),
+                               ('```\n', '```\n```'),
+                               ('```', '```\n```'),
+                               ('````', '````\n````'),
+                               ('````\na', '````\na\n````')):
+            result = DocumentParser(text).get_blocks(DocumentParserOptions.single_paragraph())
+            self.assertEqual([{'attrs': {}, 'md': expected, 'type': 'code'}], result)
+            result.append({'attrs': {}, 'md': '```\n```', 'type': 'code'})
+            exported = DocumentWriter(result).get_text()
+            self.assertEqual(expected + '\n\n```\n```\n', exported)
+            new_result = DocumentParser(exported).get_blocks()
+            self.assertListEqual(result, new_result)
 
 
 if __name__ == '__main__':

@@ -2,8 +2,14 @@
 from ubuntu
 maintainer vesal "vesal@jyu.fi"
 
-# Asennetaan python, pip ja flask
+# Aikavyöhyke ja merkistöt kuntoon
+run locale-gen en_US.UTF-8
+env LANG en_US.UTF-8
+env LANGUAGE en_US:en
+env LC_ALL en_US.UTF-8
+run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
 
+# Asennetaan python, pip ja flask
 run apt-get update
 run apt-get install -y python3
 run apt-get install -y python3-pip
@@ -25,7 +31,7 @@ RUN curl http://buildbot.pypy.org/nightly/py3k/pypy-c-jit-latest-linux64.tar.bz2
 ENV PATH $PATH:/opt/pypy3/bin
 # ENV LANG C.UTF-8
 # install setuptools for pypy3
-RUN curl https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py | pypy3
+RUN curl https://bootstrap.pypa.io/ez_setup.py | pypy3
 RUN rm *.zip
 # install pip==1.4.1, because 1.5.4 segfaults for unknown reason
 RUN easy_install pip==1.4.1

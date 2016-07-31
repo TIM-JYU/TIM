@@ -5,6 +5,14 @@ maintainer vesal "vesal@jyu.fi"
 # Workaround PAM: system error -messagelle
 run ln -fs /bin/true /usr/bin/chfn
 
+# Aikavyöhyke ja merkistöt kuntoon
+run locale-gen en_US.UTF-8
+env LANG en_US.UTF-8
+env LANGUAGE en_US:en
+env LC_ALL en_US.UTF-8
+run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
+
+
 # Asennetaan python, pip ja flask 
 
 run apt-get update
@@ -107,6 +115,41 @@ run wget -q https://get.docker.com/builds/Linux/x86_64/docker-1.10.2.tgz && \
     tar -xzvf docker-1.10.2.tgz && \
     rm docker-1.10.2.tgz
 
+# Python packages
+
+#run pip3 install numpy
+#run pip3 install scipy
+#run pip3 install scikit-learn
+#run pip3 install matplotlib
+#run pip3 install statsmodels
+#run pip3 install pandas
+# http://www.scipy.org/install.html
+# sudo apt-get install python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas python-sympy python-nose
+run apt-get install -y python3-numpy python3-scipy python3-matplotlib python3-pandas 
+run pip3 install statsmodels
+
+# Octave
+#run apt-add-repository ppa:octave/stable
+#run apt-get update
+
+run apt-get install -y octave less   
+run apt-get install -y epstool 
+run apt-get install -y transfig
+
+
+run apt-get install -y octave-control
+run apt-get install -y octave-io
+
+#env LD_LIBRARY_PATH /usr/lib/jvm/java-8-oracle/jre/lib/amd64/server
+# run javareconf
+run ln -s /usr/lib/jvm/java-8-oracle /usr/lib/jvm/default-java
+
+
+run apt-get install -y octave-signal
+run apt-get install -y octave-statistics
+
+run apt-get install -y lua5.2
+    
 # Lisätään käyttäjä `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.
 # run useradd -M agent 

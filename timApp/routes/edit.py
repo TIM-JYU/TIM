@@ -10,12 +10,21 @@ from markdownconverter import md_to_html
 from routes import logger
 from routes.notify import notify_doc_owner
 from timdb.timdbbase import TimDbException
+from typing import List
 from utils import get_error_html
 from .common import *
 
 edit_page = Blueprint('edit_page',
                       __name__,
                       url_prefix='')  # TODO: Better URL prefix.
+
+
+def get_group_id() -> str:
+    return "docmodify_[doc_id]"
+
+
+def get_group_subject() -> str:
+    return "Your document [doc_name] has been modified"
 
 
 @edit_page.route('/update/<int:doc_id>', methods=['POST'])
@@ -65,9 +74,10 @@ def update_document(doc_id):
     if content is None:
         return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
     doc = get_newest_document(doc_id)
+    ver_before = doc.get_version()
     try:
         # To verify view rights for possible referenced paragraphs, we call this first:
-        editor_pars = get_pars_from_editor_text(doc, content, break_on_elements=True)
+        editor_pars = get_pars_from_editor_text(doc, content, break_on_elements=True, skip_access_check=True)
         d = timdb.documents.update_document(doc, content, original, strict_validation)
         check_and_rename_pluginnamehere(editor_pars, d)
         old_pars = d.get_paragraphs()
@@ -89,12 +99,17 @@ def update_document(doc_id):
     except (TimDbException, ValidationException) as e:
         return abort(400, str(e))
     chg = d.get_changelog()
+    ver_after = d.get_version()
     for ver in chg:
         ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
 
     # todo: include diffs in the message
     notify_doc_owner(doc_id, '[user_name] has edited your document [doc_name]',
-                     '[user_name] has edited your document as whole: [doc_url]', setting="doc_modify")
+                     """[user_name] has edited your document as whole: [doc_url]\n\n
+See the changes here:
+[base_url]/diff/[doc_id]/{0}/{1}/{2}/{3}\n\n""".format(ver_before[0], ver_before[1], ver_after[0], ver_after[1]),
+                     setting="doc_modify",
+                     group_id=get_group_id(), group_subject=get_group_subject())
 
     return jsonResponse({'versions': chg, 'fulltext': d.export_markdown(), 'duplicates': duplicates})
 
@@ -162,7 +177,8 @@ def rename_task_ids():
 
         # todo: include diffs in the message
         notify_doc_owner(doc_id, '[user_name] has edited your document [doc_name]',
-                        '[user_name] has edited your document as whole: [doc_url]', setting="doc_modify")
+                        '[user_name] has edited your document as whole: [doc_url]', setting="doc_modify",
+                         group_id=get_group_id(), group_subject=get_group_subject())
 
         return jsonResponse({'versions': chg, 'fulltext': doc.export_markdown(), 'duplicates': duplicates})
 
@@ -184,11 +200,12 @@ def modify_paragraph():
         abort(400, 'Paragraph not found: ' + par_id)
 
     original_par = None
+    version_before = doc.get_version()
     area_start = request.get_json().get('area_start')
     area_end = request.get_json().get('area_end')
     editing_area = area_start and area_end
     try:
-        editor_pars = get_pars_from_editor_text(doc, md, break_on_elements=editing_area)
+        editor_pars = get_pars_from_editor_text(doc, md, break_on_elements=editing_area, skip_access_check=True)
     except ValidationException as e:
         return abort(400, str(e))
 
@@ -248,14 +265,19 @@ def modify_paragraph():
 
     mark_pars_as_read_if_chosen(pars, doc)
 
+    version_after = doc.get_version()
     notify_doc_owner(doc_id,
                      '[user_name] has edited your document [doc_name]',
-                     """[user_name] has changed a paragraph in your document [doc_url]\n
+                     """[user_name] has changed a paragraph in your document [doc_url]\n\n
+See the changes here:
+[base_url]/diff/[doc_id]/{2}/{3}/{4}/{5}\n\n
 == ORIGINAL ==\n
-{}\n\n
+{0}\n\n
 ==MODIFIED==\n
-{}\n
-""".format(original_md, updated_md), setting="doc_modify", par_id=par_id)
+{1}\n
+""".format(original_md, updated_md, version_before[0], version_before[1],
+           version_after[0], version_after[1]), setting="doc_modify", par_id=par_id,
+           group_id=get_group_id(), group_subject=get_group_subject())
 
     return par_response(pars,
                         doc,
@@ -339,7 +361,9 @@ def par_response(blocks, doc, original_par=None, new_par_ids=None, edit_window=F
                          })
 
 
-def get_pars_from_editor_text(doc, text, break_on_elements=False):
+def get_pars_from_editor_text(doc: Document, text: str,
+                              break_on_elements: bool = False, skip_access_check: bool = False) -> List[DocParagraph]:
+
     options = DocumentParserOptions()
     options.break_on_code_block = break_on_elements
     options.break_on_header = break_on_elements
@@ -353,7 +377,7 @@ def get_pars_from_editor_text(doc, text, break_on_elements=False):
                 refdoc = int(p.get_attr('rd'))
             except (ValueError, TypeError):
                 continue
-            if getTimDb().documents.exists(refdoc)\
+            if not skip_access_check and getTimDb().documents.exists(refdoc)\
                     and not getTimDb().users.has_view_access(getCurrentUserId(), refdoc):
                 raise ValidationException("You don't have view access to document {}".format(refdoc))
     return blocks
@@ -493,7 +517,7 @@ def mark_pars_as_read_if_chosen(pars, doc):
     timdb = getTimDb()
     if mark_read:
         for p in pars:
-            timdb.readings.setAsRead(getCurrentUserGroup(), doc, p)
+            timdb.readings.mark_read(getCurrentUserGroup(), doc, p)
 
 
 @edit_page.route("/cancelChanges/", methods=["POST"])
@@ -560,7 +584,8 @@ def add_paragraph():
     notify_doc_owner(doc_id,
                      '[user_name] has edited your document [doc_name]',
                      '[user_name] has added a new paragraph on your document [doc_url]\n\n{}'.format(md),
-                     setting="doc_modify", par_id=pars[0].get_id() if len(pars) > 0 else None)
+                     setting="doc_modify", par_id=pars[0].get_id() if len(pars) > 0 else None,
+                     group_id=get_group_id(), group_subject="Your document [doc_name] has been modified")
 
     return par_response(pars, doc, None, new_par_ids, update_cache=current_app.config['IMMEDIATE_PRELOAD'])
 
@@ -588,7 +613,8 @@ def delete_paragraph(doc_id):
     doc_name = timdb.documents.get_first_document_name(doc_id)
     notify_doc_owner(doc_id, '[user_name] has edited your document [doc_name]',
                      '[user_name] has deleted the following paragraph(s) from your document [doc_url]\n\n{}'.format(
-                         text), setting="doc_modify")
+                         text), setting="doc_modify",
+                     group_id=get_group_id(), group_subject=get_group_subject())
 
     return par_response([], doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'])
 

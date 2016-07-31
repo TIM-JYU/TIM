@@ -3,6 +3,7 @@
 
 dockername="pali"
 dockerOptions="--name $dockername\
+           --net=timnet\
            -p 61000:5000\
            -v /opt/tim/timApp/modules/pali:/pali/:ro\
            -v /opt/tim/timApp/modules/py:/py/:ro\

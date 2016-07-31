@@ -36,7 +36,8 @@ def set_notify_settings(doc_id):
 
 
 @async
-def send_email(rcpt: str, subject: str, msg: str, mail_from: Optional[str] = None, reply_to: Optional[str] = None):
+def send_email(rcpt: str, subject: str, msg: str, mail_from: Optional[str] = None, reply_to: Optional[str] = None,
+               group_id: Optional[str] = None, group_subject: Optional[str] = None):
     with app.app_context():
         conn = None
         try:
@@ -52,6 +53,9 @@ def send_email(rcpt: str, subject: str, msg: str, mail_from: Optional[str] = Non
                 headers['From'] = mail_from
             if reply_to:
                 headers['Reply-To'] = reply_to
+            if group_id and group_subject:
+                headers['Group-Id'] = group_id
+                headers['Group-Subject'] = group_subject
 
             conn = http.client.HTTPConnection(FUNNEL_HOST, port=FUNNEL_PORT)
             conn.request("POST", "/mail", body=msg.replace('\n', '<br>').encode('utf-8'), headers=headers)
@@ -77,20 +81,26 @@ def replace_macros(msg: str, doc_id: int, par_id: Optional[str]) -> str:
     if '[doc_name]' in msg or '[doc_url]' in msg:
         doc_name = timdb.documents.get_first_document_name(doc_id)
         par_part = '' if par_id is None else '#' + par_id
-        doc_url = 'http://{}/view/{}{}'.format(os.environ.get("TIM_HOST", "localhost"), doc_name.replace(' ', '%20'),
+        doc_url = '{}/view/{}{}'.format(os.environ.get("TIM_HOST", "http://localhost"), doc_name.replace(' ', '%20'),
                                                par_part)
         new_msg = new_msg.replace('[doc_name]', doc_name).replace('[doc_url]', doc_url)
+    if '[doc_id]' in msg:
+        new_msg = new_msg.replace('[doc_id]', str(doc_id))
+    if '[base_url]' in msg:
+        new_msg = new_msg.replace('[base_url]', os.environ.get("TIM_HOST", "http://localhost"))
 
     return new_msg
 
 
-def notify_doc_owner(doc_id, subject, msg, setting=None, par_id=None):
+def notify_doc_owner(doc_id, subject, msg, setting=None, par_id=None, group_id=None, group_subject=None):
     timdb = getTimDb()
     me = get_current_user()
     owner_group = timdb.documents.get_owner(doc_id)
     macro_subject = replace_macros(subject, doc_id, par_id)
     macro_msg = replace_macros(msg, doc_id, par_id)
-    macro_msg += '\n\n--\This message was automatically sent by TIM'
+
+    macro_grpid= replace_macros(group_id, doc_id, par_id) if group_id else None
+    macro_grpsubj = replace_macros(group_subject, doc_id, par_id) if group_subject else None
 
     for user in timdb.users.get_users_in_group(owner_group):
         if user['id'] != me['id'] and user['email']:
@@ -99,5 +109,6 @@ def notify_doc_owner(doc_id, subject, msg, setting=None, par_id=None):
                 if not settings['email_' + setting]:
                     continue
 
-            send_email(user['email'], macro_subject, macro_msg, mail_from=me['email'])
+            send_email(user['email'], macro_subject, macro_msg, mail_from=me['email'],
+                       group_id=macro_grpid, group_subject=macro_grpsubj)
 

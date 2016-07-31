@@ -162,6 +162,7 @@ height:85%;
 .web-console pre {
   margin-left: 0.0em; 
   border-left: none;
+  color: cyan;
 }
 
 .htmlresult {

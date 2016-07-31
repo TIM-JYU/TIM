@@ -1,6 +1,7 @@
 import datetime
 import json
 
+import io
 from flask import session
 from lxml import html
 
@@ -106,16 +107,16 @@ class PluginTest(TimRouteTest):
                                    'par_id': par_id,
                                    'doc_id': doc.doc_id})
         self.assertDictEqual({'html': "<div id='" + task_id + "' data-plugin='/mmcq'><mmcq "
-                                      "data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;onTry&quot;:null,&quot;stem&quot;:&quot;&lt;p&gt;Answer "
-                                      'yes or no to the following '
-                                      'questions.&lt;/p&gt;&quot;,&quot;choices&quot;:[{&quot;text&quot;:&quot;&lt;p&gt;&lt;span '
-                                      'class=\\&quot;math '
-                                      'inline\\&quot;&gt;\\\\(2^2=4\\\\)&lt;/span&gt;&lt;/p&gt;&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;&lt;p&gt;This '
-                                      'is true.&lt;/p&gt;&quot;},{&quot;text&quot;:&quot;&lt;p&gt;All '
-                                      'cats are '
-                                      'black.&lt;/p&gt;&quot;,&quot;correct&quot;:false,&quot;reason&quot;:&quot;&lt;p&gt;No '
-                                      'way.&lt;/p&gt;&quot;},{&quot;text&quot;:&quot;&lt;p&gt;Guess.&lt;/p&gt;&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;&lt;p&gt;No '
-                                      "reason.&lt;/p&gt;&quot;}]}}'></mmcq></div>"}, j)
+                                                              "data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;onTry&quot;:null,&quot;stem&quot;:&quot;&lt;p&gt;Answer "
+                                                              'yes or no to the following '
+                                                              'questions.&lt;/p&gt;&quot;,&quot;choices&quot;:[{&quot;text&quot;:&quot;&lt;p&gt;&lt;span '
+                                                              'class=\\&quot;math '
+                                                              'inline\\&quot;&gt;\\\\(2^2=4\\\\)&lt;/span&gt;&lt;/p&gt;&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;&lt;p&gt;This '
+                                                              'is true.&lt;/p&gt;&quot;},{&quot;text&quot;:&quot;&lt;p&gt;All '
+                                                              'cats are '
+                                                              'black.&lt;/p&gt;&quot;,&quot;correct&quot;:false,&quot;reason&quot;:&quot;&lt;p&gt;No '
+                                                              'way.&lt;/p&gt;&quot;},{&quot;text&quot;:&quot;&lt;p&gt;Guess.&lt;/p&gt;&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;&lt;p&gt;No '
+                                                              "reason.&lt;/p&gt;&quot;}]}}'></mmcq></div>"}, j)
 
         timdb = self.get_db()
         timdb.users.grant_access(timdb.users.get_anon_group_id(), doc.doc_id, 'view')
@@ -182,6 +183,82 @@ class PluginTest(TimRouteTest):
             doc.doc_id, doc.get_paragraphs()[0].get_id())
         plugs = tree.findall(mmcq_xpath)
         self.assertEqual(1, len(plugs))
+
+    def test_upload(self):
+        self.login_test1()
+        db = self.get_db()
+        ug = db.users.get_personal_usergroup_by_id(session['user_id'])
+        doc = self.create_doc(from_file='example_docs/upload_plugin.md')
+        task_name = 'testupload'
+        task_name2 = 'testupload2'
+        task_id = '{}.{}'.format(doc.doc_id, task_name)
+        filename = 'test.txt'
+        file_content = 'test file'
+        mimetype, ur, user_input = self.do_plugin_upload(doc, file_content, filename, task_id, task_name)
+        self.do_plugin_upload(doc, file_content, 'test2.txt', task_id, task_name, expect_version=2)
+        self.do_plugin_upload(doc, file_content, filename, task_id, task_name2)
+        self.do_plugin_upload(doc, file_content, filename, task_id, task_name, expect_version=3)
+        self.do_plugin_upload(doc, file_content, filename, task_id, task_name2, expect_version=2)
+        resp = self.post_answer('csPlugin', task_id, user_input)
+        self.assertDictResponse({'error': 'File was already uploaded: {}'.format(ur['file'])}, resp, expect_status=400)
+        invalid_file = '/test/test'
+        resp = self.post_answer('csPlugin',
+                                task_id,
+                                {"uploadedFile": invalid_file,
+                                 "uploadedType": mimetype,
+                                 "markup": {"type": "upload"}},
+                                )
+        self.assertDictResponse({'error': 'Non-existent upload: {}'.format(invalid_file)}, resp, expect_status=400)
+        self.assertResponse(file_content, self.app.get(ur['file']))
+        self.assertResponse(file_content,
+                            self.app.get('/uploads/{}/{}/{}/'.format(doc.doc_id, task_name, session['user_name'])))
+
+        self.login_test2()
+
+        # Another user cannot see the file
+        resp = self.app.get(ur['file'])
+        self.assertDictResponse(self.permission_error, resp, expect_status=403)
+
+        # and cannot post answers
+        resp = self.post_answer('csPlugin', task_id, user_input)
+        self.assertDictResponse(self.permission_error,
+                                resp,
+                                expect_status=403)
+
+        # until he is granted a permission
+        ug = db.users.get_personal_usergroup_by_id(session['user_id'])
+        db.users.grant_view_access(ug, doc.doc_id)
+
+        # but he still cannot see the file
+        resp = self.post_answer('csPlugin', task_id, user_input)
+        self.assertDictResponse({'error': "You don't have permission to touch this file."},
+                                resp,
+                                expect_status=403)
+        resp = self.app.get(ur['file'])
+        self.assertDictResponse(self.permission_error, resp, expect_status=403)
+
+        # until the 'see answers' right is granted for the document
+        db.users.grant_access(ug, doc.doc_id, 'see answers')
+        resp = self.app.get(ur['file'])
+        self.assertResponse(file_content, resp)
+
+    def do_plugin_upload(self, doc, file_content, filename, task_id, task_name, expect_version=1):
+        resp = self.app.post('/pluginUpload/{}/{}/'.format(doc.doc_id, task_name),
+                             data={'file': (io.BytesIO(bytes(file_content, encoding='utf-8')), filename)})
+        ur = self.assertResponseStatus(resp, return_json=True)
+        mimetype = "text/plain"
+        self.assertDictEqual({'file': '/uploads/{}/{}/{}/{}/{}'.format(doc.doc_id,
+                                                                       task_name,
+                                                                       session['user_name'],
+                                                                       expect_version,
+                                                                       filename),
+                              'type': mimetype,
+                              'block': ur['block']}, ur)
+        self.assertIsInstance(ur['block'], int)
+        user_input = {"uploadedFile": ur['file'], "uploadedType": mimetype, "markup": {"type": "upload"}}
+        resp = self.post_answer('csPlugin', task_id, user_input)
+        self.check_ok_answer(resp)
+        return mimetype, ur, user_input
 
     def check_failed_answer(self, resp, is_new=False):
         j = self.assertResponseStatus(resp, return_json=True)

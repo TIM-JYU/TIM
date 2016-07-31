@@ -1,0 +1,5 @@
+Ladattava sisältö
+Tehtävä jonka vastauksena ladataan kuva tai muu tiedosto
+``` {plugin="csPlugin" #PLUGINNAMEHERE}
+type: upload
+```

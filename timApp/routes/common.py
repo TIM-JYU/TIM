@@ -1,15 +1,18 @@
 """Common functions for use with routes."""
 import json
+import os
 import re
 from collections import defaultdict
 from urllib.parse import urlparse, urljoin
 
 from flask import current_app, session, abort, g, Response, request, redirect, url_for, flash
 
+import documentmodel.document
 import pluginControl
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from documentmodel.document import Document
 from theme import Theme
+from tim_app import db
 from timdb.timdb2 import TimDb
 from utils import generate_theme_scss, get_combined_css_filename, ThemeNotFoundException
 
@@ -54,6 +57,7 @@ def getTimDb():
     if not hasattr(g, 'timdb'):
         g.timdb = TimDb(db_path=current_app.config['DATABASE'],
                         files_root_path=current_app.config['FILES_PATH'],
+                        session=db.session,
                         current_user_name=getCurrentUserName())
     return g.timdb
 
@@ -93,23 +97,23 @@ def verify_doc_existence(doc_id):
         abort(404)
 
 
-def verify_view_access(block_id, require=True):
-    return verify_access(getTimDb().users.has_view_access(getCurrentUserId(), block_id), require)
+def verify_view_access(block_id, require=True, message=None):
+    return verify_access(getTimDb().users.has_view_access(getCurrentUserId(), block_id), require, message)
 
 
-def verify_teacher_access(block_id, require=True):
-    return verify_access(getTimDb().users.has_teacher_access(getCurrentUserId(), block_id), require)
+def verify_teacher_access(block_id, require=True, message=None):
+    return verify_access(getTimDb().users.has_teacher_access(getCurrentUserId(), block_id), require, message)
 
 
-def verify_seeanswers_access(block_id, require=True):
-    return verify_access(getTimDb().users.has_seeanswers_access(getCurrentUserId(), block_id), require)
+def verify_seeanswers_access(block_id, require=True, message=None):
+    return verify_access(getTimDb().users.has_seeanswers_access(getCurrentUserId(), block_id), require, message)
 
 
-def verify_access(has_access, require=True):
+def verify_access(has_access, require=True, message=None):
     if has_access:
         return True
     if require:
-        abort(403, "Sorry, you don't have permission to view this resource.")
+        abort(403, message or "Sorry, you don't have permission to view this resource.")
     return False
 
 
@@ -267,8 +271,7 @@ def hide_names_in_teacher(doc_id):
     return False
 
 
-def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window=False, load_plugin_states=True,
-                      show_questions=False):
+def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window=False, load_plugin_states=True, show_questions=False):
     timdb = getTimDb()
     html_pars, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                       pars,
@@ -300,8 +303,8 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
             key = htmlpar.get('ref_id'), htmlpar.get('ref_doc_id')
             pars_dict[key].append(htmlpar)
 
-        key = htmlpar['id'], htmlpar['doc_id']
-        pars_dict[key].append(htmlpar)
+            key = htmlpar['id'], htmlpar['doc_id']
+            pars_dict[key].append(htmlpar)
 
     for p in html_pars:
         p['status'] = ''
@@ -309,7 +312,7 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
 
     group = timdb.users.get_personal_usergroup(user) if user is not None else timdb.users.get_anon_group_id()
     if user is not None:
-        readings = timdb.readings.getReadings(group, doc)
+        readings = timdb.readings.get_readings(group, doc)
         for r in readings:
             key = (r['par_id'], r['doc_id'])
             pars = pars_dict.get(key)
@@ -321,7 +324,7 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
                         # elif is here so not to overwrite an existing 'read' marking
                         p['status'] = 'modified'
 
-    notes = timdb.notes.getNotes(group, doc)
+    notes = timdb.notes.get_notes(group, doc)
 
     for n in notes:
         key = (n['par_id'], n['doc_id'])
@@ -393,7 +396,7 @@ def get_preferences():
     css_file_list.sort()
     theme_list = [Theme(f) for f in css_file_list]
     try:
-        generate_theme_scss(theme_list, 'static/gen')
+        generate_theme_scss(theme_list, os.path.join('static', current_app.config['SASS_GEN_PATH']))
     except ThemeNotFoundException as e:
         flash('TIM was updated and some theme files (such as {}) are no longer available. '
               'See the settings page for the available themes.'.format(e))
@@ -413,3 +416,18 @@ def update_preferences(prefs):
             existing_css_files[t.filename] = True
     prefs['css_files'] = existing_css_files
     timdb.users.set_preferences(getCurrentUserId(), json.dumps(prefs))
+
+
+def verify_task_access(doc_id, task_id_name):
+    # If the user doesn't have access to the document, we need to check if the plugin was referenced
+    # from another document
+    if not verify_view_access(doc_id, require=False):
+        orig_doc = request.get_json().get('ref_from', {}).get('docId', doc_id)
+        verify_view_access(orig_doc)
+        par_id = request.get_json().get('ref_from', {}).get('par', doc_id)
+        par = Document(orig_doc).get_paragraph(par_id)
+        if not par.is_reference():
+            abort(403)
+        pars = documentmodel.document.dereference_pars([par])
+        if not any(p.get_attr('taskId') == task_id_name for p in pars):
+            abort(403)

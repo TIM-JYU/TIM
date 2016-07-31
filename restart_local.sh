@@ -38,9 +38,6 @@ checkdir /opt/funnel $PWD/funnel
 checkdir /var/log/funnel $PWD/tim_logs
 checkdir /var/log/wuff $PWD/tim_logs
 
-# Set a lock for the watchdog
-touch /opt/tim/restarting
-
 # Stop and remove containers
 if param tim; then
     docker rm -f tim > /dev/null 2>&1 &
@@ -95,17 +92,14 @@ fi
 
 if param tim; then
   if param sshd ; then
-    docker run --net=timnet --tmpfs /tmp/doctest_files:rw,noexec,nosuid,size=2m --name tim -p 50001:5000 -p 49999:22 -v /opt/tim/:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c 'cd /service/timApp && source initenv.sh && export TIM_NAME=tim ; export TIM_HOST=localhost ; /usr/sbin/sshd -D ; /bin/bash'
+    docker run --net=timnet --tmpfs /tmp/doctest_files:rw,noexec,nosuid,size=2m --name tim -p 50001:5000 -p 49999:22 -v /opt/tim/:/service -d -t -i timimages/tim:$(./get_latest_date.sh) /bin/bash -c 'cd /service/timApp && source /service/scripts/_initenv.sh && export TIM_NAME=tim ; /usr/sbin/sshd -D ; /bin/bash'
   else
-    docker run --net=timnet --name tim -p 50001:5000 -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=tim ; export TIM_HOST=localhost ; $TIM_SETTINGS python3 launch.py $END_SHELL"
+    docker run --net=timnet --name tim -p 50001:5000 -v /opt/tim/:/service ${DAEMON_FLAG} -t -i timimages/tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source /service/scripts/_initenv.sh ; export TIM_NAME=tim ; $TIM_SETTINGS python3 launch.py $END_SHELL"
   fi
 fi
 
 if param nginx; then
   docker run --net=timnet -d --name nginx -p 80:80 -v /opt/cs/:/opt/cs/ local_nginx /startup.sh
 fi
-
-# Remove the lock
-rm /opt/tim/restarting
 
 exit 0

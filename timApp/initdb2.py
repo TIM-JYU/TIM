@@ -5,15 +5,19 @@ import os
 import sqlalchemy
 import sqlalchemy.exc
 
-import models
-from tim_app import app
+from documentmodel.docparagraph import DocParagraph
+from documentmodel.document import Document
+from tim_app import app, db
+from timdb import tempdb_models
+from timdb.tim_models import Version, AccessType
 from timdb.timdb2 import TimDb
 from timdb.timdbbase import TimDbException
 from timdb.users import LOGGED_IN_USERNAME
 
+NEWEST_DB_VERSION = 8
+
 
 def postgre_create_database(db_name):
-    # app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432/tempdb_" + timname
     engine = sqlalchemy.create_engine("postgresql://docker:docker@postgre:5432/postgres")
     conn = engine.connect()
     conn.execute("commit")
@@ -25,23 +29,38 @@ def postgre_create_database(db_name):
     conn.close()
 
 
-def initialize_temp_database():
+def initialize_temp_database(print_progress=True):
     postgre_create_database('tempdb_' + app.config['TIM_NAME'])
-    models.initialize_temp_database()
+    tempdb_models.initialize_temp_database(print_progress=print_progress)
 
 
-def initialize_database(db_path='tim_files/tim.db', files_root_path='tim_files', create_docs=True, print_progress=True):
+def initialize_database(create_docs=True, print_progress=True):
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
+    db_path = app.config['DATABASE']
+    files_root_path = app.config['FILES_PATH']
+    Document.default_files_root = files_root_path
+    DocParagraph.default_files_root = files_root_path
     if os.path.exists(db_path):
         if print_progress:
             print('{} already exists, no need to initialize'.format(files_root_path))
+        # Even if the db exists, we can still call create_all that will create any nonexisting tables
+        db.create_all(bind='tim_main')
         return
     if print_progress:
         print('initializing the database in {}...'.format(files_root_path), end='')
     timdb = TimDb(db_path=db_path, files_root_path=files_root_path)
-    timdb.initialize_tables()
+    db.create_all(bind='tim_main')
+    sess = db.create_scoped_session()
+    sess.add(AccessType(id=1, name='view'))
+    sess.add(AccessType(id=2, name='edit'))
+    sess.add(AccessType(id=3, name='teacher'))
+    sess.add(AccessType(id=4, name='manage'))
+    sess.add(AccessType(id=5, name='see answers'))
+    sess.add(Version(version_id=NEWEST_DB_VERSION))
+    sess.commit()
+    sess.remove()
     timdb.users.create_special_usergroups()
     anon_group = timdb.users.get_anon_group_id()
     timdb.users.create_user_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
@@ -76,7 +95,7 @@ def update_database():
 
     The update method should return True if the update was applied or False if it was skipped for some reason.
     """
-    timdb = TimDb(db_path='tim_files/tim.db', files_root_path='tim_files')
+    timdb = TimDb(db_path=app.config['DATABASE'], files_root_path=app.config['FILES_PATH'])
     ver = timdb.get_version()
     ver_old = ver
     update_dict = {0: update_datamodel,
@@ -85,7 +104,8 @@ def update_database():
                    3: add_seeanswers_right,
                    4: add_translation_table,
                    5: add_logged_in_user,
-                   6: add_notifications}
+                   6: add_notifications,
+                   7: add_yubikey}
     while ver in update_dict:
         # TODO: Take automatic backup of the db (tim_files) before updating
         print('Starting update {}'.format(update_dict[ver].__name__))
@@ -129,6 +149,8 @@ CREATE TABLE Notification (
 
     return True
 
+def add_yubikey(timdb):
+    timdb.execute_sql('ALTER TABLE User ADD COLUMN yubikey VARCHAR(12)')
 
 def add_logged_in_user(timdb):
     lu = timdb.users.get_user_id_by_name(LOGGED_IN_USERNAME)

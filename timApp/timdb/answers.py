@@ -1,20 +1,19 @@
 """"""
 from collections import defaultdict
+from typing import List, Optional, Union
 
 from timdb.timdbbase import TimDbBase
-from contracts import contract
 import json
 
 
 class Answers(TimDbBase):
-    @contract
     def saveAnswer(self,
-                   user_ids: 'list(int)',
-                   task_id: 'str',
-                   content: 'str',
-                   points: 'str|int|float|None',
-                   tags: 'list(str)',
-                   valid: 'bool'=True):
+                   user_ids: List[int],
+                   task_id: str,
+                   content: str,
+                   points: Union[str, int, float, None],
+                   tags: List[str],
+                   valid: bool=True):
         """
         Saves an answer to the database.
         
@@ -30,10 +29,11 @@ class Answers(TimDbBase):
 
         existing_answers = self.get_common_answers(user_ids, task_id)
         if len(existing_answers) > 0 and existing_answers[0]['content'] == content:
+            existing_id = existing_answers[0]['id']
             cursor.execute("""UPDATE Answer SET points = ? WHERE id = ?""",
-                           [points, existing_answers[0]['id']])
+                           [points, existing_id])
             self.db.commit()
-            return False
+            return False, existing_id
 
         cursor.execute('INSERT INTO Answer (task_id, content, points, answered_on, valid)'
                        'VALUES (?,?,?,CURRENT_TIMESTAMP,?)',
@@ -48,10 +48,9 @@ class Answers(TimDbBase):
             cursor.execute('INSERT INTO AnswerTag (answer_id, tag) VALUES (?,?)', [answer_id, tag])
 
         self.db.commit()
-        return True
+        return True, answer_id
 
-    @contract
-    def get_answers(self, user_id: 'int', task_id: 'str', get_collaborators: 'bool'=True) -> 'list(dict)':
+    def get_answers(self, user_id: int, task_id: str, get_collaborators: bool=True) -> List[dict]:
         """Gets the answers of a user in a task, ordered descending by submission time.
         
         :param get_collaborators: Whether collaborators for each answer should be fetched.
@@ -86,8 +85,7 @@ class Answers(TimDbBase):
         for answer in answers:
             answer['collaborators'] = answer_dict[answer['id']]
 
-    @contract
-    def get_newest_answers(self, user_id: 'int', task_ids: 'list(str)') -> 'list(dict)':
+    def get_newest_answers(self, user_id: int, task_ids: List[str]) -> List[dict]:
         template = ','.join('?' * len(task_ids))
         return self.resultAsDictionary(self.db.execute("""SELECT MAX(Answer.id), task_id, content, points,
                                   datetime(answered_on, 'localtime') as answered_on
@@ -97,18 +95,20 @@ class Answers(TimDbBase):
                             AND user_id = ?
                            GROUP BY task_id""" % template, task_ids + [user_id]))
 
-
-    @contract
-    def get_all_answers(self, task_id: 'str', usergroup: 'int', hide_names: 'bool') -> 'list(str)':
+    def get_all_answers(self, task_id: str, usergroup: int, hide_names: bool, age: str) -> List[str]:
         """Gets the all answers to task
 
         :param task_id: The id of the task.
         :param usergroup: Group of users to search
         :param hide_names: Hide names
+        :param age: min or max
         """
         time_limit = "1900-09-12 22:00:00"
+        minmax = "max"
+        if age == "min":
+            minmax = "min"
         answs = self.db.execute("""
-select u.name, a.task_id, a.content, MAX(a.answered_on) as t
+select u.name, a.task_id, a.content, """ + minmax + """(a.answered_on) as t, count(a.answered_on) as n
 from answer as a, userAnswer as ua, user as u
 where a.task_id like ? and ua.answer_id = a.id and u.id = ua.user_id and a.answered_on > ?
 group by a.task_id, u.id
@@ -119,7 +119,7 @@ order by u.id,a.task_id;
         if answs is None: return result
 
         for row in answs:
-            header = row[0] + ": " + row[1]
+            header = row[0] + ": " + row[1] + "; " + row[3] + "; " + str(row[4])
             if hide_names: header = ""
             # print(separator + header)
             line = json.loads(row[2])
@@ -130,7 +130,6 @@ order by u.id,a.task_id;
         return result
 
 
-    @contract
     def check_if_plugin_has_answers(self, task_id: 'str') -> 'int':
         """
         Checks if there are answers to the plugin
@@ -144,8 +143,7 @@ order by u.id,a.task_id;
         return real_result
 
 
-    @contract
-    def get_common_answers(self, user_ids: 'list(int)', task_id: 'str') -> 'list(dict)':
+    def get_common_answers(self, user_ids: List[int], task_id: str) -> List[dict]:
         common_answers_ids = None
         for user_id in user_ids:
             ids = self.db.execute("""SELECT answer_id
@@ -173,8 +171,7 @@ order by u.id,a.task_id;
                             """ % template, list(common_answers_ids)))
         return common_answers
 
-    @contract
-    def getUsersForTasks(self, task_ids: 'list(str)', user_ids: 'list(int)|None'=None) -> 'list(dict)':
+    def getUsersForTasks(self, task_ids: List[str], user_ids: Optional[List[int]]=None) -> List[dict]:
         cursor = self.db.cursor()
         task_id_template = ','.join('?'*len(task_ids))
         user_restrict_sql = '' if user_ids is None else 'AND User.id IN (%s)' % ','.join('?'*len(user_ids))
@@ -198,8 +195,7 @@ order by u.id,a.task_id;
             
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def getAnswersForGroup(self, user_ids: 'list(int)', task_id: 'str') -> 'list(dict)':
+    def getAnswersForGroup(self, user_ids: List[int], task_id: str) -> List[dict]:
         """Gets the answers of the users in a task, ordered descending by submission time.
            All users in the list `user_ids` must be associated with the answer.
         
@@ -213,8 +209,7 @@ order by u.id,a.task_id;
         cursor.execute(sql, [task_id])
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def get_users(self, answer_id: 'int') -> 'list(int)':
+    def get_users(self, answer_id: int) -> List[int]:
         """Gets the user ids of the specified answer.
 
         :param answer_id: The id of the answer.
@@ -224,14 +219,13 @@ order by u.id,a.task_id;
             self.db.execute("""SELECT user_id FROM UserAnswer
                                WHERE answer_id = ?""", [answer_id]))]
 
-    @contract
-    def get_task_id(self, answer_id: 'int') -> 'str|None':
+    def get_task_id(self, answer_id: int) -> Optional[str]:
         result = self.resultAsDictionary(
                  self.db.execute("""SELECT task_id FROM Answer
                                     WHERE id = ?""", [answer_id]))
         return result[0]['task_id'] if len(result) > 0 else None
 
-    def get_users_by_taskid(self, task_id: 'str'):
+    def get_users_by_taskid(self, task_id: str):
         result = self.resultAsDictionary(self.db.execute("""SELECT DISTINCT User.id, name, real_name
                            FROM User
                            JOIN UserAnswer ON UserAnswer.user_id = User.id
@@ -240,8 +234,7 @@ order by u.id,a.task_id;
                            ORDER BY real_name ASC""", [task_id]))
         return result
 
-    @contract
-    def get_answer(self, answer_id: 'int') -> 'dict|None':
+    def get_answer(self, answer_id: int) -> Optional[dict]:
         cursor = self.db.cursor()
         cursor.execute("""SELECT id, task_id, content, points,
                                  datetime(answered_on, 'localtime') as answered_on, valid

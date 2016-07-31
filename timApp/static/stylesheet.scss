@@ -8,6 +8,22 @@ body {
     margin-bottom: $footer-height;
 }
 
+a:visited {
+    color: $link-visited-color;
+}
+
+a .glyphicon {
+    color: $icon-color;
+    &:hover {
+        color: $icon-hover-color;
+    }
+}
+
+// make sure active tab remains black
+.active a .glyphicon {
+    color: inherit;
+}
+
 .siteheader {
     @include clearfix;
     border-bottom: $header-footer-border;
@@ -48,9 +64,18 @@ body {
 // all document-related styles under .paragraphs selector!
 .paragraphs {
     @include center-block();
-    max-width: 52em;
+    @media (min-width: $screen-md-min) {
+        min-width: $paragraph-preferred-width;
+    }
+    max-width: $paragraph-preferred-width;
+    .smalltext > .parContent {
+        font-size: small;
+    }
     .parContent {
         text-align: $body-text-align;
+        @media (max-width: $screen-xs-max) {
+            text-align: $body-text-align-xs;
+        }
         font-size: 16px;
 
         & > h1 {
@@ -93,6 +118,11 @@ body {
             margin-top: 2em;
             margin-bottom: 0.5cm;
         }
+    }
+
+    .mdcontent {
+        color: #DCDCDC;
+        display: none;
     }
 
     table {
@@ -156,7 +186,14 @@ body {
         border: none;
         border-left: 4px solid $basic-color;
         border-radius: 0;
+        overflow: visible;
+
+        code {
+            white-space: pre;
+        }
     }
+
+    @import "csRun";
 }
 
 .correct {
@@ -345,7 +382,12 @@ p.caption {
     height: 100%;
     top: 0;
 
-    &:hover {
+    @media (max-width: $screen-xs-max) {
+        left: 0;
+        width: $editline-width / 2;
+    }
+
+    &:hover, &.menuopen {
         opacity: 0.5;
         background: $editline-bg-color;
     }
@@ -446,6 +488,7 @@ p.caption {
 
 .arealine {
     position: absolute;
+    left: -4.5em;
     z-index: 2;
     width: 1.5em;
     height: 100%;
@@ -813,11 +856,22 @@ input[type="file"] {
     font-weight: bold;
 }
 
+.actionButtonContent {
+    white-space: normal;
+    max-width: 600px;
+    max-height: 200px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
 .actionButtonRow {
     display: table-row;
 }
 
 @import "csRun";
+.questionButton {
+    margin: 0.2em;
+}
 
 @media print {
     body {
@@ -1004,7 +1058,7 @@ p.docsettings {
 }
 
 .wideButton {
-  @extend .btn, .btn-primary, .btn-block;
+    @extend .btn, .btn-primary, .btn-block;
 }
 
 body > .footer {
@@ -1066,6 +1120,5 @@ body > .footer {
 @media (max-width: $screen-xs-max) {
     .container-fluid {
         padding: 0;
-        overflow-x: hidden;
     }
 }

@@ -1,4 +1,5 @@
-from contracts import contract
+from typing import List
+
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from timdb.timdbbase import TimDbBase
@@ -7,17 +8,7 @@ import time
 
 
 class Readings(TimDbBase):
-    @contract
-    def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
-        """Initializes TimDB with the specified database and root path.
-
-        :param db_path: The path of the database file.
-        :param files_root_path: The root path where all the files will be stored.
-        """
-        TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
-
-    @contract
-    def getReadings(self, usergroup_id: 'int', doc: 'Document') -> 'list(dict)':
+    def get_readings(self, usergroup_id: int, doc: Document) -> List[dict]:
         """Gets the reading info for a document for a user.
 
         :param doc: The document for which to get the readings.
@@ -29,8 +20,7 @@ class Readings(TimDbBase):
         return self.resultAsDictionary(self.db.execute("""SELECT par_id, doc_id, par_hash, timestamp FROM ReadParagraphs
                            WHERE doc_id IN (%s) AND UserGroup_id = ?""" % template, list(ids) + [usergroup_id]))
 
-    @contract
-    def setAsRead(self, usergroup_id: 'int', doc: 'Document', par: 'DocParagraph', commit: 'bool'=True):
+    def mark_read(self, usergroup_id: int, doc: Document, par: DocParagraph, commit: bool=True):
         cursor = self.db.cursor()
         # Remove previous markings for this paragraph to reduce clutter
         cursor.execute(
@@ -46,12 +36,36 @@ class Readings(TimDbBase):
         if commit:
             self.db.commit()
 
-    @contract
-    def setAllAsRead(self, usergroup_id: 'int',
-                     doc: 'Document',
-                     commit: 'bool'=True):
+    def mark_all_read(self, usergroup_id: int,
+                      doc: Document,
+                      commit: bool=True):
         for i in doc:
-            self.setAsRead(usergroup_id, doc, i, commit=False)
+            self.mark_read(usergroup_id, doc, i, commit=False)
+        if commit:
+            self.db.commit()
+
+    def copy_readings(self, src_par: DocParagraph, dest_par: DocParagraph, commit: bool = False):
+        if str(src_par.doc.doc_id) == str(dest_par.doc.doc_id) and str(src_par.get_id()) == str(dest_par.get_id()):
+            return
+
+        cursor = self.db.cursor()
+
+        cursor.execute(
+            """
+DELETE FROM ReadParagraphs WHERE doc_id = ? AND par_id = ? AND UserGroup_id IN
+(SELECT UserGroup_id FROM ReadParagraphs WHERE doc_id = ? AND par_id = ?)
+            """, [dest_par.doc.doc_id, dest_par.get_id(), src_par.doc.doc_id, src_par.get_id()]
+        )
+
+        cursor.execute(
+            """
+INSERT INTO ReadParagraphs (UserGroup_id, doc_id, par_id, timestamp, par_hash)
+SELECT UserGroup_id, ?, ?, timestamp, par_hash
+FROM ReadParagraphs
+WHERE doc_id = ? AND par_id = ?
+            """, [dest_par.doc.doc_id, dest_par.get_id(), src_par.doc.doc_id, src_par.get_id()]
+        )
+
         if commit:
             self.db.commit()
 

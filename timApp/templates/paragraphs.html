@@ -100,7 +100,7 @@
         {% endif %}
 
         {% set areas = areas + [t.attrs.area] %}
-        {% do open_areas.__setitem__(t.attrs.area, open_areas|length + 1) %}
+        {#{% do open_areas.__setitem__(t.attrs.area, open_areas|length + 1) %}#}
 
         {% call start_area(t.doc_id, t.html|safe, open_areas, t.attrs) %}
         {% endcall %}
@@ -120,7 +120,7 @@
         {% endif %}
 
         {% set areas = areas + [t.ref_attrs.area] %}
-        {% do open_areas.__setitem__(t.attrs.area, areas|length) %}
+        {# {% do open_areas.__setitem__(t.attrs.area, areas|length) %} #}
 
         {% call start_area(t.doc_id, t.html|safe, open_areas, t.ref_attrs) %}
         {% endcall %}
@@ -222,7 +222,7 @@
             {% call end_area(open_areas) %}
             {% endcall %}
 
-            {% do open_areas.pop(t.attrs.area_end, None) %}
+            {#{% do open_areas.pop(t.attrs.area_end, None) %}#}
 
             {% if open_areas|length > 0 %}
                 {% call start_area(t.doc_id, t.html|safe, open_areas, t.attrs) %}
@@ -233,7 +233,7 @@
             {% call end_area(open_areas) %}
             {% endcall %}
 
-            {% do open_areas.pop(t.ref_attrs.area_end, None) %}
+            {# {% do open_areas.pop(t.ref_attrs.area_end, None) %} #}
 
             {% if areas|length > 0 %}
                 {% call start_area(t.doc_id, t.html|safe, open_areas, t.ref_attrs) %}

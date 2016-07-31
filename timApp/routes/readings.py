@@ -14,7 +14,7 @@ def get_read_paragraphs(doc_id):
     verify_read_marking_right(doc_id)
     timdb = getTimDb()
     doc = Document(doc_id)
-    readings = timdb.readings.getReadings(getCurrentUserGroup(), doc)
+    readings = timdb.readings.get_readings(getCurrentUserGroup(), doc)
     return jsonResponse(readings)
 
 
@@ -33,7 +33,7 @@ def set_read_paragraph(doc_id, specifier):
         return abort(400, 'Non-existent paragraph')
 
     for p in get_referenced_pars_from_req(par):
-        timdb.readings.setAsRead(group_id, Document(p.get_doc_id()), p)
+        timdb.readings.mark_read(group_id, Document(p.get_doc_id()), p)
 
     return okJsonResponse()
 
@@ -46,5 +46,5 @@ def mark_all_read(doc_id):
     # version = request.headers.get('Version', 'latest')
     # verify_document_version(doc_id, version)
     doc = Document(doc_id, modifier_group_id=getCurrentUserGroup())
-    timdb.readings.setAllAsRead(getCurrentUserGroup(), doc)
+    timdb.readings.mark_all_read(getCurrentUserGroup(), doc)
     return okJsonResponse()

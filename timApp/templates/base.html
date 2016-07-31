@@ -23,7 +23,7 @@
         <script>timLogInit({{ request.query_string|string|tojson }});</script>
 
         {% block stylesheet %}
-            {{ scss('gen/' + prefs.css_combined) }}
+            {{ scss(config.SASS_GEN_PATH + '/' + prefs.css_combined) }}
         {% endblock %}
         <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.min.css') }}">
 
@@ -37,6 +37,9 @@
         <script src="{{ url_for('bower.static', filename='jquery-ui/jquery-ui.min.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='angular/angular.min.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='angular-bootstrap/ui-bootstrap-tpls.min.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='ngstorage/ngStorage.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='KaTeX/dist/katex.min.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='KaTeX/dist/contrib/auto-render.min.js') }}"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
         {% block ngscripts %}
@@ -81,23 +84,25 @@
 <body>
 
 {# Set default column widths if they are not defined in a child template #}
-{% if col_1_lg is not defined %}
-    {% set col_1_lg = 2 %}
-    {% set col_2_lg = 8 %}
-    {% set col_3_lg = 2 %}
+{% set col_1_lg = col_1_lg|default(2) %}
+{% set col_2_lg = col_2_lg|default(8) %}
+{% set col_3_lg = col_3_lg|default(2) %}
+{% set col_m_lg = col_m_lg|default(12) %} {# col_m_* must be even #}
 
-    {% set col_1_md = 2 %}
-    {% set col_2_md = 8 %}
-    {% set col_3_md = 2 %}
+{% set col_1_md = col_1_md|default(2) %}
+{% set col_2_md = col_2_md|default(8) %}
+{% set col_3_md = col_3_md|default(2) %}
+{% set col_m_md = col_m_md|default(12) %}
 
-    {% set col_1_sm = 2 %}
-    {% set col_2_sm = 10 %}
-    {% set col_3_sm = 0 %}
+{% set col_1_sm = col_1_sm|default(2) %}
+{% set col_2_sm = col_2_sm|default(10) %}
+{% set col_3_sm = col_3_sm|default(0) %}
+{% set col_m_sm = col_m_sm|default(12) %}
 
-    {% set col_1_xs = 0 %}
-    {% set col_2_xs = 12 %}
-    {% set col_3_xs = 0 %}
-{% endif %}
+{% set col_1_xs = col_1_xs|default(0) %}
+{% set col_2_xs = col_2_xs|default(12) %}
+{% set col_3_xs = col_3_xs|default(0) %}
+{% set col_m_xs = col_m_xs|default(12) %}
 
 {% block body %}
     <div class="container-fluid" {% block mainctrl %}{% endblock %}>
@@ -172,11 +177,18 @@
                             col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
                             col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
                             col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
-                    <div class="material">
-                        {% if lecture_assets %}
-                            {% include 'lectureinfo_menu.html' %}
-                        {% endif %}
-                        {% block content %}{% endblock %}
+                    <div class="row">
+                        <div class="col-lg-{{ col_m_lg }} col-lg-offset-{{ (12 - col_m_lg) // 2 }}
+                                    col-md-{{ col_m_md }} col-md-offset-{{ (12 - col_m_md) // 2 }}
+                                    col-xs-{{ col_m_xs }} col-xs-offset-{{ (12 - col_m_xs) // 2 }}
+                                    col-sm-{{ col_m_sm }} col-sm-offset-{{ (12 - col_m_sm) // 2 }}">
+                            <div class="material">
+                                {% if lecture_assets %}
+                                    {% include 'lectureinfo_menu.html' %}
+                                {% endif %}
+                                {% block content %}{% endblock %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -191,8 +203,7 @@
                             col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
                     {% block footer %}
                         <div class="row">
-                            <p class="col-xs-6">&copy; Jyväskylän yliopisto</p>
-                            <a class="col-xs-6 text-right" href="/view/tim/Rekisteriseloste">Rekisteriseloste</a>
+                            <a class="col-xs-12 text-right" href="/view/tim/Rekisteriseloste">Rekisteriseloste</a>
                         </div>
                     {% endblock %}
                 </div>

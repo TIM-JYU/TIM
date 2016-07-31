@@ -1,4 +1,5 @@
-from contracts import contract, new_contract
+from typing import Optional
+
 from utils import parse_yaml
 from documentmodel.docparagraph import DocParagraph
 from timdb.timdbbase import TimDbException
@@ -54,8 +55,7 @@ class DocSettings:
         md = par.get_markdown().replace('```', '').replace('~~~', '')
         return parse_yaml(md)
 
-    @contract
-    def __init__(self, settings_dict: 'dict|None' = None):
+    def __init__(self, settings_dict: Optional[dict] = None):
         self.__dict = settings_dict if settings_dict else {}
         self.sanitize_macros()
 
@@ -68,48 +68,38 @@ class DocSettings:
 
         self.__dict[self.macros_key] = macros
 
-    @contract
-    def to_paragraph(self, doc) -> 'DocParagraph':
+    def to_paragraph(self, doc) -> DocParagraph:
         text = '```\n' + yaml.dump(self.__dict) + '\n```'
         return DocParagraph.create(doc, md=text, attrs={"settings": ""})
 
-    @contract
-    def get_dict(self) -> 'dict':
+    def get_dict(self) -> dict:
         return self.__dict
 
-    @contract
-    def global_plugin_attrs(self) -> 'dict':
+    def global_plugin_attrs(self) -> dict:
         return self.__dict.get(self.global_plugin_attrs_key, {})
 
     def css(self):
         return self.__dict.get(self.css_key)
 
-    @contract
-    def get_macros(self) -> 'dict':
+    def get_macros(self) -> dict:
         return self.__dict.get(self.macros_key, {})
 
-    @contract
-    def get_macro_delimiter(self) -> 'str':
+    def get_macro_delimiter(self) -> str:
         return self.__dict.get(self.macro_delimiter_key, '%%')
 
-    @contract
-    def auto_number_questions(self) -> 'bool':
+    def auto_number_questions(self) -> bool:
         return self.__dict.get(self.no_question_auto_numbering_key, False)
 
-    @contract
-    def get_source_document(self) -> 'int|None':
+    def get_source_document(self) -> Optional[int]:
         return self.__dict.get(self.source_document_key)
 
-    @contract
-    def set_source_document(self, source_docid: 'int|None'):
+    def set_source_document(self, source_docid: Optional[int]):
         self.__dict[self.source_document_key] = source_docid
 
-    @contract
-    def auto_number_headings(self) -> 'bool':
+    def auto_number_headings(self) -> bool:
         return self.__dict.get(self.auto_number_headings_key, False)
 
-    @contract
-    def heading_format(self) -> 'dict':
+    def heading_format(self) -> dict:
         defaults = {1: '{h1}. {text}',
                     2: '{h1}.{h2} {text}',
                     3: '{h1}.{h2}.{h3} {text}',
@@ -128,5 +118,3 @@ class DocSettings:
 
     def show_task_summary(self, default=False) -> bool:
         return self.__dict.get(self.show_task_summary_key, default)
-
-new_contract('DocSettings', DocSettings)

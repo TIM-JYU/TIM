@@ -1,12 +1,12 @@
+from typing import List, Optional
+
 __author__ = 'hajoviin'
-from contracts import contract
 from timdb.timdbbase import TimDbBase
 
 
 class Questions(TimDbBase):
     # TODO: Doesn't work until question table has been altered
-    @contract
-    def get_paragraphs_question(self, doc_id: 'int', par_index: 'int'):
+    def get_paragraphs_question(self, doc_id: int, par_index: int):
         """
         Gets the questions of some paragraph
         :param par_id: Paragraph to get question.
@@ -21,8 +21,7 @@ class Questions(TimDbBase):
                        """, [doc_id, par_index])
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def delete_question(self, question_id: 'int', commit:'bool'=True):
+    def delete_question(self, question_id: int, commit:bool=True):
         """
         Deletes the question from database
         :param question_id: question to delete
@@ -39,8 +38,7 @@ class Questions(TimDbBase):
         if commit:
             self.db.commit()
 
-    @contract
-    def get_question(self, question_id: 'int') -> 'list(dict)':
+    def get_question(self, question_id: int) -> List[dict]:
         """
         Gets question with specific id
         :param question_id: question id
@@ -58,8 +56,7 @@ class Questions(TimDbBase):
         return self.resultAsDictionary(cursor)
 
 
-    @contract
-    def get_questions(self) -> 'list(dict)':
+    def get_questions(self) -> List[dict]:
         """
         Gets the question
         :return: Questions as a list
@@ -69,10 +66,9 @@ class Questions(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def add_asked_questions(self, lecture_id: 'int', doc_id: 'int', par_id: 'str|None', asked_time: 'str',
-                            points: 'str|None', asked_json_id: 'int', expl: 'str|None', commit: 'bool'=True) -> 'int':
 
+    def add_asked_questions(self, lecture_id: int, doc_id: int, par_id: Optional[str], asked_time: str,
+                            points: str, asked_json_id: int, expl: str, commit: bool=True) -> int:
         """
         Creates a new asked questions
         :param lecture_id: Lecture where question was asked
@@ -96,8 +92,7 @@ class Questions(TimDbBase):
         question_id = cursor.lastrowid
         return question_id
 
-    @contract
-    def update_asked_question_points(self, asked_id: 'int', points: 'str', commit: 'bool'=True) -> 'int':
+    def update_asked_question_points(self, asked_id: int, points: str, commit: bool=True) -> int:
 
         """
         Creates a new asked questions
@@ -115,8 +110,7 @@ class Questions(TimDbBase):
             self.db.commit()
         return asked_id
 
-    @contract
-    def get_asked_question(self, asked_id: 'int') -> 'list(dict)':
+    def get_asked_question(self, asked_id: int) -> List[dict]:
         """
         Gets the asked question by id
         :return: Questions as a list
@@ -132,8 +126,7 @@ class Questions(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def add_asked_json(self, json: 'str', hash: 'str', commit: 'bool'=True) -> 'int':
+    def add_asked_json(self, json: str, hash: str, commit: bool=True) -> int:
         """
         Gets the asked question by id
         :return: Questions as a list
@@ -150,8 +143,7 @@ class Questions(TimDbBase):
         asked_json_id = cursor.lastrowid
         return asked_json_id
 
-    @contract
-    def get_asked_json_by_id(self, asked_json_id: 'int') -> 'list(dict)':
+    def get_asked_json_by_id(self, asked_json_id: int) -> List[dict]:
         """
         Gets the asked question by id
         :return: Questions as a list
@@ -166,8 +158,7 @@ class Questions(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def get_asked_json_by_hash(self, asked_hash: 'str') -> 'list(dict)':
+    def get_asked_json_by_hash(self, asked_hash: str) -> List[dict]:
         """
         Gets the asked question by id
         :return: Questions as a list
@@ -182,9 +173,8 @@ class Questions(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    @contract
-    def add_questions(self, doc_id: 'int', par_id: 'str', question_title: 'str', answer: 'str', questionJson: 'str',
-                      points: 'str', expl: 'str', commit: 'bool'=True) -> 'int':
+    def add_questions(self, doc_id: int, par_id: str, question_title: str, answer: str, questionJson: str,
+                      points: str, expl: str, commit: bool=True) -> int:
         """
         Creates a new questions
         :param question_title: Question to be saved
@@ -204,9 +194,8 @@ class Questions(TimDbBase):
         return question_id
 
 
-    @contract
-    def update_question(self, question_id: 'int', doc_id: 'int', par_id: 'str', question_title: 'str', answer: 'str',
-                        questionJson: 'str', points: 'str', expl: 'str',) -> 'int':
+    def update_question(self, question_id: int, doc_id: int, par_id: str, question_title: str, answer: str,
+                        questionJson: str, points: str, expl: str,) -> int:
         """
         Updates the question with particular id
         """
@@ -221,8 +210,7 @@ class Questions(TimDbBase):
         self.db.commit()
         return question_id
 
-    @contract
-    def get_doc_questions(self, doc_id: 'int') -> 'list(dict)':
+    def get_doc_questions(self, doc_id: int) -> List[dict]:
         """
         Gets questions related to a specific document
         """
@@ -235,7 +223,7 @@ class Questions(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    def get_multiple_questions(self, question_ids: 'int[]') -> 'list(dict)':
+    def get_multiple_questions(self, question_ids: 'int[]') -> List[dict]:
         """
         Gets multiple questions
         :param question_ids: quesitons ids as integet array
@@ -254,7 +242,7 @@ class Questions(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    def get_multiple_asked_questions(self, asked_ids: 'int[]') -> 'list(dict)':
+    def get_multiple_asked_questions(self, asked_ids: 'int[]') -> List[dict]:
         """
         Gets multiple questions
         :param question_ids: quesitons ids as integet array

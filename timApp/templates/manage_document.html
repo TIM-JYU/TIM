@@ -254,7 +254,7 @@
                 {% raw %}
                 <td><a href="/download/{{ doc.id }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{ version.time }}</a></td>
                 <td>{{ version.group }}</td>
-                <td>{{ version.par_id }}</td>
+                <td><a href="/view/{{ doc.fullname }}#{{ version.par_id }}">{{ version.par_id }}</a></td>
                 <td>
                     <a ng-if="!$last" href="/diff/{{ doc.id }}/{{ doc.versions[$index+1].ver[0] }}/{{ doc.versions[$index+1].ver[1] }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{ version.op }}</a>
                     <span ng-if="$last">{{ version.op }}</span>

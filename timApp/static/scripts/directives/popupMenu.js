@@ -16,11 +16,17 @@ timApp.directive('popupMenu', ['$http', '$window', '$filter', function ($http, $
             $scope.$pars = $($attrs['srcid']);
             $scope.actions = eval('$scope.' + $attrs['actions']);
             $scope.actionsAttr = $attrs['actions'];
+            $scope.editButton = false;
+
             $scope.getContent($attrs['contenturl']);
             if ($attrs['save'])
                 $scope.storageAttribute = '$scope.$storage.' + $attrs['save'];
             if ($attrs['onclose'])
                 $scope.onClose = eval('$scope.' + $attrs['onclose']);
+            if ($attrs['editbutton'])
+                $scope.editButton = eval($attrs['editbutton']);
+
+            $scope.colClass = $scope.storageAttribute ? 'col-xs-10' : 'col-xs-12';
         },
 
         controller: function ($scope, $element) {
@@ -79,6 +85,9 @@ timApp.directive('popupMenu', ['$http', '$window', '$filter', function ($http, $
                     $window.alert('Error occurred when getting contents.')
                 });
             };
+
+            $scope.model = {editState: $window.editMode};
+            $scope.$watch('model.editState', $window.watchEditMode);
 
             $element.css('position', 'absolute'); // IE needs this
         }

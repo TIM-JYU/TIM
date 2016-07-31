@@ -3,6 +3,7 @@ import logging
 import time
 import sys
 
+from funnel_thread import FunnelThread
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from logging.config import fileConfig
 from mailer import Mailer
@@ -15,7 +16,10 @@ MAIL_DIR = "/service/mail"
 EMAIL_HEADERS = {'From': 'no-reply@tim.jyu.fi',
                  'Rcpt-To': None,
                  'Reply-To': None,
+                 'Group-Id': None,
+                 'Group-Subject': None,
                  'Subject': 'TIM Notification'}
+
 
 class Funnel:
     instance = None
@@ -23,6 +27,7 @@ class Funnel:
     def __init__(self, dry_run: bool):
         self.mailer = Mailer(dry_run=dry_run)
         self.server = None
+        self.mailer_thread = None
         Funnel.instance = self
 
     @classmethod
@@ -36,18 +41,21 @@ class Funnel:
         self.server = HTTPServer((HOST_NAME, HOST_PORT), MyServer)
         logging.getLogger().info('Server starts')
 
+        self.mailer_thread = FunnelThread('mailer', self.mailer, update_interval=5)
+        self.mailer_thread.start()
+
+        self.server.serve_forever()
+
     def stop(self):
         if self.server is None:
             print("Server not running")
             return
+
+        self.mailer_thread.stop()
+
         self.server.server_close()
         self.server = None
         logging.getLogger().info('Server stops')
-
-    def update(self):
-        if self.server:
-            self.server.handle_request()
-            self.mailer.update()
 
 
 class MyServer(BaseHTTPRequestHandler):
@@ -78,6 +86,7 @@ class MyServer(BaseHTTPRequestHandler):
                 self.send_str_response(400, 'Missing message data', self.headers.items())
                 return
 
+            # todo: error handling
             Funnel.get_mailer().enqueue(msg_headers, msg_data)
             self.send_str_response(200, 'Message queued')
         else:
@@ -92,17 +101,15 @@ class MyServer(BaseHTTPRequestHandler):
         self.wfile.write(bytes(fullmsg, 'utf-8'))
         logging.getLogger().debug('Sent a response to {}: {}'.format(self.client_address, fullmsg))
 
+
 if __name__ == '__main__':
     fileConfig('logging.ini')
     funnel = Funnel(dry_run='--dry-run' in sys.argv)
-    funnel.start()
 
     try:
-        while True:
-            funnel.update()
-
+        funnel.start()
     except KeyboardInterrupt:
         pass
-
     finally:
         funnel.stop()
+

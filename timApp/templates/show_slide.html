@@ -1,10 +1,13 @@
 {% extends 'view_html.html' %}
+{# The custom style should be the last style element, so don't render it in view_html.html #}
+{% block viewhtml_customcss %}{% endblock %}
 {% block head %}
     {{ super() }}
     <meta name="apple-mobile-web-app-capable" content="yes"/>
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='scripts/reveal/css/reveal.min.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='scripts/reveal/css/theme/jyu.css') }}" id="theme">
+    {% include 'doc_customcss.html' %}
     <script>
         if (window.location.search.match(/print-pdf/gi)) {
             var link = document.createElement('link');
@@ -47,6 +50,7 @@
         // https://github.com/hakimel/reveal.js#configuration
         Reveal.initialize({
             fragments: true,
+            width: 1150,
             controls: true,
             progress: true,
             history: true,

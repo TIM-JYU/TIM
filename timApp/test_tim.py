@@ -99,7 +99,7 @@ class TimTest(TimRouteTest):
                                                            'par': first_id}))
 
         ug = timdb.users.get_personal_usergroup_by_id(session['user_id'])
-        notes = timdb.notes.getNotes(ug, Document(doc_id), include_public=False)
+        notes = timdb.notes.get_notes(ug, Document(doc_id), include_public=False)
         self.assertEqual(1, len(notes))
         test2_note_id = notes[0]['id']
 
@@ -115,7 +115,7 @@ class TimTest(TimRouteTest):
                                                                  'docId': doc_id,
                                                                  'par': first_id}))
         ug = timdb.users.get_personal_usergroup_by_id(session['user_id'])
-        notes = timdb.notes.getNotes(ug, Document(doc_id), include_public=True)
+        notes = timdb.notes.get_notes(ug, Document(doc_id), include_public=True)
         self.assertEqual(1, len(notes))
 
         self.assertDictResponse({'text': edit_text}, self.json_req('/getBlock/{}/{}'.format(doc_id, first_id),

@@ -1,18 +1,17 @@
 """Routes for document view."""
-
-from contracts import contract, new_contract
+from typing import Tuple, Union, Optional, List
 
 import routes.lecture
 from documentmodel.document import DocParagraph, get_index_from_html_list, dereference_pars
 from htmlSanitize import sanitize_html
-
-new_contract('range', 'tuple(int, int)')
 
 from flask import Blueprint, render_template
 from .common import *
 import pluginControl
 from options import *
 import time
+
+Range = Tuple[int, int]
 
 view_page = Blueprint('view_page',
                       __name__,
@@ -24,8 +23,7 @@ def get_whole_document(doc):
     return pars
 
 
-@contract
-def get_partial_document(doc: 'Document', view_range: 'range') -> 'list(DocParagraph)':
+def get_partial_document(doc: Document, view_range: Range) -> List[DocParagraph]:
     i = 0
     pars = []
     for par in doc:
@@ -37,8 +35,7 @@ def get_partial_document(doc: 'Document', view_range: 'range') -> 'list(DocParag
     return pars
 
 
-@contract
-def get_document(doc_id: 'int', view_range: 'range|None' = None) -> 'tuple(Document,list(DocParagraph))':
+def get_document(doc_id: int, view_range: Optional[Range] = None) -> Tuple[Document, List[DocParagraph]]:
     # Separated into 2 functions for optimization
     # (don't cache partial documents and don't check ranges in the loop for whole ones)
     doc = Document(doc_id).get_latest_version()
@@ -110,8 +107,7 @@ def par_info(doc_id, par_id):
     return jsonResponse(info)
 
 
-@contract
-def parse_range(start_index: 'int|str|None', end_index: 'int|str|None') -> 'range|None':
+def parse_range(start_index: Union[int, str, None], end_index: Union[int, str, None]) -> Optional[Range]:
     if start_index is None and end_index is None:
         return None
     return int(start_index), int(end_index)
@@ -120,6 +116,7 @@ def parse_range(start_index: 'int|str|None', end_index: 'int|str|None') -> 'rang
 def try_return_folder(doc_name):
     timdb = getTimDb()
     user = getCurrentUserId()
+    user_name = getCurrentUserName()
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
     if is_in_lecture:
         is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
@@ -130,7 +127,12 @@ def try_return_folder(doc_name):
     item_name = doc_name.rstrip('/')
     block_id = timdb.folders.get_folder_id(item_name)
 
-    if block_id is None:
+    if block_id is None and item_name == 'users/' + user_name and timdb.folders.get_folder_id('users') is not None:
+        # This is the user's personal folder and it doesn't exist yet.
+        # Create it
+        block_id = timdb.folders.create('users/' + user_name, getCurrentUserGroup())
+
+    elif block_id is None:
         while (block_id is None):
             item_name, _ = timdb.folders.split_location(item_name)
             block_id = timdb.folders.get_folder_id(item_name)

@@ -88,6 +88,7 @@ timApp.controller("ViewCtrl", [
         if (sc.lectureMode) {
             sc.noQuestionAutoNumbering = $window.noQuestionAutoNumbering;
         }
+
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
 
@@ -252,6 +253,8 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getFirstPar = function ($par_or_area) {
+            console.log('sc.getFirstPar():');
+            console.log($par_or_area);
             if ($par_or_area.length > 1) {
                 return sc.getFirstPar($par_or_area.first());
             }
@@ -295,36 +298,32 @@ timApp.controller("ViewCtrl", [
             return $("[t='" + t + "']");
         };
 
-        sc.toggleParEditor = function ($pars, options) {
-            var $par = sc.getFirstPar($pars);
+        sc.toggleParEditor = function ($par, options) {
             var area_start, area_end;
             var caption = 'Add paragraph';
             var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
             var mobile = touch && (window.screen.width < 1200);
             var url;
-
-            if ($pars.length > 1) {
-                area_start = sc.getParId($par);
-                area_end = sc.getLastParId($pars);
-                url = '/postParagraph/';
-
-            } else {
-                // TODO: Use same route (postParagraph) for both cases, determine logic based on given parameters
-                if (par_id == "null" || $pars.hasClass("new")) {
-                    url = '/newParagraph/';
-                } else {
-                    url = '/postParagraph/';
-                }
-
-                area_start = options.area ? sc.getParId(sc.selection.start) : null;
-                area_end = options.area ? sc.getParId(sc.selection.end) : null;
-            }
-
             var par_id = sc.getParId($par);
             var par_next_id = sc.getParId($par.next());
             if (par_next_id == "null")
                 par_next_id = null;
 
+            // TODO: Use same route (postParagraph) for both cases, determine logic based on given parameters
+            if (par_id == "null" || $par.hasClass("new")) {
+                url = '/newParagraph/';
+            } else {
+                url = '/postParagraph/';
+            }
+
+
+            if (options.area) {
+                area_end = sc.getParId(sc.selection.end);
+                area_start = sc.getParId(sc.selection.start);
+            } else {
+                area_start = null;
+                area_end = null;
+            }
 
             var attrs = {
                 "save-url": url,
@@ -566,7 +565,7 @@ timApp.controller("ViewCtrl", [
             }
             return e;
         };
-        
+
         sc.oldWidth = $($window).width();
         $($window).resize(function (e) {
             if (e.target === $window) {
@@ -587,8 +586,8 @@ timApp.controller("ViewCtrl", [
             var lastDownEvent = null;
             var lastclicktime = -1;
 
-            $document.on('mousedown touchstart', className, function (e) {
-                if (!overrideModalCheck && $(".actionButtons").length > 0 || $(EDITOR_CLASS_DOT).length > 0) {
+           $document.on('mousedown touchstart', className, function (e) {
+                if (!overrideModalCheck && ($(".actionButtons").length > 0 || $(EDITOR_CLASS_DOT).length > 0)) {
                     // Disable while there are modal gui elements
                     return;
                 }
@@ -623,6 +622,7 @@ timApp.controller("ViewCtrl", [
                 if (downEvent !== null) {
                     if (func($(this), downEvent)) {
                         e.preventDefault();
+                        e.stopPropagation();
                     }
                     downEvent = null;
                 }
@@ -633,6 +633,7 @@ timApp.controller("ViewCtrl", [
             $document.on('mouseover', className, function (e) {
                 if (func($(this), sc.fixPageCoords(e))) {
                     e.preventDefault();
+                    e.stopPropagation();
                 }
             });
         };
@@ -641,6 +642,7 @@ timApp.controller("ViewCtrl", [
             $document.on('mouseout', className, function (e) {
                 if (func($(this), sc.fixPageCoords(e))) {
                     e.preventDefault();
+                    e.stopPropagation();
                 }
             });
         };
@@ -662,9 +664,9 @@ timApp.controller("ViewCtrl", [
             });
         };
 
-        sc.showEditWindow = function (e, $pars) {
+        sc.showEditWindow = function (e, $par) {
             $(".par.new").remove();
-            sc.toggleParEditor($pars, {showDelete: true, area: false});
+            sc.toggleParEditor($par, {showDelete: true, area: false});
         };
 
         sc.editSettingsPars = function () {
@@ -687,7 +689,7 @@ timApp.controller("ViewCtrl", [
                     "docId" : sc.docId,
                     "par_next" : par_next
                 }).success(function(data, status, headers, config) {
-                    sc.reload();
+                    $window.location.reload();
                 }).error(function(data, status, headers, config) {
                     $window.alert(data.error);
                 });
@@ -757,7 +759,7 @@ timApp.controller("ViewCtrl", [
         sc.showAddParagraphMenu = function (e, $par_or_area, coords) {
             sc.showPopupMenu(e, $par_or_area, coords, {actions: 'addParagraphFunctions'});
         };
-        
+
         sc.showAddParagraphAbove = function (e, $par) {
             var $newpar = sc.createNewPar();
             $par.before($newpar);
@@ -787,7 +789,7 @@ timApp.controller("ViewCtrl", [
         sc.pasteRefAbove = function (e, $par) {
             sc.pasteAbove(e, $par, true);
         };
-        
+
         sc.pasteContentBelow = function (e, $par) {
             sc.pasteBelow(e, $par, false);
         };
@@ -885,7 +887,7 @@ timApp.controller("ViewCtrl", [
                 $window.alert(data.error);
             });
         };
-        
+
         sc.pasteBelow = function (e, $par_or_area, as_ref) {
             http.post('/clipboard/paste/' + sc.docId, {
                 "par_after" : sc.getLastParId($par_or_area),
@@ -988,13 +990,15 @@ timApp.controller("ViewCtrl", [
                 var $endpar = sc.getElementByParId(extraData.area_end);
                 $par.nextUntil($endpar).add($endpar).remove();
             }
-            var newPars = $($compile(data.texts)(sc));
+
+            var $newPars = $($compile(data.texts)(sc));
 
             if ($window.editMode === 'area')
                 newPars.find('.editline').removeClass('editline').addClass('editline-disabled');
 
-            $par.replaceWith(newPars);
-            sc.processAllMathDelayed(newPars);
+
+            $par.replaceWith($newPars);
+            sc.processAllMathDelayed($newPars);
             http.defaults.headers.common.Version = data.version;
             sc.editing = false;
             sc.cancelArea();
@@ -1003,7 +1007,7 @@ timApp.controller("ViewCtrl", [
             sc.beginUpdate();
         };
 
-        sc.pendingUpdatesCount = function () {
+        sc.pendingUpdatesCount = function () {
             return Object.keys(sc.pendingUpdates).length;
         };
 
@@ -1023,13 +1027,23 @@ timApp.controller("ViewCtrl", [
             for (var key in sc.pendingUpdates) {
                 if (sc.pendingUpdates.hasOwnProperty(key)) {
                     var $par = sc.getElementByParId(key);
-                    var newPar = $($compile(sc.pendingUpdates[key])(sc));
-                    $par.replaceWith(newPar);
-                    sc.processAllMathDelayed(newPar);
+                    var $newPar = $($compile(sc.pendingUpdates[key])(sc));
+                    $par.replaceWith($newPar);
+                    sc.applyDynamicStyles($newPar);
+                    sc.processAllMathDelayed($newPar);
                 }
             }
             sc.pendingUpdates = {};
             if (sc.lectureMode) { sc.getAndEditQuestions(); }
+        };
+
+        sc.applyDynamicStyles = function($par) {
+            if ($window.editMode) {
+                $par.addClass('editmode');
+
+                // Show hidden paragraphs if in edit mode
+                $par.find('.mdcontent').css('display', 'initial');
+            }
         };
 
         sc.isReference = function ($par) {
@@ -1056,9 +1070,13 @@ timApp.controller("ViewCtrl", [
             return true;
         };
 
-        sc.onClick(".readline, .readlineQuestion" , function ($this, e) {
+        sc.onClick(".readline, .readlineQuestion", function ($this, e) {
             return sc.markParRead($this, $this.parents('.par'));
         });
+
+        sc.isParWithinArea = function ($par) {
+            return sc.selection.pars.filter($par).length > 0;
+        };
 
         sc.getParIndex = function($par) {
             var par_id = sc.getParId($par);
@@ -1116,7 +1134,30 @@ timApp.controller("ViewCtrl", [
             // We need the timeout so we don't trigger the ng-clicks on the buttons
             $timeout( function() {sc.showOptionsWindow(e, $par, coords);}, 80);
             return false;
+        }, true);
+
+        sc.setAreaAttr = function(area, attr, value) {
+            var area_selector = "[data-area=" + area + "]";
+            $(area_selector).css(attr, value);
+        };
+
+        /*
+        sc.onClick(".areacollapse", function ($this, e) {
+            $this.removeClass("areacollapse");
+            var area_name = $this.parent().attr('data-area-start');
+            console.log("Collapse " + area_name);
+            sc.setAreaAttr(area_name, "display", "none");
+            $this.addClass("areaexpand");
         });
+
+        sc.onClick(".areaexpand", function ($this, e) {
+            $this.removeClass("areaexpand");
+            var area_name = $this.parent().attr('data-area-start');
+            console.log("Expand " + area_name);
+            sc.setAreaAttr(area_name, "display", "");
+            $this.addClass("areacollapse");
+        });
+        */
 
         sc.onMouseOverOut(".areaeditline1", function ($this, e, select) {
             var areaName = $this.attr('data-area');
@@ -1172,6 +1213,7 @@ timApp.controller("ViewCtrl", [
             return $("#area_" + area);
         };
 
+
         sc.onClick(".areacollapse", function ($this, e) {
             $this.removeClass("areacollapse");
             var area_name = $this.attr('data-area');
@@ -1192,8 +1234,8 @@ timApp.controller("ViewCtrl", [
             $window.setTimeout(function() { $this.removeClass("disabledcollapse"); $this.addClass("areacollapse"); }, 200);
         });
 
-        sc.showNoteWindow = function (e, $pars) {
-            sc.toggleNoteEditor(sc.getFirstPar($pars), {isNew: true});
+        sc.showNoteWindow = function (e, $par) {
+            sc.toggleNoteEditor($par, {isNew: true});
         };
 
         sc.handleNoteCancel = function () {
@@ -1216,13 +1258,17 @@ timApp.controller("ViewCtrl", [
             var $target = $(e.target);
             var tag = $target.prop("tagName");
 
-            // Don't show paragraph menu on these specific tags or class
+            // Don't show paragraph menu on these specific tags or classes
             var ignoredTags = ['BUTTON', 'INPUT', 'TEXTAREA', 'A', 'QUESTIONADDEDNEW'];
-            if (ignoredTags.indexOf(tag) > -1 || $target.parents('.no-popup-menu').length > 0) {
+            var ignoredClasses = ['no-popup-menu', 'ace_editor'];
+            var classSelector = ignoredClasses.map(function (c) {
+                return '.' + c;
+            }).join(',');
+            if (ignoredTags.indexOf(tag) > -1 || $target.parents(classSelector).length > 0) {
                 return false;
             }
 
-            var $par = $this.parent();
+            var $par = $this.parents('.par');
             if (sc.selection.start !== null) {
                 sc.extendSelection($par, true);
             }
@@ -1256,7 +1302,7 @@ timApp.controller("ViewCtrl", [
             sc.par = ($(question).parent().parent());
         });
 
-        sc.onClick(".questionAddedNew", function ($this, e) {
+                sc.onClick(".questionAddedNew", function ($this, e) {
             var question = $this;
             var $par = $(question).parent().parent();
             var parId = $($par)[0].getAttribute('id');
@@ -1268,15 +1314,19 @@ timApp.controller("ViewCtrl", [
         sc.onClick("html.ng-scope", function ($this, e) {
             // Clicking anywhere
             var tagName = e.target.tagName.toLowerCase();
-            var ignoreTags = ['button', 'input', 'label'];
-            if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || $(e.target).hasClass("menu-icon")
-                || $(e.target).hasClass("editline") || $(e.target).hasClass("areaeditline1")
-                ||   $(e.target).hasClass("areaeditline2") || $(e.target).hasClass("areaeditline3")
-                ||   $(e.target).attr('position') == 'absolute')
-            {
+            var jqTarget = $(e.target);
+            var ignoreTags = ['button', 'input', 'label', 'i'];
+            var ignoreClasses = ['menu-icon', 'editline', 'areaeditline', 'draghandle'];
+
+            if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || jqTarget.attr('position') == 'absolute')
                 return false;
+
+            for (var i = 0; i < ignoreClasses.length; i++) {
+                if (jqTarget.hasClass(ignoreClasses[i]))
+                    return false;
             }
 
+            //console.log(jqTarget);
             sc.closeOptionsWindow();
 
             if (tagName !== "p") {
@@ -1290,8 +1340,9 @@ timApp.controller("ViewCtrl", [
         }, true);
 
         sc.showOptionsWindow = function (e, $pars, coords) {
-            sc.showPopupMenu(e, $pars, coords,
-                {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'});
+            sc.updateClipboardStatus();
+            $pars.children('.editline').addClass('menuopen');
+            sc.showPopupMenu(e, $pars, coords, sc.popupMenuAttrs);
         };
 
         sc.closeOptionsWindow = function () {
@@ -1308,16 +1359,6 @@ timApp.controller("ViewCtrl", [
 
         sc.dist = function (coords1, coords2) {
             return Math.sqrt(Math.pow(coords2.left - coords1.left, 2) + Math.pow(coords2.top - coords1.top, 2));
-        };
-
-        sc.getEditorFunc = function(description) {
-            if (description === "Show options window")
-                return sc.showOptionsWindow;
-
-            for (var i = 0; i < sc.editorFunctions.length; i++) {
-                if (sc.editorFunctions[i].desc === description)
-                    return sc.editorFunctions[i].func;
-            }
         };
 
         sc.toggleActionButtons = function (e, $par, toggle1, toggle2, coords) {
@@ -1338,10 +1379,9 @@ timApp.controller("ViewCtrl", [
                     $par.removeClass("selected");
                     $par.removeClass("lightselect");
                 }
-                else if (clicktime < 500 && sc.$storage.defaultAction !== null) {
+                else if (clicktime < 500 && sc.defaultAction !== null) {
                     // Double click
-                    var func = sc.getEditorFunc(sc.$storage.defaultAction);
-                    func(e, $par, coords);
+                    sc.defaultAction.func(e, $par, coords);
                 }
                 else {
                     // Two clicks
@@ -1643,7 +1683,7 @@ timApp.controller("ViewCtrl", [
         sc.selection = {start: null, end: null};
         sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end', 'editing', 'getEditMode()',
                         'allowPasteContent', 'allowPasteRef', 'getAllowMove()'], function (newValues, oldValues, scope) {
-            sc.editorFunctions = sc.getEditorFunctions();
+            sc.updatePopupMenu();
             if (sc.editing) {
                 sc.notification = "Editor is already open.";
             } else {
@@ -1814,7 +1854,7 @@ timApp.controller("ViewCtrl", [
 
             $compile($popup[0])(sc);
         };
-        
+
         sc.nameAreaOk = function ($area, areaName, options) {
             $area.attr("data-name", areaName);
 
@@ -1977,6 +2017,17 @@ timApp.controller("ViewCtrl", [
             }
         };
 
+        sc.updatePopupMenu = function() {
+            sc.editorFunctions = sc.getEditorFunctions();
+            if (sc.selection.start !== null && $window.editMode) {
+                sc.popupMenuAttrs.save = null;
+                sc.popupMenuAttrs.editbutton = false;
+            } else {
+                sc.popupMenuAttrs.save = 'defaultAction';
+                sc.popupMenuAttrs.editbutton = true;
+            }
+        };
+
         sc.getAddParagraphFunctions = function () {
             return [
                 {func: sc.showAddParagraphAbove, desc: 'Above', show: true},
@@ -1985,7 +2036,26 @@ timApp.controller("ViewCtrl", [
             ];
         };
 
+        sc.updateClipboardStatus = function() {
+            http.get('/clipboardstatus', {
+            }).success(function (data, status, headers, config) {
+                if (!'empty' in data || data.empty) {
+                    sc.allowPasteContent = false;
+                    sc.allowPasteRef = false;
+                } else {
+                    sc.allowPasteContent = true;
+                    sc.allowPasteRef = !('disable_ref' in data && data.disable_ref);
+                }
+            }).error(function (data, status, headers, config) {
+                $window.alert(data.error);
+                sc.allowPasteContent = false;
+                sc.allowPasteRef = false;
+            });
+        };
+
+
         sc.getPasteFunctions = function () {
+            sc.updateClipboardStatus();
             return [
                 {func: sc.pasteRefAbove, desc: 'Above, as a reference', show: sc.allowPasteRef},
                 {func: sc.pasteContentAbove, desc: 'Above, as content', show: sc.allowPasteContent},
@@ -2006,20 +2076,19 @@ timApp.controller("ViewCtrl", [
         // call marktree.js initialization function so that TOC clicking works
         $window.addEvents();
 
-        sc.editorFunctions = sc.getEditorFunctions();
         sc.addParagraphFunctions = sc.getAddParagraphFunctions();
         sc.pasteFunctions = sc.getPasteFunctions();
-
-        sc.getAndEditQuestions();
-
-        sc.allowPasteContent = true;
-        sc.allowPasteRef = true;
-        $window.allowMove = false;
+        sc.popupMenuAttrs = {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'};
+        sc.updatePopupMenu();
 
         sc.$storage = $localStorage.$default({
             defaultAction: "Show options window",
             noteAccess: 'everyone'
         });
+
+        sc.allowPasteContent = true;
+        sc.allowPasteRef = true;
+        $window.allowMove = false;
 
         try {
             var found = $filter('filter')(sc.editorFunctions,

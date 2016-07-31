@@ -37,6 +37,7 @@
     {{ super() }}
 
     <script src="{{ url_for('static', filename='scripts/marktree.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/editmode.js') }}"></script>
 
     {% include 'view_head.html' %}
 
@@ -48,10 +49,12 @@
         <link rel="stylesheet" href="{{ cssFile }}">
     {% endfor %}
 
-    {{ (doc_css | safe ) if doc_css }}
-    <style type="text/css">
-        {{ prefs.custom_css }}
-    </style>
+    {# without this, lazy loading embedded_sagecell won't work because it doesn't know URL root #}
+    <link property="sagecell-root" href="//sagecell.sagemath.org/"/>
+
+    {% block viewhtml_customcss %}
+        {% include 'doc_customcss.html' %}
+    {% endblock %}
     <script>
         var noBrowser = {{ no_browser|tojson }};
         var showIndex = {{(headers|length > 0)|tojson}};
@@ -88,10 +91,6 @@
 {% set col_1_sm = 0 %}
 {% set col_2_sm = 12 %}
 {% set col_3_sm = 0 %}
-
-{% set col_1_xs = 0 %}
-{% set col_2_xs = 12 %}
-{% set col_3_xs = 0 %}
 
 {% block mainctrl %}ng-controller="ViewCtrl"{% endblock %}
 

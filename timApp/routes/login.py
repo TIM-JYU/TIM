@@ -3,6 +3,8 @@ from .common import *
 from .logger import log_message
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from routes.notify import send_email
+from yubico_client import Yubico
+from yubico_client.yubico_exceptions import YubicoError
 
 import codecs
 import os
@@ -259,7 +261,7 @@ def alt_login():
         
     else:
         flash("Email address or password did not match. Please try again.", 'loginmsg')
-    
+
     return finish_login(ready=False)
 
 
@@ -281,6 +283,9 @@ def save_came_from():
 
 
 def finish_login(ready=True):
+    if not ready:
+        return safe_redirect(url_for('start_page'))
+
     anchor = session.get('anchor', '')
     if anchor:
         anchor = "#" + anchor
@@ -306,3 +311,71 @@ def quick_login(username):
     session['email'] = user['email']
     flash("Logged in as: {}".format(username))
     return redirect(url_for('index_page'))
+
+
+def get_yubico_client():
+    # You need to put the key file in timApp directory
+    # The first line is app key (5 numbers) and
+    # the second line is app secret (28 characters)
+
+    if not os.path.exists('yubi.key'):
+        return None
+
+    with open('yubi.key', 'rt') as f:
+        app_key = f.readline().rstrip('\n')
+        app_secret = f.readline().rstrip('\n')
+        return Yubico(app_key, app_secret)
+
+
+@login_page.route("/yubi_reg/<otp>")
+def yubi_register(otp):
+    # For registering a new YubiKey for a user
+    verifyLoggedIn()
+    timdb = getTimDb()
+
+    client = get_yubico_client()
+    if not client:
+        abort(403, 'Yubico API keys not configured - see routes/login.py for details')
+
+    try:
+        if not client.verify(otp):
+            abort(403, 'Authentication failed')
+    except YubicoError:
+        abort(403, 'Authentication failed')
+
+    timdb.users.update_user_field(getCurrentUserId(), 'yubikey', otp[:12])
+    return okJsonResponse()
+
+
+@login_page.route("/yubi_login/<username>/<otp>")
+def yubi_login(username, otp):
+    # Log in using an YubiKey (see http://www.yubico.com)
+    timdb = getTimDb()
+    user = timdb.users.get_user_id_by_name(username)
+    if user is None:
+        abort(404, 'User not found.')
+    user = timdb.users.get_user(user)
+
+    user_pubid = user.get('yubikey')
+    if user_pubid is None or len(user_pubid) != 12:
+        abort(403, 'YubiKey login is not enabled for this account.')
+    if len(otp) != 44 or otp[:12] != user_pubid:
+        abort(403, 'OTP invalid or not registered to this account.')
+
+    client = get_yubico_client()
+    if not client:
+        abort(403, 'Yubico API keys not configured - see routes/login.py for details')
+
+    try:
+        if not client.verify(otp):
+            abort(403, 'Authentication failed')
+    except YubicoError:
+        abort(403, 'Authentication failed')
+
+    session['user_id'] = user['id']
+    session['user_name'] = user['name']
+    session['real_name'] = user['real_name']
+    session['email'] = user['email']
+    flash("Logged in as: {}".format(username))
+    return redirect(url_for('index_page'))
+

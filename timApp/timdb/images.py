@@ -1,13 +1,28 @@
-from contracts import contract, new_contract
+from typing import List, Tuple
+
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 import os
 
-new_contract('bytes', bytes)
-
 
 class Images(TimDbBase):
-    @contract
-    def getImagePath(self, image_id: 'int', image_filename: 'str'):
+    def get_file_path(self, path: str, filename: str):
+        """Gets the path of an image.
+
+        :param path: The path for the file
+        :param file_id: The id of the image.
+        :param filename: The filename of the image.
+        :returns: The id and path of the image file.
+        """
+        p = os.path.join(self.blocks_path, 'dl', path)
+        if not os.path.exists(p):
+            os.makedirs(p)
+        file_id = len(os.listdir(p))+1
+        p = os.path.join(self.blocks_path, 'dl', path, str(file_id))
+        os.makedirs(p)
+
+        return file_id, os.path.join(p, filename)
+
+    def getImagePath(self, image_id: int, image_filename: str):
         """Gets the path of an image.
         
         :param image_id: The id of the image.
@@ -17,8 +32,7 @@ class Images(TimDbBase):
 
         return os.path.join(self.blocks_path, str(image_id), image_filename)
 
-    @contract
-    def getImageRelativePath(self, image_id: 'int', image_filename: 'str'):
+    def getImageRelativePath(self, image_id: int, image_filename: str):
         """Gets the relative path of an image.
         
         :param image_id: The id of the image.
@@ -28,8 +42,31 @@ class Images(TimDbBase):
 
         return os.path.relpath(self.getImagePath(image_id, image_filename), self.blocks_path)
 
-    @contract
-    def saveImage(self, image_data: 'bytes', image_filename: 'str', owner_group_id: 'int') -> 'tuple(int, str)':
+    def saveFile(self, file_data: 'bytes', path: str, filename: str, owner_group_id: int) -> str:
+        """Saves a file to the database.
+
+        :param file_data: The  data.
+        :param path: path for the file
+        :param filename: The filename
+        :param owner_group_id: The owner group of the file.
+        :returns: the relative path of the form 'path/file_id/filename'.
+        """
+
+        # TODO: Check that the file extension is allowed.
+        # TODO: Use imghdr module to do basic validation of the file contents.
+        # TODO: Should file name be unique among images?
+        cursor = self.db.cursor()
+        file_id, file_path = self.get_file_path(path, filename)
+        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (?,?,?)',
+                       [file_path, owner_group_id, blocktypes.IMAGE])
+
+        with open(file_path, 'wb') as f:
+            f.write(file_data)
+
+        self.db.commit()
+        return file_path
+
+    def saveImage(self, image_data: 'bytes', image_filename: str, owner_group_id: int) -> Tuple[int, str]:
         """Saves an image to the database.
         
         :param image_data: The image data.
@@ -54,8 +91,7 @@ class Images(TimDbBase):
         self.db.commit()
         return img_id, image_filename
 
-    @contract
-    def deleteImage(self, image_id: 'int'):
+    def deleteImage(self, image_id: int):
         """Deletes an image from the database."""
 
         cursor = self.db.cursor()
@@ -71,8 +107,7 @@ class Images(TimDbBase):
 
         self.db.commit()
 
-    @contract
-    def getImage(self, image_id: 'int', image_filename: 'str') -> 'bytes':
+    def getImage(self, image_id: int, image_filename: str) -> bytes:
         """Gets the specified image.
         
         :param image_id: The id of the image.
@@ -83,8 +118,7 @@ class Images(TimDbBase):
         with open(self.getImagePath(image_id, image_filename), 'rb') as f:
             return f.read()
 
-    @contract
-    def getImages(self) -> 'list(dict)':
+    def getImages(self) -> List[dict]:
         """Gets all the images.
         
         :returns: A list of dictionaries of the form {'id': xx, 'file': 'xx/filename.ext'}.
@@ -95,7 +129,7 @@ class Images(TimDbBase):
         images = self.resultAsDictionary(cursor)
         return images
 
-    def imageExists(self, image_id: 'int', image_filename: 'str'):
+    def imageExists(self, image_id: int, image_filename: str):
         """Returns whether the specified image exists.
         
         :param image_id: The id of the image.

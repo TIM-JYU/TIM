@@ -9,6 +9,9 @@
     </script>
     <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
 {% endblock %}
+
+{% set col_m_lg = 10 %}
+
 {% block content %}
     <div ng-controller="IndexCtrl" class="index">
         <span ng-show="displayIndex">Welcome! Start by choosing a document to view: </span> <img
@@ -51,7 +54,7 @@
                     <td>{{ '{{ doc.modified }}' }}</td>
                     <td>{{ '{{ doc.owner.name }}' }}</td>
                     <td>
-                        <a title="Manage" ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}" class="glyphicon glyphicon-cog"></a>
+                        <a title="Manage" ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}"><i class="glyphicon glyphicon-cog"></i></a>
                     </td>
                 </tr>
                 <tr ng-repeat="doc in documentList">
@@ -63,9 +66,9 @@
                     <td>{{ '{{ doc.modified }}' }}</td>
                     <td>{{ '{{ doc.owner.name }}' }}</td>
                     <td>
-                        <a title="Edit" ng-show="doc.canEdit" href="/view/{{ '{{ doc.fullname }}' }}?edit=true" class="glyphicon glyphicon-pencil"></a>
-                        <a title="Manage" ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}" class="glyphicon glyphicon-cog"></a>
-                        <a title="Teacher" ng-show="doc.isOwner" href="/teacher/{{ '{{ doc.fullname | escape }}' }}" class="glyphicon glyphicon-education"></a>
+                        <a title="Edit" ng-show="doc.canEdit" href="/view/{{ '{{ doc.id }}' }}"><i class="glyphicon glyphicon-pencil"></i></a>
+                        <a title="Manage" ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}"><i class="glyphicon glyphicon-cog"></i></a>
+                        <a title="Teacher" ng-show="doc.isOwner" href="/teacher/{{ '{{ doc.fullname | escape }}' }}"><i class="glyphicon glyphicon-education"></i></a>
                     </td>
                 </tr>
             </table>

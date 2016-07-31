@@ -268,6 +268,9 @@ def deleteDocument(doc_id):
         return abort(404, 'Document does not exist.')
     if not timdb.users.user_is_owner(getCurrentUserId(), doc_id):
         return abort(403, "You don't have permission to delete this document.")
+    abort(403, 'Deleting documents has been disabled until a proper backup mechanism is implemented. '
+               'Please contact TIM administrators if you really want to delete this document. '
+               'You can hide this document from others by removing all permissions.')
     timdb.documents.delete(doc_id)
     return okJsonResponse()
 

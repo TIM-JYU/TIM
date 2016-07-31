@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 var csPluginStartTime = new Date();
 /*
 Sagea varten ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst#id3
@@ -11,18 +11,21 @@ if (angular.isDefined(window.csApp)) {
     var csAppCompile = csApp.compile;
 }
 
-var csApp = angular.module('csApp', ['ngSanitize']);
-csApp.directive('csRunner',['$sanitize','$compile', function ($sanitize,$compile1) {	"use strict"; csApp.sanitize = $sanitize; csApp.compile = $compile1; return csApp.directiveFunction('console',false); }]);
-csApp.directive('csJypeliRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('jypeli',false); }]);
-csApp.directive('csComtestRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('comtest',false); }]);
-csApp.directive('csRunnerInput',['$sanitize','$compile', function ($sanitize,$compile1) { "use strict";	csApp.sanitize = $sanitize; csApp.compile = $compile1; return csApp.directiveFunction('console',true); }]);
-csApp.directive('csJypeliRunnerInput', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('jypeli',true); }]);
-csApp.directive('csComtestRunnerInput', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('comtest',true); }]);
-csApp.directive('csTaunoRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',false); }]);
-csApp.directive('csTaunoRunnerInput', ['$sanitize','$compile', function ($sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',true); }]);
-csApp.directive('csParsonsRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('parsons',false); }]);
-csApp.directive('csSageRunner', ['$sanitize','$compile', function ($sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('sage',true); }]);
-csApp.directive('csSimcirRunner', ['$sanitize','$compile', function ($sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('simcir',false); }]);
+var csApp = angular.module('csApp', ['ngSanitize','ngFileUpload']);
+csApp.directive('csRunner',['Upload','$sanitize','$compile', 
+  function (Upload, $sanitize,$compile1) {	
+       "use strict"; csApp.Upload = Upload; csApp.sanitize = $sanitize; csApp.compile = $compile1; 
+       return csApp.directiveFunction('console',false); }]);
+csApp.directive('csJypeliRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('jypeli',false); }]);
+csApp.directive('csComtestRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('comtest',false); }]);
+csApp.directive('csRunnerInput',['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict";	csApp.sanitize = $sanitize; csApp.compile = $compile1; return csApp.directiveFunction('console',true); }]);
+csApp.directive('csJypeliRunnerInput', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('jypeli',true); }]);
+csApp.directive('csComtestRunnerInput', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('comtest',true); }]);
+csApp.directive('csTaunoRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',false); }]);
+csApp.directive('csTaunoRunnerInput', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',true); }]);
+csApp.directive('csParsonsRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('parsons',false); }]);
+csApp.directive('csSageRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('sage',true); }]);
+csApp.directive('csSimcirRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('simcir',false); }]);
 // csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
 
 // redefine csApp.sanitize and csApp.compile if needed
@@ -83,14 +86,15 @@ ConsolePWD.getPWD = function() {
 //==============================================================
 
 
+var csJSTypes = ["js", "glowscript", "vpython"];
 
 // =================================================================================================================
 // Things for known languages
 
 var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage","simcir","xml","r"];
-languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python","json","xml","r"];
+languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","vpython","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","glowscript","sage","simcir","xml","r", "octave","lua"];
+languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","javascript","python","json","xml","r","octave","lua"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
@@ -161,6 +165,14 @@ languageTypes.getUnitTestType = function(type,language,def) {
     if ( impt ) return impt;
     return t;     
 };
+
+languageTypes.isInArray = function(word,array) {
+    for (var i=0; i< array.length; i++)
+        if ( word === array[i] ) return true;
+    return false;
+    
+}
+
 // =================================================================================================================
 
 var removeXML = function(s) {
@@ -258,7 +270,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
     csLogTime("dir templ " + t);
     if ( TESTWITHOUTPLUGINS ) return '';
     
-	return  '<div class="csRunDiv no-popup-menu" ng-cloak>' + 
+	return  '<div class="csRunDiv " ng-cloak>' + 
     
 				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>
@@ -271,6 +283,15 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				    '<p ng-if="taunoOn" class="taunoOhje">{{taunoOhjeText}}</a></p>' 
                     : '<p ng-if="taunoOn && !noeditor" class="pluginHide"" ><a ng-click="copyFromSimcir()">copy from SimCir</a> | <a ng-click="copyToSimcir()">copy to SimCir</a> | <a ng-click="hideTauno()">hide SimCir</a></p>') +
 					"" : "") +   
+                  '<div ng-if="upload" class="form-inline small">' +  
+                  '<div class="form-group small">' +
+                  '    {{uploadstem}}: <input type="file" ngf-select="onFileSelect($file)" >' +
+                  '            <span ng-show="file.progress >= 0 && !file.error"' +
+                  '                  ng-bind="file.progress < 100 ? \'Uploading... \' + file.progress + \'%\' : \'Done!\'"></span>' +
+                  '</div>' +
+                  '    <div class="error" ng-show="file.error" ng-bind="file.error"></div>' +
+                  '    <div  class="úploadresult" ng-if="uploadresult"  ><span ng-bind-html="uploadresult"></span></div>' +
+                  '</div>' +
                   '<div ng-show="isAll" style="float: right;">{{languageText}} '+
                     '<select ng-model="selectedLanguage" ng-required ng-init="progLanguag=\'java\'">'+
                       '<option ng-repeat="item in progLanguages" value="{{item}}">{{item}}</option>'+
@@ -312,13 +333,13 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<p class="csRunSnippets" ng-if="buttons">' + // && viewCode">' +
 				  '<button ng-repeat="item in buttons" ng-click="addText(item);">{{addTextHtml(item)}}</button> &nbsp;&nbsp;' +
                   '</p>' +
-                  '<div class="csRunMenuArea">'+
+                  '<div class="csRunMenuArea" ng-if="!forcedupload">'+
 				  '<p class="csRunMenu" >' +
 				  '<button ng-if="isRun"  ng-disabled="isRunning" ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
 				  '<button ng-if="isTest" ng-disabled="isRunning" ng-click="runTest();">Test</button>&nbsp&nbsp'+
 				  '<button ng-if="isUnitTest" ng-disabled="isRunning" ng-click="runUnitTest();">UTest</button>&nbsp&nbsp'+
 				  '<span ng-if="isDocument"><a href="" ng-disabled="isRunning" ng-click="runDocument();">{{docLink}}</a>&nbsp&nbsp</span>'+
-				  '<a href="" ng-if="!attrs.nocode && (file || attrs.program)" ng-click="showCode();">{{showCodeLink}}</a>&nbsp&nbsp'+
+				  '<a href="" ng-if="!nocode && (file || attrs.program)" ng-click="showCode();">{{showCodeLink}}</a>&nbsp&nbsp'+
 				  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>' +
 				  ' <a href="" ng-if="toggleEditor" ng-click="hideShowEditor();">{{toggleEditorText[noeditor?0:1]}}</a>' +
 				  ' <a href="" ng-if="!noeditor" ng-click="showOtherEditor();">{{editorText[editorModeIndecies[editorMode+1]]}}</a>' +
@@ -342,11 +363,13 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   //'<div  class="htmlresult" ng-if="htmlresult" ><span ng-bind-html="htmlresult"></span></div>'+
 				  //'<div  class="htmlresult" ng-if="htmlresult" >{{htmlresult}}</span></div>'+
                   
-				  (t === "jypeli" || true ? '<img ng-if="imgURL" class="grconsole" ng-src="{{imgURL}}" alt=""  />' : "") +
+				  (t === "jypeli" || true ? '<img ng-if="imgURL" class="grconsole" ng-src="{{imgURL}}" alt=""  />' +
+                         '<video ng-if="wavURL" ng-src="{{wavURL}}" type="video/mp4" controls="" autoplay="true" width="300" height="40"></video>'
+                      : "") +
 				  // '<a ng-if="docURL" class="docurl" href="{{docURL}}" target="csdocument" >Go to document</a>' +
 				  '<div ng-if="docURL" class="docurl">'+
 				  '<p align="right" style="position: absolute; margin-left: 790px;"><a ng-click="closeDocument()" >X</a></p>' +
-				  '<iframe width="800" height="600"  ng-src="{{docURL}}" target="csdocument" />' +
+				  '<iframe width="800" height="600"  ng-src="{{docURL}}" target="csdocument" allowfullscreen/>' +
 				  '</div>' +
 				  //(t == "jypeli" ? '<img  class="grconsole" ng-src="{{imgURL}}" alt=""  ng-if="runSuccess"  />' : "") +
                   //  '<div class="userlist" tim-draggable-fixed="" style="top: 39px; right: 408px;">' +
@@ -406,10 +429,32 @@ csApp.directiveFunction = function(t,isInput) {
                 scope.copyToSimCirText = english ? "copy to SimCir" : "kopioi SimCiriin";  
             }
             
+            $(element[0]).bind('keydown', function(event) {
+                if (event.ctrlKey || event.metaKey) {
+                    switch (String.fromCharCode(event.which).toLowerCase()) {
+                    case 's':
+                        event.preventDefault();
+                        if ( scope.isRun ) scope.runCode();
+                        break;
+                    }
+                }
+            });
+            
             scope.languageText = english ? "language: " : "kieli: ";  
             
 			csApp.set(scope,attrs,"type","cs");
             var rt = languageTypes.getRunType(scope.type,false);
+            var iupload = false;
+            var inoeditor = false;
+            var inocode = false;
+            if ( scope.type === "upload" ) {
+                iupload = true;
+                inoeditor = true;
+                inocode = true;
+                scope.forcedupload = true;
+            }
+            
+
             scope.isText = rt == "text" || rt == "xml" || rt == "css";
             scope.isSage = languageTypes.getRunType(scope.type,false) == "sage";
             scope.isSimcir = t === "simcir";
@@ -417,6 +462,9 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"file");
 			csApp.set(scope,attrs,"viewCode",false);
 			csApp.set(scope,attrs,"filename");
+			csApp.set(scope,attrs,"upload",iupload); if ( scope.attrs.uploadbycode ) scope.upload = true;
+			csApp.set(scope,attrs,"uploadstem");
+			csApp.set(scope,attrs,"nocode",inocode);
 			csApp.set(scope,attrs,"lang");
 			csApp.set(scope,attrs,"width");
 			csApp.set(scope,attrs,"height");
@@ -427,6 +475,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"taunotype");
 			csApp.set(scope,attrs,"stem");
 			csApp.set(scope,attrs,"iframe",false);
+            if ( languageTypes.isInArray(rt,["glowscript", "vpython"]) ) { scope.glowscript = true; scope.iframe = true; }
 			// csApp.set(scope,attrs,"usercode","");
 			csApp.set(scope,attrs,"codeunder",false);
 			csApp.set(scope,attrs,"codeover",false);
@@ -451,7 +500,7 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"canvasWidth",700);
             csApp.set(scope,attrs,"canvasHeight",300);
             csApp.set(scope,attrs,"button","");
-            csApp.set(scope,attrs,"noeditor",scope.isSimcir ? "True" : false);
+            csApp.set(scope,attrs,"noeditor",scope.isSimcir ? "True" : inoeditor);
             csApp.set(scope,attrs,"norun",false);
             csApp.set(scope,attrs,"normal",english ? "Normal": "Tavallinen");
             csApp.set(scope,attrs,"highlight","Highlight");
@@ -509,6 +558,7 @@ csApp.directiveFunction = function(t,isInput) {
 
             scope.showInput = (scope.type.indexOf("input") >= 0);
             scope.showArgs = (scope.type.indexOf("args") >= 0);
+            if ( !scope.uploadstem ) scope.uploadstem = english ? "Upload image/file" : "Lataa kuva/tiedosto";
             scope.buttonText = english ? "Run": "Aja";
             if ( scope.type.indexOf("text") >= 0 || scope.isSimcir || scope.justSave ) { // || scope.isSage ) {
                 scope.isRun = true;
@@ -581,6 +631,8 @@ csApp.directiveFunction = function(t,isInput) {
             scope.changeCodeLink();
             csLogTime(scope.taskId);
             
+            scope.showUploaded(scope.attrs.uploadedFile,scope.attrs.uploadedType);
+            
             // if ( scope.isSage ) alustaSage(scope);
             
 		},		
@@ -599,18 +651,55 @@ csApp.directiveFunction = function(t,isInput) {
 	}; 
 };
 
-function alustaSage(scope,firstTime) {
+var sageLoaded = false;
+
+function lataaSage(scope,firstTime, readyFunction) {
+    if ( sageLoaded ) return;
+    var sageLoading = $.ajax({
+        dataType: "script",
+        cache: true,
+        url: "//sagecell.sagemath.org/static/embedded_sagecell.js"
+        // url: "https://cosmos.mat.uam.es:8888/static/embedded_sagecell.js"
+    });
+    sageLoading.done(function() {
+        sageLoaded = true;
+        alustaSage(scope, firstTime, readyFunction);
+    });
+    return sageLoading;
+}
+
+function runSage(scope) {
+    if ( scope.sageButton ) scope.sageButton.click();
+}
+
+function alustaSage(scope,firstTime, readyFunction) {
 // TODO: lisää kentätkin vasta kun 1. kerran alustetaan.
 // TODO: kielien valinnan tallentaminen
 // TODO: kielien valinta kunnolla float.  
 // ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst  
+    if ( !sageLoaded ) return lataaSage(scope, firstTime, readyFunction);
+    
+    if ( scope.sagecellInfo ) {
+        scope.sagecellInfo.editor = "textarea";
+        //scope.sagecellInfo.inputLocation = null;
+        //scope.sagecellInfo.outputLocation = null;
+        //sagecell.deleteSagecell(scope.sagecellInfo);
+        //scope.sagecellInfo = null;
+    }        
     var types = scope.type.split("/");
     var languages = sagecell.allLanguages;
     if ( types.length > 1 ) languages = types.slice(1); 
-    if ( scope.sagecellInfo ) {
+    // if ( scope.sagecellInfo ) {
+    if ( scope.sageInput ) {
         var outputLocation = $(scope.sageOutput);
         outputLocation.find(".sagecell_output_elements").hide();
-        scope.sagecellInfo.code = scope.usercode;
+        // scope.sagecellInfo.code = scope.usercode;
+        // scope.sagecellInfo.code = scope.getReplacedCode();
+        // scope.sagecellInfo.session.code = scope.sagecellInfo.code;
+        // scope.sagecellInfo.inputLocation.innerText = scope.sagecellInfo.code;
+        //scope.sagecellInfo.inputLocation.children[0].children[0].children[0].value = scope.sagecellInfo.code;
+        scope.sageInput.value = scope.getReplacedCode();
+        if ( readyFunction ) readyFunction();
         return;
     }    
     scope.sageArea = scope.element0.getElementsByClassName('computeSage')[0];                    
@@ -619,19 +708,27 @@ function alustaSage(scope,firstTime) {
     
     scope.sagecellInfo = sagecell.makeSagecell({
         inputLocation: scope.sageArea,
-        // inputLocation: scope.editArea,
+        replaceOutput: true,
+        //inputLocation: scope.editArea,
         editor: "textarea",
+        // hide: ["evalButton"],
         hide: ["editor","evalButton"],
         outputLocation: scope.sageOutput,
         requires_tos: false,
-        code: scope.usercode,
-        getCode: function() { return scope.getCode(); },
+        // code: scope.usercode,
+        code: scope.getReplacedCode(),
+        getCode: function() { 
+          return scope.getReplacedCode(); 
+        },
         autoeval: scope.attrs.autorun || firstTime,
         callback: function() {
             scope.sageButton = scope.sageArea.getElementsByClassName("sagecell_evalButton")[0]; // .button();     
+            scope.sageInput = scope.sageArea.getElementsByClassName("sagecell_commands")[0]; 
             
             scope.sageButton.onclick = function() {
                 // scope.checkSageSave();
+                scope.sagecellInfo.code = scope.getReplacedCode();
+                // scope.sagecellInfo.session.code = scope.sagecellInfo.code;
             };
             var sagecellOptions = scope.element0.getElementsByClassName('sagecell_options')[0];  
             var csRunMenuArea = scope.element0.getElementsByClassName('csRunMenuArea')[0];
@@ -640,6 +737,8 @@ function alustaSage(scope,firstTime) {
         },
         languages: languages // sagecell.allLanguages
     });
+    if ( readyFunction ) readyFunction();
+
 }    
 
 csApp.getInt = function(s) {
@@ -705,9 +804,10 @@ csApp.Hex2Str = function (s) {
 };
 
 
-csApp.Controller = function($scope,$http,$transclude,$sce) {
+csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 "use strict";
     csLogTime("controller");
+	$scope.wavURL = "";
 	$scope.byCode ="";
 	$scope.attrs = {};
     $scope.svgImageSnippet = function() {
@@ -744,7 +844,79 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 	$scope.viewCode = false;
 	$scope.runSuccess = false;
 	$scope.copyingFromTauno = false;
+    
+    $scope.onFileSelect = function (file) {
+        // if (!touchDevice) $scope.editor.focus();
+        $scope.ufile = file;
+        console.log(file);
 
+        if (file) {
+            if ( $scope.attrs.uploadbycode ) {
+                console.log("bycode");
+                var reader = new FileReader();
+                reader.onload = (function(theFile) {
+                    // showTrack(theFile.target.result,type);  
+                    // console.log(theFile.target.result);
+                    $scope.usercode = theFile.target.result;
+                  });
+                reader.readAsText(file);  
+
+                return;
+            }
+            
+            
+            
+            $scope.ufile.progress = 0;
+            $scope.ufile.error = null;
+            $scope.uploadedFile = null;
+            $scope.uploadresult = null;
+            $scope.docURL = null;
+            var ti = $scope.taskId.split(".");
+            if ( ti.length < 2 ) return;
+            file.upload = Upload.upload({
+                url: '/pluginUpload/' + ti[0] + '/' + ti[1] + '/' + $scope.user_id + '/',
+                data: {
+                    file: file
+                }
+            });
+
+            file.upload.then(function (response) {
+                $timeout(function () {
+                    $scope.showUploaded(response.data.file, response.data.type);
+                    $scope.doRunCode('upload',false);
+                });
+            }, function (response) {
+                if (response.status > 0) 
+                    $scope.ufile.error = response.data.error;
+            }, function (evt) {
+                    $scope.ufile.progress = Math.min(100, parseInt(100.0 *
+                    evt.loaded / evt.total));
+            });
+
+            file.upload.finally(function () {
+            })
+        }
+    };
+    
+    $scope.showUploaded = function(file,type) {
+        if ( !file || !type ) return;
+        $scope.uploadedFile = file;
+        $scope.uploadedType = type;
+            var html = '<p class="smalllink"><a href="' + file +'">' + file + '</a> (' + type + ')</p>';
+        if (type.indexOf("image") == 0) {
+            html += '<img src="'+$scope.uploadedFile+'"/>';
+            $scope.uploadresult = $sce.trustAsHtml(html);
+        } else {
+            html += '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:900px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;"  width:1200px>';
+            html += '<iframe width="700" height="900"  src="' + file +'" target="csdocument" allowfullscreen/>';
+            //html += '<embed  width="800" height="16000"  src="' + file +'" />';
+            //html += '<object width="800" height="600"   data="' + file +'" type="' + type +'"  ></object>';
+            html += '</div>';
+			$scope.uploadresult = $sce.trustAsHtml(html);
+        }
+    }
+    
+    
 	$scope.$watch('usercode', function() {
 		if ( !$scope.copyingFromTauno && $scope.usercode !== $scope.byCode ) $scope.muokattu = true;
 		$scope.copyingFromTauno = false;
@@ -784,7 +956,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
     {
 		var t = languageTypes.getRunType($scope.selectedLanguage,"cs");  
         if ( t == "md" ) { $scope.showMD(); if (nosave) return; }
-        if ( t == "js" ) { $scope.showJS(); if (nosave) return; } 
+        if ( languageTypes.isInArray(t, csJSTypes ) ) { $scope.jstype = t; $scope.showJS(); if (nosave) return; } 
 		$scope.doRunCode(t,nosave);
     }
     
@@ -865,8 +1037,16 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         $scope.closeDocument();
         // alert("moi");
         
-        if ( $scope.sageButton ) $scope.sageButton.click();
-        if ( $scope.isSage && !$scope.sagecellInfo ) alustaSage($scope,true);
+        if ( $scope.isSage ) {
+            alustaSage($scope, true, function() {runSage($scope);});
+            /*
+            var sageLoading = alustaSage($scope,true);
+            if ( $scope.sageButton ) {
+                sageLoading.done(function() {$scope.sageButton.click();});
+            }
+            */
+        }
+        // if ( $scope.isSage && !$scope.sagecellInfo ) alustaSage($scope,true);
         
         if ( $scope.simcir ) {
             $scope.usercode = $scope.getCircuitData();
@@ -893,8 +1073,9 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         }
 		$scope.resImage = "";
 		$scope.imgURL = "";
+		$scope.wavURL = "";
 		$scope.runSuccess = false;
-		if ( runType != "js" ) $scope.result = "";
+		if ( !languageTypes.isInArray(runType, csJSTypes ) ) $scope.result = "";
 		$scope.runTestGreen = false;
 		$scope.runTestRed = false;
         var isInput = false;
@@ -919,6 +1100,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 			    'userinput':uinput,
 			    'isInput' : isInput,
 			    'userargs': uargs,
+                'uploadedFile' : $scope.uploadedFile,
+                'uploadedType' : $scope.uploadedType,
                 // 'markup': {'type':t, 'file': $scope.file, 'replace': $scope.replace, 'lang': $scope.lang, 'taskId': $scope.taskId, 'user_id': $scope.user_id},
 				'markup': { 'type': t, 'taskId': $scope.taskId, 'user_id': $scope.user_id }
 			}
@@ -944,12 +1127,14 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 			}
 			$scope.error = data.web.error;
 			var imgURL = "";
+			var wavURL = "";
 			$scope.runSuccess = true;
             $scope.isRunning = false;
 
 			$scope.runError = $scope.error; // !$scope.runSuccess;
 
 			imgURL = data.web.image;
+			wavURL = data.web.wav;
 			if ( data.web.testGreen ) $scope.runTestGreen = true;
 			if ( data.web.testRed ) $scope.runTestRed = true;
 			$scope.comtestError = data.web.comtestError;
@@ -962,6 +1147,12 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 				$scope.result = data.web.console.trim();
 			}
 
+            if ( wavURL ) {
+                // <video src="https://tim.jyu.fi/csimages/cs/vesal/sinewave.wav" type="video/mp4" controls="" autoplay="true" ></video>
+				$scope.wavURL = wavURL;
+				$scope.result = data.web.console.trim();
+            }
+            
 			if ( imgURL ) {
 				// $scope.resImage = '<img src="' + imgURL + ' " alt="Result image" />';
 				$scope.imgURL = imgURL;
@@ -971,7 +1162,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
                     if ( $scope.isHtml )
                         $scope.htmlresult = removeXML(data.web.console);
                     else
-                        if ( runType != "js" ) $scope.result = data.web.console;
+                        if ( !languageTypes.isInArray(runType, csJSTypes ) ) $scope.result = data.web.console;
 				else   
 				   $scope.error = data.web.error;
 			}
@@ -1058,12 +1249,14 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 	};
 
     // Returns the visible index for next item and the desired size
-    $scope.getVid = function() {
+    $scope.getVid = function(dw, dh) {
 		csApp.taunoNr++;
 		var vid = 'tauno'+csApp.taunoNr;
 		$scope.taunoId = vid;
-		var w = csApp.ifIs($scope.width,"width","100% ");
-		var h = csApp.ifIs($scope.height,"height",500);
+        if ( dw === undefined ) dw = "100%"
+        if ( dh === undefined ) dh = 500
+		var w = csApp.ifIs($scope.width,"width",dw);
+		var h = csApp.ifIs($scope.height,"height",dh);
         return {vid:vid,w:w,h:h};
     }
 
@@ -1199,7 +1392,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
             $scope.initUserCode = true;
             $scope.showOtherEditor($scope.editorMode);
         }
-        if ( $scope.isSage ) alustaSage($scope);
+        if ( $scope.isSage ) alustaSage($scope,false,null);
         if ( $scope.simcir ) $scope.setCircuitData();
 	};
 
@@ -1270,6 +1463,33 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         $scope.carretPos = start; // seuraava tapahtuma nappaa tämän ja siirtää vain kursorin.
     };
 		
+	$scope.getReplacedCode = function() {
+		// $scope.code = $scope.localcode;
+		if ( !$scope.attrs.program ) { $scope.code = $scope.usercode; return $scope.code; }
+		var st = $scope.attrs.program.split("\n");
+		var r = "";
+		var rp = ["",""]; // alkuosa, loppuosa
+		var step = 0;
+		var nl = "";
+		var nls = "";
+        var needReplace = !!$scope.replace;
+        var regexp = new RegExp($scope.replace);
+		for (var i in st) if ( st.hasOwnProperty(i) ) {
+			var s = st[i];
+			// if ( s.indexOf($scope.replace) >= 0 ) {
+            if ( needReplace && regexp.test(s) ) {
+				r += nl + $scope.usercode + "\n";
+				if ( step === 0 ) { step++; nls = ""; continue; }
+			} else { 
+				r += nl + s;
+				rp[step] += nls + s;
+			}
+			nl = nls = "\n";
+		}
+		$scope.code = r;
+        return $scope.code;
+    }
+        
 	$scope.showCodeLocal = function() {
 		// $scope.code = $scope.localcode;
 		if ( $scope.localcode === "" ) { $scope.code = $scope.usercode; return; }
@@ -1559,19 +1779,34 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
     }
     
     
+    $scope.closeFrame = function() {
+        if ( !$scope.canvas ) return;
+        $scope.canvas.remove();
+        $scope.canvas = null;
+        $scope.lastJS = "";
+    }
+    
    $scope.lastJS = "";
     $scope.iframeClientHeight = -1;
 	$scope.showJS = function() {
         var wantsConsole = false;
         if ( $scope.type.indexOf("/c") >= 0 ) wantsConsole = true;
         if ( !$scope.attrs.runeverytime && !$scope.usercode && !$scope.userargs && !$scope.userinput ) return;
-        if ( !$scope.canvas ) { // cerate a canvas on first time
+        if ( !$scope.canvas ) { // create a canvas on first time
             if ( $scope.iframe ) {
-                var v = $scope.getVid();
+                var dw,dh;
+                var fsrc = "/cs/gethtml/canvas.html";
+                if ( $scope.glowscript ) {
+                    fsrc = "/cs/gethtml/GlowScript.html" 
+                    dh = '430';
+                    dw = '800';
+                    if ( $scope.type == "glowscript" ) $scope.gsDefaultLanguage = "GlowScript 2.1 JavaScript";
+                }
+                var v = $scope.getVid(dw,dh);
                 $scope.irrotaKiinnita = "Irrota";
-                $scope.canvas = angular.element('<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px;" >'+
-                  '<span class="csRunMenu"><div><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a></div></span>'+
-                  '<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html?scripts='+($scope.attrs.scripts||"") + '" ' + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin"></iframe>'+
+                $scope.canvas = angular.element('<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px; z-index: 20" >'+
+                  '<span class="csRunMenu"><div><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a><a href ng-click="closeFrame()" style="float: right" >[X]</a></div></span>'+
+                  '<iframe id="'+v.vid+'" class="jsCanvas" src="' + fsrc + '?scripts='+($scope.attrs.scripts||"") + '" ' + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin"></iframe>'+
                   '</div>');
                 // $scope.canvas = angular.element('<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html" ' + v.w + v.h + ' style="border:0" seamless="seamless" ></iframe>');
                 $scope.iframeLoadTries = 10;
@@ -1610,6 +1845,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
                return;
             }
             if ( $scope.iframeClientHeight < 0 ) $scope.iframeClientHeight = f.clientHeight;
+            if ( $scope.gsDefaultLanguage ) f.contentWindow.setDefLanguage($scope.gsDefaultLanguage);
             var s = f.contentWindow.runJavaScript(text,$scope.userargs,$scope.userinput, wantsConsole);
             var ch = f.contentWindow.getConsoleHeight();
             if ( ch < $scope.iframeClientHeight ) ch = $scope.iframeClientHeight;
@@ -1663,12 +1899,9 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
           fn();
         }
         } else {
-        this.$apply(fn);
-    }
-    
-      
-
-};
+            this.$apply(fn);
+        }
+    };
 
 };
 

@@ -1,10 +1,10 @@
 import json
 import logging
-import os
-import time
 import unittest
 from shutil import rmtree
+from typing import Optional
 
+from fileutils import *
 from mailer import Mailer
 
 
@@ -18,68 +18,44 @@ class NoWarnings:
 
 class MailerTest(unittest.TestCase):
     def setUp(self):
+
         self.maildir = os.path.join(os.getcwd(), 'test_mail')
         if os.path.exists(self.maildir):
             rmtree(self.maildir)
 
-        self.mailer = Mailer(mail_dir=self.maildir, dry_run=True)
+        self.mailer = Mailer(mail_dir=self.maildir, client_rate=20, client_rate_window=60, dry_run=True)
 
     def tearDown(self):
         if os.path.exists(self.maildir):
             rmtree(self.maildir)
 
-    def mkheader(self, sender: str, rcpt: str, subj: str) -> dict:
-        return {"From": sender, "Rcpt-To": rcpt, "Subject": subj}
+    @classmethod
+    def mkheader(cls, sender: str, rcpt: str, subj: str, group_id: Optional[str] = None) -> dict:
+        return {"From": sender, "Rcpt-To": rcpt, "Subject": subj, "Group-Id": group_id}
 
-    def mkmsg(self, next_msg: str, sender: str, rcpt: str, subj: str, msg: str):
-        return {"From": sender, "Rcpt-To": rcpt, "Subject": subj, "Body": msg, "Next-Msg": next_msg}
+    @classmethod
+    def mkmsg(cls, next_msg: str, sender: str, rcpt: str, subj: str, msg: str):
+        return {"From": sender, "Rcpt-To": rcpt, "Subject": subj, "Body": msg, "_next_file": next_msg}
 
     def testInit(self):
         self.assertTrue(os.path.exists(self.maildir))
-        self.assertEqual(len(os.listdir(self.maildir)), 0)
+        self.assertEqual(len(listfiles(self.maildir)), 0)
         self.assertEqual(self.mailer.get_first_filename(), os.path.join(self.maildir, 'first'))
         self.assertEqual(self.mailer.get_last_filename(), os.path.join(self.maildir, 'last'))
         self.assertFalse(self.mailer.has_messages())
-
-    def testRandomFilename(self):
-        filenames = []
-        for i in range(10):
-            random_abs, random_rel = self.mailer.get_random_filenames()
-            self.assertEqual(random_abs, os.path.join(self.maildir, random_rel))
-            self.assertFalse(os.path.isfile(random_abs))
-            with open(random_abs, 'w') as f:
-                pass
-            self.assertTrue(os.path.isfile(random_abs))
-
-    def testSetNext(self):
-        f1_abs, f1_rel = self.mailer.get_random_filenames()
-        f2_abs, f2_rel = self.mailer.get_random_filenames()
-
-        f1_data = {'From': 'from-addr', 'Rcpt-To': 'to-addr', 'Subject': 'subj', 'Next-Msg': f1_rel}
-        with open(f1_abs, 'w') as f1:
-            f1.write(json.dumps(f1_data))
-
-        self.mailer.set_next(f1_abs, f2_rel)
-
-        with open(f1_abs, 'r') as f1:
-            f1_newdata = json.loads(f1.read())
-
-        self.assertEqual(len(f1_newdata), len(f1_data))
-        for key in f1_data:
-            self.assertEqual(f1_newdata[key], f1_newdata[key], 'f1_newdata[{0}] == {1} != {2} == f1_data[{0}]'.format(
-                key, f1_newdata[key], f1_data[key]))
 
     def testEnqueue(self):
         # First enqueue
         f1_data = self.mkmsg('', 'sender', 'recipient', 'subject', 'message')
         f1_file = self.mailer.enqueue(f1_data, f1_data['Body'])
+        self.assertIsNotNone(f1_file)
         self.assertTrue(self.mailer.has_messages())
 
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 3)
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
-        self.assertTrue(f1_file in files)
+        self.assertTrue(f1_file in files, '{} not found in {}'.format(f1_file, files))
         self.assertEqual(os.readlink(self.mailer.get_first_filename()), f1_file)
         self.assertEqual(os.readlink(self.mailer.get_last_filename()), f1_file)
 
@@ -96,7 +72,7 @@ class MailerTest(unittest.TestCase):
         f2_file = self.mailer.enqueue(f2_data, f2_data['Body'])
         self.assertTrue(self.mailer.has_messages())
 
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 4)
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
@@ -117,7 +93,7 @@ class MailerTest(unittest.TestCase):
         f3_file = self.mailer.enqueue(f1_data, f1_data['Body'])
         self.assertTrue(self.mailer.has_messages())
 
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 5)
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
@@ -139,13 +115,13 @@ class MailerTest(unittest.TestCase):
         # Empty dequeue
         with NoWarnings():
             self.assertEqual(self.mailer.dequeue(), None)
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 0)
 
         # Single element
 
         f1_data = self.mkmsg('', 'sender', 'recipient', 'subject', 'message')
-        f1_abs, f1_rel = self.mailer.get_random_filenames()
+        f1_abs, f1_rel = get_random_filenames(self.maildir)
         with open(f1_abs, 'w') as f1:
             f1.write(json.dumps(f1_data))
         os.symlink(f1_rel, self.mailer.get_first_filename())
@@ -153,7 +129,7 @@ class MailerTest(unittest.TestCase):
 
         readdata = self.mailer.dequeue()
 
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 0)
         self.assertEqual(readdata['From'], f1_data['From'])
         self.assertEqual(readdata['Rcpt-To'], f1_data['Rcpt-To'])
@@ -161,7 +137,7 @@ class MailerTest(unittest.TestCase):
         self.assertEqual(readdata['Body'], f1_data['Body'])
 
         # Multiple elements
-        f_abs, f_rel = zip(*[self.mailer.get_random_filenames() for _ in range(3)])
+        f_abs, f_rel = zip(*[get_random_filenames(self.maildir) for _ in range(3)])
         f_data = [self.mkmsg(f_rel[1], f1_data["From"], f1_data["Rcpt-To"], f1_data["Subject"], f1_data["Body"]),
                   self.mkmsg(f_rel[2], 'daemon@example.org', 'human@example2.com', 'Notification', 'first line\nsecond line'),
                   self.mkmsg('', 'third@sender.com', 'third@recipient.net', 'test subject', 'message number three')]
@@ -173,7 +149,7 @@ class MailerTest(unittest.TestCase):
 
         # 3 -> 2 messages in the queue
         readdata = self.mailer.dequeue()
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 4, 'Files: ' + str(files))
         self.assertEqual(readdata['From'], f_data[0]["From"])
         self.assertEqual(readdata['Rcpt-To'], f_data[0]["Rcpt-To"])
@@ -182,7 +158,7 @@ class MailerTest(unittest.TestCase):
 
         # 2 -> 1 messages in the queue
         readdata = self.mailer.dequeue()
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 3, 'Files: ' + str(files))
         self.assertEqual(readdata['From'], f_data[1]["From"])
         self.assertEqual(readdata['Rcpt-To'], f_data[1]["Rcpt-To"])
@@ -191,7 +167,7 @@ class MailerTest(unittest.TestCase):
 
         # 1 -> 0 messages in the queue
         readdata = self.mailer.dequeue()
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 0, 'Files: ' + str(files))
         self.assertEqual(readdata['From'], f_data[2]["From"])
         self.assertEqual(readdata['Rcpt-To'], f_data[2]["Rcpt-To"])
@@ -201,40 +177,33 @@ class MailerTest(unittest.TestCase):
         # Empty dequeue
         with NoWarnings():
             self.assertEqual(self.mailer.dequeue(), None)
-        files = os.listdir(self.maildir)
+        files = listfiles(self.maildir)
         self.assertEqual(len(files), 0)
 
-    def wait_and_update(self, delay):
-        t0 = time.time()
-        while time.time() - t0 < delay:
-            self.mailer.update()
-
     def testUpdate(self):
-        self.mailer = Mailer(mail_dir=self.maildir, client_rate=2, client_rate_window=1, dry_run=True)
-        self.mailer.update()
+        self.mailer = Mailer(mail_dir=self.maildir, client_rate=2, client_rate_window=60, dry_run=True)
 
         self.mailer.enqueue(self.mkheader("s1", "r1", "subj1"), "m1")
         self.mailer.enqueue(self.mkheader("s2", "r2", "subj2"), "m2")
         self.mailer.enqueue(self.mkheader("s3", "r3", "subj3"), "m3")
         self.mailer.enqueue(self.mkheader("s4", "r4", "subj4"), "m4")
-        self.wait_and_update(0.5)    # window 1: 0.5
+        self.mailer.update(30)    # window 1: 30 s
 
-        files = os.listdir(self.maildir)
-        self.assertEqual(len(files), 4, "Files in maildir: " + str(os.listdir(self.maildir)))
+        files = listfiles(self.maildir)
+        self.assertEqual(len(files), 4, "Files in maildir: " + str(listfiles(self.maildir)))
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
-        self.mailer.update()
-        self.assertEqual(len(os.listdir(self.maildir)), 4)
+        self.assertEqual(len(listfiles(self.maildir)), 4)
 
         self.mailer.enqueue(self.mkheader("s5", "r5", "subj5"), "m5")
 
-        self.wait_and_update(0.7)    # window 1: 1.2
-        self.assertEqual(len(os.listdir(self.maildir)), 3)
+        self.mailer.update(45)    # window 2: 25 s
+        self.assertEqual(len(listfiles(self.maildir)), 3)
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
 
-        self.wait_and_update(0.9)    # window 2: 0.1
-        self.assertEqual(len(os.listdir(self.maildir)), 0)
+        self.mailer.update(50)    # window 2: 35 s
+        self.assertEqual(len(listfiles(self.maildir)), 0)
 
     def testNewInstance(self):
         self.mailer.enqueue(self.mkheader("s1", "r1", "subj1"), "m1")
@@ -243,23 +212,57 @@ class MailerTest(unittest.TestCase):
         self.mailer.enqueue(self.mkheader("s4", "r4", "subj4"), "m4")
 
         self.mailer = Mailer(mail_dir=self.maildir, client_rate=2, client_rate_window=1, dry_run=True)
-        self.mailer.update()
+        self.mailer.update(0.5)    # window 1: 0.5
 
-        self.wait_and_update(0.5)    # window 1: 0.5
-
-        files = os.listdir(self.maildir)
-        self.assertEqual(len(files), 4, "Files in maildir: " + str(os.listdir(self.maildir)))
+        files = listfiles(self.maildir)
+        self.assertEqual(len(files), 4, "Files in maildir: " + str(listfiles(self.maildir)))
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
-        self.mailer.update()
-        self.assertEqual(len(os.listdir(self.maildir)), 4)
+        self.assertEqual(len(listfiles(self.maildir)), 4)
 
         self.mailer.enqueue(self.mkheader("s5", "r5", "subj5"), "m5")
 
-        self.wait_and_update(0.7)    # window 1: 1.2
-        self.assertEqual(len(os.listdir(self.maildir)), 3)
+        self.mailer.update(0.7)    # window 1: 1.2
+        self.assertEqual(len(listfiles(self.maildir)), 3)
         self.assertTrue('first' in files)
         self.assertTrue('last' in files)
 
-        self.wait_and_update(0.9)    # window 2: 0.1
-        self.assertEqual(len(os.listdir(self.maildir)), 0)
+        self.mailer.update(0.9)    # window 2: 0.1
+        self.assertEqual(len(listfiles(self.maildir)), 0)
+
+    def testNonGrouping(self):
+        self.mailer = Mailer(mail_dir=self.maildir, client_rate=4, client_rate_window=10,
+                             group_delay=20, dry_run=True)
+
+        groups = [None, '1st', '1st', None, '2nd', '3rd', '2nd', None, '1st', '3rd']
+        files = []
+        for i in range(0, 10):
+            p = [s + str(i + 1) for s in ['s', 'r', 'subj', 'm']]
+            name = self.mailer.enqueue(self.mkheader(p[0], p[1], p[2], groups[i]), p[3])
+            files.append(os.path.join(self.maildir, name))
+
+        self.assertEqual(len(self.mailer.queue), 3)
+        self.assertEqual(len(self.mailer.group_queues), 3)
+        self.assertEqual(len(self.mailer.get_group_queue('1st')), 3)
+        self.assertEqual(len(self.mailer.get_group_queue('2nd')), 2)
+        self.assertEqual(len(self.mailer.get_group_queue('3rd')), 2)
+
+    def testGrouping(self):
+        self.mailer = Mailer(mail_dir=self.maildir, client_rate=4, client_rate_window=10,
+                             group_delay=20, dry_run=True)
+
+        groups = [None, '1st', '1st', None, '2nd', '3rd', '2nd', None, '1st', '3rd']
+        files = []
+        for i in range(0, 10):
+            p = [s + str(i + 1) for s in ['s', 'r', 'subj', 'm']]
+            name = self.mailer.enqueue(self.mkheader(p[0], 'same_recipient', p[2], groups[i]), p[3])
+            files.append(os.path.join(self.maildir, name))
+
+        self.assertEqual(len(self.mailer.queue), 3)
+        self.assertEqual(len(self.mailer.group_queues), 3)
+        self.assertEqual(len(self.mailer.get_group_queue('1st')), 1)
+        self.assertEqual(len(self.mailer.get_group_queue('2nd')), 1)
+        self.assertEqual(len(self.mailer.get_group_queue('3rd')), 1)
+
+        # todo: test group timing
+

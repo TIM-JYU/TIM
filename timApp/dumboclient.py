@@ -3,6 +3,8 @@ import json
 import os
 import subprocess
 from subprocess import DEVNULL, STDOUT
+from typing import List
+
 import requests
 import time
 
@@ -30,7 +32,7 @@ def launch_dumbo():
     return p
 
 
-def call_dumbo(md_blocks: 'list(str)') -> 'list(str)':
+def call_dumbo(md_blocks: List[str]) -> List[str]:
     """
     Calls Dumbo for converting the given list of markdown texts to HTML.
 
