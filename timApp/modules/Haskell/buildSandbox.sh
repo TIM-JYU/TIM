@@ -30,4 +30,4 @@ gitGet () {
 gitGet PluginConstructionKit git://yousource.it.jyu.fi/ties343-funktio-ohjelmointi/PluginConstructionKit.git
 gitGet Choices git://yousource.it.jyu.fi/ties343-funktio-ohjelmointi/MultipleChoicePlugin.git
 
-cabal install PluginConstructionKit/ Choices/
+cabal install --max-backjumps 100000 PluginConstructionKit/ Choices/

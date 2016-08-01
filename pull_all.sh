@@ -17,8 +17,6 @@ docker pull timimages/funnel
 
 docker tag timimages/cs3 cs3
 docker tag timimages/svn svn
-docker tag timimages/haskellrun haskellrun
-docker tag timimages/haskelldev haskelldev
 docker tag timimages/stackage_builder stackage_builder
 docker tag timimages/postgre postgre
 docker tag timimages/pali pali

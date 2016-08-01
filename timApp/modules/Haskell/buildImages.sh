@@ -4,7 +4,7 @@ IFS=$'\n\t'
 
 # This builds the development environment and the run environment images
 
-docker build -t "haskelldev" $@ .
-docker build -t "haskellrun" $@ runEnvironment/
+docker build -t "timimages/haskelldev" $@ .
+docker build -t "timimages/haskellrun" $@ runEnvironment/
 
 ./launch_sandbox_build.sh

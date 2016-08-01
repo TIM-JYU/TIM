@@ -335,7 +335,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   '</p>' +
                   '<div class="csRunMenuArea" ng-if="!forcedupload">'+
 				  '<p class="csRunMenu" >' +
-				  '<button ng-if="isRun"  ng-disabled="isRunning" ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
+				  '<button ng-if="isRun"  ng-disabled="isRunning" title="(Ctrl-S)" ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
 				  '<button ng-if="isTest" ng-disabled="isRunning" ng-click="runTest();">Test</button>&nbsp&nbsp'+
 				  '<button ng-if="isUnitTest" ng-disabled="isRunning" ng-click="runUnitTest();">UTest</button>&nbsp&nbsp'+
 				  '<span ng-if="isDocument"><a href="" ng-disabled="isRunning" ng-click="runDocument();">{{docLink}}</a>&nbsp&nbsp</span>'+
@@ -429,16 +429,6 @@ csApp.directiveFunction = function(t,isInput) {
                 scope.copyToSimCirText = english ? "copy to SimCir" : "kopioi SimCiriin";  
             }
             
-            $(element[0]).bind('keydown', function(event) {
-                if (event.ctrlKey || event.metaKey) {
-                    switch (String.fromCharCode(event.which).toLowerCase()) {
-                    case 's':
-                        event.preventDefault();
-                        if ( scope.isRun ) scope.runCode();
-                        break;
-                    }
-                }
-            });
             
             scope.languageText = english ? "language: " : "kieli: ";  
             
@@ -506,7 +496,7 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"highlight","Highlight");
             csApp.set(scope,attrs,"parsons","Parsons");
             csApp.set(scope,attrs,"jsparsons","JS-Parsons");
-            csApp.set(scope,attrs,"editorMode",0);
+            csApp.set(scope,attrs,"editorMode",-1);
             csApp.set(scope,attrs,"showCodeOn",english ? "Show all code" : "Näytä koko koodi");
             csApp.set(scope,attrs,"showCodeOff",english ? "Hide extra code": "Piilota muu koodi");
             csApp.set(scope,attrs,"resetText", english ? "Reset" : "Alusta");
@@ -524,6 +514,7 @@ csApp.directiveFunction = function(t,isInput) {
             for (var i=0; i<scope.editorModes.length; i++) scope.editorModeIndecies.push(parseInt(scope.editorModes[i]));
             scope.editorModeIndecies.push(parseInt(scope.editorModes[0]));
             if ( scope.editorModes.length <= 1 ) scope.editorText = ["","","","","","",""];
+            scope.checkEditorModeLocalStorage();
             
             scope.showCodeLink = scope.showCodeOn;
 			scope.minRows = csApp.getInt(scope.rows);
@@ -634,6 +625,26 @@ csApp.directiveFunction = function(t,isInput) {
             scope.showUploaded(scope.attrs.uploadedFile,scope.attrs.uploadedType);
             
             // if ( scope.isSage ) alustaSage(scope);
+            /*
+            scope.element0.keydown(function (e) {
+                  if (e.ctrlKey) {
+                       if (e.keyCode === 0x53) {
+                           if (!scope.isRunning) scope.runCode();
+                       }
+                  }
+            });
+            */
+            scope.initEditorKeyBindings();
+            $(element[0]).bind('keydown', function(event) {
+                if (event.ctrlKey || event.metaKey) {
+                    switch (String.fromCharCode(event.which).toLowerCase()) {
+                    case 's':
+                        event.preventDefault();
+                        if ( scope.isRun ) scope.runCode();
+                        break;
+                    }
+                }
+            });
             
 		},		
 		scope: {},				 
@@ -651,6 +662,39 @@ csApp.directiveFunction = function(t,isInput) {
 	}; 
 };
 
+function insertAtCaret(txtarea,text) {
+    var scrollPos = txtarea.scrollTop;
+    var strPos = 0;
+    var br = ((txtarea.selectionStart || txtarea.selectionStart == '0') ? 
+        "ff" : (document.selection ? "ie" : false ) );
+    if (br == "ie") { 
+        txtarea.focus();
+        var range = document.selection.createRange();
+        range.moveStart ('character', -txtarea.value.length);
+        strPos = range.text.length;
+    }
+    else if (br == "ff") strPos = txtarea.selectionStart;
+
+    var front = (txtarea.value).substring(0,strPos);  
+    var back = (txtarea.value).substring(strPos,txtarea.value.length); 
+    txtarea.value=front+text+back;
+    strPos = strPos + text.length;
+    if (br == "ie") { 
+        txtarea.focus();
+        var range = document.selection.createRange();
+        range.moveStart ('character', -txtarea.value.length);
+        range.moveStart ('character', strPos);
+        range.moveEnd ('character', 0);
+        range.select();
+    }
+    else if (br == "ff") {
+        txtarea.selectionStart = strPos;
+        txtarea.selectionEnd = strPos;
+        txtarea.focus();
+    }
+    txtarea.scrollTop = scrollPos;
+}
+
 var sageLoaded = false;
 
 function lataaSage(scope,firstTime, readyFunction) {
@@ -659,6 +703,7 @@ function lataaSage(scope,firstTime, readyFunction) {
         dataType: "script",
         cache: true,
         url: "//sagecell.sagemath.org/static/embedded_sagecell.js"
+        // url: "https://cosmos.mat.uam.es:8888/static/embedded_sagecell.js"
     });
     sageLoading.done(function() {
         sageLoaded = true;
@@ -1477,7 +1522,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 			var s = st[i];
 			// if ( s.indexOf($scope.replace) >= 0 ) {
             if ( needReplace && regexp.test(s) ) {
-				r += nl + $scope.usercode;
+				r += nl + $scope.usercode + "\n";
 				if ( step === 0 ) { step++; nls = ""; continue; }
 			} else { 
 				r += nl + s;
@@ -1670,6 +1715,36 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
     }
 
 
+    $scope.initEditorKeyBindings = function() {
+        var eindex = $scope.editorModeIndecies[$scope.editorMode];
+        if ( eindex != 0 ) return;
+        $($scope.edit).bind('keydown', function(event) {
+            eindex = $scope.editorModeIndecies[$scope.editorMode];
+            if ( eindex != 0 ) return;
+            if ( $scope.editorMode != 0 ) return;
+            if (event.which == 9) {
+                event.preventDefault();
+                if ( event.shiftKey ) return;
+                insertAtCaret($scope.edit, "    ");
+                $scope.usercode = $scope.edit.value;
+                return;
+            }
+        });
+    }
+    
+    $scope.checkEditorModeLocalStorage = function() {
+        if ( $scope.editorMode >= 0 ) return;
+        $scope.editorMode = 0;
+        if ( typeof(localStorage) === "undefined" )  return;
+        if ( localStorage.editorIndex === "undefined" ) return;
+        var eindex = localStorage.editorIndex;
+        if ( $scope.editorModes.indexOf("0") < 0 ) return;
+        if ( $scope.editorModes.indexOf("1") < 0 ) return;
+        for ( var em = 0; em < $scope.editorModeIndecies.length; em++ ) {
+            var ein = $scope.editorModeIndecies[em];
+            if ( ein == eindex ) { $scope.editorMode = em; break; }
+        }
+    }
     
     $scope.showOtherEditor = function(editorMode) {
         if ( $scope.parson ) {
@@ -1703,7 +1778,9 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         
         var otherEditDiv = $scope.element0.getElementsByClassName('csrunEditorDiv')[0];                    
         var editorDiv = angular.element(otherEditDiv); 
-        editorDiv.html(csApp.compile(html[eindex])($scope));
+        $scope.edit = csApp.compile(html[eindex])($scope);
+        editorDiv.html($scope.edit);
+        $scope.edit = $scope.edit[0];
         if ( eindex == 1 ) {
             $scope.aceEditor.setFontSize(15);
             $scope.aceEditor.setOptions({
@@ -1713,6 +1790,10 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         }
         if ( eindex == 2 ) $scope.showCsParsons(otherEditDiv.children[0]);
         if ( eindex == 3 ) $scope.showJsParsons(otherEditDiv.children[0]);
+        $scope.initEditorKeyBindings();
+        if ( typeof(localStorage) !== "undefined" && eindex <= 1) {
+            localStorage.editorIndex = eindex;
+        }
     };
     
     $scope.moveCursor = function(dx,dy) {
