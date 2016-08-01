@@ -1,4 +1,4 @@
-<!-- Pop over element --><span class="annotation-element" ><span ng-mouseenter="showHidden=1" ng-init="showHidden=0" ng-show="show" ng-click="updateVelpZIndex()"
+<!-- Pop over element --><span class="annotation-element" ><span  ng-init="showHidden=0" ng-show="show" ng-click="updateVelpZIndex()"
                                                                 ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]"
                                                                 >
     <span class="fulldiv">
@@ -6,15 +6,26 @@
             <p><span class="annHeader"><strong>{{ velp }}</strong></span></p>
             <p ng-show="showHidden"><a class="username" href="mailto:{{ email }}">{{ annotator }}</a>
                     <span class="timestamp" title="{{ creationtime }}">{{ timesince }}</span></p>
-            <p><label>Points: <input type="number" ng-model="points" ng-value="points" ng-disabled="checkRights()"
-                                     ng-change="changePoints(points)"/></label></p>
         </span>
-
         <span class="div-10">
             <span title="Close" class="float-right glyphicon glyphicon-remove clickable-icon closeAnn"
                   ng-click="toggleAnnotation();showHidden=0"></span>
         </span>
     </span>
+
+
+        <div ng-mouseenter="showHidden=1; focusInput=true" >
+            <div ng-hide="showHidden">
+              <div ng-show="points != null">
+                <p><label>Points: <input type="number" ng-model="points" ng-value="points" ng-disabled="checkRights()"
+                                     ng-change="changePoints(points)"/></label></p>
+            </div>
+                </div>
+            <div ng-show="showHidden">
+            <p><label>Points: <input type="number" ng-model="points" ng-value="points" ng-disabled="checkRights()"
+                                     ng-change="changePoints(points)"/></label></p>
+                </div>
+
     <span class="fulldiv">
         <ul class="comments">
             <li ng-repeat="comment in comments">
@@ -31,7 +42,7 @@
 
     </span>
     <div ng-show="showHidden">
-        <textarea placeholder="Add comment" ng-model="newComment" ></textarea>
+        <textarea placeholder="Add comment" ng-model="newComment" focus-me="focusInput"></textarea>
         <div>
             <form class="form-inline adjustAnnForm">
                 <div class="form-group">
@@ -51,13 +62,18 @@
         <button class="saveChanges timButton" ng-show="checkIfChanged()" ng-click="saveChanges()">Save changes
         </button>
     </span>
-    <div ng-show="showHidden">
+        <div ng-show="showHidden">
         <span class="annDelAnnotation" title="Delete annotation"
                      ng-class="['delAnnotation', 'float-right', 'glyphicon', 'glyphicon-trash', 'clickable-icon', {hide: comments.length > 1} ]"
                      ng-hide="checkRights()"
 
                      ng-click="deleteAnnotation()"></span>
         </div>
+         <div class="annotationVisibleText" ng-hide="showHidden">
+            {{ visible_options.names[visible_options.value - 1] }}
+        </div>
+    </div>
+
 </span></span><!--
 Highlighted text--><span ng-click="toggleAnnotation();showHidden=0" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
 {neutral: points == 0, negative: points < 0, positive: points > 0}]" ng-transclude="true"></span>

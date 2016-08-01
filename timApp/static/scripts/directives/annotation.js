@@ -16,7 +16,7 @@
  */
 
 /* Directive for marking */
-timApp.directive("annotation", ['$window', function ($window) {
+timApp.directive("annotation",['$window', function ($window, $timeout) {
     "use strict";
     var console = $window.console;
     return {
@@ -34,10 +34,11 @@ timApp.directive("annotation", ['$window', function ($window) {
             //email: '@',
             timesince: '@',
             creationtime: '@',
-            velp: '@'
+            velp: '@',
+            trigger: '=focusMe'
         },
 
-        link: function (scope, element, compile) {
+        link: function (scope, element) {
             scope.newComment = "";
             scope.velpElement = null;
 
@@ -47,6 +48,7 @@ timApp.directive("annotation", ['$window', function ($window) {
                 "values": [1, 2, 3, 4],
                 "names": ["Just me", "Document owner", "Teachers", "Everyone"]
             };
+
 
             // Original visibility, or visibility in session
             // TODO: origin visibility
@@ -174,6 +176,16 @@ timApp.directive("annotation", ['$window', function ($window) {
                     return true;
                 return false;
             };
+            //TODO: not working
+            scope.$watch('trigger', function(value) {
+                if (value === "true") {
+                    console.log('trigger',value);
+                    $timeout(function () {
+                        element[0].focus();
+                        scope.trigger = false;
+                    });
+                }
+            });
 
             setTimeout(function(){
                 if (scope.show) scope.updateVelpZIndex();
