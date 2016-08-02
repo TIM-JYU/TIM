@@ -96,7 +96,11 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
              * Focus comment field.
              */
             scope.focusTextarea =function(){
-                alert("focus");
+               return true;
+            };
+
+            scope.isThisNewAnnotation = function() {
+                return true;
             };
 
             /**
@@ -183,7 +187,6 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     return true;
                 return false;
             };
-
 
             setTimeout(function(){
                 if (scope.show) scope.updateVelpZIndex();
