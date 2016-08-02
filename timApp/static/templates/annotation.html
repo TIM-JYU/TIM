@@ -1,4 +1,4 @@
-<!-- Pop over element --><span class="annotation-element" ><span  ng-init="showHidden=0" ng-show="show" ng-click="updateVelpZIndex()"
+<!-- Pop over element --><span class="annotation-element" ><span  ng-init="showHidden=false" ng-show="show" ng-click="updateVelpZIndex()"
                                                                 ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]"
                                                                 >
     <span class="fulldiv">
@@ -9,12 +9,12 @@
         </span>
         <span class="div-10">
             <span title="Close" class="float-right glyphicon glyphicon-remove clickable-icon closeAnn"
-                  ng-click="toggleAnnotation();showHidden=0"></span>
+                  ng-click="toggleAnnotation();showHidden=false"></span>
         </span>
     </span>
 
 
-        <div ng-mouseenter="showHidden=1; focusInput=true" >
+        <div ng-mouseenter="showHidden=true;focusTextarea()">
             <div ng-hide="showHidden">
               <div ng-show="points != null">
                 <p><label>Points: <input type="number" ng-model="points" ng-value="points" ng-disabled="checkRights()"
@@ -75,5 +75,5 @@
     </div>
 
 </span></span><!--
-Highlighted text--><span ng-click="toggleAnnotation();showHidden=0" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
+Highlighted text--><span ng-click="toggleAnnotation();showHidden=false" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
 {neutral: points == 0, negative: points < 0, positive: points > 0}]" ng-transclude="true"></span>

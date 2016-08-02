@@ -70,6 +70,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 }
             };
 
+
             /**
              * Update annotation z-index attribute.
              */
@@ -90,6 +91,12 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             scope.showAnnotation = function () {
                 scope.show = true;
                 scope.updateVelpZIndex();
+            };
+            /**
+             * Focus comment field.
+             */
+            scope.focusTextarea =function(){
+                alert("focus");
             };
 
             /**
@@ -176,16 +183,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     return true;
                 return false;
             };
-            //TODO: not working
-            scope.$watch('trigger', function(value) {
-                if (value === "true") {
-                    console.log('trigger',value);
-                    $timeout(function () {
-                        element[0].focus();
-                        scope.trigger = false;
-                    });
-                }
-            });
+
 
             setTimeout(function(){
                 if (scope.show) scope.updateVelpZIndex();
