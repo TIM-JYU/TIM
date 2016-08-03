@@ -915,7 +915,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         element.setAttribute("email", annotation.email);
         element.setAttribute("visibleto", annotation.visible_to);
         element.setAttribute("show", show);
-        element.setAttribute("newvelp", annotation.newvelp)
         if (typeof annotation.reason !== "undefined")
             element.setAttribute("ismargin", true);
         else

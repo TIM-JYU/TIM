@@ -38,10 +38,11 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             trigger: '=focusMe'
         },
 
-        link: function (scope, element) {
+        link: function (scope, element, elem, attr) {
             scope.newComment = "";
             scope.velpElement = null;
-
+            scope.ctrlDown = false;
+            scope.ctrlKey = 17;
             scope.visible_options = {
                 "type": "select",
                 "value": scope.visibleto,
@@ -187,6 +188,36 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     return true;
                 return false;
             };
+            /**
+             * Detect cntr-S and cntr-Enter on textarea
+             * @returns {boolean}
+             */
+            scope.keyDownFunc = function (event) {
+                 if (event.keyCode === scope.ctrlKey) {
+                     scope.ctrlDown = true;
+                 }
+                if (scope.ctrlDown && (String.fromCharCode(event.which).toLowerCase() === 's' || event.keyCode === 13 )) {
+                    event.preventDefault();
+                    scope.ctrlDown = false;
+                    if (scope.checkIfChanged()){
+                        scope.saveChanges();
+                    } else {
+                        scope.toggleAnnotation();
+                    }
+
+                }
+		    };
+            scope.keyUpFunc = function (event) {
+                 if (event.keyCode === scope.ctrlKey) {
+                     scope.ctrlDown = false;
+                 }
+		    };
+
+           scope.$on('annotation', function(e, name) {
+                if(name === attr.focusOn) {
+                    elem[0].focus();
+                }
+            });
 
             setTimeout(function(){
                 if (scope.show) scope.updateVelpZIndex();
