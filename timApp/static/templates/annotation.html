@@ -1,6 +1,6 @@
 <!-- Pop over element --><span class="annotation-element"><span   ng-init="showHidden=true" ng-show="show" ng-click="updateVelpZIndex()"
                                                                 ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]"
-                                                                >
+                                                                ng-keydown="keyDownFunc($event)" ng-keyup="keyUpFunc($event)">
     <span class="fulldiv">
         <span class="div-90 annTopSection">
             <p><span class="annHeader"><strong>{{ velp }}</strong></span></p>
@@ -42,7 +42,7 @@
 
     </span>
     <div ng-show="showHidden" >
-        <textarea placeholder="Add comment" ng-model="newComment" autofocus ng-keydown=" keyDownFunc($event)" ng-keyup=" keyUpFunc($event)" focus-on="focusMe"></textarea>
+        <textarea placeholder="Add comment" ng-model="newComment" autofocus  focus-on="focusMe"></textarea>
         <div>
             <form class="form-inline adjustAnnForm">
                 <div class="form-group">

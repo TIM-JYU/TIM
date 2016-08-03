@@ -35,7 +35,8 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             timesince: '@',
             creationtime: '@',
             velp: '@',
-            trigger: '=focusMe'
+            trigger: '=focusMe',
+            newannotation: '=?'
         },
 
         link: function (scope, element, elem, attr) {
@@ -49,6 +50,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 "values": [1, 2, 3, 4],
                 "names": ["Just me", "Document owner", "Teachers", "Everyone"]
             };
+            scope.newannotation = true;
 
 
             // Original visibility, or visibility in session
@@ -204,7 +206,6 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     } else {
                         scope.toggleAnnotation();
                     }
-
                 }
 		    };
             scope.keyUpFunc = function (event) {
@@ -213,9 +214,10 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                  }
 		    };
 
-           scope.$on('annotation', function(e, name) {
-                if(name === attr.focusOn) {
-                    elem[0].focus();
+           scope.$watch('newannotation', function(value) {
+                if(value) {
+                    element.find('textarea').focus();
+                    scope.newannotation = false;
                 }
             });
 
