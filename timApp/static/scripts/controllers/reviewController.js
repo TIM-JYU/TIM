@@ -404,6 +404,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Delete annotation
      * TODO: Make query to database
      * @param id annotation id
+     */
+    /**
+     * Change annotation points
      * @param points annotation points
      */
     $scope.changeAnnotationPoints = function (id, points) {
@@ -415,6 +418,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
     };
 
+    /**
+     * Add comment
+     * @param id name comment
+     */
      $scope.addComment = function (id, name, comment) {
         for (var i = 0; i < $scope.annotations.length; i++) {
             if ($scope.annotations[i].id === id) {
@@ -428,6 +435,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             }
         }
     };
+
+    /**
+     * Change visibility
+     * @param id visibility
+     */
     $scope.changeVisibility = function (id, visiblity) {
         for (var i = 0; i < $scope.annotations.length; i++) {
             if ($scope.annotations[i].id === id) {
@@ -935,7 +947,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         try {
             var annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
             angular.element(annotationElement).isolateScope().showAnnotation();
+            if (annotation.parentNode.classname === "notes") {
+                var abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
+                abl.isolateScope().loadAnswerBrowser();
+            }
             scrollToElement(annotationElement);
+
         } catch (e) {
             // Find answer browser and isolate its scope
             // set answer id -> change answer to that
@@ -962,7 +979,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                         scrollToElement(annotationElement);
                         console.log(ab);
                     }, 500);
-                }, 100);
+                }, 300);
             }
         }
     };

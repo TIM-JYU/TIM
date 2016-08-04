@@ -35,11 +35,11 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             timesince: '@',
             creationtime: '@',
             velp: '@',
-            trigger: '=focusMe',
-            newannotation: '=?'
+            newannotation: '@',
+            showHidden: '@'
         },
 
-        link: function (scope, element, elem, attr) {
+        link: function (scope, element) {
             scope.newComment = "";
             scope.velpElement = null;
             scope.ctrlDown = false;
@@ -50,7 +50,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 "values": [1, 2, 3, 4],
                 "names": ["Just me", "Document owner", "Teachers", "Everyone"]
             };
-            scope.newannotation = true;
+            scope.newannotation = false;
 
 
             // Original visibility, or visibility in session
@@ -92,7 +92,10 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
              * Show annotation, used in summary
              */
             scope.showAnnotation = function () {
+                scope.showHidden = false;
+                scope.newannotation = false;
                 scope.show = true;
+
                 scope.updateVelpZIndex();
             };
             /**
@@ -102,9 +105,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                return true;
             };
 
-            scope.isThisNewAnnotation = function() {
-                return true;
-            };
+
 
             /**
              * Delete selected annotation. Queries parent scope.
@@ -218,6 +219,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 if(value) {
                     element.find('textarea').focus();
                     scope.newannotation = false;
+                    console.log("focus on new annotation");
                 }
             });
 

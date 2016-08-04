@@ -1,4 +1,4 @@
-<!-- Pop over element --><span class="annotation-element"><span   ng-init="showHidden=true" ng-show="show" ng-click="updateVelpZIndex()"
+<!-- Pop over element --><span class="annotation-element"><span   ng-init="showHidden=newannotation" ng-show="show" ng-click="updateVelpZIndex()"
                                                                 ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]"
                                                                 ng-keydown="keyDownFunc($event)" ng-keyup="keyUpFunc($event)">
     <span class="fulldiv">
@@ -17,8 +17,7 @@
         <div ng-mouseenter="showHidden=true">
             <div ng-hide="showHidden">
               <div ng-show="points != null">
-                <p><label>Points: <input type="number" ng-model="points" ng-value="points" ng-disabled="checkRights()"
-                                     ng-change="changePoints(points)"/></label></p>
+                <p><label>Points: {{ points }}</label></p>
             </div>
                 </div>
             <div ng-show="showHidden">
@@ -42,7 +41,7 @@
 
     </span>
     <div ng-show="showHidden" >
-        <textarea placeholder="Add comment" ng-model="newComment" autofocus  focus-on="focusMe"></textarea>
+        <textarea placeholder="Add comment" ng-model="newComment" ></textarea>
         <div>
             <form class="form-inline adjustAnnForm">
                 <div class="form-group">
