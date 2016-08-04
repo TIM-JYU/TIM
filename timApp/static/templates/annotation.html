@@ -23,7 +23,7 @@
             <div ng-show="showHidden">
             <p ng-hide="checkRights()"><label>Points: <input type="number" ng-model="points" ng-value="points" ng-disabled="checkRights()"
                                      ng-change="changePoints(points)"/></label></p>
-             <p ng-show="checkRights()" ng-hide="points == null"><label>Points:  {{ points }}</label></p>
+             <p ng-show="checkRights()" ><label ng-hide="points == null">Points:  {{ points }}</label></p>
             </div>
 
     <span class="fulldiv">
@@ -52,7 +52,10 @@
                         <select ng-model="visible_options.value" ng-disabled="checkRights()"
                             ng-options="v as visible_options.names[v-1] for v in visible_options.values">
                         </select>
-
+                        <div ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
+                         uib-popover="'Just me' means that the annotation is visible only to yourself. 'Document owner' refers to the person or group who has been named as the document owner. 'Teachers' refers to the users that have teacher access to this document. 'Everyone' means that the annotation is visible to everyone who can view the assessed content."
+                         popover-placement="left">
+                        </div>
                     </div>
 
                     <label ng-show="checkRights()" class="annotationVisibleText">
