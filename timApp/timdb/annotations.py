@@ -276,7 +276,8 @@ class Annotations(TimDbBase):
                         annotation.hash_start,
                         annotation.hash_end,
                         annotation.element_path_start,
-                        annotation.element_path_end
+                        annotation.element_path_end,
+                        UserAnswer.user_id
                       FROM annotation
                         INNER JOIN velpversion ON velpversion.id = annotation.velp_version_id
                         INNER JOIN velpcontent ON velpcontent.version_id = annotation.velp_version_id

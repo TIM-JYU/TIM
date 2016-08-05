@@ -941,17 +941,17 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Annotation to be showed, despite the name...
      * @param annotation - Annotatin to be showed.
      */
-    $scope.toggleAnnotation = function (annotation) {
+    $scope.toggleAnnotation = function (annotation, user) {
         var parent = document.getElementById(annotation.coord.start.par_id);
 
         try {
-            var annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
-            angular.element(annotationElement).isolateScope().showAnnotation();
-            if (annotation.parentNode.classname === "notes") {
-                var abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
-                abl.isolateScope().loadAnswerBrowser();
-            }
-            scrollToElement(annotationElement);
+                var annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
+                angular.element(annotationElement).isolateScope().showAnnotation();
+                if (annotation.parentNode.classname === "notes") {
+                    var abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
+                    abl.isolateScope().loadAnswerBrowser();
+                }
+                scrollToElement(annotationElement);
 
         } catch (e) {
             // Find answer browser and isolate its scope
@@ -964,6 +964,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 if (typeof ab === UNDEFINED) {
                     var abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
                     abl.isolateScope().loadAnswerBrowser();
+                }
+                if (this.selectedUser.id !== annotation.user_id){
+                    for (var i = 0; i < this.users.length; i++) {
+                        if (this.users[i].id === annotation.user_id) {
+                             $scope.changeUser(this.users[i]);
+                            break;
+                        }
+                    }
+
                 }
 
                 setTimeout(function () {

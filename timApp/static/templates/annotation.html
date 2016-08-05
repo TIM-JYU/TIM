@@ -14,7 +14,7 @@
     </span>
 
 
-        <div ng-mouseenter="showHidden=true">
+        <div ng-mouseenter="showHidden=true;updateVelpZIndex()">
             <div ng-hide="showHidden">
               <div ng-show="points != null">
                 <p><label>Points: {{ points }}</label></p>
