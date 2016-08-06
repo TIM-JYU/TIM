@@ -44,6 +44,7 @@ class TimServer(http.server.BaseHTTPRequestHandler):
         # print("do_GET ==================================================")
         if self.path.find('/reqs') >= 0: return self.do_reqs()
         if self.path.find('/favicon.ico') >= 0: return self.send_response(404)
+        if self.path.find('/template') >= 0: return self.send_text(self.do_template(get_params(self)), "text/plain")
         fname = self.path.split("?")[0]
         if fname.find('.css') >= 0: return self.send_text_file(fname, "css", "text/css")
         if fname.find('.js') >= 0: return self.send_text_file(fname, "js", "application/javascript")
@@ -56,7 +57,7 @@ class TimServer(http.server.BaseHTTPRequestHandler):
         This may be a f.ex a request single html-plugin or multiple plugins
         :return: nothing
         """
-        # print("do_POST =================================================")
+        # print("do_POST =================================================")   
         if self.path.find('/multihtml') < 0: return self.do_all(post_params(self))
 
         print("do_POST MULTIHML ==========================================")
@@ -110,6 +111,17 @@ class TimServer(http.server.BaseHTTPRequestHandler):
         do_headers(self, content_type)
         return self.wout(file_to_string(ftype + "/" + fname))
 
+    def send_text(self, txt: str, content_type: str):
+        """
+        Sends a txt to server 
+        :param txt: text to send
+        :param content_type: files_content type
+        :return: nothing
+        """
+        # fname = re.sub(".*/", "", name)
+        do_headers(self, content_type)
+        return self.wout(txt) 
+
     def get_html(self, query: QueryParams) -> str:
         """
         Return the html for this query. Params are dumbed as hexstring to avoid problems
@@ -136,6 +148,18 @@ class TimServer(http.server.BaseHTTPRequestHandler):
         result_json = self.get_reqs_result()
         result_str = json.dumps(result_json)
         return self.wout(result_str)
+
+    def do_template(self,query: QueryParams):
+        """
+        Gets a template
+        :type query: QueryParams
+        :rtype : str
+        :param query: get or put params
+        :return: template result as json
+        """
+        tempfile = query.get_param("file", "")
+        tidx = query.get_param("idx", "0")
+        return get_template('templates', tidx, tempfile) 
 
     def do_all(self, query: QueryParams):
         """
