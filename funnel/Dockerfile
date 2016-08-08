@@ -5,10 +5,12 @@
 FROM ubuntu
 MAINTAINER tomi.karppinen@jyu.fi
 
-# Set locale
-RUN locale-gen en_US.utf8
-RUN dpkg-reconfigure locales
-ENV LC_ALL en_US.utf8
+# Configure timezone and locale
+run locale-gen en_US.UTF-8
+env LANG en_US.UTF-8
+env LANGUAGE en_US:en
+env LC_ALL en_US.UTF-8
+run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
 
 # Install everything we need
 RUN apt-get update
