@@ -203,11 +203,14 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             if (!showInPlace || placeInfo.start.offset === null) {
                 addAnnotationToElement(par, annotations[i], false, "Added as margin annotation");
+               // addAnnotationMetaElement(parent.n.parentElement,annotations[i],false);
             } else {
                 var range = document.createRange();
                 range.setStart(element, placeInfo.start.offset);
                 range.setEnd(element, placeInfo.end.offset);
                 $scope.addAnnotationToCoord(range, annotations[i], false);
+                addAnnotationToElement(par, annotations[i], false, "Added as margin annotation");
+                //addAnnotationMetaElement(parent.n.parentElement,annotations[i],true);
             }
 
         }
@@ -265,6 +268,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
 
         $compile(span)($scope); // Gives error [$compile:nonassign]
+        addAnnotationMetaElement(parent.n.parentElement, annotation,true);
     };
 
     /**
@@ -284,6 +288,31 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         console.log(reason);
         $compile(span)($scope); // Gives error [$compile:nonassign]
     };
+    /**
+     * Adds meta annotation. Puts to paragraph margin link to main
+     * @param annotation
+     * @param show -
+     */
+    var addAnnotationMetaElement = function (el, annotation, show){
+        var element = document.createElement("span");
+
+         element.setAttribute("annotationmeta", "");
+
+        var velp_data = $scope.getVelpById(annotation.velp);
+
+        var velp_content;
+
+        if (velp_data !== null) {
+            velp_content = velp_data.content;
+        } else {
+            velp_content = annotation.content;
+        }
+        element.setAttribute("show", show);
+        var text = document.createTextNode("\u00A0" + annotation.content + "\u00A0");
+        element.appendChild(text);
+        addElementToParagraphMargin(el, element);
+        $compile(element)($scope);
+    }
 
     /**
      * Adds element to paragraph margin.
@@ -927,7 +956,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         element.setAttribute("email", annotation.email);
         element.setAttribute("visibleto", annotation.visible_to);
         element.setAttribute("show", show);
-        element.setAttribute("newannotation", annotation.newannotation)
+        element.setAttribute("newannotation", annotation.newannotation);
         if (typeof annotation.reason !== "undefined")
             element.setAttribute("ismargin", true);
         else
@@ -941,7 +970,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Annotation to be showed, despite the name...
      * @param annotation - Annotatin to be showed.
      */
-    $scope.toggleAnnotation = function (annotation, user) {
+    $scope.toggleAnnotation = function (annotation) {
         var parent = document.getElementById(annotation.coord.start.par_id);
 
         try {

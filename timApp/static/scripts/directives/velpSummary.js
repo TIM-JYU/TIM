@@ -28,9 +28,9 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
     var console = $window.console;
     $scope.settings = {selectedAll: false};
 
-    $scope.toggleAnnotation = function (annotation, user) {
+    $scope.toggleAnnotation = function (annotation) {
         console.log("Annotation");
-        $scope.$parent.toggleAnnotation(annotation, user);
+        $scope.$parent.toggleAnnotation(annotation);
     };
 
     /**

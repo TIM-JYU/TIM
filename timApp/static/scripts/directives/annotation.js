@@ -67,9 +67,13 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
              * Toggle annotation visibility
              */
             scope.toggleAnnotation = function () {
-                scope.show = !scope.show;
-                if (scope.show) {
-                    scope.updateVelpZIndex();
+                if (false){// FIX this scope.$parent.className === "notes" && element.velpElement.parent().className ===  "notes" && scope.$parent.n.parentElement.className ===  "notes"parent.n.parentElement
+                    scope.$parent.toggleAnnotation();
+                } else {
+                    scope.show = !scope.show;
+                    if (scope.show) {
+                        scope.updateVelpZIndex();
+                    }
                 }
             };
 

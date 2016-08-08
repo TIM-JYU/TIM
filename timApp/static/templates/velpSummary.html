@@ -8,9 +8,9 @@
                 <th class="summSecColumn">Annotation</th>
                 <th class="summThiColumn">Points</th>
             </tr>
-            <tr ng-repeat="a in annotations | orderBy:'creationtime' | filter: user_id == selectedUser.id">
+            <tr ng-repeat="a in annotations | orderBy:'creationtime'">
                 <!--<td class="summCheckbox"><input type="checkbox" ng-model="a.selected"></td> See comment above^-->
-                <td class="summSecColumn"><a ng-click="toggleAnnotation(a)">{{ a.content }}</a></td>
+                <td class="summSecColumn"><a ng-click="toggleAnnotation()">{{ a.content }}</a></td>
                 <td class="summThiColumn"><span>{{ a.points }}</span></td>
             </tr>
             <tr>
