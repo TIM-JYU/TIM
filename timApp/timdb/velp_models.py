@@ -152,7 +152,7 @@ class VelpLabel(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'velplabel'
     id = db.Column(db.Integer, primary_key=True)
-    language_id = db.Column(db.Text)
+    language_id = db.Column(db.Text, primary_key=True)
     content = db.Column(db.Text)
 
 

@@ -404,6 +404,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Delete annotation
      * TODO: Make query to database
      * @param id annotation id
+     */
+    /**
+     * Change annotation points
      * @param points annotation points
      */
     $scope.changeAnnotationPoints = function (id, points) {
@@ -415,6 +418,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
     };
 
+    /**
+     * Add comment
+     * @param id name comment
+     */
      $scope.addComment = function (id, name, comment) {
         for (var i = 0; i < $scope.annotations.length; i++) {
             if ($scope.annotations[i].id === id) {
@@ -428,6 +435,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             }
         }
     };
+
+    /**
+     * Change visibility
+     * @param id visibility
+     */
     $scope.changeVisibility = function (id, visiblity) {
         for (var i = 0; i < $scope.annotations.length; i++) {
             if ($scope.annotations[i].id === id) {
@@ -624,7 +636,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             timesince: "just now",
             creationtime: "now",
             coord: {},
-            comments: []
+            comments: [],
+            newannotation: true
         };
 
 
@@ -914,6 +927,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         element.setAttribute("email", annotation.email);
         element.setAttribute("visibleto", annotation.visible_to);
         element.setAttribute("show", show);
+        element.setAttribute("newannotation", annotation.newannotation)
         if (typeof annotation.reason !== "undefined")
             element.setAttribute("ismargin", true);
         else
@@ -927,13 +941,18 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Annotation to be showed, despite the name...
      * @param annotation - Annotatin to be showed.
      */
-    $scope.toggleAnnotation = function (annotation) {
+    $scope.toggleAnnotation = function (annotation, user) {
         var parent = document.getElementById(annotation.coord.start.par_id);
 
         try {
-            var annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
-            angular.element(annotationElement).isolateScope().showAnnotation();
-            scrollToElement(annotationElement);
+                var annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
+                angular.element(annotationElement).isolateScope().showAnnotation();
+                if (annotation.parentNode.classname === "notes") {
+                    var abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
+                    abl.isolateScope().loadAnswerBrowser();
+                }
+                scrollToElement(annotationElement);
+
         } catch (e) {
             // Find answer browser and isolate its scope
             // set answer id -> change answer to that
@@ -945,6 +964,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 if (typeof ab === UNDEFINED) {
                     var abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
                     abl.isolateScope().loadAnswerBrowser();
+                }
+                if (this.selectedUser.id !== annotation.user_id){
+                    for (var i = 0; i < this.users.length; i++) {
+                        if (this.users[i].id === annotation.user_id) {
+                             $scope.changeUser(this.users[i]);
+                            break;
+                        }
+                    }
+
                 }
 
                 setTimeout(function () {
@@ -960,7 +988,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                         scrollToElement(annotationElement);
                         console.log(ab);
                     }, 500);
-                }, 100);
+                }, 300);
             }
         }
     };

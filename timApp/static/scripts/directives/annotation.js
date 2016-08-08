@@ -16,7 +16,7 @@
  */
 
 /* Directive for marking */
-timApp.directive("annotation", ['$window', function ($window) {
+timApp.directive("annotation",['$window', function ($window, $timeout) {
     "use strict";
     var console = $window.console;
     return {
@@ -34,19 +34,24 @@ timApp.directive("annotation", ['$window', function ($window) {
             //email: '@',
             timesince: '@',
             creationtime: '@',
-            velp: '@'
+            velp: '@',
+            newannotation: '@',
+            showHidden: '@'
         },
 
-        link: function (scope, element, compile) {
+        link: function (scope, element) {
             scope.newComment = "";
             scope.velpElement = null;
-
+            scope.ctrlDown = false;
+            scope.ctrlKey = 17;
             scope.visible_options = {
                 "type": "select",
                 "value": scope.visibleto,
                 "values": [1, 2, 3, 4],
                 "names": ["Just me", "Document owner", "Teachers", "Everyone"]
             };
+            scope.newannotation = false;
+
 
             // Original visibility, or visibility in session
             // TODO: origin visibility
@@ -68,6 +73,7 @@ timApp.directive("annotation", ['$window', function ($window) {
                 }
             };
 
+
             /**
              * Update annotation z-index attribute.
              */
@@ -86,9 +92,20 @@ timApp.directive("annotation", ['$window', function ($window) {
              * Show annotation, used in summary
              */
             scope.showAnnotation = function () {
+                scope.showHidden = false;
+                scope.newannotation = false;
                 scope.show = true;
+
                 scope.updateVelpZIndex();
             };
+            /**
+             * Focus comment field.
+             */
+            scope.focusTextarea =function(){
+               return true;
+            };
+
+
 
             /**
              * Delete selected annotation. Queries parent scope.
@@ -174,6 +191,37 @@ timApp.directive("annotation", ['$window', function ($window) {
                     return true;
                 return false;
             };
+            /**
+             * Detect cntr-S and cntr-Enter on textarea
+             * @returns {boolean}
+             */
+            scope.keyDownFunc = function (event) {
+                 if (event.keyCode === scope.ctrlKey) {
+                     scope.ctrlDown = true;
+                 }
+                if (scope.ctrlDown && (String.fromCharCode(event.which).toLowerCase() === 's' || event.keyCode === 13 )) {
+                    event.preventDefault();
+                    scope.ctrlDown = false;
+                    if (scope.checkIfChanged()){
+                        scope.saveChanges();
+                    } else {
+                        scope.toggleAnnotation();
+                    }
+                }
+		    };
+            scope.keyUpFunc = function (event) {
+                 if (event.keyCode === scope.ctrlKey) {
+                     scope.ctrlDown = false;
+                 }
+		    };
+
+           scope.$watch('newannotation', function(value) {
+                if(value) {
+                    element.find('textarea').focus();
+                    scope.newannotation = false;
+                    console.log("focus on new annotation");
+                }
+            });
 
             setTimeout(function(){
                 if (scope.show) scope.updateVelpZIndex();

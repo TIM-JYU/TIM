@@ -1,5 +1,7 @@
 import copy
 from typing import Optional, List
+
+from tim_app import db
 from timdb.timdbbase import TimDbBase
 from timdb.velp_models import Velp, VelpVersion, VelpLabel
 
@@ -121,8 +123,10 @@ class Velps(TimDbBase):
         :return: id of the new label
         """
 
+        max_id = self.session.query(db.func.max(VelpLabel.id)).scalar() or 0
         vl = VelpLabel(language_id=language_id,
-                       content=content)
+                       content=content,
+                       id=max_id + 1)
         self.session.add(vl)
         self.session.commit()
         return vl.id
