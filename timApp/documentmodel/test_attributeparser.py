@@ -26,6 +26,7 @@ class AttributeParserTest(unittest.TestCase):
         self.check_valid(r'{somekey="\""}', {'somekey': '"'})
         self.check_valid(r'{somekey=\}', {'somekey': '\\'})
         self.check_valid(r'{somekey=\"}', {'somekey': '\\"'})
+        self.check_valid(r'# $\mathbb{Q}$ {a=b}', {'a': 'b'}, expected_index=15)
 
     def test_whitespace(self):
         self.check_valid('  { #asd  }   ', {'taskId': 'asd'}, 2)
