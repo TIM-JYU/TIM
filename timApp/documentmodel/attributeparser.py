@@ -66,15 +66,20 @@ class AttributeParser:
 
     def find_attr_list_start_char(self):
         self.current_pos = 0
+        found_pos = -1
         while self.has_chars():
             curr = self.get_char()
             if curr == self.attr_list_start_char():
-                return True
+                found_pos = self.current_pos
+                continue
             if curr == '\\':
                 if not self.has_chars():
-                    return False
+                    break
                 self.get_char()
-        return False
+        if found_pos < 0:
+            return False
+        self.current_pos = found_pos
+        return True
 
     def try_parse_attr_list_end_char(self):
         if self.current_char() == self.attr_list_end_char():

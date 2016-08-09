@@ -418,10 +418,19 @@ def get_block(doc_id, par_id):
 @app.route("/<plugin>/<path:filename>")
 def plugin_call(plugin, filename):
     try:
-        req = containerLink.call_plugin_resource(plugin, filename)
+        req = containerLink.call_plugin_resource(plugin, filename, request.args)
         return Response(stream_with_context(req.iter_content()), content_type=req.headers['content-type'])
     except PluginException:
         abort(404)
+
+
+@app.route("/echoRequest/<path:filename>")
+def echo_request(filename):
+    def generate():
+        yield 'Request URL: ' + request.url + "\n\n"
+        yield 'Headers:\n\n'
+        yield from (k + ": " + v + "\n" for k, v in request.headers.items())
+    return Response(stream_with_context(generate()), mimetype='text/plain')
 
 
 @app.route("/index/<int:doc_id>")
