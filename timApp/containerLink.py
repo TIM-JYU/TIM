@@ -86,10 +86,10 @@ def call_plugin_multihtml(plugin, plugin_data):
                                headers={'Content-type': 'application/json'})
 
 
-def call_plugin_resource(plugin, filename):
+def call_plugin_resource(plugin, filename, args=None):
     try:
         plug = get_plugin(plugin)
-        request = requests.get(plug['host'] + filename, timeout=5, stream=True)
+        request = requests.get(plug['host'] + filename, timeout=5, stream=True, params=args)
         request.encoding = 'utf-8'
         return request
     except requests.exceptions.Timeout:
