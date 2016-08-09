@@ -16,6 +16,7 @@ CSPLUGIN_NAME = 'csPlugin'
 SVNPLUGIN_NAME = 'showFile'
 HASKELLPLUGIN_NAME = 'haskellplugins2'
 PALIPLUGIN_NAME = 'pali'
+IMAGEXLUGIN_NAME = 'imagex'
 
 
 TIM_HOST = os.environ.get('TIM_HOST', default='http://localhost')
@@ -25,7 +26,7 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
     # so tim can get out of the container and to the plugins,
     # and set PLUGIN_CONNECTIONS = "nginx" in the flask config file
     print("Using nginx for plugins")
-    PLUGINS = {
+    PLUGINS = { 
         "csPlugin":      {"host": TIM_HOST + ":56000/cs/"},
         "taunoPlugin":   {"host": TIM_HOST + ":56000/cs/tauno/"},
         "simcirPlugin":  {"host": TIM_HOST + ":56000/cs/simcir/"},
@@ -37,6 +38,7 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
         "mmcq":          {"host": TIM_HOST + ":58000/"},
         "shortNote":     {"host": TIM_HOST + ":59000/"},
         "graphviz":      {"host": TIM_HOST + ":60000/", "browser": False},
+        "imagex":        {"host": TIM_HOST + ":62000/"},
     }
 else:
     print("Using container network for plugins")
@@ -53,6 +55,7 @@ else:
         "shortNote":     {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
         "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
         # "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"}
+        "imagex":        {"host": "http://" + IMAGEXLUGIN_NAME + ":5000/"}
     }
 
 
