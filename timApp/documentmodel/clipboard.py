@@ -106,22 +106,11 @@ class Clipboard:
             else:
                 shutil.copy(self.get_parreffilename(), self.get_reffilename())
 
-        def delete_from_source(self):
-            pars = self.read(as_ref=True, force_parrefs=True)
-            if pars is None:
-                return
-
-            doc = None
-            for par in pars:
-                if doc is None or doc.doc_id != par['attrs']['rd']:
-                    doc = Document(par['attrs']['rd'])
-                doc.delete_paragraph(par['attrs']['rp'])
-
         def cut_pars(self, doc: Document, par_start: str, par_end: str,
                      area_name: Optional[str] = None) -> List[DocParagraph]:
 
             pars = self.copy_pars(doc, par_start, par_end, area_name, doc, disable_ref=True)
-            self.delete_from_source()
+            doc.delete_section(par_start, par_end)
             self.update_metadata(last_action='cut')
             return pars
 
