@@ -16,11 +16,13 @@ from timdbtest import TimDbTest
 
 
 class DocumentTest(TimDbTest):
-    def init_testdoc(self, doc_id=None):
-        d = Document(doc_id=doc_id)
-        self.assertFalse(d.exists())
+    def init_testdoc(self):
+        try:
+            DocumentTest.init_testdoc.counter += 1
+        except AttributeError:
+            DocumentTest.init_testdoc.counter = 12345
         db = self.get_db()
-        db.documents.create(str(d.doc_id), 0, d.doc_id)
+        d = db.documents.create(str(DocumentTest.init_testdoc.counter), db.users.get_anon_group_id())
         db.close()
         return d
 
@@ -189,30 +191,16 @@ class DocumentTest(TimDbTest):
     def test_document_remove(self):
         free = Document.get_next_free_id()
         db = self.get_db()
-        for i in range(free, free + 5):
-            if i != free + 2:
-                self.init_testdoc(i)
+        docs = [self.init_testdoc() for i in range(1,5)]
 
-        self.assertEqual(free + 5, Document.get_next_free_id())
+        self.assertLess(free, Document.get_next_free_id())
 
         with self.assertRaises(DocExistsError):
-            Document.remove(doc_id=free + 2)
+            Document.remove(doc_id=0)
 
-        db.documents.delete(free + 1)
-        self.assertFalse(Document.doc_exists(doc_id=free + 1))
-        self.assertEqual(free + 5, Document.get_next_free_id())
-
-        db.documents.delete(free + 4)
-        self.assertFalse(Document.doc_exists(doc_id=free + 4))
-        self.assertEqual(free + 4, Document.get_next_free_id())
-
-        db.documents.delete(free)
-        self.assertFalse(Document.doc_exists(doc_id=free))
-        self.assertEqual(free + 4, Document.get_next_free_id())
-
-        db.documents.delete(free + 3)
-        self.assertFalse(Document.doc_exists(doc_id=free + 3))
-        self.assertEqual(free, Document.get_next_free_id())
+        for d in docs:
+            db.documents.delete(d.doc_id)
+            self.assertFalse(Document.doc_exists(doc_id=d.doc_id))
         db.close()
 
     def test_update(self):

@@ -29,8 +29,8 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
         $scope.questionId = args.questionId;
         $scope.questionParId = args.questionParId;
         $scope.isLecturer = args.isLecturer;
-        $scope.json = args.questionJson;
-        $scope.questionTitle = args.questionJson.TITLE;
+        $scope.json = args.questionjson;
+        $scope.questionTitle = args.questionjson.TITLE;
         $scope.askedTime = args.askedTime;
         $scope.clockOffset = args.clockOffset;
         $scope.expl = args.expl;

@@ -1,5 +1,5 @@
 """Answer-related routes."""
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Blueprint
 
@@ -27,9 +27,9 @@ def is_answer_valid(plugin, old_answers, tim_info):
     answer_limit = plugin.answer_limit()
     if answer_limit is not None and (answer_limit <= len(old_answers)):
         return False, 'You have exceeded the answering limit.'
-    if plugin.starttime(default=datetime(1970, 1, 1)) > datetime.now():
+    if plugin.starttime(default=datetime(1970, 1, 1, tzinfo=timezone.utc)) > datetime.now(timezone.utc):
         return False, 'You cannot submit answers yet.'
-    if plugin.deadline(default=datetime.max) < datetime.now():
+    if plugin.deadline(default=datetime.max.replace(tzinfo=timezone.utc)) < datetime.now(timezone.utc):
         return False, 'The deadline for submitting answers has passed.'
     return True, 'ok'
 
@@ -140,6 +140,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             pass
         if not is_teacher and save_answer:
             is_valid, explanation = is_answer_valid(plugin, old_answers, tim_info)
+            points_given_by = None
             if answer_browser_data.get('giveCustomPoints'):
                 custom_points = answer_browser_data.get('points')
                 try:
@@ -147,9 +148,6 @@ def post_answer(plugintype: str, task_id_ext: str):
                 except ValueError:
                     result['error'] = 'Wrong format for custom points.'
                 else:
-                    # Small hack: we differentiate custom points from automatic points by appending a space character
-                    # at the end of the custom points
-                    custom_points += ' '
                     points_min = plugin.user_min_points()
                     points_max = plugin.user_max_points()
                     if points_min is None or points_max is None:
@@ -157,13 +155,15 @@ def post_answer(plugintype: str, task_id_ext: str):
                     elif not (points_min <= custom_points_float <= points_max):
                         result['error'] = 'Points must be in range [{},{}]'.format(points_min, points_max)
                     else:
-                        points = custom_points
+                        points_given_by = getCurrentUserGroup()
+                        points = custom_points_float
             result['savedNew'], saved_answer_id = timdb.answers.saveAnswer([current_user_id],
                                                           task_id,
                                                           json.dumps(save_object),
                                                           points,
                                                           tags,
-                                                          is_valid)
+                                                          is_valid,
+                                                          points_given_by)
             if not is_valid:
                 result['error'] = explanation
         elif save_teacher:
@@ -172,12 +172,15 @@ def post_answer(plugintype: str, task_id_ext: str):
             points = answer_browser_data.get('points', points)
             if points == "":
                 points = None
+            else:
+                points = float(points)
             result['savedNew'], saved_answer_id = timdb.answers.saveAnswer(users,
-                                                          task_id,
-                                                          json.dumps(save_object),
-                                                          points,
-                                                          tags,
-                                                          valid=True)
+                                                                           task_id,
+                                                                           json.dumps(save_object),
+                                                                           points,
+                                                                           tags,
+                                                                           valid=True,
+                                                                           points_given_by=getCurrentUserGroup())
         else:
             result['savedNew'], saved_answer_id = False, None
         if result['savedNew'] and upload is not None:

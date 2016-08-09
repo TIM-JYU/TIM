@@ -2,10 +2,10 @@
 import os
 import re
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 
 import yaml
-from typing import List
+from typing import List, Optional
 from yaml import CLoader
 
 from htmlSanitize import sanitize_html
@@ -16,13 +16,15 @@ def datestr_to_relative(dstr):
     return date_to_relative(datetime.strptime(dstr, '%Y-%m-%d %H:%M:%S')) if dstr else ''
 
 
-def date_to_relative(d):
+def date_to_relative(d: Optional[datetime]):
     """Converts the given datetime object to relative string representation, such as "2 days ago", etc.
 
     :param d: The datetime object to convert.
     :return: A string representing the given date relative to current time.
     """
-    diff = datetime.now() - d
+    if d is None:
+        return None
+    diff = datetime.now(timezone.utc) - d
     s = diff.seconds
     if diff.days > 7 or diff.days < 0:
         return d.strftime('%d %b %y')

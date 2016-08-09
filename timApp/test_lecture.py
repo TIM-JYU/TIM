@@ -1,4 +1,7 @@
 import datetime
+from datetime import timezone
+
+import dateutil.parser
 
 from timroutetest import TimRouteTest
 
@@ -9,31 +12,31 @@ class LectureTest(TimRouteTest):
         doc = self.create_doc(initial_par='testing lecture')
         db = self.get_db()
         name = db.documents.get_first_document_name(doc.doc_id)
-        current_time = datetime.datetime.now()
+        current_time = datetime.datetime.now(tz=timezone.utc)
         time_format = '%H:%M:%S'
         current_time_str = current_time.strftime(time_format)
-        start_time_str = (current_time - datetime.timedelta(minutes=15)).strftime("%Y-%m-%d %H:%M")
-        end_time_str = (current_time + datetime.timedelta(hours=2)).strftime("%Y-%m-%d %H:%M")
+        start_time = (current_time - datetime.timedelta(minutes=15))
+        end_time = (current_time + datetime.timedelta(hours=2))
         lecture_code = 'test lecture'
         resp = self.app.post('/createLecture', query_string=dict(doc_id=doc.doc_id,
-                                                                 end_date=end_time_str,
+                                                                 end_date=end_time,
                                                                  lecture_code=lecture_code,
                                                                  max_students=50,
                                                                  password='1234',
-                                                                 start_date=start_time_str))
+                                                                 start_date=start_time))
         j = self.assertResponseStatus(resp, 200, return_json=True)
         lecture_id = j['lectureId']
         self.assertIsInstance(lecture_id, int)
         j = self.get('/checkLecture', as_json=True, expect_status=200, query_string=dict(doc_id=doc.doc_id))
 
         self.assertDictEqual({'doc_name': name,
-                              'endTime': end_time_str,
+                              'endTime': end_time.isoformat(),
                               'isInLecture': True,
                               'isLecturer': True,
                               'lectureCode': lecture_code,
                               'lectureId': lecture_id,
                               'lecturers': [],  # TODO This is probably wrong, should have one element
-                              'startTime': start_time_str,
+                              'startTime': start_time.isoformat(),
                               'students': [],
                               'useQuestions': True,
                               'useWall': True}, j)
@@ -61,7 +64,7 @@ class LectureTest(TimRouteTest):
 
         msg_id = j['id']
         self.assertIsInstance(msg_id, int)
-        msg_datetime = datetime.datetime.strptime(j['time'], "%Y-%m-%d %H:%M:%S.%f")
+        msg_datetime = dateutil.parser.parse(j['time'])
         msg_time = msg_datetime.strftime(time_format)
         resp = self.get('/getUpdates',
                         as_json=True,

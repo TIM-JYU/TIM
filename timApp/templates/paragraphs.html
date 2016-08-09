@@ -205,10 +205,10 @@
                         <a class="username" title="{{ note.real_name }}" href="mailto:{{ note.user_email }}">
                             {{ note.user_name }}</a>
                     {% endif %}
-                    <span class="timestamp" title="{{ note.created }}">{{ note.created|datestr_to_relative }}</span>
+                    <span class="timestamp" title="{{ note.created }}">{{ note.created|date_to_relative }}</span>
                     {% if note.modified %}
                         <span class="timestamp" title="{{ note.modified }}">
-                            (edited {{ note.modified|datestr_to_relative }})
+                            (edited {{ note.modified|date_to_relative }})
                         </span>
                     {% endif %}
                 </div>

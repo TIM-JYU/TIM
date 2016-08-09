@@ -27,11 +27,11 @@
         </div>
         <div class="lectureSection" ng-show="lectureSettings.inLecture">
             <h1 ng-bind="lectureName"></h1>
+            {% raw %}
+            <p>Started: {{ lectureStartTime | timdate }}</p>
 
-            <p ng-bind="lectureStartTime"></p>
-
-            <p ng-bind="lectureEndTime"></p>
-
+            <p>Ends: {{ lectureEndTime | timdate }}</p>
+            {% endraw %}
             <div id="inLectureIconSection">
                 {{ lecbtn('log-out', 'Leave this lecture', 'leaveLecture()') }}
                 {{ lecbtn('stop', 'End this lecture', 'endLecture()', 'canStop') }}
@@ -47,7 +47,7 @@
 
                 <div ng-show="futureLectures.length > 0">
                     <select ng-model="futureLecture"
-                            ng-options="lecture.lecture_code + ' ' + lecture.lecture_start for lecture in futureLectures">
+                            ng-options="lecture.lecture_code + ' ' + (lecture.lecture_start | timdate) for lecture in futureLectures">
                     </select>
                 </div>
                 <div class="iconSection" ng-show="futureLectures.length > 0">

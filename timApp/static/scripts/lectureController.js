@@ -621,8 +621,8 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             if ($scope.wallName.length > 30) {
                 $scope.wallName = $scope.wallName.substring(0, 30) + "...";
             }
-            $scope.lectureStartTime = "Started: " + lecture.startTime;
-            $scope.lectureEndTime = "Ends: " + lecture.endTime;
+            $scope.lectureStartTime = lecture.startTime;
+            $scope.lectureEndTime = lecture.endTime;
             $scope.lectureSettings.inLecture = true;
             $scope.lectureId = lecture.lectureId;
             $scope.polling = true;
@@ -728,9 +728,9 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
 
             var dateTime3 = new Date(dateTime2);
 
-            var endTimeDate = dateTime3.getFullYear() + '-' + $scope.leftPadder((dateTime3.getMonth() + 1), 2) + '-' +
-                $scope.leftPadder(dateTime3.getDate(), 2) + ' ' +
-                $scope.leftPadder(dateTime3.getHours(), 2) + ':' + $scope.leftPadder(dateTime3.getMinutes(), 2);
+            var endTimeDate = dateTime3.getUTCFullYear() + '-' + $scope.leftPadder((dateTime3.getUTCMonth() + 1), 2) + '-' +
+                $scope.leftPadder(dateTime3.getUTCDate(), 2) + ' ' +
+                $scope.leftPadder(dateTime3.getUTCHours(), 2) + ':' + $scope.leftPadder(dateTime3.getUTCMinutes(), 2);
 
             console.log(endTimeDate);
             $scope.lectureEndTime = "Ends: " + endTimeDate;
@@ -1117,7 +1117,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             var showPoints = '';
             if (answer.result) showPoints = 'Show points: ';
             $scope.showAnswerWindow = true;
-            var json = JSON.parse(answer.questionJson);
+            var json = JSON.parse(answer.questionjson);
             var expl = {};
             if (answer.expl) {
                 expl = JSON.parse(answer.expl)
@@ -1130,7 +1130,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             $rootScope.$broadcast("setQuestionJson", {
                 result: answer.result,
                 answer: answer.answer,
-                questionJson: json,
+                questionjson: json,
                 askedId: answer.askedId,
                 isLecturer: $scope.isLecturer,
                 askedTime: answer.asked,

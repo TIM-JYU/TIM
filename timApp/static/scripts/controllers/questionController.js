@@ -698,7 +698,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             rowsJson.push(row);
         }
 
-        var questionJson = {
+        var questionjson = {
             'QUESTION': scope.question.question,
             'TITLE': scope.question.title,
             'TYPE': scope.question.type,
@@ -708,9 +708,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             'DATA': {'HEADERS': headersJson, 'ROWS': rowsJson}
         };
 
-        scope.json = questionJson;
+        scope.json = questionjson;
         scope.dynamicAnswerSheetControl.createAnswer();
-        return questionJson;
+        return questionjson;
     };
 
     /**
@@ -718,8 +718,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
      * @memberof module:questionController
      */
     scope.createQuestion = function (ask) {
-        var questionJson = scope.createJson();
-        if (!questionJson) return;
+        var questionjson = scope.createJson();
+        if (!questionjson) return;
         var points = scope.createPoints();
         var expl = scope.createExplanation();
         var doc_id = scope.docId;
@@ -736,11 +736,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
 
         // Without timeout 'timelimit' won't be saved in settings session variable. Thread issue?
-        scope.settings['timelimit'] = questionJson.TIMELIMIT.toString();
+        scope.settings['timelimit'] = questionjson.TIMELIMIT.toString();
         setTimeout(function () {
-            setsetting('timelimit', questionJson.TIMELIMIT.toString());
+            setsetting('timelimit', questionjson.TIMELIMIT.toString());
         }, 1000);
-
+        
         var route = '/postParagraph/';
         if (scope.new_question) {
             route = '/newParagraph/';
@@ -771,6 +771,42 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             scope.showDialog("Could not create question");
             $window.console.log("There was some error creating question to database.");
         });
+/*
+        http({
+            method: 'POST',
+            url: '/addQuestion/',
+            params: {
+                'question_id': scope.question.question_id,
+                'question_title': scope.question.title,
+                'answer': "test", //answerVal,
+                'par_id': par_id,
+                'doc_id': doc_id,
+                'points': points,
+                'expl': JSON.stringify(expl),
+                'questionjson': JSON.stringify(questionjson),
+                'buster': new Date().valueOf()
+            }
+        })
+            .success(function (data) {
+                $window.console.log("The question was successfully added to database");
+                scope.removeErrors();
+                //TODO: This can be optimized to get only the new one.
+                scope.$parent.getQuestions();
+                if (ask) {
+                    scope.json = JSON.parse(data.questionjson);
+                    scope.qId = data.question_id;
+                    scope.$emit('askQuestion', {
+                        "lecture_id": scope.lectureId,
+                        "question_id": scope.qId,
+                        "doc_id": scope.docId,
+                        "json": scope.json
+                    });
+                }
+            }).error(function () {
+                $window.console.log("There was some error creating question to database.");
+            });
+        scope.close();
+*/
     };
 
     /**

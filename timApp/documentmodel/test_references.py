@@ -18,11 +18,11 @@ from timdb.timdbbase import TimDbException
 
 
 class RefTest(TimDbTest):
-    def doc_create(self, db, doc_name, doc_group):
+    def doc_create(self, db, doc_name):
         doc_id = db.documents.get_document_id(doc_name)
         if doc_id is not None:
             db.documents.delete(doc_id)
-        return db.documents.create(doc_name, owner_group_id=doc_group)
+        return db.documents.create(doc_name, owner_group_id=db.users.get_anon_group_id())
 
     def dict_merge(self, a, b):
         c = a.copy()
@@ -38,8 +38,8 @@ class RefTest(TimDbTest):
 
     def init_testdb(self):
         db = self.get_db()
-        self.src_doc = self.doc_create(db, "original", 1)
-        self.ref_doc = self.doc_create(db, "referencing", 2)
+        self.src_doc = self.doc_create(db, "original")
+        self.ref_doc = self.doc_create(db, "referencing")
 
         self.src_par = self.src_doc.add_paragraph("testpar", attrs={"a": "1", "b": "2"},
                                                   properties={"p_a": "a", "p_b": "b"})
@@ -112,7 +112,7 @@ class RefTest(TimDbTest):
         self.assertEqual('', ref_par1.get_markdown())
 
         # Reference to the reference above
-        ref_doc2 = self.doc_create(db, "referencing reference", 3)
+        ref_doc2 = self.doc_create(db, "referencing reference")
         ref_par2 = ref_doc2.add_ref_paragraph(ref_par1)
         self.assertEqual(1, len(ref_doc2))
         self.assertEqual(ref_par2.get_id(), ref_doc2.get_paragraphs()[0].get_id())

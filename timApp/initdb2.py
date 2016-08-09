@@ -7,6 +7,8 @@ import sqlalchemy.exc
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
+from routes.logger import log_info
+from sql.migrate_to_postgre import perform_migration
 from tim_app import app, db
 from timdb import tempdb_models
 from timdb.tim_models import Version, AccessType
@@ -18,23 +20,26 @@ NEWEST_DB_VERSION = 8
 
 
 def postgre_create_database(db_name):
-    engine = sqlalchemy.create_engine("postgresql://docker:docker@postgre:5432/postgres")
+    engine = sqlalchemy.create_engine("postgresql://postgres@postgresql:5432/postgres")
     conn = engine.connect()
     conn.execute("commit")
     try:
         conn.execute("create database " + db_name)
+        return True
     except sqlalchemy.exc.ProgrammingError as e:
         if 'already exists' not in str(e):
             raise e
-    conn.close()
+        return False
+    finally:
+        conn.close()
 
 
-def initialize_temp_database(print_progress=True):
+def initialize_temp_database():
     postgre_create_database('tempdb_' + app.config['TIM_NAME'])
-    tempdb_models.initialize_temp_database(print_progress=print_progress)
+    tempdb_models.initialize_temp_database()
 
 
-def initialize_database(create_docs=True, print_progress=True):
+def initialize_database(create_docs=True):
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
@@ -42,44 +47,43 @@ def initialize_database(create_docs=True, print_progress=True):
     files_root_path = app.config['FILES_PATH']
     Document.default_files_root = files_root_path
     DocParagraph.default_files_root = files_root_path
-    if os.path.exists(db_path):
-        if print_progress:
-            print('{} already exists, no need to initialize'.format(files_root_path))
-        # Even if the db exists, we can still call create_all that will create any nonexisting tables
-        db.create_all(bind='tim_main')
-        return
-    if print_progress:
-        print('initializing the database in {}...'.format(files_root_path), end='')
+    was_created = postgre_create_database(app.config['TIM_NAME'])
+    log_info('Database {} {}.'.format(app.config['TIM_NAME'], 'was created' if was_created else 'exists'))
     timdb = TimDb(db_path=db_path, files_root_path=files_root_path)
     db.create_all(bind='tim_main')
-    sess = db.create_scoped_session()
-    sess.add(AccessType(id=1, name='view'))
-    sess.add(AccessType(id=2, name='edit'))
-    sess.add(AccessType(id=3, name='teacher'))
-    sess.add(AccessType(id=4, name='manage'))
-    sess.add(AccessType(id=5, name='see answers'))
-    sess.add(Version(version_id=NEWEST_DB_VERSION))
-    sess.commit()
-    sess.remove()
-    timdb.users.create_special_usergroups()
-    anon_group = timdb.users.get_anon_group_id()
-    timdb.users.create_user_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
-    timdb.users.create_user_with_group('tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi', is_admin=True)
-    timdb.users.create_user_with_group('testuser1', 'Test user 1', 'test1@example.com', password='test1pass')
-    timdb.users.create_user_with_group('testuser2', 'Test user 2', 'test2@example.com', password='test2pass')
+    sess = timdb.session
+    if sess.query(AccessType).count() > 0:
+        log_info('Initial data already exists, skipping DB initialization.')
+    else:
+        old_db = app.config['OLD_SQLITE_DATABASE']
+        if old_db and os.path.exists(old_db):
+            perform_migration(app.config['OLD_SQLITE_DATABASE'], app.config['DATABASE'])
+            return
+        sess.add(AccessType(id=1, name='view'))
+        sess.add(AccessType(id=2, name='edit'))
+        sess.add(AccessType(id=3, name='teacher'))
+        sess.add(AccessType(id=4, name='manage'))
+        sess.add(AccessType(id=5, name='see answers'))
+        sess.add(Version(version_id=NEWEST_DB_VERSION))
+        sess.commit()
 
-    if create_docs:
-        timdb.documents.create('Testaus 1', anon_group)
-        timdb.documents.create('Testaus 2', anon_group)
-        timdb.documents.import_document_from_file('example_docs/programming_examples.md',
-                                                  'Programming examples',
-                                                  anon_group)
-        timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
-                                                  'Multiple choice plugin example',
-                                                  anon_group)
-    timdb.close()
-    if print_progress:
-        print(' done.')
+        timdb.users.create_special_usergroups()
+        anon_group = timdb.users.get_anon_group_id()
+        timdb.users.create_user_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
+        timdb.users.create_user_with_group('tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi', is_admin=True)
+        timdb.users.create_user_with_group('testuser1', 'Test user 1', 'test1@example.com', password='test1pass')
+        timdb.users.create_user_with_group('testuser2', 'Test user 2', 'test2@example.com', password='test2pass')
+
+        if create_docs:
+            timdb.documents.create('Testaus 1', anon_group)
+            timdb.documents.create('Testaus 2', anon_group)
+            timdb.documents.import_document_from_file('example_docs/programming_examples.md',
+                                                      'Programming examples',
+                                                      anon_group)
+            timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
+                                                      'Multiple choice plugin example',
+                                                      anon_group)
+        log_info('Database initialization done.')
 
 
 def update_database():
@@ -108,18 +112,18 @@ def update_database():
                    7: add_yubikey}
     while ver in update_dict:
         # TODO: Take automatic backup of the db (tim_files) before updating
-        print('Starting update {}'.format(update_dict[ver].__name__))
+        log_info('Starting update {}'.format(update_dict[ver].__name__))
         result = update_dict[ver](timdb)
         if not result:
-            print('Update {} was skipped.'.format(update_dict[ver].__name__))
+            log_info('Update {} was skipped.'.format(update_dict[ver].__name__))
         else:
-            print('Update {} was completed.'.format(update_dict[ver].__name__))
+            log_info('Update {} was completed.'.format(update_dict[ver].__name__))
         timdb.update_version()
         ver = timdb.get_version()
     if ver_old == ver:
-        print('Database is up to date.')
+        log_info('Database is up to date.')
     else:
-        print('Database was updated from version {} to {}.'.format(ver_old, ver))
+        log_info('Database was updated from version {} to {}.'.format(ver_old, ver))
     timdb.close()
 
 

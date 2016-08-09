@@ -7,7 +7,7 @@ from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser, ValidationException, ValidationWarning
 from documentmodel.documentparseroptions import DocumentParserOptions
 from markdownconverter import md_to_html
-from routes import logger
+from routes.logger import log_info
 from routes.notify import notify_doc_owner
 from timdb.timdbbase import TimDbException
 from typing import List
@@ -194,7 +194,7 @@ def modify_paragraph():
     doc_id, md, par_id, par_next_id = verify_json_params('docId', 'text', 'par', 'par_next')
     verify_edit_access(doc_id)
 
-    logger.log_message("Editing file: {}, paragraph {}".format(doc_id, par_id), 'INFO')
+    log_info("Editing file: {}, paragraph {}".format(doc_id, par_id))
     doc = get_newest_document(doc_id)
     if not doc.has_paragraph(par_id):
         abort(400, 'Paragraph not found: ' + par_id)

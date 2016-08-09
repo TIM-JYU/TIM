@@ -1,11 +1,12 @@
 import json
 import os
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from tempfile import mkstemp
 from time import time
 
+import dateutil.parser
 from lxml import etree, html
 from typing import List, Optional, Set, Tuple, Union
 
@@ -685,7 +686,9 @@ class Document:
                 if not line:
                     break
                 try:
-                    log.append(json.loads(line))
+                    entry = json.loads(line)
+                    entry['time'] = dateutil.parser.parse(entry['time']).replace(tzinfo=timezone.utc)
+                    log.append(entry)
                 except ValueError:
                     print("doc id {}: malformed log line: {}".format(self.doc_id, line))
                 lc -= 1
@@ -698,14 +701,19 @@ class Document:
                 if p.get_attr('taskId') == task_id_name:
                     return p
                 if p.is_reference():
-                    for rp in p.get_referenced_pars():
-                        if rp.get_attr('taskId') == task_id_name:
-                            return rp
+                    try:
+                        ref_pars = p.get_referenced_pars()
+                    except TimDbException:  # Ignore invalid references
+                        continue
+                    else:
+                        for rp in ref_pars:
+                            if rp.get_attr('taskId') == task_id_name:
+                                return rp
         return None
 
-    def get_last_modified(self):
+    def get_last_modified(self) -> Optional[datetime]:
         log = self.get_changelog(max_entries=1)
-        return log[0]['time'] if log is not None and len(log) > 0 else ''
+        return log[0]['time'] if log is not None and len(log) > 0 else None
 
     def delete_section(self, area_start, area_end):
         all_par_ids = [par.get_id() for par in self]

@@ -8,6 +8,7 @@ from requests.exceptions import Timeout
 
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from plugin import PluginException
+from routes.logger import log_info
 from tim_app import app
 
 TIM_URL = ""
@@ -24,7 +25,7 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
     # To use this, put your IP in TIM_HOST environment variable
     # so tim can get out of the container and to the plugins,
     # and set PLUGIN_CONNECTIONS = "nginx" in the flask config file
-    print("Using nginx for plugins")
+    log_info("Using nginx for plugins")
     PLUGINS = {
         "csPlugin":      {"host": TIM_HOST + ":56000/cs/"},
         "taunoPlugin":   {"host": TIM_HOST + ":56000/cs/tauno/"},
@@ -39,7 +40,7 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
         "graphviz":      {"host": TIM_HOST + ":60000/", "browser": False},
     }
 else:
-    print("Using container network for plugins")
+    log_info("Using container network for plugins")
     PLUGINS = {
         "csPlugin":      {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/"},
         "taunoPlugin":   {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/tauno/"},

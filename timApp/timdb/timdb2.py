@@ -2,11 +2,14 @@
 Defines the TimDb database class.
 """
 
-import sqlite3
+import sqlalchemy
 from sqlalchemy.orm import scoped_session
 
+from routes.logger import log_info
 from tim_app import db
+
 from timdb.notes import Notes
+from timdb.tim_models import Version
 from timdb.uploads import Uploads
 from timdb.users import Users
 from timdb.images import Images
@@ -43,15 +46,15 @@ class TimDb(object):
         self.blocks_path = os.path.join(self.files_root_path, 'blocks')
         for path in [self.blocks_path]:
             if not os.path.exists(path):
+                log_info('Creating directory: {}'.format(path))
                 os.makedirs(path)
         
-        self.db = sqlite3.connect(db_path)
-        self.db.row_factory = sqlite3.Row
-
         self.session = session
         if session is None:
             self.session = db.create_scoped_session()
 
+        engine = sqlalchemy.create_engine(db_path)
+        self.db = engine.connect().connection  # psycopg2.connect(db_path)  # type: psycopg2.extensions.connection
         self.notes = Notes(self.db, files_root_path, 'notes', current_user_name, self.session)
         self.readings = Readings(self.db, files_root_path, 'notes', current_user_name, self.session)
         self.users = Users(self.db, files_root_path, 'users', current_user_name, self.session)
@@ -68,8 +71,7 @@ class TimDb(object):
 
     def __del__(self):
         """Release the database connection when the object is deleted."""
-        if self.db is not None:
-            self.close()
+        self.close()
 
     def commit(self):
         """Commits any changes to the database."""
@@ -79,6 +81,7 @@ class TimDb(object):
         """Closes the database connection."""
         if self.db is not None:
             self.db.close()
+            self.session.remove()
             self.db = None
 
     def initialize_tables(self):
@@ -101,23 +104,24 @@ class TimDb(object):
         self.db.cursor().executescript(sql)
         self.db.commit()
 
-    def get_version(self):
+    def get_version(self) -> int:
         """Gets the current database version.
         :return: The database version as an integer.
         """
-        try:
-            return self.db.execute("""SELECT MAX(id) FROM Version""").fetchone()[0]
-        except sqlite3.OperationalError:
-            return 0
+        ver = self.session.query(db.func.max(Version.id)).scalar()
+        assert isinstance(ver, int)
+        return ver
 
     def update_version(self):
         """Updates the database version by inserting a new sequential entry in the Version table.
         """
-        self.db.execute("""INSERT INTO Version(updated_on) VALUES (CURRENT_TIMESTAMP)""")
+        c = self.db.cursor()
+        c.execute("""INSERT INTO Version(updated_on) VALUES (CURRENT_TIMESTAMP)""")
         self.db.commit()
 
     def table_exists(self, table_name):
         """Checks whether a table with the specified name exists in the database.
         """
-        return bool(self.db.execute("SELECT EXISTS(SELECT name from sqlite_master WHERE type = 'table' AND name = ?)",
-                               [table_name]).fetchone()[0])
+        c = self.db.cursor()
+        c.execute("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name = %s)", (table_name,))
+        return c.fetchone()[0]

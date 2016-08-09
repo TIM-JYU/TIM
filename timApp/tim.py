@@ -3,7 +3,6 @@
 import http.client
 import imghdr
 import io
-import os
 import time
 
 import shutil
@@ -25,7 +24,7 @@ from routes.common import *
 from routes.edit import edit_page
 from routes.groups import groups
 from routes.lecture import getTempDb, user_in_lecture, lecture_routes
-from routes.logger import logger_bp
+from routes.logger import log_info
 from routes.login import login_page
 from routes.manage import manage_page
 from routes.notes import notes
@@ -38,7 +37,7 @@ from routes.view import view_page
 from tim_app import app
 
 # db.engine.pool.use_threadlocal = True # This may be needless
-from utils import datestr_to_relative
+from utils import date_to_relative
 
 cache.init_app(app)
 
@@ -50,7 +49,6 @@ app.register_blueprint(manage_page)
 app.register_blueprint(edit_page)
 app.register_blueprint(view_page)
 app.register_blueprint(login_page)
-app.register_blueprint(logger_bp)
 app.register_blueprint(answers)
 app.register_blueprint(groups)
 app.register_blueprint(search_routes)
@@ -69,8 +67,8 @@ app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 assets = Environment(app)
 
-print('Debug mode: {}'.format(app.config['DEBUG']))
-print('Profiling: {}'.format(app.config['PROFILE']))
+log_info('Debug mode: {}'.format(app.config['DEBUG']))
+log_info('Profiling: {}'.format(app.config['PROFILE']))
 
 
 def error_generic(error, code):
@@ -261,7 +259,7 @@ def get_documents(folder):
         doc['canEdit'] = timdb.users.has_edit_access(uid, doc['id'])
         doc['isOwner'] = timdb.users.user_is_owner(getCurrentUserId(), doc['id']) or timdb.users.has_admin_access(uid)
         doc['owner'] = timdb.users.get_owner_group(doc['id'])
-        doc['modified'] = datestr_to_relative(doc['modified'])
+        doc['modified'] = date_to_relative(doc['modified'])
         final_docs.append(doc)
 
     final_docs.sort(key=lambda d: d['name'].lower())

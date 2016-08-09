@@ -21,15 +21,7 @@ run apt-get install -y zlib1g-dev # lxml dependency
 run apt-get install -y libxml2-dev libxslt-dev python3-dev # lxml dependency
 run apt-get install -y libyaml-dev # C-parser for PyYAML
 
-# Add the PostgreSQL repository signing key
-run wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && apt-get update
-
-# Add PostgreSQL's repository
-run echo "deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main" > /etc/apt/sources.list.d/pgdg.list
-
-run apt-get install -y libpq-dev # Needed by psycopg2 package
-
-run apt-get install -y postgresql-9.5
+run apt-get install -y python3-psycopg2
 
 run pip3 install SQLAlchemy
 run pip3 install flask
@@ -43,7 +35,6 @@ run pip3 install pyaml
 run pip3 install ansi2html
 run pip3 install cssutils
 run pip3 install mmh3
-run pip3 install psycopg2
 
 run apt-get install -y libffi-dev
 env LD_LIBRARY_PATH /usr/local/lib
@@ -55,6 +46,8 @@ run pip3 install git+git://github.com/miracle2k/webassets.git
 run pip3 install libsass
 run pip3 install flask-assets
 run pip3 install yubico-client
+run pip3 install pytz  # Not necessarily needed after all, as Python's stdlib supports UTC
+run pip3 install python-dateutil
 
 # requests must be the last package to be installed!
 # After this, pip3 stops working because it depends

@@ -1,59 +1,47 @@
-"""Routes for logging."""
-from .common import *
-from flask import Blueprint, request
-
+"""Sets up logging for the application."""
 import logging
 import os
 
-logger_bp = Blueprint('logger_bp',
-                      __name__,
-                      url_prefix='')  # TODO: Better URL prefix.
+import sys
+
+tim_logger = logging.getLogger('tim')
+tim_logger.setLevel(logging.DEBUG)
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+
+tim_logger.addHandler(ch)
 
 
-@logger_bp.record
-def record_params(setup_state):
-    app = setup_state.app
-
-    # current_app.logging.basicConfig(filename='timLog.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
+def setup_logging(app):
     formatter = logging.Formatter(
-            "{\"time\":%(asctime)s, \"file\": %(pathname)s, \"line\" :%(lineno)d, \"messageLevel\":  %(levelname)s, \"message\": %(message)s}")
+        '{"time":%(asctime)s, "file": %(pathname)s, "line" :%(lineno)d, "messageLevel":  %(levelname)s, "message": %(message)s}')
     if not os.path.exists(app.config['LOG_DIR']):
         try:
             os.mkdir(app.config['LOG_DIR'])
         except FileExistsError:
             pass
-    handler = logging.FileHandler(app.config['LOG_PATH'])
-    handler.setLevel(logging.DEBUG)
-    handler.setFormatter(formatter)
-    app.logger.addHandler(handler)
-
-    global logger
-    logger = app.logger
-
-    global LOG_LEVELS
-    LOG_LEVELS = {"CRITICAL": app.logger.critical,
-                  "ERROR": app.logger.error,
-                  "WARNING": app.logger.warning,
-                  "INFO": app.logger.info,
-                  "DEBUG": app.logger.debug}
+    file_handler = logging.FileHandler(app.config['LOG_PATH'])
+    file_handler.setLevel(app.config['LOG_LEVEL'])
+    file_handler.setFormatter(formatter)
+    global tim_logger
+    tim_logger.handlers = []
+    tim_logger.propagate = False
+    tim_logger.addHandler(file_handler)
+    if app.config['LOG_LEVEL_STDOUT'] is not None:
+        stdout_handler = logging.StreamHandler(stream=sys.stdout)
+        stdout_handler.setLevel(app.config['LOG_LEVEL_STDOUT'])
+        stdout_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+        tim_logger.addHandler(stdout_handler)
 
 
-# Logger call, disable this for now because it's unused and has no authentication
-# @logger_bp.route("/log/", methods=["POST"])
-def log_message_route():
-    jsondata = request.get_json()
-    message = jsondata['message']
-    level = jsondata['level']
-    log_message(message, level)
-    return okJsonResponse()
+def log_info(message: str):
+    tim_logger.info(message)
 
 
-def log_message(message, level):
-    if current_app.config['TESTING']:
-        return
-    try:
-        global LOG_LEVELS
-        LOG_LEVELS[level](message)
-    except KeyError:
-        global logger
-        logger.error("Failed logging call: " + str(request.get_data()))
+def log_error(message: str):
+    tim_logger.error(message)
+
+
+def log_warning(message: str):
+    tim_logger.warning(message)

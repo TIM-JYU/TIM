@@ -1,5 +1,5 @@
 """Unit tests for TIM routes."""
-
+import re
 import unittest
 
 from flask import session
@@ -44,13 +44,27 @@ class TimTest(TimRouteTest):
         self.assertEqual(1, len(pars))
         first_id = pars[0].get_id()
         comment_of_test1 = 'This is a comment.'
-        html_comment_of_test1 = md_to_html(comment_of_test1)
-        self.assertInResponse(html_comment_of_test1,
-                              self.json_post('/postNote', {'text': comment_of_test1,
-                                                           'access': 'everyone',
-                                                           'docId': doc_id,
-                                                           'par': first_id}))
-        self.assertInResponse(html_comment_of_test1, a.get('/view/' + doc_name))
+        comment_of_test1_html = md_to_html(comment_of_test1)
+        resp = self.json_post('/postNote', {'text': comment_of_test1,
+                                            'access': 'everyone',
+                                            'docId': doc_id,
+                                            'par': first_id})
+        json = self.assertResponseStatus(resp, expect_status=200, return_json=True)
+        note_id = int(re.search(r'note-id="(\d+)"', json['texts']).groups()[0])
+
+        self.assertTrue(comment_of_test1_html in json['texts'])
+        self.assertInResponse(comment_of_test1_html, a.get('/view/' + doc_name))
+        edited_comment = 'was edited!'
+        edited_comment_html = md_to_html(edited_comment)
+        resp = self.json_post('/editNote', {'id': note_id,
+                                            'text': edited_comment,
+                                            'access': 'everyone',
+                                            'docId': doc_id,
+                                            'par': first_id})
+        json = self.assertResponseStatus(resp, expect_status=200, return_json=True)
+        self.assertTrue(edited_comment_html in json['texts'])
+        self.assertFalse(comment_of_test1_html in json['texts'])
+
         self.assertResponseStatus(a.get('/teacher/' + doc_name))
         self.assertResponseStatus(a.get('/answers/' + doc_name))
         edit_text = 'testing editing now...\nnew line\n'
@@ -79,7 +93,7 @@ class TimTest(TimRouteTest):
         self.login_test2()
         view_resp = a.get('/view/' + doc_name)
         self.assertInResponse('Logged in as: Test user 2 (testuser2)', view_resp)
-        self.assertInResponse(comment_of_test1, view_resp)
+        self.assertInResponse(edited_comment_html, view_resp)
         not_viewable_docs = {7}
         viewable_docs = doc_ids - not_viewable_docs
         for view_id in viewable_docs:

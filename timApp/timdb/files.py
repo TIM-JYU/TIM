@@ -1,5 +1,6 @@
 from typing import List, Tuple
 
+from timdb.tim_models import Block
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 import os
 
@@ -37,26 +38,23 @@ class Files(TimDbBase):
         # TODO: Check that the file extension is allowed.
         # TODO: Use imghdr module to do basic validation of the file contents.
         # TODO: Should file name be unique among files?
-        cursor = self.db.cursor()
-        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (?,?,?)',
-                       [file_filename, owner_group_id, blocktypes.FILE])
-        img_id = cursor.lastrowid
+        img_id = self.insertBlockToDb(file_filename, owner_group_id, blocktypes.FILE, commit=False)
         img_path = self.getFilePath(img_id, file_filename)
         os.makedirs(os.path.dirname(img_path))  # TODO: Set mode.
 
         with open(img_path, 'wb') as f:
             f.write(file_data)
 
-        self.db.commit()
+        self.session.commit()
         return img_id, file_filename
 
     def deleteFile(self, file_id: int):
         """Deletes an file from the database."""
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT description FROM Block WHERE type_id = ? AND id = ?', [blocktypes.FILE, file_id])
+        cursor.execute('SELECT description FROM Block WHERE type_id = %s AND id = %s', [blocktypes.FILE, file_id])
         file_filename = cursor.fetchone()[0]
-        cursor.execute('DELETE FROM Block WHERE type_id = ? AND id = ?', [blocktypes.FILE, file_id])
+        cursor.execute('DELETE FROM Block WHERE type_id = %s AND id = %s', [blocktypes.FILE, file_id])
         if cursor.rowcount == 0:
             raise TimDbException('The file was not found.')
 
@@ -84,7 +82,7 @@ class Files(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT id, id || \'/\' || description AS file FROM Block WHERE type_id = ?', [blocktypes.FILE])
+        cursor.execute('SELECT id, id || \'/\' || description AS file FROM Block WHERE type_id = %s', [blocktypes.FILE])
         files = self.resultAsDictionary(cursor)
         return files
 

@@ -8,6 +8,7 @@ import tim
 import dumboclient
 import initdb2
 from bower_helper import scripts_path, copy_bower_libs_if_needed
+from routes.logger import log_info
 
 if __name__ == '__main__':
     if not os.path.exists(scripts_path):
@@ -23,10 +24,10 @@ if __name__ == '__main__':
         initdb2.initialize_temp_database()
         initdb2.update_database()
         if len(sys.argv) <= 1:
-            print('Starting without gunicorn.')
+            log_info('Starting without gunicorn.')
             tim.start_app()
         elif sys.argv[1] == '--with-gunicorn':
-            print('Starting with gunicorn. CPUs available: {}'.format(multiprocessing.cpu_count()))
+            log_info('Starting with gunicorn. CPUs available: {}'.format(multiprocessing.cpu_count()))
             p = subprocess.Popen(["gunicorn", "--config", "gunicornconf.py", "tim:app"])
             p.wait()
         else:
