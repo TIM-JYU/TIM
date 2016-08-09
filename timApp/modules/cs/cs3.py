@@ -889,7 +889,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             
             fileext = ""
             filedext = ""
-            if ttype == "cs":
+            if ttype == "cs" or ttype == "comtest":
                 fileext = "cs"
                 filedext = ".cs"
 
