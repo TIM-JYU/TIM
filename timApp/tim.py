@@ -424,6 +424,15 @@ def plugin_call(plugin, filename):
         abort(404)
 
 
+@app.route("/echoRequest/<path:filename>")
+def echo_request(filename):
+    def generate():
+        yield 'Request URL: ' + request.url + "\n\n"
+        yield 'Headers:\n\n'
+        yield from (k + ": " + v + "\n" for k, v in request.headers.items())
+    return Response(stream_with_context(generate()), mimetype='text/plain')
+
+
 @app.route("/index/<int:doc_id>")
 def get_index(doc_id):
     verify_view_access(doc_id)

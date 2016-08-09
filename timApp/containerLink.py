@@ -39,6 +39,7 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
         "shortNote":     {"host": TIM_HOST + ":59000/"},
         "graphviz":      {"host": TIM_HOST + ":60000/", "browser": False},
         "imagex":        {"host": TIM_HOST + ":62000/"},
+        "echo":          {"host": TIM_HOST + "/echoRequest/"},
     }
 else:
     print("Using container network for plugins")
@@ -55,7 +56,8 @@ else:
         "shortNote":     {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
         "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
         # "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"}
-        "imagex":        {"host": "http://" + IMAGEXLUGIN_NAME + ":5000/"}
+        "imagex":        {"host": "http://" + IMAGEXLUGIN_NAME + ":5000/"},
+        "echo":          {"host": "http://" + "tim" + ":5000/echoRequest/"}
     }
 
 
