@@ -1586,7 +1586,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.cutPar = function (e, $par) {
-            var doc_par_id = sc.dereferencePar($par);
+            var doc_par_id = [sc.docId, $par.attr('id')];
 
             http.post('/clipboard/cut/' + doc_par_id[0] + '/' + doc_par_id[1] + '/' + doc_par_id[1], {
                 }).success(function(data, status, headers, config) {

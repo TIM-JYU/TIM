@@ -2,6 +2,12 @@ var angular;
 var MENU_BUTTON_CLASS = 'menuButtons';
 var timApp = angular.module('timApp');
 
+var currentEditorScope = null;
+var editorChangeValue = function(attributes, text) {
+   if ( !currentEditorScope ) return;
+   currentEditorScope.changeValue(attributes, text);
+};
+
 timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
     '$window', '$localStorage', '$timeout', '$ocLazyLoad',
     function (Upload, $http, $sce, $compile, $window, $localStorage, $timeout, $ocLazyLoad) {
@@ -22,6 +28,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 initialTextUrl: '@'
             },
             controller: function ($scope) {
+                currentEditorScope = $scope;
                 $scope.setEditorMinSize = function() {
                     var editor = $('pareditor');
                     editor.css('min-height', '40vh');
@@ -1106,6 +1113,30 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         }
                         $scope.wrapFn();
                     };
+                    
+                    $scope.changeValue = function(attributes, text) {
+                        var sel = $scope.editor.getSelection();
+                        var t = $scope.editor.val();
+                        if ( t.length == 0 ) return;
+                        var st = sel.start;
+                        if ( t[st] === "\n" ) st--;
+                        var b = t.lastIndexOf("\n", st);
+                        var e = t.indexOf("\n", st);
+                        if ( b < 0 ) b = 0; else b++;
+                        if ( e < 0 ) e = t.length;
+                        if ( e <= b ) return;
+                        
+                        var line = t.substring(b,e);
+                        for (var i = 0; i < attributes.length; i++) {
+                            var ma = line.match(" *" + attributes[i]);
+                            if ( ma ) {
+                                line = ma[0] + " " + text;
+                                $scope.editor.setSelection(b, e);
+                                $scope.editor.replaceSelectedText(line);
+                                break;
+                            }
+                        }
+                    };
 
                     $scope.ruleClicked = function () {
                         $scope.endClicked();
@@ -1428,6 +1459,23 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.wrapFn();
                     };
 
+                    $scope.changeValue = function(attributes, text) {
+                        var pos = $scope.editor.getCursorPosition();
+                        var line = $scope.editor.session.getLine(pos.row);
+                        for (var i = 0; i < attributes.length; i++) {
+                            var ma = line.match(" *" + attributes[i]);
+                            if ( ma ) {
+                                line = ma[0] + " " + text;
+                                var range = $scope.editor.getSelectionRange();
+                                range.start.column = 0; 
+                                range.end.column = line.length+1;
+                                $scope.editor.session.replace(range, line);
+                                break;
+                            }
+                        }
+
+                    };
+
                     $scope.ruleClicked = function () {
                         $scope.editor.navigateLineEnd();
                         $scope.snippetManager.insertSnippet($scope.editor, "\n#-\n---\n#-\n");
@@ -1542,10 +1590,13 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         });
 
                         file.upload.then(function (response) {
-                            $timeout(function () {
+                            $timeout(function () { 
                                 if (response.data.image) {
                                     $scope.uploadedFile = '/images/' + response.data.image;
-                                    $scope.insertTemplate("![Image](" + $scope.uploadedFile + ")");
+                                    if ( $scope.editor.session.getLine(0).startsWith("``` {") ) 
+                                        $scope.insertTemplate($scope.uploadedFile);
+                                    else 
+                                        $scope.insertTemplate("![Image](" + $scope.uploadedFile + ")");
                                 } else {
                                     $scope.uploadedFile = '/files/' + response.data.file;
                                     $scope.insertTemplate("[File](" + $scope.uploadedFile + ")");
