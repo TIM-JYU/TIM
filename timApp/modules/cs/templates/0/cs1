@@ -14,6 +14,6 @@ public class HelloWorld
 replace: REPLACE
 byCode: |!!
 //
-WRITE THE MAIN C# PROGRAM HERE
+        System.Console.WriteLine("Hello World"); 
 !!
 ```

@@ -284,6 +284,48 @@ def removedir(dirname):
         return
 
 
+def save_extra_files(extra_files, prgpath):
+    if not extra_files:
+        return
+    ie = 0
+    for extra_file in extra_files:
+        ie += 1
+        efilename = prgpath + "/extrafile" + str(ie)
+        if "name" in extra_file: efilename = prgpath + "/" + extra_file["name"]
+        if "text" in extra_file:
+            mkdirs(os.path.dirname(efilename))
+            try:
+                codecs.open(efilename, "w", "utf-8").write(extra_file["text"])
+            except:
+                print("Can not write", efilename)
+        if "file" in extra_file:
+            try:
+                if extra_file.get("type","") != "bin":
+                    lines = get_url_lines_as_string(extra_file["file"])
+                    codecs.open(efilename, "w", "utf-8").write(lines)
+                else:
+                    open(efilename,"wb").write(urlopen(extra_file["file"]).read())
+            except Exception as e:
+                print(str(e))
+                print("XXXXXXXXXXXXXXXXXXXXXXXX Could no file cache: \n", efilename)
+
+
+def delete_extra_files(extra_files, prgpath):
+    if not extra_files:
+        return
+    ie = 0
+    for extra_file in extra_files:
+        ie += 1
+        if extra_file.get("delete",False):
+            efilename = prgpath+"/extrafile" + str(ie)
+            if "name" in extra_file: efilename = prgpath + "/" +extra_file["name"]
+            try:
+                os.remove(efilename)
+            except:
+                print("Can not delete: ", efilename)
+
+
+
 def get_html(ttype, query):
     user_id = get_param(query, "user_id", "--")
     # print("UserId:", user_id)
@@ -464,7 +506,8 @@ def check_code(out, err, compiler_output, ttype):
     except:
         out = out.decode('iso-8859-1')
     return out, err
-    
+
+
 def give_points(points_rule, rule, default=0):
     if not points_rule: return
     if rule in points_rule or default != 0: 
@@ -773,6 +816,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             userargs = get_json_param(query.jso, "input", "userargs", None)
             is_doc = get_json_param3(query.jso, "input", "markup", "document", False)
 
+            extra_files = get_json_param(query.jso, "markup", "extrafiles", None)
+            if not extra_files:
+                extra_files = get_json_param(query.jso, "markup", "-extrafiles", None)
+
             if userargs: save["userargs"] = userargs
 
             # print("USERCODE: XXXXX = ", usercode)
@@ -840,11 +887,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             ifilename = get_param(query, "inputfilename", "/input.txt")
             
-            # TODO: Validoi filename, ifilename yms jossa voi olla mm ..
+            fileext = ""
+            filedext = ""
+            if ttype == "cs":
+                fileext = "cs"
+                filedext = ".cs"
+
+                # TODO: Validoi filename, ifilename yms jossa voi olla mm ..
             
             # csfname = "/tmp/%s.cs" % basename
             # exename = "/tmp/%s.exe" % basename
-            csfname = "/tmp/%s/%s.cs" % (basename, filename)
+            csfname = "/tmp/%s/%s%s" % (basename, filename, filedext)
             exename = "/tmp/%s/%s.exe" % (basename, filename)
             pure_exename = "./%s.exe" % filename
             inputfilename = "/tmp/%s/%s" % (basename, ifilename)
@@ -854,12 +907,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             pngname = ""
 
             print("ttype: ", ttype)
-            fileext = "cs"
 
             before_code = get_param(query, "beforeCode", "")
 
             # if ttype == "console":
             # Console program
+
             if ttype == "cc":
                 if filename.endswith(".h") or filename.endswith(".c") or filename.endswith(".cc"):
                     csfname = "/tmp/%s/%s" % (basename, filename)
@@ -1085,6 +1138,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if s == "": s = "\n"
                 codecs.open(csfname, "w", "utf-8").write(before_code + s)
                 slines = s
+
+            save_extra_files(extra_files, prgpath)
 
             is_optional_image = get_json_param(query.jso, "markup", "optional_image", False)
             is_input = get_json_param(query.jso, "input", "isInput", None)
@@ -1548,15 +1603,20 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                                uargs=userargs)
                 elif ttype == "shell":
                     print("shell: ", pure_exename)
-                    # os.chmod(exename, stat.S_IEXEC)
-                    os.system('chmod +x ' + exename)
+                    try:
+                        os.chmod(exename, 777)
+                        # os.system('chmod +x ' + exename)
+                        # os.system('chmod 777 ' + exename)
+                    except:
+                        print("Ei oikeuksia: " + exename)
                     # if stdin: stdin = stdin
-                    extra = "cd $PWD\nsource "
+                    extra = "" # ""cd $PWD\nsource "
                     try:
                         # code, out, err = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
                         code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=timeout, env=env, stdin=stdin,
                                                    uargs=userargs,
                                                    extra=extra)
+                        print(pwd)
                     except OSError as e:
                         print(e)
                         code, out, err = (-1, "", str(e).encode())
@@ -1725,9 +1785,20 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if expect_output:
                 exout = re.compile(expect_output.rstrip('\n'), re.M)
                 if exout.match(out): give_points(points_rule, "output", 1)
+            readpoints    = get_points_rule(points_rule, "readpoints", None)
+            if readpoints:
+                m = re.search(readpoints, out)
+                if m and m.group(1):
+                    out = re.sub(m.group(0), "", out)
+                    try:
+                        p = float(m.group(1))
+                        give_points(points_rule, "output", p)
+                    except:
+                        p = 0
 
         return_points(points_rule, result)
 
+        delete_extra_files(extra_files, prgpath)
         if delete_tmp: removedir(prgpath)
 
         out = out[0:20000]

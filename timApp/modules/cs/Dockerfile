@@ -1,5 +1,5 @@
 # Aloitetaan ubuntun imagesta
-from ubuntu:14.04
+from ubuntu:16.04
 maintainer vesal "vesal@jyu.fi"
 
 # Workaround PAM: system error -messagelle
@@ -26,7 +26,7 @@ run apt-get install -y libsdl-mixer1.2
 run apt-get install -y xvfb
 # run apt-get install -y python  
 run apt-get install -y imagemagick
-run apt-get install -y openjdk-7-jre-headless
+run apt-get install -y openjdk-8-jre-headless
 run apt-get install -y nunit-console
 run apt-get install -y wget
 run locale-gen en_US.UTF-8 
@@ -171,6 +171,18 @@ ENV MYPASSWORD password
 # jos sellainen on.
 # run usermod -p '!' root
 # run passwd -l root
+
+
+# ssh testaamista varten
+run apt-get update
+run apt-get install -y openssh-server
+run mkdir /var/run/sshd
+run echo 'root:test' | chpasswd
+run sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+expose 22
+
+#run chmod 777 /etc/ssh
+#run chmod 777 /etc/ssh/*
 
 # Asetetaan container käynnistymään tunnuksella agent.
 user agent

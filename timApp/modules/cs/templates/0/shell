@@ -1,0 +1,6 @@
+shell
+Linux shell
+``` {plugin="csPlugin" #shell}
+type: shell
+path: user
+```

@@ -12,7 +12,8 @@ if (angular.isDefined(window.csApp)) {
 }
 
 var csApp = angular.module('csApp', ['ngSanitize','ngFileUpload']);
-csApp.directive('csRunner',['Upload','$sanitize','$compile', 
+csApp.taunoPHIndex = 3;
+csApp.directive('csRunner',['Upload','$sanitize','$compile',
   function (Upload, $sanitize,$compile1) {	
        "use strict"; csApp.Upload = Upload; csApp.sanitize = $sanitize; csApp.compile = $compile1; 
        return csApp.directiveFunction('console',false); }]);
