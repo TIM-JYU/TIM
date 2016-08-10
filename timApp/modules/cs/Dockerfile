@@ -184,6 +184,9 @@ expose 22
 #run chmod 777 /etc/ssh
 #run chmod 777 /etc/ssh/*
 
+# Laita seuraava kommentteihin tuotantoa varten
+##run usermod -a -G sudo agent
+
 # Asetetaan container käynnistymään tunnuksella agent.
 user agent
 

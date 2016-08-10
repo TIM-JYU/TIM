@@ -20,6 +20,9 @@ import datetime
 import cgi
 import logging
 
+nunit = "" # globaali arvo johon haetaan kerraan nunitin paikka
+
+
 # cs3.py: WWW-palvelin portista 5000 (ulospäin 56000) joka palvelee csPlugin pyyntöjä
 #
 # Ensin käynistettävä 
@@ -1217,9 +1220,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Numerics /r:System.Drawing %s %s" % (
                         exename, mainfile, csfname)
                 elif ttype == "comtest":
+                    global nunit
+                    if not nunit:
+                        frms = os.listdir("/usr/lib/mono/gac/nunit.framework/")
+                        nunit = "/usr/lib/mono/gac/nunit.framework/" + frms[0] + "/nunit.framework.dll"
                     jypeliref = "/r:System.Numerics /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing"
-                    cmdline = ("java -jar /cs/java/cs/ComTest.jar nunit %s && mcs /out:%s /target:library " + jypeliref +" /reference:/usr/lib/mono/gac/nunit.framework/2.6.0.0__96d09a1eb7f44a77/nunit.framework.dll %s %s") % (
-                        csfname, testdll, csfname, testcs)
+                    cmdline = ("java -jar /cs/java/cs/ComTest.jar nunit %s && mcs /out:%s /target:library " + jypeliref +" /reference:%s %s %s") % (
+                        csfname, testdll, nunit, csfname, testcs)
                 elif ttype == "jcomtest":
                     cmdline = "java comtest.ComTest %s && javac %s %s" % (csfname, csfname, testcs)
                 elif ttype == "junit":
@@ -1363,6 +1370,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()
                 err = re.sub("^ALSA.*\n", "", err, flags=re.M)
+                err = re.sub("^W: \[pulse.*\n", "", err, flags=re.M)
+                err = re.sub("^AL lib:.*\n", "", err, flags=re.M)
+                out = re.sub("^Could not open AL device - OpenAL Error: OutOfMemory.*\n", "", out, flags=re.M)
+
                 print(err)
                 # err = ""
                 wait_file(imgsource)
@@ -1604,8 +1615,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "shell":
                     print("shell: ", pure_exename)
                     try:
-                        os.chmod(exename, 777)
-                        # os.system('chmod +x ' + exename)
+                        # os.chmod(exename, 777)
+                        os.system('chmod +x ' + exename)
                         # os.system('chmod 777 ' + exename)
                     except:
                         print("Ei oikeuksia: " + exename)
