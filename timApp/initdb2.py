@@ -16,7 +16,7 @@ from timdb.timdb2 import TimDb
 from timdb.timdbbase import TimDbException
 from timdb.users import LOGGED_IN_USERNAME
 
-NEWEST_DB_VERSION = 8
+NEWEST_DB_VERSION = 9
 
 
 def postgre_create_database(db_name):
