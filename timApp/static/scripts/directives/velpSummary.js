@@ -13,6 +13,7 @@ var angular;
 var timApp = angular.module('timApp');
 /**
  * Angular directive for phrase selection
+ * @lends module:velpSummary
  */
 timApp.directive('velpSummary', function () {
     "use strict";
@@ -28,16 +29,22 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
     var console = $window.console;
     $scope.settings = {selectedAll: false};
 
-    $scope.toggleAnnotation = function (annotation, user) {
+    /**
+     * Toggles annotation in document
+     * @method toggleAnnotation
+     * @param annotation - annotation to toggle
+     */
+    $scope.toggleAnnotation = function (annotation) {
         console.log("Annotation");
-        $scope.$parent.toggleAnnotation(annotation, user);
+        $scope.$parent.toggleAnnotation(annotation);
     };
 
     /**
      * Get total number of points
+     * @method getTotalPoints
      * @returns {number}
      */
-    $scope.getTotalPoints = function () {
+    $scope.getTotalPoints = function (ann) {
         var p = 0;
         if ($scope.annotations === undefined)
             return p;
@@ -51,6 +58,7 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
 
     /**
      * Check all annotations in velp summary.
+     * @method checkAll
      */
     $scope.checkAll = function () {
         angular.forEach($scope.annotations, function (a) {
