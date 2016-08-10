@@ -703,12 +703,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
 
     $scope.notAnnotationRights = function (points) {
-
-        if (points === null || points === 0){
+    if (parent.teacherMode) {
+        return false;
+    } else {
+        if (points === null) {
             return false;
         } else {
             return true;
         }
+    }
     }
 
     /**
@@ -724,7 +727,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     }
 
     $scope.allowChangePoints = function () {
-        if ($scope.$parent.teacherMode) return true;
+        if (parent.teacherMode) return true;
     }
 
     /**

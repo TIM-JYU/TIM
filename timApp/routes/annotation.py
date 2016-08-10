@@ -110,14 +110,15 @@ def update_annotation():
         except ValueError as e:
             return abort(400, "Visibility should be 1, 2, 3 or 4.")
         new_values['visible_to'] = visible_to
-
-    if ((points < 0) or (points > 0)) and timdb.users.has_teacher_access(user_id, doc_id):
+    if timdb.users.has_teacher_access(user_id, doc_id):
         new_values['points'] = points
-        timdb.annotations.update_annotation(new_values['id'], new_values['velp_version_id'], new_values['visible_to'],
-                                        new_values['points'], new_values['icon_id'])
     else:
-        return abort(403, "You are not allowed make annotations to.")
-
+        if points is None:
+            new_values['points'] = points
+        else:
+            new_values['points'] = None
+    timdb.annotations.update_annotation(new_values['id'], new_values['velp_version_id'],
+                                        new_values['visible_to'], new_values['points'], new_values['icon_id'])
     return okJsonResponse()
 
 
