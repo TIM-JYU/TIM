@@ -67,7 +67,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
              * Toggle annotation visibility
              */
             scope.toggleAnnotation = function () {
-                if (false){// FIX this scope.$parent.className === "notes" && element.velpElement.parent().className ===  "notes" && scope.$parent.n.parentElement.className ===  "notes"parent.n.parentElement
+                if (false ){//scope.$parent.$parentNode.className === "notes" ){// FIX this scope.$parent.className === "notes" && element.velpElement.parent().className ===  "notes" && scope.$parent.n.parentElement.className ===  "notes"parent.n.parentElement
                     scope.$parent.toggleAnnotation();
                 } else {
                     scope.show = !scope.show;
@@ -164,7 +164,8 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     annotation_id: id,
                     visible_to: scope.visible_options.value,
                     velp: scope.velp,
-                    comment: scope.newComment
+                    comment: scope.newComment,
+                    doc_id: scope.$parent.docId
                 };
 
                 scope.$parent.makePostRequest("/update_annotation", scope.original, function (json) {

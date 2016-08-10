@@ -203,14 +203,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             if (!showInPlace || placeInfo.start.offset === null) {
                 addAnnotationToElement(par, annotations[i], false, "Added as margin annotation");
-               // addAnnotationMetaElement(parent.n.parentElement,annotations[i],false);
             } else {
                 var range = document.createRange();
                 range.setStart(element, placeInfo.start.offset);
                 range.setEnd(element, placeInfo.end.offset);
                 $scope.addAnnotationToCoord(range, annotations[i], false);
-                addAnnotationToElement(par, annotations[i], false, "Added as margin annotation");
-                //addAnnotationMetaElement(parent.n.parentElement,annotations[i],true);
+                //addAnnotationToElement(par, annotations[i], false, "Added also margin annotation");
             }
 
         }
@@ -249,6 +247,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var span = $scope.createPopOverElement(annotation, show);
         try {
             range.surroundContents(span);
+            //addAnnotationToElement(span, annotation, false, "Added also margin annotation");
         } catch (err) {
             addAnnotationToElement(span, annotation, true, "Annotation crosses taglines");
             $scope.selectedArea = null;
@@ -268,7 +267,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
 
         $compile(span)($scope); // Gives error [$compile:nonassign]
-        addAnnotationMetaElement(parent.n.parentElement, annotation,true);
+       //addAnnotationMetaElement(span, annotation, false);
     };
 
     /**
@@ -296,7 +295,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     var addAnnotationMetaElement = function (el, annotation, show){
         var element = document.createElement("span");
 
-         element.setAttribute("annotationmeta", "");
+         element.setAttribute("annotationmeta", "" + annotation.id );
 
         var velp_data = $scope.getVelpById(annotation.velp);
 
@@ -307,11 +306,34 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         } else {
             velp_content = annotation.content;
         }
-        element.setAttribute("show", show);
+        element.setAttribute("ng-show", show);
+        // ng-class="['highlighted', 'clickable', 'emphasise', 'default', {neutral: points == 0, negative: points < 0, positive: points > 0}]" ng-transclude="true"
+        element.setAttribute("ng-class","['highlighted', 'clickable', 'emphasise', 'default', {neutral: points == 0, negative: points < 0, positive: points > 0}]");
+        element.setAttribute("ng-transclude", "true");
+        element.setAttribute("ng-click","toggleTextAnnotation(" + annotation.id + ")");
+
+        //<input type="number" ng-model="points" ng-value="points" ng-disabled="checkRights()" ng-change="changePoints(points)" class="ng-pristine ng-untouched ng-valid" value="-1">
         var text = document.createTextNode("\u00A0" + annotation.content + "\u00A0");
         element.appendChild(text);
+        var points = document.createElement("input");
+
+        points.value = annotation.points;
+        points.setAttribute("ng-show", "false");
+        points.setAttribute("ng-model", "points");
+        points.setAttribute("ng-value", "points");
+        element.appendChild(points);
         addElementToParagraphMargin(el, element);
         $compile(element)($scope);
+    }
+
+    $scope.toggleTextAnnotation = function (id) {
+        for (var i = 0; i < $scope.annotations.length; i++) {
+            if ($scope.annotations[i].id === id) {
+                $scope.toggleAnnotation($scope.annotations[i]);
+                break;
+            }
+        }
+        //toggleAnnotation(annotation);
     }
 
     /**
@@ -643,6 +665,37 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
+     * Detect user right to annotation to document.
+     * @param points - Points given in velp
+     * @returns {boolean} - right to make annotations.
+     */
+
+    $scope.notAnnotationRights = function (points) {
+
+        if (points === null || points === 0){
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Return title text if no annotation right
+     * @param state -
+     * @returns {string}
+     */
+
+    $scope.showDisabledText = function(state) {
+        if (state){
+            return "You don't have rights to make annotations with points.";
+        }
+    }
+
+    $scope.allowChangePoints = function () {
+        if ($scope.$parent.teacherMode) return true;
+    }
+
+    /**
      * Uses selected velp, if area is selected.
      * TODO: When annotations can cross HTML-tags, change end coordinate according to end element
      * TODO: Also get parelement according to endContainer
@@ -666,7 +719,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             creationtime: "now",
             coord: {},
             comments: [],
-            newannotation: true
+            newannotation: true,
+            user_id: -1
         };
 
 
@@ -685,6 +739,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             var element_path = getElementPositionInTree(startElement, []);
             var answer_id = getAnswerInfo(startElement);
+
+            if (answer_id === null){
+                newAnnotation.user_id = null;
+            } else {
+                newAnnotation.user_id = $scope.$parent.selectedUser.id;
+            }
 
             var startoffset = getRealStartOffset($scope.selectedArea.startContainer, $scope.selectedArea.startOffset);
             var endOffset = $scope.selectedArea.endOffset;
@@ -981,6 +1041,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                     abl.isolateScope().loadAnswerBrowser();
                 }
                 scrollToElement(annotationElement);
+                addAnnotationToElement(par, annotation, false, "Added also margin annotation");
 
         } catch (e) {
             // Find answer browser and isolate its scope

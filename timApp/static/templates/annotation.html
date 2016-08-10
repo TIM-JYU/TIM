@@ -21,7 +21,7 @@
             </div>
                 </div>
             <div ng-show="showHidden">
-            <p ng-hide="checkRights()"><label>Points: <input type="number" ng-model="points" ng-value="points" ng-disabled="checkRights()"
+            <p ng-hide="checkRights() && allowChangePoints()"><label>Points: <input type="number" ng-model="points" ng-value="points" ng-disabled="checkRights()"
                                      ng-change="changePoints(points)"/></label></p>
              <p ng-show="checkRights()" ><label ng-hide="points == null">Points:  {{ points }}</label></p>
             </div>

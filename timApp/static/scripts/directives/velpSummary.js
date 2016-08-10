@@ -37,7 +37,7 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
      * Get total number of points
      * @returns {number}
      */
-    $scope.getTotalPoints = function () {
+    $scope.getTotalPoints = function (ann) {
         var p = 0;
         if ($scope.annotations === undefined)
             return p;

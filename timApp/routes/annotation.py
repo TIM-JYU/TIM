@@ -94,6 +94,7 @@ def update_annotation():
         return abort(400, "Missing data: " + e.args[0])
     visible_to = json_data.get('visible_to')
     points = json_data.get('points')
+    doc_id = json_data.get('doc_id')
     timdb = getTimDb()
     # Get values from the database to fill in unchanged new values.
     new_values = timdb.annotations.get_annotation(annotation_id)
@@ -109,9 +110,14 @@ def update_annotation():
         except ValueError as e:
             return abort(400, "Visibility should be 1, 2, 3 or 4.")
         new_values['visible_to'] = visible_to
-    new_values['points'] = points
-    timdb.annotations.update_annotation(new_values['id'], new_values['velp_version_id'], new_values['visible_to'],
+
+    if ((points < 0) or (points > 0)) and timdb.users.has_teacher_access(user_id, doc_id):
+        new_values['points'] = points
+        timdb.annotations.update_annotation(new_values['id'], new_values['velp_version_id'], new_values['visible_to'],
                                         new_values['points'], new_values['icon_id'])
+    else:
+        return abort(403, "You are not allowed make annotations to.")
+
     return okJsonResponse()
 
 

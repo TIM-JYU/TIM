@@ -1,5 +1,6 @@
 <div class="velpArea">
     <div class="velpSummary">
+        <h5>Current user task annotations</h5>
         <table>
             <tr>
                 <!-- Commented out for now, these are intended for publishing annotations.
@@ -8,15 +9,35 @@
                 <th class="summSecColumn">Annotation</th>
                 <th class="summThiColumn">Points</th>
             </tr>
-            <tr ng-repeat="a in annotations | orderBy:'creationtime'">
+            <tr ng-repeat="a in annotations | orderBy:'creationtime' | filter: {'user_id': $parent.selectedUser.id}:true ">
                 <!--<td class="summCheckbox"><input type="checkbox" ng-model="a.selected"></td> See comment above^-->
-                <td class="summSecColumn"><a ng-click="toggleAnnotation()">{{ a.content }}</a></td>
+                <td class="summSecColumn"><a ng-click="toggleAnnotation(a)">{{ a.content }}</a></td>
                 <td class="summThiColumn"><span>{{ a.points }}</span></td>
             </tr>
             <tr>
                 <!--<th class="summCheckbox"></th> See comment above^-->
                 <th class="summSecColumn">Points total</th>
                 <th class="summThiColumn"><span>{{ getTotalPoints() }}</span></th>
+            </tr>
+        </table>
+         <h5>Other Annotations</h5>
+        <table>
+            <tr>
+                <!-- Commented out for now, these are intended for publishing annotations.
+                <th class="summCheckbox"><input type="checkbox" ng-model="settings.selectedAll"
+                                                ng-change="checkAll()"></th>-->
+                <th class="summSecColumn">Annotation</th>
+                <th class="summThiColumn">Points</th>
+            </tr>
+            <tr ng-repeat="b in annotations | orderBy:'creationtime' | filter: {'user_id': null}:true ">
+                <!--<td class="summCheckbox"><input type="checkbox" ng-model="a.selected"></td> See comment above^-->
+                <td class="summSecColumn"><a ng-click="toggleAnnotation(b)">{{ b.content }}</a></td>
+                <td class="summThiColumn"><span>{{ b.points }}</span></td>
+            </tr>
+            <tr>
+                <!--<th class="summCheckbox"></th> See comment above^-->
+                <th class="summSecColumn">Points total</th>
+                <th class="summThiColumn"><span>{{ getTotalPoints(b) }}</span></th>
             </tr>
         </table>
     </div>
