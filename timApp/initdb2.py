@@ -129,10 +129,7 @@ def update_database():
 
 
 def add_timber(timdb: TimDb) -> bool:
-    if timdb.table_exists('Velp'):
-        return False
-    timdb.execute_script('schematimber.sql')
-    print('Timber stuff was added to the database.')
+    print('SQLAlchemy adds timber tables automatically.')
     return True
 
 
