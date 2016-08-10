@@ -19,10 +19,11 @@ class VelpGroups(Documents):
         valid_until = None
         cursor = self.db.cursor()
         cursor.execute("""
-                      INSERT OR IGNORE INTO
-                      VelpGroup(id, name, valid_until, default_group)
-                      VALUES (%s, %s, %s, %s)
-                      """, [new_group_id, name, valid_until, 1]
+                      INSERT INTO
+                      VelpGroup(id, name, valid_until, default_group, creation_time)
+                      VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+                      ON CONFLICT DO NOTHING
+                      """, [new_group_id, name, valid_until, True]
                        )
         self.db.commit()
         return new_group_id
@@ -43,15 +44,15 @@ class VelpGroups(Documents):
         cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO
-                      VelpGroup(id, name, valid_until)
-                      VALUES (%s, %s, %s)
+                      VelpGroup(id, name, valid_until, creation_time)
+                      VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
                       """, [new_group_id, name, valid_until]
                        )
         self.db.commit()
         return new_group_id
 
     def make_document_a_velp_group(self, name: str, velp_group_id: int, valid_until: Optional[str] = None,
-                                   default_group: Optional[bool] = 0):
+                                   default_group: Optional[bool] = False):
         """Adds document to VelpGroup table
 
         :param name: Name of the created group.
@@ -63,9 +64,10 @@ class VelpGroups(Documents):
         cursor = self.db.cursor()
 
         cursor.execute("""
-                      INSERT OR IGNORE INTO
-                      VelpGroup(id, name, valid_until, default_group)
-                      VALUES (%s, %s, %s, %s)
+                      INSERT INTO
+                      VelpGroup(id, name, valid_until, default_group, creation_time)
+                      VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+                      ON CONFLICT DO NOTHING
                       """, [velp_group_id, name, valid_until, default_group]
                        )
         self.db.commit()
@@ -80,7 +82,7 @@ class VelpGroups(Documents):
         cursor = self.db.cursor()
         cursor.execute("""
                       UPDATE VelpGroup
-                      SET default_group = 1, valid_until = NULL
+                      SET default_group = TRUE, valid_until = NULL
                       WHERE id = %s
                       """, [velp_group_id]
                        )
@@ -92,12 +94,14 @@ class VelpGroups(Documents):
         :param velp_group_ids: List of velp group IDs
         :return: First found default velp group ID and name
         """
+        if not velp_group_ids:
+            return None
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT
                       id, name
                       FROM VelpGroup
-                      WHERE id IN ({}) AND default_group = 1
+                      WHERE id IN ({}) AND default_group = TRUE
                       """.format(self.get_sql_template(velp_group_ids)), velp_group_ids
                        )
         results = self.resultAsDictionary(cursor)
@@ -112,9 +116,10 @@ class VelpGroups(Documents):
         """
         cursor = self.db.cursor()
         cursor.execute("""
-                      INSERT OR IGNORE INTO
+                      INSERT INTO
                       VelpInGroup(velp_group_id, velp_id)
                       VALUES (%s, %s)
+                      ON CONFLICT DO NOTHING
                       """, [velp_group_id, velp_id]
                        )
         self.db.commit()
@@ -129,9 +134,10 @@ class VelpGroups(Documents):
         cursor = self.db.cursor()
         for velp_group in velp_group_ids:
             cursor.execute("""
-                          INSERT OR IGNORE INTO
+                          INSERT INTO
                           VelpInGroup(velp_group_id, velp_id)
                           VALUES (%s, %s)
+                          ON CONFLICT DO NOTHING
                           """, [velp_group, velp_id]
                            )
         self.db.commit()
@@ -178,7 +184,7 @@ class VelpGroups(Documents):
     def get_groups_for_velp(self, velp_id):
         cursor = self.db.cursor()
         cursor.execute('SELECT velp_group_id AS id FROM VelpInGroup WHERE velp_id = %s', [velp_id])
-        result = cursor.fetchall()
+        result = self.resultAsDictionary(cursor)
         return result
 
     def is_id_velp_group(self, doc_id: int) -> bool:
@@ -205,9 +211,10 @@ class VelpGroups(Documents):
         """
         cursor = self.db.cursor()
         cursor.execute("""
-                      INSERT OR IGNORE INTO
+                      INSERT INTO
                       ImportedVelpGroups(user_group, doc_id, target_type, target_id, velp_group_id)
                       VALUES (%s, %s, %s, %s, %s)
+                      ON CONFLICT DO NOTHING
                       """, [user_group, doc_id, target_type, target_id, velp_group_id]
                        )
         self.db.commit()
@@ -244,9 +251,10 @@ class VelpGroups(Documents):
         for velp_group in velp_groups:
             velp_group_id = velp_group['id']
             cursor.execute("""
-                          INSERT OR IGNORE INTO
+                          INSERT INTO
                           VelpGroupsInDocument(user_id, doc_id, velp_group_id)
                           VALUES (%s, %s, %s)
+                          ON CONFLICT DO NOTHING
                           """, [user_id, doc_id, velp_group_id]
                            )
         self.db.commit()
@@ -259,21 +267,19 @@ class VelpGroups(Documents):
         :return:
         """
 
-        # Group by is necessary because we would get several results if the velpgroup has several entries in DocEntry.
-        # Now we get just one, hopefully it's enough.
         cursor = self.db.cursor()
         cursor.execute("""
                        SELECT
-                         VelpGroupsInDocument.velp_group_id AS id,
+                         DISTINCT(VelpGroupsInDocument.velp_group_id) AS id,
                          VelpGroup.name,
                          DocEntry.name AS location
                        FROM VelpGroupsInDocument
                          INNER JOIN VelpGroup ON VelpGroup.id = VelpGroupsInDocument.velp_group_id
                          INNER JOIN DocEntry ON DocEntry.id = VelpGroupsInDocument.velp_group_id
                        WHERE doc_id = %s AND user_id = %s
-                       GROUP BY velp_group_id
                        """, [doc_id, user_id]
                        )
+        # Get only the first result in case there are several entries in DocEntry
         results = self.resultAsDictionary(cursor)
         return results
 
@@ -289,12 +295,13 @@ class VelpGroups(Documents):
         for velp_group in velp_groups:
             target_type = velp_group['target_type']
             target_id = velp_group['target_id']
-            selected = 1
+            selected = True
             velp_group_id = velp_group['id']
             cursor.execute("""
-                          INSERT OR IGNORE INTO
+                          INSERT INTO
                           VelpGroupSelection(user_id, doc_id, target_type, target_id, selected, velp_group_id)
                           VALUES (%s, %s, %s, %s, %s, %s)
+                          ON CONFLICT DO NOTHING
                           """, [user_id, doc_id, target_type, target_id, selected, velp_group_id]
                            )
         self.db.commit()
@@ -490,9 +497,10 @@ class VelpGroups(Documents):
                       """, [doc_id, velp_group_id, target_type, target_id]
                        )
         cursor.execute("""
-                      INSERT OR IGNORE INTO
+                      INSERT INTO
                       VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)
                       SELECT %s, %s, %s, %s, %s
+                      ON CONFLICT DO NOTHING
                       """, [doc_id, target_type, target_id, selected, velp_group_id]
                        )
         self.db.commit()
@@ -603,12 +611,13 @@ class VelpGroups(Documents):
         for velp_group in velp_groups:
             target_type = 0
             target_id = 0
-            selected = 1
+            selected = True
             velp_group_id = velp_group['id']
             cursor.execute("""
-                          INSERT OR IGNORE INTO
+                          INSERT INTO
                           VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)
                           VALUES (%s, %s, %s, %s, %s)
+                          ON CONFLICT DO NOTHING
                           """, [doc_id, target_type, target_id, selected, velp_group_id]
                            )
         self.db.commit()

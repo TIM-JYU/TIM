@@ -178,7 +178,7 @@ class Annotations(TimDbBase):
         annotation_ids = []
         for annotation in annotations:
             annotation_ids.append(annotation['id'])
-            annotation['timesince'] = date_to_relative(timedelta(seconds=annotation['seconds_since']))
+            annotation['timesince'] = date_to_relative(annotation['creationtime'])
 
         comment_data = self.get_comments_for_annotations(annotation_ids)
 
@@ -196,8 +196,7 @@ class Annotations(TimDbBase):
                     annotation_id = next_id
                     dict_help.clear()
                     del list_help[:]
-                dict_help['comment_relative_time'] = date_to_relative(
-                    timedelta(seconds=comment_data[i]['seconds_since']))
+                dict_help['comment_relative_time'] = date_to_relative(comment_data[i]['comment_time'])
                 dict_help['comment_time'] = comment_data[i]['comment_time']
                 dict_help['commenter_id'] = comment_data[i]['commenter_id']
                 dict_help['content'] = comment_data[i]['content']
@@ -254,15 +253,14 @@ class Annotations(TimDbBase):
                         velpcontent.content AS content,
                         annotation.visible_to,
                         annotation.points,
-                        strftime('%s','now')- strftime('%s',annotation.creation_time) AS seconds_since,
                         annotation.creation_time as creationtime,
                         annotation.valid_until,
                         annotation.icon_id,
                         annotation.annotator_id,
                         Annotation.annotator_id = %s AS edit_access,
-                        user.name AS annotator_name,
-                        user.real_name AS annotator_real_name,
-                        user.email,
+                        useraccount.name AS annotator_name,
+                        useraccount.real_name AS annotator_real_name,
+                        useraccount.email,
                         annotation.answer_id,
                         annotation.paragraph_id_start,
                         annotation.paragraph_id_end,
@@ -281,7 +279,7 @@ class Annotations(TimDbBase):
                         INNER JOIN velpversion ON velpversion.id = annotation.velp_version_id
                         INNER JOIN velpcontent ON velpcontent.version_id = annotation.velp_version_id
                         LEFT JOIN useranswer ON useranswer.answer_id = annotation.answer_id
-                        INNER JOIN user ON user.id = annotation.annotator_id
+                        INNER JOIN useraccount ON useraccount.id = annotation.annotator_id
                       WHERE velpcontent.language_id = %s AND
                         (annotation.valid_until ISNULL OR annotation.valid_until >= current_timestamp)
                         AND annotation.document_id = %s AND (
@@ -326,19 +324,20 @@ class Annotations(TimDbBase):
         :param annotation_ids: List of annotation IDs
         :return: List of dictionaries containing annotation comment data
         """
+        if not annotation_ids:
+            return []
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT
                         AnnotationComment.annotation_id,
                         AnnotationComment.comment_time,
-                        strftime('%s','now')- strftime('%s',AnnotationComment.comment_time) as seconds_since,
                         AnnotationComment.commenter_id,
                         AnnotationComment.content,
-                        User.name as username,
-                        User.real_name,
-                        User.email as user_email
+                        useraccount.name as username,
+                        useraccount.real_name,
+                        useraccount.email as user_email
                       FROM AnnotationComment
-                      JOIN User ON AnnotationComment.commenter_id = User.id
+                      JOIN useraccount ON AnnotationComment.commenter_id = useraccount.id
                       WHERE AnnotationComment.annotation_id IN ({})
                       ORDER BY AnnotationComment.annotation_id ASC;
                       """.format(self.get_sql_template(annotation_ids)), annotation_ids

@@ -657,7 +657,7 @@ def create_default_velp_group(doc_id: int):
 
     else:
         default_id = timdb.documents.get_document_id(new_group_path)
-        velp_group_id = timdb.velp_groups.make_document_a_velp_group(velp_group_name, default_id, None, 1)
+        velp_group_id = timdb.velp_groups.make_document_a_velp_group(velp_group_name, default_id, None, True)
         timdb.velp_groups.update_velp_group_to_default_velp_group(default_id)
         created_new_group = False
 

@@ -3,7 +3,7 @@ from typing import Optional, List
 
 from tim_app import db
 from timdb.timdbbase import TimDbBase
-from timdb.velp_models import Velp, VelpVersion, VelpLabel
+from timdb.velp_models import Velp, VelpVersion, VelpLabel, VelpLabelContent
 
 
 class Velps(TimDbBase):
@@ -102,12 +102,16 @@ class Velps(TimDbBase):
         """
         cursor = self.db.cursor()
         cursor.execute("""
+                      SELECT version_id as id, content
+                      FROM VelpContent
+                      WHERE version_id IN
+                      (
                       SELECT
-                      MAX(id),content
-                      FROM
+                      MAX(id)
                       FROM VelpVersion
                       JOIN VelpContent ON VelpVersion.id = VelpContent.version_id
                       WHERE velp_id = %s AND language_id = %s
+                      )
                       """, [velp_id, language_id]
                        )
         row = cursor.fetchone()
@@ -123,12 +127,11 @@ class Velps(TimDbBase):
         :return: id of the new label
         """
 
-        max_id = self.session.query(db.func.max(VelpLabel.id)).scalar() or 0
-        vl = VelpLabel(language_id=language_id,
-                       content=content,
-                       id=max_id + 1)
+
+        vl = VelpLabel()
         self.session.add(vl)
-        self.session.commit()
+        self.session.flush()
+        self.add_velp_label_translation(vl.id, language_id, content)
         return vl.id
 
     def add_velp_label_translation(self, label_id: int, language_id: str, content: str):
@@ -138,14 +141,9 @@ class Velps(TimDbBase):
         :param language_id: Language chosen
         :param content: New translation
         """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      INSERT INTO
-                      VelpLabel(id, language_id, content)
-                      VALUES (%s, %s, %s)
-                      """, [label_id, language_id, content]
-                       )
-        self.db.commit()
+        vlc = VelpLabelContent(velplabel_id=label_id, language_id=language_id, content=content)
+        self.session.add(vlc)
+        self.session.commit()
 
     def update_velp_label(self, label_id: int, language_id: str, content: str):
         """Updates content of label in specific language.
@@ -155,14 +153,9 @@ class Velps(TimDbBase):
         :param content: Updated content
         :return:
         """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      UPDATE VelpLabel
-                      SET content = %s
-                      WHERE id = %s AND language_id = %s
-                      """, [content, label_id, language_id]
-                       )
-        self.db.commit()
+        vlc = self.session.query(VelpLabelContent).filter((VelpLabelContent.velplabel_id == label_id) & (VelpLabelContent.language_id == language_id)).one()
+        vlc.content = content
+        self.session.commit()
 
     def get_velp_label_ids_for_velp(self, velp_id: int) -> dict():
         """Gets labels for one velp.
@@ -398,9 +391,9 @@ class Velps(TimDbBase):
         """
         cursor = self.db.cursor()
         cursor.execute("""
-                       SELECT VelpLabel.id, VelpLabel.content
-                       FROM VelpLabel
-                       WHERE VelpLabel.language_id = %s AND VelpLabel.id IN (
+                       SELECT VelpLabelContent.velplabel_id as id, VelpLabelContent.content
+                       FROM VelpLabelContent
+                       WHERE VelpLabelContent.language_id = %s AND VelpLabelContent.velplabel_id IN (
                          SELECT DISTINCT LabelInVelp.label_id
                          FROM LabelInVelp
                          WHERE LabelInVelp.velp_id IN (
