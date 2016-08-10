@@ -2,7 +2,7 @@
  * Handles logic behind single annotation. Annotations uses attribute as a directive declaration, 
  * because IE does not support custom elements reliably.
  * 
- * @module velpSummary
+ * @module annotation
  * @author Joonas Lattu
  * @author Petteri Palojärvi
  * @author Seppo Tarvainen
@@ -15,7 +15,9 @@
  var timApp = angular.module('timApp');
  */
 
-/* Directive for marking */
+/** Directive for marking
+ * @lends module:reviewController
+ */
 timApp.directive("annotation",['$window', function ($window, $timeout) {
     "use strict";
     var console = $window.console;
@@ -65,6 +67,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
             /**
              * Toggle annotation visibility
+             * @method toggleAnnotation
              */
             scope.toggleAnnotation = function () {
                 if (false ){//scope.$parent.$parentNode.className === "notes" ){// FIX this scope.$parent.className === "notes" && element.velpElement.parent().className ===  "notes" && scope.$parent.n.parentElement.className ===  "notes"parent.n.parentElement
@@ -80,6 +83,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
             /**
              * Update annotation z-index attribute.
+             * @method updateVelpZIndex
              */
             scope.updateVelpZIndex = function () {
                 if (scope.velpElement === null) {
@@ -94,6 +98,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
             /**
              * Show annotation, used in summary
+             * @method showAnnotation
              */
             scope.showAnnotation = function () {
                 scope.showHidden = false;
@@ -102,8 +107,10 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
                 scope.updateVelpZIndex();
             };
+
             /**
              * Focus comment field.
+             * @method focusTextarea
              */
             scope.focusTextarea =function(){
                return true;
@@ -113,6 +120,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
             /**
              * Delete selected annotation. Queries parent scope.
+             * @method deleteAnnotation
              */
             scope.deleteAnnotation = function () {
 
@@ -128,6 +136,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
             /**
              * Changes points of selected annotation. Queries parent scope.
+             * @method changePoints
              */
             scope.changePoints = function () {
                 console.log(scope.points);
@@ -136,6 +145,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
             /**
              * Save changes to annotation
+             * @method saveChanges
              */
             scope.saveChanges = function () {
                 var id = scope.$parent.getRealAnnotationId(scope.aid);
@@ -175,6 +185,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
             /**
              * Check if user has rights to edit annoatation.
+             * @method checkRights
              * @returns {boolean} if user has rights or not.
              */
             scope.checkRights = function () {
@@ -183,6 +194,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
             /**
              * Check if annotation is changed comparing to last saved state.
+             * @method checkIfChanged
              * @returns {boolean}
              */
             scope.checkIfChanged = function () {
@@ -196,9 +208,11 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     return true;
                 return false;
             };
+
             /**
              * Detect cntr-S and cntr-Enter on textarea
-             * @returns {boolean}
+             * @method keyDownFunc
+             * @param event - current event
              */
             scope.keyDownFunc = function (event) {
                  if (event.keyCode === scope.ctrlKey) {
@@ -214,6 +228,12 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     }
                 }
 		    };
+
+            /**
+             * Detect if key is released
+             * @method keyUpFunc
+             * @param event - current event
+             */
             scope.keyUpFunc = function (event) {
                  if (event.keyCode === scope.ctrlKey) {
                      scope.ctrlDown = false;

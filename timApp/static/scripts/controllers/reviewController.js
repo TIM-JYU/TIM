@@ -15,6 +15,10 @@ var timApp = angular.module('timApp');
 
 var UNDEFINED = "undefined";
 
+/**
+ * Angular controller for handling annotations
+ * @lends module:reviewController
+ */
 timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile', function ($scope, $http, $window, $compile) {
     "use strict";
     var console = $window.console;
@@ -31,6 +35,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Makes post request to given url
+     * @method makePostRequest
      * @param url - Request url
      * @param params - Query parameters
      * @param successMethod - Method that is run when request is successful.
@@ -48,6 +53,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Loads document annotations into view
+     * @method loadDocumentAnnotations
      */
     $scope.loadDocumentAnnotations = function () {
         var annotationsToRemove = [];
@@ -110,6 +116,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Get children (not childNodes) of the element.
+     * @method getElementChildren
      * @param element - Element that children is requested.
      * @returns {Array}
      */
@@ -128,8 +135,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Get parent element of the given element
+     * @method getElementParent
      * @param element - Element which parent is queried
-     * @returns element parent
+     * @returns {Element} element parent
      */
     var getElementParent = function (element) {
         /*
@@ -147,9 +155,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Gets element parent element when certain attribute is present.
+     * @method getElementParentUntilAttribute
      * @param element - Element which parent is queried
      * @param attribute - Attribute as string
-     * @returns first element parent that has given attribute
+     * @returns {Element} first element parent that has given attribute
      */
     var getElementParentUntilAttribute = function (element, attribute) {
         //console.log(element);
@@ -162,6 +171,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Checks if given element is an annotation
+     * @method checkIfAnnotation
      * @param element - Element to check
      * @returns boolean
      */
@@ -178,6 +188,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Loads annotations to given answer.
+     * @method loadAnnotationsToAnswer
      * @param answer_id - Answer id
      * @param par_id - Paragraph id
      */
@@ -216,6 +227,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Get all annotaions by given answer id.
+     * @method getAnnotationsByAnswerId
      * @param id - Answer id
      * @returns {Array} answer's annotation
      */
@@ -238,7 +250,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Adds annotation to given element on given coordinate
-     * TODO: Add logic to try-block that handles annotations that breaks HTML-tags.
+     * @method addAnnotationToCoord
      * @param range - Annotation location
      * @param annotation - Annotation info
      * @param show - Whether annotation is shown when created
@@ -272,6 +284,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Adds annotation to given element. Puts annotation to the "club of missing velps".
+     * @method addAnnotationToElement
      * @param el - Given element
      * @param annotation - Annotation info
      * @param show - Whether annotation is shown when created
@@ -287,10 +300,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         console.log(reason);
         $compile(span)($scope); // Gives error [$compile:nonassign]
     };
+
     /**
      * Adds meta annotation. Puts to paragraph margin link to main
-     * @param annotation
-     * @param show -
+     * @method addAnnotationMetaElement
+     * @param annotation - annotation info
+     * @param show - Whether annotation is shown when created
      */
     var addAnnotationMetaElement = function (el, annotation, show){
         var element = document.createElement("span");
@@ -324,7 +339,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         element.appendChild(points);
         addElementToParagraphMargin(el, element);
         $compile(element)($scope);
-    }
+    };
 
     $scope.toggleTextAnnotation = function (id) {
         for (var i = 0; i < $scope.annotations.length; i++) {
@@ -338,6 +353,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Adds element to paragraph margin.
+     * @method addElementToParagraphMargin
      * @param par - Paragraph where element is added
      * @param el - Element to add
      */
@@ -355,6 +371,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Stores element for velping.
+     * @method createVelpBadge
      */
     var createVelpBadge = function () {
         var btn = document.createElement("input");
@@ -370,15 +387,16 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Updates velp badge to correct element
-     * @param oldElment - Element, where badge was
+     * @method updateVelpBadge
+     * @param oldElement - Element, where badge was
      * @param newElement - Element, where badge needs to go
      */
-    $scope.updateVelpBadge = function (oldElment, newElement) {
+    $scope.updateVelpBadge = function (oldElement, newElement) {
         if (newElement === null) {
             return null;
-        } else if (oldElment === null) {
+        } else if (oldElement === null) {
             addElementToParagraphMargin(newElement, createVelpBadge(newElement.id));
-        } else if (oldElment.id !== newElement.id) {
+        } else if (oldElement.id !== newElement.id) {
             $scope.clearVelpBadge(null);
             addElementToParagraphMargin(newElement, createVelpBadge(newElement.id));
         }
@@ -386,6 +404,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Closes element selection
+     * @param e - event
      */
     $scope.clearVelpBadge = function (e) {
         var btn = document.getElementById("velpBadge");
@@ -407,6 +426,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Returns real ids of annotations
+     * @method getRealAnnotationId
      * @param id - Annotation ID
      * @returns {int} Annotation ID
      */
@@ -419,6 +439,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Delete annotation
+     * @method deleteAnnotation
      * @param id - Annotation id
      * @param inmargin - Whether annotation is margin annotation or not
      */
@@ -451,14 +472,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         });
     };
 
-    /**
-     * Delete annotation
-     * TODO: Make query to database
-     * @param id annotation id
-     */
+
     /**
      * Change annotation points
-     * @param points annotation points
+     * @method changeAnnotationPoints
+     * @param id - annotation id
+     * @param points - annotation points
      */
     $scope.changeAnnotationPoints = function (id, points) {
         for (var i = 0; i < $scope.annotations.length; i++) {
@@ -470,8 +489,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Add comment
-     * @param id name comment
+     * Add comment to given annotation
+     * @method addComment
+     * @param id
+     * @param name
+     * @param comment
      */
      $scope.addComment = function (id, name, comment) {
         for (var i = 0; i < $scope.annotations.length; i++) {
@@ -489,7 +511,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Change visibility
-     * @param id visibility
+     * @method changeVisibility
+     * @param id - annoation id
+     * @param visibility - annotation visibility
      */
     $scope.changeVisibility = function (id, visiblity) {
         for (var i = 0; i < $scope.annotations.length; i++) {
@@ -502,6 +526,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Select text range.
+     * @method selectText
      * TODO: When annotations can break tags, check annotations from all elements in selection
      */
     $scope.selectText = function () {
@@ -551,6 +576,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Checks if given range object breaks taglines. Returns true if taglines are broken.
+     * @method isSelectionTagParentsUnequal
      * @param range - Range object
      * @returns {boolean}
      */
@@ -561,6 +587,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Checks iteratively if element has annotation as parent
+     * @method hasSelectionParentAnnotation
      * @param range - Range object
      * @returns {boolean}
      */
@@ -585,6 +612,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Checks if element has any class in illegalClasses array.
+     * @method hasAnyIllegalClass
      * @param element - Element to be checked
      * @returns {boolean} whether illegal class was found or not.
      */
@@ -598,6 +626,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Checks recursively if selection has annotations as children.
+     * @method hasSelectionChildrenAnnotation
      * @param range - Selection
      * @returns {boolean} whether range has annotations as children or not.
      */
@@ -619,6 +648,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Check if element children has annotation
+     * @method hasElementChildrenAnnotation
      * @param element - Element to check
      * @returns {boolean} Whether annotatin was found or not
      */
@@ -639,6 +669,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Get velp by its id
+     * @method getVelpById
      * @param id - Velp to find
      * @returns velp or undefined
      */
@@ -652,6 +683,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Get marking highlight style
+     * @method getMarkingHighlight
      * @param points - Points given in marking
      * @returns {string} Highlight style
      */
@@ -697,8 +729,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Uses selected velp, if area is selected.
-     * TODO: When annotations can cross HTML-tags, change end coordinate according to end element
-     * TODO: Also get parelement according to endContainer
+     * @method useVelp
+     * @todo When annotations can cross HTML-tags, change end coordinate according to end element.
+     * @todo Also get parelement according to endContainer
      * @param velp - Velp selected in velpSelection directive
      */
     $scope.useVelp = function (velp) {
@@ -825,6 +858,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Gets answer info of element. Returns null if no answer found.
+     * @method getAnswerInfo
      * @param start - Paragaph where answerbrowser element is searched.
      * @returns {*}
      */
@@ -853,6 +887,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Gets array of element indexes from parent to start
+     * @method getElementPositionInTree
      * @param start - Starting element
      * @param array - Array of indexes
      * @returns {*}
@@ -892,6 +927,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     /**
      * Get start offset according to "original state" of DOM tree.
      * Ignores annoations elements, but not elements inside annotation
+     * @method getRealStartOffset
      * @param el - Start container
      * @param startoffset - Original start offset
      * @returns {*}
@@ -925,10 +961,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     /**
      * Get start and end node numbers of created annotation element.
      * Ignores annoations elements, but not elements inside it.
+     * @method getNodeNumbers
      * @param el - Start container
      * @param aid - Annotation id
      * @param innerElement - Annotation content
-     * @returns {*[]}
+     * @returns {*}
      */
     var getNodeNumbers = function (el, aid, innerElement) {
         var parent = el;
@@ -974,6 +1011,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Get comments of given marking
+     * @method getMarkingComments
      * @param id - Marking id
      * @returns {Array|*|string|boolean}
      */
@@ -986,6 +1024,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Create pop over marking element
+     * @method createPopOverElement
      * @param annotation marking info
      * @param show wether to show marking or not
      * @returns {Element}
@@ -1028,6 +1067,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Annotation to be showed, despite the name...
+     * @method toggleAnnotation
      * @param annotation - Annotatin to be showed.
      */
     $scope.toggleAnnotation = function (annotation) {
@@ -1085,6 +1125,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Scroll window to given element.
+     * @method scrollToElement
      * @param element - Element to scroll to.
      */
     var scrollToElement = function (element) {
