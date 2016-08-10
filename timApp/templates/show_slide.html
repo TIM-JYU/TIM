@@ -20,28 +20,46 @@
         var pollInterval = 500;
     </script>
 {% endblock %}
+
 {% block body %}
     <div class="reveal" ng-controller="ViewCtrl">
         <div class="slides">
             <section>
                 {% if text %}
-                    {{ text[0].html|safe }}
+                    {% set prev_is_empty = False %}
+                    {% if 'settings' not in text[0].attrs %}
+                        <div class="{{[text[0].cls|trim, text[0].is_plugin|trim]|join(' ')|trim}}"
+                            id="{{ text[0].id }}"
+                            t="{{ text[0].t }}"
+                            attrs="{{ text[0].attrs_str }}">
+                                {{ text[0].html|safe }}
+                        </div>
+                        {% else %}
+                            {% set prev_is_empty = True %}
+                    {% endif %}
+
                     {% for t in text[1:] %}
-                        {% if t.md.startswith('---') and t.md.endswith('---') %}
+                        {% if t.md.startswith('---') and t.md.endswith('---') and not prev_is_empty %}
                             </section>
                             <section>
                                 {% else %}
-                                {% if (t.html|safe).startswith("<h1") or (t.html|safe).startswith("<h2") or (t.html|safe).startswith("<h3") %}
+                                {% if ((t.html|safe).startswith("<h1") or (t.html|safe).startswith("<h2") or (t.html|safe).startswith("<h3")) and not prev_is_empty %}
                                     </section>
                                     <section>
                                 {% endif %}
-                            {{ t.html|safe }}
+                                <div class="{{[t.cls|trim, t.is_plugin|trim]|join(' ')|trim}}"
+                                    id="{{ t.id }}"
+                                    t="{{ t.t }}"
+                                    attrs="{{ t.attrs_str }}">
+                                        {{ t.html|safe }}
+                                </div>
                         {% endif %}
                     {% endfor %}
                 {% endif %}
             </section>
         </div>
     </div>
+
     <script src="{{ url_for('static', filename='scripts/reveal/lib/js/head.min.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/reveal/js/reveal.min.js') }}"></script>
 
@@ -55,6 +73,8 @@
             progress: true,
             history: true,
             center: true,
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
             viewDistance: 10,
             theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
             transition: Reveal.getQueryHash().transition || 'fade', // default/cube/page/concave/zoom/linear/fade/none
@@ -76,7 +96,6 @@
                     }
                 },
                 {
-
                     src: "{{ url_for('static', filename='scripts/reveal/plugin/notes/notes.js') }}",
                     async: true,
                     condition: function () {
@@ -157,5 +176,26 @@
                 Reveal.slide()
             }, 2000);
         };
+
+        {% if slide_background_url %}
+            var background_url = "{{ slide_background_url }}"
+            if (background_url == "none") {
+                $('.backgrounds').css('background-image', "None");
+                //document.body.style.backgroundImage = "None";
+            } else {
+                $('.backgrounds').css('background-image', "url('" + background_url + "')");
+                //document.body.style.backgroundImage = "url('" + background_url + "')";
+            }
+        {% endif %}
+
+        {% if slide_background_color %}
+            var background_color = "{{ slide_background_color }}"
+            if (background_color != "none") {
+                $('.backgrounds').css('background-color', background_color);
+                //document.body.style.backgroundColor = background_color;
+            }
+        {% endif %}
+
+
     </script>
 {% endblock %}

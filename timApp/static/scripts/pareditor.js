@@ -120,10 +120,10 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         // If preview is released make sure that preview doesn't go out of bounds
                         if ($scope.previewReleased) {
                             var previewOffset = previewDiv.offset();
-                            if (previewOffset.top < 0) {
+                            if (previewOffset.top < 0 || previewOffset.top > $window.innerHeight) {
                                 previewDiv.offset({'top': 0, 'left': previewDiv.offset().left});
                             }
-                            if (previewOffset.left < 0) {
+                            if (previewOffset.left < 0 || previewOffset.left > $window.innerWidth) {
                                 previewDiv.offset({'top': previewDiv.offset().top, 'left': 0 });
                             }
                         }
@@ -665,6 +665,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         // Remove the form and return to editor
                         $element.find("#pluginRenameForm").get(0).remove();
                         $scope.renameFormShowing = false;
+                        $scope.saving = false;
                     }).error(function (data, status, headers, config) {
                         $window.alert("Failed to cancel save: " + data.error);
                     });
@@ -871,6 +872,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
 
                 $scope.saveClicked = function () {
+                    saving = true;
                     if ($scope.renameFormShowing) {
                         $scope.renameTaskNamesClicked($scope.inputs, $scope.duplicates, true);
                     }
@@ -905,6 +907,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         }
                     }).error(function (data, status, headers, config) {
                         $window.alert("Failed to save: " + data.error);
+                        saving = false;
                     });
                     if ($scope.options.touchDevice) $scope.changeMeta();
                 };
@@ -1711,6 +1714,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     var buttons = [];
                     buttons.push($scope.createMenuButton("Slide break", "Break text to start a new slide", "wrapFn(ruleClicked)"));
                     buttons.push($scope.createMenuButton("Slide fragment", "Content inside the fragment will be hidden and shown when next is clicked in slide view", "surroundClicked('§§', '§§'); wrapFn()"));
+                    buttons.push($scope.createMenuButton("Fragment block", "Content inside will show as a fragment and may contain inner slide fragments", "surroundClicked('<§', '§>'); wrapFn()"));
                     $scope.createMenu($event, buttons);
                 }
 

@@ -108,16 +108,47 @@ def par_list_to_html_list(pars,
 
 # Does changes to html after Dumbo and returns edited html
 def edit_html_with_own_syntax(raw: list) -> list:
-    # HTML element that has content surrounded with fragment_string will have it's class set to fragment
-    fragment_string = "§§"
     index = 0
-    # Gets edited html if content is surrounded with given string
     while index < len(raw):
-        text = raw[index]
-        raw[index] = check_and_edit_html_if_surrounded_with(text, fragment_string, change_classes_to_fragment)
+        html_text = raw[index]
+        raw[index] = make_slide_fragments(html_text)
+        #raw[index] = check_and_edit_html_if_surrounded_with(text, fragment_string, change_classes_to_fragment)
         index += 1
-
     return raw
+
+
+# Adds the necessary html to make slide fragments work with reveal.js
+def make_slide_fragments(html_text: str) -> str:
+    # TODO: Make algorithm work with more than 2 levels of fragments
+    # TODO: Make different styles of fragments available, possible syntax could be §§{shrink} or something
+    # TODO: Refactor to make this more reusable
+    # TODO: Make sure that this doesn't break latex conversion
+
+    # Split from fragment area start tag <§
+    fragments = html_text.split("&lt;§")
+    # If no fragment areas were found we look for fragment pieces
+    if len(fragments) < 2:
+        new_html = check_and_edit_html_if_surrounded_with(html_text, "§§", change_classes_to_fragment)
+        return new_html
+    else:
+        index = 1
+        # For every fragment area
+        while index < len(fragments):
+            # Try to find area end
+            index_of_area_end = fragments[index].find("§&gt;")
+            # If not found
+            if index_of_area_end == -1:
+                # Look for normal fragments
+                fragments[index] = check_and_edit_html_if_surrounded_with(fragments[index], "§§", change_classes_to_fragment)
+            else:
+                # Make a new fragment area if start and end found
+                fragments[index] = '<div class="fragment"><p>' + fragments[index]
+                fragments[index] = fragments[index].replace("§&gt;", "</div>", 1)
+                # Look for inner fragments
+                fragments[index] = check_and_edit_html_if_surrounded_with(fragments[index], "§§", change_classes_to_fragment)
+            index += 1
+        new_html = "".join(fragments)
+        return new_html
 
 
 # Checks if html element's content is surrounded with given string and edits it accordingly
@@ -142,7 +173,7 @@ def change_classes_to_fragment(html_list: list) -> str:
     index = 1
     while index < len(html_list):
         # Changes html element's class to fragment
-        new_htmls = change_class(html_list[index-1], html_list[index], "fragment")
+        new_htmls = change_class(html_list[index - 1], html_list[index], "fragment")
         # Apply changes
         html_list[index-1] = new_htmls[0]
         html_list[index] = new_htmls[1]
@@ -150,7 +181,6 @@ def change_classes_to_fragment(html_list: list) -> str:
 
     # Join the list into a string
     new_html = "".join(html_list)
-
     return new_html
 
 
@@ -172,18 +202,20 @@ def change_class(text_containing_html_tag: str, text_content: str, new_class: st
             if "class=" in html_tag:
                 # Add the new class to html element classes
                 index_of_class = html_tag.rfind("class=")
-                text_containing_html_tag = text_containing_html_tag[:(index_of_tag_start+index_of_class+7)] + new_class + " " + text_containing_html_tag[(index_of_tag_start+index_of_class+7):]
+                text_containing_html_tag = text_containing_html_tag[:(
+                    index_of_tag_start + index_of_class + 7)] + new_class + " " + text_containing_html_tag[(
+                    index_of_tag_start + index_of_class + 7):]
             else:
                 # If there isn't class in html tag we add that and the new class
-                text_containing_html_tag = text_containing_html_tag[:index_of_tag_end] + ' class="' + new_class + '"' + text_containing_html_tag[index_of_tag_end:]
+                text_containing_html_tag = text_containing_html_tag[
+                                           :index_of_tag_end] + ' class="' + new_class + '"' + text_containing_html_tag[
+                                                                                               index_of_tag_end:]
         else:
             text_content = '<span class="' + new_class + '">' + text_content + '</span>'
     # If there is an error we do nothing but return the original text
     except ValueError as e:
         pass
-
     return [text_containing_html_tag, text_content]
-
 
 
 def insert_heading_numbers(html_str, heading_info, auto_number_headings=True, heading_format=''):

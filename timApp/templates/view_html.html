@@ -55,6 +55,7 @@
     {% block viewhtml_customcss %}
         {% include 'doc_customcss.html' %}
     {% endblock %}
+
     <script>
         var noBrowser = {{ no_browser|tojson }};
         var showIndex = {{(headers|length > 0)|tojson}};

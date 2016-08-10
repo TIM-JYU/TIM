@@ -108,6 +108,7 @@ var RevealNotes = (function() {
         //OMIA
         var notesButton = document.createElement('div');
         notesButton.setAttribute('class', 'notesnavi enabled');
+		notesButton.setAttribute('title', 'Open speaker view (Hotkey "s")');
         document.getElementsByClassName('controls')[0].appendChild(notesButton);
         //OMIA
 
@@ -124,7 +125,7 @@ var RevealNotes = (function() {
 		}, false );
 
         //OMIA
-        notesButton.addEventListener('click', openNotes)
+        notesButton.addEventListener('click', openNotes);
         //OMIA
 	}
 

@@ -16,6 +16,8 @@ class DocSettings:
     heading_format_key = 'heading_format'
     show_task_summary_key = 'show_task_summary'
     no_question_auto_numbering_key = 'no_question_auto_numbering'
+    slide_background_url_key = 'slide_background_url'
+    slide_background_color_key = 'slide_background_color'
 
     @classmethod
     def is_valid_paragraph(cls, par):
@@ -92,6 +94,12 @@ class DocSettings:
 
     def get_source_document(self) -> Optional[int]:
         return self.__dict.get(self.source_document_key)
+
+    def get_slide_background_url(self, default=None) -> 'str|None':
+        return self.__dict.get(self.slide_background_url_key, default)
+
+    def get_slide_background_color(self, default=None) -> 'str|None':
+        return self.__dict.get(self.slide_background_color_key, default)
 
     def set_source_document(self, source_docid: Optional[int]):
         self.__dict[self.source_document_key] = source_docid

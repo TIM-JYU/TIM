@@ -113,7 +113,7 @@
         <button class="timButton" title="Change editor between Ace and normal textarea" ng-click="changeEditor()">Editor</button>
         <button class="timButton" ng-show="fullscreenSupported()" ng-click="goFullScreen()">Fullscreen</button>
         <button class="timButton savePar" title="Save (Ctrl-S)" ng-click="saveClicked()">Save</button>
-        <button class="timButton cancelPar" ng-click="cancelClicked()">Cancel</button>
+        <button class="timButton cancelPar" ng-disabled="saving" ng-click="cancelClicked()">Cancel</button>
         <button class="timButton deletePar" ng-show="options.showDelete" ng-click="deleteClicked()">Delete</button>
     </div>
     <div class="tags">

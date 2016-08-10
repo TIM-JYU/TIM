@@ -267,13 +267,20 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     raw_css = doc_settings.css() if doc_settings else None
     doc_css = sanitize_html('<style type="text/css">' + raw_css + '</style>') if raw_css else None
 
+    # Custom backgrounds for slides
+    slide_background_url = None
+    slide_background_color = None
+
     if template_name == 'show_slide.html':
+        slide_background_url = doc_settings.get_slide_background_url()
+        slide_background_color = doc_settings.get_slide_background_color()
         do_lazy = False
     else:
         do_lazy = get_option(request, "lazy", True)
 
     show_questions = False
     no_question_auto_numbering = None
+
     if route == 'lecture' and has_edit_access(doc_id):
         show_questions = True
         no_question_auto_numbering = doc_settings.auto_number_questions()
@@ -328,6 +335,8 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                              settings=settings,
                              no_browser=hide_answers,
                              no_question_auto_numbering=no_question_auto_numbering,
+                             slide_background_url=slide_background_url,
+                             slide_background_color=slide_background_color,
                              message=message,
                              task_info={'total_points': total_points,
                                         'tasks_done': tasks_done,
