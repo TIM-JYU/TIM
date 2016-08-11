@@ -65,7 +65,7 @@ timApp.controller("ViewCtrl", [
     '$timeout',
     function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout) {
         "use strict";
-        timLogTime("VieCtrl start","view");
+        timLogTime("ViewCtrl start","view");
         http.defaults.headers.common.Version = $window.version.hash;
         http.defaults.headers.common.RefererPath = $window.refererPath;
         sc.noBrowser = $window.noBrowser;
