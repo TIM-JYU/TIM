@@ -389,6 +389,9 @@ timApp.controller("ViewCtrl", [
                     $par.append($div);
                     $compile($div[0])(sc);
                     sc.editing = true;
+                    $timeout(function () {
+                        sc.goToEditor();
+                    }, 0);
                 };
 
                 if (options.showDelete) {
@@ -673,7 +676,15 @@ timApp.controller("ViewCtrl", [
             $pars.prepend($popup); // need to prepend to DOM before compiling
             $compile($popup[0])(sc);
             // TODO: Set offset for the popup
-            var element = $popup;
+
+            // scroll to fully show the menu if it is not fully visible
+            $timeout(function () {
+                var element = $('.actionButtons');
+                sc.scrollToElement(element);
+            }, 100);
+        };
+
+        sc.scrollToElement = function(element){
             var viewport = {};
             viewport.top = $(window).scrollTop();
             viewport.bottom = viewport.top + $(window).height();
