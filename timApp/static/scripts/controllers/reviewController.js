@@ -219,7 +219,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 range.setStart(element, placeInfo.start.offset);
                 range.setEnd(element, placeInfo.end.offset);
                 $scope.addAnnotationToCoord(range, annotations[i], false);
-                //addAnnotationToElement(par, annotations[i], false, "Added also margin annotation");
+                addAnnotationToElement(par, annotations[i], false, "Added also margin annotation");
             }
 
         }
@@ -703,12 +703,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
 
     $scope.notAnnotationRights = function (points) {
-
-        if (points === null || points === 0){
+    if ($scope.$parent.rights.teacher) {
+        return false;
+    } else {
+        if (points === null) {
             return false;
         } else {
             return true;
         }
+    }
     }
 
     /**
@@ -719,12 +722,17 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     $scope.showDisabledText = function(state) {
         if (state){
-            return "You don't have rights to make annotations with points.";
+            return "You need to have teacher rights to make annotations with points.";
         }
     }
 
+    /**
+     * Return true if user has teacher rights.
+     * @returns {boolean}
+     */
+
     $scope.allowChangePoints = function () {
-        if ($scope.$parent.teacherMode) return true;
+        return $scope.$parent.rights.teacher;
     }
 
     /**
@@ -1081,7 +1089,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                     abl.isolateScope().loadAnswerBrowser();
                 }
                 scrollToElement(annotationElement);
-                addAnnotationToElement(par, annotation, false, "Added also margin annotation");
+                //addAnnotationToElement(par, annotation, false, "Added also margin annotation");
 
         } catch (e) {
             // Find answer browser and isolate its scope
