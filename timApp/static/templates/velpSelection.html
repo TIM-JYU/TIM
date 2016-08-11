@@ -82,8 +82,10 @@
                                         Velp content is required!
                                     </p>
 
-                                    <p><input type="number" ng-model="newVelp['points']"
+                                    <p ng-show="$scope.$parent.rights.teacher"><input type="number" ng-model="newVelp['points']"
                                               placeholder="Points" value="0"></p>
+                                    <p ng-hide="$scope.$parent.rights.teacher" class="velpInfoText">You need to have teacher rights set points in this document.</p>
+
 
                                     <fieldset ng-show="advancedOn">
                                         <legend>Labels</legend>
@@ -164,6 +166,7 @@
                                                               ng-repeat="label in velp.labels" title="label.content"
                                                               ng-style="{ color: getColor(label) }"></span>
                                                 </div>
+                                                <span>{{ showDisabledText(notAnnotationRights(velp.points)) }}</span>
                                                 </p>
                                                 <!-- Adds post-it style to the bottom of velp -->
                                                 <div class="bottom-part"></div>
@@ -178,17 +181,16 @@
                                                     <span class="float-right"
                                                           ng-click="selectVelpToEdit(velp); $event.stopPropagation();"
                                                           ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
-                                                    <span>{{ showDisabledText(notAnnotationRights(velp.points)) }}</span>
-
                                                 </p>
 
                                                 <p ng-show="(editVelpForm.velpName.$invalid && !editVelpForm.velpName.$pristine) || (submitted.velp && editVelpForm.velpName.$invalid)"
                                                    class="error">
                                                     Velp content is required!
                                                 </p>
-                                                <p><input id="addVelpPoints" type="number" style="width: 100%;"
+                                                <p ng-show="$scope.$parent.rights.teacher"><input id="addVelpPoints" type="number" style="width: 100%;"
                                                           ng-model="velpToEdit['points']"
                                                           placeholder="Points" value="0"></p>
+                                                <p ng-hide="$scope.$parent.rights.teacher" class="velpInfoText">You need to have teacher rights change points in this document.</p>
 
                                                 <fieldset ng-show="advancedOn">
                                                     <legend>Labels

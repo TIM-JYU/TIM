@@ -722,7 +722,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     $scope.showDisabledText = function(state) {
         if (state){
-            return "You don't have rights to make annotations with points.";
+            return "You need to have teacher rights to make annotations with points.";
         }
     }
 
@@ -1089,7 +1089,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                     abl.isolateScope().loadAnswerBrowser();
                 }
                 scrollToElement(annotationElement);
-                addAnnotationToElement(par, annotation, false, "Added also margin annotation");
+                //addAnnotationToElement(par, annotation, false, "Added also margin annotation");
 
         } catch (e) {
             // Find answer browser and isolate its scope

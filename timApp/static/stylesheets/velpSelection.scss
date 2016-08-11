@@ -110,6 +110,7 @@
     height: 22em;
     position: absolute;
 }
+
 /*
 #searchVelps {
     width: 11em;
@@ -302,6 +303,10 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 .velpInfo {
     float: left;
     border: 0;
+}
+.velpInfoText {
+    font-size: x-small;
+    font-weight: normal;
 }
 
 .velpInfo input.points{

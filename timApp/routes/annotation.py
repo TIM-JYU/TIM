@@ -165,7 +165,7 @@ def add_comment() -> Dict:
     verifyLoggedIn()
     commenter_id = getCurrentUserId()
     timdb.annotations.add_comment(annotation_id, commenter_id, content)
-
+    # TODO notice with email to annotator if commenter is not itself
     return jsonResponse(timdb.users.get_user(commenter_id))
 
 
