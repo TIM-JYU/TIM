@@ -74,7 +74,7 @@ def correct_yaml(text):
     """
     lines = text.splitlines()
     s = ""
-    p = re.compile("^[^ :]*:[^ ]")  # kissa:istuu
+    p = re.compile("^[ \t]*[^ :]*:[^ ]")  # kissa:istuu
     pm = re.compile("^[^ :]+:[ ]*\|[ ]*[^ ]+[ ]*$")  # program: ||| or  program: |!!!
     multiline = False
     end_str = ''
