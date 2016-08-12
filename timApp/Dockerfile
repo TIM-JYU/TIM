@@ -84,8 +84,6 @@ run bower --allow-root install angular-sanitize#~1.4
 run bower --allow-root install bootstrap#~3.3
 run bower --allow-root install jquery-ui#~1.11
 run bower --allow-root install katex#~0.5
-run bower --allow-root install ng-table#~0.5
-run bower --allow-root install ng-table-export
 run bower --allow-root install rangyinputs
 run bower --allow-root install ngstorage#~0.3
 run bower --allow-root install chartjs#~1.0
