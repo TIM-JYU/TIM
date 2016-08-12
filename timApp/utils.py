@@ -75,14 +75,16 @@ def correct_yaml(text):
     lines = text.splitlines()
     s = ""
     p = re.compile("^[ \t]*[^ :]*:[^ ]")  # kissa:istuu
-    pm = re.compile("^[^ :]+:[ ]*\|[ ]*[^ ]+[ ]*$")  # program: ||| or  program: |!!!
+    pm = re.compile("^( *)[^ :]+:[ ]*\|[ ]*[^ ]+[ ]*$")  # program: ||| or  program: |!!!
     multiline = False
     end_str = ''
     for line in lines:
         line = line.rstrip()
         if p.match(line) and not multiline:
             line = line.replace(':', ': ', 1)
-        if pm.match(line):
+        r = pm.match(line)
+        if r and not multiline:
+            indent = " " + r.group(1)
             multiline = True
             line, end_str = line.split("|", 1)
             end_str = end_str.rstrip()
@@ -92,7 +94,7 @@ def correct_yaml(text):
             if line == end_str:
                 multiline = False
                 continue
-            line = " " + line
+            line = indent + line
         s = s + line + "\n"
     return s
 

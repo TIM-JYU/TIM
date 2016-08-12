@@ -1,0 +1,9 @@
+Numero
+Numero jolle voidaan antaa arvoväli
+``` {#PLUGINNAMEHERE plugin="csPlugin"}
+type: text/tiny
+-pointsRule:
+    numberRule: "pisteitä 1 jos yli 3 mutta alle 6"
+cols: 3
+stem: "Anna luku väliltä 3-6"
+```

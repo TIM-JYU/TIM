@@ -27,6 +27,7 @@ csApp.directive('csTaunoRunnerInput', ['Upload','$sanitize','$compile', function
 csApp.directive('csParsonsRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('parsons',false); }]);
 csApp.directive('csSageRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('sage',true); }]);
 csApp.directive('csSimcirRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('simcir',false); }]);
+csApp.directive('csTextRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('text',false); }]);
 // csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
 
 // redefine csApp.sanitize and csApp.compile if needed
@@ -270,6 +271,17 @@ csApp.directiveTemplateCS = function(t,isInput) {
 	csApp.taunoPHIndex = 3;
     csLogTime("dir templ " + t);
     if ( TESTWITHOUTPLUGINS ) return '';
+
+    if ( t == 'text') {
+        return '<div class="csRunDiv csTinyDiv" ng-cloak style="text-align: left;">' +
+                '<p>Here comes header</p>' +
+    		  '<span ng-if="stem" class="stem" >{{stem}}</span>' +
+			  '<input class="csTinyText no-popup-menu" ng-hide="noeditor && !viewCode" size="{{cols}}" ng-model="usercode" ng-trim="false" ng-attr-placeholder="{{placeholder}}" ng-keypress="runCodeIfCR($event);" />'+
+			  '<button ng-if="isRun"  ng-disabled="isRunning" title="(Ctrl-S)" ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
+			  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>&nbsp&nbsp' +
+			  '<span class="csRunError" ng-if="runError">{{error}}</span>'+
+			  '</div>';
+    }
     
 	return  '<div class="csRunDiv " ng-cloak>' + 
     
@@ -472,6 +484,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"codeover",false);
 			csApp.set(scope,attrs,"open",!scope.isFirst);
 			csApp.set(scope,attrs,"rows",1);
+			csApp.set(scope,attrs,"cols",10);
 			csApp.set(scope,attrs,"maxrows",100);
 			csApp.set(scope,attrs,"attrs.bycode");
 			csApp.set(scope,attrs,"placeholder",english ? "Write your code here": "Kirjoita koodi tähän:");
@@ -997,6 +1010,11 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         return true;
     }
     
+    $scope.runCodeIfCR = function(event) {
+        $scope.runError ="";
+        if ( event.keyCode == 13 ) $scope.runCode();
+    }
+
     $scope.runCodeCommon = function(nosave, extraMarkUp)
     {
 		var t = languageTypes.getRunType($scope.selectedLanguage,"cs");  
@@ -1759,7 +1777,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         var aceHtml = '<div class="no-popup-menu"><div ng-show="mode" ui-ace="{onLoad:aceLoaded,  mode: \'{{mode}}\', require: [\'ace/ext/language_tools\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
         // var aceHtml = '<div ng-show="mode" ui-ace="{  mode: \'{{mode}}\',    require: [\'/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
                    // ' style="left:-6em; height:{{rows*1.17}}em;" class="csRunArea csEditArea" ng-hide="noeditor"  ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
-                   ' style="left:-1em; width: 105% !important;" class="csRunArea csEditArea" ng-hide="noeditor"  ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
+                   //' style="left:-5px; width: 101% !important;'+
+                   ' " class="csRunArea csEditArea csAceEditor" ng-hide="noeditor"  ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
                    /*
                    '<div style="right:0px;">'+
                    '<button ng-click="moveCursor(-1, 0);">&#x21d0;</button>'+

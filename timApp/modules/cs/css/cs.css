@@ -7,9 +7,24 @@
   width: 40em;
 }
 
+.csTinyDiv .stem {
+    padding-left: 8px;
+}
+
+.csTinyText {
+    margin-top: 4px;
+    margin-left: 1em;
+    margin-right: 1em;
+}
+
 .csRunArea {
 	width: 50em;
-} 
+}
+
+.csAceEditor {
+    width: 101% !important;
+    margin-left: -5px !important;
+}
 
 /* @import url('http://fonts.googleapis.com/css?family=Droid+Sans+Mono'); */
 
