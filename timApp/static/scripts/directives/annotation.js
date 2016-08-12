@@ -135,6 +135,14 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             };
 
             /**
+             * Update annotation to margin
+             * @method updateAnnotationToMargin
+             */
+            scope.updateAnnotationToMargin = function () {
+                scope.$parent.updateAnnotationToMargin(scope.aid, scope.ismargin);
+            }
+
+            /**
              * Changes points of selected annotation. Queries parent scope.
              * @method changePoints
              */

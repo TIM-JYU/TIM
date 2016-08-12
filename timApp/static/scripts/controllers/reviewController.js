@@ -96,6 +96,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                     range.setStart(startel, placeInfo.start.offset);
                     range.setEnd(endel, placeInfo.end.offset);
                     $scope.addAnnotationToCoord(range, $scope.annotations[i], false);
+                    addAnnotationToElement(parent, $scope.annotations[i], false, "Added also margin annotation");
                 } catch (err) {
                     addAnnotationToElement(parent, $scope.annotations[i], false, "Could not show annotation in correct place");
                 }
@@ -259,7 +260,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var span = $scope.createPopOverElement(annotation, show);
         try {
             range.surroundContents(span);
-            //addAnnotationToElement(span, annotation, false, "Added also margin annotation");
         } catch (err) {
             addAnnotationToElement(span, annotation, true, "Annotation crosses taglines");
             $scope.selectedArea = null;
@@ -279,7 +279,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
 
         $compile(span)($scope); // Gives error [$compile:nonassign]
-       //addAnnotationMetaElement(span, annotation, false);
     };
 
     /**
@@ -470,6 +469,40 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             console.log(json);
         });
     };
+     /**
+     * Update changed annotation to margin annota
+     * @method updateAnnotationToMargin
+     * @param id - Annotation id
+     */
+    $scope.updateAnnotationToMargin = function (id, inmargin) {
+        var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
+        //var annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
+        if(!inmargin) {
+            // nothing
+            for (var a = 0; a < $scope.annotations.length; a++) {
+                if (id === $scope.annotations[a].id){
+                    addAnnotationToElement($scope.createPopOverElement($scope.annotations[a], false), $scope.annotations[a], false,"Added also margin annotation");
+                }
+            }
+
+            console.log("updateAnnotationMargin");
+        } else {
+            //for (var a = 0; a < $scope.annotations.length; a++) {
+              //  if (id === $scope.annotations[a].id)
+                //    $scope.annotations.splice(a, 1);
+            //}
+            annotationParents[1].parentNode.removeChild(annotationParents[1]);
+            addAnnotationToElement($scope.createPopOverElement($scope.annotations[id], false), $scope.annotations[id], false,"Added also margin annotation");
+        }
+         for (var b = 0; b < $scope.annotations.length; b++) {
+            if (id === $scope.annotations[b].id){
+                addAnnotationToElement($scope.createPopOverElement($scope.annotations[b], false), $scope.annotations[b], false,"Added also margin annotation");
+            }
+         }
+
+        //annotationParents[0].parentNode.appendChild($scope.annotations[id]);
+    };
+
 
 
     /**
@@ -816,6 +849,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 $scope.annotationids[newAnnotation.id] = json.data.id;
                 console.log("Annotation to text");
                 console.log(json);
+                addAnnotationToElement($scope.selectedElement, newAnnotation, true, "Also");
             });
 
             $scope.selectedArea = undefined;
