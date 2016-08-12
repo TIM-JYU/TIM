@@ -1,5 +1,5 @@
-Numero
-Numero jolle voidaan antaa arvoväli
+Luku
+Luku jolle voidaan antaa arvoväli
 ``` {#PLUGINNAMEHERE plugin="csPlugin"}
 type: text/tiny
 -pointsRule:

@@ -429,6 +429,7 @@ csApp.directiveFunction = function(t,isInput) {
             var english = scope.lang=="en"; 
             scope.english = english;
 
+
             if ( (t == "tauno" || t === "simcir") ) { // Tauno translations
                 var taunoText = "Tauno";
                 if ( t === "simcir" ) taunoText = "SimCir";
@@ -461,6 +462,7 @@ csApp.directiveFunction = function(t,isInput) {
             scope.isText = rt == "text" || rt == "xml" || rt == "css";
             scope.isSage = languageTypes.getRunType(scope.type,false) == "sage";
             scope.isSimcir = t === "simcir";
+            scope.tiny = scope.type.indexOf("tiny") >= 0;
             
 			csApp.set(scope,attrs,"file");
 			csApp.set(scope,attrs,"viewCode",false);
@@ -487,7 +489,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"cols",10);
 			csApp.set(scope,attrs,"maxrows",100);
 			csApp.set(scope,attrs,"attrs.bycode");
-			csApp.set(scope,attrs,"placeholder",english ? "Write your code here": "Kirjoita koodi tähän:");
+			csApp.set(scope,attrs,"placeholder", scope.tiny ? "" : english ? "Write your code here": "Kirjoita koodi tähän:");
 			csApp.set(scope,attrs,"inputplaceholder",english ? "Write your input here": "Kirjoita syöte tähän");
 			csApp.set(scope,attrs,"argsplaceholder",scope.isText ? (english ? "Write file name here" : "Kirjoita tiedoston nimi tähän" ) : (english ? "Write your program args here": "Kirjoita ohjelman argumentit tähän"));
 			csApp.set(scope,attrs,"argsstem",scope.isText ? (english ? "File name:" : "Tiedoston nimi:") : (english ? "Args:": "Args"));
