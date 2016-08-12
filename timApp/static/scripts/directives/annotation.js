@@ -193,6 +193,33 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             };
 
             /**
+             * Detect user right to annotation to document.
+             * @param points - Points given in velp or annotation.
+             * @returns {boolean} - right to make annotations.
+             */
+
+            scope.notAnnotationRights = function (points) {
+                if (scope.$parent.rights.teacher) {
+                    return false;
+                } else {
+                    if (points === null) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                }
+            }
+
+            /**
+             * Return true if user has teacher rights.
+             * @returns {boolean}
+             */
+
+            scope.allowChangePoints = function () {
+                return scope.$parent.rights.teacher;
+            }
+
+            /**
              * Check if annotation is changed comparing to last saved state.
              * @method checkIfChanged
              * @returns {boolean}

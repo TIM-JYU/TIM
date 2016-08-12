@@ -348,7 +348,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 break;
             }
         }
-        //toggleAnnotation(annotation);
     }
 
     /**
@@ -698,20 +697,20 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Detect user right to annotation to document.
-     * @param points - Points given in velp
+     * @param points - Points given in velp or annotation.
      * @returns {boolean} - right to make annotations.
      */
 
     $scope.notAnnotationRights = function (points) {
-    if ($scope.$parent.rights.teacher) {
-        return false;
-    } else {
-        if (points === null) {
+        if ($scope.$parent.rights.teacher) {
             return false;
         } else {
-            return true;
+            if (points === null) {
+                return false;
+            } else {
+                return true;
+            }
         }
-    }
     }
 
     /**
@@ -724,15 +723,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         if (state){
             return "You need to have teacher rights to make annotations with points.";
         }
-    }
-
-    /**
-     * Return true if user has teacher rights.
-     * @returns {boolean}
-     */
-
-    $scope.allowChangePoints = function () {
-        return $scope.$parent.rights.teacher;
     }
 
     /**
