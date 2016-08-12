@@ -2,18 +2,17 @@
 {% block ngmodules %}
     {{ super() }}
     {% if teacher_mode %}
-    {{ (['oc.lazyLoad', 'ui.ace', 'ngStorage', "ngTable", "ngTableExport", "ngTableExportKorppi"] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
+    {{ (['ui.grid', 'ui.grid.selection', 'ui.grid.exporter', 'ui.grid.autoResize', 'oc.lazyLoad', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
     {% else %}
     {{ (['oc.lazyLoad', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
     {% endif %}
 {% endblock %}
 {% block ngscripts %}
     {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('bower.static', filename='angular-ui-grid/ui-grid.min.css') }}">
     <script src="{{ url_for('bower.static', filename='oclazyload/dist/ocLazyLoad.min.js') }}"></script>
     {% if teacher_mode %}
-        <script src="{{ url_for('bower.static', filename='ng-table/dist/ng-table.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='ng-table-export/ng-table-export.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/ng-table-exportKorppi.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular-ui-grid/ui-grid.js') }}"></script>
     {% endif %}
 
     {% for script in js %}
@@ -96,47 +95,10 @@
 
 {% block rightside %}
     {% if teacher_mode %}
-        <div ng-controller="UserListController" id="users" class="userlist" tim-draggable-fixed caption="Users with answers ({{ plugin_users|length }})">
+        <div ng-controller="UserListController" class="userlist" tim-draggable-fixed caption="Users with answers ({{ plugin_users|length }})">
             {% if plugin_users %}
                 {% raw %}
-                <table ng-table="tableParams" show-filter="true" class="table table-condensed ng-table-rowselected"
-                       export-csv="csv" export-korppi="expkorppi">
-                    <tr ng-repeat="user in $data"
-                        ng-click="changeUser(user)"
-                        ng-class="{'active': user == selectedUser}">
-                        <td ng-attr-title="{{user.real_name}}" data-title="'Full name'" sortable="'real_name'" filter="{ 'real_name': 'text' }">
-                            {{user.real_name}}
-                        </td>
-                        <td ng-attr-title="{{user.name}}" data-title="'User name'" sortable="'name'" filter="{ 'name': 'text' }">
-                            {{user.name}}
-                        </td>
-                        <td data-title="'Tasks'" sortable="'task_count'" filter="{ 'task_count': 'text' }">
-                            {{user.task_count}}
-                        </td>
-                        <td data-title="'Total points'" sortable="'total_points'"
-                            filter="{ 'total_points': 'text' }">
-                            {{user.total_points}}
-                        </td>
-                    </tr>
-                </table>
-                <form>
-                    <div class="form-group">
-                        <a class="timButton btn-sm" ng-mousedown="csv.generate()" ng-href="{{ csv.link() }}"
-                           download="users_{{ doc.id }}.csv">Export
-                            to CSV</a>
-                    </div>
-
-                    <div class="form-group">
-                        <div class="input-group input-group-sm">
-                            <input placeholder="Korppi field name" class="form-control" type="text" size="5"
-                                   name="korppiExportId" ng-model="expkorppi.korppiExportId">
-                  <span class="input-group-btn">
-                    <a class="timButton" ng-mousedown="expkorppi.generate()" ng-href="{{ expkorppi.link() }}"
-                       download="{{ expkorppi.korppiExportId }}.txt">Export to Korppi</a>
-                </span>
-                        </div>
-                    </div>
-                </form>
+                <div ui-grid="gridOptions" ui-grid-selection ui-grid-exporter ui-grid-auto-resize class="grid"></div>
                 {% endraw %}
             {% else %}
                 No answerers.

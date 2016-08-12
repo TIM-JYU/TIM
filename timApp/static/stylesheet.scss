@@ -645,73 +645,29 @@ input[type="file"] {
 
 /* For user list in teacher view ================================*/
 .userlist {
+    @media(max-width: $screen-xs-max) {
+        width: 200px;
+    }
+    @media(min-width: $screen-sm-min) {
+        width: 200px;
+    }
+    @media(min-width: $screen-md-min) {
+        width: 300px;
+    }
+    @media(min-width: $screen-lg-min) {
+        width: 423px;
+    }
+
     $list-max-height: 95vh;
 
     overflow: auto;
     overflow-x: hidden;
+    min-height: $list-max-height;
     max-height: $list-max-height;
 
     position: relative;
     background-color: #e6e6e6;
     padding: 2px;
-
-    .active {
-        background-color: white;
-    }
-
-    .sortable.header {
-        cursor: pointer;
-    }
-
-    @mixin cells($table-max-width, $first-col-width, $small-col-width) {
-        td, th {
-            width: $small-col-width;
-            max-width: $small-col-width;
-        }
-
-        td:first-child, th:first-child {
-            width: $first-col-width;
-            max-width: $first-col-width;
-        }
-
-        td:nth-child(2), th:nth-child(2) {
-            width: $table-max-width - 2*$small-col-width - $first-col-width;
-            max-width: $table-max-width - 2*$small-col-width - $first-col-width;
-        }
-    }
-
-    @media(max-width: $screen-xs-max) {
-        @include cells(200px, 50px, 50px);
-    }
-    @media(min-width: $screen-sm-min) {
-        @include cells(200px, 50px, 50px);
-    }
-    @media(min-width: $screen-md-min) {
-        @include cells(300px, 90px, 75px);
-    }
-    @media(min-width: $screen-lg-min) {
-        @include cells(423px, 120px, 105px);
-    }
-
-    td {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    thead, tbody {
-        display: block;
-    }
-
-    tbody {
-        max-height: calc(#{$list-max-height} - 240px); //TODO how to compute the 240 automatically
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
-
-    .ng-table-pager {
-        display: none;
-    }
 }
 
 .close {
