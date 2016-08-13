@@ -6,7 +6,7 @@ imagexApp.directive('imagexRunner',
                     ['$sanitize','$compile',
                      function ($sanitize,$compile1) {
                          "use strict";
-                         // TÃƒÂ¤tÃƒÂ¤ kutsutaan yhden kerran kun plugin otetaan kÃƒÂ¤yttÃƒÂ¶ÃƒÂ¶n
+                         // Tätä kutsutaan yhden kerran kun plugin otetaan käyttöön
                          timHelper.sanitize = $sanitize;
                          imagexApp.sanitize = $sanitize;
                          imagexApp.compile = $compile1;
@@ -16,7 +16,7 @@ imagexApp.directive('imagexRunner',
 
 imagexApp.directiveFunction = function() {
     "use strict";
-    // Koska tÃƒÂ¤tÃƒÂ¤ kutsutaan direktiivistÃƒÂ¤, tÃƒÂ¤tÃƒÂ¤ kutsutaan yhden kerran
+    // Koska tätä kutsutaan direktiivistä, tätä kutsutaan yhden kerran
     return {
         scope: {},
         controller: imagexApp.Controller,
@@ -36,7 +36,7 @@ imagexApp.directiveFunction = function() {
 
 imagexApp.directiveTemplate = function () {
     "use strict";
-    // Koska tÃƒÂ¤tÃƒÂ¤ kutsutaan directiveFunction-metodista, tÃƒÂ¤tÃƒÂ¤ kutsutaan yhden kerran
+    // Koska tätä kutsutaan directiveFunction-metodista, tätä kutsutaan yhden kerran
     
     if ( imagexApp.TESTWITHOUTPLUGINS ) return '';
     return '<div class="csRunDiv no-popup-menu">' +
@@ -48,9 +48,9 @@ imagexApp.directiveTemplate = function () {
         '</div>'+
         '<button ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.save();">{{button}}</button>&nbsp&nbsp' +
         '<button ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.showAnswer();">Showanswer</button>&nbsp&nbsp' +
-        '<button ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.resetExercise();">Reset</button>&nbsp&nbsp' +
+        '<a ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.resetExercise();">Reset</a>&nbsp&nbsp' +
         '<a href="" ng-if="muokattu" ng-click="imagexScope.initCode()">{{resetText}}</a>' +
-        '<input ng-show="preview" id="coords"></input>' +
+        '<input ng-show="preview" id="coords" />' +
         '<span class="tries" ng-if="max_tries"> Tries: {{tries}}/{{max_tries}}</span>' +
         '<pre class="" ng-if="error">{{error}}</pre>' +
         '<pre class="" ng-show="result">{{result}}</pre>' +
@@ -233,7 +233,7 @@ function DragTask(canvas) {
     this.canvas.addEventListener('mouseup', upEvent);
     this.canvas.addEventListener('touchend', upEvent);
 
-    // LisÃƒÂ¤tty eventlistenereiden poistamiseen.
+    // Lisätty eventlistenereiden poistamiseen.
     this.removeEventListeners = function() {
 	this.canvas.removeEventListener('mousemove', moveEvent);
 	this.canvas.removeEventListener('touchmove', moveEvent);
@@ -540,7 +540,7 @@ var shapeFunctions = {
 	init:
 	function (initValues) {
 	    this.image = new Image();
-            if (initValues.name === 'background') this.image.src = initValues.src;
+            if (initValues.name === 'background') this.image.src = getValue(initValues.src,"");
             else this.image.src = getValue1(initValues.imgproperties, "src", "");
             this.initValues = initValues;
             this.init2();    
@@ -548,12 +548,18 @@ var shapeFunctions = {
         init2:
         function () {
             var initValues = this.initValues;
-	    this.r1 = getValue(this.image.width, 20);
-	    this.r2 = getValue(this.image.height, 20);
-            if (initValues.name === 'background')
-                return;
+	    var r1 = getValue(this.image.width, 20);
+	    var r2 = getValue(this.image.height, 20);
+        // Look if size attribute overrides the image size
+        this.size = getValue(initValues.size, [null, null]);
+        this.r1 = getValue(this.size[0], r1);
+        if ( this.size[0] && !this.size[1] ) r2 = this.r1/r1*r2;
+        this.r2 = getValue(this.size[1], r2)
+        this.size[0] = this.r1;
+        this.size[1] = this.r2;
+        if (initValues.name === 'background')  return;
 	    initValues.r1 = this.r1;
-            initValues.r2 = this.r2;
+        initValues.r2 = this.r2;
 	    initValues.x = getValue(initValues.position[0], 0);
 	    initValues.y = getValue(initValues.position[1], 0);
 	    if (this.pin) this.pinInit(initValues);
@@ -736,7 +742,7 @@ var shapeFunctions = {
 
 var userObjects = scope.attrs.markup.objects; 
 if (scope.attrs.state) {
-    // lisÃƒÂ¤tty oikeiden vastausten lukemiseen ja piirtÃƒÂ¤miseen.
+    // lisätty oikeiden vastausten lukemiseen ja piirtämiseen.
     for (var i = 0; i < userObjects.length; i++) {
 	for (var j = 0; j < scope.attrs.state.markup.objects.objects.length; j++) {
 	    if (userObjects[i].id === scope.attrs.state.markup.objects.objects[j].id) {
@@ -799,8 +805,8 @@ for (i = 0; i < objects.length; i++) {
 
     dt.draw();
 
-// Katsotaan, onko oikeat vastaukset heitetty markuppiin. Jos on, piirretÃƒÂ¤ÃƒÂ¤n oikeat raahaukset.
-// pitÃƒÂ¤isi varmaan ottaa raahaus kokonaan pois pÃƒÂ¤ÃƒÂ¤ltÃƒÂ¤ tÃƒÂ¤ssÃƒÂ¤ tilanteessa.
+// Katsotaan, onko oikeat vastaukset heitetty markuppiin. Jos on, piirretään oikeat raahaukset.
+// pitäisi varmaan ottaa raahaus kokonaan pois päältä tässä tilanteessa.
 if(scope.attrs.state) {
     if (scope.attrs.state.markup.correctanswer) {
         //handle drawing lines.
@@ -836,17 +842,17 @@ if(scope.attrs.state) {
 
 imagexApp.Controller = function($scope, $http, $transclude, $interval) {
 "use strict";
-// TÃƒÂ¤tÃƒÂ¤ kutsutaan kerran jokaiselle pluginin esiintymÃƒÂ¤lle.
-// Angular kutsuu tÃƒÂ¤tÃƒÂ¤ koska se on sanottu direktiivifunktiossa Controlleriksi.
-// TÃƒÂ¤hÃƒÂ¤n tullaan ensin ja sitten initScope-metodiin
-// SiitÃƒÂ¤ ei ole mitÃƒÂ¤ÃƒÂ¤n hajua mistÃƒÂ¤ se keksii tÃƒÂ¤lle nuo parametrit???
+// Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
+// Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Controlleriksi.
+// Tähän tullaan ensin ja sitten initScope-metodiin
+// Siitä ei ole mitään hajua mistä se keksii tälle nuo parametrit???
     if (imagexApp.TESTWITHOUTPLUGINS) return;
     $scope.imagexScope = new ImagexScope($scope);
     $scope.attrs = {};
     $scope.http = $http; 
     $scope.interval = $interval;
 
-    // Luodaan $scope.attrs joka on avattuna sisÃƒÂ¤llÃƒÂ¶ssÃƒÂ¤ olev JSON tai HEX
+    // Luodaan $scope.attrs joka on avattuna sisällössä olev JSON tai HEX
     $transclude(function(clone,scope) { timHelper.initAttributes(clone,$scope); });
     $scope.errors = [];
     $scope.muokattu = false;
@@ -856,14 +862,14 @@ imagexApp.Controller = function($scope, $http, $transclude, $interval) {
 
 imagexApp.initScope = function (scope, element, attrs) {
 "use strict";
-// TÃƒÂ¤tÃƒÂ¤ kutsutaan kerran jokaiselle pluginin esiintymÃƒÂ¤lle.
-// Angular kutsuu tÃƒÂ¤tÃƒÂ¤ koska se on sanottu direktiivifunktiossa Link-metodiksi.
+// Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
+// Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Link-metodiksi.
     scope.cursor = "\u0383"; //"\u0347"; // "\u02FD";
     scope.plugin = element.parent().attr("data-plugin");
     scope.taskId = element.parent().attr("id");
     scope.app = imagexApp;
 
-    // EtsitÃƒÂ¤ÃƒÂ¤n kullekin attribuutille arvo joko scope.attrs tai attrs-parametrista. Jos ei ole, kÃƒÂ¤ytetÃƒÂ¤ÃƒÂ¤n oletusta.
+    // Etsitään kullekin attribuutille arvo joko scope.attrs tai attrs-parametrista. Jos ei ole, käytetään oletusta.
     timHelper.set(scope, attrs, "stem");
     timHelper.set(scope, attrs, "user_id");
     timHelper.set(scope, attrs, "button", "Save");
@@ -872,26 +878,26 @@ imagexApp.initScope = function (scope, element, attrs) {
     timHelper.set(scope, attrs, "max_tries");
     timHelper.set(scope, attrs, "cols", 20);
     timHelper.set(scope, attrs, "autoupdate", 500);
-    timHelper.setn(scope, "tid", attrs, ".taskID"); // vain kokeilu ettÃƒÂ¤ "juuresta" ottaminen toimii
+    timHelper.setn(scope, "tid", attrs, ".taskID"); // vain kokeilu että "juuresta" ottaminen toimii
     timHelper.set(scope,attrs,"background");
-    // TÃƒÂ¤ssÃƒÂ¤ on nyt kaikki raahattavat objektit
+    // Tässä on nyt kaikki raahattavat objektit
     timHelper.set(scope,attrs,"objects","http://localhost/static/images/jyulogo.png");
-    // TÃƒÂ¤ssÃƒÂ¤ pitÃƒÂ¤isi olla kaikki targetit
+    // Tässä pitäisi olla kaikki targetit
     timHelper.set(scope,attrs,"targets");
     timHelper.set(scope,attrs,"fixedobjects");
 
-    timHelper.set(scope,attrs,"canvaswidth", 600);
+    timHelper.set(scope,attrs,"canvaswidth", 800);
     timHelper.set(scope,attrs,"canvasheight", 600);
 	//timHelper.set(scope,attrs,"preview", false);
 	timHelper.set(scope,attrs,"preview",scope.attrs.preview);
 
-    // Otsikot.  Oletetaan ettÃƒÂ¤ 1. elementti korvaatan header-otsikolla ja viimeinen footerilla
+    // Otsikot.  Oletetaan että 1. elementti korvaatan header-otsikolla ja viimeinen footerilla
     element[0].childNodes[0].outerHTML = timHelper.getHeading(scope, attrs, "header", "h4");
     var n = element[0].childNodes.length;
     if (n > 1) element[0].childNodes[n - 1].outerHTML = timHelper.getHeading(scope, attrs, "footer", 'p class="plgfooter"');
     imagexApp.initDrawing(scope, element[0].childNodes[1].childNodes[0]);
 	scope.canvas = element[0].childNodes[1].childNodes[0];
-	scope.coords = element.find("#coords")[0]
+	scope.coords = element.find("#coords")[0];
     scope.canvas.coords = scope.coords;
     /*
     $(scope.canvas).bind('keydown', function(event) {
@@ -911,8 +917,8 @@ imagexApp.initScope = function (scope, element, attrs) {
 };
 
 
-// TehdÃƒÂ¤ÃƒÂ¤n kaikista toiminnallisista funktioista oma luokka, jotta
-// niitÃƒÂ¤ ei erikseen lisÃƒÂ¤tÃƒÂ¤ jokaisen pluginin esiintymÃƒÂ¤n kohdalla uudelleen.
+// Tehdään kaikista toiminnallisista funktioista oma luokka, jotta
+// niitä ei erikseen lisätä jokaisen pluginin esiintymän kohdalla uudelleen.
 function ImagexScope(scope) {
     "use strict";
     this.scope = scope;
@@ -982,7 +988,7 @@ ImagexScope.prototype.doshowAnswer = function(){
         url = $scope.plugin;
         var i = url.lastIndexOf("/");
         if (i > 0) url = url.substring(i);
-        url += "/" + $scope.taskId + "/answer/";  // HÃƒÂ¤ck piti vÃƒÂ¤hÃƒÂ¤n muuttaa, jotta kone hÃƒÂ¤viÃƒÂ¤ÃƒÂ¤.
+        url += "/" + $scope.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
     }
 
     $scope.http({method: 'PUT', url: url, data: params, headers: {'Content-Type': 'application/json'}, timeout: 20000}
@@ -1047,7 +1053,7 @@ ImagexScope.prototype.doSave = function(nosave) {
         url = $scope.plugin;
         var i = url.lastIndexOf("/");
         if (i > 0) url = url.substring(i);
-        url += "/" + $scope.taskId + "/answer/";  // HÃƒÂ¤ck piti vÃƒÂ¤hÃƒÂ¤n muuttaa, jotta kone hÃƒÂ¤viÃƒÂ¤ÃƒÂ¤.
+        url += "/" + $scope.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
     }
 
     $scope.http({method: 'PUT', url: url, data: params, headers: {'Content-Type': 'application/json'}, timeout: 20000}
