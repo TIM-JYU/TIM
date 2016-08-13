@@ -729,9 +729,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         md += 'points: ' + points + '\n';
         md += 'expl: ' + JSON.stringify(expl) + '\n';
         md += 'json: \n';
-        var questionJsonMd = JSON.stringify(questionJson, null, 4);
-        questionJsonMd = questionJsonMd.replace(/.+/g, '    $&');
-        md += questionJsonMd + '\n';
+        var questionjsonmd = JSON.stringify(questionjson, null, 4);
+        questionjsonmd = questionjsonmd.replace(/.+/g, '    $&');
+        md += questionjsonmd + '\n';
         md += '```';
 
 
@@ -758,7 +758,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             //TODO: This can be optimized to get only the new one.
             scope.$parent.getQuestions();
             if (ask) {
-                scope.json = JSON.parse(data.questionJson);
+                scope.json = JSON.parse(data.questionjson);
                 scope.$emit('askQuestion', {
                     "lecture_id": scope.lectureId,
                     "question_id": scope.qId,
