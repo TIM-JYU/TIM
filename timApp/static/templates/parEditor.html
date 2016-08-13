@@ -90,6 +90,7 @@
             Upload image/file: <input type="file" ngf-select="onFileSelect($file)">
             <span ng-show="file.progress >= 0 && !file.error"
                   ng-bind="file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!'"></span>
+            <a ng-href="{{uploadedFile}}" >{{uploadedFile}}</a>
         </span>
         <div class="error" ng-show="file.error" ng-bind="file.error"></div>
     </div>

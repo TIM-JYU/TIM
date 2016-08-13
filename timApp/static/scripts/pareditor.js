@@ -1101,7 +1101,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.editor.replaceSelectedText("- " + $scope.editor.getSelection().text);
                     };
 
-                    $scope.insertTemplate = function (text) {
+                    $scope.insertTemplate = function (text) {  // for textArea
                         $scope.closeMenu(null, close);
                         var pluginnamehere = "PLUGINNAMEHERE";
                         var searchEndIndex = $scope.editor.getSelection().start;
@@ -1114,6 +1114,11 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.wrapFn();
                     };
                     
+                    $scope.editorStartsWith = function(text)
+                    {
+                        return  ($scope.editor.val().startsWith(text) );
+                    }
+
                     $scope.changeValue = function(attributes, text) {
                         var sel = $scope.editor.getSelection();
                         var t = $scope.editor.val();
@@ -1442,7 +1447,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.wrapFn();
                     };
 
-                    $scope.insertTemplate = function (text) {
+                    $scope.insertTemplate = function (text) { // for ACE-editor
                         $scope.closeMenu(null, close);
                         var range = $scope.editor.getSelectionRange();
                         var start = range.start;
@@ -1458,6 +1463,11 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         }
                         $scope.wrapFn();
                     };
+
+                    $scope.editorStartsWith = function(text)
+                    {
+                        return  ($scope.editor.session.getLine(0).startsWith(text) );
+                    }
 
                     $scope.changeValue = function(attributes, text) {
                         var pos = $scope.editor.getCursorPosition();
@@ -1575,7 +1585,9 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 };
 
                 $scope.onFileSelect = function (file) {
-                    if (!touchDevice) $scope.editor.focus();
+                    $scope.uploadedFile = "";
+                    //if (!touchDevice)
+                        $scope.editor.focus();
                     $scope.file = file;
                     console.log(file);
 
@@ -1593,7 +1605,8 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             $timeout(function () { 
                                 if (response.data.image) {
                                     $scope.uploadedFile = '/images/' + response.data.image;
-                                    if ( $scope.editor.session.getLine(0).startsWith("``` {") ) 
+                                    // if ( $scope.editor.session.getLine(0).startsWith("``` {") )
+                                    if ( $scope.editorStartsWith("``` {") )
                                         $scope.insertTemplate($scope.uploadedFile);
                                     else 
                                         $scope.insertTemplate("![Image](" + $scope.uploadedFile + ")");
