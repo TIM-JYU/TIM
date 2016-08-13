@@ -393,9 +393,8 @@ def get_all_templates(dirname: str) -> object:
     :return: dict with list of lif to template items (templates) and texts (text)
     """
     templates = []
-    texts = []
     try:
-        texts = open(dirname+"/tabs.txt", encoding="utf-8-sig").read().splitlines();
+        texts = open(dirname+"/tabs.txt", encoding="utf-8-sig").read().splitlines()
         for i in range(0, len(texts)):
             templates.append(get_templates(dirname+"/"+str(i)))
     except Exception as e:
@@ -411,13 +410,14 @@ def get_template(dirname: str, idx: str, filename: str) -> str:
     :param filename: from file (validity of this is checked)
     :return: lines starting from line 2.
     """
+    fname = ""
     try:
         fname = re.sub(r"[^ A-ZÅÄÖa-zåäö_0-9]","",filename)
         tidx = re.sub(r"[^0-9]","",idx)
         # f = open(dirname+"/"+tidx+"/"+fname).readlines()
         f = open(dirname+"/"+tidx+"/"+fname, encoding="utf-8-sig").readlines()
     except Exception as e:
-        return str(e) + "params: " + dirname + ", " + idx + ", " + filename + ", " + fname  
+        return "{0} params: {1}, {2}, {3}, {4}".format(str(e), dirname, idx, filename, fname)
     return "".join(f[2:])
 
 

@@ -1,0 +1,23 @@
+Yksinkertainen
+Kuvaraahaustehtävä yksinkertaisella muotoilulla
+``` {plugin="imagex" #PLUGINNAMEHERE}
+header: Raahaa kuvat oikeille paikoille
+stem: Raahaa kuvat oikeille paikoille
+background: 
+    src: "/static/images/tim-logo_42height.png"
+objects: 
+  - 
+    type: "img"
+    position: [300, 300]
+    id: "obj1"
+    imgproperties: 
+        src: "/static/images/tim-logo_42height.png"
+targets: 
+  - 
+    id: "target1"
+    color: "red"
+    snapColor: "black"
+    position: [100, 300]
+    size: [40, 20]
+    points: {obj1: 0.5, obj2: -0.25}
+```

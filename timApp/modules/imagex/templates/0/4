@@ -1,0 +1,22 @@
+Textbox
+Raahattava tekstilaatikko kuvatehtävään
+  - 
+    type: "textbox"
+    position: [300, 500]
+    id: "objn"
+    a: 0
+    pin:
+      visible: true
+      position: 
+        align: "southeast"
+      color: "purple"
+    textboxproperties:
+      cornerradius: 5
+      borderWidth: 2
+      borderColor: "black"
+      textColor: "black"
+      fillColor: "yellow"
+      cornerradius
+      font: "20px times"
+      text: "objektin n teksti"
+      size: []

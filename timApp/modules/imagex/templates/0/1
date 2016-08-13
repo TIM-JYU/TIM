@@ -1,0 +1,89 @@
+Yksityiskohtainen
+Kuvaraahaustehtävä monimutkaisemmalla muotoilulla
+``` {plugin="imagex" #PLUGINNAMEHER}
+header: Raahaa kuvat oikeille paikoille
+stem: Raahaa kuvat oikeille paikoille
+background: 
+    src: "/static/images/tim-logo_42height.png"
+objects: 
+  - 
+    type: "img"
+    position: [300, 300]
+    id: "obj1"
+    imgproperties: 
+      src: "/static/images/tim-logo_42height.png"
+      textbox: false
+    pin:
+      visible: true
+      position: 
+        align: ""
+        coord: []
+      color: ""
+      length: 
+    textboxproperties:
+      positionOnImage:
+        coord: []
+      borderWidth:
+      borderColor: ""
+      text: ""
+      textColor: ""
+      font: ""
+      size: []
+  - 
+    type: "img"
+    position: [300, 400]
+    id: "obj2"
+    imgproperties: 
+      src: "/static/images/tim-logo_42height.png"
+      textbox: true
+    pin:
+      visible: true
+      position: 
+        align: "west"
+    textboxproperties:
+      positionOnImage:
+        coord: [15, 55]
+      text: "sieni"
+  - 
+    type: "textbox"
+    position: [300, 500]
+    a: 30
+    id: "obj3"
+    pin:
+      visible: true
+      position: 
+        align: "southeast"
+      color: "purple"
+    textboxproperties:
+      cornerradius: 5
+      fillColor: "yellow"
+      borderWidth: 2
+      borderColor: "brown"
+      textColor: "blue"
+      backgroud: yellow
+      font: "30px times"
+      size: []
+targets: 
+  - 
+      id: "target1"
+      shape: ""
+      color: "red"
+      snapColor: "black"
+      position: [100, 200]
+      size: [40, 20]
+      points: {obj1: 0.5, obj2: -0.25}
+  - 
+      id: "target2"
+      type: "ellipse"
+      a: 30
+      position: [100, 300]
+      size: [60, 30]
+      points: {obj1: 0.5, obj2: -0.25}
+  - 
+      id: "target3"
+      type: "ellipse"
+      color: "green"
+      position: [100, 500]
+      size: [40]
+      points: {obj1: 0.5, obj2: -0.25}
+```

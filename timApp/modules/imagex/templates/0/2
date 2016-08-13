@@ -1,0 +1,26 @@
+Objekti
+Raahattava objekti kuvatehtävään
+  - 
+    type: "img"
+    position: [300, 300]
+    id: "objn"
+    a: 0
+    imgproperties: 
+      src: "/static/images/tim-logo_42height.png"
+      textbox: false
+    pin:
+      visible: true
+      position: 
+        align: "west"
+        coord: []
+      color: ""
+      length: 
+    textboxproperties:
+      positionOnImage:
+        coord: []
+      borderWidth:
+      borderColor: ""
+      text: ""
+      textColor: ""
+      font: ""
+      size: []

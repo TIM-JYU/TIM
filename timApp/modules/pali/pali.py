@@ -8,7 +8,6 @@ Serving from local port 5000
 
 import binascii
 import sys
-import re
 sys.path.insert(0, '/py') # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
 
@@ -91,12 +90,19 @@ class PaliServer(tim_server.TimServer):
         s = make_lazy(s, query, get_lazy_pali_html)
         return s
 
+
     def get_reqs_result(self) -> dict:
         """
         :return: reqs result as json
         """
-        return {"js": ["/static/scripts/timHelper.js","js/pali.js"], "angularModule": ["paliApp"],
+        #Get templates for plugin
+        templs = {}
+        # templs = get_all_templates('/pali/templates') # uncoment this to test how templates works
+        ret = {"js": ["/static/scripts/timHelper.js","js/pali.js"], "angularModule": ["paliApp"],
                        "css": ["css/pali.css"], "multihtml": True}
+        ret.update(templs)
+        return ret
+
 
     def do_answer(self, query: QueryParams):
         """

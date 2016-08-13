@@ -1,0 +1,10 @@
+Kohde
+Kohde kuvatehtävään
+  - 
+    id: "target1"
+    shape: ""
+    color: "red"
+    snapColor: "black"
+    position: [100, 300]
+    size: [40, 20]
+    points: {obj1: 0.5, obj2: -0.25}
