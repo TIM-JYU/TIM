@@ -1,0 +1,10 @@
+# Aloitetaan palin:n imagesta
+from pali
+user root
+run apt-get update
+run apt-get install -y openssh-server
+run mkdir /var/run/sshd
+run echo 'root:test' | chpasswd
+run sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+expose 22
+CMD service  ssh start && /bin/bash -c "su agent"
