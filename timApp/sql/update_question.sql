@@ -6,11 +6,11 @@ CREATE TABLE Question (
   par_id         TEXT    NOT NULL,
   question_title TEXT    NOT NULL,
   answer         TEXT,
-  questionJson   TEXT,
+  questionjson   TEXT,
   points         TEXT
 );
 
-INSERT INTO Question (question_id, doc_id, par_id, question_title, answer, questionJson)
-SELECT question_id, doc_id, par_id, question_title, answer, questionJson FROM QuestionOld;
+INSERT INTO Question (question_id, doc_id, par_id, question_title, answer, questionjson)
+SELECT question_id, doc_id, par_id, question_title, answer, questionjson FROM QuestionOld;
 
 DROP TABLE QuestionOld;

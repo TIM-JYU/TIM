@@ -454,10 +454,10 @@ timApp.controller("ViewCtrl", [
                 params: {'par_id': sc.questionParId, 'doc_id': sc.docId, 'buster': new Date().getTime()}
             })
                 .success(function (data) {
-                    sc.json = data.questionJson;
+                    sc.json = data.questionjson;
                     $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.TITLE});
                     $rootScope.$broadcast("setPreviewJson", {
-                        questionJson: sc.json,
+                        questionjson: sc.json,
                         questionParId: sc.questionParId,
                         questionParIdNext: sc.questionParIdNext,
                         points: data.points,

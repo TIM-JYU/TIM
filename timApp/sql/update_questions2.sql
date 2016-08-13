@@ -10,7 +10,7 @@ CREATE TABLE Question (
   par_id         TEXT    NOT NULL,
   question_title TEXT    NOT NULL,
   answer         TEXT,
-  questionJson   TEXT,
+  questionjson   TEXT,
   points         TEXT
 );
 

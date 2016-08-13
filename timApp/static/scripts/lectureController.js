@@ -327,7 +327,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                         $scope.getLectureAnswers(answer);
                     }
                     $rootScope.$broadcast("setQuestionJson", {
-                        questionJson: $scope.json,
+                        questionjson: $scope.json,
                         questionParId: data.par_id,
                         questionId: data.question_id,
                         askedId: id,

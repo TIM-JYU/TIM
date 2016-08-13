@@ -855,7 +855,7 @@ def ask_question():
     if question_id or par_id:
         if question_id:
             question = timdb.questions.get_question(question_id)[0]
-            question_json_str = question.get("questionJson")
+            question_json_str = question.get("questionjson")
             expl = question.get("expl")
             points = question.get("points")
         else:
@@ -995,7 +995,7 @@ def get_question_by_par_id():
     par_id = request.args.get('par_id')
     verify_ownership(doc_id)
     question_json, points, expl = get_question_data_from_document(doc_id, par_id)
-    return jsonResponse({"points": points, "questionJson": question_json, "expl": expl})
+    return jsonResponse({"points": points, "questionjson": question_json, "expl": expl})
 
 
 @lecture_routes.route("/getAskedQuestionById", methods=['GET'])
