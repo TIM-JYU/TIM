@@ -298,7 +298,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         // this.draw = shapeFunctions[this.type].draw;
     }
     function Target(dt, values) {
-        this.name = 'target';
+        this.name = 'target';   
         this.ctx = dt.ctx;
         this.position = getValue(values.position, [0, 0]);
         this.x = this.position[0];
