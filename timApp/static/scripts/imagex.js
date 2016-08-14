@@ -221,7 +221,8 @@ imagexApp.initDrawing = function(scope, canvas) {
 
             if (isTarget && isTarget.snap === true) {
                 this.activeDragObject.x = isTarget.x;
-                this.activeDragObject.y = isTarget.y; }
+                this.activeDragObject.y = isTarget.y;
+            }
             this.activeDragObject = null;
             this.draw();
         }.bind(this);
@@ -303,7 +304,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.x = this.position[0];
         this.y = this.position[1];
         this.a = getValue(values.a, 0);
-        this.snap = !!values.snap;
+        this.snap = getValue(values.snap,true);
         this.type = getValue(values.type, 'rectangle');
         // this.type = getValue(values, 'target.type', default, 'rectangle');
         this.size = getValue(values.size, [10, 10]);
