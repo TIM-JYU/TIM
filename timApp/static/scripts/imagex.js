@@ -244,11 +244,13 @@ imagexApp.initDrawing = function(scope, canvas) {
             this.canvas.removeEventListener('touchend', upEvent);
         }
     }
+
     function Empty(objectValues) {
     }
-    function DragObject(dt, values) {
+
+    function DragObject(dt, values, defId) {
         this.draw = Empty;
-        if (!values.type) return;
+        this.type = getValueDef(values, "type", "textbox");
         this.name = 'dragobject';
         this.ctx = dt.ctx;
         if (values.state === 'state') {
@@ -256,24 +258,24 @@ imagexApp.initDrawing = function(scope, canvas) {
             this.x = this.position[0] - values.pinpointoffsetx;
             this.y = this.position[1] - values.pinpointoffsety; }
         else {
-            this.position = getValue(values.position, [0, 0]);
+            this.position = getValueDef(values, "position", [0, 0]);
             this.x = this.position[0];
             this.y = this.position[1]; }
-        this.size = getValue(values.size, [10, 10]);
+        this.size = getValueDef(values, "size", [10, 10]);
         this.r1 = getValue(this.size[0], 10);
         this.r2 = getValue(this.size[1], this.r1);
-        this.type = values.type;
         this.target = null;
         this.currentTarget = null;
-        this.id = values.id;
-        this.pin = values.pin;
-        this.a = getValue(values.a, 0);
-        this.imgproperties = values.imgproperties;
-        this.textboxproperties = getValue(values.textboxproperties, {});
-        this.vectorproperties = getValue(values.vectorproperties, {});
+        this.id = getValue(values.id,defId);
+        this.ispin = isKeyDef(values,"pin", false);
+        this.a = getValueDef(values, "a", 0);
+        this.imgproperties = {};
+        this.textboxproperties = {};
+        this.vectorproperties = {};
 
         this.init = shapeFunctions[this.type].init;
         this.pinInit = shapeFunctions['pin'].init;
+        this.pinInit2 = shapeFunctions['pin'].init2;
         this.textbox = {};
         this.textbox.init = shapeFunctions['textbox'].init;
         this.textbox.init(values);
@@ -298,24 +300,24 @@ imagexApp.initDrawing = function(scope, canvas) {
         // this.draw = shapeFunctions[this.type].draw;
     }
     function Target(dt, values) {
-        this.name = 'target';   
+        this.name = 'target';
         this.ctx = dt.ctx;
-        this.position = getValue(values.position, [0, 0]);
+        this.position = getValueDef(values, "position", [0, 0]);
         this.x = this.position[0];
         this.y = this.position[1];
-        this.a = getValue(values.a, 0);
-        this.snap = getValue(values.snap,true);
-        this.type = getValue(values.type, 'rectangle');
+        this.a = getValueDef(values,"a", 0);
+        this.snap = getValueDef(values, "snap",true);
+        this.type = getValueDef(values, "type", 'rectangle');
         // this.type = getValue(values, 'target.type', default, 'rectangle');
-        this.size = getValue(values.size, [10, 10]);
-        this.imgproperties = values.imgproperties;
-        this.textboxproperties = getValue(values.textboxproperties, {});
-        this.vectorproperties = getValue(values.vectorproperties, {});
+        this.size = getValueDef(values, "size", [10, 10]);
+        this.imgproperties = {};
+        this.textboxproperties = {};
+        this.vectorproperties = {};
         this.r1 = getValue(this.size[0], 10);
         this.r2 = getValue(this.size[1], this.r1);
-        this.color =  getValue(values.color, 'Blue');
-        this.origColor =  getValue(values.color, 'Blue');
-        this.snapColor = getValue(values.snapColor, 'Cyan');
+        this.color =  getValueDef(values, "color", 'Blue');
+        this.origColor =  getValueDef(values, "color", 'Blue');
+        this.snapColor = getValueDef(values,"snapColor", 'Cyan');
         this.init = shapeFunctions[this.type].init;
         this.init(values);
         //this.textboxInit = shapeFunctions['textbox'].init;
@@ -329,21 +331,21 @@ imagexApp.initDrawing = function(scope, canvas) {
             this.type = 'img';
             this.name = 'background'; }
         else {
-            this.type = getValue(values.type, 'rectangle');
+            this.type = getValueDef(values, "type", 'rectangle');
             this.name = 'fixedobject'; }
 
         this.ctx = dt.ctx;
-        this.position = getValue(values.position, [0, 0]);
+        this.position = getValueDef(values,"position", [0, 0]);
         this.x = this.position[0];
         this.y = this.position[1];
-        this.a = getValue(values.a, 0);
-        this.color = getValue(values.color, 'Blue');
-        this.size = getValue(values.size, [10, 10]);
+        this.a = getValueDef(values,"a", 0);
+        this.color = getValueDef(values, "color", 'Blue');
+        this.size = getValueDef(values, "size", [10, 10]);
         this.r1 = getValue(this.size[0], 10);
         this.r2 = getValue(this.size[1], this.r1);
-        this.imgproperties = getValue(values.imgproperties, {});
-        this.textboxproperties = getValue(values.textboxproperties, {});
-        this.vectorproperties = getValue(values.vectorproperties, {});
+        this.imgproperties = {};
+        this.textboxproperties = {};
+        this.vectorproperties = {};
 
         this.init = shapeFunctions[this.type].init;
         if (this.name === 'fixedobject') {
@@ -369,25 +371,72 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.endposition = getValue(values.endposition, [0, 0]);
         this.draw = shapeFunctions["line"].draw;
     }
+
+    // Check if key exists in value, previous or defaults
+    // if (  isKeyDef(initValues, "pin", false) ...;
+    // there is no sence to call this with true because then it allways returns true
+    function isKeyDef(value, key, defaultValue) {
+        var keys = key.split(".");
+        var v = value;
+        var p = scope.previousValue;
+        var d = scope.defaults;
+        var ret = defaultValue;
+        var k; // current key
+
+        // Loop v and p to same level
+        for (var i = 0; i < keys.length-1; i++) {
+            var k = keys[i];
+            if (!p[k])  p[k] = {}; // if not on p, add
+            p = p[k]; // for next round
+            if (v && v[k]) v = v[k]; else v = null;
+            if (d && d[k]) d = d[k]; else d = null;
+        }
+
+        if ( keys.length < 1 ) return ret;
+        k = keys[keys.length-1];
+        if ( v && (typeof v[k] !== 'undefined')  ) {
+            if ( v[k] != null ) ret = true;
+            p["iskey" +k] = ret;
+            return ret;
+        }
+        if ( p && (typeof p["iskey"+k] !== 'undefined')  ) return p["iskey"+k];
+        if ( d && (typeof d[k] !== 'undefined')  ) return true;
+        return ret;
+     }
+
+    // Find value for key from value, prevous or defaults.  If nowhere return defaultValue
     //this.pinProperties.position = getValue(initValues, "pinPoint.position", {});
-    /*
-     function getValueTest(value, key, defaultValue) {
-     scope.previousValue = {};
-     var keys = key.split(".");
-     var returnValue = value;
-     for (var i = 0; i < keys.length; i++) {
-     if (returnValue[keys[i]]) scope.previousValue[keys[i]] = returnValue[keys[i]];
-     else if (scope.previousValue[keys[i]]) returnValue[keys[i]] =
-     scope.previousValue[keys[i]];
-     else {scope.previousValue[keys[i]] = defaultValue;
-     returnValue[keys[i]] = defaultValue; }
-     returnValue = returnValue[keys[i]];
+    function getValueDef(value, key, defaultValue) {
+        var keys = key.split(".");
+        var v = value;
+        var p = scope.previousValue;
+        var d = scope.defaults;
+        var ret = defaultValue;
+        var k; // current key
+
+        // Loop v and p to same level
+        for (var i = 0; i < keys.length-1; i++) {
+            var k = keys[i];
+            if (!p[k])  p[k] = {}; // if not on p, add
+            p = p[k]; // for next round
+            if (v && v[k]) v = v[k]; else v = null;
+            if (d && d[k]) d = d[k]; else d = null;
+        }
+
+        if ( keys.length < 1 ) return ret;
+        k = keys[keys.length-1];
+        if ( v && (typeof v[k] !== 'undefined')  ) {
+            if ( v[k] != null ) ret = v[k];
+            p[k] = ret;
+            return ret;
+        }
+        if ( p && (typeof p[k] !== 'undefined') && p[k] != null ) return p[k];
+        if ( d && (typeof d[k] !== 'undefined') && d[k] != null ) return d[k];
+        return ret;
      }
-     return returnValue;
-     }
-     var testValue = {pinni: {paikka: {x:3, y:7}}};
-     var pinnin_paikka = getValueTest(testValue, "pinni.paikka", {});
-     */
+
+     // var testValue = {pinni: {paikka: {x:3, y:7}}};
+     // var pinnin_paikka = getValueDef(testValue, "pinni.paikka", {});
 
     function getValue(value, defaultValue) {
         // function getValue(value, key, defaultValue) {
@@ -501,11 +550,13 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.r2 = this.size[1];
                     this.arrowHeadWidth = this.r2 / 3;
                     this.arrowHeadLength = this.r2 / 1.5;
+                    this.vectorColor = getValueDef(objectValues, "vectorproperties.color", 'Black');
+                    this.drawtextbox = getValueDef(objectValues, "vectorproperties.textbox", false);
                 },
             draw:
                 function (objectValues) {
                     this.ctx = objectValues.ctx;
-                    this.ctx.strokeStyle = getValue(objectValues.vectorproperties.color, 'Black');
+                    this.ctx.strokeStyle = this.vectorColor;
                     this.ctx.fillStyle = this.ctx.strokeStyle;
                     if (objectValues.name === 'fixedobject') {
                         this.ctx.save();
@@ -523,7 +574,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.ctx.lineTo(0, - this.r2 / 6);
                     this.ctx.lineTo(0, 0);
                     this.ctx.fill();
-                    if (getValue1(objectValues.vectorproperties, "textbox", false)) {
+                    if ( this.drawtextbox ) {
                         this.textbox.draw(objectValues); }
                     if (objectValues.name === 'fixedobject') this.ctx.restore();
                 }
@@ -534,9 +585,17 @@ imagexApp.initDrawing = function(scope, canvas) {
                 function (initValues) {
                     this.ready = false;  // to prevent to use wrong values
                     this.image = new Image();
-                    if (initValues.name === 'background') this.image.src = getValue(initValues.src,"");
-                    else this.image.src = getValue1(initValues.imgproperties, "src", "");
+                    if (initValues.name === 'background') {
+                        this.image.src = getValue(initValues.src,"");
+                        this.size = getValue(initValues.size, [null, null]); // do not use bg size as a default
+                    }
+                    else {
+                        this.image.src = getValueDef(initValues, "imgproperties.src", "");
+                        this.size = getValueDef(initValues, "size", [null, null]);
+                    }
                     this.initValues = initValues;
+                    this.imgproperties.textbox = getValueDef(initValues, "imgproperties.textbox", false);
+                    if (this.imgproperties.textbox) this.textbox.init(initValues);
                     if ( !this.image.complete ) return;
                     this.init2();
                 },
@@ -547,7 +606,6 @@ imagexApp.initDrawing = function(scope, canvas) {
                     var r2 = getValue(this.image.height, 0);
                     if ( r1 == 0 ) return;
                     // Look if size attribute overrides the image size
-                    this.size = getValue(initValues.size, [null, null]);
                     this.r1 = getValue(this.size[0], r1);
                     if ( this.size[0] && !this.size[1] ) r2 = this.r1/r1*r2;
                     this.r2 = getValue(this.size[1], r2);
@@ -559,8 +617,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                     initValues.r2 = this.r2;
                     initValues.x = getValue(initValues.position[0], 0);
                     initValues.y = getValue(initValues.position[1], 0);
-                    if (this.pin) this.pinInit(initValues);
-                    if (this.imgproperties.textbox) this.textbox.init(initValues);
+                    if (this.ispin) this.pinInit2();
                 },
 
             draw:
@@ -585,8 +642,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                     if (objectValues.name === 'fixedobject' || objectValues.name === 'background')
                         this.ctx.rotate(this.a * to_radians);
                     this.ctx.drawImage(this.image, 0, 0, this.r1, this.r2);
-                    if (getValue1(objectValues.imgproperties, "textbox", false))
-                        this.textbox.draw(objectValues);
+                    if ( this.imgproperties.textbox ) this.textbox.draw(objectValues);
                     this.ctx.restore();
                 }
         },
@@ -595,27 +651,29 @@ imagexApp.initDrawing = function(scope, canvas) {
             init:
                 function (initValues) {
                     this.borderGap = 3;
-                    initValues.textboxproperties = getValue(initValues.textboxproperties, {});
-                    this.type = initValues.type;
+                    // initValues.textboxproperties = getValue(initValues.textboxproperties, {});
+                    this.type = getValueDef(initValues, "type", "textbox");
                     if (this.type === 'img' || this.type === 'vector') {
-                        this.textBoxOffset = getValue1(initValues.textboxproperties.positionOnImage,
-                            "coord", [0, 0]);
+                        this.textBoxOffset = getValueDef(initValues, "textboxproperties.positionOnImage.coord", [0, 0]);
                         this.x = getValue( this.textBoxOffset[0], 0);
                         this.y = getValue( this.textBoxOffset[1], 0); }
                     var fontDraw = document.createElement("canvas");
-                    this.font = getValue1(initValues.textboxproperties, "font", '14px Arial');
-                    this.auxctx = fontDraw.getContext('2d');
-                    this.auxctx.font = this.font;
-                    this.text = getValue(initValues.textboxproperties.text, initValues.id);
-                    this.textwidth = this.auxctx.measureText(this.text).width;
-                    this.textHeight = parseInt(this.font, 10);
-                    this.textBoxSize = getValue(initValues.textboxproperties.size, []);
+                    // TODO: sopessa voisi olla alustusken aikana yksi dummy canvas joka sitten poistetaan
+                    this.font = getValueDef(initValues, "textboxproperties.font", '14px Arial');
+                    var auxctx = fontDraw.getContext('2d');
+                    auxctx.font = this.font;
+                    this.text = getValueDef(initValues, "textboxproperties.text", initValues.id);
+                    var measure =  auxctx.measureText(this.text);
+                    this.textwidth = measure.width;
+                    this.textHeight = parseInt(auxctx.font, 10);
+                    this.textBoxSize = getValueDef(initValues, "textboxproperties.size", []);
                     this.r1 = getValue(this.textBoxSize[0], this.textwidth + 2 * this.borderGap);
                     this.r2 = getValue(this.textBoxSize[1], this.textHeight + 2 * this.borderGap);
-                    this.borderColor = getValue(initValues.textboxproperties.borderColor, 'Black');
-                    this.fillColor = getValue(initValues.textboxproperties.fillColor, 'White');
-                    this.textColor = getValue(initValues.textboxproperties.textColor, 'Black');
-                    this.cornerRadius = getValue(initValues.textboxproperties.cornerradius, 0);
+                    this.borderColor = getValueDef(initValues, "textboxproperties.borderColor", 'Black');
+                    this.fillColor = getValueDef(initValues, "textboxproperties.fillColor", 'White');
+                    this.textColor = getValueDef(initValues, "textboxproperties.textColor", 'Black');
+                    this.borderWidth = getValueDef(initValues, "textboxproperties.borderWidth", 2);
+                    this.cornerRadius = getValueDef(initValues, "textboxproperties.cornerradius", 0);
                     if (this.cornerRadius > this.r1 / 2 || this.cornerRadius > this.r2 / 2) {
                         if (this.cornerRadius > this.r1 / 2) this.cornerRadius = this.r1 / 2;
                         if (this.cornerRadius > this.r2 / 2) this.cornerRadius = this.r2 / 2; }
@@ -623,10 +681,9 @@ imagexApp.initDrawing = function(scope, canvas) {
                     initValues.r2 = this.r2;
                     initValues.x = this.x;
                     initValues.y = this.y;
-                    if (this.pin) {
+                    if (this.ispin) {
                         this.pinInit(initValues);
                     }
-
                 },
 
             draw:
@@ -667,7 +724,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.ctx.fill();
                     this.ctx.fillStyle = this.textColor;
                     this.ctx.fillText(this.text, this.borderGap, this.borderGap);
-                    this.ctx.lineWidth = getValue(objectValues.textboxproperties.borderWidth, 2);
+                    this.ctx.lineWidth = this.borderWidth;
                     this.ctx.strokeStyle = this.borderColor;
                     this.ctx.stroke();
                     this.ctx.restore();
@@ -677,11 +734,25 @@ imagexApp.initDrawing = function(scope, canvas) {
         pin: {
             init:
                 function (initValues) {
-                    this.pinProperties = getValue(initValues.pinPoint, {});
-                    this.pinProperties.visible = getValue1(initValues.pinPoint, "visible", true);
-                    this.pinProperties.position = getValue1(initValues.pinPoint, "position", {});
+                    this.pinProperties = {}; // getValue(initValues.pinPoint, {});
+                    this.pinProperties.visible = getValueDef(initValues, "pin.visible", true);
+                    this.pinProperties.position = {};
 
-                    this.pinLength = getValue(this.pinProperties.length, 10);
+                    this.pinLength = getValueDef(initValues, "pin.length", 15);
+                    this.pinColor = getValueDef(initValues, "pin.color", getValueDef(initValues, "borderColor", 'blue'));
+                    this.lineWidth = getValueDef(initValues, "textboxproperties.borderWidth", 2);
+                    this.pinPositionAlign = getValueDef(initValues, "pin.position.align", 'northwest');
+                    this.pinPositionStart = getValueDef(initValues, "pin.position.start", [0,0]);
+                    this.pinProperties.position.coord = getValueDef(initValues, "pin.position.coord", []);
+                    var pinst = getValueDef(initValues, "pin.position.start", [0, 0]);
+                    this.pinsx = getValue(pinst[0], 0);
+                    this.pinsy = getValue(pinst[1], 0);
+                    this.pinInit2();
+                },
+
+            init2:
+                function () {
+                    // TODO: pinlenght so that it is allways same length.  Now 45 deg pins are longer
                     this.pinPositions = {
                         west: {x: 0, y: this.r2 / 2, off: {x: -this.pinLength, y: 0}},
                         east: {x: this.r1, y: this.r2 / 2, off: {x: this.pinLength, y: 0}},
@@ -696,14 +767,9 @@ imagexApp.initDrawing = function(scope, canvas) {
                         northwest: {x: 0, y: 0, off: {x: -this.pinLength, y: -this.pinLength}},
                         center: {x: this.r1 / 2, y: this.r2 / 2, off:{x: 0, y: 0}}
                     };
-                    this.pinPositionAlign = getValue2(initValues.pin, "position", "align", 'northwest');
-                    this.pinPosition = getValue(this.pinPositions[this.pinPositionAlign],
-                        this.pinPositions.northwest);
-                    this.pinProperties.position.coord = getValue(this.pinProperties.position.coord, []);
-                    this.pinPosition.off.x = getValue(this.pinProperties.position.coord[0],
-                        this.pinPosition.off.x);
-                    this.pinPosition.off.y = getValue(this.pinProperties.position.coord[1],
-                        this.pinPosition.off.y);
+                    this.pinPosition = getValue(this.pinPositions[this.pinPositionAlign], this.pinPositions.northwest);
+                    this.pinPosition.off.x = getValue(this.pinProperties.position.coord[0], this.pinPosition.off.x);
+                    this.pinPosition.off.y = getValue(this.pinProperties.position.coord[1], this.pinPosition.off.y);
                     if (this.pinProperties && this.pinProperties.visible) {
                         this.dotPosition = {x: this.pinPosition.x + this.pinPosition.off.x,
                             y: this.pinPosition.y + this.pinPosition.off.y}}
@@ -721,16 +787,17 @@ imagexApp.initDrawing = function(scope, canvas) {
                         this.ctx.restore();
                         return;
                     }
-                    this.ctx.strokeStyle = getValue(this.pinProperties.color,
-                        getValue(objectValues.borderColor, 'blue'));
+                    this.ctx.strokeStyle = this.pinColor;
                     this.ctx.beginPath();
-                    this.ctx.arc(0, 0, 1.5, 0, 2 * Math.PI, false);
-                    this.ctx.stroke();
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(0, 0);
-                    this.ctx.lineWidth = getValue(objectValues.textboxproperties.borderWidth, 2);
-                    this.ctx.lineTo(-this.pinPosition.off.x, -this.pinPosition.off.y);
-                    this.ctx.stroke();
+                    if ( this.pinProperties.visible ) {
+                        this.ctx.arc(0, 0, 1.5, 0, 2 * Math.PI, false);
+                        this.ctx.stroke();
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(0, 0);
+                        this.ctx.lineWidth = this.lineWidth;
+                        this.ctx.lineTo(-this.pinPosition.off.x+this.pinsx, -this.pinPosition.off.y+this.pinsy);
+                        this.ctx.stroke();
+                    }
                     if (this.type === 'textbox') this.textbox.draw(objectValues);
                     if (this.type === 'img') this.imageDraw(objectValues);
                     this.ctx.restore();
@@ -760,7 +827,9 @@ imagexApp.initDrawing = function(scope, canvas) {
     var targets = [];
     var objects = [];
 
+    scope.defaults = scope.attrs.markup.defaults;
 
+    scope.previousValue = {};
 
     if (scope.attrs.markup.background) {
         scope.attrs.markup.background.name = 'background';
@@ -768,19 +837,25 @@ imagexApp.initDrawing = function(scope, canvas) {
         dt.drawObjects.push(background);
     }
 
+    scope.previousValue = {};
+
     if (userFixedObjects) {
         for (i = 0; i < userFixedObjects.length; i++) {
             fixedobjects[i] = new FixedObject(dt, userFixedObjects[i]);
         } }
+
+    scope.previousValue = {};
 
     if (userTargets) {
         for (i = 0; i < userTargets.length; i++) {
             targets[i] = new Target(dt, userTargets[i]);
         } }
 
+    scope.previousValue = {};
+
     if (userObjects) {
         for (i = 0; i < userObjects.length; i++) {
-            objects[i] = new DragObject(dt, userObjects[i]);
+            objects[i] = new DragObject(dt, userObjects[i], "obj" + (i+1));
             if(!scope.drags){
                 scope.drags = [];
             }
