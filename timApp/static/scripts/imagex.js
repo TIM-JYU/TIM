@@ -426,8 +426,12 @@ imagexApp.initDrawing = function(scope, canvas) {
         if ( keys.length < 1 ) return ret;
         k = keys[keys.length-1];
         if ( v && (typeof v[k] !== 'undefined')  ) {
-            if ( v[k] != null ) ret = v[k];
-            p[k] = ret;
+            if ( v[k] != null ) {
+                ret = v[k];
+                p[k] = ret;
+            }
+            else p[k] = null;
+
             return ret;
         }
         if ( p && (typeof p[k] !== 'undefined') && p[k] != null ) return p[k];
