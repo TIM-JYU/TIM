@@ -50,9 +50,9 @@ imagexApp.directiveTemplate = function () {
         '<button ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.showAnswer();">Showanswer</button>&nbsp&nbsp' +
         '<a ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.resetExercise();">Reset</a>&nbsp&nbsp' +
         '<a href="" ng-if="muokattu" ng-click="imagexScope.initCode()">{{resetText}}</a>' +
-        '<input ng-show="preview" id="coords" />' +
+        '<input ng-if="preview" id="coords" />' +
         '<span class="tries" ng-if="max_tries"> Tries: {{tries}}/{{max_tries}}</span>' +
-        '<pre class="" ng-if="error">{{error}}</pre>' +
+        '<pre class="" ng-if="error && preview">{{error}}</pre>' +
         '<pre class="" ng-show="result">{{result}}</pre>' +
         '<p class="plgfooter">Here comes footer</p>' +
         '</div>'
@@ -142,24 +142,31 @@ imagexApp.initDrawing = function(scope, canvas) {
             scope.incompleteImages = 0;
 
             for (var i = 0; i < this.drawObjects.length; i++) {
-                this.drawObjects[i].ctx = this.ctx;
-                if (this.activeDragObject) {
-                    activeDragObjectId = this.activeDragObject.id;
-                    this.activeDragObject.x = this.mousePosition.x - this.activeDragObject.xoffset;
-                    this.activeDragObject.y = this.mousePosition.y - this.activeDragObject.yoffset;
-                    if (this.drawObjects[i].id == activeDragObjectId) {
-                        topmostIndex = i;
-                        topmostElement = this.drawObjects[i]; }
+                try {
+                    this.drawObjects[i].ctx = this.ctx;
+                    if (this.activeDragObject) {
+                        activeDragObjectId = this.activeDragObject.id;
+                        this.activeDragObject.x = this.mousePosition.x - this.activeDragObject.xoffset;
+                        this.activeDragObject.y = this.mousePosition.y - this.activeDragObject.yoffset;
+                        if (this.drawObjects[i].id == activeDragObjectId) {
+                            topmostIndex = i;
+                            topmostElement = this.drawObjects[i];
+                        }
+                    }
+                    if (activeDragObjectId != this.drawObjects[i].id) {
+                        this.drawObjects[i].draw(this.drawObjects[i]); // kutsutaan objektin omaa piirtoa
+                    }
+                    if (this.drawObjects[i].name == 'dragobject') {
+                        var onTopOf = areObjectsOnTopOf(this.drawObjects[i],
+                            this.drawObjects, 'target');
+                        if (onTopOf) onTopOf.color = onTopOf.snapColor;
+                    }
+                    else if (this.drawObjects[i].name === 'target')
+                        this.drawObjects[i].color = this.drawObjects[i].origColor;
                 }
-                if (activeDragObjectId != this.drawObjects[i].id) {
-                    this.drawObjects[i].draw(this.drawObjects[i]); // kutsutaan objektin omaa piirtoa
+                catch  (err) {
+                    scope.error += "draw " + this.drawObjects[i].id + ": " + err + "\n";
                 }
-                if (this.drawObjects[i].name == 'dragobject') {
-                    var onTopOf = areObjectsOnTopOf(this.drawObjects[i],
-                        this.drawObjects, 'target');
-                    if (onTopOf) onTopOf.color = onTopOf.snapColor; }
-                else if (this.drawObjects[i].name === 'target')
-                    this.drawObjects[i].color = this.drawObjects[i].origColor;
             }
 
             if (scope.incompleteImages !== 0) {
@@ -249,8 +256,9 @@ imagexApp.initDrawing = function(scope, canvas) {
     }
 
     function DragObject(dt, values, defId) {
+        this.id = getValue(values.id,defId);
         this.draw = Empty;
-        this.type = getValueDef(values, "type", "textbox");
+        this.type = getValueDef(values, "type", "textbox", true);
         this.name = 'dragobject';
         this.ctx = dt.ctx;
         if (values.state === 'state') {
@@ -266,7 +274,6 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.r2 = getValue(this.size[1], this.r1);
         this.target = null;
         this.currentTarget = null;
-        this.id = getValue(values.id,defId);
         this.ispin = isKeyDef(values,"pin", false);
         this.a = getValueDef(values, "a", 0);
         this.imgproperties = {};
@@ -299,7 +306,8 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.draw = shapeFunctions['pin'].draw;
         // this.draw = shapeFunctions[this.type].draw;
     }
-    function Target(dt, values) {
+    function Target(dt, values, defId) {
+        this.id = getValue(values.id,defId);
         this.name = 'target';
         this.ctx = dt.ctx;
         this.position = getValueDef(values, "position", [0, 0]);
@@ -307,7 +315,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.y = this.position[1];
         this.a = getValueDef(values,"a", 0);
         this.snap = getValueDef(values, "snap",true);
-        this.type = getValueDef(values, "type", 'rectangle');
+        this.type = getValueDef(values, "type", 'rectangle', true);
         // this.type = getValue(values, 'target.type', default, 'rectangle');
         this.size = getValueDef(values, "size", [10, 10]);
         this.imgproperties = {};
@@ -326,12 +334,13 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.draw = shapeFunctions[this.type].draw;
 
     }
-    function FixedObject(dt, values) {
+    function FixedObject(dt, values,defId) {
+        this.id = getValue(values.id,defId);
         if (values.name === 'background') {
             this.type = 'img';
             this.name = 'background'; }
         else {
-            this.type = getValueDef(values, "type", 'rectangle');
+            this.type = getValueDef(values, "type", 'rectangle', true);
             this.name = 'fixedobject'; }
 
         this.ctx = dt.ctx;
@@ -406,7 +415,8 @@ imagexApp.initDrawing = function(scope, canvas) {
 
     // Find value for key from value, prevous or defaults.  If nowhere return defaultValue
     //this.pinProperties.position = getValue(initValues, "pinPoint.position", {});
-    function getValueDef(value, key, defaultValue) {
+    function getValueDef(value, key, defaultValue, keepEmtpyAsNone) {
+        keepEmtpyAsNone = typeof keepEmtpyAsNone !== 'undefined' ? keepEmtpyAsNone : false;
         var keys = key.split(".");
         var v = value;
         var p = scope.previousValue;
@@ -426,7 +436,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         if ( keys.length < 1 ) return ret;
         k = keys[keys.length-1];
         if ( v && (typeof v[k] !== 'undefined')  ) {
-            if ( v[k] != null ) {
+            if ( v[k] != null && ( !keepEmtpyAsNone || v[k] != "" )) {
                 ret = v[k];
                 p[k] = ret;
             }
@@ -554,8 +564,8 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.r2 = this.size[1];
                     this.arrowHeadWidth = this.r2 / 3;
                     this.arrowHeadLength = this.r2 / 1.5;
-                    this.vectorColor = getValueDef(objectValues, "vectorproperties.color", 'Black');
-                    this.drawtextbox = getValueDef(objectValues, "vectorproperties.textbox", false);
+                    this.vectorColor = getValueDef(initValues, "vectorproperties.color", 'Black');
+                    this.drawtextbox = getValueDef(initValues, "vectorproperties.textbox", false);
                 },
             draw:
                 function (objectValues) {
@@ -842,28 +852,41 @@ imagexApp.initDrawing = function(scope, canvas) {
     }
 
     scope.previousValue = {};
+    scope.error = "";
 
     if (userFixedObjects) {
         for (i = 0; i < userFixedObjects.length; i++) {
-            fixedobjects[i] = new FixedObject(dt, userFixedObjects[i]);
+            try {
+                fixedobjects[i] = new FixedObject(dt, userFixedObjects[i], "fix" + (i+1));
+            } catch (err ) {
+                scope.error += "init fix" + (i+1)+": " + err +"\n";
+            }
         } }
 
     scope.previousValue = {};
 
     if (userTargets) {
         for (i = 0; i < userTargets.length; i++) {
-            targets[i] = new Target(dt, userTargets[i]);
+            try {
+                targets[i] = new Target(dt, userTargets[i], "trg" + (i+1));
+            } catch (err) {
+                scope.error += "init trg" + (i+1)+": " + err +"\n";
+            }
         } }
 
     scope.previousValue = {};
 
     if (userObjects) {
         for (i = 0; i < userObjects.length; i++) {
-            objects[i] = new DragObject(dt, userObjects[i], "obj" + (i+1));
-            if(!scope.drags){
-                scope.drags = [];
+            try {
+                objects[i] = new DragObject(dt, userObjects[i], "obj" + (i+1));
+                if(!scope.drags){
+                    scope.drags = [];
+                }
+                scope.drags.push(objects[i]);
+            } catch (err) {
+                scope.error += "init obj" + (i+1)+": " + err +"\n";
             }
-            scope.drags.push(objects[i]);
         } }
 
 
