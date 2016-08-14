@@ -398,86 +398,13 @@ p.caption {
      background: $editline-bg-color;
 }
 
-.areaeditline {
-    opacity: 0;
-    position: absolute;
-    left: -$areaeditline-width;
-    width: $areaeditline-width;
-    height: 100%;
-    top: 0;
-
-    &.show {
-        opacity: 0.2;
-    }
-
-    &:hover, &.manualhover, &.menuopen, &.show.menuopen {
-        opacity: 0.5;
-    }
-}
-
-.areaeditline1 {
-    @extend .areaeditline;
-    background: #d874ff; /* rgb(236,103,27); */
-}
-
-.areaeditline2 {
-    @extend .areaeditline;
-    background: #b2aaff; /* rgb(236,103,27); */
-    left: -2 * $areaeditline-width;
-    width: $areaeditline-width;
-}
-
-.areaeditline3 {
-    @extend .areaeditline;
-    left: -3 * $areaeditline-width;
-    width: $areaeditline-width;
-    background: #ff9851; /* rgb(236,103,27); */
-}
-
-.area {
-    position: relative;
-}
-
-.areacollapse, .areaexpand, .disabledcollapse, .disabledexpand {
-    cursor: pointer;
-    position: relative;
-}
-
-.areatitle {
-    padding-left: 10px;
-    display: inline;
-
-    h1, h2, h3, h4, h5, h6 {
-        display: inline;
-        vertical-align: middle;
-    }
-}
-
-.areaexpand, .disabledexpand, .areacollapse, .disabledcollapse {
-    left: -4em;
-    margin-bottom: 1em;
-
-    @media (max-width: $screen-sm + 6) {
-        left: -1em;
-    }
-    @media (max-width: $screen-xs-max) {
-        left: 0.8em;
-    }
-}
-
-.areacollapse::before, .areaexpand::before {
+.areacollapse::before {
     color: $areacollapse-color;
-}
-
-.disabledcollapse::before, .disabledexpand::before {
-    color: #ccc;
-}
-
-.areacollapse::before, .disabledcollapse::before {
     content: "[-]";
 }
 
-.areaexpand::before, .disabledexpand::before {
+.areaexpand::before {
+    color: $areacollapse-color;
     content: "[+]";
 }
 
@@ -817,7 +744,7 @@ input[type="file"] {
     min-height: 50px;
 }
 
-.menuButtons, .nameArea {
+.menuButtons {
     display: table;
     position: absolute;
     white-space: nowrap;
@@ -830,7 +757,6 @@ input[type="file"] {
 }
 
 .actionButtonContent {
-    /* todo: find working values for mobile devices */
     white-space: normal;
     max-width: 600px;
     max-height: 200px;

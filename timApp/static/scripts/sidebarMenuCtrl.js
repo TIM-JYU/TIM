@@ -95,60 +95,6 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
                     console.log("Couldn't fetch the questions");
                 });
         };
-
-        $scope.enable_par_edit = function () {
-            $('.editline-disabled').removeClass('editline-disabled').addClass('editline');
-        };
-
-        $scope.disable_par_edit = function () {
-            $('.editline').removeClass('editline').addClass('editline-disabled');
-        };
-
-        $scope.enable_area_edit_active = function () {
-            $('.areaeditline1-disabled').removeClass('areaeditline1-disabled').addClass('areaeditline1');
-            $('.areaeditline2-disabled').removeClass('areaeditline2-disabled').addClass('areaeditline2');
-            $('.areaeditline3-disabled').removeClass('areaeditline3-disabled').addClass('areaeditline3');
-            $('.areaeditline').addClass('show');
-        };
-
-        $scope.enable_area_edit_passive = function () {
-            $('.areaeditline1-disabled').removeClass('areaeditline1-disabled').addClass('areaeditline1');
-            $('.areaeditline2-disabled').removeClass('areaeditline2-disabled').addClass('areaeditline2');
-            $('.areaeditline3-disabled').removeClass('areaeditline3-disabled').addClass('areaeditline3');
-            $('.areaeditline.show').removeClass('show');
-        };
-
-        $scope.disable_area_edit = function () {
-            $('.areaeditline1').removeClass('areaeditline1').addClass('areaeditline1-disabled');
-            $('.areaeditline2').removeClass('areaeditline2').addClass('areaeditline2-disabled');
-            $('.areaeditline3').removeClass('areaeditline3').addClass('areaeditline3-disabled');
-            $('.areaeditline.show').removeClass('show');
-        };
-
-        $scope.model = {editState: $window.editMode};
-
-        $scope.$watch('model.editState', function (newVal, oldVal, scope) {
-            $window.editMode = newVal;
-            $('.editmode').removeClass('editmode');
-
-            if (oldVal === "par" && newVal === null) {
-                $scope.enable_par_edit();
-                $scope.enable_area_edit_passive();
-            } else if (newVal === "par") {
-                $scope.enable_par_edit();
-                $scope.disable_area_edit();
-                $('.par').addClass('editmode');
-            } else if (newVal === "area") {
-                $('.editline').removeClass('editline').addClass('editline-disabled');
-                $scope.disable_par_edit();
-                $scope.enable_area_edit_active();
-                $('.area').addClass('editmode');
-            } else if (oldVal === "area" && newVal === null) {
-                $('.editline-disabled').removeClass('editline-disabled').addClass('editline');
-                $scope.enable_par_edit();
-                $scope.enable_area_edit_passive();
-            }
-        });
     }
 ])
 ;
