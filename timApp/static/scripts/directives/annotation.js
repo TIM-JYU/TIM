@@ -171,10 +171,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                             comment_relative_time: "just now"
                         });
                         scope.$parent.addComment(scope.aid, json.data.name, comment);
-                        scope.updateAnnotationToMargin();
                     });
-                } else {
-                    scope.updateAnnotationToMargin();
                 }
                 scope.newComment = "";
                 if (scope.visible_options.value !== scope.original.visible_to) {
@@ -192,6 +189,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 scope.$parent.makePostRequest("/update_annotation", scope.original, function (json) {
                     console.log(json);
                 });
+                scope.updateAnnotationToMargin();
             };
 
             /**
@@ -220,6 +218,16 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     }
                 }
             }
+
+             /**
+             * Return true if user has teacher rights.
+             * @returns {boolean}
+             */
+
+            scope.allowChangePoints = function () {
+                return scope.$parent.rights.teacher;
+            }
+
 
 
             /**

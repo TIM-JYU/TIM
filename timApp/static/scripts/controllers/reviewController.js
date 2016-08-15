@@ -426,6 +426,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param id - Annotation id
      */
     $scope.updateAnnotationToMargin = function (id, inmargin) {
+        var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
         var annotationElement = $('[aid="{0}"]'.replace('{0}', id));
         var par = annotationElement.parents('.par');
         var annotationHighlights = annotationElement[0].getElementsByClassName("highlighted");
@@ -448,20 +449,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 savedHTML += addHTML;
             }
             annotationParents[0].outerHTML = savedHTML;
-            //for (var a = 0; a < $scope.annotations.length; a++) {
-              //  if (id === $scope.annotations[a].id)
-                //    $scope.annotations.splice(a, 1);
-            //}
 
-
+            // TODO: add redraw annotation text
         }
-         for (var b = 0; b < $scope.annotations.length; b++) {
-            if (id === $scope.annotations[b].id){
-                addAnnotationToElement($scope.createPopOverElement($scope.annotations[b], false), $scope.annotations[b], false,"Added also margin annotation");
-            }
-         }
 
-        //annotationElement[0].parentNode.appendChild($scope.annotations[id]);
     };
 
 
