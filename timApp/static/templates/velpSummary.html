@@ -17,7 +17,7 @@
             <tr>
                 <!--<th class="summCheckbox"></th> See comment above^-->
                 <th class="summSecColumn">Points total</th>
-                <th class="summThiColumn"><span>{{ getTotalPoints() }}</span></th>
+                <th class="summThiColumn"><span>{{ getTotalPoints(user_id) }}</span></th>
             </tr>
         </table>
          <h5>Other Annotations</h5>
@@ -34,11 +34,11 @@
                 <td class="summSecColumn"><a ng-click="toggleAnnotation(b)">{{ b.content }}</a></td>
                 <td class="summThiColumn"><span>{{ b.points }}</span></td>
             </tr>
-            <tr>
-                <!--<th class="summCheckbox"></th> See comment above^-->
+            <!--<tr>
+                <!--<th class="summCheckbox"></th> See comment above^
                 <th class="summSecColumn">Points total</th>
-                <th class="summThiColumn"><span>{{ getTotalPoints(b) }}</span></th>
-            </tr>
+               <th class="summThiColumn"><span></span></th>
+            </tr>-->
         </table>
     </div>
 </div>

@@ -44,13 +44,15 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
      * @method getTotalPoints
      * @returns {number}
      */
-    $scope.getTotalPoints = function (ann) {
+    $scope.getTotalPoints = function (user) {
         var p = 0;
         if ($scope.annotations === undefined)
             return p;
 
         for (var i = 0; i < $scope.annotations.length; i++) {
-            p += $scope.annotations[i].points;
+            if ($scope.annotatios[i].user_id === user) {
+                p += $scope.annotations[i].points;
+            }
         }
         //cast back to a number, the string has trailing zeros.
         return Number(p.toPrecision(4));

@@ -10,7 +10,7 @@
  * @copyright 2016 Timber project authors
  */
 
-var angular;
+var angular, $;
 var timApp = angular.module('timApp');
 
 var UNDEFINED = "undefined";
@@ -301,55 +301,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Adds meta annotation. Puts to paragraph margin link to main
-     * @method addAnnotationMetaElement
-     * @param annotation - annotation info
-     * @param show - Whether annotation is shown when created
-     */
-    var addAnnotationMetaElement = function (el, annotation, show){
-        var element = document.createElement("span");
-
-         element.setAttribute("annotationmeta", "" + annotation.id );
-
-        var velp_data = $scope.getVelpById(annotation.velp);
-
-        var velp_content;
-
-        if (velp_data !== null) {
-            velp_content = velp_data.content;
-        } else {
-            velp_content = annotation.content;
-        }
-        element.setAttribute("ng-show", show);
-        // ng-class="['highlighted', 'clickable', 'emphasise', 'default', {neutral: points == 0, negative: points < 0, positive: points > 0}]" ng-transclude="true"
-        element.setAttribute("ng-class","['highlighted', 'clickable', 'emphasise', 'default', {neutral: points == 0, negative: points < 0, positive: points > 0}]");
-        element.setAttribute("ng-transclude", "true");
-        element.setAttribute("ng-click","toggleTextAnnotation(" + annotation.id + ")");
-
-        //<input type="number" ng-model="points" ng-value="points" ng-disabled="checkRights()" ng-change="changePoints(points)" class="ng-pristine ng-untouched ng-valid" value="-1">
-        var text = document.createTextNode("\u00A0" + annotation.content + "\u00A0");
-        element.appendChild(text);
-        var points = document.createElement("input");
-
-        points.value = annotation.points;
-        points.setAttribute("ng-show", "false");
-        points.setAttribute("ng-model", "points");
-        points.setAttribute("ng-value", "points");
-        element.appendChild(points);
-        addElementToParagraphMargin(el, element);
-        $compile(element)($scope);
-    };
-
-    $scope.toggleTextAnnotation = function (id) {
-        for (var i = 0; i < $scope.annotations.length; i++) {
-            if ($scope.annotations[i].id === id) {
-                $scope.toggleAnnotation($scope.annotations[i]);
-                break;
-            }
-        }
-    }
-
-    /**
      * Adds element to paragraph margin.
      * @method addElementToParagraphMargin
      * @param par - Paragraph where element is added
@@ -475,13 +426,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param id - Annotation id
      */
     $scope.updateAnnotationToMargin = function (id, inmargin) {
-        var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
-        //var annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
+        var annotationElement = $('[aid="{0}"]'.replace('{0}', id));
+        var par = annotationElement.parents('.par');
+        //var annotationHighlights = annotationElement[0].getElementsByClassName("highlighted");
         if(!inmargin) {
             // nothing
             for (var a = 0; a < $scope.annotations.length; a++) {
                 if (id === $scope.annotations[a].id){
-                    addAnnotationToElement($scope.createPopOverElement($scope.annotations[a], false), $scope.annotations[a], false,"Added also margin annotation");
+                    //addAnnotationToElement(par[0], $scope.annotations[a], false,"Added also margin annotation");
+                    //addAnnotationToElement($scope.annotations[a], false, "Added also margin annotation");
                 }
             }
 
@@ -491,8 +444,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
               //  if (id === $scope.annotations[a].id)
                 //    $scope.annotations.splice(a, 1);
             //}
-            annotationParents[1].parentNode.removeChild(annotationParents[1]);
-            addAnnotationToElement($scope.createPopOverElement($scope.annotations[id], false), $scope.annotations[id], false,"Added also margin annotation");
+            annotationElement[1].parentNode.removeChild(annotationElement[1]);
+            addAnnotationToElement($scope.selectedElement, $scope.annotations[id], false, "Added also margin annotation");
         }
          for (var b = 0; b < $scope.annotations.length; b++) {
             if (id === $scope.annotations[b].id){
@@ -500,7 +453,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             }
          }
 
-        //annotationParents[0].parentNode.appendChild($scope.annotations[id]);
+        //annotationElement[0].parentNode.appendChild($scope.annotations[id]);
     };
 
 
