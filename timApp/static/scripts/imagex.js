@@ -60,7 +60,7 @@ imagexApp.directiveTemplate = function () {
 
 
 imagexApp.initDrawing = function(scope, canvas) {
-
+    
     function getPos(e, evt) {
         var rect = e.getBoundingClientRect();
         if (evt.touches) {
@@ -76,21 +76,24 @@ imagexApp.initDrawing = function(scope, canvas) {
             y: posY - rect.top
         };
     }
-
+    
     function isObjectOnTopOf(position, object, name) {
         var sina = Math.sin(-object.a * to_radians);
         var cosa = Math.cos(-object.a * to_radians);
         var rotatedX = cosa * (position.x - object.x) - sina * (position.y - object.y);
         var rotatedY = cosa * (position.y - object.y) + sina * (position.x - object.x);
 
+        if (isTouch) var grabOffset = 25;
+        else var grabOffset = 0;
+
         if (object.name === "target") {
             if (object.type === "rectangle") {
                 if (rotatedX >= -object.r1 / 2 && rotatedX <= object.r1 / 2 &&
-                    rotatedY >= -object.r2 / 2 && rotatedY <= object.r2 / 2) {
+                    rotatedY >= -object.r2 / 2 && rotatedY <= object.r2 / 2 ) {
                     if (name && object.name === name) return true;
                     else if (!name) return true;
                 } }
-
+            
             else if (object.type === "ellipse") {
                 if ((Math.pow(rotatedX, 2) / Math.pow(object.r1/2, 2)) +
                     (Math.pow(rotatedY, 2) / Math.pow(object.r2/2, 2)) <= 1) {
@@ -103,20 +106,24 @@ imagexApp.initDrawing = function(scope, canvas) {
                 if (rotatedX >= - object.pinPosition.off.x - object.pinPosition.x &&
                     rotatedX <= object.r1 - object.pinPosition.off.x - object.pinPosition.x &&
                     rotatedY >= - object.pinPosition.off.y - object.pinPosition.y &&
-                    rotatedY <= object.r2 -object.pinPosition.off.y- object.pinPosition.y) {
+                    rotatedY <= object.r2 -object.pinPosition.off.y- object.pinPosition.y 
+                    + grabOffset) {
                     if (name && object.name === name) return true;
                     else if (!name) return true; }
             }
             if (object.type === "vector") {
-                if (rotatedX >= 0 && rotatedX <= object.r1 &&
-                    rotatedY >= -object.r2 / 2 - object.arrowHeadWidth &&
-                    rotatedY <= object.r2 / 2 + object.arrowHeadWidth) {
+                if (rotatedX >= - object.pinPosition.off.x - object.pinPosition.x &&
+                    rotatedX <= object.r1 - object.pinPosition.off.x - object.pinPosition.x &&
+                    rotatedY >= -object.r2 / 2 - object.arrowHeadWidth  / 2 
+                    - object.pinPosition.off.y - object.pinPosition.y &&
+                    rotatedY <= object.r2 / 2 + object.arrowHeadWidth / 2 
+                    - object.pinPosition.off.y- object.pinPosition.y + grabOffset) {
                     if (name && object.name === name) return true;
                     else if (!name) return true; }
             }
         }
     }
-
+    
     function areObjectsOnTopOf(position, objects, name) {
         for (var i = objects.length-1; i >=0; i--) {
             var collision = isObjectOnTopOf(position, objects[i], name);
@@ -126,7 +133,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         }
         return null;
     }
-
+    
     function DragTask(canvas) {
         this.canvas = canvas;
         this.drawObjects = [];
@@ -138,9 +145,9 @@ imagexApp.initDrawing = function(scope, canvas) {
             this.ctx = canvas.getContext('2d');
             this.ctx.clearRect(0, 0, canvas.width, canvas.height);
             var activeDragObjectId = "";
-
+            
             scope.incompleteImages = 0;
-
+            
             for (var i = 0; i < this.drawObjects.length; i++) {
                 try {
                     this.drawObjects[i].ctx = this.ctx;
@@ -171,7 +178,6 @@ imagexApp.initDrawing = function(scope, canvas) {
 
             if (scope.incompleteImages !== 0) {
                 setTimeout(this.draw, 500);
-
                 //      tee tÃ¤hÃ¤n rajoitus
             }
 
@@ -227,8 +233,8 @@ imagexApp.initDrawing = function(scope, canvas) {
             }
 
             if (isTarget && isTarget.snap === true) {
-                this.activeDragObject.x = isTarget.x;
-                this.activeDragObject.y = isTarget.y;
+                this.activeDragObject.x = isTarget.x + isTarget.snapOffset[0];
+                this.activeDragObject.y = isTarget.y + isTarget.snapOffset[1];
             }
             this.activeDragObject = null;
             this.draw();
@@ -252,8 +258,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         }
     }
 
-    function Empty(objectValues) {
-    }
+    function Empty(objectValues) {}
 
     function DragObject(dt, values, defId) {
         this.id = getValue(values.id,defId);
@@ -315,6 +320,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.y = this.position[1];
         this.a = getValueDef(values,"a", 0);
         this.snap = getValueDef(values, "snap",true);
+        this.snapOffset = getValueDef(values, "snapOffset", [0, 0]);
         this.type = getValueDef(values, "type", 'rectangle', true);
         // this.type = getValue(values, 'target.type', default, 'rectangle');
         this.size = getValueDef(values, "size", [10, 10]);
@@ -449,9 +455,6 @@ imagexApp.initDrawing = function(scope, canvas) {
         return ret;
      }
 
-     // var testValue = {pinni: {paikka: {x:3, y:7}}};
-     // var pinnin_paikka = getValueDef(testValue, "pinni.paikka", {});
-
     function getValue(value, defaultValue) {
         // function getValue(value, key, defaultValue) {
         // scope.default...
@@ -476,6 +479,13 @@ imagexApp.initDrawing = function(scope, canvas) {
         return getValue1(value[key1],key2, defaultValue);
     }
 
+
+    function isTouchDevice(){
+        return typeof window.ontouchstart !== 'undefined';
+    }
+    
+    var isTouch = isTouchDevice();
+
     var to_radians = Math.PI / 180;
     var doc_ctx = canvas;
     var dt = new DragTask(doc_ctx);
@@ -487,9 +497,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         //TÃ¤mÃ¤ piirtÃ¤Ã¤ viivan, mutta vain kerran.
         line: {
             init:
-                function (initValues) {
-
-                },
+                function (initValues) {},
             draw:
                 function (objectValues) {
                     this.ctx = objectValues.ctx;
@@ -505,9 +513,7 @@ imagexApp.initDrawing = function(scope, canvas) {
 
         ellipse: {
             init:
-                function (initValues) {
-
-                },
+                function (initValues) {},
             draw:
                 function (objectValues) {
                     this.ctx = objectValues.ctx;
@@ -522,7 +528,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.ctx.restore();
                     this.ctx.stroke();}
         },
-
+        
         rectangle: {
             init:
                 function (initValues) {
@@ -551,8 +557,8 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.ctx.arc(-this.r1 / 2 + this.cornerRadius, this.r2 / 2 - this.cornerRadius,
                         this.cornerRadius, 0.5 * Math.PI, Math.PI);
                     this.ctx.lineTo(-this.r1 / 2, -this.r2 / 2 + this.cornerRadius);
-                    this.ctx.arc(-this.r1 / 2 + this.cornerRadius, -this.r2 / 2 + this.cornerRadius,
-                        this.cornerRadius, Math.PI, 1.5 * Math.PI);
+                    this.ctx.arc(-this.r1 / 2 + this.cornerRadius, -this.r2 / 2 + 
+                                 this.cornerRadius, this.cornerRadius, Math.PI, 1.5 * Math.PI);
                     this.ctx.restore();
                     this.ctx.stroke(); }
         },
@@ -562,8 +568,10 @@ imagexApp.initDrawing = function(scope, canvas) {
                 function (initValues) {
                     this.r1 = this.size[0];
                     this.r2 = this.size[1];
-                    this.arrowHeadWidth = this.r2 / 3;
-                    this.arrowHeadLength = this.r2 / 1.5;
+                    this.arrowHeadWidth = 
+                        getValueDef(initValues, "vectorproperties.arrowheadwidth", this.r2 / 3);
+                    this.arrowHeadLength = 
+                        getValueDef(initValues, "vectorproperties.arrowheadlength", this.r2 / 1.5);
                     this.vectorColor = getValueDef(initValues, "vectorproperties.color", 'Black');
                     this.drawtextbox = getValueDef(initValues, "vectorproperties.textbox", false);
                 },
@@ -572,25 +580,35 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.ctx = objectValues.ctx;
                     this.ctx.strokeStyle = this.vectorColor;
                     this.ctx.fillStyle = this.ctx.strokeStyle;
+                    if (objectValues.pinPosition) {
+                        this.vectorX = - objectValues.pinPosition.off.x
+                            - objectValues.pinPosition.x;
+                        this.vectorY = - objectValues.pinPosition.off.y
+                            - objectValues.pinPosition.y; }
+                    else {
+                        this.vectorX = getValue(objectValues.position[0], 0);
+                        this.vectorY = getValue(objectValues.position[1], 0); }
+                    this.ctx.save();
                     if (objectValues.name === 'fixedobject') {
-                        this.ctx.save();
                         this.ctx.translate(this.x, this.y);
                         this.ctx.rotate(this.a * to_radians);}
+                    if (objectValues.name === 'dragobject') {
+                        this.ctx.translate(this.vectorX, this.vectorY); }
                     this.ctx.beginPath();
-                    this.ctx.lineTo(0, this.r2 / 6);
-                    this.ctx.lineTo(this.r1 - this.arrowHeadLength, this.r2 / 6);
-                    this.ctx.lineTo(this.r1 - this.arrowHeadLength, this.r2 / 6 +
-                        this.arrowHeadWidth);
-                    this.ctx.lineTo(this.r1, 0);
-                    this.ctx.lineTo(this.r1 - this.arrowHeadLength, - this.r2 / 6 -
-                        this.arrowHeadWidth);
-                    this.ctx.lineTo(this.r1 - this.arrowHeadLength, - this.r2 / 6);
-                    this.ctx.lineTo(0, - this.r2 / 6);
+                    this.ctx.lineTo(0, this.r2);
+                    this.ctx.lineTo(this.r1 - this.arrowHeadLength, this.r2 );
+                    this.ctx.lineTo(this.r1 - this.arrowHeadLength, this.r2 / 2  +
+                        this.arrowHeadWidth / 2);
+                    this.ctx.lineTo(this.r1, this.r2 / 2);
+                    this.ctx.lineTo(this.r1 - this.arrowHeadLength,
+                                    this.r2 / 2 - this.arrowHeadWidth / 2);
+                    this.ctx.lineTo(this.r1 - this.arrowHeadLength, 0 );
+                    //this.ctx.lineTo(0, - this.r2 );
                     this.ctx.lineTo(0, 0);
                     this.ctx.fill();
                     if ( this.drawtextbox ) {
                         this.textbox.draw(objectValues); }
-                    if (objectValues.name === 'fixedobject') this.ctx.restore();
+                    this.ctx.restore();
                 }
         },
 
@@ -601,14 +619,16 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.image = new Image();
                     if (initValues.name === 'background') {
                         this.image.src = getValue(initValues.src,"");
-                        this.size = getValue(initValues.size, [null, null]); // do not use bg size as a default
+                        this.size = getValue(initValues.size, [null, null]); 
+                        // do not use bg size as a default
                     }
                     else {
                         this.image.src = getValueDef(initValues, "imgproperties.src", "");
                         this.size = getValueDef(initValues, "size", [null, null]);
                     }
                     this.initValues = initValues;
-                    this.imgproperties.textbox = getValueDef(initValues, "imgproperties.textbox", false);
+                    this.imgproperties.textbox = getValueDef(initValues,
+                                                             "imgproperties.textbox", false);
                     if (this.imgproperties.textbox) this.textbox.init(initValues);
                     if ( !this.image.complete ) return;
                     this.init2();
@@ -621,7 +641,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                     if ( r1 == 0 ) return;
                     // Look if size attribute overrides the image size
                     this.r1 = getValue(this.size[0], r1);
-                    if ( this.size[0] && !this.size[1] ) r2 = this.r1/r1*r2;
+                    if ( this.size[0] && !this.size[1] ) r2 = this.r1 / r1 * r2;
                     this.r2 = getValue(this.size[1], r2);
                     this.size[0] = this.r1;
                     this.size[1] = this.r2;
@@ -638,19 +658,18 @@ imagexApp.initDrawing = function(scope, canvas) {
                 function (objectValues) {
                     if (!this.image.complete) {
                         scope.incompleteImages =+ 1;
-                        return;
-                    }
+                        return; }
                     if ( !this.ready ) this.init2();
 
                     this.ctx = objectValues.ctx;
                     if (objectValues.pinPosition) {
-                        this.imageX = - objectValues.pinPosition.off.x - objectValues.pinPosition.x;
-                        this.imageY = - objectValues.pinPosition.off.y - objectValues.pinPosition.y;
-                    }
+                        this.imageX = - objectValues.pinPosition.off.x
+                            - objectValues.pinPosition.x;
+                        this.imageY = - objectValues.pinPosition.off.y
+                            - objectValues.pinPosition.y; }
                     else {
                         this.imageX = getValue(objectValues.position[0], 0);
-                        this.imageY = getValue(objectValues.position[1], 0);
-                    }
+                        this.imageY = getValue(objectValues.position[1], 0); }
                     this.ctx.save();
                     this.ctx.translate(this.imageX, this.imageY);
                     if (objectValues.name === 'fixedobject' || objectValues.name === 'background')
@@ -668,11 +687,14 @@ imagexApp.initDrawing = function(scope, canvas) {
                     // initValues.textboxproperties = getValue(initValues.textboxproperties, {});
                     this.type = getValueDef(initValues, "type", "textbox");
                     if (this.type === 'img' || this.type === 'vector') {
-                        this.textBoxOffset = getValueDef(initValues, "textboxproperties.positionOnImage.coord", [0, 0]);
+                        this.textBoxOffset = 
+                            getValueDef(initValues, "textboxproperties.position",
+                                        [0, 0]);
                         this.x = getValue( this.textBoxOffset[0], 0);
                         this.y = getValue( this.textBoxOffset[1], 0); }
                     var fontDraw = document.createElement("canvas");
-                    // TODO: sopessa voisi olla alustusken aikana yksi dummy canvas joka sitten poistetaan
+                    // TODO: sopessa voisi olla alustusken aikana yksi dummy canvas
+                    // joka sitten poistetaan
                     this.font = getValueDef(initValues, "textboxproperties.font", '14px Arial');
                     var auxctx = fontDraw.getContext('2d');
                     auxctx.font = this.font;
@@ -683,11 +705,15 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.textBoxSize = getValueDef(initValues, "textboxproperties.size", []);
                     this.r1 = getValue(this.textBoxSize[0], this.textwidth + 2 * this.borderGap);
                     this.r2 = getValue(this.textBoxSize[1], this.textHeight + 2 * this.borderGap);
-                    this.borderColor = getValueDef(initValues, "textboxproperties.borderColor", 'Black');
-                    this.fillColor = getValueDef(initValues, "textboxproperties.fillColor", 'White');
-                    this.textColor = getValueDef(initValues, "textboxproperties.textColor", 'Black');
+                    this.borderColor = getValueDef(initValues, 
+                                                   "textboxproperties.borderColor", 'Black');
+                    this.fillColor = getValueDef(initValues,
+                                                 "textboxproperties.fillColor", 'White');
+                    this.textColor = getValueDef(initValues,
+                                                 "textboxproperties.textColor", 'Black');
                     this.borderWidth = getValueDef(initValues, "textboxproperties.borderWidth", 2);
-                    this.cornerRadius = getValueDef(initValues, "textboxproperties.cornerradius", 0);
+                    this.cornerRadius = getValueDef(initValues, 
+                                                    "textboxproperties.cornerradius", 0);
                     if (this.cornerRadius > this.r1 / 2 || this.cornerRadius > this.r2 / 2) {
                         if (this.cornerRadius > this.r1 / 2) this.cornerRadius = this.r1 / 2;
                         if (this.cornerRadius > this.r2 / 2) this.cornerRadius = this.r2 / 2; }
@@ -706,17 +732,16 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.ctx.font = getValue(this.font, '14px Arial');
                     this.ctx.textBaseline = 'top';
                     if (objectValues.type === 'textbox' && objectValues.name === 'dragobject') {
-                        this.textBoxX = - objectValues.pinPosition.off.x - objectValues.pinPosition.x;
-                        this.textBoxY = - objectValues.pinPosition.off.y - objectValues.pinPosition.y;
-                    }
+                        this.textBoxX = - objectValues.pinPosition.off.x
+                            - objectValues.pinPosition.x;
+                        this.textBoxY = - objectValues.pinPosition.off.y
+                            - objectValues.pinPosition.y; }
                     else if (objectValues.name === 'fixedobject') {
                         this.textBoxX = objectValues.x;
-                        this.textBoxY = objectValues.y;
-                    }
+                        this.textBoxY = objectValues.y; }
                     else {
                         this.textBoxX = objectValues.textbox.textBoxOffset[0];
                         this.textBoxY = objectValues.textbox.textBoxOffset[1]; }
-
                     this.ctx.save();
                     this.ctx.translate(this.textBoxX, this.textBoxY);
                     if (objectValues.name === 'fixedobject') this.ctx.rotate(this.a * to_radians);
@@ -724,16 +749,16 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.ctx.moveTo(this.cornerRadius - 1, 0);
                     this.ctx.lineTo(this.r1 - this.cornerRadius, 0);
                     this.ctx.arc(this.r1 - this.cornerRadius, this.cornerRadius,
-                        this.cornerRadius, 1.5 * Math.PI, 0);
+                                 this.cornerRadius, 1.5 * Math.PI, 0);
                     this.ctx.lineTo(this.r1, this.r2 - this.cornerRadius);
                     this.ctx.arc(this.r1 - this.cornerRadius, this.r2 - this.cornerRadius,
-                        this.cornerRadius, 0, 0.5 * Math.PI);
+                                 this.cornerRadius, 0, 0.5 * Math.PI);
                     this.ctx.lineTo(this.cornerRadius, this.r2);
                     this.ctx.arc(this.cornerRadius, this.r2 - this.cornerRadius,
-                        this.cornerRadius, 0.5 * Math.PI, Math.PI);
+                                 this.cornerRadius, 0.5 * Math.PI, Math.PI);
                     this.ctx.lineTo(0, this.cornerRadius);
                     this.ctx.arc(this.cornerRadius, this.cornerRadius,
-                        this.cornerRadius, Math.PI, 1.5 * Math.PI);
+                                 this.cornerRadius, Math.PI, 1.5 * Math.PI);
                     this.ctx.fillStyle = this.fillColor;
                     this.ctx.fill();
                     this.ctx.fillStyle = this.textColor;
@@ -751,13 +776,18 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.pinProperties = {}; // getValue(initValues.pinPoint, {});
                     this.pinProperties.visible = getValueDef(initValues, "pin.visible", true);
                     this.pinProperties.position = {};
-
-                    this.pinLength = getValueDef(initValues, "pin.length", 15);
-                    this.pinColor = getValueDef(initValues, "pin.color", getValueDef(initValues, "borderColor", 'blue'));
+                    this.pinLength = getValueDef(initValues, "pin.length",
+                                                 (this.type === "vector") ? 0 : 15);
+                    // this.pinLength = getValueDef(initValues, "pin.length", 15);
+                    this.pinColor = getValueDef(initValues, "pin.color",
+                                                getValueDef(initValues, "borderColor", 'blue'));
                     this.lineWidth = getValueDef(initValues, "textboxproperties.borderWidth", 2);
-                    this.pinPositionAlign = getValueDef(initValues, "pin.position.align", 'northwest');
+                    this.pinDotRadius = getValueDef(initValues, "pin.dotRadius", 3);
+                    this.pinPositionAlign = getValueDef(initValues,
+                                                        "pin.position.align", 'northwest');
                     this.pinPositionStart = getValueDef(initValues, "pin.position.start", [0,0]);
-                    this.pinProperties.position.coord = getValueDef(initValues, "pin.position.coord", []);
+                    this.pinProperties.position.coord = getValueDef(initValues,
+                                                                    "pin.position.coord", []);
                     var pinst = getValueDef(initValues, "pin.position.start", [0, 0]);
                     this.pinsx = getValue(pinst[0], 0);
                     this.pinsy = getValue(pinst[1], 0);
@@ -766,7 +796,8 @@ imagexApp.initDrawing = function(scope, canvas) {
 
             init2:
                 function () {
-                    // TODO: pinlenght so that it is allways same length.  Now 45 deg pins are longer
+                    // TODO: pinlenght so that it is allways same length.
+                    // Now 45 deg pins are longer
                     this.pinPositions = {
                         west: {x: 0, y: this.r2 / 2, off: {x: -this.pinLength, y: 0}},
                         east: {x: this.r1, y: this.r2 / 2, off: {x: this.pinLength, y: 0}},
@@ -781,9 +812,17 @@ imagexApp.initDrawing = function(scope, canvas) {
                         northwest: {x: 0, y: 0, off: {x: -this.pinLength, y: -this.pinLength}},
                         center: {x: this.r1 / 2, y: this.r2 / 2, off:{x: 0, y: 0}}
                     };
-                    this.pinPosition = getValue(this.pinPositions[this.pinPositionAlign], this.pinPositions.northwest);
-                    this.pinPosition.off.x = getValue(this.pinProperties.position.coord[0], this.pinPosition.off.x);
-                    this.pinPosition.off.y = getValue(this.pinProperties.position.coord[1], this.pinPosition.off.y);
+                    if (this.type === 'vector') {
+                        this.pinPosition = getValue(this.pinPositions[this.pinPositionAlign],
+                                                    this.pinPositions.west)
+                    }
+                    else                        
+                        this.pinPosition = getValue(this.pinPositions[this.pinPositionAlign],
+                                                    this.pinPositions.northwest);
+                    this.pinPosition.off.x = getValue(this.pinProperties.position.coord[0],
+                                                      this.pinPosition.off.x);
+                    this.pinPosition.off.y = getValue(this.pinProperties.position.coord[1],
+                                                      this.pinPosition.off.y);
                     if (this.pinProperties && this.pinProperties.visible) {
                         this.dotPosition = {x: this.pinPosition.x + this.pinPosition.off.x,
                             y: this.pinPosition.y + this.pinPosition.off.y}}
@@ -796,24 +835,22 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.ctx.save();
                     this.ctx.translate(objectValues.x, objectValues.y);
                     this.ctx.rotate(this.a * to_radians);
-                    if (this.type === 'vector') {
-                        this.vectorDraw(objectValues);
-                        this.ctx.restore();
-                        return;
-                    }
                     this.ctx.strokeStyle = this.pinColor;
+                    this.ctx.fillStyle = this.pinColor;
                     this.ctx.beginPath();
-                    if ( this.pinProperties.visible ) {
-                        this.ctx.arc(0, 0, 1.5, 0, 2 * Math.PI, false);
-                        this.ctx.stroke();
+                    if (this.pinProperties.visible) {
+                        this.ctx.arc(0, 0, this.pinDotRadius, 0, 2 * Math.PI, false);
+                        this.ctx.fill();
                         this.ctx.beginPath();
                         this.ctx.moveTo(0, 0);
                         this.ctx.lineWidth = this.lineWidth;
-                        this.ctx.lineTo(-this.pinPosition.off.x+this.pinsx, -this.pinPosition.off.y+this.pinsy);
+                        this.ctx.lineTo(- this.pinPosition.off.x + this.pinsx,
+                                        - this.pinPosition.off.y + this.pinsy);
                         this.ctx.stroke();
                     }
                     if (this.type === 'textbox') this.textbox.draw(objectValues);
                     if (this.type === 'img') this.imageDraw(objectValues);
+                    if (this.type === 'vector') this.vectorDraw(objectValues);
                     this.ctx.restore();
                 }
         }
@@ -842,7 +879,6 @@ imagexApp.initDrawing = function(scope, canvas) {
     var objects = [];
 
     scope.defaults = scope.attrs.markup.defaults;
-
     scope.previousValue = {};
 
     if (scope.attrs.markup.background) {
@@ -1044,6 +1080,7 @@ ImagexScope.prototype.save = function() {
     this.doSave(false);
     //$scope.evalAsync( $scope.drags);
 };
+
 
 ImagexScope.prototype.showAnswer = function(){
     "use strict";
