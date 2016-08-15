@@ -34,7 +34,4 @@ docker rmi $(docker images | grep "^<none>" | awk '{print $3}')
 # Same with Dumbo
 (cd Ephemeral/Dumbo && ./build_dumbo.sh $@)
 
-# Initialize PostgreSQL database
-(cd postgre && ./init_postgre.sh $@)
-
 ./create_network.sh
