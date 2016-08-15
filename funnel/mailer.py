@@ -16,7 +16,7 @@ MAIL_SIGNATURE = "\n\n-- This message was automatically sent by TIM"
 
 CLIENT_RATE        = 20  # Max messages per client rate window
 CLIENT_RATE_WINDOW = 60  # In seconds
-GROUP_DELAY        = 600 # In seconds, the delay to combine similar messages into one
+GROUP_DELAY        = 300 # In seconds, the delay to combine similar messages into one
 
 
 def group_messages(msg_a: Dict, msg_b: Dict):
@@ -25,7 +25,7 @@ def group_messages(msg_a: Dict, msg_b: Dict):
 
     msg_new = msg_a.copy()
     msg_new.update({
-        'From': 'tim.jyu.fi',
+        'From': 'no-reply@tim.jyu.fi',
         'Subject': msg_a.get('Group-Subject', 'Various notifications'),
         'Body': msg_a['Body'] + '\n\n' + msg_b['Body']
     })

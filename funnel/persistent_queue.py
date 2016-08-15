@@ -70,8 +70,8 @@ class PersistentQueue():
         self.__write_element_dict(new_element, name)
 
     def delete(self):
-        self.assert_dir()
-        shutil.rmtree(self.dir)
+        if os.path.isdir(self.dir):
+            shutil.rmtree(self.dir)
 
     @classmethod
     def __read_element_dict(cls, filename: str) -> Dict[str, str]:
@@ -112,8 +112,8 @@ class PersistentQueue():
         last_file = self.get_last_filename()
 
         if not os.path.islink(first_file):
-            files = os.listdir(self.dir)
-            if len(files) > 1:
+            files = listnormalfiles(self.dir)
+            if len(files) > 0:
                 os.symlink(files[0], first_file)
             else:
                 os.symlink(this_relfile, first_file)
