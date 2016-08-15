@@ -70,8 +70,8 @@ class PersistentQueue():
         self.__write_element_dict(new_element, name)
 
     def delete(self):
-        self.assert_dir()
-        shutil.rmtree(self.dir)
+        if os.path.isdir(self.dir):
+            shutil.rmtree(self.dir)
 
     @classmethod
     def __read_element_dict(cls, filename: str) -> Dict[str, str]:
