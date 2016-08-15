@@ -25,7 +25,7 @@ def group_messages(msg_a: Dict, msg_b: Dict):
 
     msg_new = msg_a.copy()
     msg_new.update({
-        'From': 'tim.jyu.fi',
+        'From': 'no-reply@tim.jyu.fi',
         'Subject': msg_a.get('Group-Subject', 'Various notifications'),
         'Body': msg_a['Body'] + '\n\n' + msg_b['Body']
     })
