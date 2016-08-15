@@ -433,7 +433,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             // nothing
             for (var a = 0; a < $scope.annotations.length; a++) {
                 if (id === $scope.annotations[a].id){
-                    //addAnnotationToElement(par[0], $scope.annotations[a], false,"Added also margin annotation");
+                    annotationElement[1].parentNode.removeChild(annotationElement[1]);
+                    addAnnotationToElement(par[0], $scope.annotations[a], false,"Added also margin annotation");
                     //addAnnotationToElement($scope.annotations[a], false, "Added also margin annotation");
                 }
             }
@@ -444,8 +445,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
               //  if (id === $scope.annotations[a].id)
                 //    $scope.annotations.splice(a, 1);
             //}
-            annotationElement[1].parentNode.removeChild(annotationElement[1]);
-            addAnnotationToElement($scope.selectedElement, $scope.annotations[id], false, "Added also margin annotation");
+
+
         }
          for (var b = 0; b < $scope.annotations.length; b++) {
             if (id === $scope.annotations[b].id){

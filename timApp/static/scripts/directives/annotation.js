@@ -140,7 +140,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
              */
             scope.updateAnnotationToMargin = function () {
                 scope.$parent.updateAnnotationToMargin(scope.aid, scope.ismargin);
-            }
+            };
 
             /**
              * Changes points of selected annotation. Queries parent scope.
@@ -171,7 +171,10 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                             comment_relative_time: "just now"
                         });
                         scope.$parent.addComment(scope.aid, json.data.name, comment);
+                        scope.updateAnnotationToMargin();
                     });
+                } else {
+                    scope.updateAnnotationToMargin();
                 }
                 scope.newComment = "";
                 if (scope.visible_options.value !== scope.original.visible_to) {

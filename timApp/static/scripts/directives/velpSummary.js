@@ -50,7 +50,7 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
             return p;
 
         for (var i = 0; i < $scope.annotations.length; i++) {
-            
+
                 p += $scope.annotations[i].points;
 
         }
