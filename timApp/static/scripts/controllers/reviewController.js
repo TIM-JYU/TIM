@@ -428,7 +428,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.updateAnnotationToMargin = function (id, inmargin) {
         var annotationElement = $('[aid="{0}"]'.replace('{0}', id));
         var par = annotationElement.parents('.par');
-        //var annotationHighlights = annotationElement[0].getElementsByClassName("highlighted");
+        var annotationHighlights = annotationElement[0].getElementsByClassName("highlighted");
         if(!inmargin) {
             // nothing
             for (var a = 0; a < $scope.annotations.length; a++) {
@@ -441,6 +441,13 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             console.log("updateAnnotationMargin");
         } else {
+            var savedHTML = "";
+            for (var i = 0; i < annotationHighlights.length; i++) {
+                var addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', '');
+                addHTML = addHTML.replace('</span>', '');
+                savedHTML += addHTML;
+            }
+            annotationParents[0].outerHTML = savedHTML;
             //for (var a = 0; a < $scope.annotations.length; a++) {
               //  if (id === $scope.annotations[a].id)
                 //    $scope.annotations.splice(a, 1);

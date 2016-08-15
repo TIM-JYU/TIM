@@ -221,14 +221,6 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 }
             }
 
-            /**
-             * Return true if user has teacher rights.
-             * @returns {boolean}
-             */
-
-            scope.allowChangePoints = function () {
-                return scope.$parent.rights.teacher;
-            }
 
             /**
              * Check if annotation is changed comparing to last saved state.
