@@ -70,9 +70,13 @@ class ImagexServer(tim_server.TimServer):
 
         # do the next if Anonymoys is not allowed to use plugins
         if user_id == "Anonymous":
+            allow_anonymous = str(query.get_param("anonymous", "false")).lower()
             # SANITOIDAAN markupista tuleva syöte
-            return NOLAZY + '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' \
-                   + query.get_sanitized_param("initword", "") + '</pre>'
+            jump = query.get_param("taskID", "")
+            # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX jump: ", jump)
+            if allow_anonymous != "true":
+                return NOLAZY + '<p class="pluginError"><a href="/login?anchor=' + jump + '">Please login to interact with this component</a></p><pre class="csRunDiv">' + get_param(
+                    query, "byCode", "") + '</pre>'
 
         # Send query 2 instead of normal query if it exists.
         if query2:
