@@ -13,8 +13,8 @@ from tim_app import app
 
 TIM_URL = ""
 
-CSPLUGIN_NAME = 'csPlugin'
-SVNPLUGIN_NAME = 'showFile'
+CSPLUGIN_NAME = 'csplugin'
+SVNPLUGIN_NAME = 'showfile'
 HASKELLPLUGIN_NAME = 'haskellplugins2'
 PALIPLUGIN_NAME = 'pali'
 
@@ -64,6 +64,7 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None, params=N
         request.encoding = 'utf-8'
         return request.text
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+        log_info(str(e))
         raise PluginException("Could not connect to plugin.")
 
 
