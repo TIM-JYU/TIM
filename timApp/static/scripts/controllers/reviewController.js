@@ -397,7 +397,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
         var annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
 
-        if (!inmargin) {
+        if (annotationParents.length > 1) {
             var savedHTML = "";
             for (var i = 0; i < annotationHighlights.length; i++) {
                 var addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', '');
@@ -405,6 +405,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 savedHTML += addHTML;
             }
             annotationParents[0].outerHTML = savedHTML;
+            annotationParents[1].parentNode.removeChild(annotationParents[1]);
         } else {
             annotationParents[0].parentNode.removeChild(annotationParents[0]);
         }
@@ -449,7 +450,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 savedHTML += addHTML;
             }
             annotationParents[0].outerHTML = savedHTML;
-
+            
             // TODO: add redraw annotation text
         }
 
@@ -801,7 +802,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 $scope.annotationids[newAnnotation.id] = json.data.id;
                 console.log("Annotation to text");
                 console.log(json);
-                addAnnotationToElement($scope.selectedElement, newAnnotation, true, "Also");
+                addAnnotationToElement($scope.selectedElement, newAnnotation, true, "Added also margin annotation");
             });
 
             $scope.selectedArea = undefined;

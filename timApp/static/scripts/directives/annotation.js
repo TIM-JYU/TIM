@@ -53,6 +53,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 "names": ["Just me", "Document owner", "Teachers", "Everyone"]
             };
             scope.newannotation = false;
+            scope.marginonly = false;
 
 
             // Original visibility, or visibility in session
@@ -76,6 +77,8 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     scope.show = !scope.show;
                     if (scope.show) {
                         scope.updateVelpZIndex();
+                    } else {
+                     console.log(scope.$parent.annotations);
                     }
                 }
             };
@@ -125,7 +128,6 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             scope.deleteAnnotation = function () {
 
                 if (scope.comments.length < 2) {
-                    console.log(scope.ismargin);
                     if (!$window.confirm("Delete - are you sure?")) {
                         return;
                     }
