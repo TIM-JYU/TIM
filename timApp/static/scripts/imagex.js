@@ -60,7 +60,6 @@ imagexApp.directiveTemplate = function () {
 
 
 imagexApp.initDrawing = function(scope, canvas) {
-    
     function getPos(e, evt) {
         var rect = e.getBoundingClientRect();
         if (evt.touches) {
@@ -83,7 +82,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         var rotatedX = cosa * (position.x - object.x) - sina * (position.y - object.y);
         var rotatedY = cosa * (position.y - object.y) + sina * (position.x - object.x);
 
-        if (isTouch) var grabOffset = 25;
+        if (isTouch) var grabOffset = scope.extraGrabAreaHeight;
         else var grabOffset = 0;
 
         if (object.name === "target") {
@@ -153,8 +152,10 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.drawObjects[i].ctx = this.ctx;
                     if (this.activeDragObject) {
                         activeDragObjectId = this.activeDragObject.id;
-                        this.activeDragObject.x = this.mousePosition.x - this.activeDragObject.xoffset;
-                        this.activeDragObject.y = this.mousePosition.y - this.activeDragObject.yoffset;
+                        this.activeDragObject.x = 
+                            this.mousePosition.x - this.activeDragObject.xoffset;
+                        this.activeDragObject.y = 
+                            this.mousePosition.y - this.activeDragObject.yoffset;
                         if (this.drawObjects[i].id == activeDragObjectId) {
                             topmostIndex = i;
                             topmostElement = this.drawObjects[i];
@@ -202,7 +203,8 @@ imagexApp.initDrawing = function(scope, canvas) {
             if ( this.canvas.coords && scope.preview) {
                 //&& scope.preview) { // if there is palce to put coords
                 this.canvas.coords.value =
-                    "[" + Math.round(this.mousePosition.x) + ", " + Math.round(this.mousePosition.y) + "]";
+                    "[" + Math.round(this.mousePosition.x) + ", " 
+                    + Math.round(this.mousePosition.y) + "]";
                 //scope.coords.select();
                 //document.execCommand('copy');
                 if ( typeof(editorChangeValue) !== 'undefined' )
@@ -340,15 +342,15 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.draw = shapeFunctions[this.type].draw;
 
     }
-    function FixedObject(dt, values,defId) {
-        this.id = getValue(values.id,defId);
+    function FixedObject(dt, values, defId) {
+        this.id = getValue(values.id, defId);
         if (values.name === 'background') {
             this.type = 'img';
             this.name = 'background'; }
         else {
             this.type = getValueDef(values, "type", 'rectangle', true);
             this.name = 'fixedobject'; }
-
+        //this.backgroundColor = getValueDef(values, "background.color", "red");
         this.ctx = dt.ctx;
         this.position = getValueDef(values,"position", [0, 0]);
         this.x = this.position[0];
@@ -420,8 +422,7 @@ imagexApp.initDrawing = function(scope, canvas) {
      }
 
     // Find value for key from value, prevous or defaults.  If nowhere return defaultValue
-    //this.pinProperties.position = getValue(initValues, "pinPoint.position", {});
-    function getValueDef(value, key, defaultValue, keepEmtpyAsNone) {
+     function getValueDef(value, key, defaultValue, keepEmtpyAsNone) {
         keepEmtpyAsNone = typeof keepEmtpyAsNone !== 'undefined' ? keepEmtpyAsNone : false;
         var keys = key.split(".");
         var v = value;
@@ -569,9 +570,9 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.r1 = this.size[0];
                     this.r2 = this.size[1];
                     this.arrowHeadWidth = 
-                        getValueDef(initValues, "vectorproperties.arrowheadwidth", this.r2 / 3);
+                        getValueDef(initValues, "vectorproperties.arrowheadwidth", this.r2 * 3 );
                     this.arrowHeadLength = 
-                        getValueDef(initValues, "vectorproperties.arrowheadlength", this.r2 / 1.5);
+                        getValueDef(initValues, "vectorproperties.arrowheadlength", this.r2 * 5);
                     this.vectorColor = getValueDef(initValues, "vectorproperties.color", 'Black');
                     this.drawtextbox = getValueDef(initValues, "vectorproperties.textbox", false);
                 },
@@ -783,8 +784,11 @@ imagexApp.initDrawing = function(scope, canvas) {
                                                 getValueDef(initValues, "borderColor", 'blue'));
                     this.lineWidth = getValueDef(initValues, "textboxproperties.borderWidth", 2);
                     this.pinDotRadius = getValueDef(initValues, "pin.dotRadius", 3);
-                    this.pinPositionAlign = getValueDef(initValues,
-                                                        "pin.position.align", 'northwest');
+                    if (this.type === 'vector') 
+                        this.pinPositionAlign = 
+                        getValueDef(initValues, "pin.position.align", "west");
+                    else this.pinPositionAlign = getValueDef(initValues,
+                                                             "pin.position.align", 'northwest');
                     this.pinPositionStart = getValueDef(initValues, "pin.position.start", [0,0]);
                     this.pinProperties.position.coord = getValueDef(initValues,
                                                                     "pin.position.coord", []);
@@ -816,9 +820,8 @@ imagexApp.initDrawing = function(scope, canvas) {
                         this.pinPosition = getValue(this.pinPositions[this.pinPositionAlign],
                                                     this.pinPositions.west)
                     }
-                    else                        
-                        this.pinPosition = getValue(this.pinPositions[this.pinPositionAlign],
-                                                    this.pinPositions.northwest);
+                    else this.pinPosition = getValue(this.pinPositions[this.pinPositionAlign],
+                                                     this.pinPositions.northwest);
                     this.pinPosition.off.x = getValue(this.pinProperties.position.coord[0],
                                                       this.pinPosition.off.x);
                     this.pinPosition.off.y = getValue(this.pinProperties.position.coord[1],
@@ -926,8 +929,6 @@ imagexApp.initDrawing = function(scope, canvas) {
         } }
 
 
-
-
     for (i = 0; i < fixedobjects.length; i++) {
         dt.drawObjects.push(fixedobjects[i]);
     }
@@ -942,8 +943,8 @@ imagexApp.initDrawing = function(scope, canvas) {
 
     dt.draw();
 
-// Katsotaan, onko oikeat vastaukset heitetty markuppiin. Jos on, piirretään oikeat raahaukset.
-// pitäisi varmaan ottaa raahaus kokonaan pois päältä tässä tilanteessa.
+    // Katsotaan, onko oikeat vastaukset heitetty markuppiin. Jos on, piirretään oikeat raahaukset.
+    // pitäisi varmaan ottaa raahaus kokonaan pois päältä tässä tilanteessa.
     if(scope.attrs.state) {
         if (scope.attrs.state.markup.correctanswer) {
             //handle drawing lines.
@@ -979,10 +980,10 @@ imagexApp.initDrawing = function(scope, canvas) {
 
 imagexApp.Controller = function($scope, $http, $transclude, $interval) {
     "use strict";
-// Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
-// Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Controlleriksi.
-// Tähän tullaan ensin ja sitten initScope-metodiin
-// Siitä ei ole mitään hajua mistä se keksii tälle nuo parametrit???
+    // Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
+    // Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Controlleriksi.
+    // Tähän tullaan ensin ja sitten initScope-metodiin
+    // Siitä ei ole mitään hajua mistä se keksii tälle nuo parametrit???
     if (imagexApp.TESTWITHOUTPLUGINS) return;
     $scope.imagexScope = new ImagexScope($scope);
     $scope.attrs = {};
@@ -999,14 +1000,15 @@ imagexApp.Controller = function($scope, $http, $transclude, $interval) {
 
 imagexApp.initScope = function (scope, element, attrs) {
     "use strict";
-// Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
-// Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Link-metodiksi.
+    // Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
+    // Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Link-metodiksi.
     scope.cursor = "\u0383"; //"\u0347"; // "\u02FD";
     scope.plugin = element.parent().attr("data-plugin");
     scope.taskId = element.parent().attr("id");
     scope.app = imagexApp;
 
-    // Etsitään kullekin attribuutille arvo joko scope.attrs tai attrs-parametrista. Jos ei ole, käytetään oletusta.
+    // Etsitään kullekin attribuutille arvo joko scope.attrs tai attrs-parametrista.
+    // Jos ei ole, käytetään oletusta.
     timHelper.set(scope, attrs, "stem");
     timHelper.set(scope, attrs, "user_id");
     timHelper.set(scope, attrs, "button", "Save");
@@ -1015,23 +1017,25 @@ imagexApp.initScope = function (scope, element, attrs) {
     timHelper.set(scope, attrs, "max_tries");
     timHelper.set(scope, attrs, "cols", 20);
     timHelper.set(scope, attrs, "autoupdate", 500);
-    timHelper.setn(scope, "tid", attrs, ".taskID"); // vain kokeilu että "juuresta" ottaminen toimii
-    timHelper.set(scope,attrs,"background");
+    timHelper.setn(scope, "tid", attrs, ".taskID"); //vain kokeilu että "juuresta" ottaminen toimii
+    timHelper.set(scope, attrs, "extraGrabAreaHeight", 30);
+    timHelper.set(scope, attrs, "background");
     // Tässä on nyt kaikki raahattavat objektit
-    timHelper.set(scope,attrs,"objects","http://localhost/static/images/jyulogo.png");
+    timHelper.set(scope, attrs, "objects","http://localhost/static/images/jyulogo.png");
     // Tässä pitäisi olla kaikki targetit
-    timHelper.set(scope,attrs,"targets");
-    timHelper.set(scope,attrs,"fixedobjects");
+    timHelper.set(scope, attrs, "targets");
+    timHelper.set(scope, attrs, "fixedobjects");
 
-    timHelper.set(scope,attrs,"canvaswidth", 800);
-    timHelper.set(scope,attrs,"canvasheight", 600);
+    timHelper.set(scope, attrs, "canvaswidth", 800);
+    timHelper.set(scope, attrs, "canvasheight", 600);
     //timHelper.set(scope,attrs,"preview", false);
-    timHelper.set(scope,attrs,"preview",scope.attrs.preview);
+    timHelper.set(scope, attrs, "preview", scope.attrs.preview);
 
     // Otsikot.  Oletetaan että 1. elementti korvaatan header-otsikolla ja viimeinen footerilla
     element[0].childNodes[0].outerHTML = timHelper.getHeading(scope, attrs, "header", "h4");
     var n = element[0].childNodes.length;
-    if (n > 1) element[0].childNodes[n - 1].outerHTML = timHelper.getHeading(scope, attrs, "footer", 'p class="plgfooter"');
+    if (n > 1) element[0].childNodes[n - 1].outerHTML = 
+        timHelper.getHeading(scope, attrs, "footer", 'p class="plgfooter"');
     imagexApp.initDrawing(scope, element[0].childNodes[1].childNodes[0]);
     scope.canvas = element[0].childNodes[1].childNodes[0];
     scope.coords = element.find("#coords")[0];
@@ -1049,7 +1053,7 @@ imagexApp.initScope = function (scope, element, attrs) {
      }
      });
      */
-//    imagexApp.initDrawing.DragTask(element[0].childNodes[1].childNodes[0]);
+    // imagexApp.initDrawing.DragTask(element[0].childNodes[1].childNodes[0]);
     scope.attrs = {}; // not needed any more
 };
 
