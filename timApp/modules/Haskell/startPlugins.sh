@@ -5,7 +5,7 @@
 
 dockername="haskellplugins2"
 dockerOptions="--name $dockername --net=timnet \
-   -v /opt/tim/timApp/modules/Haskell/.cabal-sandbox/bin/:/hbin\
+   -v /opt/tim/timApp/modules/Haskell/bin/:/hbin\
    -v /opt/tim/timApp/modules/Haskell/:/Haskell\
    -v /opt/tim/timApp/modules/Haskell/startAll.sh:/startAll.sh\
    -p 57000:5001\

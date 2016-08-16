@@ -1,5 +1,5 @@
 # Start from Ubuntu image
-from haskell:7.8
+from fpco/stack-run:lts-6
 maintainer Ville Tirronen "ville.tirronen@jyu.fi"
   
 run apt-get update

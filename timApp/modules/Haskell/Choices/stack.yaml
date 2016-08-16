@@ -1,0 +1,13 @@
+flags: {}
+packages:
+- '.'
+- ../PluginConstructionKit
+extra-deps:
+- base-prelude-0.1.21
+- bytestring-builder-0.10.8.1.0
+- html-entities-1.1.0.0
+- http-client-0.5.1
+- http-client-tls-0.3.0
+- pandoc-1.17.2
+- zip-archive-0.3.0.4
+resolver: lts-6.12
