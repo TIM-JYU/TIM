@@ -840,6 +840,14 @@ def get_surrounding_headers2(query):
     return result, get_heading(query, "footer", 'p class="plgfooter"')
 
 
+def get_tiny_surrounding_headers(query, inside):
+    result = get_heading(query, "header", "h4")
+    stem = allow(get_param(query, "stem", None))
+    if stem: result += '<span class="stem" >' + stem + "</span>"
+    result += '<span class="csTinyText" >' + inside + '</span>\n'
+    return result
+
+
 def get_surrounding_headers(query, inside):
     result = get_heading(query, "header", "h4")
     stem = allow(get_param(query, "stem", None))

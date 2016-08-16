@@ -17,6 +17,7 @@ CSPLUGIN_NAME = 'csplugin'
 SVNPLUGIN_NAME = 'showfile'
 HASKELLPLUGIN_NAME = 'haskellplugins2'
 PALIPLUGIN_NAME = 'pali'
+IMAGEXLUGIN_NAME = 'imagex'
 
 
 TIM_HOST = os.environ.get('TIM_HOST', default='http://localhost')
@@ -38,6 +39,9 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
         "mmcq":          {"host": TIM_HOST + ":58000/"},
         "shortNote":     {"host": TIM_HOST + ":59000/"},
         "graphviz":      {"host": TIM_HOST + ":60000/", "browser": False},
+        "pali":          {"host": TIM_HOST + ":61000/"},
+        "imagex":        {"host": TIM_HOST + ":62000/"},
+        "echo":          {"host": TIM_HOST + "/echoRequest/"},
     }
 else:
     log_info("Using container network for plugins")
@@ -53,7 +57,9 @@ else:
         "mmcq":          {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
         "shortNote":     {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
         "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
-        # "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"}
+        "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
+        "imagex":        {"host": "http://" + IMAGEXLUGIN_NAME + ":5000/"},
+        "echo":          {"host": "http://" + "tim" + ":5000/echoRequest/"}
     }
 
 
@@ -93,10 +99,10 @@ def call_plugin_multihtml(plugin, plugin_data, params=None):
                                params=params)
 
 
-def call_plugin_resource(plugin, filename):
+def call_plugin_resource(plugin, filename, args=None):
     try:
         plug = get_plugin(plugin)
-        request = requests.get(plug['host'] + filename, timeout=5, stream=True)
+        request = requests.get(plug['host'] + filename, timeout=5, stream=True, params=args)
         request.encoding = 'utf-8'
         return request
     except requests.exceptions.Timeout:

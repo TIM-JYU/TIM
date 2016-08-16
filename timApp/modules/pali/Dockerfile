@@ -20,7 +20,7 @@ run chown -R agent /service
 
 # testejä varten
 ENV MYPASSWORD password
-RUN echo "root:$MYPASSWORD" | chpasswd
+# RUN echo "root:$MYPASSWORD" | chpasswd
 
 # Varmuudeksi estetään root login ja poistetaan rootin salasana,
 # jos sellainen on.

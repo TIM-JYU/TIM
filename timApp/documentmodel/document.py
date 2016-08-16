@@ -319,7 +319,11 @@ class Document:
         :param par_id: The paragraph id.
         :return: Boolean.
         """
-        with open(self.get_version_path(self.get_version()), 'r') as f:
+        file_name = self.get_version_path(self.get_version())
+        if not os.path.isfile(file_name):
+            return False
+
+        with open(file_name, 'r') as f:
             while True:
                 line = f.readline()
                 if line == '':

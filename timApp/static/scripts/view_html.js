@@ -65,7 +65,7 @@ timApp.controller("ViewCtrl", [
     '$timeout',
     function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout) {
         "use strict";
-        timLogTime("VieCtrl start","view");
+        timLogTime("ViewCtrl start","view");
 
         sc.reviewMode = true;
 
@@ -466,6 +466,9 @@ timApp.controller("ViewCtrl", [
                     $par.append($div);
                     $compile($div[0])(sc);
                     sc.editing = true;
+                    $timeout(function () {
+                        sc.goToEditor();
+                    }, 0);
                 };
 
                 if (options.showDelete) {
@@ -751,7 +754,15 @@ timApp.controller("ViewCtrl", [
             $pars.prepend($popup); // need to prepend to DOM before compiling
             $compile($popup[0])(sc);
             // TODO: Set offset for the popup
-            var element = $popup;
+
+            // scroll to fully show the menu if it is not fully visible
+            $timeout(function () {
+                var element = $('.actionButtons');
+                sc.scrollToElement(element);
+            }, 100);
+        };
+
+        sc.scrollToElement = function(element){
             var viewport = {};
             viewport.top = $(window).scrollTop();
             viewport.bottom = viewport.top + $(window).height();
@@ -1664,7 +1675,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.cutPar = function (e, $par) {
-            var doc_par_id = sc.dereferencePar($par);
+            var doc_par_id = [sc.docId, $par.attr('id')];
 
             http.post('/clipboard/cut/' + doc_par_id[0] + '/' + doc_par_id[1] + '/' + doc_par_id[1], {
                 }).success(function(data, status, headers, config) {

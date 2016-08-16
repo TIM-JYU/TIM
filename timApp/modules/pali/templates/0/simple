@@ -1,5 +1,5 @@
 Viisi kirjainta
-Palindromi viidellä kirjaimella
+Palindromi viidellÃ¤ kirjaimella
 ``` {#ekapali plugin="pali"}
 header: Kirjoita palindromi
 stem: Kirjoita palindromi jossa 5 kirjainta

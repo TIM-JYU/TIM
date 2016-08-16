@@ -2,7 +2,7 @@
 from ubuntu
 maintainer vesal "vesal@jyu.fi"
 
-# Aikavyˆhyke ja merkistˆt kuntoon
+# Aikavy√∂hyke ja merkist√∂t kuntoon
 run locale-gen en_US.UTF-8
 env LANG en_US.UTF-8
 env LANGUAGE en_US:en
@@ -13,55 +13,56 @@ run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive t
 run apt-get update
 run apt-get install -y python3
 run apt-get install -y python3-pip
-run pip3 install Flask
+# run pip3 install Flask
 run pip3 install bleach
 run apt-get install -y wget
 
-# Poistetaan pip. Sit‰ ei tarvitse en‰‰ ja saadaan
-# hitusen pienempi image ja v‰hemm‰n ohjelmia potentiaalisen
-# hyˆkk‰‰j‰n k‰yttˆˆn. (Periaate ok. k‰yt‰nnˆss‰ tosi marginaalinen
+# Poistetaan pip. Sit√§ ei tarvitse en√§√§ ja saadaan
+# hitusen pienempi image ja v√§hemm√§n ohjelmia potentiaalisen
+# hy√∂kk√§√§j√§n k√§ytt√∂√∂n. (Periaate ok. k√§yt√§nn√∂ss√§ tosi marginaalinen
 # toimenpide) 
 # run apt-get -y --purge remove python3-pip
 
 # pypy3:
 run apt-get update
 run apt-get install -y curl
-RUN curl http://buildbot.pypy.org/nightly/py3k/pypy-c-jit-latest-linux64.tar.bz2 | tar -jxf - && mv pypy* /opt/pypy3
+#RUN curl http://buildbot.pypy.org/nightly/py3k/pypy-c-jit-latest-linux64.tar.bz2 | tar -jxf - && mv pypy* /opt/pypy3
 #ENV PYTHONPATH /opt/pypy3/site-packages
-ENV PATH $PATH:/opt/pypy3/bin
+#ENV PATH $PATH:/opt/pypy3/bin
 # ENV LANG C.UTF-8
 # install setuptools for pypy3
-RUN curl https://bootstrap.pypa.io/ez_setup.py | pypy3
-RUN rm *.zip
+#RUN curl https://bootstrap.pypa.io/ez_setup.py | pypy3
+#RUN rm *.zip
 # install pip==1.4.1, because 1.5.4 segfaults for unknown reason
-RUN easy_install pip==1.4.1
-RUN ln -s /opt/pypy3/bin/pip /opt/pypy3/bin/pip3
-run /opt/pypy3/bin/pip3 install bleach
+#RUN easy_install pip==1.4.1
+#RUN ln -s /opt/pypy3/bin/pip /opt/pypy3/bin/pip3
+#run /opt/pypy3/bin/pip3 install bleach
 
 
-# Lis‰t‰‰n alkuper‰inen hakemisto polkuun /service
-run mkdir /service
+run apt-get install -y wget
+run locale-gen en_US.UTF-8
+run locale-gen fi_FI.UTF-8
 
 # Sudo jos tarvitaan testeihin
 # RUN apt-get update
 # RUN apt-get -y install sudo
 # RUN useradd -m agent && echo "agent:agent" | chpasswd && adduser agent sudo
 
-# Lis‰t‰‰n k‰ytt‰j‰ `agent` -- Emme halua ajaa containerissakaan
+# Lis√§t√§√§n k√§ytt√§j√§ `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.
 run useradd -M agent 
-run chown -R agent /service
+# run chown -R agent /service
 
-# testej‰ varten
+# testej√§ varten
 #ENV MYPASSWORD password
 #RUN echo "root:$MYPASSWORD" | chpasswd
 
-# Varmuudeksi estet‰‰n root login ja poistetaan rootin salasana,
+# Varmuudeksi estet√§√§n root login ja poistetaan rootin salasana,
 # jos sellainen on.
 # run usermod -p '!' root
 # run passwd -l root
 
-# Asetetaan container k‰ynnistym‰‰n tunnuksella agent.
+# Asetetaan container k√§ynnistym√§√§n tunnuksella agent.
 user agent
 
 # Avataan portti 5000 ulos containerista.

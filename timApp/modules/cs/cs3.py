@@ -1,24 +1,21 @@
 # -*- coding: utf-8 -*-
-import threading
-import time
-
+import datetime
 import http.server
-import subprocess
-# import nltk
-import os
-import uuid
 import io
-import shutil
+import logging
 import shlex
+import shutil
 import signal
 import socketserver
-# from signal import alarm, signal, SIGALRM, SIGKILL
+import subprocess
+import threading
+import time
+import uuid
 from subprocess import PIPE, Popen, check_output
+
 from fileParams3 import *
-# from requests import Request, Session
-import datetime
-import cgi
-import logging
+
+nunit = ""  # globaali arvo johon haetaan kerraan nunitin paikka
 
 # cs3.py: WWW-palvelin portista 5000 (ulospäin 56000) joka palvelee csPlugin pyyntöjä
 #
@@ -89,7 +86,7 @@ def tquote(s):
     if s.startswith("$"): return s
     r = shlex.quote(s)
     if r.find("$") < 0: return r
-    return r.replace("'",'"')     
+    return r.replace("'", '"')
 
 
 def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8"):
@@ -187,7 +184,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
         except:
             pwd = ""
 
-        if ( stderr ):
+        if (stderr):
             remove(cwd + "/" + stdoutf)
             remove(cwd + "/" + stderrf)
             err = str(stderr)
@@ -284,15 +281,57 @@ def removedir(dirname):
         return
 
 
+def save_extra_files(extra_files, prgpath):
+    if not extra_files:
+        return
+    ie = 0
+    for extra_file in extra_files:
+        ie += 1
+        efilename = prgpath + "/extrafile" + str(ie)
+        if "name" in extra_file: efilename = prgpath + "/" + extra_file["name"]
+        if "text" in extra_file:
+            mkdirs(os.path.dirname(efilename))
+            try:
+                codecs.open(efilename, "w", "utf-8").write(extra_file["text"])
+            except:
+                print("Can not write", efilename)
+        if "file" in extra_file:
+            try:
+                if extra_file.get("type", "") != "bin":
+                    lines = get_url_lines_as_string(extra_file["file"])
+                    codecs.open(efilename, "w", "utf-8").write(lines)
+                else:
+                    open(efilename, "wb").write(urlopen(extra_file["file"]).read())
+            except Exception as e:
+                print(str(e))
+                print("XXXXXXXXXXXXXXXXXXXXXXXX Could no file cache: \n", efilename)
+
+
+def delete_extra_files(extra_files, prgpath):
+    if not extra_files:
+        return
+    ie = 0
+    for extra_file in extra_files:
+        ie += 1
+        if extra_file.get("delete", False):
+            efilename = prgpath + "/extrafile" + str(ie)
+            if "name" in extra_file: efilename = prgpath + "/" + extra_file["name"]
+            try:
+                os.remove(efilename)
+            except:
+                print("Can not delete: ", efilename)
+
+
 def get_html(ttype, query):
     user_id = get_param(query, "user_id", "--")
+    tiny = False
     # print("UserId:", user_id)
     if user_id == "Anonymous":
         allow_anonymous = str(get_param(query, "anonymous", "false")).lower()
         jump = get_param(query, "taskID", "")
         # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX jump: ", jump)
         if allow_anonymous != "true":
-            return NOLAZY + '<p class="pluginError"><a href="/login?anchor='+jump+'">Please login to interact with this component</a></p><pre class="csRunDiv">' + get_param(
+            return NOLAZY + '<p class="pluginError"><a href="/login?anchor=' + jump + '">Please login to interact with this component</a></p><pre class="csRunDiv">' + get_param(
                 query, "byCode", "") + '</pre>'
     do_lazy = is_lazy(query)
     # do_lazy = False
@@ -301,8 +340,9 @@ def get_html(ttype, query):
     js = query_params_to_map_check_parts(query)
     # print(js)
     if "byFile" in js and not ("byCode" in js):
-        js["byCode"] = get_url_lines_as_string(js["byFile"])  # TODO: Tähän niin että jos tiedosto puuttuu, niin parempi tieto
-    bycode = ""  
+        js["byCode"] = get_url_lines_as_string(
+            js["byFile"])  # TODO: Tähän niin että jos tiedosto puuttuu, niin parempi tieto
+    bycode = ""
     if "byCode" in js: bycode = js["byCode"]
     if get_param(query, "noeditor", False): bycode = ""
 
@@ -313,9 +353,9 @@ def get_html(ttype, query):
     uf = get_json_eparam(query.jso, "state", "uploadedFile", uf)
     ut = get_json_eparam(query.jso, "state", "uploadedType", ut)
     if uf and ut:
-        js["uploadedFile"] = uf;
-        js["uploadedType"] = ut;
-    
+        js["uploadedFile"] = uf
+        js["uploadedType"] = ut
+
     jso = json.dumps(js)
     print(jso)
     runner = 'cs-runner'
@@ -327,18 +367,21 @@ def get_html(ttype, query):
     if "simcir" in ttype:
         runner = 'cs-simcir-runner'
         bycode = ''
+    if "tiny" in ttype:
+        runner = 'cs-text-runner'
+        tiny = True
     if "parsons" in ttype: runner = 'cs-parsons-runner'
     if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype: runner = 'cs-jypeli-runner'
     if "sage" in ttype: runner = 'cs-sage-runner'
 
+    usercode = get_json_eparam(query.jso, "state", "usercode", "")
     if is_review(query):
-        usercode = get_json_eparam(query.jso, "state", "usercode", "")
         userinput = get_json_eparam(query.jso, "state", "userinput", None)
         userargs = get_json_eparam(query.jso, "state", "userargs", None)
         s = ""
-        if ( userinput != None ): s = s + '<p>Input:</p><pre>' + userinput + '</pre>'
-        if ( userargs != None ): s = s + '<p>Args:</p><pre>' + userargs + '</pre>'
-        result = NOLAZY + '<div class="review" ng-non-bindable><pre>' + usercode + '</pre>'+s+'</div>'
+        if (userinput != None): s = s + '<p>Input:</p><pre>' + userinput + '</pre>'
+        if (userargs != None): s = s + '<p>Args:</p><pre>' + userargs + '</pre>'
+        result = NOLAZY + '<div class="review" ng-non-bindable><pre>' + usercode + '</pre>' + s + '</div>'
         return result
 
     r = runner + is_input
@@ -353,13 +396,19 @@ def get_html(ttype, query):
         r = "cs-console"
 
     if do_lazy:
-        # r = LAZYWORD + r;    
-        if type(bycode) != type(''): 
-            print("Ei ollut string: ", bycode, jso)
-            bycode = '' + str(bycode)       
-        ebycode = html.escape(bycode)
-        lazy_visible = '<div class="lazyVisible csRunDiv no-popup-menu" >' + get_surrounding_headers(query,
-                                                                                                    '<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre" ng-non-bindable><pre>' + ebycode + '</pre></div>') + '</div>'
+        # r = LAZYWORD + r;
+        code = bycode
+        if usercode: code = usercode
+        if type(code) != type(''):
+            print("Ei ollut string: ", code, jso)
+            code = '' + str(code)
+        ebycode = html.escape(code)
+        if tiny:
+            lazy_visible = '<div class="lazyVisible csRunDiv csTinyDiv no-popup-menu" >' + get_tiny_surrounding_headers(query,
+                                                                                                     '' + ebycode + '') + '</div>'
+        else:
+            lazy_visible = '<div class="lazyVisible csRunDiv no-popup-menu" >' + get_surrounding_headers(query,
+                                                                                                     '<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre" ng-non-bindable><pre>' + ebycode + '</pre></div>') + '</div>'
         # lazyClass = ' class="lazyHidden"'
         lazy_start = LAZYSTART
         lazy_end = LAZYEND
@@ -464,10 +513,11 @@ def check_code(out, err, compiler_output, ttype):
     except:
         out = out.decode('iso-8859-1')
     return out, err
-    
+
+
 def give_points(points_rule, rule, default=0):
     if not points_rule: return
-    if rule in points_rule or default != 0: 
+    if rule in points_rule or default != 0:
         points_rule["valid"] = True  # rule found
     p = points_rule.get(rule, default)
     if not points_rule.get("cumulative", True):
@@ -481,13 +531,38 @@ def give_points(points_rule, rule, default=0):
     pts = points_rule.get("points", None)
     if pts:
         ptype = pts.get(ptstype, 0)
-        print(ptstype, "===" , pts[ptstype], p)
+        print(ptstype, "===", pts[ptstype], p)
         pts[ptstype] = ptype + p
     else:
         pts = {}
         points_rule["points"] = pts
         pts[ptstype] = p
     points_rule["result"] = pts.get("run", 0) + pts.get("test", 0) + pts.get("doc", 0) + pts.get("code", 0)
+
+
+def check_number_rule(s, number_rule):
+    val = 0
+    try:
+        val = float(s)
+    except ValueError:
+        return 0
+    points = 0
+    if not isinstance(number_rule, list) or (len(number_rule) >= 1 and isinstance(number_rule[0], float)):
+        number_rule = [number_rule]
+
+    for rule in number_rule:
+        r = rule
+        if not isinstance(r, list):
+            r = re.findall(r"[0-9.]+",r)
+        if len(r) < 2: continue
+        if len(r) < 3: r.append(r[1])
+        try:
+            if float(r[1]) <= val and val <= float(r[2]):
+                points = max(float(r[0]),points)
+        except ValueError:
+            continue
+    return points
+
 
 
 def get_points_rule(points_rule, key, default):
@@ -504,12 +579,12 @@ def return_points(points_rule, result):
         result["tim_info"] = tim_info
     if "points" in points_rule: result["save"]["points"] = points_rule["points"]
 
-    
+
 def get_imgsource(query):
     result = get_param(query, "imgsource", "")
     if result: return result
-    result = get_param(query, "bmpname", "") # backwards compability
-    
+    result = get_param(query, "bmpname", "")  # backwards compability
+
 
 class TIMServer(http.server.BaseHTTPRequestHandler):
     def __init__(self, request, client_address, _server):
@@ -600,7 +675,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
     def do_all(self, query):
         try:
             signal.signal(signal.SIGALRM, self.signal_handler)
-            signal.alarm(20)   # Ten seconds
+            signal.alarm(20)  # Ten seconds
         except Exception  as e:
             print("No signal", e)
         try:
@@ -608,8 +683,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         except Exception  as e:
             print("Timed out2!", e)
             logging.exception("Timed out 2 trace")
-        
-        
+
     def do_all_t(self, query):
         pwd = ""
         print(threading.currentThread().getName())
@@ -711,10 +785,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             result_json = {"js": ["/cs/js/dir.js",
                                   "/static/scripts/jquery.ui.touch-punch.min.js",
                                   "/cs/cs-parsons/csparsons.js",
-                                  #"https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
+                                  # "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
                                   # "https://sagecell.sagemath.org/static/embedded_sagecell.js", # will be loaded by JS lazily
                                   ],
-                                  #"/cs/js/embedded_sagecell.js"],
+                           # "/cs/js/embedded_sagecell.js"],
                            "angularModule": ["csApp", "csConsoleApp"],
                            "css": ["/cs/css/cs.css"], "multihtml": True}
             if is_parsons:
@@ -730,7 +804,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                       "/cs/js-parsons/lib/skulpt.js",
                                       "/cs/js-parsons/lib/skulpt-stdlib.js",
                                       "/cs/js-parsons/lib/prettify.js"
-                ],
+                                      ],
                                "angularModule": ["csApp", "csConsoleApp"],
                                "css": ["/cs/css/cs.css", "/cs/js-parsons/parsons.css",
                                        "/cs/js-parsons/lib/prettify.css"], "multihtml": True}
@@ -739,7 +813,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                       "/cs/simcir/simcir.js",
                                       "/cs/simcir/simcir-basicset.js",
                                       "/cs/simcir/simcir-library.js",
-                ],
+                                      ],
                                "angularModule": ["csApp"],
                                "css": ["/cs/css/cs.css", "/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"],
                                "multihtml": True}
@@ -761,7 +835,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
             uploadedFile = get_json_param(query.jso, "input", "uploadedFile", None)
             uploadedType = get_json_param(query.jso, "input", "uploadedType", None)
-            if uploadedFile and uploadedType: 
+            if uploadedFile and uploadedType:
                 save["uploadedFile"] = uploadedFile
                 save["uploadedType"] = uploadedType
             usercode = get_json_param(query.jso, "state", "usercode", None)
@@ -772,6 +846,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if selected_language: save["selectedLanguage"] = selected_language
             userargs = get_json_param(query.jso, "input", "userargs", None)
             is_doc = get_json_param3(query.jso, "input", "markup", "document", False)
+
+            extra_files = get_json_param(query.jso, "markup", "extrafiles", None)
+            if not extra_files:
+                extra_files = get_json_param(query.jso, "markup", "-extrafiles", None)
 
             if userargs: save["userargs"] = userargs
 
@@ -816,18 +894,18 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             timeout = get_param(query, "timeout", 10)
             task_id = get_param(query, "taskID", "")
             doc_id, dummy = (task_id + "NONE.none").split(".", 1)
-            
+
             upath = get_param(query, "path", "")  # from user/sql do user and /sql
             epath = "/" + doc_id
-            if "/" in upath:                      # if user/ do just user and ""
-                upath, epath = upath.split("/",1)
+            if "/" in upath:  # if user/ do just user and ""
+                upath, epath = upath.split("/", 1)
                 if epath: epath = "/" + epath
-            
+
             if upath == "user" and self.user_id:
                 userpath = "user/" + hash_user_dir(self.user_id)
                 mustpath = "/tmp/" + userpath
-                basename =  userpath + epath
-                fullpath = "/tmp/" + basename # check it is sure under userpath
+                basename = userpath + epath
+                fullpath = "/tmp/" + basename  # check it is sure under userpath
                 if not os.path.abspath(fullpath).startswith(mustpath): basename = userpath + "/ERRORPATH"
                 delete_tmp = False
                 mkdirs("/tmp/user")
@@ -839,25 +917,33 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             filename = get_param(query, "filename", "prg")
 
             ifilename = get_param(query, "inputfilename", "/input.txt")
-            
-            # TODO: Validoi filename, ifilename yms jossa voi olla mm ..
-            
+
+            fileext = ""
+            filedext = ""
+            if ttype == "cs" or ttype == "comtest":
+                fileext = "cs"
+                filedext = ".cs"
+
+                # TODO: Validoi filename, ifilename yms jossa voi olla mm ..
+
             # csfname = "/tmp/%s.cs" % basename
             # exename = "/tmp/%s.exe" % basename
-            csfname = "/tmp/%s/%s.cs" % (basename, filename)
+            csfname = "/tmp/%s/%s%s" % (basename, filename, filedext)
             exename = "/tmp/%s/%s.exe" % (basename, filename)
             pure_exename = "./%s.exe" % filename
             inputfilename = "/tmp/%s/%s" % (basename, ifilename)
             prgpath = "/tmp/%s" % basename
             filepath = prgpath
+            imgsource = ""
+            pngname = ""
 
             print("ttype: ", ttype)
-            fileext = "cs"
 
             before_code = get_param(query, "beforeCode", "")
 
             # if ttype == "console":
             # Console program
+
             if ttype == "cc":
                 if filename.endswith(".h") or filename.endswith(".c") or filename.endswith(".cc"):
                     csfname = "/tmp/%s/%s" % (basename, filename)
@@ -904,10 +990,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 pngname = "/csimages/%s.png" % rndname
                 imgsource = get_imgsource(query)
                 wavsource = get_param(query, "wavsource", "")
-                wavdest = "/csimages/%s/%s" % (self.user_id,wavsource)
-                wavname = "%s/%s" % (self.user_id,wavsource)
+                wavdest = "/csimages/%s/%s" % (self.user_id, wavsource)
+                wavname = "%s/%s" % (self.user_id, wavsource)
                 mkdirs("/csimages/%s" % self.user_id)
-
 
             if ttype == "alloy":
                 csfname = "/tmp/%s/%s.als" % (basename, filename)
@@ -928,7 +1013,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 pure_exename = "/home/agent/%s" % filename
                 pngname = "/csimages/%s.png" % rndname
                 imgsource = get_imgsource(query)
-
 
             if ttype == "r":
                 debug_str("r alkaa")
@@ -1039,7 +1123,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if userinput:
                 save["userinput"] = userinput
                 if userinput[-1:] != "\n": userinput += "\n"
-            nosave = get_param(query, "nosave", None)     
+            nosave = get_param(query, "nosave", None)
             nosave = get_json_param(query.jso, "input", "nosave", nosave)
 
             if not nosave: result["save"] = save
@@ -1060,7 +1144,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     filepath = prgpath + "/" + package.replace(".", "/")
                     mkdirs(filepath)
                     javaclassname = package + "." + classname
-                filename = javaclassname + ".java"    
+                filename = javaclassname + ".java"
                 javaname = filepath + "/" + classname + ".java"
                 fileext = "java"
                 csfname = javaname
@@ -1083,6 +1167,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if s == "": s = "\n"
                 codecs.open(csfname, "w", "utf-8").write(before_code + s)
                 slines = s
+
+            save_extra_files(extra_files, prgpath)
 
             is_optional_image = get_json_param(query.jso, "markup", "optional_image", False)
             is_input = get_json_param(query.jso, "input", "isInput", None)
@@ -1109,17 +1195,19 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         points_rule["points"]["test"] = 0
                     elif is_doc:
                         points_rule["points"]["doc"] = 0
-                        print("doc points: ",points_rule["points"]["doc"])
+                        print("doc points: ", points_rule["points"]["doc"])
                     else:
                         points_rule["points"]["run"] = 0
-
-                expect_code = get_points_rule(points_rule, is_test + "expectCode", None)
-                if expect_code and not is_doc:
-                    if expect_code == "byCode": expect_code = get_param(query, "byCode", "")
-                    excode = re.compile(expect_code.rstrip('\n'), re.M)
-                    if excode.match(usercode): give_points(points_rule, "code", 1)
+                if not is_doc:
+                    expect_code = get_points_rule(points_rule, is_test + "expectCode", None)
+                    if expect_code:
+                        if expect_code == "byCode": expect_code = get_param(query, "byCode", "")
+                        excode = re.compile(expect_code.rstrip('\n'), re.M)
+                        if excode.match(usercode): give_points(points_rule, "code", 1)
+                    number_rule = get_points_rule(points_rule, is_test + "numberRule", None)
+                    if number_rule:
+                        give_points(points_rule, "code", check_number_rule(usercode, number_rule))
             print(points_rule)
-
 
             # print(ttype)
             # ########################## Compiling programs ###################################################
@@ -1139,30 +1227,36 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     docfilename = p.sub("", filename)
                     p = re.compile('[^.]*\.')
                     docfilename = p.sub("", docfilename)
-                    docfilename = docfilename.replace("_","__") # jostakin syystä tekee näin
+                    docfilename = docfilename.replace("_", "__")  # jostakin syystä tekee näin
                     dochtml = "/csimages/cs/docs/%s/%s/html/%s_8%s.html" % (self.user_id, docrnd, docfilename, fileext)
                     docfile = "%s/%s/html/%s_8%s.html" % (userdoc, docrnd, docfilename, fileext)
-                    print("XXXXXXXXXXXXXXXXXXXXXX",filename)
-                    print("XXXXXXXXXXXXXXXXXXXXXX",docfilename)
-                    print("XXXXXXXXXXXXXXXXXXXXXX",dochtml)
-                    print("XXXXXXXXXXXXXXXXXXXXXX",docfile)
+                    print("XXXXXXXXXXXXXXXXXXXXXX", filename)
+                    print("XXXXXXXXXXXXXXXXXXXXXX", docfilename)
+                    print("XXXXXXXXXXXXXXXXXXXXXX", dochtml)
+                    print("XXXXXXXXXXXXXXXXXXXXXX", docfile)
                     doc_output = check_output([doccmd], stderr=subprocess.STDOUT, shell=True).decode("utf-8")
-                    if not os.path.isfile(docfile): # There is maybe more files with same name and it is difficult to guess the name
+                    if not os.path.isfile(
+                            docfile):  # There is maybe more files with same name and it is difficult to guess the name
                         dochtml = "/csimages/cs/docs/%s/%s/html/%s" % (self.user_id, docrnd, "files.html")
-                        print("XXXXXXXXXXXXXXXXXXXXXX",dochtml)
-                        
+                        print("XXXXXXXXXXXXXXXXXXXXXX", dochtml)
+
                     web["docurl"] = dochtml
                     give_points(points_rule, "doc")
 
                 elif ttype == "jypeli":
                     if s.find(" Main(") >= 0: mainfile = ""
-                    #cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs %s" % (
+                    # cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs %s" % (
                     cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Numerics /r:System.Drawing %s %s" % (
                         exename, mainfile, csfname)
                 elif ttype == "comtest":
+                    global nunit
+                    if not nunit:
+                        frms = os.listdir("/usr/lib/mono/gac/nunit.framework/")
+                        nunit = "/usr/lib/mono/gac/nunit.framework/" + frms[0] + "/nunit.framework.dll"
                     jypeliref = "/r:System.Numerics /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing"
-                    cmdline = ("java -jar /cs/java/cs/ComTest.jar nunit %s && mcs /out:%s /target:library " + jypeliref +" /reference:/usr/lib/mono/gac/nunit.framework/2.6.0.0__96d09a1eb7f44a77/nunit.framework.dll %s %s") % (
-                        csfname, testdll, csfname, testcs)
+                    cmdline = (
+                                  "java -jar /cs/java/cs/ComTest.jar nunit %s && mcs /out:%s /target:library " + jypeliref + " /reference:%s %s %s") % (
+                                  csfname, testdll, nunit, csfname, testcs)
                 elif ttype == "jcomtest":
                     cmdline = "java comtest.ComTest %s && javac %s %s" % (csfname, csfname, testcs)
                 elif ttype == "junit":
@@ -1221,7 +1315,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     cmdline = "mcs /r:System.Numerics /out:%s %s" % (exename, csfname)
                 else:
                     cmdline = ""
-                    
+
                 if get_param(query, "justSave", False):
                     cmdline = ""
 
@@ -1231,13 +1325,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                                    shell=True).decode("utf-8")
                     compiler_output = compiler_output.replace(prgpath, "")
                     give_points(points_rule, is_test + "compile")
-                    
+
                 # self.wfile.write("*** Success!\n")
                 print("*** Compile Success")
-                if nocode and ttype != "jcomtest": 
+                if nocode and ttype != "jcomtest":
                     print("Poistetaan ", ttype, csfname)
                     remove(csfname)
-                # print(compiler_output)
+                    # print(compiler_output)
             except subprocess.CalledProcessError as e:
                 '''
                 self.wout("!!! Error code " + str(e.returncode) + "\n")
@@ -1263,7 +1357,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if delete_tmp: removedir(prgpath)
                 give_points(points_rule, is_test + "notcompile")
                 return write_json_error(self.wfile, error_str, result, points_rule)
-
 
             # ########################## Running programs ###################################################
             # delete_tmp = False
@@ -1294,11 +1387,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if is_doc:
                 pass  # jos doc ei ajeta
             elif get_param(query, "justSave", False):
-                showname = csfname.replace(basename,"").replace("/tmp//","")
+                showname = csfname.replace(basename, "").replace("/tmp//", "")
                 if showname == "prg": showname = ""
                 code, out, err, pwd = (0, "", ("tallennettu " + showname), "")
             elif get_param(query, "justCompile", False) and ttype.find("comtest") < 0:
-                #code, out, err, pwd = (0, "".encode("utf-8"), ("Compiled " + filename).encode("utf-8"), "")
+                # code, out, err, pwd = (0, "".encode("utf-8"), ("Compiled " + filename).encode("utf-8"), "")
                 code, out, err, pwd = (0, "", ("Compiled " + filename), "")
             elif ttype == "jypeli":
                 code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
@@ -1306,13 +1399,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()
                 err = re.sub("^ALSA.*\n", "", err, flags=re.M)
+                err = re.sub("^W: \[pulse.*\n", "", err, flags=re.M)
+                err = re.sub("^AL lib:.*\n", "", err, flags=re.M)
+                out = re.sub("^Could not open AL device - OpenAL Error: OutOfMemory.*\n", "", out, flags=re.M)
+
                 print(err)
                 # err = ""
                 wait_file(imgsource)
-                #statinfo = os.stat(imgsource)
-                #print("bmpsize: ", statinfo.st_size)
+                # statinfo = os.stat(imgsource)
+                # print("bmpsize: ", statinfo.st_size)
                 run(["convert", "-flip", imgsource, pngname], cwd=prgpath, timeout=20)
-                #print(imgsource, pngname)
+                # print(imgsource, pngname)
                 remove(imgsource)
                 # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/cs/%s.png\n" % (basename))
                 print("*** Screenshot: https://tim.it.jyu.fi/csimages/cs/%s\n" % pure_pngname)
@@ -1432,7 +1529,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     web["testGreen"] = False
                     web["testRed"] = True
                     lni = out.find(", line ")
-                    if lni >= 0:  #  and not nocode:
+                    if lni >= 0:  # and not nocode:
                         lns = out[lni + 7:]
                         lns = lns[0:lns.find("\n")]
                         lnro = int(lns)
@@ -1505,7 +1602,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     give_points(points_rule, "test")
 
             else:
-                runcommand = get_param(query, "cmd", "");
+                runcommand = get_param(query, "cmd", "")
                 if ttype != "run" and (runcommand or get_param(query, "cmds", "")):
                     print("runcommand: ", runcommand)
                     # code, out, err, pwd = run2([runcommand], cwd=prgpath, timeout=10, env=env, stdin=stdin,
@@ -1515,13 +1612,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     if extra != "": cmd = []
                     print("run: ", cmd, extra, pure_exename, csfname)
                     try:
-                        code, out, err, pwd = run2(cmd, cwd=prgpath, timeout=10, env=env, stdin=stdin, 
+                        code, out, err, pwd = run2(cmd, cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                                    uargs=get_param(query, "runargs", "") + " " + userargs,
                                                    extra=extra)
                     except Exception as e:
                         print(e)
                         code, out, err = (-1, "", str(e).encode())
-                    print("Run2: ", imgsource, pngname)    
+                    print("Run2: ", imgsource, pngname)
                     if code == -9:
                         out = "Runtime exceeded, maybe loop forever\n" + out
                     else:
@@ -1546,31 +1643,36 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                                uargs=userargs)
                 elif ttype == "shell":
                     print("shell: ", pure_exename)
-                    # os.chmod(exename, stat.S_IEXEC)
-                    os.system('chmod +x ' + exename)
+                    try:
+                        # os.chmod(exename, 777)
+                        os.system('chmod +x ' + exename)
+                        # os.system('chmod 777 ' + exename)
+                    except:
+                        print("Ei oikeuksia: " + exename)
                     # if stdin: stdin = stdin
-                    extra = "cd $PWD\nsource "
+                    extra = ""  # ""cd $PWD\nsource "
                     try:
                         # code, out, err = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
                         code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=timeout, env=env, stdin=stdin,
                                                    uargs=userargs,
                                                    extra=extra)
+                        print(pwd)
                     except OSError as e:
                         print(e)
                         code, out, err = (-1, "", str(e).encode())
-                elif ttype == "run": 
+                elif ttype == "run":
                     cmd = shlex.split(get_param(query, "cmd", "ls -la") + " " + pure_exename)
                     extra = get_param(query, "cmds", "").format(pure_exename)
                     if extra != "": cmd = []
                     print("run: ", cmd, extra, pure_exename, csfname)
-                    print("Run1: ", imgsource, pngname)    
+                    print("Run1: ", imgsource, pngname)
                     try:
                         code, out, err, pwd = run2(cmd, cwd=prgpath, timeout=10, env=env, stdin=stdin, uargs=userargs,
                                                    extra=extra)
                     except Exception as e:
                         print(e)
                         code, out, err = (-1, "", str(e).encode())
-                    print("Run2: ", imgsource, pngname)    
+                    print("Run2: ", imgsource, pngname)
                     if code == -9:
                         out = "Runtime exceeded, maybe loop forever\n" + out
                     else:
@@ -1615,7 +1717,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         print(is_optional_image, image_ok)
                         remove(imgsource)
                         if image_ok: web["image"] = "/csimages/cs/" + rndname + ".png"
-                        
+
                 elif ttype == "lua":
                     print("lua: ", exename)
                     code, out, err, pwd = run2(["lua", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
@@ -1627,11 +1729,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         print(is_optional_image, image_ok)
                         remove(imgsource)
                         if image_ok: web["image"] = "/csimages/cs/" + rndname + ".png"
-                        
+
                 elif ttype == "octave":
                     print("octave: ", exename)
-                    code, out, err, pwd = run2(["octave", "-qf", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                           uargs=userargs, ulimit="ulimit -f 80000")
+                    code, out, err, pwd = run2(["octave", "-qf", pure_exename], cwd=prgpath, timeout=10, env=env,
+                                               stdin=stdin,
+                                               uargs=userargs, ulimit="ulimit -f 80000")
                     if imgsource and pngname:
                         image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
                         if e: err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
@@ -1642,10 +1745,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     if wavsource and wavdest:
                         wav_ok, e = copy_file(filepath + "/" + wavsource, wavdest, True, is_optional_image)
                         if e: err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
-                        print("WAV: ",is_optional_image, wav_ok, wavname,wavsource,wavdest)
+                        print("WAV: ", is_optional_image, wav_ok, wavname, wavsource, wavdest)
                         remove(wavsource)
                         if wav_ok: web["wav"] = "/csimages/cs/" + wavname
-                        
+
                 elif ttype == "clisp":
                     print("clips: ", exename)
                     code, out, err, pwd = run2(["sbcl", "--script", pure_exename], cwd=prgpath, timeout=10, env=env,
@@ -1658,7 +1761,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     code, out, err, pwd = run2(["python2", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                                uargs=userargs)
                 elif ttype == "text" or ttype == "xml" or ttype == "css":
-                    print(ttype,": ", csfname)
+                    print(ttype, ": ", csfname)
                     showname = filename
                     if showname == "prg": showname = ""
                     code, out, err, pwd = (0, "".encode("utf-8"), ("tallennettu " + showname).encode("utf-8"), "")
@@ -1723,9 +1826,20 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if expect_output:
                 exout = re.compile(expect_output.rstrip('\n'), re.M)
                 if exout.match(out): give_points(points_rule, "output", 1)
+            readpoints = get_points_rule(points_rule, "readpoints", None)
+            if readpoints:
+                m = re.search(readpoints, out)
+                if m and m.group(1):
+                    out = re.sub(m.group(0), "", out)
+                    try:
+                        p = float(m.group(1))
+                        give_points(points_rule, "output", p)
+                    except:
+                        p = 0
 
         return_points(points_rule, result)
 
+        delete_extra_files(extra_files, prgpath)
         if delete_tmp: removedir(prgpath)
 
         out = out[0:20000]
@@ -1755,16 +1869,18 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 # Ongelmaa korjattu siten, että kaikki run-kommennot saavat prgpathin käyttöönsä
 
 if __debug__:
-# if True:
+    # if True:
     class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
         """Handle requests in a separate thread."""
+
 
     print("Debug mode/ThreadingMixIn")
 else:
     class ThreadedHTTPServer(socketserver.ForkingMixIn, http.server.HTTPServer):
         """Handle requests in a separate thread."""
-    print("Normal mode/ForkingMixIn")
 
+
+    print("Normal mode/ForkingMixIn")
 
 if __name__ == '__main__':
     server = ThreadedHTTPServer(('', PORT), TIMServer)
