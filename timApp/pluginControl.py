@@ -152,6 +152,8 @@ def pluginify(doc,
             continue
         try:
             reqs = json.loads(resp)
+            if plugin_name == 'mmcq':
+                reqs['multihtml'] = True
         except ValueError:
             for idx in plugin_block_map.keys():
                 html_pars[idx]['html'] = get_error_html_plugin(plugin_name, 'Failed to parse JSON from plugin reqs route.')
