@@ -22,6 +22,12 @@ LOGGED_GROUP_ID = None
 ADMIN_GROUP_ID = None
 
 
+class NoSuchUserException(TimDbException):
+    def __init__(self, user_id):
+        super().__init__('No such user: {}'.format(user_id))
+        self.user_id = user_id
+
+
 class Users(TimDbBase):
     """Handles saving and retrieving user-related information to/from the database."""
 
@@ -615,6 +621,8 @@ WHERE User_id IN ({}))
         cursor = self.db.cursor()
         cursor.execute("""SELECT prefs FROM User WHERE id = ?""", [user_id])
         result = self.resultAsDictionary(cursor)
+        if not result:
+            raise NoSuchUserException(user_id)
         return result[0]['prefs']
 
     def set_preferences(self, user_id: int, prefs: str):

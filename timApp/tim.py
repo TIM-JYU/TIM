@@ -26,7 +26,7 @@ from routes.edit import edit_page
 from routes.groups import groups
 from routes.lecture import getTempDb, user_in_lecture, lecture_routes
 from routes.logger import logger_bp
-from routes.login import login_page
+from routes.login import login_page, logout
 from routes.manage import manage_page
 from routes.notes import notes
 from routes.notify import notify
@@ -38,6 +38,7 @@ from routes.view import view_page
 from tim_app import app
 
 # db.engine.pool.use_threadlocal = True # This may be needless
+from timdb.users import NoSuchUserException
 from utils import datestr_to_relative
 
 cache.init_app(app)
@@ -109,6 +110,14 @@ def forbidden(error):
 @app.errorhandler(500)
 def internal_error(error):
     error.description = "Something went wrong with the server, sorry. We'll fix this as soon as possible."
+    return error_generic(error, 500)
+
+
+@app.errorhandler(NoSuchUserException)
+def internal_error(error):
+    if error.user_id == session['user_id']:
+        flash('Your user id ({}) was not found in the database. Clearing session automatically.'.format(error.user_id))
+        return logout()
     return error_generic(error, 500)
 
 
