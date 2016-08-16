@@ -5,11 +5,6 @@ IFS=$'\n\t'
 # This is used by the container to rebuild the cabal sandbox if necessary
 
 cd /Haskell
-if [ ! -d ".cabal-sandbox/" ]; 
- then
-  cabal sandbox init
-  cabal update;
-fi
 
 gitGet () {
     if [ ! -d "$1" ]; 
@@ -30,4 +25,5 @@ gitGet () {
 gitGet PluginConstructionKit git://yousource.it.jyu.fi/ties343-funktio-ohjelmointi/PluginConstructionKit.git
 gitGet Choices git://yousource.it.jyu.fi/ties343-funktio-ohjelmointi/MultipleChoicePlugin.git
 
-cabal install --max-backjumps 100000 PluginConstructionKit/ Choices/
+(cd PluginConstructionKit/ && stack init --force --solver --omit-packages && stack solver --update-config)
+(cd Choices/ && stack solver --update-config --allow-different-user && stack build --allow-different-user --copy-bins)
