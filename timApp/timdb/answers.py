@@ -156,7 +156,7 @@ JOIN answer a ON a.id = t.id JOIN useranswer ua ON ua.answer_id = a.id JOIN user
         :return: 0 if not found, 1 if answers exist
         """
         cursor = self.db.cursor()
-        cursor.execute("""SELECT EXISTS(SELECT 1 FROM Answer WHERE task_id = ? LIMIT 1)""", [task_id])
+        cursor.execute("""SELECT EXISTS(SELECT 1 FROM Answer WHERE task_id = %s LIMIT 1)""", [task_id])
         result = cursor.fetchone()
         real_result = result[0]
         return real_result
