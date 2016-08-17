@@ -184,7 +184,7 @@ class Users(TimDbBase):
         """
         cursor = self.db.cursor()
         hash = self.hash_password(password)
-        cursor.execute('REPLACE INTO NewUser (email, pass) VALUES (?, ?)', [email, hash])
+        cursor.execute('REPLACE INTO NewUser (email, pass, created) VALUES (?, ?, CURRENT_TIMESTAMP)', [email, hash])
         if commit:
             self.db.commit()
 
