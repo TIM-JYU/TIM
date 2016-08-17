@@ -26,8 +26,8 @@ class PluginTest(TimRouteTest):
         resp = self.app.get('/view/{}'.format(doc.doc_id))
         self.assertResponseStatus(resp)
         tree = html.fromstring(resp.get_data(as_text=True))
-        mmcq_xpath = r'.//div[@class="par mmcq"]/div[@class="parContent"]/div[@id="{}.mmcqexample"]'.format(
-            doc.doc_id)
+        mmcq_xpath = r'.//div[@class="par mmcq"]/div[@class="parContent"]/div[@id="{}.mmcqexample.{}"]'.format(
+            doc.doc_id, doc.get_paragraphs()[0].get_id())
         plugs = tree.findall(mmcq_xpath)
         self.assertEqual(1, len(plugs))
         task_name = 'mmcqexample'
@@ -109,7 +109,7 @@ class PluginTest(TimRouteTest):
                                    'answer_id': answer_list[0]['id'],
                                    'par_id': par_id,
                                    'doc_id': doc.doc_id})
-        self.assertDictEqual({'html': "<div id='" + task_id + "' data-plugin='/mmcq'><mmcq "
+        self.assertDictEqual({'html': "<div id='" + task_id_ext + "' data-plugin='/mmcq'><mmcq "
                                                               "data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;onTry&quot;:null,&quot;stem&quot;:&quot;&lt;p&gt;Answer "
                                                               'yes or no to the following '
                                                               'questions.&lt;/p&gt;&quot;,&quot;choices&quot;:[{&quot;text&quot;:&quot;&lt;p&gt;&lt;span '

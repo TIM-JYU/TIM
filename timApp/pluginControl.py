@@ -154,6 +154,8 @@ def pluginify(doc,
             continue
         try:
             reqs = json.loads(resp)
+            if plugin_name == 'mmcq':
+                reqs['multihtml'] = True
         except ValueError:
             for idx in plugin_block_map.keys():
                 html_pars[idx]['html'] = get_error_html_plugin(plugin_name, 'Failed to parse JSON from plugin reqs route.')
@@ -214,7 +216,7 @@ def pluginify(doc,
                 html, is_lazy = make_lazy(html, val, do_lazy)
                 needs_browser = get_plugin_needs_browser(plugin_name)
                 html_pars[idx]['needs_browser'] = needs_browser or is_lazy
-                html_pars[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
+                html_pars[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskIDExt'],
                                                                              plugin_url,
                                                                              html) if wrap_in_div else html
 

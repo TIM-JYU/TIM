@@ -169,11 +169,22 @@ class ImagexServer(tim_server.TimServer):
                         for drag in drags:
                             if drag['id'] == selectkey:
                                 # Check if image is inside target, award points.
-                                #If there is no shape default to '', which becomes rectangle in geometry.
+                                #Take values from the first taget if they are not found.
                                 if 'type' not in target:
-                                    target['type'] = ''
+                                    if 'type' in targets[0]:
+                                        target['type'] = targets[0]['type']
+                                    else:
+                                        target['type'] = "rectangle"
                                 if 'a' not in target:
-                                    target['a'] = 0
+                                    if 'a' in targets[0]:
+                                        target['a'] = targets[0]['a']
+                                    else:
+                                        target['a'] = 0
+
+                                if 'size' not in target:
+                                    target['size'] = targets[0]['size']
+                                if 'position' not in target:
+                                    target['position'] = targets[0]['position']
                                 if isInside(target['type'],target['size'],target['a'],target['position'],drag["position"]):
                                     #print("--targetpoints--" + str(target['target']['points']))
                                     #print(target['target']['points'][selectkey])
