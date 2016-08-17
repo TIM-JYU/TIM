@@ -53,6 +53,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 "names": ["Just me", "Document owner", "Teachers", "Everyone"]
             };
             scope.newannotation = false;
+            scope.marginonly = false;
 
 
             // Original visibility, or visibility in session
@@ -76,6 +77,8 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     scope.show = !scope.show;
                     if (scope.show) {
                         scope.updateVelpZIndex();
+                    } else {
+                     console.log(scope.$parent.annotations);
                     }
                 }
             };
@@ -125,13 +128,20 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             scope.deleteAnnotation = function () {
 
                 if (scope.comments.length < 2) {
-                    console.log(scope.ismargin);
                     if (!$window.confirm("Delete - are you sure?")) {
                         return;
                     }
                     scope.$parent.deleteAnnotation(scope.aid, scope.ismargin);
                     scope.toggleAnnotation();
                 }
+            };
+
+            /**
+             * Update annotation to margin
+             * @method updateAnnotationToMargin
+             */
+            scope.updateAnnotationToMargin = function () {
+                scope.$parent.updateAnnotationToMargin(scope.aid, scope.ismargin);
             };
 
             /**
@@ -181,6 +191,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 scope.$parent.makePostRequest("/update_annotation", scope.original, function (json) {
                     console.log(json);
                 });
+                scope.updateAnnotationToMargin();
             };
 
             /**
@@ -191,6 +202,35 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             scope.checkRights = function () {
                 return scope.editaccess !== 1;
             };
+
+            /**
+             * Detect user right to annotation to document.
+             * @param points - Points given in velp or annotation.
+             * @returns {boolean} - right to make annotations.
+             */
+
+            scope.notAnnotationRights = function (points) {
+                if (scope.$parent.rights.teacher) {
+                    return false;
+                } else {
+                    if (points === null) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                }
+            }
+
+             /**
+             * Return true if user has teacher rights.
+             * @returns {boolean}
+             */
+
+            scope.allowChangePoints = function () {
+                return scope.$parent.rights.teacher;
+            }
+
+
 
             /**
              * Check if annotation is changed comparing to last saved state.

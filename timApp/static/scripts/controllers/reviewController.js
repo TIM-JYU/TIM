@@ -10,7 +10,7 @@
  * @copyright 2016 Timber project authors
  */
 
-var angular;
+var angular, $;
 var timApp = angular.module('timApp');
 
 var UNDEFINED = "undefined";
@@ -96,6 +96,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                     range.setStart(startel, placeInfo.start.offset);
                     range.setEnd(endel, placeInfo.end.offset);
                     $scope.addAnnotationToCoord(range, $scope.annotations[i], false);
+                    addAnnotationToElement(parent, $scope.annotations[i], false, "Added also margin annotation");
                 } catch (err) {
                     addAnnotationToElement(parent, $scope.annotations[i], false, "Could not show annotation in correct place");
                 }
@@ -259,7 +260,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var span = $scope.createPopOverElement(annotation, show);
         try {
             range.surroundContents(span);
-            //addAnnotationToElement(span, annotation, false, "Added also margin annotation");
         } catch (err) {
             addAnnotationToElement(span, annotation, true, "Annotation crosses taglines");
             $scope.selectedArea = null;
@@ -279,7 +279,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
 
         $compile(span)($scope); // Gives error [$compile:nonassign]
-       //addAnnotationMetaElement(span, annotation, false);
     };
 
     /**
@@ -300,56 +299,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         console.log(reason);
         $compile(span)($scope); // Gives error [$compile:nonassign]
     };
-
-    /**
-     * Adds meta annotation. Puts to paragraph margin link to main
-     * @method addAnnotationMetaElement
-     * @param annotation - annotation info
-     * @param show - Whether annotation is shown when created
-     */
-    var addAnnotationMetaElement = function (el, annotation, show){
-        var element = document.createElement("span");
-
-         element.setAttribute("annotationmeta", "" + annotation.id );
-
-        var velp_data = $scope.getVelpById(annotation.velp);
-
-        var velp_content;
-
-        if (velp_data !== null) {
-            velp_content = velp_data.content;
-        } else {
-            velp_content = annotation.content;
-        }
-        element.setAttribute("ng-show", show);
-        // ng-class="['highlighted', 'clickable', 'emphasise', 'default', {neutral: points == 0, negative: points < 0, positive: points > 0}]" ng-transclude="true"
-        element.setAttribute("ng-class","['highlighted', 'clickable', 'emphasise', 'default', {neutral: points == 0, negative: points < 0, positive: points > 0}]");
-        element.setAttribute("ng-transclude", "true");
-        element.setAttribute("ng-click","toggleTextAnnotation(" + annotation.id + ")");
-
-        //<input type="number" ng-model="points" ng-value="points" ng-disabled="checkRights()" ng-change="changePoints(points)" class="ng-pristine ng-untouched ng-valid" value="-1">
-        var text = document.createTextNode("\u00A0" + annotation.content + "\u00A0");
-        element.appendChild(text);
-        var points = document.createElement("input");
-
-        points.value = annotation.points;
-        points.setAttribute("ng-show", "false");
-        points.setAttribute("ng-model", "points");
-        points.setAttribute("ng-value", "points");
-        element.appendChild(points);
-        addElementToParagraphMargin(el, element);
-        $compile(element)($scope);
-    };
-
-    $scope.toggleTextAnnotation = function (id) {
-        for (var i = 0; i < $scope.annotations.length; i++) {
-            if ($scope.annotations[i].id === id) {
-                $scope.toggleAnnotation($scope.annotations[i]);
-                break;
-            }
-        }
-        //toggleAnnotation(annotation);
-    }
 
     /**
      * Adds element to paragraph margin.
@@ -448,7 +397,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
         var annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
 
-        if (!inmargin) {
+        if (annotationParents.length > 1) {
             var savedHTML = "";
             for (var i = 0; i < annotationHighlights.length; i++) {
                 var addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', '');
@@ -456,6 +405,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 savedHTML += addHTML;
             }
             annotationParents[0].outerHTML = savedHTML;
+            annotationParents[1].parentNode.removeChild(annotationParents[1]);
         } else {
             annotationParents[0].parentNode.removeChild(annotationParents[0]);
         }
@@ -471,6 +421,41 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             console.log(json);
         });
     };
+     /**
+     * Update changed annotation to margin annota
+     * @method updateAnnotationToMargin
+     * @param id - Annotation id
+     */
+    $scope.updateAnnotationToMargin = function (id, inmargin) {
+        var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
+        var annotationElement = $('[aid="{0}"]'.replace('{0}', id));
+        var par = annotationElement.parents('.par');
+        var annotationHighlights = annotationElement[0].getElementsByClassName("highlighted");
+        if(!inmargin) {
+            // nothing
+            for (var a = 0; a < $scope.annotations.length; a++) {
+                if (id === $scope.annotations[a].id){
+                    annotationElement[1].parentNode.removeChild(annotationElement[1]);
+                    addAnnotationToElement(par[0], $scope.annotations[a], false,"Added also margin annotation");
+                    //addAnnotationToElement($scope.annotations[a], false, "Added also margin annotation");
+                }
+            }
+
+            console.log("updateAnnotationMargin");
+        } else {
+            var savedHTML = "";
+            for (var i = 0; i < annotationHighlights.length; i++) {
+                var addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', '');
+                addHTML = addHTML.replace('</span>', '');
+                savedHTML += addHTML;
+            }
+            annotationParents[0].outerHTML = savedHTML;
+
+            // TODO: add redraw annotation text
+        }
+
+    };
+
 
 
     /**
@@ -698,20 +683,20 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Detect user right to annotation to document.
-     * @param points - Points given in velp
+     * @param points - Points given in velp or annotation.
      * @returns {boolean} - right to make annotations.
      */
 
     $scope.notAnnotationRights = function (points) {
-    if ($scope.$parent.rights.teacher) {
-        return false;
-    } else {
-        if (points === null) {
+        if ($scope.$parent.rights.teacher) {
             return false;
         } else {
-            return true;
+            if (points === null) {
+                return false;
+            } else {
+                return true;
+            }
         }
-    }
     }
 
     /**
@@ -724,15 +709,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         if (state){
             return "You need to have teacher rights to make annotations with points.";
         }
-    }
-
-    /**
-     * Return true if user has teacher rights.
-     * @returns {boolean}
-     */
-
-    $scope.allowChangePoints = function () {
-        return $scope.$parent.rights.teacher;
     }
 
     /**
@@ -826,6 +802,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 $scope.annotationids[newAnnotation.id] = json.data.id;
                 console.log("Annotation to text");
                 console.log(json);
+                addAnnotationToElement($scope.selectedElement, newAnnotation, true, "Added also margin annotation");
             });
 
             $scope.selectedArea = undefined;

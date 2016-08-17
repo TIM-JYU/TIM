@@ -285,6 +285,16 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
     // Methods
 
+
+    /**
+     * Return true if user has teacher rights.
+     * @returns {boolean}
+     */
+
+    $scope.allowChangePoints = function () {
+        return $scope.$parent.rights.teacher;
+    }
+
     /**
      * Get color for object.
      * @method getColor
