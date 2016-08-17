@@ -9,7 +9,7 @@
                 <th class="summSecColumn">Annotation</th>
                 <th class="summThiColumn">Points</th>
             </tr>
-            <tr ng-repeat="a in annotations | orderBy:'creationtime' | filter: {'user_id': $parent.selectedUser.id}:true ">
+            <tr ng-repeat="a in ( filteredList1 = (annotations | orderBy:'creationtime' | filter: {'user_id': $parent.selectedUser.id}:true)) ">
                 <!--<td class="summCheckbox"><input type="checkbox" ng-model="a.selected"></td> See comment above^-->
                 <td class="summSecColumn"><a ng-click="toggleAnnotation(a)">{{ a.content }}</a></td>
                 <td class="summThiColumn"><span>{{ a.points }}</span></td>
@@ -17,10 +17,10 @@
             <tr>
                 <!--<th class="summCheckbox"></th> See comment above^-->
                 <th class="summSecColumn">Points total</th>
-                <th class="summThiColumn"><span>{{ getTotalPoints() }}</span></th>
+                <th class="summThiColumn"><span>{{ getTotalPoints(filteredList1) }}</span></th>
             </tr>
         </table>
-         <h5>Other Annotations</h5>
+         <h5>Other document annotations</h5>
         <table>
             <tr>
                 <!-- Commented out for now, these are intended for publishing annotations.
@@ -37,7 +37,7 @@
             <!--<tr>
                 <!--<th class="summCheckbox"></th> See comment above^
                 <th class="summSecColumn">Points total</th>
-               <th class="summThiColumn"><span></span></th>
+                <th class="summThiColumn"><span>{{ getTotalPoints(filteredList2) }}</span></th>
             </tr>-->
         </table>
     </div>

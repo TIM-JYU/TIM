@@ -450,7 +450,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 savedHTML += addHTML;
             }
             annotationParents[0].outerHTML = savedHTML;
-            
+
             // TODO: add redraw annotation text
         }
 
