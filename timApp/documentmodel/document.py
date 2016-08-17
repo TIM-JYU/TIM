@@ -74,7 +74,7 @@ class Document:
         :return: Boolean.
         """
         froot = cls.get_default_files_root() if files_root is None else files_root
-        return os.path.exists(os.path.join(cls.get_documents_dir(files_root), str(doc_id)))
+        return os.path.exists(os.path.join(cls.get_documents_dir(froot), str(doc_id)))
 
     @classmethod
     def version_exists(cls, doc_id: int, doc_ver: 'tuple(int,int)', files_root: Optional[str] = None) -> bool:

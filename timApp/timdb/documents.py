@@ -126,8 +126,11 @@ class Documents(TimDbBase):
         :param folder Folder in which the recovered documents are placed
         :returns Number of recovered documents.
         """
-        cursor = self.db.cursor()
         doc_dir = Document.get_documents_dir(self.files_root_path)
+        if not os.path.exists(doc_dir):
+            return 0
+
+        cursor = self.db.cursor()
         recovered = 0
         for doc_item in os.listdir(doc_dir):
             if not os.path.isdir(os.path.join(doc_dir, doc_item)):
@@ -430,7 +433,7 @@ class Documents(TimDbBase):
         :returns: The paragraphs and the new document as a tuple.
         """
 
-        assert Document.doc_exists(doc.doc_id), 'document does not exist: ' + str(doc.doc_id)
+        assert self.exists(doc.doc_id), 'document does not exist: ' + str(doc.doc_id)
         new_content = self.trim_markdown(new_content)
         par = doc.modify_paragraph(par_id, new_content, new_attrs, new_properties)
         self.update_last_modified(doc)
