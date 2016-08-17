@@ -17,10 +17,12 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
         );
 
         $scope.columns = [
-            {field: 'real_name', name: 'Full name', cellTooltip: true},
-            {field: 'name', name: 'Username', cellTooltip: true},
-            {field: 'task_count', name: 'Tasks', cellTooltip: true, maxWidth: 70},
-            {field: 'total_points', name: 'Points', cellTooltip: true, maxWidth: 70}
+            {field: 'real_name', name: 'Full name', cellTooltip: true, headerTooltip: true},
+            {field: 'name', name: 'Username', cellTooltip: true, headerTooltip: true},
+            {field: 'task_count', name: 'Tasks', cellTooltip: true, headerTooltip: true, maxWidth: 70},
+            {field: 'total_points', name: 'Points', cellTooltip: true, headerTooltip: true, maxWidth: 70},
+            {field: 'velp_points', name: 'Velp points', cellTooltip: true, headerTooltip: true, maxWidth: 70, visible: false},
+            {field: 'velped_task_count', name: 'Velped tasks', cellTooltip: true, headerTooltip: true, maxWidth: 70, visible: false}
         ];
         $scope.gridOptions = {
             multiSelect: false,
