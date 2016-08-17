@@ -120,6 +120,40 @@ class Documents(TimDbBase):
 
         Document.remove(document_id)
 
+    def recover_db(self, usergroup_id: int, folder: str = None) -> bool:
+        """Recreates database entries for documents that already exist on the disk
+        :param usergroup_id Owner for recovered documents
+        :param folder Folder in which the recovered documents are placed
+        :returns Number of recovered documents.
+        """
+        cursor = self.db.cursor()
+        doc_dir = Document.get_documents_dir(self.files_root_path)
+        recovered = 0
+        for doc_item in os.listdir(doc_dir):
+            if not os.path.isdir(os.path.join(doc_dir, doc_item)):
+                continue
+            try:
+                doc_id = int(doc_item)
+                cursor.execute('SELECT EXISTS(SELECT id FROM Block WHERE id = ?)', [doc_id])
+                if not cursor.fetchone()[0]:
+                    doc_name = "Recovered document " + str(doc_id)
+                    cursor.execute("""INSERT INTO Block (id, type_id, description, created, UserGroup_id)
+                                      VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?)""",
+                                           [doc_id, blocktypes.DOCUMENT, doc_name, usergroup_id])
+                    recovered += 1
+                    doc_fullname = doc_name if not folder else folder + '/' + doc_name
+                    cursor.execute('SELECT EXISTS(SELECT id FROM DocEntry WHERE id = ?)', [doc_id])
+                    if not cursor.fetchone()[0]:
+                        cursor.execute('INSERT INTO DocEntry (id, name, public) VALUES (?, ?, 1)',
+                                           [doc_id, doc_fullname])
+
+            except ValueError:
+                pass
+
+        if recovered:
+            self.db.commit()
+
+        return recovered
 
     def get_names(self, document_id: int, return_json: bool = False, include_nonpublic: bool = False) -> List[dict]:
         """Gets the list of all names a document is known by.
