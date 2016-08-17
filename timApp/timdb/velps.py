@@ -1,7 +1,6 @@
 import copy
 from typing import Optional, List
 
-from tim_app import db
 from timdb.timdbbase import TimDbBase
 from timdb.velp_models import Velp, VelpVersion, VelpLabel, VelpLabelContent
 

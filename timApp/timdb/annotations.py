@@ -1,6 +1,5 @@
 import copy
 from enum import Enum, unique
-from datetime import timedelta
 from typing import Dict, List, Optional
 from timdb.timdbbase import TimDbBase
 from timdb.velp_models import Annotation, AnnotationComment
