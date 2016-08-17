@@ -214,7 +214,7 @@ def pluginify(doc,
                 html, is_lazy = make_lazy(html, val, do_lazy)
                 needs_browser = get_plugin_needs_browser(plugin_name)
                 html_pars[idx]['needs_browser'] = needs_browser or is_lazy
-                html_pars[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
+                html_pars[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskIDExt'],
                                                                              plugin_url,
                                                                              html)
 
