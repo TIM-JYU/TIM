@@ -102,9 +102,14 @@ PermApp.controller("PermCtrl", [
         sc.updateMetadata = function() {
             $http.post('/translation/' + sc.doc.id, {
                 'new_langid': sc.lang_id,
-                'new_title': sc.doc.title
+                'new_title': sc.doc.title,
+                'old_title': sc.old_title
             }).success(function (data, status, headers, config) {
-                sc.getTranslations();
+                if (sc.doc.title == sc.old_title)
+                    sc.getTranslations();
+                else
+                    location.replace('/manage/' + sc.doc.title);
+
             }).error(function (data, status, headers, config) {
                 alert(data.error);
             });
@@ -117,7 +122,8 @@ PermApp.controller("PermCtrl", [
         sc.updateTranslation = function(tr) {
             $http.post('/translation/' + tr.id, {
                 'new_langid': tr.lang_id,
-                'new_title': tr.title
+                'new_title': tr.title,
+                'old_title': tr.old_title
             }).success(function (data, status, headers, config) {
                 sc.getTranslations();
             }).error(function (data, status, headers, config) {
@@ -240,12 +246,20 @@ PermApp.controller("PermCtrl", [
             });
         };
 
-        sc.updateAlias = function(alias) {
+        sc.updateAlias = function(alias, first) {
+            var new_alias = sc.combine(alias.location, alias.name);
             $http.post('/alias/' + sc.doc.id + '/' + $window.encodeURIComponent(alias.fullname), {
                 'public': Boolean(alias.public),
-                'new_name': sc.combine(alias.location, alias.name)
+                'new_name': new_alias
             }).success(function (data, status, headers, config) {
-                sc.getAliases();
+                console.log(first);
+                console.log(new_alias);
+
+                if (!first || new_alias == alias.fullname)
+                    sc.getAliases();
+                else
+                    location.replace('/manage/' + new_alias);
+
             }).error(function (data, status, headers, config) {
                 alert(data.error);
             });
@@ -551,7 +565,7 @@ text = '\n'.join(a)
 
         sc.createTranslation = function() {
             $http.post('/translate/' + sc.doc.id + "/" + sc.translationName, {
-                'doc_title': sc.translationTitle
+                'doc_title': sc.translationTitle,
             }).success(function (data, status, headers, config) {
                 location.href = "/view/" + data.name;
             }).error(function (data, status, headers, config) {

@@ -364,6 +364,12 @@ def update_translation(doc_id):
         if doc_id == src_doc_id and lang_id == "":
             # Allow removing the language id for the document itself
             timdb.documents.remove_translation(doc_id)
+
+            # Rename the document if requested
+            (prev_title,) = verify_json_params('old_title', require=False)
+            if prev_title is not None and doc_title != prev_title:
+                timdb.documents.change_name(doc_id, prev_title, doc_title)
+
             return okJsonResponse()
 
         abort(403, 'Invalid language identifier')
