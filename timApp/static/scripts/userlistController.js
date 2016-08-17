@@ -24,6 +24,13 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
             {field: 'velp_points', name: 'Velp points', cellTooltip: true, headerTooltip: true, maxWidth: 70, visible: false},
             {field: 'velped_task_count', name: 'Velped tasks', cellTooltip: true, headerTooltip: true, maxWidth: 70, visible: false}
         ];
+
+        $scope.fireUserChange = function(row, updateAll) {
+            $scope.changeUser(row.entity, updateAll);
+        };
+
+        $scope.instantUpdate = false;
+
         $scope.gridOptions = {
             multiSelect: false,
             enableFullRowSelection: true,
@@ -39,7 +46,7 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
                 $scope.gridApi = gridApi;
 
                 gridApi.selection.on.rowSelectionChanged($scope, function (row) {
-                    $scope.changeUser(row.entity);
+                    $scope.fireUserChange(row, $scope.instantUpdate);
                 });
                 gridApi.grid.modifyRows($scope.gridOptions.data);
                 gridApi.selection.selectRow($scope.gridOptions.data[0]);
@@ -76,7 +83,26 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
                         });
                     },
                     order: 210
+                },
+                {
+                    title: 'Enable instant update',
+                    action: function ($event) {
+                        $scope.instantUpdate = true;
+                    },
+                    shown: function () {
+                        return !$scope.instantUpdate;
+                    }
+                },
+                {
+                    title: 'Disable instant update',
+                    action: function ($event) {
+                        $scope.instantUpdate = false;
+                    },
+                    shown: function () {
+                        return $scope.instantUpdate;
+                    }
                 }
-            ]
+            ],
+            rowTemplate: "<div ng-dblclick=\"grid.appScope.fireUserChange(row, true)\" ng-repeat=\"(colRenderIndex, col) in colContainer.renderedColumns track by col.colDef.name\" class=\"ui-grid-cell\" ng-class=\"{ 'ui-grid-row-header-cell': col.isRowHeader }\" ui-grid-cell></div>"
         };
     }]);

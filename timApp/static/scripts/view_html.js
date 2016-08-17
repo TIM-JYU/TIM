@@ -206,9 +206,9 @@ timApp.controller("ViewCtrl", [
             sc.showDialog(message);
         });
 
-        sc.changeUser = function (user) {
+        sc.changeUser = function (user, updateAll) {
             sc.selectedUser = user;
-            sc.$broadcast('userChanged', {user: user});
+            sc.$broadcast('userChanged', {user: user, updateAll: updateAll});
         };
 
         sc.getParId = function ($par) {

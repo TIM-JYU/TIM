@@ -1083,7 +1083,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 if (this.selectedUser.id !== annotation.user_id){
                     for (var i = 0; i < this.users.length; i++) {
                         if (this.users[i].id === annotation.user_id) {
-                             $scope.changeUser(this.users[i]);
+                             $scope.changeUser(this.users[i], false);
                             break;
                         }
                     }

@@ -282,9 +282,13 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
 
                 $scope.$on('userChanged', function (event, args) {
                     $scope.user = args.user;
+                    console.log(args);
                     $scope.firstLoad = false;
                     $scope.shouldUpdateHtml = true;
-                    if ($scope.hasUserChanged()) {
+                    if (args.updateAll) {
+                        $scope.loadIfChanged();
+                    }
+                    else if ($scope.hasUserChanged()) {
                         $scope.dimPlugin();
                     } else {
                         $scope.parContent.css('opacity', '1.0');
