@@ -138,10 +138,14 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
             /**
              * Update annotation to margin
-             * @method updateAnnotationToMargin
+             * @method updateAnnotation
              */
-            scope.updateAnnotationToMargin = function () {
-                scope.$parent.updateAnnotationToMargin(scope.aid, scope.ismargin);
+            scope.updateAnnotation = function () {
+                var margin = false;
+                if (scope.velpElement.parentNode.offsetParent.className ==="notes"){
+                    margin = true;
+                }
+                scope.$parent.updateAnnotation(scope.aid, margin);
             };
 
             /**
@@ -173,7 +177,11 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                             comment_relative_time: "just now"
                         });
                         scope.$parent.addComment(scope.aid, json.data.name, comment);
+                        scope.updateAnnotation();
                     });
+
+                } else {
+                    scope.updateAnnotation();
                 }
                 scope.newComment = "";
                 if (scope.visible_options.value !== scope.original.visible_to) {
@@ -191,7 +199,6 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 scope.$parent.makePostRequest("/update_annotation", scope.original, function (json) {
                     console.log(json);
                 });
-                scope.updateAnnotationToMargin();
             };
 
             /**
@@ -219,7 +226,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                         return true;
                     }
                 }
-            }
+            };
 
              /**
              * Return true if user has teacher rights.
@@ -228,7 +235,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
             scope.allowChangePoints = function () {
                 return scope.$parent.rights.teacher;
-            }
+            };
 
 
 
