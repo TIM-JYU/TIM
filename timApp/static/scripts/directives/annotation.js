@@ -71,8 +71,15 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
              * @method toggleAnnotation
              */
             scope.toggleAnnotation = function () {
-                if (false ){//scope.$parent.$parentNode.className === "notes" ){// FIX this scope.$parent.className === "notes" && element.velpElement.parent().className ===  "notes" && scope.$parent.n.parentElement.className ===  "notes"parent.n.parentElement
-                    scope.$parent.toggleAnnotation();
+                if (scope.velpElement === null) {
+                    scope.velpElement = element[0].getElementsByClassName("annotation-info")[0];
+                }
+                var elementName = scope.velpElement.parentNode.offsetParent.className;
+                var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', scope.aid));
+                if ( elementName === "notes" &&  annotationParents.length > 1 ){//scope.$parent.$parentNode.className === "notes" ){// FIX this scope.$parent.className === "notes" && element.velpElement.parent().className ===  "notes" && scope.$parent.n.parentElement.className ===  "notes"parent.n.parentElement
+                    scope.$$prevSibling.show = !scope.$$prevSibling.show;
+                    scope.$$prevSibling.updateVelpZIndex();
+                    //scope.isolateScope.show = !scope.isolateScope.show;
                 } else {
                     scope.show = !scope.show;
                     if (scope.show) {
