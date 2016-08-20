@@ -16,6 +16,8 @@ from http_params import *
 import tim_server
 # Library for checking if a point is inside a shape.
 from geometry import*
+# For copying dicts.
+from copy import deepcopy
 # Methods for checking contents of JSON.
 from fileParams3 import get_all_templates
 PORT = 5000
@@ -105,6 +107,8 @@ class ImagexServer(tim_server.TimServer):
 
     # Creates accurate state for answer, ie. changes the object positions.
     def create_state_imagex(self, markup, drags):
+        # Original objects
+        markup['yamlobjects'] = deepcopy(markup['objects'])
         #print(markup)
         #print(drags)
         for object in markup['objects']:
@@ -171,7 +175,7 @@ class ImagexServer(tim_server.TimServer):
                                 # Check if image is inside target, award points.
                                 #Take values from the first taget if they are not found.
                                 if 'type' not in target:
-                                    if 'type' in targets[0]:
+                                    if 'type' in targets[0]: # TODO: TÄMÄ ON VÄÄRIN, SE ON EDELLISEN
                                         target['type'] = targets[0]['type']
                                     else:
                                         target['type'] = "rectangle"
@@ -238,10 +242,11 @@ class ImagexServer(tim_server.TimServer):
 
             markup = {}
             #Create state to be saved for this excercise.
-            markup["objects"] = self.create_state_imagex(query.get_param("markup",None),drags)
+            markup["objects"] = self.create_state_imagex(query.get_param("markup",None),drags) # TODO: stateen menee ihan liian paljon tavaraa.  Vain se käyttäjän vastaus!!!
             markup["tries"] = tries
             #Save if finalanswer was given to student.
             markup['finalanswergiven'] = finalanswergiven
+            freeHandData =  query.get_json_param("input", "freeHandData", None)
             # markup["targets"] = targets
             # Return correct answer if the answer table isnt empty.
             if len(answer) != 0:
@@ -249,7 +254,7 @@ class ImagexServer(tim_server.TimServer):
 
             #Save user input and points to markup
             tim_info = {"points":points}
-            save = {"markup": markup,"tries":tries} #{"drags":drags,"tries":tries}
+            save = {"markup": markup,"tries":tries, 'freeHandData':freeHandData} #{"drags":drags,"tries":tries}
             result["save"] = save
             result["tim_info"] = tim_info
             out = "saved"
