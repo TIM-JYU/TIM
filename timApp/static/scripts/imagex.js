@@ -36,11 +36,12 @@ imagexApp.directiveFunction = function() {
 
 
 function FreeHand() {
-    this.w = 2;
-    this.color = "Red";
+    this.params = {}
+    this.params.w = 2;
+    this.params.color = "Red";
+    this.params.lineMode = false; // freeHand mode, true would be line mode
     this.prevPos = null;
     this.freeDrawing = [];
-    this.lineMode = false;
     this.redraw = null;
 };
 
@@ -53,8 +54,8 @@ FreeHand.prototype.draw = function(ctx) {
 FreeHand.prototype.startSegment = function(p) {
     if ( !p ) return;
     var ns = {};
-    ns.color = this.color;
-    ns.w = this.w;
+    ns.color = this.params.color;
+    ns.w = this.params.w;
     ns.lines = [p];
     this.freeDrawing.push(ns);
     this.prevPos = p;
@@ -70,8 +71,8 @@ FreeHand.prototype.startSegmentDraw = function(redraw, p) {
     if ( !p ) return;
     this.redraw = redraw;
     var ns = {};
-    ns.color = this.color;
-    ns.w = this.w;
+    ns.color = this.params.color;
+    ns.w = this.params.w;
     ns.lines = [p];
     this.freeDrawing.push(ns);
     this.prevPos = p;
@@ -86,7 +87,7 @@ FreeHand.prototype.addPoint = function(p) {
         var ns = this.freeDrawing[n - 1];
         ns.lines.push(p);
     }
-    if ( !this.lineMode ) this.prevPos = p;
+    if ( !this.params.lineMode ) this.prevPos = p;
 };
 
 FreeHand.prototype.popPoint = function(minlen) {
@@ -107,7 +108,7 @@ FreeHand.prototype.popSegment = function(minlen) {
 
 FreeHand.prototype.addPointDraw = function(ctx, p) {
     if ( !p ) return;
-    if ( this.lineMode ) {
+    if ( this.params.lineMode ) {
         this.popPoint(1);
         if ( this.redraw ) this.redraw();
     }
@@ -122,14 +123,14 @@ FreeHand.prototype.clear = function() {
 
 
 FreeHand.prototype.setColor = function(newColor) {
-    this.color = newColor;
+    this.params.color = newColor;
     this.startSegment(this.prevPos);
 };
 
 
 FreeHand.prototype.setWidth = function(newWidth) {
-    this.w = newWidth;
-    if ( w < 1 ) this.w = 1;
+    this.params.w = newWidth;
+    if ( this.params.w < 1 ) this.params.w = 1;
     this.startSegment(this.prevPos);
 };
 
@@ -137,8 +138,8 @@ FreeHand.prototype.setWidth = function(newWidth) {
 FreeHand.prototype.line = function(ctx, p1, p2) {
     if ( !p1 || !p2 ) return;
     ctx.beginPath();
-    ctx.strokeStyle = this.color;
-    ctx.lineWidth = this.w;
+    ctx.strokeStyle = this.params.color;
+    ctx.lineWidth = this.params.w;
     ctx.moveTo(p1.x, p1.y);
     ctx.lineTo(p2.x, p2.y);
     ctx.stroke();
@@ -182,8 +183,8 @@ imagexApp.directiveTemplate = function () {
         '<label ng-show="freeHandVisible">FreeHand <input type="checkbox" name="freeHand" value="true" ng-model="freeHand"></label> ' +
         '<span>' +
         '<span ng-show="freeHand">' +
-        '<label ng-show="freeHandLineVisible">Line <input type="checkbox" name="freeHandLine" value="true" ng-model="freeHandDrawing.lineMode"></label> ' +
-        '<input ng-show="true" id="freeWidth" size="1" ng-model="freeHandDrawing.w" /> ' +
+        '<label ng-show="freeHandLineVisible">Line <input type="checkbox" name="freeHandLine" value="true" ng-model="lineMode"></label> ' +
+        '<input ng-show="true" id="freeWidth" size="1" ng-model="w" /> ' +
         '<span style="background-color: red; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'red\');">R</span>' +
         '<span style="background-color: blue; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'blue\');">B</span>' +
         '<span style="background-color: yellow; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'yellow\');">Y</span>' +
@@ -448,13 +449,13 @@ imagexApp.initDrawing = function(scope, canvas) {
               if ( c == "b" ) th.freeHand.setColor("blue");
               if ( c == "y" ) th.freeHand.setColor("yellow");
               if ( c == "g" ) th.freeHand.setColor("green");
-              if ( c == "+" ) th.freeHand.setWidth(w+1);
-              if ( c == "-" ) th.freeHand.setWidth(w-1);
+              if ( c == "+" ) th.freeHand.setWidth(th.freeHand.params.w+1);
+              if ( c == "-" ) th.freeHand.setWidth(th.freeHand.params.w-1);
               if ( c == "1" ) th.freeHand.setWidth(1);
               if ( c == "2" ) th.freeHand.setWidth(2);
               if ( c == "3" ) th.freeHand.setWidth(3);
               if ( c == "4" ) th.freeHand.setWidth(4);
-              if ( c == "l" ) th.freeHand.lineMode = !th.freeHand.lineMode;
+              if ( c == "l" ) th.freeHand.params.lineMode = !th.freeHand.params.lineMode;
         }, false);
 
         // Lisätty eventlistenereiden poistamiseen.
@@ -1279,9 +1280,11 @@ imagexApp.initScope = function (scope, element, attrs) {
     timHelper.set(scope, attrs, "freeHandWidth", 2);
     timHelper.set(scope, attrs, "state.freeHandData", null);
 
-    scope.freeHandDrawing.w = scope.freeHandWidth;
-    scope.freeHandDrawing.color = scope.freeHandColor;
-    scope.freeHandDrawing.lineMode = scope.freeHandLine;
+
+    scope.w = scope.freeHandWidth;
+    scope.color = scope.freeHandColor;
+    scope.lineMode = scope.freeHandLine;
+    scope.freeHandDrawing.params = scope; // to get 2 way binding to params
     if ( scope.freeHandData ) scope.freeHandDrawing.freeDrawing = scope.freeHandData;
 
 
