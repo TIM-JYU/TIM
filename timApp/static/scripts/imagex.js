@@ -124,6 +124,7 @@ FreeHand.prototype.clear = function() {
 
 FreeHand.prototype.setColor = function(newColor) {
     this.params.color = newColor;
+    if ( this.update ) this.update();
     this.startSegment(this.prevPos);
 };
 
@@ -131,9 +132,24 @@ FreeHand.prototype.setColor = function(newColor) {
 FreeHand.prototype.setWidth = function(newWidth) {
     this.params.w = newWidth;
     if ( this.params.w < 1 ) this.params.w = 1;
+    if ( this.update ) this.update();
     this.startSegment(this.prevPos);
 };
 
+FreeHand.prototype.incWidth = function(dw) {
+    this.setWidth(this.params.w + dw);
+}
+
+
+FreeHand.prototype.setLineMode = function(newMode) {
+    this.params.lineMode = newMode;
+    if ( this.update ) this.update();
+}
+
+
+FreeHand.prototype.flipLineMode = function(newMode) {
+    this.setLineMode(!this.params.lineMode);
+}
 
 FreeHand.prototype.line = function(ctx, p1, p2) {
     if ( !p1 || !p2 ) return;
@@ -184,7 +200,7 @@ imagexApp.directiveTemplate = function () {
         '<span>' +
         '<span ng-show="freeHand">' +
         '<label ng-show="freeHandLineVisible">Line <input type="checkbox" name="freeHandLine" value="true" ng-model="lineMode"></label> ' +
-        '<input ng-show="true" id="freeWidth" size="1" ng-model="w" /> ' +
+        '<input ng-show="true" id="freeWidth" size="1"  style="width: 1.2em" ng-model="w" /> ' +
         '<input ng-style="{\'background-color\': color}" ng-model="color" size="4" />&nbsp; ' +
         '<span style="background-color: red; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'red\');">R</span>' +
         '<span style="background-color: blue; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'blue\');">B</span>' +
@@ -450,13 +466,13 @@ imagexApp.initDrawing = function(scope, canvas) {
               if ( c == "b" ) th.freeHand.setColor("blue");
               if ( c == "y" ) th.freeHand.setColor("yellow");
               if ( c == "g" ) th.freeHand.setColor("green");
-              if ( c == "+" ) th.freeHand.setWidth(th.freeHand.params.w+1);
-              if ( c == "-" ) th.freeHand.setWidth(th.freeHand.params.w-1);
+              if ( c == "+" ) th.freeHand.incWidth(+1);
+              if ( c == "-" ) th.freeHand.incWidth(-1);
               if ( c == "1" ) th.freeHand.setWidth(1);
               if ( c == "2" ) th.freeHand.setWidth(2);
               if ( c == "3" ) th.freeHand.setWidth(3);
               if ( c == "4" ) th.freeHand.setWidth(4);
-              if ( c == "l" ) th.freeHand.params.lineMode = !th.freeHand.params.lineMode;
+              if ( c == "l" ) th.freeHand.flipLineMode();
         }, false);
 
         // Lisätty eventlistenereiden poistamiseen.
@@ -1287,6 +1303,7 @@ imagexApp.initScope = function (scope, element, attrs) {
     scope.lineMode = scope.freeHandLine;
     scope.freeHandDrawing.params = scope; // to get 2 way binding to params
     if ( scope.freeHandData ) scope.freeHandDrawing.freeDrawing = scope.freeHandData;
+    scope.freeHandDrawing.update = function() { scope.$apply(); };
 
 
     // Otsikot.  Oletetaan että 1. elementti korvaatan header-otsikolla ja viimeinen footerilla
@@ -1420,6 +1437,7 @@ ImagexScope.prototype.resetExercise = function(){
     "use strict";
     // Set scope.
     var $scope = this.scope;
+    $scope.freeHandDrawing.clear();
     // Objects dragged by user.
     var dragtable = $scope.drags;
     // Original objects.
