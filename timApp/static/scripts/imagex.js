@@ -119,6 +119,7 @@ FreeHand.prototype.addPointDraw = function(ctx, p) {
 
 FreeHand.prototype.clear = function() {
     this.freeDrawing = [];
+    if ( this.redraw ) this.redraw();
 };
 
 
