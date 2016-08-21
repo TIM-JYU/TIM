@@ -185,6 +185,7 @@ imagexApp.directiveTemplate = function () {
         '<span ng-show="freeHand">' +
         '<label ng-show="freeHandLineVisible">Line <input type="checkbox" name="freeHandLine" value="true" ng-model="lineMode"></label> ' +
         '<input ng-show="true" id="freeWidth" size="1" ng-model="w" /> ' +
+        '<input ng-style="{\'background-color\': color}" ng-model="color" size="4" />&nbsp; ' +
         '<span style="background-color: red; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'red\');">R</span>' +
         '<span style="background-color: blue; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'blue\');">B</span>' +
         '<span style="background-color: yellow; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'yellow\');">Y</span>' +
