@@ -5,6 +5,7 @@ export LANG=en_US.UTF-8
 # For X server emulation
 Xvfb :1 -screen 0 1280x1024x24 -extension RANDR 2>/dev/null  &
 export DISPLAY=:1 
+export GNUTERM=png
 cmd=$1
 
 if [  -z "$cmd"  ]; then

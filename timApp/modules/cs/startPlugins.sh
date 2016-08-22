@@ -3,9 +3,21 @@
 # run with option i to get interactive mode
 # option p for pure start (no wget for files)
 dockername="csPlugin"
+dockerImage="cs3"
+extraPorts=""
+extraCmds="/bin/bash"
+
+if [ "$3" = "d" ]
+then 
+    dockerImage="cs3sudo"
+    extraPorts="-p 49998:22"
+    extraCmds=''
+fi
+
 # dockerOptions="--name $dockername --net=timnet -p 56000:5000 -v /lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu:ro -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/bin/docker -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash"
 # dockerOptions="--name $dockername --net=timnet -p 56000:5000                                                 -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/bin/docker -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash"
-dockerOptions="--name $dockername --net=timnet -p 56000:5000                                                 -v /var/run/docker.sock:/var/run/docker.sock                                -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash"
+#dockerOptions="--name $dockername --net=timnet -p 56000:5000 $extraPorts                                       -v /var/run/docker.sock:/var/run/docker.sock                                -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs $dockerImage /bin/bash"
+dockerOptions="--name $dockername --net=timnet -p 56000:5000 $extraPorts                                       -v /var/run/docker.sock:/var/run/docker.sock                                -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs $dockerImage  $extraCmds" 
 # dockerOptions="--name $dockername --net=timnet -p 56000:5000  -v /lib/x86_64-linux-gnu/libdevmapper.so.1.02.1:/lib/x86_64-linux-gnu/libdevmapper.so.1.02.1   -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/bin/docker -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash"
 
 docker stop $dockername > /dev/null 2>&1
@@ -21,6 +33,19 @@ else
 fi
 sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp
 
+if hash unzip; then
+    echo "unzip ok"
+else
+    sudo apt-get install -y unzip
+fi
+
+
+if [ ! -d MIRToolbox ]; then
+  echo "GET MIR"
+  wget --quiet https://www.dropbox.com/s/hvufxm3t8o1r2k4/MIRToolbox.zip
+  unzip -o MIRToolbox.zip 1>/dev/null
+  rm -rf MIRToolbox.zip
+fi
 
 
 sudo chmod 777 /tmp

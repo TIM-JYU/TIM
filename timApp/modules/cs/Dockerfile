@@ -12,6 +12,9 @@ env LANGUAGE en_US:en
 env LC_ALL en_US.UTF-8
 run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
 
+# tuntuu valittavan koko ajan jos ei tätä asenna
+run apt-get update
+run apt-get install -y apt-utils
 
 # Asennetaan python, pip ja flask 
 
@@ -171,15 +174,6 @@ ENV MYPASSWORD password
 # jos sellainen on.
 # run usermod -p '!' root
 # run passwd -l root
-
-
-# ssh testaamista varten
-run apt-get update
-run apt-get install -y openssh-server
-run mkdir /var/run/sshd
-run echo 'root:test' | chpasswd
-run sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-expose 22
 
 #run chmod 777 /etc/ssh
 #run chmod 777 /etc/ssh/*

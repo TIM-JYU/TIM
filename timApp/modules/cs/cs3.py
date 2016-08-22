@@ -121,7 +121,7 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin
 
 
 def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8",
-         extra="", ulimit=None):
+         extra="", ulimit=None, noX11=False):
     """
     Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed
     to fullfill the run inside docker.
@@ -171,7 +171,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
              "/tmp/uhome/" + udir + "/:/home/agent/",
              # dargs = ["/cs/docker-run-timeout.sh", "10s", "-v", "/opt/cs:/cs/:ro", "-v", "/tmp/uhome/" + udir + ":/home/agent/",
              # "-w", "/home/agent", "ubuntu", "/cs/rcmd.sh", urndname + ".sh"]
-             "-w", "/home/agent", "cs3", "/cs/rcmd.sh", urndname + ".sh"]
+             "-w", "/home/agent", "cs3", "/cs/rcmd.sh", urndname + ".sh", str(noX11)]
     print(dargs)
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
     try:
@@ -847,6 +847,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             userargs = get_json_param(query.jso, "input", "userargs", None)
             is_doc = get_json_param3(query.jso, "input", "markup", "document", False)
 
+            noX11 = get_json_param(query.jso, "markup", "noX11", False)
             extra_files = get_json_param(query.jso, "markup", "extrafiles", None)
             if not extra_files:
                 extra_files = get_json_param(query.jso, "markup", "-extrafiles", None)
@@ -1395,7 +1396,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 code, out, err, pwd = (0, "", ("Compiled " + filename), "")
             elif ttype == "jypeli":
                 code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                           uargs=userargs, ulimit="ulimit -f 80000")
+                                           uargs=userargs, ulimit="ulimit -f 80000", noX11=noX11)
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()
                 err = re.sub("^ALSA.*\n", "", err, flags=re.M)
@@ -1437,7 +1438,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 bmplname = "run/capture.png"
                 runcmd = ["java", "sample.Runner", javaclassname, "--captureName", bmplname]
                 runcmd.extend(a)
-                code, out, err, pwd = run2(runcmd, cwd=prgpath, timeout=10, env=env, stdin=stdin, uargs=userargs)
+                code, out, err, pwd = run2(runcmd, cwd=prgpath, timeout=10, env=env, stdin=stdin, uargs=userargs, noX11=noX11)
                 print(err)
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()
@@ -1465,7 +1466,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 debug_str("r ajoon")
                 code, out, err, pwd = run2(["Rscript", "--save", "--restore", pure_exename], cwd=prgpath, timeout=10,
                                            env=env, stdin=stdin,
-                                           uargs=userargs, ulimit="ulimit -f 80000")
+                                           uargs=userargs, ulimit="ulimit -f 80000", noX11=noX11)
                 debug_str("r ajo valmis")
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()
@@ -1489,7 +1490,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             elif ttype == "alloy":
                 runcmd = ["java", "-cp", "/cs/java/alloy-dev.jar:/cs/java", "RunAll", pure_exename]
-                code, out, err, pwd = run2(runcmd, cwd=prgpath, timeout=10, env=env, stdin=stdin, uargs=userargs)
+                code, out, err, pwd = run2(runcmd, cwd=prgpath, timeout=10, env=env, stdin=stdin, uargs=userargs, noX11=noX11)
                 print(err)
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()
@@ -1507,7 +1508,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif ttype == "comtest":
                 eri = -1
                 code, out, err, pwd = run2(["nunit-console", "-nologo", "-nodots", testdll], cwd=prgpath, timeout=10,
-                                           env=env)
+                                           env=env, noX11=noX11)
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()
                 # print(code, out, err)
@@ -1545,14 +1546,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 # linenr_end = " "
                 if ttype == "jcomtest":
                     code, out, err, pwd = run2(["java", "org.junit.runner.JUnitCore", testdll], cwd=prgpath, timeout=10,
-                                               env=env)
+                                               env=env, noX11=noX11)
                 if ttype == "junit":
                     code, out, err, pwd = run2(["java", "org.junit.runner.JUnitCore", javaclassname], cwd=prgpath,
                                                timeout=10,
-                                               env=env)
+                                               env=env, noX11=noX11)
                 if ttype == "ccomtest":
                     code, out, err, pwd = run2(["java", "-jar", "/cs/java/comtestcpp.jar", "-nq", testcs], cwd=prgpath,
-                                               timeout=10, env=env)
+                                               timeout=10, env=env, noX11=noX11)
                     # linenr_end = ":"
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()
@@ -1614,7 +1615,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     try:
                         code, out, err, pwd = run2(cmd, cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                                    uargs=get_param(query, "runargs", "") + " " + userargs,
-                                                   extra=extra)
+                                                   extra=extra, noX11=noX11)
                     except Exception as e:
                         print(e)
                         code, out, err = (-1, "", str(e).encode())
@@ -1634,13 +1635,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     # code, out, err = run2(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
                     code, out, err, pwd = run2(["java", "-cp", classpath, javaclassname], cwd=prgpath, timeout=10,
                                                env=env, stdin=stdin, ulimit="ulimit -f 10000",
-                                               uargs=userargs)
+                                               uargs=userargs, noX11=noX11)
                 elif ttype == "scala":
                     print("scala: ", classname)
                     # code, out, err = run2(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
                     code, out, err, pwd = run2(["scala", classname], cwd=prgpath, timeout=10,
                                                env=env, stdin=stdin, ulimit="ulimit -f 10000",
-                                               uargs=userargs)
+                                               uargs=userargs, noX11=noX11)
                 elif ttype == "shell":
                     print("shell: ", pure_exename)
                     try:
@@ -1655,7 +1656,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         # code, out, err = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
                         code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=timeout, env=env, stdin=stdin,
                                                    uargs=userargs,
-                                                   extra=extra)
+                                                   extra=extra, noX11=noX11)
                         print(pwd)
                     except OSError as e:
                         print(e)
@@ -1668,7 +1669,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     print("Run1: ", imgsource, pngname)
                     try:
                         code, out, err, pwd = run2(cmd, cwd=prgpath, timeout=10, env=env, stdin=stdin, uargs=userargs,
-                                                   extra=extra)
+                                                   extra=extra, noX11=noX11)
                     except Exception as e:
                         print(e)
                         code, out, err = (-1, "", str(e).encode())
@@ -1687,29 +1688,29 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "jjs":
                     print("jjs: ", exename)
                     code, out, err, pwd = run2(["jjs", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                               uargs=userargs)
+                                               uargs=userargs, noX11=noX11)
                 elif ttype == "sql":
                     print("sql: ", exename)
                     code, out, err, pwd = run2(["sqlite3", dbname], cwd=prgpath, timeout=timeout, env=env, stdin=stdin,
-                                               uargs=userargs)
+                                               uargs=userargs, noX11=noX11)
                 elif ttype == "psql":
                     print("psql: ", exename)
                     code, out, err, pwd = run2(["psql", "-h", dbname, "-U", "$psqluser"], cwd=prgpath, timeout=10,
                                                env=env, stdin=stdin,
-                                               uargs=userargs)
+                                               uargs=userargs, noX11=noX11)
                     # code, out, err = run2(["sqlite3",dbname], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs, code='iso-8859-1')
                 elif ttype == "cc":
                     print("c: ", exename)
                     code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                               uargs=userargs)
+                                               uargs=userargs, noX11=noX11)
                 elif ttype == "c++":
                     print("c++: ", exename)
                     code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                               uargs=userargs)
+                                               uargs=userargs, noX11=noX11)
                 elif ttype == "py":
                     print("py: ", exename)
                     code, out, err, pwd = run2(["python3", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                               uargs=userargs)
+                                               uargs=userargs, noX11=noX11)
                     if imgsource and pngname:
                         image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
                         if e: err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
@@ -1721,7 +1722,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "lua":
                     print("lua: ", exename)
                     code, out, err, pwd = run2(["lua", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                               uargs=userargs)
+                                               uargs=userargs, noX11=noX11)
                     if imgsource and pngname:
                         image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
                         if e: err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
@@ -1734,13 +1735,20 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     print("octave: ", exename)
                     code, out, err, pwd = run2(["octave", "-qf", pure_exename], cwd=prgpath, timeout=10, env=env,
                                                stdin=stdin,
-                                               uargs=userargs, ulimit="ulimit -f 80000")
+                                               uargs=userargs, ulimit="ulimit -f 80000", noX11=True)
+                    print("err1: ",err)
+                    err = err.decode("utf-8")
+                    print("err1s: ",err)
+                    err = re.sub("^octave: unable to open X11 DISPLAY.*\n", "", err, flags=re.M)
+                    err = re.sub("^octave: disabling GUI features.*\n", "", err, flags=re.M)
+                    err = err.encode("utf-8")
+                    print("err2: ",err)
                     if imgsource and pngname:
-                        image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
+                        image_ok, e = copy_file(filepath + "/" + imgsource, pngname, False, is_optional_image)
                         if e: err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
                         # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
                         print(is_optional_image, image_ok)
-                        remove(imgsource)
+                        # remove(imgsource)
                         if image_ok: web["image"] = "/csimages/cs/" + rndname + ".png"
                     if wavsource and wavdest:
                         wav_ok, e = copy_file(filepath + "/" + wavsource, wavdest, True, is_optional_image)
@@ -1753,13 +1761,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     print("clips: ", exename)
                     code, out, err, pwd = run2(["sbcl", "--script", pure_exename], cwd=prgpath, timeout=10, env=env,
                                                stdin=stdin,
-                                               uargs=userargs)
+                                               uargs=userargs, noX11=noX11)
                     # code, out, err = run(["sbcl", "--noinform --load " + exename + " --eval '(SB-EXT:EXIT)'"], timeout=10, env=env)
                     # code, out, err = run(["clisp",exename], timeout=10, env=env)
                 elif ttype == "py2":
                     print("py2: ", exename)
                     code, out, err, pwd = run2(["python2", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                               uargs=userargs)
+                                               uargs=userargs, noX11=noX11)
                 elif ttype == "text" or ttype == "xml" or ttype == "css":
                     print(ttype, ": ", csfname)
                     showname = filename
@@ -1768,7 +1776,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "fs":
                     print("Exe: ", exename)
                     code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                               uargs=userargs)
+                                               uargs=userargs, noX11=noX11)
                 elif ttype == "md":
                     code, out, err = (0, "".encode(), "".encode())
                 elif ttype == "js":
@@ -1784,7 +1792,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "cs":
                     print("Exe: ", exename)
                     code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                               uargs=userargs)
+                                               uargs=userargs, noX11=noX11)
                 elif ttype == "upload":
                     code, out, err = (0, "".encode(), "".encode())
                 else:
@@ -1827,10 +1835,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 exout = re.compile(expect_output.rstrip('\n'), re.M)
                 if exout.match(out): give_points(points_rule, "output", 1)
             readpoints = get_points_rule(points_rule, "readpoints", None)
+            readpointskeep = get_points_rule(points_rule, "readpointskeep", False)
             if readpoints:
                 m = re.search(readpoints, out)
                 if m and m.group(1):
-                    out = re.sub(m.group(0), "", out)
+                    if not readpointskeep:
+                        out = re.sub(m.group(0), "", out)
                     try:
                         p = float(m.group(1))
                         give_points(points_rule, "output", p)
