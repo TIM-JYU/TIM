@@ -186,36 +186,39 @@ imagexApp.directiveTemplate = function () {
     if ( imagexApp.TESTWITHOUTPLUGINS ) return '';
     return '<div class="csRunDiv no-popup-menu">' +
         '<p>Header comes here</p>' +
-	'<p ng-if="stem" class="stem" >{{stem}}</p>' +     
+	    '<p ng-if="stem" class="stem" >{{stem}}</p>' +
         '<div>'+
-        '<canvas id="canvas" tabindex="1" width={{canvaswidth}} height={{canvasheight}} no-popup-menu ></canvas>'+
-        '<div class="content">'+
-        '</div>'+
+            '<canvas id="canvas" tabindex="1" width={{canvaswidth}} height={{canvasheight}} no-popup-menu ></canvas>'+
+            '<div class="content">'+
+            '</div>'+
         '</div>'+
         '<button ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.save();">{{button}}</button>&nbsp&nbsp' +
         '<button ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.showAnswer();">Showanswer</button>&nbsp&nbsp' +
         '<a ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.resetExercise();">Reset</a>&nbsp&nbsp' +
         '<a href="" ng-if="muokattu" ng-click="imagexScope.initCode()">{{resetText}}</a>' +
         '<input ng-show="preview" id="coords" />' +
+
         '<label ng-show="freeHandVisible">FreeHand <input type="checkbox" name="freeHand" value="true" ng-model="freeHand"></label> ' +
         '<span>' +
-        '<span ng-show="freeHand">' +
-        '<label ng-show="freeHandLineVisible">Line <input type="checkbox" name="freeHandLine" value="true" ng-model="lineMode"></label> ' +
-        '<input ng-show="true" id="freeWidth" size="1"  style="width: 1.2em" ng-model="w" /> ' +
-        '<input ng-style="{\'background-color\': color}" ng-model="color" size="4" />&nbsp; ' +
-        '<span style="background-color: red; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'red\');">R</span>' +
-        '<span style="background-color: blue; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'blue\');">B</span>' +
-        '<span style="background-color: yellow; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'yellow\');">Y</span>' +
-        '<span style="background-color: green; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'green\');">G</span>' +
-        '&nbsp;' +
-        '<a href="" ng-click="imagexScope.undo()">Undo</a>' +
-        '</span>' +
+            '<span ng-show="freeHand">' +
+                '<label ng-show="freeHandLineVisible">Line <input type="checkbox" name="freeHandLine" value="true" ng-model="lineMode"></label> ' +
+                '<span ng-show="freeHandToolbar">' +
+                    '<input ng-show="true" id="freeWidth" size="1"  style="width: 1.7em" ng-model="w" /> ' +
+                    '<input ng-style="{\'background-color\': color}" ng-model="color" size="4" />&nbsp; ' +
+                    '<span style="background-color: red; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'red\');">R</span>' +
+                    '<span style="background-color: blue; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'blue\');">B</span>' +
+                    '<span style="background-color: yellow; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'yellow\');">Y</span>' +
+                    '<span style="background-color: green; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'green\');">G</span>' +
+                    '&nbsp;' +
+                    '<a href="" ng-click="imagexScope.undo()">Undo</a>' +
+                '</span>' +
+            '</span>' +
         '</span>' +
         '<span class="tries" ng-if="max_tries"> Tries: {{tries}}/{{max_tries}}</span>' +
         '<pre class="" ng-if="error && preview">{{error}}</pre>' +
         '<pre class="" ng-show="result">{{result}}</pre>' +
         '<p class="plgfooter">Here comes footer</p>' +
-        '</div>'
+    '</div>'
 };
 
 
@@ -459,22 +462,24 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.canvas.addEventListener('mouseup', function(event) { th.upEvent(event,event); });
         this.canvas.addEventListener('touchend', function(event) { th.upEvent(event,te(event)); });
 
-        this.canvas.parentElement.parentElement.addEventListener( "keypress", function(event) {
-              var c = String.fromCharCode(event.keyCode);
-              if ( event.keyCode == 26 ) { th.freeHand.popSegment(0) }
-              if ( c == "c" ) { th.freeHand.clear(); th.draw(); }
-              if ( c == "r" ) th.freeHand.setColor("red");
-              if ( c == "b" ) th.freeHand.setColor("blue");
-              if ( c == "y" ) th.freeHand.setColor("yellow");
-              if ( c == "g" ) th.freeHand.setColor("green");
-              if ( c == "+" ) th.freeHand.incWidth(+1);
-              if ( c == "-" ) th.freeHand.incWidth(-1);
-              if ( c == "1" ) th.freeHand.setWidth(1);
-              if ( c == "2" ) th.freeHand.setWidth(2);
-              if ( c == "3" ) th.freeHand.setWidth(3);
-              if ( c == "4" ) th.freeHand.setWidth(4);
-              if ( c == "l" ) th.freeHand.flipLineMode();
-        }, false);
+        if ( scope.freeHandShortCuts)
+            this.canvas.parentElement.parentElement.addEventListener( "keypress", function(event) {
+                  var c = String.fromCharCode(event.keyCode);
+                  if ( event.keyCode == 26 ) { th.freeHand.popSegment(0) }
+                  if ( c == "c" ) { th.freeHand.clear(); th.draw(); }
+                  if ( c == "r" ) th.freeHand.setColor("red");
+                  if ( c == "b" ) th.freeHand.setColor("blue");
+                  if ( c == "y" ) th.freeHand.setColor("yellow");
+                  if ( c == "g" ) th.freeHand.setColor("green");
+                  if ( c == "+" ) th.freeHand.incWidth(+1);
+                  if ( c == "-" ) th.freeHand.incWidth(-1);
+                  if ( c == "1" ) th.freeHand.setWidth(1);
+                  if ( c == "2" ) th.freeHand.setWidth(2);
+                  if ( c == "3" ) th.freeHand.setWidth(3);
+                  if ( c == "4" ) th.freeHand.setWidth(4);
+                  if ( c == "l" ) th.freeHand.flipLineMode();
+                  if ( c == "f" && scope.freeHandShortCut ) { scope.freeHand = !scope.freeHand; scope.$apply()}
+            }, false);
 
         // Lisätty eventlistenereiden poistamiseen.
         /*
@@ -1152,8 +1157,9 @@ imagexApp.initDrawing = function(scope, canvas) {
 
     if (userFixedObjects) {
         for (i = 0; i < userFixedObjects.length; i++) {
+            if ( userFixedObjects[i] )
             try {
-                fixedobjects[i] = new FixedObject(dt, userFixedObjects[i], "fix" + (i+1));
+                fixedobjects.push(new FixedObject(dt, userFixedObjects[i], "fix" + (i+1)));
             } catch (err ) {
                 scope.error += "init fix" + (i+1)+": " + err +"\n";
             }
@@ -1163,8 +1169,9 @@ imagexApp.initDrawing = function(scope, canvas) {
 
     if (userTargets) {
         for (i = 0; i < userTargets.length; i++) {
+            if (userTargets[i])
             try {
-                targets[i] = new Target(dt, userTargets[i], "trg" + (i+1));
+                targets.push(new Target(dt, userTargets[i], "trg" + (i+1)));
             } catch (err) {
                 scope.error += "init trg" + (i+1)+": " + err +"\n";
             }
@@ -1174,12 +1181,14 @@ imagexApp.initDrawing = function(scope, canvas) {
 
     if (userObjects) {
         for (i = 0; i < userObjects.length; i++) {
+            if ( userObjects[i])
             try {
-                objects[i] = new DragObject(dt, userObjects[i], "obj" + (i+1));
+                var newObject = new DragObject(dt, userObjects[i], "obj" + (i+1))
+                objects.push(newObject);
                 if(!scope.drags){
                     scope.drags = [];
                 }
-                scope.drags.push(objects[i]);
+                scope.drags.push(newObject);
             } catch (err) {
                 scope.error += "init obj" + (i+1)+": " + err +"\n";
             }
@@ -1290,12 +1299,18 @@ imagexApp.initScope = function (scope, element, attrs) {
     //timHelper.set(scope,attrs,"preview", false);
     timHelper.set(scope, attrs, "preview", scope.attrs.preview);
 
-    timHelper.set(scope, attrs, "freeHandVisible", false);
-    timHelper.set(scope, attrs, "freeHand", false);
-    timHelper.set(scope, attrs, "freeHandLineVisible", false);
-    timHelper.set(scope, attrs, "freeHandLine", false);
-    timHelper.set(scope, attrs, "freeHandColor", false);
-    timHelper.set(scope, attrs, "freeHandWidth", 2);
+    // Free hand drawing things:
+    timHelper.set(scope, attrs, "freeHand", false); // is free hand drawing on, if "use", it it off, but usable
+    var use = false;
+    if ( scope.freeHand == "use") { scope.freeHand = false; use = true; }
+    timHelper.set(scope, attrs, "freeHandVisible", scope.freeHand || use); // is the checkbox visible
+    timHelper.set(scope, attrs, "freeHandToolbar", true); // is toolbat visible
+    timHelper.set(scope, attrs, "freeHandLineVisible", true); // is line checkbox visible
+    timHelper.set(scope, attrs, "freeHandLine", false); // is line drawing mode on
+    timHelper.set(scope, attrs, "freeHandShortCuts", true); // general shortcuts like r,b tec
+    timHelper.set(scope, attrs, "freeHandShortCut", scope.freeHand || use); // f for toggle freeHand on/off
+    timHelper.set(scope, attrs, "freeHandColor", scope.freeHandDrawing.params.color); //
+    timHelper.set(scope, attrs, "freeHandWidth", scope.freeHandDrawing.params.w);
     timHelper.set(scope, attrs, "state.freeHandData", null);
 
 
@@ -1438,6 +1453,8 @@ ImagexScope.prototype.resetExercise = function(){
     "use strict";
     // Set scope.
     var $scope = this.scope;
+    $scope.error = "";
+    $scope.result = "";
     $scope.freeHandDrawing.clear();
     // Objects dragged by user.
     var dragtable = $scope.drags;
