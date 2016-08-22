@@ -1736,13 +1736,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     code, out, err, pwd = run2(["octave", "-qf", pure_exename], cwd=prgpath, timeout=10, env=env,
                                                stdin=stdin,
                                                uargs=userargs, ulimit="ulimit -f 80000", noX11=True)
-                    print("err1: ",err)
-                    err = err.decode("utf-8")
-                    print("err1s: ",err)
-                    err = re.sub("^octave: unable to open X11 DISPLAY.*\n", "", err, flags=re.M)
-                    err = re.sub("^octave: disabling GUI features.*\n", "", err, flags=re.M)
-                    err = err.encode("utf-8")
-                    print("err2: ",err)
+                    if err:
+                        print("err1: ",err)
+                        err = err.decode("utf-8")
+                        print("err1s: ",err)
+                        err = re.sub("^octave: unable to open X11 DISPLAY.*\n", "", err, flags=re.M)
+                        err = re.sub("^octave: disabling GUI features.*\n", "", err, flags=re.M)
+                        err = err.encode("utf-8")
+                        print("err2: ",err)
                     if imgsource and pngname:
                         image_ok, e = copy_file(filepath + "/" + imgsource, pngname, False, is_optional_image)
                         if e: err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")

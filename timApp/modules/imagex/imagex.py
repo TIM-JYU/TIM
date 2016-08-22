@@ -107,7 +107,19 @@ class ImagexServer(tim_server.TimServer):
 
     # Creates accurate state for answer, ie. changes the object positions.
     def create_state_imagex(self, markup, drags):
-        # Original objects
+        #Begin by removing unnecessary parts from objects.
+        for object in markup['objects']:
+            # Remove unnecessary keys from dict. only id and position are needed in javascript.
+            # additional dict for storing removable keys.
+            remove = []
+            for key in object.keys():
+                if key != 'position' and key != "id":
+                    remove.append(key)
+            # Remove keys from markup in a loop.
+            for key in remove:
+                object.pop(key, None)
+
+        # Copy original object positions so the excercise can be reset.
         markup['yamlobjects'] = deepcopy(markup['objects'])
         #print(markup)
         #print(drags)
@@ -115,6 +127,17 @@ class ImagexServer(tim_server.TimServer):
             for drag in drags:
                 if object['id'] == drag['id']:
                     object['position'] = drag['position']
+
+
+        #Remove other unnecessary parts from markup, ie. everything that isnt an object.
+        delete = []
+        for key in markup.keys():
+            if key != "objects" and key != "yamlobjects":
+                delete.append(key)
+        for key in delete:
+            markup.pop(key,None)
+
+        #print("--STATE--" + str(markup))
         return markup
 
     #gets reqs
@@ -130,6 +153,18 @@ class ImagexServer(tim_server.TimServer):
         # Add templates to reqs.
         ret.update(templs)
         return ret
+
+
+    def gettargetattr(self,firsttarget,defaults,attr,default):
+        """
+        Get attr for target. First checked from default, then from
+        the first target. if neither is found return default.
+        """
+        if str(attr) in defaults:
+            return defaults[str(attr)]
+        if str(attr) in firsttarget:
+            return firsttarget[str(attr)]
+        return default
 
 
     def do_answer(self, query: QueryParams):
@@ -154,10 +189,12 @@ class ImagexServer(tim_server.TimServer):
             #print("--state--" + str(query.get_param("state",None)))
             #Student points
             points = 0
+            #get defaults
+            defaults = query.get_param("defaults","")
+            print(defaults)
             max_tries = int(query.get_param("max_tries", 1000000))
             tries = int(query.get_json_param("state", "tries", 0))
             finalanswergiven = query.get_json_param("state","finalanswergiven",False)
-            #tries = int(query.get_json_param("tries",0))
             #Targets dict.
             targets = list(query.get_param("targets",None))
             drags = query.get_json_param("input", "drags", None)
@@ -172,23 +209,17 @@ class ImagexServer(tim_server.TimServer):
                     for selectkey in target['points'].keys():
                         for drag in drags:
                             if drag['id'] == selectkey:
-                                # Check if image is inside target, award points.
-                                #Take values from the first taget if they are not found.
+                                #Check if needed values exist for target. If they dont, read them from defaults
+                                #or first target. # TODO: NOT FROM FIRST!!!
                                 if 'type' not in target:
-                                    if 'type' in targets[0]: # TODO: TÄMÄ ON VÄÄRIN, SE ON EDELLISEN
-                                        target['type'] = targets[0]['type']
-                                    else:
-                                        target['type'] = "rectangle"
+                                    target['type'] = self.gettargetattr(targets[0], defaults, "type", "") # TODO: vieläkin väärin, pitää ottaa edellisestä ei 0:sta!
                                 if 'a' not in target:
-                                    if 'a' in targets[0]:
-                                        target['a'] = targets[0]['a']
-                                    else:
-                                        target['a'] = 0
-
+                                    target['a'] = self.gettargetattr(targets[0], defaults, "a", 0)
                                 if 'size' not in target:
-                                    target['size'] = targets[0]['size']
+                                    target['size'] = self.gettargetattr(targets[0],defaults,"size",[10])
                                 if 'position' not in target:
-                                    target['position'] = targets[0]['position']
+                                    target['position'] = self.gettargetattr(targets[0], defaults, "position", [0,0])
+                                # Check if image is inside target, award points.
                                 if isInside(target['type'],target['size'],target['a'],target['position'],drag["position"]):
                                     #print("--targetpoints--" + str(target['target']['points']))
                                     #print(target['target']['points'][selectkey])

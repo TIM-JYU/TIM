@@ -373,7 +373,8 @@ imagexApp.initDrawing = function(scope, canvas) {
 
         this.downEvent = function(event, p) {
             this.mousePosition = getPos(this.canvas,p);
-            this.activeDragObject = areObjectsOnTopOf(this.mousePosition, this.drawObjects, 'dragobject');
+            this.activeDragObject = 
+                areObjectsOnTopOf(this.mousePosition, this.drawObjects, 'dragobject');
 
             if (this.activeDragObject) {
                 this.canvas.style.cursor ="pointer";
@@ -440,11 +441,13 @@ imagexApp.initDrawing = function(scope, canvas) {
                 }
                 this.activeDragObject = null;
                 this.draw();
+
             } else if ( mouseDown ) {
                 this.canvas.style.cursor ="default";
                 mouseDown = false;
                 this.freeHand.endSegment();
             }
+            this.draw(); // TODO: Miksi tämä on täällä?
         };
 
         function te(event) {
@@ -922,16 +925,24 @@ imagexApp.initDrawing = function(scope, canvas) {
             init:
                 function (initValues) {
                     
-                    this.borderGap = 3 ;
-                    // initValues.textboxproperties = getValue(initValues.textboxproperties, {});
+                    this.margins = getValueDef(initValues, "textboxproperties.margins", [3]);
+                    if (typeof this.margins === 'number') {
+                        this.margin = this.margins;
+                        this.margins = [];
+                        this.margins.push(this.margin); 
+                        
+                    }
+                    this.topMargin = this.margins[0];
+                    this.rightMargin = getValue(this.margins[1], this.topMargin);
+                    this.bottomMargin = getValue(this.margins[2], this.topMargin);
+                    this.leftMargin = getValue(this.margins[3], this.rightMargin);
+                    
                     this.type = getValueDef(initValues, "type", "textbox");
                     if (this.type === 'img' || this.type === 'vector') {
                         this.textBoxOffset = 
                             getValueDef(initValues, "textboxproperties.position", [0, 0]);
                         this.x = getValue( this.textBoxOffset[0], 0);
                         this.y = getValue( this.textBoxOffset[1], 0); }
-
-
 
                     var fontDraw = document.createElement("canvas");
                     // TODO: sopessa voisi olla alustusken aikana yksi dummy canvas
@@ -948,12 +959,13 @@ imagexApp.initDrawing = function(scope, canvas) {
                     for (var i = 0; i < this.lines.length; i++) {
                         lineWidths[i] = auxctx.measureText(this.lines[i]).width;
                     }
-                    this.textwidth = Math.max(lineWidths);
-                    this.textHeight = parseInt(auxctx.font, 10);
+                    this.textwidth = Math.max(...lineWidths);
+                    this.textHeight = parseInt(auxctx.font, 10)*1.1;
                     this.textBoxSize = getValueDef(initValues, "textboxproperties.size", []);
-                    this.r1 = getValue(this.textBoxSize[0], this.textwidth + 2 * this.borderGap);
-                    this.r2 = getValue(this.textBoxSize[1],
-                                       (this.textHeight * this.lines.length) + 3 * this.borderGap);
+                    this.r1 = getValue(this.textBoxSize[0], 
+                                       this.textwidth + this.leftMargin + this.rightMargin);
+                    this.r2 = getValue(this.textBoxSize[1], (this.textHeight * this.lines.length) 
+                                       + this.topMargin + this.bottomMargin);
                     this.borderColor = getValueDef(initValues, 
                                                    "textboxproperties.borderColor", 'Black');
                     this.fillColor = getValueDef(initValues,
@@ -1013,9 +1025,9 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.ctx.fillStyle = this.textColor;
 
                     // täällä laitetaan tekstiä
-                    var textStart = this.borderGap;
+                    var textStart = this.topMargin;
                     for (var i = 0; i < this.lines.length; i++) {
-                        this.ctx.fillText(this.lines[i], this.borderGap, textStart);
+                        this.ctx.fillText(this.lines[i], this.leftMargin, textStart);
                         textStart += this.textHeight;
                     }
         //            this.ctx.fillText(this.text, this.borderGap, this.borderGap);
@@ -1493,6 +1505,7 @@ ImagexScope.prototype.doSave = function(nosave) {
             'freeHandData': this.scope.freeHandDrawing.freeDrawing
         }
     };
+        console.log(params);
 
     if (nosave) params.input.nosave = true;
     var url = "/imagex/answer";
