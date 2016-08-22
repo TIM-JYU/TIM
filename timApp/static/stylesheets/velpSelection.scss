@@ -110,6 +110,7 @@
     height: 22em;
     position: absolute;
 }
+
 /*
 #searchVelps {
     width: 11em;
@@ -303,6 +304,12 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
     float: left;
     border: 0;
 }
+.velpInfoText {
+    font-size: x-small;
+    font-weight: lighter;
+    line-height: 100%;
+    word-break: keep-all;
+}
 
 .velpInfo input.points{
     background: transparent;
@@ -383,6 +390,7 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
     text-align: left;
     word-wrap: break-word;
     white-space: normal;
+    min-height: 5em;
     width: 18em;
     position: absolute;
     display: inline-block;
@@ -391,6 +399,9 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
     -webkit-box-shadow: 2px 6px 16px -5px rgba(0,0,0,0.6);
     -moz-box-shadow: 2px 6px 16px -5px rgba(0,0,0,0.6);
     box-shadow: 2px 6px 16px -5px rgba(0,0,0,0.6);
+}
+.annotationVisibleText{
+    font-size: 0.9rem;
 }
 
 .annotation-info em {
@@ -501,6 +512,10 @@ label.disabled {
 
 .emphasise.new {
     background: lightskyblue;
+}
+
+.emphasise.inactive {
+    background: whitesmoke;
 }
 
 .clickable-icon {

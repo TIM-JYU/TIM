@@ -1,20 +1,31 @@
-<!-- Pop over element --><span class="annotation-element" ><span ng-show="show" ng-click="updateVelpZIndex()"
+<!-- Pop over element --><span class="annotation-element"><span   ng-init="showHidden=newannotation" ng-show="show" ng-click="updateVelpZIndex()"
                                                                 ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]"
-                                                                >
+                                                                ng-keydown="keyDownFunc($event)" ng-keyup="keyUpFunc($event)">
     <span class="fulldiv">
         <span class="div-90 annTopSection">
             <p><span class="annHeader"><strong>{{ velp }}</strong></span></p>
-            <p><a class="username" href="mailto:{{ email }}">{{ annotator }}</a>
+            <p ng-show="showHidden"><a class="username" href="mailto:{{ email }}">{{ annotator }}</a>
                     <span class="timestamp" title="{{ creationtime }}">{{ timesince }}</span></p>
-            <p><label>Points: <input type="number" ng-model="points" ng-value="points" ng-disabled="checkRights()"
-                                     ng-change="changePoints(points)"/></label></p>
         </span>
-
         <span class="div-10">
             <span title="Close" class="float-right glyphicon glyphicon-remove clickable-icon closeAnn"
-                  ng-click="toggleAnnotation()"></span>
+                  ng-click="toggleAnnotation();showHidden=false"></span>
         </span>
     </span>
+
+
+        <div ng-mouseenter="showHidden=true;updateVelpZIndex()">
+            <div ng-hide="showHidden">
+              <div ng-show="points != null">
+                <p><label>Points: {{ points }}</label></p>
+            </div>
+                </div>
+            <div ng-show="showHidden">
+            <p ng-hide="checkRights() || !allowChangePoints()"><label>Points: <input type="number" ng-model="points" ng-value="points" ng-disabled="checkRights()"
+                                     ng-change="changePoints(points)"/></label></p>
+             <p ng-show="checkRights()" ><label ng-hide="points == null">Points:  {{ points }}</label></p>
+            </div>
+
     <span class="fulldiv">
         <ul class="comments">
             <li ng-repeat="comment in comments">
@@ -28,30 +39,54 @@
                 <!--strong>{{ comment["commenter_username"] }}</strong-->
                 </li>
         </ul>
-        <textarea placeholder="Add comment" ng-model="newComment" autofocus></textarea>
-    </span>
 
-    <div>
-        <form class="form-inline adjustAnnForm">
-            <div class="form-group">
-                <label ng-class="{disabled: checkRights()}">Visible to:</label>
-                <select ng-model="visible_options.value" ng-disabled="checkRights()"
-                        ng-options="v as visible_options.names[v-1] for v in visible_options.values">
-                </select>
-                <div ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
-                     uib-popover="'Just me' means that the annotation is visible only to yourself. 'Document owner' refers to the person or group who has been named as the document owner. 'Teachers' refers to the users that have teacher access to this document. 'Everyone' means that the annotation is visible to everyone who can view the assessed content."
-                     popover-placement="left">
+    </span>
+    <div ng-show="showHidden" >
+        <textarea placeholder="Add comment" ng-model="newComment" ></textarea>
+        <div>
+            <form class="form-inline adjustAnnForm">
+                <div class="form-group">
+
+                    <div ng-hide="checkRights()">
+                        <label ng-class="{disabled: checkRights()}"><div title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></div></label>
+                        <select ng-model="visible_options.value" ng-disabled="checkRights()"
+                            ng-options="v as visible_options.names[v-1] for v in visible_options.values">
+                        </select>
+                        <div ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
+                         uib-popover="'Just me' means that the annotation is visible only to yourself. 'Document owner' refers to the person or group who has been named as the document owner. 'Teachers' refers to the users that have teacher access to this document. 'Everyone' means that the annotation is visible to everyone who can view the assessed content."
+                         popover-placement="left">
+                        </div>
+                    </div>
+
+                    <label ng-show="checkRights()" class="annotationVisibleText">
+                        <div title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></div>
+                        {{ visible_options.names[visible_options.value - 1] }}
+                        <div ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
+                         uib-popover="'Just me' means that the annotation is visible only to yourself. 'Document owner' refers to the person or group who has been named as the document owner. 'Teachers' refers to the users that have teacher access to this document. 'Everyone' means that the annotation is visible to everyone who can view the assessed content."
+                         popover-placement="left">
+                        </div>
+                    </label>
+
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
     <span>
-        <button class="saveChanges timButton" ng-disabled="!checkIfChanged()" ng-click="saveChanges()">Save changes
+        <button class="saveChanges timButton" ng-show="checkIfChanged()" ng-click="saveChanges()">Save changes
         </button>
-    </span><span class="annDelAnnotation" title="Delete annotation"
-                 ng-class="['delAnnotation', 'float-right', 'glyphicon', 'glyphicon-trash', 'clickable-icon', {hide: comments.length > 1} ]"
-                 ng-hide="checkRights()"
-                 ng-click="deleteAnnotation()"></span>
+    </span>
+        <div ng-show="showHidden">
+        <span class="annDelAnnotation" title="Delete annotation"
+                     ng-class="['delAnnotation', 'float-right', 'glyphicon', 'glyphicon-trash', 'clickable-icon', {hide: comments.length > 1} ]"
+                     ng-hide="checkRights()"
+
+                     ng-click="deleteAnnotation()"></span>
+        </div>
+         <div class="annotationVisibleText" ng-hide="showHidden">
+            {{ visible_options.names[visible_options.value - 1] }}
+        </div>
+    </div>
+
 </span></span><!--
-Highlighted text--><span ng-click="toggleAnnotation()" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
+Highlighted text--><span ng-click="showHidden=false;toggleAnnotation()" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
 {neutral: points == 0, negative: points < 0, positive: points > 0}]" ng-transclude="true"></span>

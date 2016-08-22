@@ -13,6 +13,7 @@ var angular;
 var timApp = angular.module('timApp');
 /**
  * Angular directive for phrase selection
+ * @lends module:velpSummary
  */
 timApp.directive('velpSummary', function () {
     "use strict";
@@ -28,6 +29,11 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
     var console = $window.console;
     $scope.settings = {selectedAll: false};
 
+    /**
+     * Toggles annotation in document
+     * @method toggleAnnotation
+     * @param annotation - annotation to toggle
+     */
     $scope.toggleAnnotation = function (annotation) {
         console.log("Annotation");
         $scope.$parent.toggleAnnotation(annotation);
@@ -35,15 +41,18 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
 
     /**
      * Get total number of points
+     * @method getTotalPoints
      * @returns {number}
      */
-    $scope.getTotalPoints = function () {
+    $scope.getTotalPoints = function (annotations) {
         var p = 0;
-        if ($scope.annotations === undefined)
+        if (annotations === undefined)
             return p;
 
-        for (var i = 0; i < $scope.annotations.length; i++) {
-            p += $scope.annotations[i].points;
+        for (var i = 0; i < annotations.length; i++) {
+
+                p += $scope.annotations[i].points;
+
         }
         //cast back to a number, the string has trailing zeros.
         return Number(p.toPrecision(4));
@@ -51,6 +60,7 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
 
     /**
      * Check all annotations in velp summary.
+     * @method checkAll
      */
     $scope.checkAll = function () {
         angular.forEach($scope.annotations, function (a) {
