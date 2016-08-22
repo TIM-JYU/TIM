@@ -38,6 +38,7 @@ class VelpTest(TimRouteTest):
         self.assertNotEqual(-1, j['id'])
         resp = self.get('/{}/get_default_velp_group'.format(str(doc1_id)), as_json=True)
         self.assertNotEqual(-1, resp['id'])
+        #self.assertEqual(-1, resp['id'])
 
         # Create new velp group (after default group) so we should have 2 for document in total
         resp = self.json_post('/{}/create_velp_group'.format(str(doc1_id)),
@@ -81,6 +82,31 @@ class VelpTest(TimRouteTest):
         # Try to get (not existing) default velp group and create new default group for document without owner rights
         resp = self.get('/{}/get_default_velp_group'.format(str(doc2_id)), as_json=True)
         self.assertEqual(-1, resp['id'])
-        self.assertDictResponse({'error': 'User is not owner of current document'},
+        self.assertDictResponse({'error': 'User has no edit access to current document'},
                                 self.json_post('/{}/create_default_velp_group'.format(str(doc2_id))),
                                 expect_status = 403)
+
+
+        # There are no velps added to any groups so getting velps for doc1 should give nothing
+        resp = self.get('/{}/get_velps'.format(str(doc1_id)), as_json=True)
+        self.assertEqual(len(resp), 0)
+
+        # Add new velp to doc1 default velp group and check velps for that document after
+        testdata = {'content':'test velp 1', 'velp_groups':[11], 'language_id':'FI'} # doc1 default group id is 11
+        resp = self.json_post('/add_velp', testdata)
+        j = self.assertResponseStatus(resp, return_json=True)
+        self.assertEqual(j, 1) # Added velp's id is 1
+        resp = self.get('/{}/get_velps'.format(str(doc1_id)), as_json=True)
+        print(resp)
+        self.assertEqual(len(resp), 1)
+        self.assertEqual(resp[0]['content'], "test velp 1")
+
+        # Change just added velp's content
+        testdata = {'content':'Is Zorg now', 'velp_groups':[11], 'language_id':'FI', 'id':1} # doc1 default group id is 11
+        resp = self.json_post('/{}/update_velp'.format(str(doc1_id)), testdata)
+        self.assertResponseStatus(resp, return_json=True)
+        resp = self.get('/{}/get_velps'.format(str(doc1_id)), as_json=True)
+        self.assertEqual(resp[0]['content'], "Is Zorg now")
+
+
+
