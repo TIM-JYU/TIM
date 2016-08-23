@@ -13,6 +13,8 @@ imagexApp.directive('imagexRunner',
             return imagexApp.directiveFunction(); }]
 );
 
+var globalPreviewColor = "#fff"
+
 
 imagexApp.directiveFunction = function() {
     "use strict";
@@ -196,7 +198,7 @@ imagexApp.directiveTemplate = function () {
         '<button ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.showAnswer();">Showanswer</button>&nbsp&nbsp' +
         '<a ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.resetExercise();">Reset</a>&nbsp&nbsp' +
         '<a href="" ng-if="muokattu" ng-click="imagexScope.initCode()">{{resetText}}</a>' +
-        '<input ng-show="preview" id="coords" />' +
+        '<input colorpicker="hex" type="text" ng-style="{\'background-color\': previewColor}" ng-model="previewColor" ng-show="preview" id="coords" ng-click="imagexScope.getPColor();" />' +
 
         '<label ng-show="freeHandVisible">FreeHand <input type="checkbox" name="freeHand" value="true" ng-model="freeHand"></label> ' +
         '<span>' +
@@ -204,11 +206,11 @@ imagexApp.directiveTemplate = function () {
                 '<label ng-show="freeHandLineVisible">Line <input type="checkbox" name="freeHandLine" value="true" ng-model="lineMode"></label> ' +
                 '<span ng-show="freeHandToolbar">' +
                     '<input ng-show="true" id="freeWidth" size="1"  style="width: 1.7em" ng-model="w" /> ' +
-                    '<input ng-style="{\'background-color\': color}" ng-model="color" size="4" />&nbsp; ' +
-                    '<span style="background-color: red; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'red\');">R</span>' +
-                    '<span style="background-color: blue; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'blue\');">B</span>' +
-                    '<span style="background-color: yellow; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'yellow\');">Y</span>' +
-                    '<span style="background-color: green; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'green\');">G</span>' +
+                    '<input colorpicker="hex" id="freeHandColor" type="text" ng-style="{\'background-color\': color}" ng-model="color" size="4"  />&nbsp; ' +
+                    '<span style="background-color: red; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'#f00\');">R</span>' +
+                    '<span style="background-color: blue; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'#00f\');">B</span>' +
+                    '<span style="background-color: yellow; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'#ff0\');">Y</span>' +
+                    '<span style="background-color: #0f0; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'#0f0\');">G</span>' +
                     '&nbsp;' +
                     '<a href="" ng-click="imagexScope.undo()">Undo</a>' +
                 '</span>' +
@@ -325,7 +327,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                             topmostIndex = i;
                             topmostElement = this.drawObjects[i]; }
                     }
-                    if (this.activeDragObject != this.drawObjects[i]  ) {
+                    if (this.activeDragObject != this.drawObjects[i]) {
                         // kutsutaan objektin omaa piirtoa
                         this.drawObjects[i].draw(this.drawObjects[i]); 
                     }
@@ -333,16 +335,22 @@ imagexApp.initDrawing = function(scope, canvas) {
                         if (this.activeDragObject) {
                             var onTopOf = areObjectsOnTopOf(this.activeDragObject,
                                                             this.drawObjects, 'target');
-                            if (onTopOf) onTopOf.color = onTopOf.snapColor;
+                            if (onTopOf && onTopOf.objectCount < onTopOf.maxObjects) {
+                                onTopOf.color = onTopOf.snapColor;
+                                //this.drawObjects[i].objectCount++;
+                            }
                             var onTopOfB = areObjectsOnTopOf(this.drawObjects[i],
                                                              this.drawObjects, 'target');
-                            if (onTopOfB && this.drawObjects[i].id !== this.activeDragObject.id)
+                            if (onTopOfB && this.drawObjects[i] !== this.activeDragObject)
                                 onTopOfB.color = onTopOfB.dropColor;
                         }
                         else {
                             var onTopOfA = areObjectsOnTopOf(this.drawObjects[i],
                                                              this.drawObjects, 'target');
-                            if (onTopOfA) onTopOfA.color = onTopOfA.dropColor;
+                            if (onTopOfA) {
+                                onTopOfA.color = onTopOfA.dropColor;
+                                //onTopOfA.objectCount++;
+                            }
                         }
                     }
 
@@ -350,9 +358,9 @@ imagexApp.initDrawing = function(scope, canvas) {
                         this.drawObjects[i].color = this.drawObjects[i].origColor;
                         
                     } 
+                    //console.log(onTopOf);
                 }
                     
-
                 catch (err) {
                     scope.error += "draw " + this.drawObjects[i].id + ": " + err + "\n";
                 }
@@ -423,6 +431,14 @@ imagexApp.initDrawing = function(scope, canvas) {
 
 
         this.upEvent = function(event, p) {
+            var isObjectInTarget = 
+                areObjectsOnTopOf(this.drawObjects[i], this.drawObjects, 'target');
+            if (isObjectInTarget) {
+                //isObjectInTarget.objectCount++;
+            }
+            
+            //this.drawObjects[i].objectCount--;
+
 
             if (this.activeDragObject) {
                 this.canvas.style.cursor ="default";
@@ -434,27 +450,35 @@ imagexApp.initDrawing = function(scope, canvas) {
                 this.drawObjects.splice(topmostIndex, 1);
                 this.drawObjects.splice(this.drawObjects.length, 0, topmostElement);
 
-                if (isTarget && isTarget.snap ) {
-                    this.activeDragObject.x = isTarget.x + isTarget.snapOffset[0];
-                    this.activeDragObject.y = isTarget.y + isTarget.snapOffset[1];
-                    // isTarget.color = 'yellow';
+                if (isTarget) {
+                    if (isTarget.objectCount < isTarget.maxObjects) {
+                        if (isTarget.snap) {
+                            this.activeDragObject.x = isTarget.x + isTarget.snapOffset[0];
+                            this.activeDragObject.y = isTarget.y + isTarget.snapOffset[1];
+                        }
+                    }
+                    //isTarget.objectCount++;
                 }
+                
+                
+                
+                
                 this.activeDragObject = null;
                 this.draw();
-
+        
             } else if ( mouseDown ) {
                 this.canvas.style.cursor ="default";
                 mouseDown = false;
                 this.freeHand.endSegment();
             }
+
+            
             this.draw(); // TODO: Miksi tämä on täällä?
         };
 
         function te(event) {
             return event.touches[0] || event.changedTouches[0];
         };
-
-
 
 
         this.canvas.style.msTouchAction = 'none';
@@ -466,22 +490,23 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.canvas.addEventListener('touchend', function(event) { th.upEvent(event,te(event)); });
 
         if ( scope.freeHandShortCuts)
-            this.canvas.parentElement.parentElement.addEventListener( "keypress", function(event) {
-                  var c = String.fromCharCode(event.keyCode);
-                  if ( event.keyCode == 26 ) { th.freeHand.popSegment(0) }
-                  if ( c == "c" ) { th.freeHand.clear(); th.draw(); }
-                  if ( c == "r" ) th.freeHand.setColor("red");
-                  if ( c == "b" ) th.freeHand.setColor("blue");
-                  if ( c == "y" ) th.freeHand.setColor("yellow");
-                  if ( c == "g" ) th.freeHand.setColor("green");
-                  if ( c == "+" ) th.freeHand.incWidth(+1);
-                  if ( c == "-" ) th.freeHand.incWidth(-1);
-                  if ( c == "1" ) th.freeHand.setWidth(1);
-                  if ( c == "2" ) th.freeHand.setWidth(2);
-                  if ( c == "3" ) th.freeHand.setWidth(3);
-                  if ( c == "4" ) th.freeHand.setWidth(4);
-                  if ( c == "l" ) th.freeHand.flipLineMode();
-                  if ( c == "f" && scope.freeHandShortCut ) { scope.freeHand = !scope.freeHand; scope.$apply()}
+            // this.canvas.parentElement.parentElement.addEventListener( "keypress", function(event) {
+            this.canvas.addEventListener( "keypress", function(event) {
+                var c = String.fromCharCode(event.keyCode);
+                if ( event.keyCode == 26 ) { th.freeHand.popSegment(0) }
+                if ( c == "c" ) { th.freeHand.clear(); th.draw(); }
+                if ( c == "r" ) th.freeHand.setColor("#f00");
+                if ( c == "b" ) th.freeHand.setColor("#00f");
+                if ( c == "y" ) th.freeHand.setColor("#ff0");
+                if ( c == "g" ) th.freeHand.setColor("#0f0");
+                if ( c == "+" ) th.freeHand.incWidth(+1);
+                if ( c == "-" ) th.freeHand.incWidth(-1);
+                if ( c == "1" ) th.freeHand.setWidth(1);
+                if ( c == "2" ) th.freeHand.setWidth(2);
+                if ( c == "3" ) th.freeHand.setWidth(3);
+                if ( c == "4" ) th.freeHand.setWidth(4);
+                if ( c == "l" ) th.freeHand.flipLineMode();
+                if ( c == "f" && scope.freeHandShortCut ) { scope.freeHand = !scope.freeHand; scope.$apply()}
             }, false);
 
         // Lisätty eventlistenereiden poistamiseen.
@@ -500,6 +525,7 @@ imagexApp.initDrawing = function(scope, canvas) {
     function Empty(objectValues) {}
 
     function DragObject(dt, values, defId) {
+        this.defaultId = defId;
         this.id = getValue(values.id,defId);
         values.id = this.id;
 
@@ -515,6 +541,7 @@ imagexApp.initDrawing = function(scope, canvas) {
             this.position = getValueDef(values, "position", [0, 0]);
             this.x = this.position[0];
             this.y = this.position[1]; }
+        // If default values of type, size, a or position are changed, check also imagex.py
         if (this.type === 'vector') this.size = getValueDef(values, "size", [50, 4]);
         else this.size = getValueDef(values, "size", [10, 10]);
         this.r1 = getValue(this.size[0], 10);
@@ -553,19 +580,23 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.draw = shapeFunctions['pin'].draw;
         // this.draw = shapeFunctions[this.type].draw;
     }
+    
     function Target(dt, values, defId) {
-        this.id = getValue(values.id,defId);
+        this.defaultId = defId;
+        this.id = getValue(values.id, defId);
         values.id = this.id;
         this.name = 'target';
         this.ctx = dt.ctx;
+        this.maxObjects = getValue(values.maxObjects, 1000);
+        this.objectCount = 0;
+        // If default values of type, size, a or position are changed, check also imagex.py
         this.position = getValueDef(values, "position", [0, 0]);
         this.x = this.position[0];
         this.y = this.position[1];
         this.a = -getValueDef(values,"a", 0);
-        this.snap = getValueDef(values, "snap",true);
+        this.snap = getValueDef(values, "snap", true);
         this.snapOffset = getValueDef(values, "snapOffset", [0, 0]);
         this.type = getValueDef(values, "type", 'rectangle', true);
-        // this.type = getValue(values, 'target.type', default, 'rectangle');
         this.size = getValueDef(values, "size", [10, 10]);
         this.imgproperties = {};
         this.textboxproperties = {};
@@ -583,7 +614,9 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.draw = shapeFunctions[this.type].draw;
 
     }
+    
     function FixedObject(dt, values, defId) {
+        this.defaultId = defId;
         this.id = getValue(values.id, defId);
         values.id = this.id;
         if (values.name === 'background') {
@@ -593,6 +626,7 @@ imagexApp.initDrawing = function(scope, canvas) {
             this.type = getValueDef(values, "type", 'rectangle', true);
             this.name = 'fixedobject'; }
         this.ctx = dt.ctx;
+        // If default values of type, size, a or position are changed, check also imagex.py
         this.position = getValueDef(values,"position", [0, 0]);
         this.x = this.position[0];
         this.y = this.position[1];
@@ -1030,9 +1064,6 @@ imagexApp.initDrawing = function(scope, canvas) {
                         this.ctx.fillText(this.lines[i], this.leftMargin, textStart);
                         textStart += this.textHeight;
                     }
-        //            this.ctx.fillText(this.text, this.borderGap, this.borderGap);
-                    
-
                     this.ctx.lineWidth = this.borderWidth;
                     this.ctx.strokeStyle = this.borderColor;
                     this.ctx.stroke();
@@ -1128,13 +1159,22 @@ imagexApp.initDrawing = function(scope, canvas) {
         }
     };
 
-    // Use these to reset excercise if there is no state.
-    scope.yamlobjects = scope.attrs.markup.objects;
+    //scope.yamlobjects = scope.attrs.markup.objects;
 
+    // Use these to reset excercise if there is no state.
+    // This esoteric marking works as a deep copy.
+
+    try {
+        if (scope.attrs.markup.objects)
+            scope.yamlobjects = JSON.parse(JSON.stringify(scope.attrs.markup.objects));
+    } catch (err) {
+        scope.yamlobjects = [];
+    }
     var userObjects = scope.attrs.markup.objects;
+
     if (scope.attrs.state) {
         // used to reset object positions.
-        scope.yamlobjects = scope.attrs.state.markup.objects.yamlobjects;
+       // scope.yamlobjects = scope.attrs.state.markup.objects.yamlobjects;
         // lisätty oikeiden vastausten lukemiseen ja piirtämiseen.
         for (var i = 0; i < userObjects.length; i++) {
             if ( !userObjects[i] ) continue; // looks like the first may be null
@@ -1235,11 +1275,11 @@ imagexApp.initDrawing = function(scope, canvas) {
                         var values = {};
                         // get positions for drawing.
                         values.position = [];
-                        values.position[0] = getValue(userObjects[p].position[0],0);
-                        values.position[1] = getValue(userObjects[p].position[1],0);
+                        values.position[0] = getValue(userObjects[p].position[0], 0);
+                        values.position[1] = getValue(userObjects[p].position[1], 0);
                         values.endposition = [];
-                        values.endposition[0] = getValue(rightdrags[j].position[0],0);
-                        values.endposition[1] = getValue(rightdrags[j].position[1],0);
+                        values.endposition[0] = getValue(rightdrags[j].position[0], 0);
+                        values.endposition[1] = getValue(rightdrags[j].position[1], 0);
                         values.ctx = doc_ctx.getContext("2d");
                         //give context and values for draw function.
                         var line = new Line(dt,values);
@@ -1340,10 +1380,12 @@ imagexApp.initScope = function (scope, element, attrs) {
     if (n > 1) element[0].childNodes[n - 1].outerHTML = 
         timHelper.getHeading(scope, attrs, "footer", 'p class="plgfooter"');
     scope.canvas = element.find("#canvas")[0];//element[0].childNodes[1].childNodes[0];
+    scope.colorInput = element.find("#freeHandColor")[0];//element[0].childNodes[1].childNodes[0];
     imagexApp.initDrawing(scope, scope.canvas);//element[0].childNodes[1].childNodes[0]);
 
     scope.coords = element.find("#coords")[0];
     scope.canvas.coords = scope.coords;
+    scope.previewColor= globalPreviewColor;
     /*
       $(scope.canvas).bind('keydown', function(event) {
       if (event.ctrlKey || event.metaKey) {
@@ -1369,6 +1411,7 @@ function ImagexScope(scope) {
     this.scope = scope;
 }
 
+
 ImagexScope.prototype.watchDrags = function() {
     "use strict";
     // var $scope = this.scope;
@@ -1382,14 +1425,27 @@ ImagexScope.prototype.initCode = function() {
     $scope.result = "";
 };
 
+
 ImagexScope.prototype.undo = function() {
     this.scope.freeHandDrawing.popSegment(0);
 }
+
 
 ImagexScope.prototype.setFColor = function(color) {
     this.scope.freeHandDrawing.setColor(color);
 }
 
+
+
+ImagexScope.prototype.getPColor = function() {
+    if (this.scope.preview) {
+        if ( typeof(editorChangeValue) !== 'undefined' ) {
+            globalPreviewColor = this.scope.coords.value;
+            editorChangeValue(["[a-zA-Z]*[cC]olor[a-zA-Z]*:"], '"' + this.scope.coords.value + '"');
+        }
+    }
+
+}
 
 
 ImagexScope.prototype.save = function() {
@@ -1410,6 +1466,9 @@ ImagexScope.prototype.getDragObjectJson = function() {
     var $scope = this.scope;
     var dragtable = $scope.drags;
     var json = [];
+    if(!dragtable){
+        return json;
+    }
     for(var i = 0; i < dragtable.length ; i++) {
         json.push({"id":dragtable[i].id,
             "position":[dragtable[i].x, dragtable[i].y]});
@@ -1471,14 +1530,17 @@ ImagexScope.prototype.resetExercise = function(){
     // Objects dragged by user.
     var dragtable = $scope.drags;
     // Original objects.
-    var objects = $scope.yamlobjects; // $scope.objects;
+    var objects = $scope.yamlobjects; //$scope.objects;
     // Loop
-    for(var i = 0; i< dragtable.length;i++) {
-        for (var j = 0; j < objects.length; j++) {
-            // If ID:s match set x and y for dragobject to be the original x and y.
-            if (dragtable[i].id === objects[j].id) {
-                dragtable[i].x = objects[j].position[0];
-                dragtable[i].y = objects[j].position[1];
+
+    if(dragtable) {
+        for (var i = 0; i < dragtable.length; i++) {
+            for (var j = 0; j < objects.length; j++) {
+                // If ID:s match set x and y for dragobject to be the original x and y.
+                if (dragtable[i].defaultId === objects[j].defaultId) {
+                    dragtable[i].x = objects[j].position[0];
+                    dragtable[i].y = objects[j].position[1];
+                }
             }
         }
     }

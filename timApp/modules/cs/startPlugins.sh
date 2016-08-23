@@ -41,10 +41,16 @@ fi
 
 
 if [ ! -d MIRToolbox ]; then
-  echo "GET MIR"
-  wget --quiet https://www.dropbox.com/s/hvufxm3t8o1r2k4/MIRToolbox.zip
-  unzip -o MIRToolbox.zip 1>/dev/null
-  rm -rf MIRToolbox.zip
+    echo "GET MIR"
+    mkdir MIRToolbox
+    cd MIRToolbox
+    rm -rf *
+
+    #Here we download MIRToolbox:
+    git clone http://github.com/martinarielhartmann/mirtooloct .
+    #To reduce the size of the folder a bit:
+    cd mirtooloct
+    rm -rf *.pdf
 fi
 
 
@@ -80,7 +86,9 @@ sudo mkdir -p /opt/cs/jypeli
 cd /opt/cs/jypeli
 curl http://kurssit.it.jyu.fi/npo/MonoJypeli/TIM/Jypeli.headless.tar.gz | sudo tar -xz --overwrite --warning=none
 
+sudo mkdir -p /opt/cs/java
 cd /opt/cs/java
+sudo chmod 777 .
 rm -f comtest*.jar*
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtest.jar -O comtest.jar -nv
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar -O comtestcpp.jar -nv

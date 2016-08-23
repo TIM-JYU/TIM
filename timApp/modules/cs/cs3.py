@@ -1733,7 +1733,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
                 elif ttype == "octave":
                     print("octave: ", exename)
-                    code, out, err, pwd = run2(["octave", "-qf", pure_exename], cwd=prgpath, timeout=10, env=env,
+                    code, out, err, pwd = run2(["octave", "--no-window-system", "--no-gui", "-qf", pure_exename], cwd=prgpath, timeout=10, env=env,
                                                stdin=stdin,
                                                uargs=userargs, ulimit="ulimit -f 80000", noX11=True)
                     if err:

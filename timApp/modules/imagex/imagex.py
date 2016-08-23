@@ -107,38 +107,8 @@ class ImagexServer(tim_server.TimServer):
 
     # Creates accurate state for answer, ie. changes the object positions.
     def create_state_imagex(self, markup, drags):
-        #Begin by removing unnecessary parts from objects.
-        for object in markup['objects']:
-            # Remove unnecessary keys from dict. only id and position are needed in javascript.
-            # additional dict for storing removable keys.
-            remove = []
-            for key in object.keys():
-                if key != 'position' and key != "id":
-                    remove.append(key)
-            # Remove keys from markup in a loop.
-            for key in remove:
-                object.pop(key, None)
-
-        # Copy original object positions so the excercise can be reset.
-        markup['yamlobjects'] = deepcopy(markup['objects'])
-        #print(markup)
-        #print(drags)
-        for object in markup['objects']:
-            for drag in drags:
-                if object['id'] == drag['id']:
-                    object['position'] = drag['position']
-
-
-        #Remove other unnecessary parts from markup, ie. everything that isnt an object.
-        delete = []
-        for key in markup.keys():
-            if key != "objects" and key != "yamlobjects":
-                delete.append(key)
-        for key in delete:
-            markup.pop(key,None)
-
-        #print("--STATE--" + str(markup))
-        return markup
+        dict = {"objects":drags}
+        return dict
 
     #gets reqs
     def get_reqs_result(self) -> dict:
@@ -148,22 +118,22 @@ class ImagexServer(tim_server.TimServer):
         #Get templates for plugin
         templs = get_all_templates('templates')
         #print("--templates--" + str(templs))
-        ret = {"js": ["/static/scripts/timHelper.js","/static/scripts/imagex.js"], "angularModule": ["imagexApp"],#["/static/scripts/timHelper.js","js/imagex.js"], "angularModule": ["imagexApp"],
-                       "css": ["static/css/imagex.css"], "multihtml": True}
+        ret = {"js": ["/static/scripts/timHelper.js","/static/scripts/imagex.js","/static/scripts/bower_components/angular-bootstrap-colorpicker/js/bootstrap-colorpicker-module.min.js"], "angularModule": ["imagexApp","colorpicker.module"],#["/static/scripts/timHelper.js","js/imagex.js"], "angularModule": ["imagexApp"],
+                       "css": ["static/css/imagex.css","/static/scripts/bower_components/angular-bootstrap-colorpicker/css/colorpicker.css"], "multihtml": True}
         # Add templates to reqs.
         ret.update(templs)
         return ret
 
 
-    def gettargetattr(self,firsttarget,defaults,attr,default):
+    def gettargetattr(self,prevtarget,defaults,attr,default):
         """
         Get attr for target. First checked from default, then from
-        the first target. if neither is found return default.
+        the previous target. if neither is found return default.
         """
         if str(attr) in defaults:
             return defaults[str(attr)]
-        if str(attr) in firsttarget:
-            return firsttarget[str(attr)]
+        if str(attr) in prevtarget:
+            return prevtarget[str(attr)]
         return default
 
 
@@ -189,18 +159,23 @@ class ImagexServer(tim_server.TimServer):
             #print("--state--" + str(query.get_param("state",None)))
             #Student points
             points = 0
-            #get defaults
+            #get default values for targets. If values arent told for targets get them from here or from previous
+            # target.
             defaults = query.get_param("defaults","")
-            print(defaults)
+            #If all tries have been used just return.
             max_tries = int(query.get_param("max_tries", 1000000))
             tries = int(query.get_json_param("state", "tries", 0))
+            if tries >= max_tries:
+                return
             finalanswergiven = query.get_json_param("state","finalanswergiven",False)
             #Targets dict.
             targets = list(query.get_param("targets",None))
             drags = query.get_json_param("input", "drags", None)
             gottenpoints = {}
             gottenpointsobj = {}
-            #Uncomment to see student answersS
+            #For tracking indexes
+            i = 0
+            #Uncomment to see student answers
             #print("---drags---" + str(drags))
             #No points are awarded if all tries have been given or the final answer has been given to the student.
             if tries < max_tries and finalanswergiven == False:
@@ -212,13 +187,13 @@ class ImagexServer(tim_server.TimServer):
                                 #Check if needed values exist for target. If they dont, read them from defaults
                                 #or first target. # TODO: NOT FROM FIRST!!!
                                 if 'type' not in target:
-                                    target['type'] = self.gettargetattr(targets[0], defaults, "type", "") # TODO: vieläkin väärin, pitää ottaa edellisestä ei 0:sta!
+                                    target['type'] = self.gettargetattr(targets[i], defaults, "type", "") # TODO: vieläkin väärin, pitää ottaa edellisestä ei 0:sta!
                                 if 'a' not in target:
-                                    target['a'] = self.gettargetattr(targets[0], defaults, "a", 0)
+                                    target['a'] = self.gettargetattr(targets[i], defaults, "a", 0)
                                 if 'size' not in target:
-                                    target['size'] = self.gettargetattr(targets[0],defaults,"size",[10])
+                                    target['size'] = self.gettargetattr(targets[i],defaults,"size",[10])
                                 if 'position' not in target:
-                                    target['position'] = self.gettargetattr(targets[0], defaults, "position", [0,0])
+                                    target['position'] = self.gettargetattr(targets[i], defaults, "position", [0,0])
                                 # Check if image is inside target, award points.
                                 if isInside(target['type'],target['size'],target['a'],target['position'],drag["position"]):
                                     #print("--targetpoints--" + str(target['target']['points']))
@@ -229,6 +204,8 @@ class ImagexServer(tim_server.TimServer):
                                     gottenpointsobj[selectkey] = target['points'][selectkey]
                                     gottenpoints.update(gottenpointsobj)
                                     gottenpointsobj = {}
+
+                    i = i + 1
 
             if tries >= max_tries or finalanswergiven == True:
                 out = out[0:20000]

@@ -2,13 +2,11 @@
 # Set locale
 export LANG=en_US.UTF-8
 # export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/
-echo $2 > t.t
 
 if [ $2 != "True" ]; then
   # For X server emulation
   Xvfb :1 -screen 0 1280x1024x24 -extension RANDR 2>/dev/null  &
   export DISPLAY=:1 
-  echo "USE X11" >> t.t
 fi
 export GNUTERM=png
 cmd=$1
