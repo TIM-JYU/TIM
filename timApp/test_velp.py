@@ -38,7 +38,7 @@ class VelpTest(TimRouteTest):
         self.assertNotEqual(-1, j['id'])
         resp = self.get('/{}/get_default_velp_group'.format(str(doc1_id)), as_json=True)
         self.assertNotEqual(-1, resp['id'])
-        #self.assertEqual(-1, resp['id'])
+        default_group_id = resp['id']   # Grab ID of newly created group for later use
 
         # Create new velp group (after default group) so we should have 2 for document in total
         resp = self.json_post('/{}/create_velp_group'.format(str(doc1_id)),
@@ -92,21 +92,43 @@ class VelpTest(TimRouteTest):
         self.assertEqual(len(resp), 0)
 
         # Add new velp to doc1 default velp group and check velps for that document after
-        testdata = {'content':'test velp 1', 'velp_groups':[11], 'language_id':'FI'} # doc1 default group id is 11
-        resp = self.json_post('/add_velp', testdata)
-        j = self.assertResponseStatus(resp, return_json=True)
-        self.assertEqual(j, 1) # Added velp's id is 1
+        test_data = {'content':'test velp 1', 'velp_groups':[default_group_id], 'language_id':'FI'}
+        resp = self.json_post('/add_velp', test_data)
+        velp_id = self.assertResponseStatus(resp, return_json=True)
+        self.assertEqual(velp_id, 1) # Added velp's id is 1 as it was the first ever velp added
         resp = self.get('/{}/get_velps'.format(str(doc1_id)), as_json=True)
         print(resp)
         self.assertEqual(len(resp), 1)
         self.assertEqual(resp[0]['content'], "test velp 1")
 
         # Change just added velp's content
-        testdata = {'content':'Is Zorg now', 'velp_groups':[11], 'language_id':'FI', 'id':1} # doc1 default group id is 11
-        resp = self.json_post('/{}/update_velp'.format(str(doc1_id)), testdata)
+        test_data = {'content':'Is Zorg now', 'velp_groups':[default_group_id], 'language_id':'FI', 'id':1}
+        resp = self.json_post('/{}/update_velp'.format(str(doc1_id)), test_data)
         self.assertResponseStatus(resp, return_json=True)
         resp = self.get('/{}/get_velps'.format(str(doc1_id)), as_json=True)
         self.assertEqual(resp[0]['content'], "Is Zorg now")
+
+        # Next add velp label, attach it to a velp
+        resp = self.json_post('/add_velp_label', {'content':'test label'})
+        label_id = self.assertResponseStatus(resp)
+        test_data = {'content':'Is Zorg now', 'velp_groups':[default_group_id], 'language_id':'FI', 'id':velp_id,
+                    'labels':[label_id]}
+        self.json_post('/{}/update_velp'.format(str(doc1_id)), test_data)
+        resp = self.get('/{}/get_velp_labels'.format(str(doc1_id)), as_json=True)
+        print(resp)
+        self.assertEqual(resp[0]['content'], 'test label')
+
+        # Add a new velp label and update previous one
+        self.json_post('/add_velp_label', {'content':'test label intensifies'})
+        resp = self.json_post('/update_velp_label', {'id':label_id, 'content':'Zorg label'})
+        self.assertResponseStatus(resp, expect_status=200)
+        resp = self.get('/{}/get_velp_labels'.format(str(doc1_id)), as_json=True)
+        print(resp)
+        self.assertNotEqual(resp[0]['content'], 'test label')
+        self.assertEqual(len(resp), 1)  # Added velp label wasn't added to any velp and thus it can't be found
+                                        # when searching velp labels for doc1
+
+
 
 
 
