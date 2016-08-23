@@ -1,6 +1,18 @@
 from routes.common import *
 from timroutetest import TimRouteTest
 
+# Tested routes from velp.py
+#   /<int:doc_id>/get_default_velp_group
+#   /<int:doc_id>/get_velps
+#   /<int:doc_id>/get_velp_groups
+#   /<int:doc_id>/get_velp_labels
+#   /add_velp
+#   /<int:doc_id>/update_velp
+#   /add_velp_label
+#   /update_velp_label
+#   /<int:doc_id>/create_velp_group
+#   /<int:doc_id>/create_default_velp_group
+
 class VelpTest(TimRouteTest):
     def test_velp(self):
         db = self.get_db()
@@ -127,7 +139,6 @@ class VelpTest(TimRouteTest):
         self.assertNotEqual(resp[0]['content'], 'test label')
         self.assertEqual(len(resp), 1)  # Added velp label wasn't added to any velp and thus it can't be found
                                         # when searching velp labels for doc1
-
 
 
 
