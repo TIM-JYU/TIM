@@ -496,6 +496,7 @@ def start_page():
 
 @app.route("/view/")
 def index_page():
+    save_last_page()
     timdb = getTimDb()
     current_user = getCurrentUserId()
     in_lecture = user_in_lecture()

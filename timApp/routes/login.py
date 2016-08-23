@@ -45,7 +45,7 @@ def logout():
     session.pop('last_doc', None)
     session.pop('anchor', None)
     session['user_name'] = 'Anonymous'
-    return redirect(url_for('start_page'))
+    return jsonResponse(dict(current_user=get_current_user(), session_users=[]))
 
 
 @login_page.route("/login")

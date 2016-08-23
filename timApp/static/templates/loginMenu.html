@@ -1,0 +1,82 @@
+<div>
+    <button ng-show="!isLoggedIn()"
+            uib-popover-template="'loginTemplate.html'"
+            popover-title="Log in"
+            popover-placement="bottom"
+            popover-animation="false"
+            popover-trigger="outsideClick"
+            type="button"
+            class="btn btn-default margin-4">Log in
+    </button>
+
+    <script type="text/ng-template" id="loginTemplate.html">
+        <div class="row" ng-click="stopClick($event)">
+            <div class="col-sm-12">
+                <form class="form-horizontal" method="POST" action="/altlogin">
+                    <p class="text-center">
+                        You can either log in with Korppi
+                    </p>
+
+                    <button class="timButton center-block" type="button" ng-click="korppiLogin()">Log in with Korppi
+                    </button>
+                    <p class="text-center">
+                        or with your email address if you have a TIM email account.
+                    </p>
+
+                    <div class="form-group">
+                        <label for="email" class="control-label col-sm-4">Email</label>
+                        <div class="col-sm-6">
+                            <input class="form-control" id="email" name="email" type="email"
+                                   value="{{ getCurrentUser().email }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password" class="col-sm-4 control-label">Password</label>
+                        <div class="col-sm-6">
+                            <input class="form-control" id="password" name="password" type="password">
+                        </div>
+                    </div>
+
+                    <button class="center-block timButton" type="submit">Log in</button>
+                </form>
+            </div>
+        </div>
+    </script>
+
+    <div ng-show="isLoggedIn()" class="btn-group margin-4" uib-dropdown on-toggle="toggled(open)">
+        <button type="button" class="btn btn-primary" uib-dropdown-toggle>
+            {{ getCurrentUser().real_name }} <span
+                ng-show="getSessionUsers().length > 0">and {{ getSessionUsers().length }} <ng-pluralize
+                count="getSessionUsers().length"
+                when="{'1': 'other',
+                     'other': 'others'}">
+        </ng-pluralize></span> <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu"
+            uib-dropdown-menu
+            role="menu"
+            aria-labelledby="single-button">
+            <li role="menuitem"><a
+                    ng-click="addUser($event)"
+                    uib-popover-template="'loginTemplate.html'"
+                    popover-is-open="isOpen"
+                    popover-title="Add a user to this session"
+                    popover-placement="auto bottom"
+                    popover-append-to-body="true"
+                    popover-animation="false"
+                    href="#">Add a user to this session...</a></li>
+            <li role="menuitem"><a
+                    ng-click="addTestUser($event)"
+                    href="#">Add a test user</a></li>
+            <li class="divider"></li>
+            <li
+                    role="menuitem"
+            ><a ng-click="logout(getCurrentUser())" href="#">Log <span
+                    ng-show="getSessionUsers().length > 0">everyone</span>
+                out</a></li>
+            <li role="menuitem" ng-repeat="u in getSessionUsers()"><a ng-click="logout(u)"
+                                                                      href="#">Log {{ u.real_name }} out</a></li>
+        </ul>
+    </div>
+</div>

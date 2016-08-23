@@ -177,8 +177,7 @@ def show_time(s):
 
 
 def view(doc_path, template_name, usergroup=None, route="view"):
-
-    session['last_doc'] = request.path
+    save_last_page()
 
     timdb = getTimDb()
     doc_info = timdb.documents.resolve_doc_id_name(doc_path)

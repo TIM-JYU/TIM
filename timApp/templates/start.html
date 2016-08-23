@@ -26,15 +26,11 @@
 
                 <div class="col-md-4">
                     {% if session.user_id %}
-                        <p>You're logged in as {{ session.real_name }} ({{ session.user_name }}).<p>
+                        <login-menu></login-menu>
                         <ul>
                             <li><a href="/view/users/{{ session.user_name }}">My documents</a></li>
                             <li><a href="/view/">All documents</a></li>
                         </ul>
-
-                        <form method="POST" action="/logout">
-                            <button class="wideButton" type="submit">Log out</button>
-                        </form>
                     {% elif session.altlogin == "signup2" %}
                         <form method="POST" action="/altsignup2">
                             <p>

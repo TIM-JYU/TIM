@@ -427,3 +427,7 @@ def verify_task_access(doc_id, task_id_name):
         pars = documentmodel.document.dereference_pars([par])
         if not any(p.get_attr('taskId') == task_id_name for p in pars):
             abort(403)
+
+
+def save_last_page():
+    session['last_doc'] = request.path
