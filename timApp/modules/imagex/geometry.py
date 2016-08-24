@@ -11,7 +11,7 @@ See: https://tim.jyu.fi/view/tim/TIMin%20kehitys/Kuvaraahausteht%C3%A4v%C3%A4n%2
 """
 
 # Checks if point is inside a given object
-def isInside(type,size,angle,center,point):
+def is_inside(type,size,angle,center,point):
     if(len(size) == 1):
         size.append(size[0])
     # Do rectangle stuff

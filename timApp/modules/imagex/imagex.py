@@ -155,57 +155,92 @@ class ImagexServer(tim_server.TimServer):
         err = ""
         tries = 0
 
-        try:
+        previous_value = {}
+        defaults = query.get_param("defaults", {})
+
+        # Find  value for key from value, prevous or defaults.If nowhere return defaultValue
+        def get_value_def(value, key, default_value, keep_emtpy_as_none = False):
+            keys = key.split(".")
+            ret = default_value
+            if len(keys) < 1: return ret
+
+            k_last = keys.pop()
+
+            v = value
+            p = previous_value
+            d = defaults
+            # Loop v and p to same level
+            for k in keys:
+                if not k in p: p[k] = {}; # if not on p, add
+                p = p[k] # for next round
+                if v and k in v: v = v[k]
+                else: v = None
+                if d and k in d: d = d[k]
+                else: d = None
+
+            k = k_last;
+            if v and k in v:
+                if v[k] and (not keep_emtpy_as_none or v[k] != ""):
+                    ret = v[k]
+                    p[k] = ret
+                else: p[k] = None;
+                return ret
+
+            if p and (k in p) and p[k] != None:
+                return p[k]
+            if d and (k in d) and d[k] != None:
+                return d[k]
+            return ret
+
+
+        if True:
             #print("--state--" + str(query.get_param("state",None)))
             #Student points
             points = 0
             #get default values for targets. If values arent told for targets get them from here or from previous
             # target.
-            defaults = query.get_param("defaults","")
             #If all tries have been used just return.
             max_tries = int(query.get_param("max_tries", 1000000))
             tries = int(query.get_json_param("state", "tries", 0))
             if tries >= max_tries:
                 return
             finalanswergiven = query.get_json_param("state","finalanswergiven",False)
-            #Targets dict.
-            targets = list(query.get_param("targets",None))
+            #Targets dict
+            try:
+                targets = list(query.get_param("targets",None))
+            except:
+                targets = []
             drags = query.get_json_param("input", "drags", None)
             gottenpoints = {}
             gottenpointsobj = {}
             #For tracking indexes
-            i = 0
             #Uncomment to see student answers
             #print("---drags---" + str(drags))
             #No points are awarded if all tries have been given or the final answer has been given to the student.
-            if tries < max_tries and finalanswergiven == False:
+            if tries < max_tries and finalanswergiven == False and targets != None:
                 for target in targets:
                     #Find object name from user input.
+                    target['points'] = get_value_def(target, "points", {})
+                    target['type'] = get_value_def(target, "type", "rectangle")
+                    target['a'] = get_value_def(target, "a", 0)
+                    target['size'] = get_value_def(target, "size", [10])
+                    target['position'] = get_value_def(target, "position", [0, 0])
+                    target['max'] = get_value_def(target, "max", 100000)
+                    target['n'] = 0;
+                    print(target)
                     for selectkey in target['points'].keys():
                         for drag in drags:
                             if drag['id'] == selectkey:
                                 #Check if needed values exist for target. If they dont, read them from defaults
                                 #or first target. # TODO: NOT FROM FIRST!!!
-                                if 'type' not in target:
-                                    target['type'] = self.gettargetattr(targets[i], defaults, "type", "") # TODO: vieläkin väärin, pitää ottaa edellisestä ei 0:sta!
-                                if 'a' not in target:
-                                    target['a'] = self.gettargetattr(targets[i], defaults, "a", 0)
-                                if 'size' not in target:
-                                    target['size'] = self.gettargetattr(targets[i],defaults,"size",[10])
-                                if 'position' not in target:
-                                    target['position'] = self.gettargetattr(targets[i], defaults, "position", [0,0])
                                 # Check if image is inside target, award points.
-                                if isInside(target['type'],target['size'],target['a'],target['position'],drag["position"]):
-                                    #print("--targetpoints--" + str(target['target']['points']))
-                                    #print(target['target']['points'][selectkey])
-                                    #Add points for objects being inside shape.
+                                if target["n"] < target["max"] and \
+                                      is_inside(target['type'],target['size'],-target['a'],target['position'],drag["position"]):
+                                    target["n"] += 1;
                                     points += (target['points'][selectkey])
-
                                     gottenpointsobj[selectkey] = target['points'][selectkey]
                                     gottenpoints.update(gottenpointsobj)
                                     gottenpointsobj = {}
-
-                    i = i + 1
 
             if tries >= max_tries or finalanswergiven == True:
                 out = out[0:20000]
@@ -248,25 +283,30 @@ class ImagexServer(tim_server.TimServer):
 
 
 
-            markup = {}
+            userAnswer = {}
             #Create state to be saved for this excercise.
-            markup["objects"] = self.create_state_imagex(query.get_param("markup",None),drags) # TODO: stateen menee ihan liian paljon tavaraa.  Vain se käyttäjän vastaus!!!
-            markup["tries"] = tries
+            print("drags: ", drags)
+            # markup["objects"] = self.create_state_imagex(query.get_param("markup",None),drags) # TODO: stateen menee ihan liian paljon tavaraa.  Vain se käyttäjän vastaus!!!
+            userAnswer["drags"] = drags
+            userAnswer["tries"] = tries
             #Save if finalanswer was given to student.
-            markup['finalanswergiven'] = finalanswergiven
+            userAnswer['finalanswergiven'] = finalanswergiven
             freeHandData =  query.get_json_param("input", "freeHandData", None)
             # markup["targets"] = targets
             # Return correct answer if the answer table isnt empty.
             if len(answer) != 0:
-                markup['correctanswer'] = answer
+                userAnswer['correctanswer'] = answer
 
             #Save user input and points to markup
             tim_info = {"points":points}
-            save = {"markup": markup,"tries":tries, 'freeHandData':freeHandData} #{"drags":drags,"tries":tries}
+            save = {"userAnswer": userAnswer, "tries": tries, 'freeHandData': freeHandData} #{"drags":drags,"tries":tries}
             result["save"] = save
             result["tim_info"] = tim_info
             out = "saved"
         #Print exception and error.
+
+        try:
+            print("joo")
         except Exception as e:
             err = str(e)
             print("---Virhe---")

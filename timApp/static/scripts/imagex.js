@@ -140,7 +140,7 @@ FreeHand.prototype.setWidth = function(newWidth) {
 };
 
 FreeHand.prototype.incWidth = function(dw) {
-    this.setWidth(this.params.w + dw);
+    this.setWidth(parseInt(this.params.w) + dw);
 }
 
 
@@ -198,7 +198,6 @@ imagexApp.directiveTemplate = function () {
         '<button ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.showAnswer();">Showanswer</button>&nbsp&nbsp' +
         '<a ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.resetExercise();">Reset</a>&nbsp&nbsp' +
         '<a href="" ng-if="muokattu" ng-click="imagexScope.initCode()">{{resetText}}</a>' +
-        '<input colorpicker="hex" type="text" ng-style="{\'background-color\': previewColor}" ng-model="previewColor" ng-show="preview" id="coords" ng-click="imagexScope.getPColor();" />' +
 
         '<label ng-show="freeHandVisible">FreeHand <input type="checkbox" name="freeHand" value="true" ng-model="freeHand"></label> ' +
         '<span>' +
@@ -216,6 +215,13 @@ imagexApp.directiveTemplate = function () {
                 '</span>' +
             '</span>' +
         '</span>' +
+        '<div ng-show="preview" >' +
+        '<span>' +
+            '<span ng-style="{\'background-color\': previewColor}" style="display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.getPColor();">&lt;-</span> ' +
+            '<input ng-model="previewColor" colorpicker="hex" type="text"  ng-model="previewColor" id="previewColorInput" ng-click="imagexScope.getPColor();" size="10"/> ' +
+            '<label> Coord: <input  id="coords" ng-click="imagexScope.getPColor();" size="10"/></label>' +
+        '</span>' +
+        '</div>' +
         '<span class="tries" ng-if="max_tries"> Tries: {{tries}}/{{max_tries}}</span>' +
         '<pre class="" ng-if="error && preview">{{error}}</pre>' +
         '<pre class="" ng-show="result">{{result}}</pre>' +
@@ -525,7 +531,7 @@ imagexApp.initDrawing = function(scope, canvas) {
     function Empty(objectValues) {}
 
     function DragObject(dt, values, defId) {
-        this.defaultId = defId;
+        this.dId = defId;
         this.id = getValue(values.id,defId);
         values.id = this.id;
 
@@ -541,6 +547,12 @@ imagexApp.initDrawing = function(scope, canvas) {
             this.position = getValueDef(values, "position", [0, 0]);
             this.x = this.position[0];
             this.y = this.position[1]; }
+
+        this.origPos = {};
+        this.origPos.x = this.x;
+        this.origPos.y = this.y;
+        this.origPos.pos = this.position;
+
         // If default values of type, size, a or position are changed, check also imagex.py
         if (this.type === 'vector') this.size = getValueDef(values, "size", [50, 4]);
         else this.size = getValueDef(values, "size", [10, 10]);
@@ -582,7 +594,7 @@ imagexApp.initDrawing = function(scope, canvas) {
     }
     
     function Target(dt, values, defId) {
-        this.defaultId = defId;
+        this.dId = defId;
         this.id = getValue(values.id, defId);
         values.id = this.id;
         this.name = 'target';
@@ -616,7 +628,7 @@ imagexApp.initDrawing = function(scope, canvas) {
     }
     
     function FixedObject(dt, values, defId) {
-        this.defaultId = defId;
+        this.dId = defId;
         this.id = getValue(values.id, defId);
         values.id = this.id;
         if (values.name === 'background') {
@@ -1171,23 +1183,26 @@ imagexApp.initDrawing = function(scope, canvas) {
         scope.yamlobjects = [];
     }
     var userObjects = scope.attrs.markup.objects;
-
-    if (scope.attrs.state) {
+/*
+    if (scope.attrs.state && scope.attrs.state.userAnswer ) {
         // used to reset object positions.
        // scope.yamlobjects = scope.attrs.state.markup.objects.yamlobjects;
         // lisätty oikeiden vastausten lukemiseen ja piirtämiseen.
-        for (var i = 0; i < userObjects.length; i++) {
-            if ( !userObjects[i] ) continue; // looks like the first may be null
-            for (var j = 0; j < scope.attrs.state.markup.objects.objects.length; j++) {
-                if (userObjects[i].id === scope.attrs.state.markup.objects.objects[j].id) {
-                    userObjects[i].position[0] =
-                        scope.attrs.state.markup.objects.objects[j].position[0];
-                    userObjects[i].position[1] =
-                        scope.attrs.state.markup.objects.objects[j].position[1]
+        var userDrags = scope.attrs.state.userAnswer.drags;
+        if (userObjects && userDrags && userDrags.length > 0) {
+            for (var i = 0; i < userObjects.length; i++) {
+                if ( !userObjects[i].dId ) userObjects[i].dId = "obj" + (i+1);
+                if (!userObjects[i]) continue; // looks like the first may be null
+                for (var j = 0; j < userDrags.length; j++) {
+                    if (userObjects[i].dId === userDrags[j].dId) {
+                        userObjects[i].position[0] = userDrags[j].position[0];
+                        userObjects[i].position[1] = userDrags[j].position[1]
+                    }
                 }
             }
         }
     }
+*/
 
     var userTargets = scope.attrs.markup.targets;
     var userFixedObjects = scope.attrs.markup.fixedobjects;
@@ -1247,6 +1262,27 @@ imagexApp.initDrawing = function(scope, canvas) {
         } }
 
 
+    if (scope.attrs.state && scope.attrs.state.userAnswer ) {
+        // used to reset object positions.
+       // scope.yamlobjects = scope.attrs.state.markup.objects.yamlobjects;
+        // lisätty oikeiden vastausten lukemiseen ja piirtämiseen.
+        var userDrags = scope.attrs.state.userAnswer.drags;
+        if (objects && userDrags && userDrags.length > 0) {
+            for (var i = 0; i < objects.length; i++) {
+                if (!objects[i]) continue; // looks like the first may be null
+                for (var j = 0; j < userDrags.length; j++) {
+                    if (objects[i].dId === userDrags[j].dId) {
+                        objects[i].position[0] = userDrags[j].position[0];
+                        objects[i].position[1] = userDrags[j].position[1]
+                        objects[i].x = objects[i].position[0];
+                        objects[i].y = objects[i].position[1];
+                    }
+                }
+            }
+        }
+    }
+
+
     for (i = 0; i < fixedobjects.length; i++) {
         dt.drawObjects.push(fixedobjects[i]);
     }
@@ -1260,13 +1296,15 @@ imagexApp.initDrawing = function(scope, canvas) {
     }
 
     dt.draw();
+    
+    scope.objects = objects;
 
     // Katsotaan, onko oikeat vastaukset heitetty markuppiin. Jos on, piirretään oikeat raahaukset.
     // pitäisi varmaan ottaa raahaus kokonaan pois päältä tässä tilanteessa.
-    if(scope.attrs.state) {
-        if (scope.attrs.state.markup.correctanswer) {
+    if(scope.attrs.state && scope.attrs.state.userAnswer ) {
+        if (scope.attrs.state.userAnswer.correctanswer) {
             //handle drawing lines.
-            var rightdrags = scope.attrs.state.markup.correctanswer.rightanswers;
+            var rightdrags = scope.attrs.state.userAnswer.correctanswer.rightanswers;
             var j = 0;
             for (j = 0; j < rightdrags.length; j++) {
                 var p = 0;
@@ -1371,7 +1409,11 @@ imagexApp.initScope = function (scope, element, attrs) {
     scope.lineMode = scope.freeHandLine;
     scope.freeHandDrawing.params = scope; // to get 2 way binding to params
     if ( scope.freeHandData ) scope.freeHandDrawing.freeDrawing = scope.freeHandData;
-    scope.freeHandDrawing.update = function() { scope.$apply(); };
+    scope.freeHandDrawing.update = function() {
+        var phase = scope.$root.$$phase;
+        if(phase == '$apply' || phase == '$digest') return;
+        scope.$apply();
+    };
 
 
     // Otsikot.  Oletetaan että 1. elementti korvaatan header-otsikolla ja viimeinen footerilla
@@ -1384,6 +1426,7 @@ imagexApp.initScope = function (scope, element, attrs) {
     imagexApp.initDrawing(scope, scope.canvas);//element[0].childNodes[1].childNodes[0]);
 
     scope.coords = element.find("#coords")[0];
+    scope.previewColorInput = element.find("#previewColorInput")[0];
     scope.canvas.coords = scope.coords;
     scope.previewColor= globalPreviewColor;
     /*
@@ -1440,8 +1483,8 @@ ImagexScope.prototype.setFColor = function(color) {
 ImagexScope.prototype.getPColor = function() {
     if (this.scope.preview) {
         if ( typeof(editorChangeValue) !== 'undefined' ) {
-            globalPreviewColor = this.scope.coords.value;
-            editorChangeValue(["[a-zA-Z]*[cC]olor[a-zA-Z]*:"], '"' + this.scope.coords.value + '"');
+            globalPreviewColor = this.scope.previewColorInput.value;
+            editorChangeValue(["[a-zA-Z]*[cC]olor[a-zA-Z]*:"], '"' + globalPreviewColor + '"');
         }
     }
 
@@ -1470,7 +1513,7 @@ ImagexScope.prototype.getDragObjectJson = function() {
         return json;
     }
     for(var i = 0; i < dragtable.length ; i++) {
-        json.push({"id":dragtable[i].id,
+        json.push({"dId":dragtable[i].dId, "id":dragtable[i].id,
             "position":[dragtable[i].x, dragtable[i].y]});
     }
     return json;
@@ -1528,20 +1571,14 @@ ImagexScope.prototype.resetExercise = function(){
     $scope.result = "";
     $scope.freeHandDrawing.clear();
     // Objects dragged by user.
-    var dragtable = $scope.drags;
-    // Original objects.
-    var objects = $scope.yamlobjects; //$scope.objects;
-    // Loop
+    var objects = $scope.objects; //$scope.objects;
 
-    if(dragtable) {
-        for (var i = 0; i < dragtable.length; i++) {
-            for (var j = 0; j < objects.length; j++) {
-                // If ID:s match set x and y for dragobject to be the original x and y.
-                if (dragtable[i].defaultId === objects[j].defaultId) {
-                    dragtable[i].x = objects[j].position[0];
-                    dragtable[i].y = objects[j].position[1];
-                }
-            }
+    if(objects) {
+        for (var i = 0; i < objects.length; i++) {
+            var obj = objects[i];
+            obj.x = obj.origPos.x;
+            obj.y = obj.origPos.y;
+            obj.position = obj.origPos.pos;
         }
     }
     // Draw the excercise so that reset appears instantly.
@@ -1567,7 +1604,7 @@ ImagexScope.prototype.doSave = function(nosave) {
             'freeHandData': this.scope.freeHandDrawing.freeDrawing
         }
     };
-        console.log(params);
+    //    console.log(params);
 
     if (nosave) params.input.nosave = true;
     var url = "/imagex/answer";
