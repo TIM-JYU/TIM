@@ -94,7 +94,7 @@ def inject_custom_css() -> dict:
 @app.context_processor
 def inject_user() -> dict:
     """"Injects the user object to all templates."""
-    return dict(current_user=get_current_user())
+    return dict(current_user=get_current_user(), other_users=get_other_users_as_list())
 
 
 @app.errorhandler(400)

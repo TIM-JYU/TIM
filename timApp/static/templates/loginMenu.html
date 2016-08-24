@@ -12,12 +12,13 @@
     <script type="text/ng-template" id="loginTemplate.html">
         <div class="row" ng-click="stopClick($event)">
             <div class="col-sm-12">
-                <form class="form-horizontal" method="POST" action="/altlogin">
+                <form class="form-horizontal" ng-submit="loginWithEmail()">
                     <p class="text-center">
                         You can either log in with Korppi
                     </p>
 
-                    <button class="timButton center-block" type="button" ng-click="korppiLogin()">Log in with Korppi
+                    <button class="timButton center-block" type="button" ng-click="korppiLogin(addingToSession)">Log in
+                        with Korppi
                     </button>
                     <p class="text-center">
                         or with your email address if you have a TIM email account.
@@ -25,16 +26,15 @@
 
                     <div class="form-group">
                         <label for="email" class="control-label col-sm-4">Email</label>
-                        <div class="col-sm-6">
-                            <input class="form-control" id="email" name="email" type="email"
-                                   value="{{ getCurrentUser().email }}">
+                        <div class="col-sm-8">
+                            <input class="form-control" id="email" ng-model="form.email" type="email">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label for="password" class="col-sm-4 control-label">Password</label>
-                        <div class="col-sm-6">
-                            <input class="form-control" id="password" name="password" type="password">
+                        <div class="col-sm-8">
+                            <input class="form-control" id="password" ng-model="form.password" type="password">
                         </div>
                     </div>
 
@@ -60,15 +60,12 @@
             <li role="menuitem"><a
                     ng-click="addUser($event)"
                     uib-popover-template="'loginTemplate.html'"
-                    popover-is-open="isOpen"
+                    popover-is-open="addingToSession"
                     popover-title="Add a user to this session"
                     popover-placement="auto bottom"
                     popover-append-to-body="true"
                     popover-animation="false"
                     href="#">Add a user to this session...</a></li>
-            <li role="menuitem"><a
-                    ng-click="addTestUser($event)"
-                    href="#">Add a test user</a></li>
             <li class="divider"></li>
             <li
                     role="menuitem"

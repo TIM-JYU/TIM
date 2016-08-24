@@ -6,6 +6,9 @@ from collections import defaultdict
 from urllib.parse import urlparse, urljoin
 
 from flask import current_app, session, abort, g, Response, request, redirect, url_for, flash
+from typing import List
+
+from typing import Dict
 
 import documentmodel.document
 import pluginControl
@@ -32,6 +35,14 @@ def safe_redirect(url, **values):
 
 def get_current_user():
     return getTimDb().users.get_user(getCurrentUserId())
+
+
+def get_other_users() -> Dict[int, Dict[str, str]]:
+    return session.get('other_users', {})
+
+
+def get_other_users_as_list() -> List[Dict[str, str]]:
+    return list(session.get('other_users', {}).values())
 
 
 def getCurrentUserId():

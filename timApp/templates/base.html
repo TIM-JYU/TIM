@@ -68,6 +68,7 @@
                 };
             });
             var current_user = {{ current_user|tojson }};
+            var other_users = {{ other_users|tojson }};
         </script>
 
         <script src="{{ url_for('static', filename='scripts/services/userService.js') }}"></script>
