@@ -2,7 +2,7 @@
 # Restart csPlugin 
 # run with option i to get interactive mode
 # option p for pure start (no wget for files)
-dockername="csPlugin"
+dockername="csplugin"
 dockerImage="cs3"
 extraPorts=""
 extraCmds="/bin/bash"

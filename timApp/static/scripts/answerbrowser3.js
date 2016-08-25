@@ -166,7 +166,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                 };
 
                 $scope.indexOfSelected = function () {
-                    if ( !$scope.filteredAnswers ) return -1;
+                    if ( !$scope.filteredAnswers || !$scope.selectedAnswer ) return -1;
                     var arrayLength = $scope.filteredAnswers.length;
                     for (var i = 0; i < arrayLength; i++) {
                         if ($scope.filteredAnswers[i].id === $scope.selectedAnswer.id) {
@@ -177,7 +177,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                 };
 
                 $scope.getBrowserData = function () {
-                    if ($scope.answers.length > 0)
+                    if ($scope.answers.length > 0 && $scope.selectedAnswer)
                         return {
                             answer_id: $scope.selectedAnswer.id,
                             saveTeacher: $scope.saveTeacher,

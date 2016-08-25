@@ -553,7 +553,7 @@ def check_number_rule(s, number_rule):
     for rule in number_rule:
         r = rule
         if not isinstance(r, list):
-            r = re.findall(r"[0-9.]+",r)
+            r = re.findall(r"[-0-9.]+",r)
         if len(r) < 2: continue
         if len(r) < 3: r.append(r[1])
         try:

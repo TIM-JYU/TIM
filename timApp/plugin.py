@@ -2,6 +2,8 @@ from copy import deepcopy
 
 from typing import Tuple, Optional
 
+from datetime import datetime
+
 from documentmodel.document import Document
 from markdownconverter import expand_macros
 from timdb.timdbbase import TimDbException
@@ -64,13 +66,15 @@ class Plugin:
         return doc_id, task_id_name, par_id
 
     def deadline(self, default=None):
-        return self.values.get(self.deadline_key, default)
+        return get_date(self.values.get(self.deadline_key, default))
 
     def starttime(self, default=None):
-        return self.values.get(self.starttime_key, default)
+        return get_date(self.values.get(self.starttime_key, default))
 
     def points_rule(self, default=None):
-        return self.values.get(self.points_rule_key, default)
+        pr = self.values.get(self.points_rule_key, default)
+        if pr: return pr
+        return self.values.get("-"+self.points_rule_key, default)
 
     def max_points(self, default=None):
         return self.points_rule({}).get('maxPoints', default)
@@ -86,6 +90,11 @@ class Plugin:
 
     def points_multiplier(self, default=1):
         return self.points_rule({}).get('multiplier', default)
+
+
+def get_date(d):
+    if type(d) is str: d = datetime.strptime(d,  "%Y-%m-%d %H:%M:%S")
+    return d
 
 
 class PluginException(Exception):

@@ -195,7 +195,7 @@ imagexApp.directiveTemplate = function () {
             '</div>'+
         '</div>'+
         '<button ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.save();">{{button}}</button>&nbsp&nbsp' +
-        '<button ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.showAnswer();">Showanswer</button>&nbsp&nbsp' +
+        '<button ng-show="finalanswer && userHasAnswered" ng-disabled="isRunning" ng-click="imagexScope.showAnswer();">Showanswer</button>&nbsp&nbsp' +
         '<a ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.resetExercise();">Reset</a>&nbsp&nbsp' +
         '<a href="" ng-if="muokattu" ng-click="imagexScope.initCode()">{{resetText}}</a>' +
 
@@ -526,6 +526,47 @@ imagexApp.initDrawing = function(scope, canvas) {
             this.canvas.removeEventListener('touchend', upEvent);
         }
         */
+
+        this.addRightAnswers = function() {
+            // have to add handler for drawing finalanswer here. no way around it.
+            if ( scope.rightAnswersSet ) { dt.draw(); return; }
+            if ( !scope.answer || !scope.answer.rightanswers ) return;
+
+            var rightdrags = scope.answer.rightanswers;
+            var dragtable = scope.objects;
+            var j = 0;
+            for (j = 0; j < rightdrags.length; j++) {
+                var p = 0;
+                for (p = 0; p < objects.length; p++) {
+                    if (objects[p].id === rightdrags[j].id) {
+                        var values = { beg: objects[p], end: rightdrags[j] };
+                        rightdrags[j].x = rightdrags[j].position[0];
+                        rightdrags[j].y = rightdrags[j].position[1];
+                        // get positions for drawing.
+                        /*
+                        values.position = [];
+                        values.position[0] = getValue(dragtable[p].position[0], 0);
+                        values.position[1] = getValue(dragtable[p].position[1], 0);
+                        values.endposition = [];
+                        values.endposition[0] = getValue(rightdrags[j].position[0], 0);
+                        values.endposition[1] = getValue(rightdrags[j].position[1], 0);
+                        */
+                        //values.ctx = doc_ctx.getContext("2d");
+                        //give context and values for draw function.
+                        var line = new Line(dt,values);
+                        line.did = "-";
+                        this.drawObjects.push(line);
+                        //line.draw();
+                        values = {};
+                    }
+                }
+            }
+            scope.rightAnswersSet = true;
+
+            dt.draw();
+        }
+
+
     }
 
     function Empty(objectValues) {}
@@ -669,8 +710,11 @@ imagexApp.initDrawing = function(scope, canvas) {
     // Kutsuu viivaa piirtÃ¤vÃ¤Ã¤ funktiota.
     function Line(dt, values){
         this.ctx = dt.ctx;
-        this.position = getValue(values.position, [0, 0]);
-        this.endposition = getValue(values.endposition, [0, 0]);
+        this.beg = values.beg;
+        this.end = values.end;
+        this.color = getValueDef(values, "answerproperties.color", 'green');
+        this.lineWidth = getValueDef(values, "answerproperties.lineWidth", 2);
+
         this.draw = shapeFunctions["line"].draw;
     }
 
@@ -781,6 +825,8 @@ imagexApp.initDrawing = function(scope, canvas) {
 
     //var canvas = element[0];
 
+
+
     var shapeFunctions = {
         //TÃ¤mÃ¤ piirtÃ¤Ã¤ viivan, mutta vain kerran.
         line: {
@@ -791,10 +837,10 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.ctx = objectValues.ctx;
                     //attribuuteista vÃ¤ri ja leveys sekÃ¤ aseta dash
                     this.ctx.beginPath();
-                    this.ctx.moveTo(this.position[0],this.position[1]);
-                    this.ctx.lineTo(this.endposition[0],this.endposition[1]);
-                    this.ctx.lineWidth = 2;
-                    this.ctx.strokeStyle = "green";
+                    this.ctx.moveTo(this.beg.x,this.beg.y);
+                    this.ctx.lineTo(this.end.x,this.end.y);
+                    this.ctx.lineWidth = this.lineWidth;
+                    this.ctx.strokeStyle = this.color;
                     this.ctx.stroke();
                 }
         },
@@ -1005,7 +1051,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                     for (var i = 0; i < this.lines.length; i++) {
                         lineWidths[i] = auxctx.measureText(this.lines[i]).width;
                     }
-                    this.textwidth = Math.max(...lineWidths);
+                    this.textwidth = Math.max.apply(null,lineWidths);  // Math.max(...lineWidths);
                     this.textHeight = parseInt(auxctx.font, 10)*1.1;
                     this.textBoxSize = getValueDef(initValues, "textboxproperties.size", []);
                     this.r1 = getValue(this.textBoxSize[0], 
@@ -1262,7 +1308,9 @@ imagexApp.initDrawing = function(scope, canvas) {
         } }
 
 
+
     if (scope.attrs.state && scope.attrs.state.userAnswer ) {
+        scope.userHasAnswered = true;
         // used to reset object positions.
        // scope.yamlobjects = scope.attrs.state.markup.objects.yamlobjects;
         // lisätty oikeiden vastausten lukemiseen ja piirtämiseen.
@@ -1298,39 +1346,6 @@ imagexApp.initDrawing = function(scope, canvas) {
     dt.draw();
     
     scope.objects = objects;
-
-    // Katsotaan, onko oikeat vastaukset heitetty markuppiin. Jos on, piirretään oikeat raahaukset.
-    // pitäisi varmaan ottaa raahaus kokonaan pois päältä tässä tilanteessa.
-    if(scope.attrs.state && scope.attrs.state.userAnswer ) {
-        if (scope.attrs.state.userAnswer.correctanswer) {
-            //handle drawing lines.
-            var rightdrags = scope.attrs.state.userAnswer.correctanswer.rightanswers;
-            var j = 0;
-            for (j = 0; j < rightdrags.length; j++) {
-                var p = 0;
-                for (p = 0; p < userObjects.length; p++) {
-                    if (userObjects[p].id === rightdrags[j].id) {
-                        var values = {};
-                        // get positions for drawing.
-                        values.position = [];
-                        values.position[0] = getValue(userObjects[p].position[0], 0);
-                        values.position[1] = getValue(userObjects[p].position[1], 0);
-                        values.endposition = [];
-                        values.endposition[0] = getValue(rightdrags[j].position[0], 0);
-                        values.endposition[1] = getValue(rightdrags[j].position[1], 0);
-                        values.ctx = doc_ctx.getContext("2d");
-                        //give context and values for draw function.
-                        var line = new Line(dt,values);
-                        dt.drawObjects.push(line);
-                        values = {};
-                    }
-                }
-            }
-            // Poistetaan eventlistenerit canvaksesta jos oikea vastaus on annettu opiskelijalle.
-           // dt.removeEventListeners();
-        }
-    }
-    dt.draw();
 };
 
 
@@ -1383,6 +1398,7 @@ imagexApp.initScope = function (scope, element, attrs) {
     // Tässä pitäisi olla kaikki targetit
     timHelper.set(scope, attrs, "targets");
     timHelper.set(scope, attrs, "fixedobjects");
+    timHelper.set(scope, attrs, "finalanswer");
 
     timHelper.set(scope, attrs, "canvaswidth", 800);
     timHelper.set(scope, attrs, "canvasheight", 600);
@@ -1525,6 +1541,11 @@ ImagexScope.prototype.getDragObjectJson = function() {
 ImagexScope.prototype.doshowAnswer = function(){
     "use strict";
     var $scope = this.scope;
+    if ($scope.answer &&  $scope.answer.rightanswers ) {
+        $scope.dt.addRightAnswers();
+        return;
+    }
+
     // These break the whole javascript if used, positions are updated somehow anyways.
     // $scope.$digest();
     // $scope.$apply();
@@ -1537,6 +1558,7 @@ ImagexScope.prototype.doshowAnswer = function(){
         'input': {
             'markup': {'taskId': $scope.taskId, 'user_id': $scope.user_id},
             'drags' : this.getDragObjectJson(),
+            'freeHandData': this.scope.freeHandDrawing.freeDrawing,
             'finalanswerquery' : true
         }
     };
@@ -1554,6 +1576,10 @@ ImagexScope.prototype.doshowAnswer = function(){
         $scope.error = data.web.error;
         $scope.result = data.web.result;
         $scope.tries = data.web.tries;
+        // for showing right answers.
+        $scope.answer = data.web.answer;
+        $scope.dt.addRightAnswers();
+        //$scope.imagexScope.resetExercise();
 
     }).error(function (data, status) {
         $scope.isRunning = false;
@@ -1582,6 +1608,14 @@ ImagexScope.prototype.resetExercise = function(){
         }
     }
     // Draw the excercise so that reset appears instantly.
+
+    var dobjs = $scope.dt.drawObjects;
+
+    for (var i = dobjs.length-1; i--; ) {
+	    if (dobjs[i].did === "-") dobjs.splice(i, 1);
+    }
+    $scope.rightAnswersSet = false;
+
     $scope.dt.draw();
 };
 
@@ -1621,6 +1655,7 @@ ImagexScope.prototype.doSave = function(nosave) {
         $scope.error = data.web.error;
         $scope.result = data.web.result;
         $scope.tries = data.web.tries;
+        $scope.userHasAnswered = true;
     }).error(function (data, status) {
         $scope.isRunning = false;
         $scope.errors.push(status);

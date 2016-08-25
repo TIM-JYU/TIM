@@ -12,8 +12,8 @@ from tim_app import app
 
 TIM_URL = ""
 
-CSPLUGIN_NAME = 'csPlugin'
-SVNPLUGIN_NAME = 'showFile'
+CSPLUGIN_NAME = 'csplugin'
+SVNPLUGIN_NAME = 'showfile'
 HASKELLPLUGIN_NAME = 'haskellplugins2'
 PALIPLUGIN_NAME = 'pali'
 IMAGEXLUGIN_NAME = 'imagex'

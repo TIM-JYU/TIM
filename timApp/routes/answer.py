@@ -31,6 +31,9 @@ def is_answer_valid(plugin, old_answers, tim_info):
         return False, 'You cannot submit answers yet.'
     if plugin.deadline(default=datetime.max) < datetime.now():
         return False, 'The deadline for submitting answers has passed.'
+    if tim_info.get('notValid', None):
+        return False, 'Answer is not valid'
+
     return True, 'ok'
 
 
