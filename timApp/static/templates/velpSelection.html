@@ -55,7 +55,7 @@
                 <input id="createVelpButton" class="timButton" type="button" ng-click="selectVelpToEdit(newVelp)"
                        value="Create new velp">
 
-                <div class="stack">
+                <div class="stack" id="selectVelpsStack">
 
                     <!-- NEW VELP -->
 
@@ -143,7 +143,9 @@
                             </div>
                         </div>
                     </div>
-
+                    <button ng-click="releaseClicked()" class="timButton" id="releaseSelectVelpsButton" style="padding-top: 0px;padding-bottom: 0px;margin-bottom: 10px ">&#8592;</button>
+    <div id="selectVelpsDiv" tim-draggable-fixed>
+        <span title="Close" class="glyphicon glyphicon-remove clickable-icon closedraggable" ng-click="releaseClicked()" style="visibility: hidden;position: absolute; margin-left: 16.7em;margin-top: 0.2em"></span>
                     <!-- EDIT VELPS -->
                             <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn ) track by $index">
                                 <div title ="{{ showDisabledText(notAnnotationRights(velp.points)) }}" class="velp" ng-click="notAnnotationRights(velp.points)||useVelp(velp)"
@@ -265,7 +267,7 @@
             </div>
             <!--  </td>
           </tr>-->
-
+</div>
         </uib-tab>
 
         <!-- MANAGE VELPS -->

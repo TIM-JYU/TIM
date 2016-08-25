@@ -422,7 +422,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         });
     };
      /**
-     * Update changed annotation to margin annota
+     * Update changed annotation to margin annotation
      * @method updateAnnotation
      * @param id - Annotation id
      */
@@ -788,7 +788,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             if (answer_id !== null)
                 newAnnotation.answer_id = answer_id.selectedAnswer.id;
-
+            addAnnotationToElement($scope.selectedElement, newAnnotation, false, "Added also margin annotation");
             $scope.addAnnotationToCoord($scope.selectedArea, newAnnotation, true);
             $scope.annotations.push(newAnnotation);
             $scope.annotationids[newAnnotation.id] = newAnnotation.id;
@@ -803,7 +803,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 $scope.annotationids[newAnnotation.id] = json.data.id;
                 console.log("Annotation to text");
                 console.log(json);
-                addAnnotationToElement($scope.selectedElement, newAnnotation, true, "Added also margin annotation");
+
             });
 
             $scope.selectedArea = undefined;
