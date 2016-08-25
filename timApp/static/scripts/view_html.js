@@ -105,6 +105,7 @@ timApp.controller("ViewCtrl", [
 
         // from https://stackoverflow.com/a/7317311
         $window.onload = function () {
+            sc.getAndEditQuestions();
             $window.addEventListener("beforeunload", function (e) {
                 if (!sc.editing) {
                     return undefined;
