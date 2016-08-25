@@ -135,7 +135,11 @@ run pip3 install statsmodels
 #run apt-add-repository ppa:octave/stable
 #run apt-get update
 
-run apt-get install -y octave less   
+# run apt-get install -y octave less
+run add-apt-repository ppa:octave/stable
+run apt-get update
+
+
 run apt-get install -y epstool 
 run apt-get install -y transfig
 

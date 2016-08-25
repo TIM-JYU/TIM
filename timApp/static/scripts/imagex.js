@@ -531,7 +531,7 @@ imagexApp.initDrawing = function(scope, canvas) {
     function Empty(objectValues) {}
 
     function DragObject(dt, values, defId) {
-        this.dId = defId;
+        this.did = defId;
         this.id = getValue(values.id,defId);
         values.id = this.id;
 
@@ -594,7 +594,7 @@ imagexApp.initDrawing = function(scope, canvas) {
     }
     
     function Target(dt, values, defId) {
-        this.dId = defId;
+        this.did = defId;
         this.id = getValue(values.id, defId);
         values.id = this.id;
         this.name = 'target';
@@ -628,7 +628,7 @@ imagexApp.initDrawing = function(scope, canvas) {
     }
     
     function FixedObject(dt, values, defId) {
-        this.dId = defId;
+        this.did = defId;
         this.id = getValue(values.id, defId);
         values.id = this.id;
         if (values.name === 'background') {
@@ -1191,10 +1191,10 @@ imagexApp.initDrawing = function(scope, canvas) {
         var userDrags = scope.attrs.state.userAnswer.drags;
         if (userObjects && userDrags && userDrags.length > 0) {
             for (var i = 0; i < userObjects.length; i++) {
-                if ( !userObjects[i].dId ) userObjects[i].dId = "obj" + (i+1);
+                if ( !userObjects[i].did ) userObjects[i].did = "obj" + (i+1);
                 if (!userObjects[i]) continue; // looks like the first may be null
                 for (var j = 0; j < userDrags.length; j++) {
-                    if (userObjects[i].dId === userDrags[j].dId) {
+                    if (userObjects[i].did === userDrags[j].did) {
                         userObjects[i].position[0] = userDrags[j].position[0];
                         userObjects[i].position[1] = userDrags[j].position[1]
                     }
@@ -1271,7 +1271,7 @@ imagexApp.initDrawing = function(scope, canvas) {
             for (var i = 0; i < objects.length; i++) {
                 if (!objects[i]) continue; // looks like the first may be null
                 for (var j = 0; j < userDrags.length; j++) {
-                    if (objects[i].dId === userDrags[j].dId) {
+                    if (objects[i].did === userDrags[j].did) {
                         objects[i].position[0] = userDrags[j].position[0];
                         objects[i].position[1] = userDrags[j].position[1]
                         objects[i].x = objects[i].position[0];
@@ -1513,7 +1513,7 @@ ImagexScope.prototype.getDragObjectJson = function() {
         return json;
     }
     for(var i = 0; i < dragtable.length ; i++) {
-        json.push({"dId":dragtable[i].dId, "id":dragtable[i].id,
+        json.push({"did":dragtable[i].did, "id":dragtable[i].id,
             "position":[dragtable[i].x, dragtable[i].y]});
     }
     return json;
