@@ -208,13 +208,14 @@ class Velps(TimDbBase):
         :return: None
         """
         cursor = self.db.cursor()
-        for label_id in labels:
-            cursor.execute("""
-                           INSERT INTO LabelInVelp(label_id, velp_id)
-                           VALUES (?, ?)
-                           """, [label_id, velp_id]
-                           )
-        self.db.commit()
+        if labels:  # Labels list can theoretically be null at some situations
+            for label_id in labels:
+                cursor.execute("""
+                               INSERT INTO LabelInVelp(label_id, velp_id)
+                               VALUES (?, ?)
+                               """, [label_id, velp_id]
+                               )
+            self.db.commit()
 
     def update_velp_labels(self, velp_id: int, labels: List[int]):
         """Replaces the labels of a velp with new ones.

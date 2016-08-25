@@ -1,6 +1,18 @@
 from routes.common import *
 from timroutetest import TimRouteTest
 
+# Tested routes from velp.py
+#   /<int:doc_id>/get_default_velp_group
+#   /<int:doc_id>/get_velps
+#   /<int:doc_id>/get_velp_groups
+#   /<int:doc_id>/get_velp_labels
+#   /add_velp
+#   /<int:doc_id>/update_velp
+#   /add_velp_label
+#   /update_velp_label
+#   /<int:doc_id>/create_velp_group
+#   /<int:doc_id>/create_default_velp_group
+
 class VelpTest(TimRouteTest):
     def test_velp(self):
         db = self.get_db()
@@ -38,6 +50,7 @@ class VelpTest(TimRouteTest):
         self.assertNotEqual(-1, j['id'])
         resp = self.get('/{}/get_default_velp_group'.format(str(doc1_id)), as_json=True)
         self.assertNotEqual(-1, resp['id'])
+        default_group_id = resp['id']   # Grab ID of newly created group for later use
 
         # Create new velp group (after default group) so we should have 2 for document in total
         resp = self.json_post('/{}/create_velp_group'.format(str(doc1_id)),
@@ -81,6 +94,52 @@ class VelpTest(TimRouteTest):
         # Try to get (not existing) default velp group and create new default group for document without owner rights
         resp = self.get('/{}/get_default_velp_group'.format(str(doc2_id)), as_json=True)
         self.assertEqual(-1, resp['id'])
-        self.assertDictResponse({'error': 'User is not owner of current document'},
+        self.assertDictResponse({'error': 'User has no edit access to current document'},
                                 self.json_post('/{}/create_default_velp_group'.format(str(doc2_id))),
                                 expect_status = 403)
+
+
+        # There are no velps added to any groups so getting velps for doc1 should give nothing
+        resp = self.get('/{}/get_velps'.format(str(doc1_id)), as_json=True)
+        self.assertEqual(len(resp), 0)
+
+        # Add new velp to doc1 default velp group and check velps for that document after
+        test_data = {'content':'test velp 1', 'velp_groups':[default_group_id], 'language_id':'FI'}
+        resp = self.json_post('/add_velp', test_data)
+        velp_id = self.assertResponseStatus(resp, return_json=True)
+        self.assertEqual(velp_id, 1) # Added velp's id is 1 as it was the first ever velp added
+        resp = self.get('/{}/get_velps'.format(str(doc1_id)), as_json=True)
+        print(resp)
+        self.assertEqual(len(resp), 1)
+        self.assertEqual(resp[0]['content'], "test velp 1")
+
+        # Change just added velp's content
+        test_data = {'content':'Is Zorg now', 'velp_groups':[default_group_id], 'language_id':'FI', 'id':1}
+        resp = self.json_post('/{}/update_velp'.format(str(doc1_id)), test_data)
+        self.assertResponseStatus(resp, return_json=True)
+        resp = self.get('/{}/get_velps'.format(str(doc1_id)), as_json=True)
+        self.assertEqual(resp[0]['content'], "Is Zorg now")
+
+        # Next add velp label, attach it to a velp
+        resp = self.json_post('/add_velp_label', {'content':'test label'})
+        label_id = self.assertResponseStatus(resp)
+        test_data = {'content':'Is Zorg now', 'velp_groups':[default_group_id], 'language_id':'FI', 'id':velp_id,
+                    'labels':[label_id]}
+        self.json_post('/{}/update_velp'.format(str(doc1_id)), test_data)
+        resp = self.get('/{}/get_velp_labels'.format(str(doc1_id)), as_json=True)
+        print(resp)
+        self.assertEqual(resp[0]['content'], 'test label')
+
+        # Add a new velp label and update previous one
+        self.json_post('/add_velp_label', {'content':'test label intensifies'})
+        resp = self.json_post('/update_velp_label', {'id':label_id, 'content':'Zorg label'})
+        self.assertResponseStatus(resp, expect_status=200)
+        resp = self.get('/{}/get_velp_labels'.format(str(doc1_id)), as_json=True)
+        print(resp)
+        self.assertNotEqual(resp[0]['content'], 'test label')
+        self.assertEqual(len(resp), 1)  # Added velp label wasn't added to any velp and thus it can't be found
+                                        # when searching velp labels for doc1
+
+
+
+
