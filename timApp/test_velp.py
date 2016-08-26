@@ -109,7 +109,6 @@ class VelpTest(TimRouteTest):
         velp_id = self.assertResponseStatus(resp, return_json=True)
         self.assertEqual(velp_id, 1) # Added velp's id is 1 as it was the first ever velp added
         resp = self.get('/{}/get_velps'.format(str(doc1_id)), as_json=True)
-        print(resp)
         self.assertEqual(len(resp), 1)
         self.assertEqual(resp[0]['content'], "test velp 1")
 
@@ -127,7 +126,6 @@ class VelpTest(TimRouteTest):
                     'labels':[label_id]}
         self.json_post('/{}/update_velp'.format(str(doc1_id)), test_data)
         resp = self.get('/{}/get_velp_labels'.format(str(doc1_id)), as_json=True)
-        print(resp)
         self.assertEqual(resp[0]['content'], 'test label')
 
         # Add a new velp label and update previous one
@@ -135,7 +133,6 @@ class VelpTest(TimRouteTest):
         resp = self.json_post('/update_velp_label', {'id':label_id, 'content':'Zorg label'})
         self.assertResponseStatus(resp, expect_status=200)
         resp = self.get('/{}/get_velp_labels'.format(str(doc1_id)), as_json=True)
-        print(resp)
         self.assertNotEqual(resp[0]['content'], 'test label')
         self.assertEqual(len(resp), 1)  # Added velp label wasn't added to any velp and thus it can't be found
                                         # when searching velp labels for doc1
