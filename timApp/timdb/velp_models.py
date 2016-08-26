@@ -83,6 +83,8 @@ class Velp(db.Model):
     icon_id = db.Column(db.Integer, db.ForeignKey('icon.id'))
     valid_from = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
     valid_until = db.Column(db.DateTime(timezone=True))
+    color = db.Column(db.Text)
+    visible_to = db.Column(db.Integer, nullable=False)
 
 
 class VelpContent(db.Model):

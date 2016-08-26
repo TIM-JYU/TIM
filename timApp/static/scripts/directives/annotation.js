@@ -71,8 +71,33 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
              * @method toggleAnnotation
              */
             scope.toggleAnnotation = function () {
-                if (false ){//scope.$parent.$parentNode.className === "notes" ){// FIX this scope.$parent.className === "notes" && element.velpElement.parent().className ===  "notes" && scope.$parent.n.parentElement.className ===  "notes"parent.n.parentElement
-                    scope.$parent.toggleAnnotation();
+                if (scope.velpElement === null) {
+                    scope.velpElement = element[0].getElementsByClassName("annotation-info")[0];
+                }
+                var elementName = scope.velpElement.parentNode.offsetParent.className;
+                var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', scope.aid));
+                if ( elementName === "notes" &&  annotationParents.length > 1 ){
+                    if (scope.aid > 0)
+                    {
+                        if (true) {// todo: detect is scope.$$prevSibling visible $(scope.$$prevSibling).is(':visible')
+                            scope.$$prevSibling.show = !scope.$$prevSibling.show;
+                            scope.$$prevSibling.updateVelpZIndex();
+                        } else {
+                             scope.show = !scope.show;
+                            if (scope.show) {
+                                scope.updateVelpZIndex();
+                            }
+                        }
+                    } else {
+                        scope.$$nextSibling.show = !scope.$$nextSibling.show;
+                        scope.$$nextSibling.updateVelpZIndex();
+                        //scope.show = !scope.show;
+                        //scope.velpElement.parentNode. = !scope.velpElement.parentNode.$$prevSibling.show;
+                        //annotationParents.show = !annotationParents[0].show;
+                        //scope.show = !scope.show;
+                    }
+
+                    //scope.isolateScope.show = !scope.isolateScope.show;
                 } else {
                     scope.show = !scope.show;
                     if (scope.show) {
@@ -138,10 +163,14 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
             /**
              * Update annotation to margin
-             * @method updateAnnotationToMargin
+             * @method updateAnnotation
              */
-            scope.updateAnnotationToMargin = function () {
-                scope.$parent.updateAnnotationToMargin(scope.aid, scope.ismargin);
+            scope.updateAnnotation = function () {
+                var margin = false;
+                if (scope.velpElement.parentNode.offsetParent.className ==="notes"){
+                    margin = true;
+                }
+                scope.$parent.updateAnnotation(scope.aid, margin);
             };
 
             /**
@@ -173,7 +202,11 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                             comment_relative_time: "just now"
                         });
                         scope.$parent.addComment(scope.aid, json.data.name, comment);
+                        scope.updateAnnotation();
                     });
+
+                } else {
+                    scope.updateAnnotation();
                 }
                 scope.newComment = "";
                 if (scope.visible_options.value !== scope.original.visible_to) {
@@ -191,7 +224,6 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 scope.$parent.makePostRequest("/update_annotation", scope.original, function (json) {
                     console.log(json);
                 });
-                scope.updateAnnotationToMargin();
             };
 
             /**
@@ -219,7 +251,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                         return true;
                     }
                 }
-            }
+            };
 
              /**
              * Return true if user has teacher rights.
@@ -228,7 +260,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
             scope.allowChangePoints = function () {
                 return scope.$parent.rights.teacher;
-            }
+            };
 
 
 

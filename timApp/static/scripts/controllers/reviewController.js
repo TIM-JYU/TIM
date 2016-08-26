@@ -422,17 +422,16 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         });
     };
      /**
-     * Update changed annotation to margin annota
-     * @method updateAnnotationToMargin
+     * Update changed annotation to margin annotation
+     * @method updateAnnotation
      * @param id - Annotation id
      */
-    $scope.updateAnnotationToMargin = function (id, inmargin) {
+    $scope.updateAnnotation = function (id, inmargin) {
         var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
         var annotationElement = $('[aid="{0}"]'.replace('{0}', id));
         var par = annotationElement.parents('.par');
         var annotationHighlights = annotationElement[0].getElementsByClassName("highlighted");
         if(!inmargin) {
-            // nothing
             for (var a = 0; a < $scope.annotations.length; a++) {
                 if (id === $scope.annotations[a].id){
                     annotationElement[1].parentNode.removeChild(annotationElement[1]);
@@ -443,15 +442,17 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             console.log("updateAnnotationMargin");
         } else {
-            var savedHTML = "";
-            for (var i = 0; i < annotationHighlights.length; i++) {
-                var addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', '');
-                addHTML = addHTML.replace('</span>', '');
-                savedHTML += addHTML;
-            }
-            annotationParents[0].outerHTML = savedHTML;
+            if (annotationParents.length > 1) {
+                var savedHTML = "";
+                for (var i = 0; i < annotationHighlights.length; i++) {
+                    var addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', '');
+                    addHTML = addHTML.replace('</span>', '');
+                    savedHTML += addHTML;
+                }
+                annotationParents[0].outerHTML = savedHTML;
 
-            // TODO: add redraw annotation text
+                // TODO: add redraw annotation text
+            }
         }
 
     };
@@ -787,7 +788,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             if (answer_id !== null)
                 newAnnotation.answer_id = answer_id.selectedAnswer.id;
-
+            addAnnotationToElement($scope.selectedElement, newAnnotation, false, "Added also margin annotation");
             $scope.addAnnotationToCoord($scope.selectedArea, newAnnotation, true);
             $scope.annotations.push(newAnnotation);
             $scope.annotationids[newAnnotation.id] = newAnnotation.id;
@@ -802,7 +803,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 $scope.annotationids[newAnnotation.id] = json.data.id;
                 console.log("Annotation to text");
                 console.log(json);
-                addAnnotationToElement($scope.selectedElement, newAnnotation, true, "Added also margin annotation");
+
             });
 
             $scope.selectedArea = undefined;

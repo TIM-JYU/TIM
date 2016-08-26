@@ -55,7 +55,7 @@
                 <input id="createVelpButton" class="timButton" type="button" ng-click="selectVelpToEdit(newVelp)"
                        value="Create new velp">
 
-                <div class="stack">
+                <div class="stack" id="selectVelpsStack">
 
                     <!-- NEW VELP -->
 
@@ -131,6 +131,17 @@
                                             </span>
                                         </span>
                                     </fieldset>
+                                     <label class="annotationVisibleText">
+                                                    <div title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></div>
+                                                    <select ng-model="visible_options.value"
+                                                    ng-options="v as visible_options.names[v-1] for v in visible_options.values">
+                                                    </select>
+                                                    <div ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
+                                                     uib-popover="'Just me' means that the annotation is visible only to yourself. 'Document owner' refers to the person or group who has been named as the document owner. 'Teachers' refers to the users that have teacher access to this document. 'Everyone' means that the annotation is visible to everyone who can view the assessed content."
+                                                     popover-placement="left">
+                                                    </div>
+                                                </label>
+                                    <button colorpicker type="button" colorpicker-position="top" ng-model="velp.color">Color</button>
                                     <p class="error" ng-show="!isSomeVelpGroupSelected(newVelp)">
                                         You need to select at least one velpgroup.
                                     </p>
@@ -143,7 +154,9 @@
                             </div>
                         </div>
                     </div>
-
+                    <button ng-click="releaseClicked()" class="timButton" id="releaseSelectVelpsButton" style="padding-top: 0px;padding-bottom: 0px;margin-bottom: 10px ">&#8592;</button>
+    <div id="selectVelpsDiv" tim-draggable-fixed>
+        <span title="Close" class="glyphicon glyphicon-remove clickable-icon closedraggable" ng-click="releaseClicked()" style="visibility: hidden;position: absolute; margin-left: 16.7em;margin-top: 0.2em"></span>
                     <!-- EDIT VELPS -->
                             <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn ) track by $index">
                                 <div title ="{{ showDisabledText(notAnnotationRights(velp.points)) }}" class="velp" ng-click="notAnnotationRights(velp.points)||useVelp(velp)"
@@ -265,7 +278,7 @@
             </div>
             <!--  </td>
           </tr>-->
-
+</div>
         </uib-tab>
 
         <!-- MANAGE VELPS -->

@@ -89,7 +89,12 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     var default_personal_velp_group = {id: -2, name: "Personal default"};
 
     $scope.annotations = [];
-
+    $scope.visible_options = {
+                "type": "select",
+                "value": 4,
+                "values": [1, 2, 3, 4],
+                "names": ["Just me", "Document owner", "Teachers", "Everyone"]
+    };
     // Get velpgroup data
     var promises = [];
     promises.push();
@@ -427,6 +432,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
             language_id: "FI",
             icon_id: null,
             valid_until: null,
+            visible_to: $scope.newVelp.visible_options.value,
             velp_groups: JSON.parse(JSON.stringify($scope.newVelp.velp_groups))
 
         };
@@ -1093,6 +1099,51 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
             velp.velp_groups.splice(index, 1);
         }
     };
+
+    /**
+     * Releases select tab.
+     * @method releaseClicked
+     */
+
+    $scope.releaseClicked = function () {
+                    var div = $("#selectVelpsDiv");
+                    $scope.previewReleased = !($scope.previewReleased);
+                    var top = div.offset().top;
+                    var left = div.offset().left - 270;
+                    var element = div.detach();
+                    if (div.css("position") === "fixed") {
+                        $('#selectVelpsStack').append(element);
+                        // If preview has been clicked back in, save the preview position before making it static again
+                        div.css("position", "static");
+                        div.find(".draghandle").css("visibility", "hidden");
+                        div.find(".closedraggable").css("visibility", "hidden");
+                        div.css("display", "default");
+                        div.css("padding", 0);
+
+                        document.getElementById("releaseSelectVelpsButton").innerHTML = "&#8592;";
+
+
+
+                    }
+                    else {
+                        // If preview has just been released or it was released last time editor was open
+                        $('#velpMenu').append(element);
+                        div.css("position", "fixed");
+                        div.find(".draghandle").css("visibility", "visible");
+                        div.find(".closedraggable").css("visibility", "visible");
+
+                        div.css("display", "table");
+                        div.css("width", "19em");
+                        div.css("padding", 5);
+                        div.css("z-index", 9999);
+                        document.getElementById("releaseSelectVelpsButton").innerHTML = "&#8594;";
+
+                        div.offset({'left': left, 'top': top});
+
+
+                    }
+
+                };
 }]);
 
 /**
@@ -1149,4 +1200,5 @@ timApp.filter('filterByLabels', function () {
 
         return returnVelps;
     };
+
 });
