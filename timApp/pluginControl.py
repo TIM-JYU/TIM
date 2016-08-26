@@ -82,7 +82,7 @@ def pluginify(doc,
     :type pars: list[DocParagraph]
     """
 
-    taketime("answ", "start")
+    # taketime("answ", "start")
 
     settings = doc.get_settings()
     pars = dereference_pars(pars, edit_window, source_doc=doc.get_original_document())
@@ -92,7 +92,7 @@ def pluginify(doc,
 
     html_pars = [par.html_dict() for par in pars]
 
-    taketime("answ", "sansitize")
+    # taketime("answ", "sansitize")
 
     if custom_state is not None:
         if len(pars) != 1:
@@ -134,7 +134,7 @@ def pluginify(doc,
                                          "preview" : edit_window,
                                          "anonymous": user is not None}
 
-    taketime("answ", "markup", len(plugins))
+    # taketime("answ", "markup", len(plugins))
 
     answers = []
     if load_states and custom_state is None and user is not None:
@@ -148,7 +148,7 @@ def pluginify(doc,
     css_paths = []
     modules = []
 
-    taketime("answ", "done", len(answers))
+    # taketime("answ", "done", len(answers))
 
     for plugin_name, plugin_block_map in plugins.items():
         try:
@@ -225,7 +225,7 @@ def pluginify(doc,
                                                                              plugin_url,
                                                                              html)
 
-    taketime("phtml done")
+    # taketime("phtml done")
 
     return html_pars, js_paths, css_paths, modules
 
