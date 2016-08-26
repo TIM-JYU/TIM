@@ -38,6 +38,10 @@ class Document:
     def get_default_files_root(cls):
         return cls.default_files_root
 
+    @classmethod
+    def get_documents_dir(cls, files_root: str = default_files_root) -> str:
+        return os.path.join(files_root, 'docs')
+
     def __len__(self):
         count = 0
         for _ in self:
@@ -71,7 +75,7 @@ class Document:
         :return: Boolean.
         """
         froot = cls.get_default_files_root() if files_root is None else files_root
-        return os.path.exists(os.path.join(froot, 'docs', str(doc_id)))
+        return os.path.exists(os.path.join(cls.get_documents_dir(froot), str(doc_id)))
 
     @classmethod
     def version_exists(cls, doc_id: int, doc_ver: 'tuple(int,int)', files_root: Optional[str] = None) -> bool:
@@ -82,7 +86,7 @@ class Document:
         :return: Boolean.
         """
         froot = cls.get_default_files_root() if files_root is None else files_root
-        return os.path.isfile(os.path.join(froot, 'docs', str(doc_id), str(doc_ver[0]), str(doc_ver[1])))
+        return os.path.isfile(os.path.join(cls.get_documents_dir(froot), str(doc_id), str(doc_ver[0]), str(doc_ver[1])))
 
     def __update_par_map(self):
         self.par_map = {}
@@ -168,7 +172,7 @@ class Document:
             i.close()
 
     def create(self, ignore_exists : bool = False):
-        path = os.path.join(self.files_root, 'docs', str(self.doc_id))
+        path = os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id))
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
         elif not ignore_exists:
@@ -199,7 +203,7 @@ class Document:
         """
         froot = cls.get_default_files_root() if files_root is None else files_root
         if cls.doc_exists(doc_id, files_root=froot):
-            shutil.rmtree(os.path.join(froot, 'docs', str(doc_id)))
+            shutil.rmtree(os.path.join(cls.get_documents_dir(froot), str(doc_id)))
             # todo: remove all paragraph links
         elif not ignore_exists:
             raise DocExistsError(doc_id)
@@ -211,7 +215,7 @@ class Document:
         :return:
         """
         froot = cls.get_default_files_root() if files_root is None else files_root
-        res = 1 + cls.__get_largest_file_number(os.path.join(froot, 'docs'), default=0)
+        res = 1 + cls.__get_largest_file_number(cls.get_documents_dir(froot), default=0)
         return res
 
     def get_version(self) -> Tuple[int, int]:
@@ -221,7 +225,7 @@ class Document:
         """
         if self.version is not None:
             return self.version
-        basedir = os.path.join(self.files_root, 'docs', str(self.doc_id))
+        basedir = os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id))
         major = self.__get_largest_file_number(basedir, default=0)
         minor = 0 if major < 1 else self.__get_largest_file_number(os.path.join(basedir, str(major)), default=0)
         self.version = major, minor
@@ -232,11 +236,11 @@ class Document:
         return self.doc_id, major, minor
 
     def get_document_path(self) -> str:
-        return os.path.join(self.files_root, 'docs', str(self.doc_id))
+        return os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id))
 
     def get_version_path(self, ver: Optional[Tuple[int, int]]=None) -> str:
         version = self.get_version() if ver is None else ver
-        return os.path.join(self.files_root, 'docs', str(self.doc_id), str(version[0]), str(version[1]))
+        return os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id), str(version[0]), str(version[1]))
 
     def get_refs_dir(self, ver: Optional[Tuple[int, int]]=None) -> str:
         version = self.get_version() if ver is None else ver
@@ -289,7 +293,7 @@ class Document:
             ver = (old_ver[0] + 1, 0) if increment_major else (old_ver[0], old_ver[1] + 1)
             ver_exists = os.path.isfile(self.get_version_path(ver))
         if increment_major:
-            os.mkdir(os.path.join(self.files_root, 'docs', str(self.doc_id), str(ver[0])))
+            os.mkdir(os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id), str(ver[0])))
         if old_ver[0] > 0:
             shutil.copyfile(self.get_version_path(old_ver), self.get_version_path(ver))
         else:

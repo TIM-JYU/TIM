@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Functions for dealing with plugin paragraphs."""
 import json
-import time
+from timtiming import taketime
+
 from collections import OrderedDict
 
 from containerLink import call_plugin_html, call_plugin_multihtml, PLUGINS
@@ -83,6 +84,8 @@ def pluginify(doc,
     :type pars: list[DocParagraph]
     """
 
+    # taketime("answ", "start")
+
     settings = doc.get_settings()
     pars = dereference_pars(pars, edit_window, source_doc=doc.get_original_document())
     if sanitize:
@@ -90,6 +93,8 @@ def pluginify(doc,
             par.sanitize_html()
 
     html_pars = [par.html_dict() for par in pars]
+
+    # taketime("answ", "sansitize")
 
     if custom_state is not None:
         if len(pars) != 1:
@@ -99,6 +104,7 @@ def pluginify(doc,
     for idx, block in enumerate(pars):
         attr_taskid = block.get_attr('taskId')
         plugin_name = block.get_attr('plugin')
+
 
         if plugin_name:
             vals = parse_plugin_values(block, global_attrs=settings.global_plugin_attrs(),
@@ -130,6 +136,9 @@ def pluginify(doc,
                                          "preview" : edit_window,
                                          "anonymous": user is not None}
 
+    # taketime("answ", "markup", len(plugins))
+
+    answers = []
     if load_states and custom_state is None and user is not None:
         answers = answer_db.get_newest_answers(user['id'], list(state_map.keys()))
         for answer in answers:
@@ -141,9 +150,7 @@ def pluginify(doc,
     css_paths = []
     modules = []
 
-    t22 = time.clock()
-    # print("%-15s %-10s %6d - %7.4f" % ("answ done", " ", len(answers), (t22-t12)))
-    t12 = t22
+    # taketime("answ", "done", len(answers))
 
     for plugin_name, plugin_block_map in plugins.items():
         try:
@@ -219,6 +226,8 @@ def pluginify(doc,
                 html_pars[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskIDExt'],
                                                                              plugin_url,
                                                                              html) if wrap_in_div else html
+
+    # taketime("phtml done")
 
     return html_pars, js_paths, css_paths, modules
 
