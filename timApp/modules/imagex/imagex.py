@@ -219,6 +219,7 @@ class ImagexServer(tim_server.TimServer):
             #Uncomment to see student answers
             #print("---drags---" + str(drags))
             #No points are awarded if all tries have been given or the final answer has been given to the student.
+            tnr = 0
             if targets != None:
                 for target in targets:
                     #Find object name from user input.
@@ -230,6 +231,7 @@ class ImagexServer(tim_server.TimServer):
                     target['max'] = get_value_def(target, "max", 100000)
                     target['snapOffset'] = get_value_def(target, "snapOffset", [0, 0])
                     target['n'] = 0;
+                    tnr += 1
                     print(target)
                     if tries < max_tries:  # and finalanswergiven == False:
                         for selectkey in target['points'].keys():
@@ -241,7 +243,11 @@ class ImagexServer(tim_server.TimServer):
                                     if target["n"] < target["max"] and \
                                           is_inside(target['type'],target['size'],-target['a'],target['position'],drag["position"]):
                                         target["n"] += 1;
-                                        points += (target['points'][selectkey])
+                                        drag["td"] = "trg" + str(tnr)
+                                        if "id" in target: drag["tid"] = target["id"]
+                                        pts = (target['points'][selectkey])
+                                        drag["points"] = pts
+                                        points += pts
                                         gottenpointsobj[selectkey] = target['points'][selectkey]
                                         gottenpoints.update(gottenpointsobj)
                                         gottenpointsobj = {}
@@ -315,7 +321,8 @@ class ImagexServer(tim_server.TimServer):
 
             #Save user input and points to markup
             tim_info = {"points": points}
-            save = {"userAnswer": userAnswer, 'freeHandData': freeHandData} #{"drags":drags,"tries":tries}
+            save = {"userAnswer": userAnswer}
+            if freeHandData: save['freeHandData'] = freeHandData #{"drags":drags,"tries":tries}
             if finalanswergiven: save["finalanswergiven"] = True
             result["save"] = save
             if not prevfinalanswergiven:

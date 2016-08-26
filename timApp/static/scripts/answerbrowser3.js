@@ -332,9 +332,14 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                 $scope.getAllAnswers = function() {
                     var sPageURL = decodeURIComponent(window.location.search.substring(1));
                     var age = "";
+                    var valid = "&valid=1";
                     if ( sPageURL.indexOf("age=min") >= 0 ) age = "&age=min";
+                    if ( sPageURL.indexOf("age=all") >= 0 ) age = "&age=all";
+                    if ( sPageURL.indexOf("valid=all") >= 0 ) valid = "&valid=%";
+                    if ( sPageURL.indexOf("valid=0") >= 0 ) valid = "&valid=0";
+                    if ( sPageURL.indexOf("valid=1") >= 0 ) valid = "&valid=1";
                     $scope.loading++;
-                    $http.get('/allAnswers/' + $scope.taskId + '?rnd='+Math.random() + age, {params: {group: $scope.$parent.group}})
+                    $http.get('/allAnswers/' + $scope.taskId + '?rnd='+Math.random() + age + valid, {params: {group: $scope.$parent.group}})
                         .success(function (data, status, headers, config) {
                             $scope.allAnswers = data.join("\n\n----------------------------------------------------------------------------------\n");
                             var nw = $window;

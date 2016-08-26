@@ -139,7 +139,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     """
     s_in = ""
     pwd = ""
-    if not ulimit: ulimit = "ulimit -f 1000 -t 10 -s 100 "  # -v 2000 -s 100 -u 10
+    if not ulimit: ulimit = "ulimit -f 1000 -t 10 -s 600 "  # -v 2000 -s 100 -u 10
     if uargs and len(uargs): args.extend(shlex.split(uargs))
     if stdin: s_in = " <" + stdin
     mkdirs(cwd + "/run")
@@ -553,7 +553,7 @@ def check_number_rule(s, number_rule):
     for rule in number_rule:
         r = rule
         if not isinstance(r, list):
-            r = re.findall(r"[-0-9.]+",r)
+            r = re.findall(r"-?[0-9.]+",r)
         if len(r) < 2: continue
         if len(r) < 3: r.append(r[1])
         try:

@@ -136,6 +136,7 @@ def pluginify(doc,
 
     taketime("answ", "markup", len(plugins))
 
+    answers = []
     if load_states and custom_state is None and user is not None:
         answers = answer_db.get_newest_answers(user['id'], list(state_map.keys()))
         for answer in answers:

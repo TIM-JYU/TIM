@@ -53,8 +53,9 @@ FreeHand.prototype.draw = function(ctx) {
 };
 
 
-FreeHand.prototype.startSegment = function(p) {
-    if ( !p ) return;
+FreeHand.prototype.startSegment = function(pxy) {
+    if ( !pxy ) return;
+    var p = [Math.round(pxy.x), Math.round(pxy.y)];
     var ns = {};
     ns.color = this.params.color;
     ns.w = this.params.w;
@@ -69,8 +70,9 @@ FreeHand.prototype.endSegment = function() {
 };
 
 
-FreeHand.prototype.startSegmentDraw = function(redraw, p) {
-    if ( !p ) return;
+FreeHand.prototype.startSegmentDraw = function(redraw, pxy) {
+    if ( !pxy ) return;
+    var p = [Math.round(pxy.x), Math.round(pxy.y)];
     this.redraw = redraw;
     var ns = {};
     ns.color = this.params.color;
@@ -81,8 +83,9 @@ FreeHand.prototype.startSegmentDraw = function(redraw, p) {
 };
 
 
-FreeHand.prototype.addPoint = function(p) {
-    if ( !p ) return;
+FreeHand.prototype.addPoint = function(pxy) {
+    if ( !pxy ) return;
+    var p = [Math.round(pxy.x), Math.round(pxy.y)];
     var n = this.freeDrawing.length;
     if ( n == 0 ) this.startSegment(p);
     else {
@@ -108,14 +111,14 @@ FreeHand.prototype.popSegment = function(minlen) {
 };
 
 
-FreeHand.prototype.addPointDraw = function(ctx, p) {
-    if ( !p ) return;
+FreeHand.prototype.addPointDraw = function(ctx, pxy) {
+    if ( !pxy ) return;
     if ( this.params.lineMode ) {
         this.popPoint(1);
         if ( this.redraw ) this.redraw();
     }
-    this.line(ctx,this.prevPos, p);
-    this.addPoint(p);
+    this.line(ctx,this.prevPos, [pxy.x, pxy.y]);
+    this.addPoint(pxy);
 };
 
 
@@ -159,8 +162,8 @@ FreeHand.prototype.line = function(ctx, p1, p2) {
     ctx.beginPath();
     ctx.strokeStyle = this.params.color;
     ctx.lineWidth = this.params.w;
-    ctx.moveTo(p1.x, p1.y);
-    ctx.lineTo(p2.x, p2.y);
+    ctx.moveTo(p1[0], p1[1]);
+    ctx.lineTo(p2[0], p2[1]);
     ctx.stroke();
 }
 
@@ -172,9 +175,9 @@ function drawFreeHand(ctx, dr) {
         ctx.beginPath();
         ctx.strokeStyle = seg.color;
         ctx.lineWidth = seg.w;
-        ctx.moveTo(seg.lines[0].x, seg.lines[0].y);
+        ctx.moveTo(seg.lines[0][0], seg.lines[0][1]);
         for (var lni = 1; lni < seg.lines.length; lni++) {
-            ctx.lineTo(seg.lines[lni].x, seg.lines[lni].y);
+            ctx.lineTo(seg.lines[lni][0], seg.lines[lni][1]);
         }
         ctx.stroke();
     }

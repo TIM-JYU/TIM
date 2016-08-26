@@ -95,37 +95,50 @@ class Answers(TimDbBase):
                             AND user_id = ?
                            GROUP BY task_id""" % template, task_ids + [user_id]))
 
-    def get_all_answers(self, task_id: str, usergroup: int, hide_names: bool, age: str) -> List[str]:
+    def get_all_answers(self, task_id: str, usergroup: int, hide_names: bool, age: str, valid: str) -> List[str]:
         """Gets the all answers to task
 
         :param task_id: The id of the task.
         :param usergroup: Group of users to search
         :param hide_names: Hide names
-        :param age: min or max
+        :param age: min, max or all
+        :param valid: 0, 1 or all
         """
         time_limit = "1900-09-12 22:00:00"
+        counts =  "count(a.answered_on)"
+        groups = "group by a.task_id, u.id"
         minmax = "max"
         if age == "min":
             minmax = "min"
+        if age == "all":
+            minmax = ""
+            counts = "a.valid"
+            groups = "";
+
+
         answs = self.db.execute("""
-select u.name, a.task_id, a.content, """ + minmax + """(a.answered_on) as t, count(a.answered_on) as n
+select u.name, a.task_id, a.content, """ + minmax + """(a.answered_on) as t, """ + counts + """ as n, a.points as points
 from answer as a, userAnswer as ua, user as u
 where a.task_id like ? and ua.answer_id = a.id and u.id = ua.user_id and a.answered_on > ?
-group by a.task_id, u.id
-order by u.id,a.task_id;
-        """, [task_id, time_limit])
+and a.valid like ?
+""" + groups + """
+order by u.id,a.task_id,a.answered_on;
+        """, [task_id, time_limit, valid])
 
         result = []
         if answs is None: return result
 
         for row in answs:
-            header = row[0] + ": " + row[1] + "; " + row[3] + "; " + str(row[4])
+            header = row[0] + ": " + row[1] + "; " + row[3] + "; " + str(row[4]) + "; " + str(row[5])
             if hide_names: header = ""
             # print(separator + header)
             line = json.loads(row[2])
-            if not isinstance(line, list):
-                answ = line.get("usercode", "-")
-                result.append(header + "\n" + answ)
+            answ = str(line)
+            if isinstance(line, object):
+                if  "usercode" in line:
+                    answ = line.get("usercode", "-")
+
+            result.append(header + "\n" + answ)
 
         return result
 
