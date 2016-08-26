@@ -6,6 +6,8 @@ CREATE TABLE Velp (
   icon_id        INTEGER,
   valid_from     DATETIME DEFAULT CURRENT_TIMESTAMP,
   valid_until    DATETIME,
+  color          TEXT,
+  visible_to     INTEGER  NOT NULL,
 
   CONSTRAINT Velp_PK
   PRIMARY KEY (id),

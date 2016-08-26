@@ -89,7 +89,12 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     var default_personal_velp_group = {id: -2, name: "Personal default"};
 
     $scope.annotations = [];
-
+    $scope.visible_options = {
+                "type": "select",
+                "value": 4,
+                "values": [1, 2, 3, 4],
+                "names": ["Just me", "Document owner", "Teachers", "Everyone"]
+    };
     // Get velpgroup data
     var promises = [];
     promises.push();
@@ -427,6 +432,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
             language_id: "FI",
             icon_id: null,
             valid_until: null,
+            visible_to: $scope.newVelp.visible_options.value,
             velp_groups: JSON.parse(JSON.stringify($scope.newVelp.velp_groups))
 
         };
