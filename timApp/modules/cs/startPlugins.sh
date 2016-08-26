@@ -104,6 +104,11 @@ sudo chmod 777 cs
 cd cs
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/tojukarp/trunk/dist/ComTest.jar -O ComTest.jar -nv
 
+sudo mkdir -p /opt/cs/simcir/check
+sudo chmod 777 /opt/cs/simcir/check
+cd /opt/cs/simcir/check
+wget https://yousource.it.jyu.fi/opetus-ji/logik-py/blobs/raw/master/simcirtest.py -O simcirtest.py -nv
+
 fi
 
 cd /opt/cs

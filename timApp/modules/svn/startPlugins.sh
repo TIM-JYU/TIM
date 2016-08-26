@@ -1,7 +1,7 @@
 #!/bin/bash
 # Restart showFile
 
-dockername="showFile"
+dockername="showfile"
 
 docker stop $dockername > /dev/null 2>&1
 docker rm $dockername > /dev/null 2>&1
