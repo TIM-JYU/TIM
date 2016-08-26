@@ -89,6 +89,9 @@ timApp.controller("ViewCtrl", [
         } else {
             sc.selectedUser = null;
         }
+        if (sc.lectureMode) {
+            sc.noQuestionAutoNumbering = $window.noQuestionAutoNumbering;
+        }
 
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
@@ -106,6 +109,7 @@ timApp.controller("ViewCtrl", [
 
         // from https://stackoverflow.com/a/7317311
         $window.onload = function () {
+            sc.getAndEditQuestions();
             $window.addEventListener("beforeunload", function (e) {
                 if (!sc.editing) {
                     return undefined;
@@ -373,6 +377,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.toggleParEditor = function ($par, options) {
+            var area_start, area_end;
             var caption = 'Add paragraph';
             var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
             var mobile = touch && (window.screen.width < 1200);
@@ -389,8 +394,6 @@ timApp.controller("ViewCtrl", [
                 url = '/postParagraph/';
             }
 
-            var area_start;
-            var area_end;
 
             if (options.area) {
                 area_end = sc.getParId(sc.selection.end);
@@ -521,7 +524,51 @@ timApp.controller("ViewCtrl", [
             sc.showQuestionPreview = true;
         };
 
-        sc.toggleNoteEditor = function ($par, options) {
+        sc.showQuestionNew = function (parId, parIdNext) {
+            sc.json = "No data";
+            sc.questionParId = parId;
+            sc.questionParIdNext = parIdNext;
+
+            http({
+                url: '/getQuestionByParId',
+                method: 'GET',
+                params: {'par_id': sc.questionParId, 'doc_id': sc.docId, 'buster': new Date().getTime()}
+            })
+                .success(function (data) {
+                    sc.json = data.questionjson;
+                    $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.TITLE});
+                    $rootScope.$broadcast("setPreviewJson", {
+                        questionjson: sc.json,
+                        questionParId: sc.questionParId,
+                        questionParIdNext: sc.questionParIdNext,
+                        points: data.points,
+                        expl: data.expl,
+                        isLecturer: sc.isLecturer
+                    });
+                })
+
+                .error(function () {
+                    $window.console.log("Could not question.");
+                });
+
+
+            sc.lectureId = -1;
+            sc.inLecture = false;
+
+            sc.$on('postLectureId', function (event, response) {
+                sc.lectureId = response;
+            });
+
+            sc.$on('postInLecture', function (event, response) {
+                sc.inLecture = response;
+            });
+
+            $rootScope.$broadcast('getLectureId');
+            $rootScope.$broadcast('getInLecture');
+            sc.showQuestionPreview = true;
+        };
+
+        sc.toggleNoteEditor = function ($par_or_area, options) {
             var caption = 'Edit comment';
             var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
             var mobile = touch && (window.screen.width < 1200);
@@ -546,7 +593,8 @@ timApp.controller("ViewCtrl", [
                 data = {};
                 initUrl = '/note/' + options.noteData.id;
             }
-            var par_id = sc.getParId($par),
+            var $par = sc.getFirstPar($par_or_area);
+            var par_id = sc.getFirstParId($par_or_area),
                 attrs = {
                     "save-url": url,
                     "extra-data": angular.extend({
@@ -599,7 +647,7 @@ timApp.controller("ViewCtrl", [
             }
             return e;
         };
-        
+
         sc.oldWidth = $($window).width();
         $($window).resize(function (e) {
             if (e.target === $window) {
@@ -621,7 +669,7 @@ timApp.controller("ViewCtrl", [
             var lastclicktime = -1;
 
            $document.on('mousedown touchstart', className, function (e) {
-                if (!overrideModalCheck && ($(".actionButtons").length > 0 || $(EDITOR_CLASS_DOT).length > 0)) {
+                if (!overrideModalCheck && ($(".actionButtons").length > 0 || $(EDITOR_CLASS_DOT).length > 0)) {
                     // Disable while there are modal gui elements
                     return;
                 }
@@ -677,6 +725,23 @@ timApp.controller("ViewCtrl", [
                 if (func($(this), sc.fixPageCoords(e))) {
                     e.preventDefault();
                     e.stopPropagation();
+                }
+            });
+        };
+
+        sc.onMouseOverOut = function (className, func) {
+            // A combination function with a third parameter
+            // true when over, false when out
+
+            $document.on('mouseover', className, function (e) {
+                if (func($(this), sc.fixPageCoords(e), true)) {
+                    e.preventDefault();
+                }
+            });
+
+            $document.on('mouseout', className, function (e) {
+                if (func($(this), sc.fixPageCoords(e), false)) {
+                    e.preventDefault();
                 }
             });
         };
@@ -779,6 +844,10 @@ timApp.controller("ViewCtrl", [
             $('html, body').animate({
                 scrollTop: y
             }, 500);
+        };
+
+        sc.showAddParagraphMenu = function (e, $par_or_area, coords) {
+            sc.showPopupMenu(e, $par_or_area, coords, {actions: 'addParagraphFunctions'});
         };
 
         sc.showAddParagraphAbove = function (e, $par) {
@@ -936,7 +1005,12 @@ timApp.controller("ViewCtrl", [
         // Event handler for "Add question below"
         // Opens pop-up window to create question.
         sc.addQuestion = function (e, $par) {
+            var parId = sc.getParId($par);
+            var parNextId = sc.getParId($par.next());
+            var $newpar = sc.createNewPar();
+            $par.after($newpar);
             $rootScope.$broadcast('toggleQuestion');
+            $rootScope.$broadcast('newQuestion', {'par_id': parId,'par_id_next': parNextId});
             sc.par = $par;
         };
 
@@ -1008,6 +1082,11 @@ timApp.controller("ViewCtrl", [
             }
 
             var $newPars = $($compile(data.texts)(sc));
+
+            if ($window.editMode === 'area')
+                newPars.find('.editline').removeClass('editline').addClass('editline-disabled');
+
+
             $par.replaceWith($newPars);
             sc.processAllMathDelayed($newPars);
             http.defaults.headers.common.Version = data.version;
@@ -1018,7 +1097,7 @@ timApp.controller("ViewCtrl", [
             sc.beginUpdate();
         };
 
-        sc.pendingUpdatesCount = function () {
+        sc.pendingUpdatesCount = function () {
             return Object.keys(sc.pendingUpdates).length;
         };
 
@@ -1045,6 +1124,7 @@ timApp.controller("ViewCtrl", [
                 }
             }
             sc.pendingUpdates = {};
+            if (sc.lectureMode) { sc.getAndEditQuestions(); }
         };
 
         sc.applyDynamicStyles = function($par) {
@@ -1080,7 +1160,7 @@ timApp.controller("ViewCtrl", [
             return true;
         };
 
-        sc.onClick(".readline", function ($this, e) {
+        sc.onClick(".readline, .readlineQuestion", function ($this, e) {
             return sc.markParRead($this, $this.parents('.par'));
         });
 
@@ -1146,26 +1226,9 @@ timApp.controller("ViewCtrl", [
             return false;
         }, true);
 
-        sc.setAreaAttr = function(area, attr, value) {
-            var area_selector = "[data-area=" + area + "]";
-            $(area_selector).css(attr, value);
+        sc.getArea = function(area) {
+            return $("#area_" + area);
         };
-
-        sc.onClick(".areacollapse", function ($this, e) {
-            $this.removeClass("areacollapse");
-            var area_name = $this.parent().attr('data-area-start');
-            console.log("Collapse " + area_name);
-            sc.setAreaAttr(area_name, "display", "none");
-            $this.addClass("areaexpand");
-        });
-
-        sc.onClick(".areaexpand", function ($this, e) {
-            $this.removeClass("areaexpand");
-            var area_name = $this.parent().attr('data-area-start');
-            console.log("Expand " + area_name);
-            sc.setAreaAttr(area_name, "display", "");
-            $this.addClass("areacollapse");
-        });
 
         sc.showNoteWindow = function (e, $par) {
             sc.toggleNoteEditor($par, {isNew: true});
@@ -1235,6 +1298,15 @@ timApp.controller("ViewCtrl", [
             sc.par = ($(question).parent().parent());
         });
 
+                sc.onClick(".questionAddedNew", function ($this, e) {
+            var question = $this;
+            var $par = $(question).parent().parent();
+            var parId = $($par)[0].getAttribute('id');
+            var parNextId = sc.getParId($par.next());
+            sc.showQuestionNew(parId, parNextId);
+            sc.par = ($(question).parent());
+        });
+
         sc.onClick("html.ng-scope", function ($this, e) {
             // Clicking anywhere
             var tagName = e.target.tagName.toLowerCase();
@@ -1286,6 +1358,9 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.toggleActionButtons = function (e, $par, toggle1, toggle2, coords) {
+            if ($window.editMode == 'area')
+                return;
+
             if (!sc.rights.editable && !sc.rights.can_comment) {
                 return;
             }
@@ -1336,6 +1411,42 @@ timApp.controller("ViewCtrl", [
                 $questionsDiv.append($questionDiv);
             }
             return $questionsDiv;
+        };
+
+        sc.getAndEditQuestions = function () {
+            console.log(sc.settings);
+            console.log($window.sessionsettings);
+            var questions = $('.editlineQuestion');
+            for (var i = 0; i < questions.length; i++) {
+                var questionParent = $(questions[i].parentNode);
+                var questionChildren = $(questionParent.children());
+                var questionNumber = $(questionChildren.find($('.questionNumber')));
+                var questionTitle = JSON.parse(questionParent.attr('attrs')).question;
+                if (questionTitle == 'Untitled') {
+                    questionTitle = "";
+                }
+                if(questionTitle.length > 10) {
+                    questionTitle = questionTitle.substr(0, 10) + "\r\n...";
+                }
+                if (questionNumber.length > 0) {
+                    questionNumber[0].innerHTML = (i+1)+ ")\r\n" + questionTitle;
+                }
+                else {
+                    var parContent = $(questionChildren[0]);
+                    questionParent.addClass('questionPar');
+                    parContent.addClass('questionParContent');
+                    var questionTitleText;
+                    if (sc.noQuestionAutoNumbering) {
+                        questionTitleText = questionTitle;
+                    } else {
+                        questionTitleText = (i+1) + ")\r\n" + questionTitle;
+                    }
+                    var p = $("<p>", {class: "questionNumber", text: questionTitleText});
+                    parContent.append(p);
+                    var editLine = $(questionChildren[1]);
+                    parContent.before(editLine);
+                }
+            }
         };
 
         sc.getQuestions = function () {
@@ -1547,6 +1658,16 @@ timApp.controller("ViewCtrl", [
                 //return sc.showAddParagraphBelow(e, $par);
                 return sc.showAddParagraphAbove(e, $(".addBottomContainer"));
             });
+
+            sc.onClick(".pasteBottom", function ($this, e) {
+                $(".actionButtons").remove();
+                sc.pasteAbove(e, $(".addBottomContainer"), false);
+            });
+
+            sc.onClick(".pasteRefBottom", function ($this, e) {
+                $(".actionButtons").remove();
+                sc.pasteAbove(e, $(".addBottomContainer"), true);
+            });
         }
         sc.processAllMathDelayed($('body'));
 
@@ -1693,7 +1814,7 @@ timApp.controller("ViewCtrl", [
                     $window.alert(data.error);
                 });
         };
-        
+
         sc.copyPar = function (e, $par) {
             var doc_par_id = sc.dereferencePar($par);
 
@@ -1705,7 +1826,7 @@ timApp.controller("ViewCtrl", [
                     $window.alert(data.error);
                 });
         };
-        
+
         sc.startArea = function (e, $par) {
             sc.extendSelection($par);
         };
@@ -1777,7 +1898,6 @@ timApp.controller("ViewCtrl", [
                 });
             }
         };
-
 
         sc.nothing = function () {
         };
@@ -1894,8 +2014,8 @@ timApp.controller("ViewCtrl", [
                 sc.allowPasteRef = false;
             });
         };
-        
-        
+
+
         sc.getPasteFunctions = function () {
             sc.updateClipboardStatus();
             return [

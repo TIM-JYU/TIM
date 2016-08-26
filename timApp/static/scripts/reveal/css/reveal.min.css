@@ -21,7 +21,7 @@ html, body, .reveal div, .reveal span, .reveal applet, .reveal object, .reveal i
   font-size: 100%;
   font: inherit;
   vertical-align: baseline;
-  background-color: inherit;
+  /*background-color: inherit;*/
 }
 
 .reveal article, .reveal aside, .reveal details, .reveal figcaption, .reveal figure, .reveal footer, .reveal header, .reveal hgroup, .reveal menu, .reveal nav, .reveal section {
@@ -794,13 +794,23 @@ body {
  * PER-SLIDE BACKGROUNDS
  *********************************************/
 .reveal > .backgrounds {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  -webkit-perspective: 600px;
-          perspective: 600px; }
+    position: absolute;
+
+    /*OMIA!!!*/
+    background-color: #fff;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: left;
+    background-image: url('theme/pohja1.jpg');
+    background-size: auto 100%;
+    /**/
+
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    -webkit-perspective: 600px;
+    perspective: 600px; }
 
 .reveal .slide-background {
   display: none;

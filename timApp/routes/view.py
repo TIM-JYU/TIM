@@ -199,6 +199,8 @@ def view(doc_path, template_name, usergroup=None, route="view"):
         message = None
 
     doc_id = doc_info['id']
+    edit_mode = request.args.get('edit', None) if has_edit_access(doc_id) else None
+
     if route == 'teacher':
         if verify_teacher_access(doc_id, False) is False:
             if verify_view_access(doc_id):
@@ -271,17 +273,31 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     raw_css = doc_settings.css() if doc_settings else None
     doc_css = sanitize_html('<style type="text/css">' + raw_css + '</style>') if raw_css else None
 
+    # Custom backgrounds for slides
+    slide_background_url = None
+    slide_background_color = None
+
     if template_name == 'show_slide.html':
+        slide_background_url = doc_settings.get_slide_background_url()
+        slide_background_color = doc_settings.get_slide_background_color()
         do_lazy = False
     else:
         do_lazy = get_option(request, "lazy", True)
+
+    show_questions = False
+    no_question_auto_numbering = None
+
+    if route == 'lecture' and has_edit_access(doc_id):
+        show_questions = True
+        no_question_auto_numbering = doc_settings.auto_number_questions()
 
     texts, jsPaths, cssPaths, modules = post_process_pars(doc,
                                                           xs,
                                                           current_user if teacher_or_see_answers or logged_in() else None,
                                                           sanitize=False,
                                                           do_lazy=do_lazy,
-                                                          load_plugin_states=not hide_answers)
+                                                          load_plugin_states=not hide_answers,
+                                                          show_questions=show_questions)
 
     index = get_index_from_html_list(t['html'] for t in texts)
 
@@ -305,6 +321,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     result = render_template(template_name,
                              route=route,
+                             edit_mode=edit_mode,
                              doc=doc_info,
                              text=texts,
                              headers=index,
@@ -323,6 +340,9 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                              reqs=pluginControl.get_all_reqs(),
                              settings=settings,
                              no_browser=hide_answers,
+                             no_question_auto_numbering=no_question_auto_numbering,
+                             slide_background_url=slide_background_url,
+                             slide_background_color=slide_background_color,
                              message=message,
                              task_info={'total_points': total_points,
                                         'tasks_done': tasks_done,

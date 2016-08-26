@@ -367,7 +367,12 @@ text = '\n'.join(a)
             sc.fulltext = text;
         };
 
-        sc.renameTaskNamesClicked = function (duplicates, renameDuplicates, data) {
+        sc.cancelPluginRenameClicked = function () {
+            $('#pluginRenameForm').remove();
+            sc.renameFormShowing = false;
+        };
+
+        sc.renameTaskNamesClicked = function (duplicates, renameDuplicates) {
             // A list of duplicate task names and possible new names
             if (typeof renameDuplicates === 'undefined' || renameDuplicates === false) {
                 $('#pluginRenameForm').remove();
@@ -409,7 +414,7 @@ text = '\n'.join(a)
             sc.renameFormShowing = true;
             sc.duplicates = data.duplicates;
             sc.data = data;
-            var $editorTop = $('.docEditor');
+            var $editorTop = $('#documentEditorDiv');
             //var coords = {left: $editorTop.position().left, top: $editorTop.position().top};
             var $actionDiv = $("<div>", {class: "pluginRenameForm", id: "pluginRenameForm"});
             $actionDiv.css("position", "relative");
@@ -440,6 +445,15 @@ text = '\n'.join(a)
             for(var i = 0; i < data.duplicates.length; i++) {
                 span = $("<span>");
                 span.css('display', 'block');
+                var $warningSpan = $("<span>", {
+                    class: "pluginRenameExclamation",
+                    text: "!",
+                    title: "There are answers related to this task. Those answers might be lost upon renaming this task."
+                });
+                if (data.duplicates[i][2] != 'hasAnswers') {
+                    $warningSpan.css('visibility', 'hidden');
+                }
+                span.append($warningSpan);
                 span.append($("<label>", {
                     class: "pluginRenameObject",
                     text: data.duplicates[i][0],
@@ -459,19 +473,25 @@ text = '\n'.join(a)
                 class: 'timButton, pluginRenameObject',
                 text: "Save",
                 title: "Rename task names with given names",
-                'ng-click': "renameTaskNamesClicked(duplicates, true, data)",
+                'ng-click': "renameTaskNamesClicked(duplicates, true)",
             }));
             $buttonDiv.append($("<button>", {
                 class: 'timButton, pluginRenameObject',
                 text: "Rename Automatically",
                 title: "Rename duplicate task names automatically",
-                'ng-click': "renameTaskNamesClicked(duplicates, true, data)",
+                'ng-click': "renameTaskNamesClicked(duplicates, true)",
             }));
             $buttonDiv.append($("<button>", {
                 class: 'timButton, pluginRenameObject',
                 text: "Ignore",
                 title: "Proceed without renaming",
-                'ng-click': "renameTaskNamesClicked(undefined, false, data)",
+                'ng-click': "renameTaskNamesClicked(undefined, false)",
+            }));
+            $buttonDiv.append($("<button>", {
+                class: 'timButton, pluginRenameObject',
+                text: "Cancel",
+                title: "Return to editing document",
+                'ng-click': "cancelPluginRenameClicked()",
             }));
             $actionDiv.append($form);
             $actionDiv.append($buttonDiv);

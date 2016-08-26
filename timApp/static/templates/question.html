@@ -1,16 +1,17 @@
 <div class="ng-scope" style="text-align:left" ng-controller="QuestionController">
     <div class="popUpWindow" id="questionWindow" ng-if="!asked_id">
         <form class="createQuestion" id="question-form">
+            <div id="question-textarea-div">
+                <div>Question:</div>
+                <textarea id="question-textarea" name="question" rows="3" ng-model="question.question" ng-change="changeQuestionTitle(question.question)"></textarea>
+            </div>
             <div id="questionName">
                 <label>
                     Question title:
-                    <input id="qTitle" name="question.title" type="text" ng-model="question.title"/>
+                    <input id="qTitle" name="question.title" type="text" ng-model="question.title" onfocus="this.select()" ng-change="titleIsChanged()" />
                 </label>
             </div>
-            <div id="question-textarea-div">
-                <div>Question:</div>
-                <textarea id="question-textarea" name="question" rows="3" ng-model="question.question"></textarea>
-            </div>
+
             <div id="qType">
                 <label>Question type:
                     <select name="question.type" ng-model="question.type" ng-dropdown required
@@ -76,11 +77,11 @@
         <p class="error_message" id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
 
         <div class="buttons" id="question_buttons">
+            <span ng-if="(!new_question)"> <button class="btn btn-danger" ng-click="deleteQuestion()">Delete</button> </span>
             <button class="timButton" ng-if="lectureSettings.inLecture" ng-click="createQuestion(true)">Save and ask
             </button>
             <button class="timButton" ng-click="createQuestion()">Save</button>
             <button class="timButton" ng-click="close()">Cancel</button>
-            <span ng-if="(question.question_id)"> <button class="btn btn-danger" ng-click="deleteQuestion()">Delete</button> </span>
         </div>
     </div>
     <div class="popUpWindow" id="questionWindow" ng-if="asked_id">

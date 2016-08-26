@@ -124,15 +124,17 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         var $editor = $('.editorArea');
                         var $previewContent = $('.previewcontent');
                         var previewDiv = $('#previewDiv');
+                        // If preview is released make sure that preview doesn't go out of bounds
                         if ($scope.previewReleased) {
                             var previewOffset = previewDiv.offset();
-                            if (previewOffset.top < 0) {
+                            if (previewOffset.top < 0 || previewOffset.top > $window.innerHeight) {
                                 previewDiv.offset({'top': 0, 'left': previewDiv.offset().left});
                             }
-                            if (previewOffset.left < 0) {
+                            if (previewOffset.left < 0 || previewOffset.left > $window.innerWidth) {
                                 previewDiv.offset({'top': previewDiv.offset().top, 'left': 0 });
                             }
                         }
+                        // Check that editor doesn't go out of bounds
                         var editorOffset = $editor.offset();
                         if (editorOffset.top < 0) {
                             $editor.offset({'top': 0, 'left': $editor.offset().left});
@@ -656,8 +658,35 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     }
                 };
 
+                /**
+                 * Called when user wants to cancel changes after entering duplicate task-ids
+                 */
+                $scope.cancelPluginRenameClicked = function () {
+                    // Cancels recent changes to paragraph/document
+                    $http.post('/cancelChanges/', angular.extend({
+                        newPars: $scope.newPars,
+                        originalPar: $scope.originalPar,
+                        docId: $scope.extraData.docId,
+                        parId: $scope.extraData.par
+                    }, $scope.extraData)).success(function (data, status, headers, config) {
+                        // Remove the form and return to editor
+                        $element.find("#pluginRenameForm").get(0).remove();
+                        $scope.renameFormShowing = false;
+                        $scope.saving = false;
+                    }).error(function (data, status, headers, config) {
+                        $window.alert("Failed to cancel save: " + data.error);
+                    });
+                };
+
+                /**
+                 * Function that handles different cases of user input in plugin rename form
+                 * after user has saved multiple plugins with the same taskname
+                 * @param inputs - The input fields in plugin rename form
+                 * @param duplicates - The duplicate tasks, contains duplicate taskIds and relevant parIds
+                 * @param renameDuplicates - Whether user wants to rename task names or not
+                 */
                 $scope.renameTaskNamesClicked = function (inputs, duplicates, renameDuplicates) {
-                    // A list of duplicate task names and possible new names
+                    // If user wants to ignore duplicates proceed like normal after saving
                     if (typeof renameDuplicates === 'undefined' || renameDuplicates === false) {
                         $scope.renameFormShowing = false;
                         if ($scope.options.destroyAfterSave) {
@@ -672,7 +701,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     var duplicateData = [];
                     var duplicate;
 
-                    // if duplicates are to be renamed automatically
+                    // if duplicates are to be renamed automatically (user pressed "rename automatically")
                     if (typeof inputs === 'undefined') {
                         if (renameDuplicates) {
                             if (duplicates.length > 0) {
@@ -695,10 +724,12 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             duplicateData.push(duplicate);
                         }
                     }
+                    // Save the new task names for duplicates
                     $http.post('/postNewTaskNames/', angular.extend({
                         duplicates: duplicateData,
                         renameDuplicates: renameDuplicates
                     }, $scope.extraData)).success(function (data, status, headers, config) {
+                        // If no new duplicates were founds
                         if(data.duplicates.length <= 0) {
                             $scope.renameFormShowing = false;
                             $scope.afterSave({
@@ -709,6 +740,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                                 $element.remove();
                             }
                         }
+                        // If there still are duplicates remake the form
                         if(data.duplicates.length > 0) {
                             $element.find("#pluginRenameForm").get(0).remove();
                             $scope.createPluginRenameForm(data);
@@ -722,42 +754,21 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     if ($scope.options.touchDevice) $scope.changeMeta();
                 };
 
-                $scope.saveClicked = function () {
-                    if ($scope.previewReleased) {
-                        $scope.savePreviewData(true);
-                    } else $scope.savePreviewData(false);
-                    var text = $scope.getEditorText();
-                    $http.post($scope.saveUrl, angular.extend({
-                        text: text
-                    }, $scope.extraData)).success(function (data, status, headers, config) {
-                        if (data.duplicates.length > 0) {
-                            $scope.data = data;
-                            $scope.createPluginRenameForm(data);
-                        }
-                        if (data.duplicates.length <= 0) {
-                            $scope.afterSave({
-                                extraData: $scope.extraData,
-                                saveData: data
-                            });
-                            if ($scope.options.destroyAfterSave) {
-                                $element.remove();
-                            }
-                        }
-                        if (angular.isDefined($scope.extraData.access)) {
-                            $scope.$storage.noteAccess = $scope.extraData.access;
-                        }
-                    }).error(function (data, status, headers, config) {
-                        $window.alert("Failed to save: " + data.error);
-                    });
-                    if ($scope.options.touchDevice) $scope.changeMeta();
-                };
 
+                /**
+                 * Function that creates a form for renaming plugins with duplicate tasknames
+                 * @param data - The data received after saving editor text
+                 */
                 $scope.createPluginRenameForm = function (data) {
+                    // Hides other texteditor elements when form is created
                     $scope.renameFormShowing = true;
                     $scope.duplicates = data.duplicates;
+                    // Get the editor div
                     var $editorTop = $('.editorArea');
+                    // Create a new div
                     var $actionDiv = $("<div>", {class: "pluginRenameForm", id: "pluginRenameForm"});
                     $actionDiv.css("position", "relative");
+                    // Add warning and info texts
                     $actionDiv.append($("<strong>", {
                         text: 'Warning!'
                     }));
@@ -776,52 +787,138 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     $actionDiv.append($("<strong>", {
                         text: 'Rename duplicates:'
                     }));
+
+                    // Create the rename form
                     var $form = $("<form>");
                     $scope.inputs = [];
                     var input;
                     var span;
+
+                    // Add inputs and texts for each duplicate
                     for(var i = 0; i < data.duplicates.length; i++) {
+                        // Make a span element
                         span = $("<span>");
                         span.css('display', 'block');
+                        // Add a warning if the plugin has answers related to it
+                        var $warningSpan = $("<span>", {
+                            class: "pluginRenameExclamation",
+                            text: "!",
+                            title: "There are answers related to this task. Those answers might be lost upon renaming this task."
+                        });
+                        if (data.duplicates[i][2] != 'hasAnswers') {
+                            $warningSpan.css('visibility', 'hidden');
+                        }
+                        span.append($warningSpan);
+                        // Add the duplicate name
                         span.append($("<label>", {
                             class: "pluginRenameObject",
                             text: data.duplicates[i][0],
                             for: "newName" + i,
                         }));
+                        // Add input field for a new name to the duplicate
                         input = $("<input>", {
                             class: "pluginRenameObject",
                             type: "text",
                             id: data.duplicates[i][1],
                         });
+                        // Add the span to the form
                         $scope.inputs.push(input);
                         span.append(input);
                         $form.append(span);
                     }
+                    // Make a new div for buttons
                     var $buttonDiv = $("<div>");
+                    // A button for saving with input field values or automatically if no values given
                     $buttonDiv.append($("<button>", {
                         class: 'timButton, pluginRenameObject',
                         text: "Save",
-                        title: "Rename task names with given names",
+                        title: "Rename task names with given names (Ctrl + S)",
                         'ng-click': "renameTaskNamesClicked(inputs, duplicates, true)",
                     }));
+                    // Button for renaming duplicates automatically
                     $buttonDiv.append($("<button>", {
                         class: 'timButton, pluginRenameObject',
                         text: "Rename Automatically",
                         title: "Rename duplicate task names automatically",
                         'ng-click': "renameTaskNamesClicked(undefined, duplicates, true)",
                     }));
+                    // Button for ignoring duplicates
                     $buttonDiv.append($("<button>", {
                         class: 'timButton, pluginRenameObject',
                         text: "Ignore",
                         title: "Proceed without renaming",
                         'ng-click': "renameTaskNamesClicked(undefined, undefined, false)",
                     }));
+                    // Button that allows user to return to edit and cancel save
+                    $buttonDiv.append($("<button>", {
+                        class: 'timButton, pluginRenameObject',
+                        text: "Cancel",
+                        title: "Return to editor",
+                        'ng-click': "cancelPluginRenameClicked()",
+                    }));
+                    // Add the new divs to editor container
                     $actionDiv.append($form);
                     $actionDiv.append($buttonDiv);
                     $actionDiv = $compile($actionDiv)($scope);
                     $editorTop.append($actionDiv);
-                    $scope.wrapFn();
+                    // Focus the first input element
+                    $scope.inputs[0].focus();
+                    $scope.pluginRenameForm = $actionDiv;
+                    // Add hotkey for quick saving (Ctrl + S)
+                    $scope.pluginRenameForm.keydown( function(e) {
+                        if (e.ctrlKey) {
+                            if (e.keyCode === 83) {
+                                $scope.renameTaskNamesClicked($scope.inputs, $scope.duplicates, true);
+                                e.preventDefault();
+                            }
+                        }
+                    });
+                    // Scroll the rename form to view
+                    $('html, body').scrollTop($editorTop.offset().top);
                 };
+
+
+                $scope.saveClicked = function () {
+                    saving = true;
+                    if ($scope.renameFormShowing) {
+                        $scope.renameTaskNamesClicked($scope.inputs, $scope.duplicates, true);
+                    }
+                    if ($scope.previewReleased) {
+                        $scope.savePreviewData(true);
+                    } else $scope.savePreviewData(false);
+                    var text = $scope.getEditorText();
+                    $http.post($scope.saveUrl, angular.extend({
+                        text: text
+                    }, $scope.extraData)).success(function (data, status, headers, config) {
+                        if (data.duplicates.length > 0) {
+                            $scope.data = data;
+                            $scope.createPluginRenameForm(data);
+                            if (data.original_par !== 'undefined') {
+                                $scope.originalPar = data.original_par;
+                            }
+                            if (data.new_par_ids !== 'undefined') {
+                                $scope.newPars = data.new_par_ids;
+                            }
+                        }
+                        if (data.duplicates.length <= 0) {
+                            $scope.afterSave({
+                                extraData: $scope.extraData,
+                                saveData: data
+                            });
+                            if ($scope.options.destroyAfterSave) {
+                                $element.remove();
+                            }
+                        }
+                        if (angular.isDefined($scope.extraData.access)) {
+                            $scope.$storage.noteAccess = $scope.extraData.access;
+                        }
+                    }).error(function (data, status, headers, config) {
+                        $window.alert("Failed to save: " + data.error);
+                        saving = false;
+                    });
+                    if ($scope.options.touchDevice) $scope.changeMeta();
+                };
+
 
                 $scope.selectLine = function (select) {
                     var selection = $scope.editor.getSelection();
@@ -1676,6 +1773,14 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     }
                     $scope.createMenu($event, buttons);
                 };
+
+                $scope.slideClicked = function ($event) {
+                    var buttons = [];
+                    buttons.push($scope.createMenuButton("Slide break", "Break text to start a new slide", "wrapFn(ruleClicked)"));
+                    buttons.push($scope.createMenuButton("Slide fragment", "Content inside the fragment will be hidden and shown when next is clicked in slide view", "surroundClicked('§§', '§§'); wrapFn()"));
+                    buttons.push($scope.createMenuButton("Fragment block", "Content inside will show as a fragment and may contain inner slide fragments", "surroundClicked('<§', '§>'); wrapFn()"));
+                    $scope.createMenu($event, buttons);
+                }
 
                 $scope.pluginClicked = function ($event, key) {
                     $scope.createMenu($event, $scope.pluginButtonList[key]);

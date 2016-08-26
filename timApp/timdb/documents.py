@@ -37,7 +37,7 @@ class Documents(TimDbBase):
 
         assert doc.exists(), 'document does not exist: %r' % doc.doc_id
         content = self.trim_markdown(content)
-        par = doc.insert_paragraph(content, prev_par_id, attrs, properties)
+        par = doc.insert_paragraph(content, insert_before_id=prev_par_id, attrs=attrs, properties=properties)
         self.update_last_modified(doc)
         return [par], doc
 

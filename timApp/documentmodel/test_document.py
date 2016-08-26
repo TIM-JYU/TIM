@@ -126,21 +126,21 @@ class DocumentTest(TimDbTest):
         pars = self.add_pars(d, 10)
 
         # Insert as first
-        par = d.insert_paragraph('new first', pars[0])
+        par = d.insert_paragraph('new first', insert_before_id=pars[0])
         pars = [par.get_id()] + pars
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((11, 0), d.get_version())
         self.assertEqual(11, len(d.get_changelog()))
 
         # Insert in the middle
-        par = d.insert_paragraph('middle', pars[4])
+        par = d.insert_paragraph('middle', insert_before_id=pars[4])
         pars = pars[0:4] + [par.get_id()] + pars[4:]
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((12, 0), d.get_version())
         self.assertEqual(12, len(d.get_changelog()))
 
         # Insert as last
-        par = d.insert_paragraph('last', None)
+        par = d.insert_paragraph('last', insert_before_id=None)
         pars.append(par.get_id())
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((13, 0), d.get_version())

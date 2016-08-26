@@ -149,6 +149,19 @@ JOIN answer a ON a.id = t.id JOIN useranswer ua ON ua.answer_id = a.id JOIN user
         return result
 
 
+    def check_if_plugin_has_answers(self, task_id: 'str') -> 'int':
+        """
+        Checks if there are answers to the plugin
+        :param task_id: The task id of plugin ín format doc_id.par_id
+        :return: 0 if not found, 1 if answers exist
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""SELECT EXISTS(SELECT 1 FROM Answer WHERE task_id = %s LIMIT 1)""", [task_id])
+        result = cursor.fetchone()
+        real_result = result[0]
+        return real_result
+
+
     def get_common_answers(self, user_ids: List[int], task_id: str) -> List[dict]:
         common_answers_ids = None
         for user_id in user_ids:

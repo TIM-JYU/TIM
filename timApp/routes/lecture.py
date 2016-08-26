@@ -2,12 +2,18 @@ import datetime
 import json
 import threading
 import time
+from tim_app import app
 from time import mktime
 from datetime import timezone
 
-from flask import Blueprint, request, abort, session, render_template, current_app
+from flask import Blueprint, render_template
 
 from documentmodel.randutils import hashfunc
+
+#from models import db
+from routes.common import *
+from plugin import parse_plugin_values
+
 from options import get_option
 from routes.common import getTimDb, getCurrentUserId, jsonResponse, verify_ownership, get_rights, has_ownership, \
     get_user_settings
@@ -823,16 +829,21 @@ def extend_question():
 @lecture_routes.route("/askQuestion", methods=['POST'])
 def ask_question():
     if not request.args.get('doc_id') or not \
-            (request.args.get('question_id') or request.args.get('asked_id')) or not request.args.get('lecture_id'):
+            (request.args.get('question_id') or request.args.get('asked_id') or request.args.get('par_id')) or not \
+            request.args.get('lecture_id'):
         abort(400, "Bad request")
     doc_id = int(request.args.get('doc_id'))
     lecture_id = int(request.args.get('lecture_id'))
     question_id = None
     asked_id = None
+    par_id = None
+    question_json_str = None
     if 'question_id' in request.args:
         question_id = int(request.args.get('question_id'))
-    else:
+    elif 'asked_id' in request.args:
         asked_id = int(request.args.get('asked_id'))
+    else:
+        par_id = request.args.get('par_id')
 
     verify_ownership(doc_id)
 
@@ -840,23 +851,37 @@ def ask_question():
         abort(400, "Not valid lecture id")
 
     timdb = getTimDb()
-    if question_id:
-        question = timdb.questions.get_question(question_id)[0]
-        question_json_str = question.get("questionjson")
-        question_hash = hashfunc(question.get("questionjson"))
+
+    if question_id or par_id:
+        if question_id:
+            question = timdb.questions.get_question(question_id)[0]
+            question_json_str = question.get("questionjson")
+            expl = question.get("expl")
+            points = question.get("points")
+        else:
+            question_json_str, points, expl = get_question_data_from_document(doc_id, par_id)
+            question_json_str = json.dumps(question_json_str)
+            expl = json.dumps(expl)
+            points = points
+
+        if not points:
+            points = "0:0"
+        question_hash = hashfunc(question_json_str)
         asked_hash = timdb.questions.get_asked_json_by_hash(question_hash)
         if asked_hash:
             asked_json_id = asked_hash[0].get("asked_json_id")
         else:
             asked_json_id = timdb.questions.add_asked_json(question_json_str, question_hash)
+
         asked_time = datetime.datetime.now(timezone.utc)
-        asked_id = timdb.questions.add_asked_questions(lecture_id, doc_id, None, asked_time, question.get("points"),
-                                                       asked_json_id, question.get("expl"))
-    else:
+        asked_id = timdb.questions.add_asked_questions(lecture_id, doc_id, None, asked_time, points,
+                                                       asked_json_id, expl)
+    elif asked_id:
         question = timdb.questions.get_asked_question(asked_id)[0]
         asked_json = timdb.questions.get_asked_json_by_id(question["asked_json_id"])[0]
         asked_json_id = asked_json["asked_json_id"]
         question_json_str = asked_json["json"]
+
     question_json = json.loads(question_json_str)
 
     if not question_json["TIMELIMIT"]:
@@ -926,7 +951,7 @@ def update_question_points():
 
 
 def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_time):
-    with current_app.app_context():
+    with app.app_context():
         if question_timelimit == 0:
             return
         tempdb = getTempDb()
@@ -956,13 +981,21 @@ def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_tim
 def get_question_by_id():
     if not request.args.get("question_id"):
         abort("400")
-    # doc_id = int(request.args.get('doc_id'))
     question_id = int(request.args.get('question_id'))
-
-    # verifyOwnership(doc_id)
     timdb = getTimDb()
     question = timdb.questions.get_question(question_id)
     return jsonResponse(question[0])
+
+
+@lecture_routes.route("/getQuestionByParId", methods=['GET'])
+def get_question_by_par_id():
+    if not request.args.get("par_id") or not request.args.get("doc_id"):
+        abort("400")
+    doc_id = int(request.args.get('doc_id'))
+    par_id = request.args.get('par_id')
+    verify_ownership(doc_id)
+    question_json, points, expl = get_question_data_from_document(doc_id, par_id)
+    return jsonResponse({"points": points, "questionjson": question_json, "expl": expl})
 
 
 @lecture_routes.route("/getAskedQuestionById", methods=['GET'])
@@ -1155,6 +1188,16 @@ def user_in_lecture():
     if in_lecture:
         in_lecture = check_if_lecture_is_running(lecture_id)
     return in_lecture
+
+
+def get_question_data_from_document(doc_id, par_id):
+    par = Document(doc_id).get_paragraph(par_id)
+    question = parse_plugin_values(par)
+    markup = question.get('markup')
+    points = markup.get('points', '')
+    json = markup.get('json')
+    expl = markup.get('expl', '')
+    return json, points, expl
 
 
 def getTempDb():

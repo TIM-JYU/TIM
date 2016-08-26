@@ -25,6 +25,9 @@
 {% set lecture_mode = route == "lecture" %}
 {% set slide_mode = route == "slide" %}
 
+{% set par_edit_mode = edit_mode == "par" %}
+{% set area_edit_mode = edit_mode == "area" %}
+
 {% block title %}{{ doc.title }}{% endblock %}
 
 {# The custom style should be the last style element, so don't render it in base.html #}
@@ -58,6 +61,7 @@
     {% block viewhtml_customcss %}
         {% include 'doc_customcss.html' %}
     {% endblock %}
+
     <script>
         var noBrowser = {{ no_browser|tojson }};
         var showIndex = {{(headers|length > 0)|tojson}};
@@ -76,6 +80,10 @@
         {% else %}
             users = [{{current_user|tojson}}];
         {% endif %}
+        {% if lecture_mode or in_lecture %}
+            var noQuestionAutoNumbering = {{ no_question_auto_numbering|tojson}};
+        {% endif %}
+
     </script>
 {% endblock %}
 

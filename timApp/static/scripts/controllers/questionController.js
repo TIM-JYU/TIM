@@ -52,19 +52,37 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
     };
 
+    scope.$on("newQuestion", function (event, data) {
+        scope.new_question = true;
+        scope.par_id = "NEW_PAR";
+        scope.par_id_next = data.par_id_next;
+        scope.titleChanged = false;
+    });
+
     scope.$on("editQuestion", function (event, data) {
             var id = data.question_id;
+            var par_id = data.par_id;
+            var par_id_next = data.par_id_next;
             var asked_id = data.asked_id;
             var json = data.json;
 
             scope.asked_id = false;
+            scope.new_question = false;
+            scope.titleChanged = false;
             if (id) {
                 scope.question.question_id = id;
             } else if (asked_id) {
                 scope.asked_id = data.asked_id;
+            } else {
+                scope.par_id = par_id;
+                scope.par_id_next = par_id_next;
             }
 
             if (json["TITLE"]) scope.question.title = scope.putBackQuotations(json["TITLE"]);
+            if (scope.question.title == "Untitled") {
+                scope.question.title = "";
+                scope.titleChanged = true;
+            }
             if (json["QUESTION"]) scope.question.question = scope.putBackQuotations(json["QUESTION"]);
             if (json["TYPE"]) scope.question.type = json["TYPE"];
             if (json["MATRIXTYPE"]) scope.question.matrixType = json["MATRIXTYPE"];
@@ -399,6 +417,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         scope.setShowPreview(false);
         scope.dynamicAnswerSheetControl.closePreview();
         if (scope.questionShown) scope.$emit('toggleQuestion');
+        if (scope.new_question) scope.handleCancel({docId: scope.docId, par: "NEW_PAR"});
     };
 
     /**
@@ -569,8 +588,12 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             return scope.updatePoints();
         }
         scope.removeErrors();
+        scope.question.title = $('#qTitle').val();
+        if(scope.question.title == "") {
+            scope.question.title = "Untitled";
+        }
         if (scope.question.question === undefined || scope.question.question.trim().length === 0 || scope.question.title === undefined || scope.question.title.trim().length === 0) {
-            scope.errorize("questionName", "Both title and question are required for a question.");
+            scope.errorize("questionName", "Question is required.");
         }
         if (scope.question.type === undefined) {
             scope.errorize("qType", "Question type must be selected.");
@@ -619,6 +642,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
 
         if (scope.error_message !== "") {
+            if (scope.question.title == "Untitled") {
+                scope.question.title = "";
+            }
             return;
         }
         scope.removeErrors();
@@ -697,15 +723,55 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         var points = scope.createPoints();
         var expl = scope.createExplanation();
         var doc_id = scope.docId;
-        var $par = scope.par;
-        var par_id = scope.getParId($par);
+
+        // Create markdown for question to be saved as a paragraph
+        var md = '``` {question="' + scope.question.title + '"}\n';
+        md += 'points: ' + points + '\n';
+        md += 'expl: ' + JSON.stringify(expl) + '\n';
+        md += 'json: \n';
+        var questionjsonmd = JSON.stringify(questionjson, null, 4);
+        questionjsonmd = questionjsonmd.replace(/.+/g, '    $&');
+        md += questionjsonmd + '\n';
+        md += '```';
+
 
         // Without timeout 'timelimit' won't be saved in settings session variable. Thread issue?
         scope.settings['timelimit'] = questionjson.TIMELIMIT.toString();
         setTimeout(function () {
             setsetting('timelimit', questionjson.TIMELIMIT.toString());
         }, 1000);
-
+        
+        var route = '/postParagraph/';
+        if (scope.new_question) {
+            route = '/newParagraph/';
+        }
+        http.post(route, angular.extend({
+            docId: doc_id,
+            text: md,
+            par: scope.par_id,
+            par_next: scope.par_id_next,
+            buster: new Date().valueOf()
+        })).success(function (data) {
+            $window.console.log("The question was successfully added to database");
+            scope.removeErrors();
+            scope.addSavedParToDom(data, {docId: scope.docId, par: scope.par_id, par_next: scope.par_id_next});
+            //TODO: This can be optimized to get only the new one.
+            scope.$parent.getQuestions();
+            if (ask) {
+                scope.json = JSON.parse(data.questionjson);
+                scope.$emit('askQuestion', {
+                    "lecture_id": scope.lectureId,
+                    "question_id": scope.qId,
+                    "doc_id": scope.docId,
+                    "json": scope.json
+                });
+            }
+            scope.close();
+        }).error(function () {
+            scope.showDialog("Could not create question");
+            $window.console.log("There was some error creating question to database.");
+        });
+/*
         http({
             method: 'POST',
             url: '/addQuestion/',
@@ -740,6 +806,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 $window.console.log("There was some error creating question to database.");
             });
         scope.close();
+*/
     };
 
     /**
@@ -759,21 +826,18 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             .success(function () {
                 $window.console.log("Points successfully updated.");
             }).error(function () {
-                $window.console.log("There was some error when updating points.");
-            });
+            $window.console.log("There was some error when updating points.");
+        });
         scope.close();
     };
 
     scope.deleteQuestion = function () {
         var confirmDi = $window.confirm("Are you sure you want to delete this question?");
         if (confirmDi) {
-            http({
-                url: '/deleteQuestion',
-                method: 'POST',
-                params: {question_id: scope.qId, doc_id: scope.docId}
-            })
-                .success(function () {
+            http.post('/deleteParagraph/' + scope.docId, {par: scope.par_id})
+                .success(function (data) {
                     $window.console.log("Deleted question done!");
+                    scope.handleDelete(data, {par: scope.par_id, area_start: null, area_end: null});
                     scope.close();
                     scope.getQuestions();
                 })
@@ -805,6 +869,20 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         } else {
             $(".createQuestion").off('change.createjson');
         }
+    };
+
+    /**
+     * Changes the question title field to match the question if user hasn't defined title
+     * @param question of question
+     */
+    scope.changeQuestionTitle = function (question) {
+        if(!scope.question.title && !scope.titleChanged) {
+            $('#qTitle').val(question);
+        }
+    };
+
+    scope.titleIsChanged = function () {
+        scope.titleChanged = true;
     };
 }])
 ;

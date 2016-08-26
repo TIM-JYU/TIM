@@ -69,7 +69,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
         $scope.clockOffset = 0;
         $scope.current_question_id = false;
         $scope.current_points_id = false;
-        $scope.settings = $window.settings;
+        $scope.settings = $window.sessionsettings;
 
         //TODO: Move all lecture settings to lectureSettings object, so they will work as ng-model
         $scope.lectureSettings = {
@@ -295,6 +295,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
         /**
          * Use data.question_id to ask question as new.
          * Use data.asked_id to reask question.
+         * Use data.par_id to ask a question from document.
          */
         $scope.$on("askQuestion", function (event, data) {
             $scope.json = data.json;
@@ -304,7 +305,8 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 buster: new Date().getTime()
             };
             if (data.asked_id) args['asked_id'] = data.asked_id;
-            else if (data.question_id) args['question_id'] = data.question_id;
+            else if (data.question_id) args['question_id'] = data.question_id; // Remove when moving questions to document finished
+            else args['par_id'] = data.par_id;
             http({
                 url: '/askQuestion',
                 method: 'POST',
@@ -326,6 +328,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                     }
                     $rootScope.$broadcast("setQuestionJson", {
                         questionjson: $scope.json,
+                        questionParId: data.par_id,
                         questionId: data.question_id,
                         askedId: id,
                         isLecturer: $scope.isLecturer,
@@ -358,6 +361,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
 
         $scope.$on('toggleQuestion', function (event, data) {
             $scope.questionShown = !$scope.questionShown;
+            $scope.$emit('newQuestion', data);
         });
 
         /*

@@ -40,7 +40,7 @@
         <button class="editorButton" title="Underline" ng-click="surroundClicked('<u>', '</u>'); wrapFn()"><u>U</u></button>
         <button class="editorButton" title="Strikethrough" ng-click="surroundClicked('<s>', '</s>'); wrapFn()"><s>Z</s></button>
         <button class="editorButton" title="Code (Ctrl-O)" ng-click="surroundClicked('`', '`'); wrapFn()">Code</button>
-        <button class="editorButton" title="Code block (Ctrl-9)" ng-click="wrapFn(codeBlockClicked)">Code block</button>
+        <button class="editorButton" title="Code block (Ctrl-Alt-O)" ng-click="wrapFn(codeBlockClicked)">Code block</button>
         <button class="editorButton" title="Subscript" ng-click="surroundClicked('~', '~'); wrapFn()">X_</button>
         <button class="editorButton" title="Superscript" ng-click="surroundClicked('^', '^'); wrapFn()">X^</button>
         <button class="editorButton" title="Heading 1 (Ctrl-1)" ng-click="headerClicked('#')">H1</button>
@@ -57,7 +57,7 @@
         </button>
         <button class="editorButton" title="List item" ng-click="wrapFn(listClicked)">List</button>
         <button class="editorButton" title="Table" ng-click="tableClicked($event)">Table</button>
-        <button class="editorButton" title="Break text to start a new slide" ng-click="wrapFn(ruleClicked)">Slide break</button>
+        <button class="editorButton" title="Slide" ng-click="slideClicked($event)">Slide</button>
         <button class="editorButton" title="Break text to start a new paragraph (Shift-Enter)" ng-click="wrapFn(paragraphClicked)">Paragraph break</button>
         <button class="editorButton" title="Forces line to end at cursor position (Ctrl-Enter)" ng-click="wrapFn(endLineClicked)">End line</button>
         <button class="editorButton" title="Creates a comment block or sets the line to a comment (Ctrl-Y)" ng-click="wrapFn(commentClicked)">Comment</button>
@@ -114,7 +114,7 @@
         <button class="timButton" title="Change editor between Ace and normal textarea" ng-click="changeEditor()">Editor</button>
         <button class="timButton" ng-show="fullscreenSupported()" ng-click="goFullScreen()">Fullscreen</button>
         <button class="timButton savePar" title="Save (Ctrl-S)" ng-click="saveClicked()">Save</button>
-        <button class="timButton cancelPar" ng-click="cancelClicked()">Cancel</button>
+        <button class="timButton cancelPar" ng-disabled="saving" ng-click="cancelClicked()">Cancel</button>
         <button class="timButton deletePar" ng-show="options.showDelete" ng-click="deleteClicked()">Delete</button>
     </div>
     <div class="tags">

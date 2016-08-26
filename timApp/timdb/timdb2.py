@@ -85,7 +85,7 @@ class TimDb(object):
 
     def close(self):
         """Closes the database connection."""
-        if self.db is not None:
+        if hasattr(self, 'db') and self.db is not None:
             self.db.close()
             self.session.remove()
             self.db = None

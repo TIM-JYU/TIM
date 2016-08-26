@@ -62,7 +62,7 @@ a .glyphicon {
 }
 
 // all document-related styles under .paragraphs selector!
-.paragraphs {
+.paragraphs, .slides {
     @include center-block();
     @media (min-width: $screen-md-min) {
         min-width: $paragraph-preferred-width;
@@ -250,7 +250,7 @@ p.caption {
     background-color: #B0B0B0;
 }
 
-.readline {
+.readline, .readlineQuestion {
     border-color: #F60; /* rgb(236,103,27); */
 
     &:hover {
@@ -331,7 +331,7 @@ p.caption {
     background: inherit;
 }
 
-#previewDiv .editline, #previewDiv .readline, #previewDiv .arealine .csrunPreview .editline, .csrunPreview .readline {
+#previewDiv .editline, #previewDiv .readline, #previewDiv .arealine .csrunPreview .editline .areaeditline1 .areaeditline2 .areaeditline3, .csrunPreview .readline {
     display: none;
 }
 
@@ -395,6 +395,11 @@ p.caption {
         opacity: 0.5;
         background: $editline-bg-color;
     }
+}
+
+.editlineQuestion:hover, .editline.menuopen {
+     opacity: 0.5;
+     background: $editline-bg-color;
 }
 
 .areacollapse::before {
@@ -578,10 +583,6 @@ br {
     font-size: 14px;
 }
 
-.extraButtonArea.hidden {
-    display: none;
-}
-
 .tabsarea, .extraButtonArea {
     overflow-x: auto;
     overflow-y: hidden;
@@ -679,10 +680,9 @@ input[type="file"] {
     position: relative;
 }
 
-.questionAdded img {
+.questionAdded img, img.questionAddedNew {
     cursor: pointer;
     z-index: 1;
-    position: relative;
 }
 
 .ace_editor {
@@ -716,6 +716,14 @@ input[type="file"] {
     min-height: 50px;
 }
 
+.actionButtonContent {
+    white-space: normal;
+    max-width: 600px;
+    max-height: 200px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
 .refPopup {
     position: relative;
     white-space: nowrap;
@@ -746,6 +754,7 @@ input[type="file"] {
     display: table-row;
 }
 
+@import "csRun";
 .questionButton {
     margin: 0.2em;
 }
@@ -966,7 +975,6 @@ body > .footer {
 }
 
 #pluginRenameForm {
-    height: 100%;
     padding-bottom: 15px;
 }
 
@@ -982,6 +990,17 @@ body > .footer {
 .pluginRenameInner {
     margin-left: 15px;
     margin-top: 15px;
+}
+
+.pluginRenameExclamation {
+    background-color: #cc0000;
+    border: 2px solid #00001a;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: bold;
+    display: inline-block;
+    min-width: 1.5em;
+    max-height: 1.4em;
 }
 
 @media (max-width: $screen-xs-max) {
