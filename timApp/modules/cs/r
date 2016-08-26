@@ -1,3 +1,2 @@
 #!/bin/sh
-./startAll.sh
-
+./startAll.sh 

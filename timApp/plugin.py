@@ -25,6 +25,11 @@ class Plugin:
         self.type = plugin_type
 
     @staticmethod
+    def get_date(d):
+        if type(d) is str: d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
+        return d
+
+    @staticmethod
     def from_task_id(task_id: str):
         doc_id, task_id_name, par_id = Plugin.parse_task_id(task_id)
         doc = Document(doc_id)
@@ -66,10 +71,10 @@ class Plugin:
         return doc_id, task_id_name, par_id
 
     def deadline(self, default=None):
-        return get_date(self.values.get(self.deadline_key, default))
+        return self.get_date(self.values.get(self.deadline_key, default))
 
     def starttime(self, default=None):
-        return get_date(self.values.get(self.starttime_key, default))
+        return self.get_date(self.values.get(self.starttime_key, default))
 
     def points_rule(self, default=None):
         pr = self.values.get(self.points_rule_key, default)
@@ -92,9 +97,6 @@ class Plugin:
         return self.points_rule({}).get('multiplier', default)
 
 
-def get_date(d):
-    if type(d) is str: d = datetime.strptime(d,  "%Y-%m-%d %H:%M:%S")
-    return d
 
 
 class PluginException(Exception):

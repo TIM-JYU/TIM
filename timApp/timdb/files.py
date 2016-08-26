@@ -2,6 +2,7 @@ from typing import List, Tuple
 
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 import os
+import datetime
 
 
 class Files(TimDbBase):
@@ -38,8 +39,8 @@ class Files(TimDbBase):
         # TODO: Use imghdr module to do basic validation of the file contents.
         # TODO: Should file name be unique among files?
         cursor = self.db.cursor()
-        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (?,?,?)',
-                       [file_filename, owner_group_id, blocktypes.FILE])
+        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id, created) VALUES (?,?,?,?)',
+                       [file_filename, owner_group_id, blocktypes.FILE, datetime.datetime.utcnow()])
         img_id = cursor.lastrowid
         img_path = self.getFilePath(img_id, file_filename)
         os.makedirs(os.path.dirname(img_path))  # TODO: Set mode.
