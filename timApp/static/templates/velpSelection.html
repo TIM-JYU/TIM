@@ -131,6 +131,17 @@
                                             </span>
                                         </span>
                                     </fieldset>
+                                     <label class="annotationVisibleText">
+                                                    <div title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></div>
+                                                    <select ng-model="visible_options.value"
+                                                    ng-options="v as visible_options.names[v-1] for v in visible_options.values">
+                                                    </select>
+                                                    <div ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
+                                                     uib-popover="'Just me' means that the annotation is visible only to yourself. 'Document owner' refers to the person or group who has been named as the document owner. 'Teachers' refers to the users that have teacher access to this document. 'Everyone' means that the annotation is visible to everyone who can view the assessed content."
+                                                     popover-placement="left">
+                                                    </div>
+                                                </label>
+                                    <button colorpicker type="button" colorpicker-position="top" ng-model="velp.color">Color</button>
                                     <p class="error" ng-show="!isSomeVelpGroupSelected(newVelp)">
                                         You need to select at least one velpgroup.
                                     </p>

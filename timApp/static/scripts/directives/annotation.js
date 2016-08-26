@@ -76,9 +76,27 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 }
                 var elementName = scope.velpElement.parentNode.offsetParent.className;
                 var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', scope.aid));
-                if ( elementName === "notes" &&  annotationParents.length > 1 ){//scope.$parent.$parentNode.className === "notes" ){// FIX this scope.$parent.className === "notes" && element.velpElement.parent().className ===  "notes" && scope.$parent.n.parentElement.className ===  "notes"parent.n.parentElement
-                    scope.$$prevSibling.show = !scope.$$prevSibling.show;
-                    scope.$$prevSibling.updateVelpZIndex();
+                if ( elementName === "notes" &&  annotationParents.length > 1 ){
+                    if (scope.aid > 0)
+                    {
+                        if (true) {// todo: detect is scope.$$prevSibling visible $(scope.$$prevSibling).is(':visible')
+                            scope.$$prevSibling.show = !scope.$$prevSibling.show;
+                            scope.$$prevSibling.updateVelpZIndex();
+                        } else {
+                             scope.show = !scope.show;
+                            if (scope.show) {
+                                scope.updateVelpZIndex();
+                            }
+                        }
+                    } else {
+                        scope.$$nextSibling.show = !scope.$$nextSibling.show;
+                        scope.$$nextSibling.updateVelpZIndex();
+                        //scope.show = !scope.show;
+                        //scope.velpElement.parentNode. = !scope.velpElement.parentNode.$$prevSibling.show;
+                        //annotationParents.show = !annotationParents[0].show;
+                        //scope.show = !scope.show;
+                    }
+
                     //scope.isolateScope.show = !scope.isolateScope.show;
                 } else {
                     scope.show = !scope.show;

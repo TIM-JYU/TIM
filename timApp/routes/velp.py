@@ -228,6 +228,7 @@ def add_velp() -> int:
     icon_id = json_data.get('icon_id')
     valid_until = json_data.get('valid_until')
     velp_labels = json_data.get('labels')
+    visible_to = json_data('visible_to')
 
     default_points = float(default_points) if default_points is not None else None
     icon_id = int(icon_id) if icon_id is not None else None
