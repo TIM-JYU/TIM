@@ -1475,10 +1475,11 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         for (var i = 0; i < attributes.length; i++) {
                             var ma = line.match(" *" + attributes[i]);
                             if ( ma ) {
+                                var len = line.length;
                                 line = ma[0] + " " + text;
                                 var range = $scope.editor.getSelectionRange();
                                 range.start.column = 0; 
-                                range.end.column = line.length+1;
+                                range.end.column = len+1;
                                 $scope.editor.session.replace(range, line);
                                 break;
                             }

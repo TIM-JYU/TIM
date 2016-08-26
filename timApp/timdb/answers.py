@@ -112,40 +112,53 @@ class Answers(TimDbBase):
         ) t JOIN Answer a ON a.id = t.aid""".format(template), task_ids + [user_id])
         return self.resultAsDictionary(c)
 
-    def get_all_answers(self, task_id: str, usergroup: int, hide_names: bool, age: str) -> List[str]:
+    def get_all_answers(self, task_id: str, usergroup: int, hide_names: bool, age: str, valid: str) -> List[str]:
         """Gets the all answers to task
 
         :param task_id: The id of the task.
         :param usergroup: Group of users to search
         :param hide_names: Hide names
-        :param age: min or max
+        :param age: min, max or all
+        :param valid: 0, 1 or all
         """
         time_limit = "1900-09-12 22:00:00"
+        counts =  "count(a.answered_on)"
+        groups = "group by a.task_id, u.id"
         minmax = "max"
         if age == "min":
             minmax = "min"
+        if age == "all":
+            minmax = ""
+            counts = "a.valid"
+            groups = ""
         c = self.db.cursor()
         c.execute("""
 SELECT u.name, a.task_id, a.content, a.answered_on, n
 FROM
-(SELECT {}(a.id) AS id, COUNT(a.id) as n
+(SELECT {}(a.id) AS id, {} as n
 FROM answer AS a, userAnswer AS ua, useraccount AS u
 WHERE a.task_id LIKE %s AND ua.answer_id = a.id AND u.id = ua.user_id AND a.answered_on > %s
-GROUP BY a.task_id, u.id
+AND a.valid like %s
+{}
 ORDER BY u.id,a.task_id) t
 JOIN answer a ON a.id = t.id JOIN useranswer ua ON ua.answer_id = a.id JOIN useraccount u ON u.id = ua.user_id
-        """.format(minmax), [task_id, time_limit])
+        """.format(minmax, counts, groups), [task_id, time_limit, valid])
 
         result = []
 
         for row in c.fetchall():
-            header = row[0] + ": " + row[1] + "; " + str(row[3]) + "; " + str(row[4])
+            points = str(row[5])
+            if points == "None": points = ""
+            header = row[0] + ": " + row[1] + "; " + row[3] + "; " + str(row[4]) + "; " + points
             if hide_names: header = ""
             # print(separator + header)
             line = json.loads(row[2])
-            if not isinstance(line, list):
-                answ = line.get("usercode", "-")
-                result.append(header + "\n" + answ)
+            answ = str(line)
+            if isinstance(line, object):
+                if  "usercode" in line:
+                    answ = line.get("usercode", "-")
+
+            result.append(header + "\n" + answ)
         return result
 
 

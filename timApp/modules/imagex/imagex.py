@@ -16,6 +16,8 @@ from http_params import *
 import tim_server
 # Library for checking if a point is inside a shape.
 from geometry import*
+# For copying dicts.
+from copy import deepcopy
 # Methods for checking contents of JSON.
 from fileParams3 import get_all_templates
 PORT = 5000
@@ -105,13 +107,8 @@ class ImagexServer(tim_server.TimServer):
 
     # Creates accurate state for answer, ie. changes the object positions.
     def create_state_imagex(self, markup, drags):
-        #print(markup)
-        #print(drags)
-        for object in markup['objects']:
-            for drag in drags:
-                if object['id'] == drag['id']:
-                    object['position'] = drag['position']
-        return markup
+        dict = {"objects":drags}
+        return dict
 
     #gets reqs
     def get_reqs_result(self) -> dict:
@@ -121,11 +118,23 @@ class ImagexServer(tim_server.TimServer):
         #Get templates for plugin
         templs = get_all_templates('templates')
         #print("--templates--" + str(templs))
-        ret = {"js": ["/static/scripts/timHelper.js","/static/scripts/imagex.js"], "angularModule": ["imagexApp"],#["/static/scripts/timHelper.js","js/imagex.js"], "angularModule": ["imagexApp"],
-                       "css": ["static/css/imagex.css"], "multihtml": True}
+        ret = {"js": ["/static/scripts/timHelper.js","/static/scripts/imagex.js","/static/scripts/bower_components/angular-bootstrap-colorpicker/js/bootstrap-colorpicker-module.min.js"], "angularModule": ["imagexApp","colorpicker.module"],#["/static/scripts/timHelper.js","js/imagex.js"], "angularModule": ["imagexApp"],
+                       "css": ["static/css/imagex.css","/static/scripts/bower_components/angular-bootstrap-colorpicker/css/colorpicker.css"], "multihtml": True}
         # Add templates to reqs.
         ret.update(templs)
         return ret
+
+
+    def gettargetattr(self,prevtarget,defaults,attr,default):
+        """
+        Get attr for target. First checked from default, then from
+        the previous target. if neither is found return default.
+        """
+        if str(attr) in defaults:
+            return defaults[str(attr)]
+        if str(attr) in prevtarget:
+            return prevtarget[str(attr)]
+        return default
 
 
     def do_answer(self, query: QueryParams):
@@ -146,72 +155,122 @@ class ImagexServer(tim_server.TimServer):
         err = ""
         tries = 0
 
-        try:
+        previous_value = {}
+        defaults = query.get_param("defaults", {})
+
+        # Find  value for key from value, prevous or defaults.If nowhere return defaultValue
+        def get_value_def(value, key, default_value, keep_emtpy_as_none = False):
+            keys = key.split(".")
+            ret = default_value
+            if len(keys) < 1: return ret
+
+            k_last = keys.pop()
+
+            v = value
+            p = previous_value
+            d = defaults
+            # Loop v and p to same level
+            for k in keys:
+                if not k in p: p[k] = {}; # if not on p, add
+                p = p[k] # for next round
+                if v and k in v: v = v[k]
+                else: v = None
+                if d and k in d: d = d[k]
+                else: d = None
+
+            k = k_last;
+            if v and k in v:
+                if v[k] and (not keep_emtpy_as_none or v[k] != ""):
+                    ret = v[k]
+                    p[k] = ret
+                else: p[k] = None;
+                return ret
+
+            if p and (k in p) and p[k] != None:
+                return p[k]
+            if d and (k in d) and d[k] != None:
+                return d[k]
+            return ret
+
+
+        if True:
             #print("--state--" + str(query.get_param("state",None)))
             #Student points
             points = 0
+            #get default values for targets. If values arent told for targets get them from here or from previous
+            # target.
+            #If all tries have been used just return.
             max_tries = int(query.get_param("max_tries", 1000000))
             tries = int(query.get_json_param("state", "tries", 0))
-            finalanswergiven = query.get_json_param("state","finalanswergiven",False)
-            #tries = int(query.get_json_param("tries",0))
-            #Targets dict.
-            targets = list(query.get_param("targets",None))
+            prevfinalanswergiven = query.get_json_param("state","finalanswergiven",False)
+            print("prevfinalanswergiven =", prevfinalanswergiven)
+            finalanswergiven = False
+            if prevfinalanswergiven:  finalanswergiven = True
+
+            #Targets dict
+            try:
+                targets = list(query.get_param("targets",None))
+            except:
+                targets = []
             drags = query.get_json_param("input", "drags", None)
             gottenpoints = {}
             gottenpointsobj = {}
-            #Uncomment to see student answersS
+            #For tracking indexes
+            #Uncomment to see student answers
             #print("---drags---" + str(drags))
             #No points are awarded if all tries have been given or the final answer has been given to the student.
-            if tries < max_tries and finalanswergiven == False:
+            tnr = 0
+            if targets != None:
                 for target in targets:
                     #Find object name from user input.
-                    for selectkey in target['points'].keys():
-                        for drag in drags:
-                            if drag['id'] == selectkey:
-                                # Check if image is inside target, award points.
-                                #Take values from the first taget if they are not found.
-                                if 'type' not in target:
-                                    if 'type' in targets[0]:
-                                        target['type'] = targets[0]['type']
-                                    else:
-                                        target['type'] = "rectangle"
-                                if 'a' not in target:
-                                    if 'a' in targets[0]:
-                                        target['a'] = targets[0]['a']
-                                    else:
-                                        target['a'] = 0
-
-                                if 'size' not in target:
-                                    target['size'] = targets[0]['size']
-                                if 'position' not in target:
-                                    target['position'] = targets[0]['position']
-                                if isInside(target['type'],target['size'],target['a'],target['position'],drag["position"]):
-                                    #print("--targetpoints--" + str(target['target']['points']))
-                                    #print(target['target']['points'][selectkey])
-                                    #Add points for objects being inside shape.
-                                    points += (target['points'][selectkey])
-
-                                    gottenpointsobj[selectkey] = target['points'][selectkey]
-                                    gottenpoints.update(gottenpointsobj)
-                                    gottenpointsobj = {}
-
-            if tries >= max_tries or finalanswergiven == True:
-                out = out[0:20000]
-                web["tries"] = tries
-                web["error"] = "You have exceeded the answering limit or made a request for the correct answer"
-                sresult = json.dumps(result)
-                # Write results to site.
-                self.wout(sresult)
-                return
-
-            tries = tries + 1
+                    target['points'] = get_value_def(target, "points", {})
+                    target['type'] = get_value_def(target, "type", "rectangle")
+                    target['a'] = get_value_def(target, "a", 0)
+                    target['size'] = get_value_def(target, "size", [10])
+                    target['position'] = get_value_def(target, "position", [0, 0])
+                    target['max'] = get_value_def(target, "max", 100000)
+                    target['snapOffset'] = get_value_def(target, "snapOffset", [0, 0])
+                    target['n'] = 0;
+                    tnr += 1
+                    print(target)
+                    if tries < max_tries:  # and finalanswergiven == False:
+                        for selectkey in target['points'].keys():
+                            for drag in drags:
+                                if drag['id'] == selectkey:
+                                    #Check if needed values exist for target. If they dont, read them from defaults
+                                    #or first target. # TODO: NOT FROM FIRST!!!
+                                    # Check if image is inside target, award points.
+                                    if target["n"] < target["max"] and \
+                                          is_inside(target['type'],target['size'],-target['a'],target['position'],drag["position"]):
+                                        target["n"] += 1;
+                                        drag["td"] = "trg" + str(tnr)
+                                        if "id" in target: drag["tid"] = target["id"]
+                                        pts = (target['points'][selectkey])
+                                        drag["points"] = pts
+                                        points += pts
+                                        gottenpointsobj[selectkey] = target['points'][selectkey]
+                                        gottenpoints.update(gottenpointsobj)
+                                        gottenpointsobj = {}
 
             answer = {}
             # Check if getting finalanswer from excercise is allowed and if client asked for it.
             finalanswer = query.get_param("finalanswer",False)
             finalanswerquery = query.get_json_param("input","finalanswerquery", False)
+            tries = tries + 1
 
-            if finalanswer == True and (tries >= max_tries or finalanswerquery == True):
+            if tries >= max_tries and (finalanswer == False or finalanswerquery == False):
+                out = "You have exceeded the answering limit or have seen the answer"
+                out = out[0:20000]
+                web["tries"] = tries
+                web["result"] = out
+                web["error"] = "You have exceeded the answering limit or have seen the answer"
+                sresult = json.dumps(result)
+                # Write results to site.
+                self.wout(sresult)
+                return
+
+
+            if finalanswer and finalanswerquery:
                 print("--final answer--")
                 #Set tries to be max_tries so that this cannot be exploited.
                 tries = max_tries
@@ -221,7 +280,7 @@ class ImagexServer(tim_server.TimServer):
                     for key in target['points'].keys():
                         if target['points'][key] > 0:
                             obj['id'] = key
-                            obj['position'] = target['position']
+                            obj['position'] = [target['position'][0] + target['snapOffset'][0], target['position'][1] + target['snapOffset'][1] ];
                             #Empty dict between loops.
                     answertable.append(obj)
                     obj = {}
@@ -229,31 +288,53 @@ class ImagexServer(tim_server.TimServer):
 
                 answer['rightanswers'] = answertable
                 answer['studentanswers'] = gottenpoints
-                answer['targets'] = targets
-                #print(answer)
+                # answer['targets'] = targets
+                print(answer)
                 finalanswergiven = True
+                # Send stuff over to tim.
+                out = "Answer to the exercise"
+                out = out[0:20000]
+                web["tries"] = tries
+                web["result"] = out
+                web["error"] = err
+                web["answer"] = answer
+                print(web)
+                # save = { "tries": tries}
+                # result["save"] = save
+                #sresult = json.dumps(result)
+                # Write results to site.
+                #self.wout(sresult)
+                # return
 
-
-
-
-            markup = {}
-            #Create state to be saved for this excercise.
-            markup["objects"] = self.create_state_imagex(query.get_param("markup",None),drags)
-            markup["tries"] = tries
-            #Save if finalanswer was given to student.
-            markup['finalanswergiven'] = finalanswergiven
+            userAnswer = {}
+            # Create state to be saved for this excercise.
+            # print("drags: ", drags)
+            userAnswer["drags"] = drags
+            # userAnswer["tries"] = tries
+            # Save if finalanswer was given to student.
+            # userAnswer['finalanswergiven'] = finalanswergiven
+            freeHandData = query.get_json_param("input", "freeHandData", None)
             # markup["targets"] = targets
             # Return correct answer if the answer table isnt empty.
-            if len(answer) != 0:
-                markup['correctanswer'] = answer
+            # if len(answer) != 0:
+            #    userAnswer['correctanswer'] = answer
 
             #Save user input and points to markup
-            tim_info = {"points":points}
-            save = {"markup": markup,"tries":tries} #{"drags":drags,"tries":tries}
+            tim_info = {"points": points}
+            save = {"userAnswer": userAnswer}
+            if freeHandData: save['freeHandData'] = freeHandData #{"drags":drags,"tries":tries}
+            if finalanswergiven: save["finalanswergiven"] = True
             result["save"] = save
+            if not prevfinalanswergiven:
+                out = "saved"
+            else:
+                tim_info["notValid"] = True
+                out = "saved but not valid"
             result["tim_info"] = tim_info
-            out = "saved"
         #Print exception and error.
+
+        try:
+            print("joo")
         except Exception as e:
             err = str(e)
             print("---Virhe---")
@@ -263,6 +344,8 @@ class ImagexServer(tim_server.TimServer):
         web["tries"] = tries
         web["result"] = out
         web["error"] = err
+        web["answer"] = answer
+        print(web)
         sresult = json.dumps(result)
         #Write results to site.
         self.wout(sresult)
