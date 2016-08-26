@@ -129,7 +129,9 @@ order by u.id,a.task_id,a.answered_on;
         if answs is None: return result
 
         for row in answs:
-            header = row[0] + ": " + row[1] + "; " + row[3] + "; " + str(row[4]) + "; " + str(row[5])
+            points = str(row[5])
+            if points == "None": points = ""
+            header = row[0] + ": " + row[1] + "; " + row[3] + "; " + str(row[4]) + "; " + points
             if hide_names: header = ""
             # print(separator + header)
             line = json.loads(row[2])
