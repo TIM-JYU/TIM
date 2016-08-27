@@ -467,6 +467,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"file");
 			csApp.set(scope,attrs,"viewCode",false);
 			csApp.set(scope,attrs,"filename");
+			csApp.set(scope,attrs,"nosave",false);
 			csApp.set(scope,attrs,"upload",iupload); if ( scope.attrs.uploadbycode ) scope.upload = true;
 			csApp.set(scope,attrs,"uploadstem");
 			csApp.set(scope,attrs,"nocode",inocode);
@@ -1020,9 +1021,9 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
     $scope.runCodeCommon = function(nosave, extraMarkUp)
     {
 		var t = languageTypes.getRunType($scope.selectedLanguage,"cs");  
-        if ( t == "md" ) { $scope.showMD(); if (nosave) return; }
-        if ( languageTypes.isInArray(t, csJSTypes ) ) { $scope.jstype = t; $scope.showJS(); if (nosave) return; } 
-		$scope.doRunCode(t,nosave);
+        if ( t == "md" ) { $scope.showMD(); if (nosave || $scope.nosave) return; }
+        if ( languageTypes.isInArray(t, csJSTypes ) ) { $scope.jstype = t; $scope.showJS(); if (nosave || $scope.nosave) return; } 
+		$scope.doRunCode(t,nosave || $scope.nosave);
     }
     
     $scope.runCodeAuto = function() {
@@ -1031,7 +1032,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 	};
 	
 	$scope.runCodeLink = function(nosave) {
-		$scope.runCodeCommon(nosave);
+		$scope.runCodeCommon(nosave || $scope.nosave);
 	};
 	
 	$scope.runCode = function() {
@@ -1172,7 +1173,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 			}
         };
 		//		  alert($scope.usercode);
-        if ( nosave ) params.input.nosave = true;
+        if ( nosave  || $scope.nosave) params.input.nosave = true;
         if ( extraMarkUp ) jQuery.extend(params.input.markup, extraMarkUp);
         if ( $scope.isAll ) jQuery.extend(params.input, {'selectedLanguage': $scope.selectedLanguage});
         var url = "/cs/answer";
