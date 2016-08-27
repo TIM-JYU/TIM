@@ -154,15 +154,16 @@
                 <iframe id="slideFrame" src="/show_slide/{{ doc.fullname }}" allowfullscreen></iframe>
                 <a id="showSlidesLink" href="/show_slide/{{ doc.fullname }}">Show slides only</a>
             </div>
-        {% endif %}
-        {% if velp_mode or teacher_mode %}
-            <div ng-controller="ReviewController">
-                {% include 'velp_view.html' %}
-            </div>
         {% else %}
-            <div ng-controller="ReviewController">
-                {% include 'view_content.html' %}
-            </div>
+            {% if velp_mode or teacher_mode %}
+                <div ng-controller="ReviewController">
+                    {% include 'velp_view.html' %}
+                </div>
+            {% else %}
+                <div ng-controller="ReviewController">
+                    {% include 'view_content.html' %}
+                </div>
+            {% endif %}
         {% endif %}
     </div>
     <p id="test"></p>

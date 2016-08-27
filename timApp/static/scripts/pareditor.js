@@ -609,10 +609,12 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         if ($scope.minSizeSet || JSON.parse($window.localStorage.getItem('previewIsReleased')) === true) {
                             var top = div.offset().top;
                             var left = div.offset().left;
+                            var editorOffset = $window.localStorage.getItem('editorReleasedOffset');
+                            if ( editorOffset ) editor.offset({'left': editorOffset.left, 'top': editor.offset().top});
                             if ($window.localStorage.getItem('previewReleasedOffset')) {
                                 var savedOffset = (JSON.parse(localStorage.getItem('previewReleasedOffset')));
-                                left = savedOffset.left;
-                                top = editor.offset().top - savedOffset.top;
+                                left = editor.offset().left + savedOffset.left;
+                                top = editor.offset().top + savedOffset.top;
                             } else {
                                 if ($(window).width() < editor.width() + div.width()) {
                                     top += 5;
@@ -646,9 +648,10 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         // Calculate distance from editor's top and left
                         var editorOffset = $('.editorArea').offset();
                         var previewOffset = $('#previewDiv').offset();
-                        var left = previewOffset.left;
-                        var top = editorOffset.top - previewOffset.top;
+                        var left = previewOffset.left - editorOffset.left;
+                        var top = previewOffset.top - editorOffset.top;
                         $window.localStorage.setItem('previewReleasedOffset', JSON.stringify({'left': left, 'top': top}));
+                        $window.localStorage.setItem('editorReleasedOffset', JSON.stringify(editorOffset));
 
                     }
                     if ($scope.previewReleased) {
@@ -887,6 +890,10 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.savePreviewData(true);
                     } else $scope.savePreviewData(false);
                     var text = $scope.getEditorText();
+                    if ( text.trim() === "" ) {
+                        $scope.deleteClicked();
+                        return;
+                    }
                     $http.post($scope.saveUrl, angular.extend({
                         text: text
                     }, $scope.extraData)).success(function (data, status, headers, config) {

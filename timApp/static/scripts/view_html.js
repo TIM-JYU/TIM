@@ -607,10 +607,12 @@ timApp.controller("ViewCtrl", [
                         showImageUpload: true,
                         showPlugins: false,
                         touchDevice: mobile,
+                        /*
                         tags: [
                             {name: 'difficult', desc: 'The text is difficult to understand'},
                             {name: 'unclear', desc: 'The text is unclear'}
                         ],
+                        */
                         choices: {
                             desc: [{
                                 desc: 'Show note to:',

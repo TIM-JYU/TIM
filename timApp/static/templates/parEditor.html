@@ -117,7 +117,7 @@
         <button class="timButton cancelPar" ng-disabled="saving" ng-click="cancelClicked()">Cancel</button>
         <button class="timButton deletePar" ng-show="options.showDelete" ng-click="deleteClicked()">Delete</button>
     </div>
-    <div class="tags">
+    <div class="editortags">
         <label ng-repeat="tag in options.tags">
             <input type="checkbox" ng-model="extraData.tags[tag.name]"/> {{ tag.desc }}
         </label>
@@ -126,7 +126,7 @@
         <div ng-repeat="choice in options.choices.desc">
             {{ choice.desc }}
             <label ng-repeat="opt in choice.opts">
-                <input type="radio" ng-model="extraData[choice.name]" ng-value="opt.value"/> {{ opt.desc }}
+                <input type="radio" ng-model="extraData[choice.name]" ng-value="opt.value"/> {{ opt.desc }}&nbsp;
             </label>
         </div>
     </div>
