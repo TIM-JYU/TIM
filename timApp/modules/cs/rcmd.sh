@@ -2,9 +2,13 @@
 # Set locale
 export LANG=en_US.UTF-8
 # export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/
-# For X server emulation
-Xvfb :1 -screen 0 1280x1024x24 -extension RANDR 2>/dev/null  &
-export DISPLAY=:1 
+
+if [ $2 != "True" ]; then
+  # For X server emulation
+  Xvfb :1 -screen 0 1280x1024x24 -extension RANDR 2>/dev/null  &
+  export DISPLAY=:1 
+fi
+export GNUTERM=png
 cmd=$1
 
 if [  -z "$cmd"  ]; then
@@ -29,7 +33,7 @@ fi
 # cd /home/agent/run
 # echo "Running: $cmd" >> /tmp/log/log.txt
 # echo "Running: $cmd" >> log.txt
-chmod 755 ~/$cmd
+#chmod 755 ~/$cmd
 #cp $cmd a.sh
 #cd $PWD # ei tässä kun kaikki eivät kestä muutosta
 ulimit -f 80000 # -t 1 -v 2000 -s 100 -u 10

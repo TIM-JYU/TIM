@@ -75,6 +75,7 @@
             <p ng-show="documentList.length == 0 && folderList.length == 0">There are no documents to show.</p>
             {% if session.user_id %}
                 <uib-tabset active="-1">
+                    <!--
                     <uib-tab heading="Upload a new document">
                         <div class="form-group">
                             <label for="docUpload">Select a file:</label>
@@ -84,6 +85,7 @@
                            ng-bind="file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!'">
                      </span>
                     </uib-tab>
+                    -->
                     <uib-tab heading="Create a new document">
                         <div class="form-group"><label>
                             Document name:

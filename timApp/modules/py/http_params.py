@@ -290,6 +290,8 @@ def multi_post_params(request: http.server.BaseHTTPRequestHandler) -> [QueryPara
     results = []
     for jso in jsons:
         results.append(QueryParams(jso))
+
+    print(str(results))
     return results
     # tai:
     # return {QueryParams(jso) for jso in jsons]

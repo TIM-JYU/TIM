@@ -6,5 +6,6 @@ run apt-get install -y openssh-server
 run mkdir /var/run/sshd
 run echo 'root:test' | chpasswd
 run sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN echo agent:kissa | chpasswd
 expose 22
 CMD service  ssh start && /bin/bash -c "su agent"
