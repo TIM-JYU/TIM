@@ -3,6 +3,7 @@ import os
 import collections
 from typing import Optional, Tuple
 
+import decimal
 from sqlalchemy.orm import scoped_session
 
 from psycopg2._psycopg import connection
@@ -121,6 +122,7 @@ class TimDbBase(object):
         for row in rows:
             result = {}
             for prop, val in zip(cols, row):
+                if isinstance(val, decimal.Decimal): val = float(val)
                 result[prop] = val
             results.append(result)
         return results

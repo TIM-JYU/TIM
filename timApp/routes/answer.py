@@ -252,7 +252,7 @@ def get_all_answers(task_id):
     doc_id, _, _ = Plugin.parse_task_id(task_id)
     usergroup = request.args.get('group')
     age = request.args.get('age')
-    valid = request.args.get('valid',1)
+    valid = request.args.get('valid',"1")
 
     if not usergroup:
         usergroup = 0

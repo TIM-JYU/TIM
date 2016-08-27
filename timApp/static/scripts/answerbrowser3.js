@@ -362,7 +362,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     var valid = "&valid=1";
                     if ( sPageURL.indexOf("age=min") >= 0 ) age = "&age=min";
                     if ( sPageURL.indexOf("age=all") >= 0 ) age = "&age=all";
-                    if ( sPageURL.indexOf("valid=all") >= 0 ) valid = "&valid=%";
+                    if ( sPageURL.indexOf("valid=all") >= 0 ) valid = "&valid=all";
                     if ( sPageURL.indexOf("valid=0") >= 0 ) valid = "&valid=0";
                     if ( sPageURL.indexOf("valid=1") >= 0 ) valid = "&valid=1";
                     $scope.loading++;
