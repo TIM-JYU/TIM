@@ -399,7 +399,8 @@ csApp.set = function(scope,attrs,name,def) {
     scope[name] = def;
     if ( attrs && attrs[name] ) scope[name] = attrs[name];
     if ( scope.attrs && scope.attrs[name] ) scope[name] = scope.attrs[name];
-    if ( scope[name] == "None" ) scope[name] = "";
+    if ( scope[name] === "None" ) scope[name] = "";
+    if ( scope[name] === "False" ) scope[name] = false;
     return scope[name];
 };
 
@@ -409,7 +410,8 @@ csApp.getParam = function(scope,name,def) {
     var result = def;
     if ( scope.attrs && scope.attrs[name] ) result = scope.attrs[name];
     if ( scope[name] ) result = scope[name];
-    if ( result == "None" ) scope[name] = "";
+    if ( result === "None" ) result = "";
+    if ( result === "False" ) result = false;
     return result;
 }
 
