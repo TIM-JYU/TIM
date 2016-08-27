@@ -257,7 +257,7 @@ def add_velp() -> int:
     icon_id = json_data.get('icon_id')
     valid_until = json_data.get('valid_until')
     velp_labels = json_data.get('labels')
-    visible_to = json_data('visible_to')
+    visible_to = json_data.get('visible_to')
 
     default_points = float(default_points) if default_points is not None else None
     icon_id = int(icon_id) if icon_id is not None else None
@@ -284,7 +284,7 @@ def add_velp() -> int:
     velp_groups = velp_groups_rights
 
     new_velp_id = timdb.velps.create_new_velp(current_user_id, velp_content, default_points,
-                                              icon_id, valid_until, language_id)
+                                              icon_id, valid_until, language_id, visible_to)
 
     if velp_labels is not None:
         timdb.velps.add_labels_to_velp(new_velp_id, velp_labels)
