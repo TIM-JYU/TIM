@@ -421,7 +421,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
     /**
      * Adds new velp to database. Requires values in $scope.newVelp variable.
-     * @method addNewVelpToDatabase
+     * @method addNewVelpToDatabase 
      */
     var addNewVelpToDatabase = function () {
         var velpToAdd = {
@@ -432,7 +432,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
             language_id: "FI",
             icon_id: null,
             valid_until: null,
-            visible_to: $scope.newVelp.visible_options.value,
+            visible_to: $scope.visible_options.value,
             velp_groups: JSON.parse(JSON.stringify($scope.newVelp.velp_groups))
 
         };

@@ -312,8 +312,8 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
             key = htmlpar.get('ref_id'), htmlpar.get('ref_doc_id')
             pars_dict[key].append(htmlpar)
 
-            key = htmlpar['id'], htmlpar['doc_id']
-            pars_dict[key].append(htmlpar)
+        key = htmlpar['id'], htmlpar['doc_id']
+        pars_dict[key].append(htmlpar)
 
     for p in html_pars:
         p['status'] = ''
