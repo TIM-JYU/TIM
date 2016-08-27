@@ -41,7 +41,7 @@ class Velps(TimDbBase):
         :param visible_to: Default visibility to annotation.
         :return: ID of velp that was just created.
         """
-
+        if not visible_to: visible_to = 4
         v = Velp(creator_id=creator_id,
                  default_points=default_points,
                  icon_id=icon_id,
