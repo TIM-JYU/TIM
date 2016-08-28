@@ -610,7 +610,11 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             var top = div.offset().top;
                             var left = div.offset().left;
                             var editorOffset = $window.localStorage.getItem('editorReleasedOffset');
-                            if ( editorOffset ) editor.offset({'left': editorOffset.left, 'top': editor.offset().top});
+                            if ( editorOffset ) {
+                                editorOffset = JSON.parse(editorOffset);
+                                // editor.offset({'left': editorOffset.left, 'top': editor.offset().top});
+                                editor.css('left', editorOffset.left - editor.offset().left);
+                            }
                             if ($window.localStorage.getItem('previewReleasedOffset')) {
                                 var savedOffset = (JSON.parse(localStorage.getItem('previewReleasedOffset')));
                                 left = editor.offset().left + savedOffset.left;
