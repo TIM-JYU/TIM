@@ -341,6 +341,9 @@ timApp.controller("ViewCtrl", [
                 area_end = null;
             }
 
+            var tags = [];
+            tags["markread"] = true;
+
             var attrs = {
                 "save-url": url,
                 "extra-data": {
@@ -348,16 +351,18 @@ timApp.controller("ViewCtrl", [
                     par: par_id, // the id of paragraph on which the editor was opened
                     par_next: par_next_id, // the id of the paragraph that follows par or null if par is the last one
                     area_start: area_start,
-                    area_end: area_end
+                    area_end: area_end,
+                    tags: tags
                 },
                 "options": {
+                    localSaveTag: "par",
                     showDelete: options.showDelete,
                     showImageUpload: true,
                     showPlugins: true,
                     destroyAfterSave: true,
                     touchDevice: mobile,
                     tags: [
-                        {name: 'markread', desc: 'Mark as read'}
+                        {name: 'markread', desc: 'Mark as read', value:"markasread"}
                     ]
                 },
                 "after-save": 'addSavedParToDom(saveData, extraData)',
@@ -403,6 +408,11 @@ timApp.controller("ViewCtrl", [
                 area_end = null;
             }
 
+            var tags = {};
+            var markread = $window.localStorage.getItem("markread") || false;
+            tags["markread"] =  markread === "true";
+
+
             var attrs = {
                 "save-url": url,
                 "extra-data": {
@@ -410,9 +420,11 @@ timApp.controller("ViewCtrl", [
                     par: par_id, // the id of paragraph on which the editor was opened
                     par_next: par_next_id, // the id of the paragraph that follows par or null if par is the last one
                     area_start: area_start,
-                    area_end: area_end
+                    area_end: area_end,
+                    tags: tags
                 },
                 "options": {
+                    localSaveTag: "par",
                     showDelete: options.showDelete,
                     showImageUpload: true,
                     showPlugins: true,
@@ -603,6 +615,7 @@ timApp.controller("ViewCtrl", [
                         isComment: true
                     }, data),
                     "options": {
+                        localSaveTag: "note",
                         showDelete: !options.isNew,
                         showImageUpload: true,
                         showPlugins: false,

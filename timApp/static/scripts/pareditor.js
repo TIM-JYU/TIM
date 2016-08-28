@@ -1,3 +1,5 @@
+// TODO: save cursor postion when changing editor
+
 var angular;
 var MENU_BUTTON_CLASS = 'menuButtons';
 var timApp = angular.module('timApp');
@@ -28,12 +30,43 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 initialTextUrl: '@'
             },
             controller: function ($scope) {
+                var tag = $scope.options.localSaveTag || "";
+                var storage = $window.localStorage;
+                $scope.lstag = tag;
+
+                $scope.getLocalBool = function(name, def) {
+                    var ret = def;
+                    if ( !ret ) ret = false;
+                    var val = storage.getItem(name+$scope.lstag);
+                    if ( !val ) return ret;
+                    return val === "true";
+                }
+
                 currentEditorScope = $scope;
+
+                var proeditor = $scope.getLocalBool("proeditor",  tag==="par" ? true : false);
+                if ( proeditor === "true") proeditor = true;
+                $scope.proeditor = proeditor;
+                
+
+
+                $scope.setLocalValue = function(name, val) {
+                    $window.localStorage.setItem(name + $scope.lstag, val);
+                }
+                
                 $scope.setEditorMinSize = function() {
                     var editor = $('pareditor');
-                    editor.css('min-height', '40vh');
+                    // editor.css('min-height', '40vh');
                     $scope.previewReleased = false;
-                    if (JSON.parse($window.localStorage.getItem('previewIsReleased')) === true) {
+
+                    var editorOffset = storage.getItem('editorReleasedOffset'+tag);
+                    if ( editorOffset ) {
+                        editorOffset = JSON.parse(editorOffset);
+                        // editor.offset({'left': editorOffset.left, 'top': editor.offset().top});
+                        editor.css('left', editorOffset.left - editor.offset().left);
+                    }
+
+                    if (storage.getItem('previewIsReleased'+tag) === "true") {
                         $scope.releaseClicked();
                     }
                     $scope.minSizeSet = true;
@@ -103,7 +136,10 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     $scope.isIE = true;
                 }
 
+                $scope.dataLoaded = false; // allow load in first time what ever editor
+
                 $scope.setInitialText = function () {
+                    if ( $scope.dataLoaded ) return;
                     $scope.setEditorText('Loading text...');
                     $http.get($scope.initialTextUrl, {
                         params: angular.extend({
@@ -111,12 +147,14 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         }, $scope.extraData)
                     }).success(function (data, status, headers, config) {
                         $scope.setEditorText(data.text);
+                        // $scope.editorText = data.text;
                         angular.extend($scope.extraData, data.extraData);
                         $scope.aceChanged();
                         $scope.aceReady();
                     }).error(function (data, status, headers, config) {
                         $window.alert('Failed to get text: ' + data.error);
                     });
+                    $scope.dataLoaded = true; // prevent data load in future
                 };
 
                 $scope.adjustPreview = function () {
@@ -320,6 +358,9 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 };
 
                 $scope.createTextArea = function (text) {
+                    if (!$scope.minSizeSet) {
+                        $scope.setEditorMinSize();
+                    }
                     $scope.isAce = false;
                     var $container = ('.editorContainer');
                     var $textarea = $.parseHTML('<textarea rows="10" ng-model="editorText" ng-change="aceChanged()" ng-trim="false" id="teksti" wrap="off"></textarea>');
@@ -388,21 +429,24 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     };
                 };
 
+                $scope.aceReady = function () {
+                    $scope.editor.focus();
+                    $scope.bottomClicked();
+                };
+
                 $scope.aceLoaded = function (editor) {
                     $scope.editor = editor;
                     $scope.createAce(editor);
-                    if ($scope.initialTextUrl) $scope.setInitialText();
+                    $scope.setInitialText();
+
                     editor.focus();
+                    $scope.aceReady();
 
                     /*iPad does not open the keyboard if not manually focused to editable area
                      var iOS = /(iPad|iPhone|iPod)/g.test($window.navigator.platform);
                      if (!iOS) editor.focus();*/
                 };
 
-                $scope.aceReady = function () {
-                    $scope.editor.focus();
-                    $scope.bottomClicked();
-                };
 
                 $('.editorContainer').on('resize', $scope.adjustPreview);
 
@@ -448,22 +492,6 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     }, 500);
                 };
 
-                if ($scope.options.touchDevice) {
-                    $scope.createTextArea();
-                    $scope.setTextAreaControllerFunctions();
-
-                    if (!$scope.options.metaset) {
-                        var $meta = $("meta[name='viewport']");
-                        $scope.oldmeta = $meta[0];
-                        $meta.remove();
-                        $('head').prepend('<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=0">');
-                    }
-                    $scope.options.metaset = true;
-                    if ($scope.initialTextUrl) $scope.setInitialText();
-
-                } else {
-                    $scope.setAceControllerFunctions();
-                }
 
                 /* Add citation info to help tab */
                 document.getElementById('helpCite').setAttribute('value', '#- {rd="' + $scope.extraData.docId + '" rl="no" rp="' + $scope.extraData.par +'"}');
@@ -553,6 +581,10 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 };
 
                 $scope.deleteClicked = function () {
+                    if ( !$scope.options.showDelete ) {
+                        $scope.cancelClicked(); // when empty and save clicked there is no par
+                        return;
+                    }
                     if (!$window.confirm("Delete - are you sure?")) {
                         return;
                     }
@@ -585,6 +617,8 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     var content = $('.previewcontent');
                     var editor = $('.editorArea');
                     $scope.previewReleased = !($scope.previewReleased);
+                    var tag = $scope.options.localSaveTag || "";
+                    var storage = $window.localStorage;
 
                     if (div.css("position") == "absolute") {
                         // If preview has been clicked back in, save the preview position before making it static again
@@ -606,17 +640,11 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     }
                     else {
                         // If preview has just been released or it was released last time editor was open
-                        if ($scope.minSizeSet || JSON.parse($window.localStorage.getItem('previewIsReleased')) === true) {
+                        if ($scope.minSizeSet || storage.getItem('previewIsReleased'+tag) === "true") {
                             var top = div.offset().top;
                             var left = div.offset().left;
-                            var editorOffset = $window.localStorage.getItem('editorReleasedOffset');
-                            if ( editorOffset ) {
-                                editorOffset = JSON.parse(editorOffset);
-                                // editor.offset({'left': editorOffset.left, 'top': editor.offset().top});
-                                editor.css('left', editorOffset.left - editor.offset().left);
-                            }
-                            if ($window.localStorage.getItem('previewReleasedOffset')) {
-                                var savedOffset = (JSON.parse(localStorage.getItem('previewReleasedOffset')));
+                            if (storage.getItem('previewReleasedOffset'+tag)) {
+                                var savedOffset = (JSON.parse(storage.getItem('previewReleasedOffset'+tag)));
                                 left = editor.offset().left + savedOffset.left;
                                 top = editor.offset().top + savedOffset.top;
                             } else {
@@ -648,21 +676,18 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 };
 
                 $scope.savePreviewData = function (savePreviewPosition) {
+                    var tag = $scope.options.localSaveTag || "";
+                    var storage = $window.localStorage;
+                    var editorOffset = $('.editorArea').offset();
+                    storage.setItem('editorReleasedOffset'+tag, JSON.stringify(editorOffset));
                     if (savePreviewPosition) {
                         // Calculate distance from editor's top and left
-                        var editorOffset = $('.editorArea').offset();
                         var previewOffset = $('#previewDiv').offset();
                         var left = previewOffset.left - editorOffset.left;
                         var top = previewOffset.top - editorOffset.top;
-                        $window.localStorage.setItem('previewReleasedOffset', JSON.stringify({'left': left, 'top': top}));
-                        $window.localStorage.setItem('editorReleasedOffset', JSON.stringify(editorOffset));
-
+                        storage.setItem('previewReleasedOffset'+tag, JSON.stringify({'left': left, 'top': top}));
                     }
-                    if ($scope.previewReleased) {
-                        $window.localStorage.setItem('previewIsReleased', JSON.stringify(true));
-                    } else {
-                        $window.localStorage.setItem('previewIsReleased', JSON.stringify(false));
-                    }
+                    storage.setItem('previewIsReleased'+tag, $scope.previewReleased);
                 };
 
                 /**
@@ -923,6 +948,15 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         if (angular.isDefined($scope.extraData.access)) {
                             $scope.$storage.noteAccess = $scope.extraData.access;
                         }
+                        if (angular.isDefined($scope.extraData.tags["markread"])) { // TODO: tee silmukassa
+                            $window.localStorage.setItem("markread",$scope.extraData.tags["markread"]);
+                        }
+                        $window.localStorage.setItem("proeditor" + $scope.lstag, $scope.proeditor);
+                        
+                        if ( $scope.isAce ) 
+                            $scope.setLocalValue("acewrap", $scope.editor.getSession().getUseWrapMode());
+
+
                     }).error(function (data, status, headers, config) {
                         $window.alert("Failed to save: " + data.error);
                         saving = false;
@@ -1013,6 +1047,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                 $scope.setTextAreaFunctions = function () {
 
+                    $scope.saveOldMode("text");
                     //Navigation
                     $scope.undoClicked = function () {
                         document.execCommand("undo", false, null);
@@ -1346,6 +1381,8 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 };
 
                 $scope.setAceFunctions = function () {
+                    $scope.saveOldMode("ace");
+
                     $scope.snippetManager = ace.require("ace/snippets").snippetManager;
 
                     /*
@@ -1683,11 +1720,17 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     $scope.setAceControllerFunctions();
                 };
 
-                if ($scope.options.touchDevice) {
+                $scope.saveOldMode = function(oldMode) {
+                    $window.localStorage.setItem("oldMode"+$scope.options.localSaveTag, oldMode);
+                };
+
+                /*
+                if ( oldMode == "text") {
                     $scope.setTextAreaFunctions();
                 } else {
                     $scope.setAceFunctions();
                 }
+                */
 
                 $scope.surroundedByItalic = function () {
                     return (($scope.surroundedBy('*', '*') && !$scope.surroundedBy('**', '**')) || $scope.surroundedBy('***', '***'));
@@ -1899,35 +1942,70 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     }
                 };
 
+                $scope.getEditorText = function() { return ""; }; // for first time use this
+
                 /**
                  * Switched editor between ace and textarea
                  */
-                $scope.changeEditor = function () {
+                $scope.changeEditor = function (newMode) {
+                    //$scope.saveEditor("text")
                     var text = $scope.getEditorText();
                     $scope.editorText = text;
-                    if ($scope.isAce) {
+                    if ($scope.isAce || newMode === "text") {
                         var oldeditor = $('#ace_editor');
+                        $scope.setTextAreaControllerFunctions();
                         $scope.setTextAreaFunctions();
                         $scope.createTextArea(text);
+                        $scope.setInitialText();
+                        $scope.editor.focus();
                     } else {
                         var oldeditor = $('#teksti');
+                        $scope.setAceControllerFunctions();
                         $scope.setAceFunctions();
                         var neweditor = $("<div>", {
                             class: 'editor',
                             id: 'ace_editor',
-                            'ng-model': 'editorText'
+                            'ng-model': 'editorText',
+                            'ui-ace': "{  useWrapMode: false,  onLoad: aceLoaded,  onChange: aceChanged }",
+                             onLoad: "aceLoaded",
                         });
                         $('.editorContainer').append($compile(neweditor)($scope));
                         var neweditor = ace.edit("ace_editor");
                         $scope.editor = neweditor;
-                        $scope.createAce($scope.editor, text);
+                        // $scope.createAce($scope.editor, text);
                         $scope.editor.getSession().on('change', $scope.aceChanged);
+                        neweditor.getSession().setUseWrapMode($scope.getLocalBool("acewrap"),false);
+                        neweditor.setOptions({maxLines: 28});
                     }
-                    oldeditor.remove();
-                    $scope.editor.focus();
+                    if (oldeditor) oldeditor.remove();
                     $scope.adjustPreview();
+                    if ( !$scope.proeditor && $scope.lstag === "note" ) {
+                        var editor = $('pareditor');
+                        editor.css("max-width","40em");
+                    }
+
                 };
 
+                var oldMode = $window.localStorage.getItem("oldMode"+$scope.options.localSaveTag) ||( $scope.options.touchDevice ? "text" : "ace");
+                $scope.changeEditor(oldMode);
+
+                if ($scope.options.touchDevice) {
+                    if (!$scope.options.metaset) {
+                        var $meta = $("meta[name='viewport']");
+                        $scope.oldmeta = $meta[0];
+                        $meta.remove();
+                        $('head').prepend('<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=0">');
+                    }
+                    $scope.options.metaset = true;
+                }
+
+                /*
+                $scope.aceLoaded = function(editor) {  // prevent data load next time
+                    $scope.editor = editor;
+                    $scope.createAce(editor);
+                    $scope.aceReady();
+                };
+                */
                 var viewport = {};
                 viewport.top = $(window).scrollTop();
                 viewport.bottom = viewport.top + $(window).height();

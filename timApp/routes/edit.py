@@ -517,7 +517,7 @@ def mark_pars_as_read_if_chosen(pars, doc):
     timdb = getTimDb()
     if mark_read:
         for p in pars:
-            timdb.readings.setAsRead(getCurrentUserGroup(), doc, p)
+            timdb.readings.mark_read(getCurrentUserGroup(), doc, p)
 
 
 @edit_page.route("/cancelChanges/", methods=["POST"])

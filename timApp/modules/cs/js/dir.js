@@ -399,7 +399,8 @@ csApp.set = function(scope,attrs,name,def) {
     scope[name] = def;
     if ( attrs && attrs[name] ) scope[name] = attrs[name];
     if ( scope.attrs && scope.attrs[name] ) scope[name] = scope.attrs[name];
-    if ( scope[name] == "None" ) scope[name] = "";
+    if ( scope[name] === "None" ) scope[name] = "";
+    if ( scope[name] === "False" ) scope[name] = false;
     return scope[name];
 };
 
@@ -409,7 +410,8 @@ csApp.getParam = function(scope,name,def) {
     var result = def;
     if ( scope.attrs && scope.attrs[name] ) result = scope.attrs[name];
     if ( scope[name] ) result = scope[name];
-    if ( result == "None" ) scope[name] = "";
+    if ( result === "None" ) result = "";
+    if ( result === "False" ) result = false;
     return result;
 }
 
@@ -467,6 +469,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"file");
 			csApp.set(scope,attrs,"viewCode",false);
 			csApp.set(scope,attrs,"filename");
+			csApp.set(scope,attrs,"nosave",false);
 			csApp.set(scope,attrs,"upload",iupload); if ( scope.attrs.uploadbycode ) scope.upload = true;
 			csApp.set(scope,attrs,"uploadstem");
 			csApp.set(scope,attrs,"nocode",inocode);
@@ -984,7 +987,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 			csApp.updateEditSize($scope);
 		if ( $scope.viewCode ) $scope.pushShowCodeNow();
         window.clearInterval($scope.runTimer);
-        if ( $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
+        if ( $scope.runned && $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
 
 		/* // tällä koodilla on se vika, että ei voi pyyhkiä alusta välilyönteä ja yhdistää rivejä
 		if ( $scope.carretPos && $scope.carretPos >= 0 ) {
@@ -999,12 +1002,12 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
     
 	$scope.$watch('userargs', function() {
         window.clearInterval($scope.runTimer);
-        if ( $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
+        if ( $scope.runned && $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
 	}, true);
     
 	$scope.$watch('userinput', function() {
         window.clearInterval($scope.runTimer);
-        if ( $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
+        if ( $scope.runned && $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
 	}, true);
     
     $scope.logTime = function(msg) {
@@ -1019,10 +1022,11 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 
     $scope.runCodeCommon = function(nosave, extraMarkUp)
     {
+        $scope.runned = true;
 		var t = languageTypes.getRunType($scope.selectedLanguage,"cs");  
-        if ( t == "md" ) { $scope.showMD(); if (nosave) return; }
-        if ( languageTypes.isInArray(t, csJSTypes ) ) { $scope.jstype = t; $scope.showJS(); if (nosave) return; } 
-		$scope.doRunCode(t,nosave);
+        if ( t == "md" ) { $scope.showMD(); if (nosave || $scope.nosave) return; }
+        if ( languageTypes.isInArray(t, csJSTypes ) ) { $scope.jstype = t; $scope.showJS(); if (nosave || $scope.nosave) return; } 
+		$scope.doRunCode(t,nosave || $scope.nosave);
     }
     
     $scope.runCodeAuto = function() {
@@ -1031,7 +1035,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 	};
 	
 	$scope.runCodeLink = function(nosave) {
-		$scope.runCodeCommon(nosave);
+		$scope.runCodeCommon(nosave || $scope.nosave);
 	};
 	
 	$scope.runCode = function() {
@@ -1172,7 +1176,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 			}
         };
 		//		  alert($scope.usercode);
-        if ( nosave ) params.input.nosave = true;
+        if ( nosave  || $scope.nosave) params.input.nosave = true;
         if ( extraMarkUp ) jQuery.extend(params.input.markup, extraMarkUp);
         if ( $scope.isAll ) jQuery.extend(params.input, {'selectedLanguage': $scope.selectedLanguage});
         var url = "/cs/answer";

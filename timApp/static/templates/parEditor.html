@@ -1,4 +1,6 @@
 <div id="pareditor">
+  <div>
+  <div ng-show="proeditor">
     <ul class="tabsarea">
         <li id="navigate" class="tab active"><a ng-click="tabClicked($event, 'navigateButtons')">Navigation</a></li>
         <li id="style" class="tab"><a ng-click="tabClicked($event, 'styleButtons')">Style</a></li>
@@ -101,21 +103,26 @@
             <a onclick="window.open('https://tim.jyu.fi/view/tim/TIM-ohjeet#viitteen-katsominen','_blank')">[?]</a>
         </span>
     </div>
-
+  </div>
     <div class="editorContainer">
+        <!--
         <div id="ace_editor" ng-if="!options.touchDevice" class="editor" ui-ace="{
   useWrapMode: false,
   onLoad: aceLoaded,
   onChange: aceChanged,
     }" ng-model="editorText">
-        </div>
+        </div> -->
     </div>
     <div class="editButtonArea">
+        <span ng-show="proeditor">
         <button class="timButton" title="Change editor between Ace and normal textarea" ng-click="changeEditor()">Editor</button>
         <button class="timButton" ng-show="fullscreenSupported()" ng-click="goFullScreen()">Fullscreen</button>
+        </span>
         <button class="timButton savePar" title="Save (Ctrl-S)" ng-click="saveClicked()">Save</button>
         <button class="timButton cancelPar" ng-disabled="saving" ng-click="cancelClicked()">Cancel</button>
+        <span ng-show="proeditor">
         <button class="timButton deletePar" ng-show="options.showDelete" ng-click="deleteClicked()">Delete</button>
+        </span>
     </div>
     <div class="editortags">
         <label ng-repeat="tag in options.tags">
@@ -130,7 +137,11 @@
             </label>
         </div>
     </div>
-    <div id="previewDiv" tim-draggable-fixed="" caption="Preview" class="preview"
+    </div>
+    <div class="editoropts">
+        <label ><input type="checkbox" ng-model="proeditor"/> adv</label>
+    </div>
+    <div id="previewDiv" tim-draggable-fixed="" caption="Preview" class="preview" ng-show="proeditor"
          style='z-index:100; top: 0px; right: 0px;'>
     <span>Preview
         (<ng-pluralize count="parCount"
