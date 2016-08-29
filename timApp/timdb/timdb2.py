@@ -84,11 +84,6 @@ class TimDb(object):
             self.session.remove()
             self.db = None
 
-    def initialize_tables(self):
-        """Initializes the database from the schema2.sql file.
-        NOTE: The database is emptied if it exists."""
-        self.execute_script('schema2.sql')
-
     def execute_script(self, sql_file):
         """Executes an SQL file on the database.
         :param sql_file: The SQL script to be executed.
