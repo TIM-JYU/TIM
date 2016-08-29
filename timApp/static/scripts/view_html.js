@@ -67,8 +67,6 @@ timApp.controller("ViewCtrl", [
         "use strict";
         timLogTime("ViewCtrl start","view");
 
-        sc.reviewMode = true;
-
         http.defaults.headers.common.Version = $window.version.hash;
         http.defaults.headers.common.RefererPath = $window.refererPath;
         sc.noBrowser = $window.noBrowser;
