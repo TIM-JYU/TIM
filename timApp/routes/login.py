@@ -151,7 +151,7 @@ def alt_signup():
     
     timdb = getTimDb()
     timdb.users.create_potential_user(email, password)
-    
+
     session.pop('altlogin', None)
     session.pop('user_id', None)
     session.pop('appcookie', None)
