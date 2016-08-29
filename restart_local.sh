@@ -71,6 +71,7 @@ if param postgre; then
   docker volume create --name pg_data
   docker run --net=timnet -d --name postgresql \
   -v pg_data:/var/lib/postgresql/data \
+  -p 5432:5432 \
   -t -i postgres:9.5
   ./wait_for_postgre.sh
 fi
