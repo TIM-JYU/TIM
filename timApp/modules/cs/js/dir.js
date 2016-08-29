@@ -279,7 +279,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 			  '<input class="csTinyText no-popup-menu" ng-hide="noeditor && !viewCode" size="{{cols}}" ng-model="usercode" ng-trim="false" ng-attr-placeholder="{{placeholder}}" ng-keypress="runCodeIfCR($event);" />'+
 			  '<button ng-if="isRun"  ng-disabled="isRunning" title="(Ctrl-S)" ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
 			  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>&nbsp&nbsp' +
-			  '<span class="csRunError" ng-if="runError">{{error}}</span>'+
+			  '<span class="csRunError"  ng-if="runError" ng-style="tinyErrorStyle">{{error}}</span>'+
 			  '</div>';
     }
     
@@ -523,6 +523,8 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"words",false);
             csApp.set(scope,attrs,"editorModes","01");
             csApp.set(scope,attrs,"justSave",false);
+            csApp.set(scope,attrs,"validityCheck","");
+            csApp.set(scope,attrs,"validityCheckMessage","");
             // csApp.set(scope,attrs,"program");
 
             
@@ -586,6 +588,7 @@ csApp.directiveFunction = function(t,isInput) {
             
 			scope.edit = element.find("textarea")[0]; // angular.element(e); // $("#"+scope.editid);
 			scope.preview = element.find(".csrunPreview")[0]; // angular.element(e); // $("#"+scope.editid);
+
             scope.element0 = element[0];
 			element[0].childNodes[0].outerHTML = csApp.getHeading(attrs,"header",scope,"h4");
 			var n = element[0].childNodes.length;
@@ -1136,6 +1139,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         // if ( runType == "md" ) { $scope.showMD(); return; }
 		$scope.checkIndent();
 		if ( !$scope.autoupdate ) {
+            $scope.tinyErrorStyle = {};
             $scope.error = "... running ...";
             $scope.runError = true;
             $scope.isRunning = true;
@@ -1159,6 +1163,17 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         if ( $scope.userargs ) uargs = $scope.userargs;
 		var t = runType;
 		// if ( t == "tauno" ) t = "comtest";
+        if ( $scope.validityCheck ) {
+            var re = new RegExp($scope.validityCheck);
+            if ( !ucode.match(re)) {
+                $scope.tinyErrorStyle = {color: "red"};
+                var msg = $scope.validityCheckMessage;
+                if ( !msg ) msg = "Did not match to " + $scope.validityCheck;
+                $scope.error = msg;
+                $scope.isRunning = false;
+                return;
+            }
+        }
     
 		// params = 'type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&replace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
 		// $http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
@@ -1213,7 +1228,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 
 			if ( docURL ) {
 				$scope.docURL = docURL;
-				$scope.result = data.web.console.trim();
+				$scope.error = data.web.console.trim();
 			}
 
             if ( wavURL ) {

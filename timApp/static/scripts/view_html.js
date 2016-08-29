@@ -1938,7 +1938,6 @@ timApp.controller("ViewCtrl", [
                     sc.allowPasteRef = !('disable_ref' in data && data.disable_ref);
                 }
             }).error(function (data, status, headers, config) {
-                $window.alert(data.error);
                 sc.allowPasteContent = false;
                 sc.allowPasteRef = false;
             });
