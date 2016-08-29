@@ -196,7 +196,7 @@ class Users(TimDbBase):
         """
         cursor = self.db.cursor()
         hash = self.hash_password(password)
-        cursor.execute('REPLACE INTO NewUser (email, pass, created) VALUES (%s, %s, CURRENT_TIMESTAMP)', [email, hash])
+        cursor.execute('INSERT INTO NewUser (email, pass, created) VALUES (%s, %s, CURRENT_TIMESTAMP) ON CONFLICT UPDATE', [email, hash])
         if commit:
             self.db.commit()
 
