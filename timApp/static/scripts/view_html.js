@@ -303,84 +303,6 @@ timApp.controller("ViewCtrl", [
             return $("[t='" + t + "']");
         };
 
-        /**
-         * Toggles review editor window
-         * @param $par paragraph to review
-         * @param options additional options
-         */
-         sc.toggleReviewEditor = function ($par, options) {
-            var caption = 'Add paragraph';
-            var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
-            var mobile = touch && (window.screen.width < 1200);
-            var url;
-            var par_id = sc.getParId($par);
-            var par_next_id = sc.getParId($par.next());
-            if (par_next_id == "null")
-                par_next_id = null;
-
-            // TODO: Use same route (postParagraph) for both cases, determine logic based on given parameters
-            if (par_id == "null" || $par.hasClass("new")) {
-                url = '/newParagraph/';
-            } else {
-                url = '/postParagraph/';
-            }
-
-            var area_start;
-            var area_end;
-
-            if (options.area) {
-                if (sc.selection.reversed) {
-                    area_start = sc.selection.end;
-                    area_end = sc.selection.start;
-                } else {
-                    area_end = sc.selection.end;
-                    area_start = sc.selection.start;
-                }
-            } else {
-                area_start = null;
-                area_end = null;
-            }
-
-            var tags = [];
-            tags["markread"] = true;
-
-            var attrs = {
-                "save-url": url,
-                "extra-data": {
-                    docId: sc.docId, // current document id
-                    par: par_id, // the id of paragraph on which the editor was opened
-                    par_next: par_next_id, // the id of the paragraph that follows par or null if par is the last one
-                    area_start: area_start,
-                    area_end: area_end,
-                    tags: tags
-                },
-                "options": {
-                    localSaveTag: "par",
-                    showDelete: options.showDelete,
-                    showImageUpload: true,
-                    showPlugins: true,
-                    destroyAfterSave: true,
-                    touchDevice: mobile,
-                    tags: [
-                        {name: 'markread', desc: 'Mark as read', value:"markasread"}
-                    ]
-                },
-                "after-save": 'addSavedParToDom(saveData, extraData)',
-                "after-cancel": 'handleCancel(extraData)',
-                "after-delete": 'handleDelete(saveData, extraData)',
-                "preview-url": '/preview/' + sc.docId,
-                "delete-url": '/deleteParagraph/' + sc.docId
-            };
-             caption = 'Review editor';
-             attrs["initial-text-url"] = '/getBlock/' + sc.docId + "/" + par_id;
-           /* if (options.showDelete) {
-                caption = 'Edit paragraph';
-                if (par_id != "null")
-                    attrs["initial-text-url"] = '/getBlock/' + sc.docId + "/" + par_id;
-            }*/
-            sc.toggleEditor($par, options, attrs, caption, "review-editor");
-        };
-
         sc.toggleParEditor = function ($par, options) {
             var area_start, area_end;
             var caption = 'Add paragraph';
@@ -1931,11 +1853,6 @@ timApp.controller("ViewCtrl", [
             sc.showOptionsWindow(e, $par);
         };
 
-        sc.showReviewWindow = function (e, $par) {
-            $(".par.new").remove();
-            sc.toggleReviewEditor($par, {showDelete: false, area: false});
-        };
-
         /*
         sc.selectText = function () {
             var sel = $window.getSelection();
@@ -1973,7 +1890,6 @@ timApp.controller("ViewCtrl", [
             } else {
                 return [
                     {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
-                    /* {func: sc.showReviewWindow, desc: 'Review', show: sc.rights.editable}, */
                     {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
                     {func: sc.cutPar, desc: 'Cut paragraph', show: $window.editMode === 'par'},
                     {func: sc.copyPar, desc: 'Copy paragraph', show: $window.editMode !== 'area'},
