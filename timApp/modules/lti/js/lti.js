@@ -237,15 +237,15 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
 
     // Called when "Aja" button is pressed.
     $scope.run = function() {
-        var url = "";
-        if ($scope.use_lti) {
-            url = $sce.trustAsResourceUrl('../lti/getform?hash=' + $scope.hash);
-            //$scope.iframe.src = url;
-        } else {
-            url = $sce.trustAsResourceUrl('../lti/getlink?page=' + $scope.view_url);
-            //$scope.reload(url, false);
-        }
+        var url = ($scope.use_lti ?
+                   '../lti/getform?hash=' + $scope.hash :
+                   '../lti/getlink?page=' + $scope.view_url);
+        url = $sce.trustAsResourceUrl(url);
         $scope.iframe.src = url;
+        var iframeInScope = document.getElementById($scope.iframe.id);
+        if (iframeInScope) {
+            iframeInScope.src = url;
+        }
         ltiApp.container.update($scope, 'active');
     };
 
