@@ -1,0 +1,374 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>timApp.documentmodel.documentparser &#8212; Timber 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Timber 1.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for timApp.documentmodel.documentparser</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">documentmodel.attributeparser</span> <span class="k">import</span> <span class="n">AttributeParser</span>
+<span class="kn">from</span> <span class="nn">documentmodel.documentparseroptions</span> <span class="k">import</span> <span class="n">DocumentParserOptions</span>
+<span class="kn">from</span> <span class="nn">documentmodel.randutils</span> <span class="k">import</span> <span class="n">hashfunc</span><span class="p">,</span> <span class="n">random_id</span><span class="p">,</span> <span class="n">is_valid_id</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="k">import</span> <span class="n">count_chars</span>
+
+
+<div class="viewcode-block" id="SplitterException"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.SplitterException">[docs]</a><span class="k">class</span> <span class="nc">SplitterException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="ValidationException"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.ValidationException">[docs]</a><span class="k">class</span> <span class="nc">ValidationException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="ValidationWarning"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.ValidationWarning">[docs]</a><span class="k">class</span> <span class="nc">ValidationWarning</span><span class="p">(</span><span class="n">ValidationException</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="DocReader"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.DocReader">[docs]</a><span class="k">class</span> <span class="nc">DocReader</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :type lines: list[str]</span>
+<span class="sd">    :type i: int</span>
+<span class="sd">    :type current_line: int</span>
+<span class="sd">    :param lines:</span>
+<span class="sd">    :param i:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lines</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="o">=</span> <span class="n">lines</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_line</span> <span class="o">=</span> <span class="n">i</span>
+
+<div class="viewcode-block" id="DocReader.peek_line"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.DocReader.peek_line">[docs]</a>    <span class="k">def</span> <span class="nf">peek_line</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :rtype: str</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_line</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="DocReader.get_line_and_advance"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.DocReader.get_line_and_advance">[docs]</a>    <span class="k">def</span> <span class="nf">get_line_and_advance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">peek_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_line</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="DocReader.has_more_lines"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.DocReader.has_more_lines">[docs]</a>    <span class="k">def</span> <span class="nf">has_more_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_line</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="DocumentParser"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.DocumentParser">[docs]</a><span class="k">class</span> <span class="nc">DocumentParser</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Splits documents into paragraphs.</span>
+
+<span class="sd">    :type _blocks: list[dict]</span>
+<span class="sd">    :type _doc_text: str</span>
+<span class="sd">    :type _last_setting: tuple</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_text</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :type doc_text: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_doc_text</span> <span class="o">=</span> <span class="n">doc_text</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_break_on_empty_line</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_setting</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: DocumentParserOptions</span>
+
+<div class="viewcode-block" id="DocumentParser.get_blocks"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.DocumentParser.get_blocks">[docs]</a>    <span class="k">def</span> <span class="nf">get_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DocumentParserOptions</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="n">DocumentParserOptions</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_document</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span></div>
+
+<div class="viewcode-block" id="DocumentParser.add_missing_attributes"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.DocumentParser.add_missing_attributes">[docs]</a>    <span class="k">def</span> <span class="nf">add_missing_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hash_func</span><span class="o">=</span><span class="n">hashfunc</span><span class="p">,</span> <span class="n">id_func</span><span class="o">=</span><span class="n">random_id</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_document</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_setting</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">:</span>
+            <span class="n">r</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hash_func</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;md&#39;</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;attrs&#39;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">):</span>
+                <span class="n">r</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">id_func</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="DocumentParser.validate_structure"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.DocumentParser.validate_structure">[docs]</a>    <span class="k">def</span> <span class="nf">validate_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_validator_func</span><span class="o">=</span><span class="n">is_valid_id</span><span class="p">,</span> <span class="n">is_whole_document</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_document</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_setting</span><span class="p">)</span>
+        <span class="n">found_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">found_tasks</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">found_areas</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">classed_areas</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">found_area_ends</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;code&#39;</span><span class="p">:</span>
+                <span class="n">md</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;md&#39;</span><span class="p">]</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">last_line</span> <span class="o">=</span> <span class="n">md</span><span class="p">[</span><span class="n">md</span><span class="o">.</span><span class="n">rindex</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+                    <span class="n">num_ticks</span> <span class="o">=</span> <span class="n">count_chars</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="s1">&#39;`&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">last_line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;`&#39;</span><span class="o">*</span><span class="n">num_ticks</span><span class="p">):</span>
+                        <span class="n">attrs</span><span class="p">,</span> <span class="n">start_index</span> <span class="o">=</span> <span class="n">AttributeParser</span><span class="p">(</span><span class="n">last_line</span><span class="p">)</span><span class="o">.</span><span class="n">get_attributes</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">start_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="n">ValidationException</span><span class="p">(</span><span class="s1">&#39;The end of code block contains attributes: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">attrs</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+            <span class="n">curr_id</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">curr_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">curr_id</span> <span class="ow">in</span> <span class="n">found_ids</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">ValidationException</span><span class="p">(</span><span class="s1">&#39;Duplicate paragraph id: &#39;</span> <span class="o">+</span> <span class="n">curr_id</span><span class="p">)</span>
+                <span class="n">found_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">curr_id</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">id_validator_func</span><span class="p">(</span><span class="n">curr_id</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">ValidationException</span><span class="p">(</span><span class="s1">&#39;Invalid paragraph id: &#39;</span> <span class="o">+</span> <span class="n">curr_id</span><span class="p">)</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;attrs&#39;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">task_id</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;taskId&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">task_id</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">task_id</span> <span class="ow">in</span> <span class="n">found_tasks</span><span class="p">:</span>
+                    <span class="c1"># Duplicate task id&#39;s are not fatal, but still something we could warn the user about.</span>
+                    <span class="c1"># For now, just ignore them.</span>
+                    <span class="c1">#print(&#39;Duplicate task id: &#39; + task_id)</span>
+                    <span class="c1">#raise ValidationException(&#39;Duplicate task id: &#39; + task_id)</span>
+                    <span class="k">pass</span>
+                <span class="c1">#found_tasks.add(task_id)</span>
+            <span class="n">area</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;area&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">area</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">area</span> <span class="ow">in</span> <span class="n">found_areas</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">ValidationException</span><span class="p">(</span><span class="s1">&#39;Cannot have multiple areas with same name: &#39;</span> <span class="o">+</span> <span class="n">area</span><span class="p">)</span>
+                <span class="n">has_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;classes&#39;</span><span class="p">,</span> <span class="p">[]))</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                <span class="k">if</span> <span class="n">has_classes</span><span class="p">:</span>
+                    <span class="n">classed_areas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">area</span><span class="p">)</span>
+                <span class="n">found_areas</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">area</span><span class="p">)</span>
+            <span class="n">area_end</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;area_end&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">area_end</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">area_end</span> <span class="o">==</span> <span class="n">area</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">ValidationException</span><span class="p">(</span><span class="s1">&#39;Cannot have a zero-length area&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">area_end</span> <span class="ow">in</span> <span class="n">classed_areas</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">area_end</span> <span class="o">!=</span> <span class="n">classed_areas</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                        <span class="k">raise</span> <span class="n">ValidationWarning</span><span class="p">(</span><span class="s1">&#39;Classed areas cannot overlap (&quot;</span><span class="si">{}</span><span class="s1">&quot; and &quot;</span><span class="si">{}</span><span class="s1">&quot;)&#39;</span>
+                                                  <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">classed_areas</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">area_end</span><span class="p">))</span>
+                    <span class="n">classed_areas</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">is_whole_document</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">area_end</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">found_areas</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">ValidationWarning</span><span class="p">(</span><span class="s1">&#39;No start found for area &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">area_end</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">area_end</span> <span class="ow">in</span> <span class="n">found_area_ends</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">ValidationWarning</span><span class="p">(</span><span class="s1">&#39;Area already ended: &#39;</span> <span class="o">+</span> <span class="n">area_end</span><span class="p">)</span>
+                <span class="n">found_area_ends</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">area_end</span><span class="p">)</span>
+        <span class="n">unended_areas</span> <span class="o">=</span> <span class="n">found_areas</span> <span class="o">-</span> <span class="n">found_area_ends</span>
+        <span class="k">if</span> <span class="n">is_whole_document</span> <span class="ow">and</span> <span class="n">unended_areas</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationWarning</span><span class="p">(</span><span class="s1">&#39;Some areas were not ended: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">unended_areas</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="k">def</span> <span class="nf">_parse_document</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DocumentParserOptions</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="n">DocumentParserOptions</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_setting</span> <span class="o">==</span> <span class="n">options</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_break_on_empty_line</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">break_on_empty_line</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_setting</span> <span class="o">=</span> <span class="n">options</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_doc_text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">doc</span> <span class="o">=</span> <span class="n">DocReader</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+        <span class="n">funcs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">try_parse_code_block</span><span class="p">,</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">try_parse_header_block</span><span class="p">,</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">parse_normal_block</span><span class="p">]</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eat_whitespace</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">doc</span><span class="o">.</span><span class="n">has_more_lines</span><span class="p">():</span>
+                <span class="k">break</span>
+            <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">funcs</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="n">result</span><span class="p">[</span><span class="s1">&#39;md&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;md&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="p">((</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;code&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">options</span><span class="o">.</span><span class="n">break_on_code_block</span><span class="p">)</span>
+                        <span class="ow">or</span> <span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;header&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">options</span><span class="o">.</span><span class="n">break_on_header</span><span class="p">)</span>
+                        <span class="ow">or</span> <span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;autonormal&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">options</span><span class="o">.</span><span class="n">break_on_normal</span><span class="p">))</span> \
+                            <span class="ow">and</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;attrs&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> \
+                            <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;attrs&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;plugin&#39;</span><span class="p">)</span> \
+                            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;atom&#39;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;md&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;md&#39;</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;attrs&#39;</span><span class="p">):</span>
+                            <span class="n">result</span><span class="p">[</span><span class="s1">&#39;attrs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                    <span class="k">break</span>
+
+<div class="viewcode-block" id="DocumentParser.is_beginning_of_code_block"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.DocumentParser.is_beginning_of_code_block">[docs]</a>    <span class="k">def</span> <span class="nf">is_beginning_of_code_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :type doc: DocReader</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">doc</span><span class="o">.</span><span class="n">peek_line</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;```&#39;</span><span class="p">):</span>
+            <span class="n">code_start_char</span> <span class="o">=</span> <span class="s1">&#39;`&#39;</span>
+        <span class="k">elif</span> <span class="n">doc</span><span class="o">.</span><span class="n">peek_line</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;~~~&#39;</span><span class="p">):</span>
+            <span class="n">code_start_char</span> <span class="o">=</span> <span class="s1">&#39;~&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;^&#39;</span> <span class="o">+</span> <span class="n">code_start_char</span> <span class="o">+</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="n">doc</span><span class="o">.</span><span class="n">peek_line</span><span class="p">())</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="n">match</span></div>
+
+<div class="viewcode-block" id="DocumentParser.is_beginning_of_header_block"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.DocumentParser.is_beginning_of_header_block">[docs]</a>    <span class="k">def</span> <span class="nf">is_beginning_of_header_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">doc</span><span class="o">.</span><span class="n">peek_line</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DocumentParser.is_empty_line"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.DocumentParser.is_empty_line">[docs]</a>    <span class="k">def</span> <span class="nf">is_empty_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :type doc: DocReader</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">doc</span><span class="o">.</span><span class="n">peek_line</span><span class="p">()</span><span class="o">.</span><span class="n">isspace</span><span class="p">()</span> <span class="ow">or</span> <span class="n">doc</span><span class="o">.</span><span class="n">peek_line</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span></div>
+
+<div class="viewcode-block" id="DocumentParser.try_parse_code_block"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.DocumentParser.try_parse_code_block">[docs]</a>    <span class="k">def</span> <span class="nf">try_parse_code_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :type doc: DocReader</span>
+<span class="sd">        :rtype: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">is_code_block</span><span class="p">,</span> <span class="n">code_block_marker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_beginning_of_code_block</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_code_block</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">start_line</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">get_line_and_advance</span><span class="p">()</span>
+        <span class="n">block_lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tokens</span><span class="p">,</span> <span class="n">start</span> <span class="o">=</span> <span class="n">AttributeParser</span><span class="p">(</span><span class="n">start_line</span><span class="p">)</span><span class="o">.</span><span class="n">get_attributes</span><span class="p">()</span>
+        <span class="n">is_atom</span> <span class="o">=</span> <span class="n">tokens</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;atom&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_atom</span><span class="p">:</span>
+            <span class="n">tokens</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;atom&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">first_line</span> <span class="o">=</span> <span class="n">start_line</span><span class="p">[:</span><span class="n">start</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">block_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">first_line</span><span class="p">)</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">doc</span><span class="o">.</span><span class="n">has_more_lines</span><span class="p">():</span>
+                <span class="k">break</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">get_line_and_advance</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">code_block_marker</span><span class="p">):</span>
+                <span class="k">break</span>
+            <span class="n">block_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_atom</span> <span class="ow">and</span> <span class="n">line</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">code_block_marker</span><span class="p">):</span>
+            <span class="n">block_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">block_lines</span><span class="p">),</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;atom&#39;</span> <span class="k">if</span> <span class="n">is_atom</span> <span class="k">else</span> <span class="s1">&#39;code&#39;</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extract_attrs</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">tokens</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="DocumentParser.try_parse_header_block"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.DocumentParser.try_parse_header_block">[docs]</a>    <span class="k">def</span> <span class="nf">try_parse_header_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :rtype: dict</span>
+<span class="sd">        :type doc: DocReader</span>
+<span class="sd">        :param doc:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_beginning_of_header_block</span><span class="p">(</span><span class="n">doc</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">header_line</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">get_line_and_advance</span><span class="p">()</span>
+        <span class="n">block_lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tokens</span><span class="p">,</span> <span class="n">start</span> <span class="o">=</span> <span class="n">AttributeParser</span><span class="p">(</span><span class="n">header_line</span><span class="p">)</span><span class="o">.</span><span class="n">get_attributes</span><span class="p">()</span>
+        <span class="n">block_type</span> <span class="o">=</span> <span class="s1">&#39;normal&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">header_line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#-&#39;</span><span class="p">):</span>
+            <span class="n">block_type</span> <span class="o">=</span> <span class="s1">&#39;header&#39;</span>
+            <span class="n">block_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">header_line</span><span class="p">[:</span><span class="n">start</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+        <span class="n">block_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_normal_block</span><span class="p">(</span><span class="n">doc</span><span class="p">)[</span><span class="s1">&#39;md&#39;</span><span class="p">])</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">block_lines</span><span class="p">),</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="n">block_type</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extract_attrs</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">tokens</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="DocumentParser.parse_normal_block"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.DocumentParser.parse_normal_block">[docs]</a>    <span class="k">def</span> <span class="nf">parse_normal_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :type doc: DocReader</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">block_lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="n">doc</span><span class="o">.</span><span class="n">has_more_lines</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_beginning_of_header_block</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span> \
+                    <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_beginning_of_code_block</span><span class="p">(</span><span class="n">doc</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> \
+                    <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_break_on_empty_line</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty_line</span><span class="p">(</span><span class="n">doc</span><span class="p">)):</span>
+                <span class="k">break</span>
+            <span class="n">block_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get_line_and_advance</span><span class="p">())</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">block_lines</span><span class="p">),</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;autonormal&#39;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="DocumentParser.extract_attrs"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.DocumentParser.extract_attrs">[docs]</a>    <span class="k">def</span> <span class="nf">extract_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">tokens</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">builtin</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">builtin</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">builtin</span><span class="p">]</span> <span class="o">=</span> <span class="n">tokens</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">builtin</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="s1">&#39;attrs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tokens</span></div>
+
+<div class="viewcode-block" id="DocumentParser.eat_whitespace"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.documentparser.DocumentParser.eat_whitespace">[docs]</a>    <span class="k">def</span> <span class="nf">eat_whitespace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :rtype: NoneType</span>
+<span class="sd">        :type doc: DocReader</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="n">doc</span><span class="o">.</span><span class="n">has_more_lines</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty_line</span><span class="p">(</span><span class="n">doc</span><span class="p">):</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">get_line_and_advance</span><span class="p">()</span>
+        <span class="k">return</span> <span class="kc">None</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Timber project authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,723 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>timApp.timdb.velpgroups &#8212; Timber 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Timber 1.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for timApp.timdb.velpgroups</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The module contains the database functions related to velp groups and their default and show selections. This includes</span>
+<span class="sd">adding new velp groups and editing the information of their default and show selections in the document</span>
+<span class="sd">(and its paragraphs). The module also retrieves or creates the default and personal velp groups.</span>
+<span class="sd">Information about velp group selections are managed through this module.</span>
+<span class="sd">The module also retrieves the velp groups and their default and show selections from the database.</span>
+
+<span class="sd">:authors: Joonas Lattu, Petteri Palojärvi</span>
+<span class="sd">:copyright: 2016 Timber project members</span>
+<span class="sd">:version: 1.0.0</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">contracts</span> <span class="k">import</span> <span class="n">contract</span><span class="p">,</span> <span class="n">new_contract</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">sqlite3</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="n">new_contract</span><span class="p">(</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">Row</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">timdb.timdbbase</span> <span class="k">import</span> <span class="n">TimDbBase</span><span class="p">,</span> <span class="n">TimDbException</span><span class="p">,</span> <span class="n">blocktypes</span>
+<span class="kn">from</span> <span class="nn">timdb.documents</span> <span class="k">import</span> <span class="o">*</span>
+
+
+<div class="viewcode-block" id="VelpGroups"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups">[docs]</a><span class="k">class</span> <span class="nc">VelpGroups</span><span class="p">(</span><span class="n">Documents</span><span class="p">):</span>
+<div class="viewcode-block" id="VelpGroups.create_default_velp_group"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.create_default_velp_group">[docs]</a>    <span class="k">def</span> <span class="nf">create_default_velp_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">owner_group_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">default_group_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates default velp group for document.</span>
+
+<span class="sd">        :param name: Name of the new default velp group.</span>
+<span class="sd">        :param owner_group_id: The id of the owner group.</span>
+<span class="sd">        :param default_group_path: Path of new document / velp group</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Create new document and add its ID to VelpGroupTable</span>
+        <span class="n">new_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">default_group_path</span><span class="p">,</span> <span class="n">owner_group_id</span><span class="p">)</span>
+        <span class="n">new_group_id</span> <span class="o">=</span> <span class="n">new_group</span><span class="o">.</span><span class="n">doc_id</span>
+        <span class="n">valid_until</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      INSERT OR IGNORE INTO</span>
+<span class="s2">                      VelpGroup(id, name, valid_until, default_group)</span>
+<span class="s2">                      VALUES (?, ?, ?, ?)</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">new_group_id</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">valid_until</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">new_group_id</span></div>
+
+<div class="viewcode-block" id="VelpGroups.create_velp_group"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.create_velp_group">[docs]</a>    <span class="k">def</span> <span class="nf">create_velp_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">owner_group_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">new_group_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">valid_until</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a velp group</span>
+
+<span class="sd">        :param name: Name of the created group.</span>
+<span class="sd">        :param owner_group_id: The id of the owner group.</span>
+<span class="sd">        :param new_group_path: Path of new document / velp group</span>
+<span class="sd">        :param valid_until: How long velp group is valid (None is forever).</span>
+<span class="sd">        :return: new velp group ID</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Create new document and add its ID to VelpGroupTable</span>
+        <span class="n">new_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">new_group_path</span><span class="p">,</span> <span class="n">owner_group_id</span><span class="p">)</span>
+        <span class="n">new_group_id</span> <span class="o">=</span> <span class="n">new_group</span><span class="o">.</span><span class="n">doc_id</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      INSERT INTO</span>
+<span class="s2">                      VelpGroup(id, name, valid_until)</span>
+<span class="s2">                      VALUES (?, ?, ?)</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">new_group_id</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">valid_until</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">new_group_id</span></div>
+
+<div class="viewcode-block" id="VelpGroups.make_document_a_velp_group"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.make_document_a_velp_group">[docs]</a>    <span class="k">def</span> <span class="nf">make_document_a_velp_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">valid_until</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                   <span class="n">default_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds document to VelpGroup table</span>
+
+<span class="sd">        :param name: Name of the created group.</span>
+<span class="sd">        :param velp_group_id: ID of new velp group (and existing document)</span>
+<span class="sd">        :param valid_until: How long velp group is valid (None is forever)</span>
+<span class="sd">        :param default_group: Boolean whether velp group should be default or not</span>
+<span class="sd">        :return: velp group ID</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      INSERT OR IGNORE INTO</span>
+<span class="s2">                      VelpGroup(id, name, valid_until, default_group)</span>
+<span class="s2">                      VALUES (?, ?, ?, ?)</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">velp_group_id</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">valid_until</span><span class="p">,</span> <span class="n">default_group</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">velp_group_id</span></div>
+
+<div class="viewcode-block" id="VelpGroups.update_velp_group_to_default_velp_group"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.update_velp_group_to_default_velp_group">[docs]</a>    <span class="k">def</span> <span class="nf">update_velp_group_to_default_velp_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Makes velp group a default velp group in velp group table</span>
+
+<span class="sd">        :param velp_group_id: ID of velp group</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      UPDATE VelpGroup</span>
+<span class="s2">                      SET default_group = 1, valid_until = NULL</span>
+<span class="s2">                      WHERE id = ?</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">velp_group_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VelpGroups.check_velp_group_ids_for_default_group"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.check_velp_group_ids_for_default_group">[docs]</a>    <span class="k">def</span> <span class="nf">check_velp_group_ids_for_default_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_group_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Checks if list of velp group IDs contains a default velp group</span>
+
+<span class="sd">        :param velp_group_ids: List of velp group IDs</span>
+<span class="sd">        :return: First found default velp group ID and name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      SELECT</span>
+<span class="s2">                      id, name</span>
+<span class="s2">                      FROM VelpGroup</span>
+<span class="s2">                      WHERE id IN (</span><span class="si">{}</span><span class="s2">) AND default_group = 1</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_sql_template</span><span class="p">(</span><span class="n">velp_group_ids</span><span class="p">)),</span> <span class="n">velp_group_ids</span>
+                       <span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resultAsDictionary</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="VelpGroups.add_velp_to_group"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.add_velp_to_group">[docs]</a>    <span class="k">def</span> <span class="nf">add_velp_to_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds a velp to a specific group</span>
+
+<span class="sd">        :param velp_id: Velp if</span>
+<span class="sd">        :param velp_group_id: Velp group ID</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      INSERT OR IGNORE INTO</span>
+<span class="s2">                      VelpInGroup(velp_group_id, velp_id)</span>
+<span class="s2">                      VALUES (?, ?)</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">velp_group_id</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VelpGroups.add_velp_to_groups"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.add_velp_to_groups">[docs]</a>    <span class="k">def</span> <span class="nf">add_velp_to_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">velp_group_ids</span><span class="p">:</span> <span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Adds a velp to specific groups</span>
+
+<span class="sd">        :param velp_id: ID of velp</span>
+<span class="sd">        :param velp_group_ids: List of velp group IDs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">velp_group</span> <span class="ow">in</span> <span class="n">velp_group_ids</span><span class="p">:</span>
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                          INSERT OR IGNORE INTO</span>
+<span class="s2">                          VelpInGroup(velp_group_id, velp_id)</span>
+<span class="s2">                          VALUES (?, ?)</span>
+<span class="s2">                          &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">velp_group</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">]</span>
+                           <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VelpGroups.remove_velp_from_group"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.remove_velp_from_group">[docs]</a>    <span class="k">def</span> <span class="nf">remove_velp_from_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Removes a velp from a specific group</span>
+
+<span class="sd">        :param velp_id: Velp id</span>
+<span class="sd">        :param velp_group_id: Velp group id</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      DELETE</span>
+<span class="s2">                      FROM VelpInGroup</span>
+<span class="s2">                      WHERE velp_id = ? AND velp_group_id = ?</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">velp_id</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VelpGroups.remove_velp_from_groups"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.remove_velp_from_groups">[docs]</a>    <span class="k">def</span> <span class="nf">remove_velp_from_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">velp_group_ids</span><span class="p">:</span> <span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Removes a velp from specific groups</span>
+
+<span class="sd">        :param velp_id: ID of velp</span>
+<span class="sd">        :param velp_group_ids: List of velp group IDs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">velp_group</span> <span class="ow">in</span> <span class="n">velp_group_ids</span><span class="p">:</span>
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                          DELETE</span>
+<span class="s2">                          FROM VelpInGroup</span>
+<span class="s2">                          WHERE velp_id = ? AND velp_group_id = ?</span>
+<span class="s2">                          &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">velp_id</span><span class="p">,</span> <span class="n">velp_group</span><span class="p">]</span>
+                           <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VelpGroups.get_velp_group_name"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.get_velp_group_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_velp_group_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Gets velp group&#39;s name</span>
+
+<span class="sd">        :param velp_group_id: velp group ID</span>
+<span class="sd">        :return: velp group&#39;s name as a string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;SELECT name FROM VelpGroup WHERE id = ?&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">velp_group_id</span><span class="p">])</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="VelpGroups.get_groups_for_velp"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.get_groups_for_velp">[docs]</a>    <span class="k">def</span> <span class="nf">get_groups_for_velp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets velp group&#39;s of the velp</span>
+
+<span class="sd">        :param velp_id: velp ID</span>
+<span class="sd">        :return: velp groups of the velp.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;SELECT velp_group_id AS id FROM VelpInGroup WHERE velp_id = ?&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">velp_id</span><span class="p">])</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="VelpGroups.is_id_velp_group"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.is_id_velp_group">[docs]</a>    <span class="k">def</span> <span class="nf">is_id_velp_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Checks whether given document id can also be found from VelpGroup table</span>
+
+<span class="sd">        :param doc_id: ID of document</span>
+<span class="sd">        :return: True if part of VelpGroup table, else False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;SELECT name FROM VelpGroup WHERE id = ?&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">doc_id</span><span class="p">])</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="k">return</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="VelpGroups.add_group_to_imported_table"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.add_group_to_imported_table">[docs]</a>    <span class="k">def</span> <span class="nf">add_group_to_imported_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_group</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                                    <span class="n">velp_group_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds velp groups to ImportedVelpGroups table for specific document / user group combo</span>
+
+<span class="sd">        :param user_group: ID of user group</span>
+<span class="sd">        :param doc_id: Id of document</span>
+<span class="sd">        :param target_type: Which kind of area group targets to (0 doc, 1 paragraph, 2 area)</span>
+<span class="sd">        :param target_id:  ID of target (0 for documents)</span>
+<span class="sd">        :param velp_group_id: ID of velp group</span>
+<span class="sd">        :return: void</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      INSERT OR IGNORE INTO</span>
+<span class="s2">                      ImportedVelpGroups(user_group, doc_id, target_type, target_id, velp_group_id)</span>
+<span class="s2">                      VALUES (?, ?, ?, ?, ?)</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">user_group</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+        <span class="k">return</span></div>
+
+<div class="viewcode-block" id="VelpGroups.get_groups_from_imported_table"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.get_groups_from_imported_table">[docs]</a>    <span class="k">def</span> <span class="nf">get_groups_from_imported_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_groups</span><span class="p">:</span> <span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets velp groups from ImportedVelpGroups table for specific document / user group IDs combo</span>
+
+<span class="sd">        :param user_groups: List of user group IDs</span>
+<span class="sd">        :param doc_id: ID of document</span>
+<span class="sd">        :return: velp groups in document that user has access to via group.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      SELECT</span>
+<span class="s2">                      user_group, doc_id, target_type, target_id, velp_group_id as id</span>
+<span class="s2">                      FROM ImportedVelpGroups</span>
+<span class="s2">                      WHERE doc_id = ? AND user_group IN (</span><span class="si">{}</span><span class="s2">)</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_sql_template</span><span class="p">(</span><span class="n">user_groups</span><span class="p">)),</span> <span class="p">[</span><span class="n">doc_id</span><span class="p">]</span> <span class="o">+</span> <span class="n">user_groups</span>
+                       <span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resultAsDictionary</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="VelpGroups.add_groups_to_document"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.add_groups_to_document">[docs]</a>    <span class="k">def</span> <span class="nf">add_groups_to_document</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_groups</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds velp groups to VelpGroupsInDocument table</span>
+
+<span class="sd">        :param velp_groups: Velp groups as dictionaries</span>
+<span class="sd">        :param doc_id: ID of document</span>
+<span class="sd">        :param user_id: ID of user</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">velp_group</span> <span class="ow">in</span> <span class="n">velp_groups</span><span class="p">:</span>
+            <span class="n">velp_group_id</span> <span class="o">=</span> <span class="n">velp_group</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                          INSERT OR IGNORE INTO</span>
+<span class="s2">                          VelpGroupsInDocument(user_id, doc_id, velp_group_id)</span>
+<span class="s2">                          VALUES (?, ?, ?)</span>
+<span class="s2">                          &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">]</span>
+                           <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VelpGroups.get_groups_from_document_table"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.get_groups_from_document_table">[docs]</a>    <span class="k">def</span> <span class="nf">get_groups_from_document_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets velp groups from VelpGroupsInDocument table of specific document / user combo</span>
+
+<span class="sd">        :param doc_id: ID of document</span>
+<span class="sd">        :param user_id: ID of user</span>
+<span class="sd">        :return: velp groups in document that user has access to.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Group by is necessary because we would get several results if the velpgroup has several entries in DocEntry.</span>
+        <span class="c1"># Now we get just one, hopefully it&#39;s enough.</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                       SELECT</span>
+<span class="s2">                         VelpGroupsInDocument.velp_group_id AS id,</span>
+<span class="s2">                         VelpGroup.name,</span>
+<span class="s2">                         DocEntry.name AS location</span>
+<span class="s2">                       FROM VelpGroupsInDocument</span>
+<span class="s2">                         INNER JOIN VelpGroup ON VelpGroup.id = VelpGroupsInDocument.velp_group_id</span>
+<span class="s2">                         INNER JOIN DocEntry ON DocEntry.id = VelpGroupsInDocument.velp_group_id</span>
+<span class="s2">                       WHERE doc_id = ? AND user_id = ?</span>
+<span class="s2">                       GROUP BY velp_group_id</span>
+<span class="s2">                       &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resultAsDictionary</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="VelpGroups.add_groups_to_selection_table"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.add_groups_to_selection_table">[docs]</a>    <span class="k">def</span> <span class="nf">add_groups_to_selection_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_groups</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds velp groups to VelpGroupSelection table</span>
+
+<span class="sd">        :param velp_groups: Velp groups as dictionaries</span>
+<span class="sd">        :param doc_id: ID of document</span>
+<span class="sd">        :param user_id: ID of user</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">velp_group</span> <span class="ow">in</span> <span class="n">velp_groups</span><span class="p">:</span>
+            <span class="n">target_type</span> <span class="o">=</span> <span class="n">velp_group</span><span class="p">[</span><span class="s1">&#39;target_type&#39;</span><span class="p">]</span>
+            <span class="n">target_id</span> <span class="o">=</span> <span class="n">velp_group</span><span class="p">[</span><span class="s1">&#39;target_id&#39;</span><span class="p">]</span>
+            <span class="n">selected</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">velp_group_id</span> <span class="o">=</span> <span class="n">velp_group</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                          INSERT OR IGNORE INTO</span>
+<span class="s2">                          VelpGroupSelection(user_id, doc_id, target_type, target_id, selected, velp_group_id)</span>
+<span class="s2">                          VALUES (?, ?, ?, ?, ?, ?)</span>
+<span class="s2">                          &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">selected</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">]</span>
+                           <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VelpGroups.get_personal_selections_for_velp_groups"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.get_personal_selections_for_velp_groups">[docs]</a>    <span class="k">def</span> <span class="nf">get_personal_selections_for_velp_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets all velp group personal selections for document</span>
+
+<span class="sd">        :param doc_id: ID of document</span>
+<span class="sd">        :param user_id: ID of user</span>
+<span class="sd">        :return: Dict with following info { target_id: [{velp_group_id, selected}, etc], etc }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      SELECT</span>
+<span class="s2">                      target_id, velp_group_id, selected</span>
+<span class="s2">                      FROM VelpGroupSelection</span>
+<span class="s2">                      WHERE doc_id = ? AND user_id = ?</span>
+<span class="s2">                      ORDER BY target_id ASC</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resultAsDictionary</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">results</span><span class="p">:</span>
+            <span class="n">target_id</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;target_id&#39;</span><span class="p">]</span>
+            <span class="n">list_help</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">target_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="n">group_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">target_id</span> <span class="o">!=</span> <span class="s1">&#39;0&#39;</span><span class="p">:</span>
+                <span class="n">target_dict</span><span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)):</span>
+                <span class="n">next_id</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;target_id&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">next_id</span> <span class="o">!=</span> <span class="n">target_id</span><span class="p">:</span>
+                    <span class="n">target_dict</span><span class="p">[</span><span class="n">target_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">list_help</span><span class="p">)</span>
+                    <span class="n">target_id</span> <span class="o">=</span> <span class="n">next_id</span>
+                    <span class="k">del</span> <span class="n">list_help</span><span class="p">[:]</span>
+                    <span class="n">group_dict</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;velp_group_id&#39;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;selected&#39;</span><span class="p">]:</span>
+                        <span class="n">group_dict</span><span class="p">[</span><span class="s1">&#39;selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">group_dict</span><span class="p">[</span><span class="s1">&#39;selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">list_help</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">group_dict</span><span class="p">))</span>
+                    <span class="n">group_dict</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">group_dict</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;velp_group_id&#39;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;selected&#39;</span><span class="p">]:</span>
+                        <span class="n">group_dict</span><span class="p">[</span><span class="s1">&#39;selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">group_dict</span><span class="p">[</span><span class="s1">&#39;selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">list_help</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">group_dict</span><span class="p">))</span>
+                    <span class="n">group_dict</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">target_dict</span><span class="p">[</span><span class="n">target_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">list_help</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">target_dict</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">target_dict</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;0&#39;</span><span class="p">:</span> <span class="p">[]}</span></div>
+
+<div class="viewcode-block" id="VelpGroups.get_default_selections_for_velp_groups"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.get_default_selections_for_velp_groups">[docs]</a>    <span class="k">def</span> <span class="nf">get_default_selections_for_velp_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets all velp group default selections for document</span>
+
+<span class="sd">        :param doc_id: ID of document</span>
+<span class="sd">        :param user_id: ID of user</span>
+<span class="sd">        :return: Dict with following info { target_id: [{velp_group_id, selected}, etc], etc }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      SELECT DISTINCT</span>
+<span class="s2">                      VelpGroupDefaults.target_id, VelpGroupDefaults.velp_group_id, VelpGroupDefaults.selected</span>
+<span class="s2">                      FROM VelpGroupDefaults</span>
+<span class="s2">                      LEFT JOIN VelpGroupsInDocument ON VelpGroupsInDocument.doc_id = VelpGroupDefaults.doc_id</span>
+<span class="s2">                      AND VelpGroupsInDocument.velp_group_id = VelpGroupDefaults.velp_group_id</span>
+<span class="s2">                      WHERE VelpGroupsInDocument.doc_id = ? AND VelpGroupsInDocument.user_id = ?</span>
+<span class="s2">                      AND VelpGroupsInDocument.doc_id = VelpGroupDefaults.doc_id</span>
+<span class="s2">                      ORDER BY VelpGroupDefaults.target_id ASC</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resultAsDictionary</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">results</span><span class="p">:</span>
+            <span class="n">target_id</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;target_id&#39;</span><span class="p">]</span>
+            <span class="n">list_help</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">target_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="n">group_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">target_id</span> <span class="o">!=</span> <span class="s1">&#39;0&#39;</span><span class="p">:</span>
+                <span class="n">target_dict</span><span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)):</span>
+                <span class="n">next_id</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;target_id&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">next_id</span> <span class="o">!=</span> <span class="n">target_id</span><span class="p">:</span>
+                    <span class="n">target_dict</span><span class="p">[</span><span class="n">target_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">list_help</span><span class="p">)</span>
+                    <span class="n">target_id</span> <span class="o">=</span> <span class="n">next_id</span>
+                    <span class="k">del</span> <span class="n">list_help</span><span class="p">[:]</span>
+                    <span class="n">group_dict</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;velp_group_id&#39;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;selected&#39;</span><span class="p">]:</span>
+                        <span class="n">group_dict</span><span class="p">[</span><span class="s1">&#39;selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">group_dict</span><span class="p">[</span><span class="s1">&#39;selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">list_help</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">group_dict</span><span class="p">))</span>
+                    <span class="n">group_dict</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">group_dict</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;velp_group_id&#39;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;selected&#39;</span><span class="p">]:</span>
+                        <span class="n">group_dict</span><span class="p">[</span><span class="s1">&#39;selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">group_dict</span><span class="p">[</span><span class="s1">&#39;selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">list_help</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">group_dict</span><span class="p">))</span>
+                    <span class="n">group_dict</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">target_dict</span><span class="p">[</span><span class="n">target_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">list_help</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">target_dict</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">target_dict</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;0&#39;</span><span class="p">:</span> <span class="p">[]}</span></div>
+
+
+    <span class="c1"># Methods for changing selections</span>
+
+<div class="viewcode-block" id="VelpGroups.change_selection"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.change_selection">[docs]</a>    <span class="k">def</span> <span class="nf">change_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                         <span class="n">selected</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Changes selection for velp group in VelpGroupSelection for specific user / document / target combo</span>
+
+<span class="sd">        :param doc_id: ID of document</span>
+<span class="sd">        :param velp_group_id: ID of velp group</span>
+<span class="sd">        :param target_type: 0 document, 1 paragraph</span>
+<span class="sd">        :param target_id: ID of targeted area</span>
+<span class="sd">        :param user_id: ID of user</span>
+<span class="sd">        :param selected: Boolean whether group is selected or not</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      DELETE FROM VelpGroupSelection</span>
+<span class="s2">                      WHERE user_id = ? AND doc_id = ? AND velp_group_id = ? AND target_type = ? AND target_id = ?</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">target_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      INSERT INTO</span>
+<span class="s2">                      VelpGroupSelection(user_id, doc_id, velp_group_id, target_type, target_id, selected)</span>
+<span class="s2">                      VALUES (?, ?, ?, ?, ?, ?)</span>
+<span class="s2">                        &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">selected</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VelpGroups.change_all_target_area_selections"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.change_all_target_area_selections">[docs]</a>    <span class="k">def</span> <span class="nf">change_all_target_area_selections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                                          <span class="n">selected</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Change all personal selections to True or False for currently chose area (document or paragraph)</span>
+
+<span class="sd">        :param doc_id: ID of document</span>
+<span class="sd">        :param target_type: Currently 0 = document, 1 = paragraph</span>
+<span class="sd">        :param target_id: ID of target (&#39;0&#39; for documents)</span>
+<span class="sd">        :param user_id: ID of user</span>
+<span class="sd">        :param selected: True or False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">target_type</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      UPDATE VelpGroupSelection</span>
+<span class="s2">                      SET selected = ?</span>
+<span class="s2">                      WHERE doc_id = ? AND target_id = ? AND user_id = ?</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">selected</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">]</span>
+                        <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">target_type</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                          DELETE FROM VelpGroupSelection</span>
+<span class="s2">                          WHERE user_id = ? AND doc_id = ? AND target_type = ? AND target_id = ?</span>
+<span class="s2">                          &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">target_id</span><span class="p">]</span>
+                           <span class="p">)</span>
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                          INSERT INTO</span>
+<span class="s2">                          VelpGroupSelection(user_id, doc_id, target_type, target_id, velp_group_id, selected)</span>
+<span class="s2">                          SELECT ?, ?, ?, ?, velp_group_id, ? FROM VelpGroupSelection WHERE doc_id = ? AND</span>
+<span class="s2">                          user_id = ? AND target_type = 0</span>
+<span class="s2">                            &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">selected</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">]</span>
+                           <span class="p">)</span>
+            <span class="c1"># target_type is 0 because only 0 always contains all velp groups user has access to.</span>
+            <span class="c1"># Other target types will get added to database only after they&#39;ve been clicked once in interface.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VelpGroups.change_default_selection"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.change_default_selection">[docs]</a>    <span class="k">def</span> <span class="nf">change_default_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                                 <span class="n">selected</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Changes selection for velp group&#39;s default selection in target area</span>
+
+<span class="sd">        :param doc_id: ID of document</span>
+<span class="sd">        :param target_type: 0 document, 1 paragraph</span>
+<span class="sd">        :param target_id: ID of targeted area</span>
+<span class="sd">        :param velp_group_id: ID of velp group</span>
+<span class="sd">        :param selected: Boolean whether group is selected or not</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      DELETE FROM VelpGroupDefaults</span>
+<span class="s2">                      WHERE doc_id = ? AND velp_group_id = ? AND target_type = ? AND target_id = ?</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">target_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      INSERT OR IGNORE INTO</span>
+<span class="s2">                      VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)</span>
+<span class="s2">                      SELECT ?, ?, ?, ?, ?</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">selected</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VelpGroups.change_all_target_area_default_selections"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.change_all_target_area_default_selections">[docs]</a>    <span class="k">def</span> <span class="nf">change_all_target_area_default_selections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                                          <span class="n">selected</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Change all default selections to True or False for currently chose area (document or paragraph)</span>
+
+<span class="sd">        :param doc_id: ID of document</span>
+<span class="sd">        :param target_type: Currently 0 = document, 1 = paragraph</span>
+<span class="sd">        :param target_id: ID of target (&#39;0&#39; for documents)</span>
+<span class="sd">        :param user_id: ID of user (with manage access) to get all defaults from that user&#39;s selection table</span>
+<span class="sd">        :param selected: True or False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                        DELETE FROM VelpGroupDefaults</span>
+<span class="s2">                        WHERE doc_id = ? AND target_type = ? AND target_id = ?</span>
+<span class="s2">                        &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">target_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                        INSERT INTO</span>
+<span class="s2">                        VelpGroupDefaults(doc_id, target_type, target_id, velp_group_id, selected)</span>
+<span class="s2">                        SELECT ?, ?, ?, velp_group_id, ?</span>
+<span class="s2">                        FROM VelpGroupsInDocument</span>
+<span class="s2">                        WHERE doc_id = ? AND user_id = ?</span>
+<span class="s2">                          &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">selected</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VelpGroups.reset_target_area_selections_to_defaults"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.reset_target_area_selections_to_defaults">[docs]</a>    <span class="k">def</span> <span class="nf">reset_target_area_selections_to_defaults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Changes user&#39;s personal velp group selections in target area to defaults</span>
+
+<span class="sd">        :param doc_id: ID of document</span>
+<span class="sd">        :param target_id: ID of target area</span>
+<span class="sd">        :param user_id: ID of user</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      DELETE FROM VelpGroupSelection</span>
+<span class="s2">                      WHERE user_id = ? AND doc_id = ? AND target_id = ?</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">target_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VelpGroups.reset_all_selections_to_defaults"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.reset_all_selections_to_defaults">[docs]</a>    <span class="k">def</span> <span class="nf">reset_all_selections_to_defaults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Changes user&#39;s all personal velp group selections in document to defaults</span>
+
+<span class="sd">        :param doc_id: ID of document</span>
+<span class="sd">        :param user_id: ID of user</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      DELETE FROM VelpGroupSelection</span>
+<span class="s2">                      WHERE user_id = ? AND doc_id = ?</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+    <span class="c1"># Unused methods</span>
+
+<div class="viewcode-block" id="VelpGroups.update_velp_group"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.update_velp_group">[docs]</a>    <span class="k">def</span> <span class="nf">update_velp_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">valid_until</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Updates name and/or valid until time of velp group</span>
+
+<span class="sd">        :param velp_group_id: Velp group id</span>
+<span class="sd">        :param name: Name of velp group</span>
+<span class="sd">        :param valid_until: How long velp group is valid</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      UPDATE VelpGroup</span>
+<span class="s2">                      SET name = ? AND  valid_until = ?</span>
+<span class="s2">                      WHERE id = ?</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">name</span><span class="p">,</span> <span class="n">valid_until</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VelpGroups.delete_velp_group"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.delete_velp_group">[docs]</a>    <span class="k">def</span> <span class="nf">delete_velp_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deletes velp group. Doesn&#39;t delete velps belonging to group, only their links to deleted group</span>
+
+<span class="sd">        :param velp_group_id: Velp group id</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      DELETE</span>
+<span class="s2">                      FROM VelpGroup</span>
+<span class="s2">                      WHERE  id = ?;</span>
+<span class="s2">                      DELETE</span>
+<span class="s2">                      FROM VelpInGroup</span>
+<span class="s2">                      WHERE velp_group_id = ?</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">velp_group_id</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">]</span>
+                       <span class="p">)</span></div>
+
+    <span class="c1"># TODO: Unused</span>
+<div class="viewcode-block" id="VelpGroups.add_groups_to_default_table"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgroups.VelpGroups.add_groups_to_default_table">[docs]</a>    <span class="k">def</span> <span class="nf">add_groups_to_default_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_groups</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds velp groups to VelpGroupDefaults table</span>
+
+<span class="sd">        :param velp_groups: Velp groups as dictionaries</span>
+<span class="sd">        :param doc_id: ID of document</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">velp_group</span> <span class="ow">in</span> <span class="n">velp_groups</span><span class="p">:</span>
+            <span class="n">target_type</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">target_id</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">selected</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">velp_group_id</span> <span class="o">=</span> <span class="n">velp_group</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                          INSERT OR IGNORE INTO</span>
+<span class="s2">                          VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)</span>
+<span class="s2">                          VALUES (?, ?, ?, ?, ?)</span>
+<span class="s2">                          &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">selected</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">]</span>
+                           <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Timber project authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

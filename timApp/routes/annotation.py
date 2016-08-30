@@ -1,3 +1,13 @@
+"""
+The module handles the main logic related to annotations. This includes adding, modifiying and deleting annotations
+as well as adding comments to the annotations. The module also retrieves the annotations to the document.
+
+:authors: Joonas Lattu, Petteri Palojärvi
+:copyright: 2016 Timber project members
+:version: 1.0.0
+
+"""
+
 from typing import Dict
 from flask import Blueprint
 from .common import *
@@ -11,9 +21,15 @@ annotations = Blueprint('annotations',
 # TODO connect the routes in this file to the ui.
 @annotations.route("/add_annotation", methods=['POST'])
 def add_annotation() -> Dict:
-    """Creates a new annotation.
+    """Creates a new annotation to the database.
 
-    :return:
+    Required key(s):
+        - velp: velp ID
+        - visible_to: visibility group (1-4)
+        - doc_id: document ID
+        - coord: start and end coordinates of the annotation.
+
+    :return: Dictionary oontaining annotation id and annotator name.
     """
     json_data = request.get_json()
     print(json_data)
@@ -81,7 +97,15 @@ def add_annotation() -> Dict:
 
 @annotations.route("/update_annotation", methods=['POST'])
 def update_annotation():
-    """Updates annotation visibility and/or points.
+    """Updates the visibility and/or points of the annotation.
+
+    Required key(s):
+        - annotation_id: annotation ID.
+
+    Optional key(s):
+        - visible_to: visibility group number (1-4)
+        - points: number of points
+        - doc_id: document ID.
 
     :return: okJsonResponse()
     """
@@ -124,7 +148,10 @@ def update_annotation():
 
 @annotations.route("/invalidate_annotation", methods=['POST'])
 def invalidate_annotation():
-    """Invalidates annotation by setting its valid from to current moment
+    """Invalidates annotation by setting its valid from to current moment.
+
+    Required key(s):
+        - annotation_id: annotation ID
 
     :return: okJsonResponse()
     """
@@ -150,7 +177,11 @@ def invalidate_annotation():
 
 @annotations.route("/add_annotation_comment", methods=['POST'])
 def add_comment() -> Dict:
-    """Adds new comment to annotation.
+    """Adds new comment to the annotation.
+
+    Required key(s):
+        - annotation_id: annotation ID
+        - content: content of the comment.
 
     :return: Dictionary of information about user who added the comment
     """
@@ -171,9 +202,9 @@ def add_comment() -> Dict:
 
 @annotations.route("/<int:doc_id>/get_annotations", methods=['GET'])
 def get_annotations(doc_id: int):
-    """Returns all annotations with comments user can see / has access to in a document.
+    """Returns all annotations with comments user can see, e.g. has access to them in a document.
 
-    :param doc_id: ID of document
+    :param doc_id: ID of the document
     :return: List of dictionaries containing annotations with comments
     """
     timdb = getTimDb()

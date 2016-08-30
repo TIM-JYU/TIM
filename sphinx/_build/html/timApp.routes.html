@@ -1,0 +1,664 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>timApp.routes package &#8212; Timber 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Timber 1.0.0 documentation" href="index.html" />
+    <link rel="next" title="timApp.timdb package" href="timApp.timdb.html" />
+    <link rel="prev" title="Welcome to the Server-side Class Documentation of Velp Application Version 1.0.0" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="timapp-routes-package">
+<h1>timApp.routes package<a class="headerlink" href="#timapp-routes-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-timApp.routes.annotation">
+<span id="timapp-routes-annotation-module"></span><h2>timApp.routes.annotation module<a class="headerlink" href="#module-timApp.routes.annotation" title="Permalink to this headline">¶</a></h2>
+<p>The module handles the main logic related to annotations. This includes adding, modifiying and deleting annotations
+as well as adding comments to the annotations. The module also retrieves the annotations to the document.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">authors:</th><td class="field-body">Joonas Lattu, Petteri Palojärvi</td>
+</tr>
+<tr class="field-even field"><th class="field-name">copyright:</th><td class="field-body">2016 Timber project members</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">version:</th><td class="field-body">1.0.0</td>
+</tr>
+</tbody>
+</table>
+<dl class="function">
+<dt id="timApp.routes.annotation.add_annotation">
+<code class="descclassname">timApp.routes.annotation.</code><code class="descname">add_annotation</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; typing.Dict[KT, VT]<a class="reference internal" href="_modules/timApp/routes/annotation.html#add_annotation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.annotation.add_annotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new annotation to the database.</p>
+<dl class="docutils">
+<dt>Required key(s):</dt>
+<dd><ul class="first last simple">
+<li>velp: velp ID</li>
+<li>visible_to: visibility group (1-4)</li>
+<li>doc_id: document ID</li>
+<li>coord: start and end coordinates of the annotation.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Dictionary oontaining annotation id and annotator name.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.annotation.add_comment">
+<code class="descclassname">timApp.routes.annotation.</code><code class="descname">add_comment</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; typing.Dict[KT, VT]<a class="reference internal" href="_modules/timApp/routes/annotation.html#add_comment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.annotation.add_comment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds new comment to the annotation.</p>
+<dl class="docutils">
+<dt>Required key(s):</dt>
+<dd><ul class="first last simple">
+<li>annotation_id: annotation ID</li>
+<li>content: content of the comment.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Dictionary of information about user who added the comment</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.annotation.get_annotations">
+<code class="descclassname">timApp.routes.annotation.</code><code class="descname">get_annotations</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/routes/annotation.html#get_annotations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.annotation.get_annotations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all annotations with comments user can see, e.g. has access to them in a document.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc_id</strong> &#8211; ID of the document</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">List of dictionaries containing annotations with comments</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.annotation.invalidate_annotation">
+<code class="descclassname">timApp.routes.annotation.</code><code class="descname">invalidate_annotation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/routes/annotation.html#invalidate_annotation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.annotation.invalidate_annotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Invalidates annotation by setting its valid from to current moment.</p>
+<dl class="docutils">
+<dt>Required key(s):</dt>
+<dd><ul class="first last simple">
+<li>annotation_id: annotation ID</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">okJsonResponse()</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.annotation.update_annotation">
+<code class="descclassname">timApp.routes.annotation.</code><code class="descname">update_annotation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/routes/annotation.html#update_annotation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.annotation.update_annotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the visibility and/or points of the annotation.</p>
+<dl class="docutils">
+<dt>Required key(s):</dt>
+<dd><ul class="first last simple">
+<li>annotation_id: annotation ID.</li>
+</ul>
+</dd>
+<dt>Optional key(s):</dt>
+<dd><ul class="first last simple">
+<li>visible_to: visibility group number (1-4)</li>
+<li>points: number of points</li>
+<li>doc_id: document ID.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">okJsonResponse()</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-timApp.routes.velp">
+<span id="timapp-routes-velp-module"></span><h2>timApp.routes.velp module<a class="headerlink" href="#module-timApp.routes.velp" title="Permalink to this headline">¶</a></h2>
+<p>The module handles the main logic related to velps, velp groups and labels. This includes adding and modifiying velps
+and labels as well as adding new velp groups. The module also retrieves or creates the default velp group for the
+document and the personal default group for the user. Velp groups can be set to shown or shown as default in specific
+element (or in the whole document) through this module. The module also retrieves the velps, velp groups and labels to
+the document.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">authors:</th><td class="field-body">Joonas Lattu, Petteri Palojärvi</td>
+</tr>
+<tr class="field-even field"><th class="field-name">copyright:</th><td class="field-body">2016 Timber project members</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">version:</th><td class="field-body">1.0.0</td>
+</tr>
+</tbody>
+</table>
+<dl class="function">
+<dt id="timApp.routes.velp.add_label">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">add_label</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; int<a class="reference internal" href="_modules/timApp/routes/velp.html#add_label"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.add_label" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates new velp label.</p>
+<dl class="docutils">
+<dt>Required key(s):</dt>
+<dd><ul class="first last simple">
+<li>content: label content</li>
+</ul>
+</dd>
+<dt>Optional key(s):</dt>
+<dd><ul class="first last simple">
+<li>language_id: language ID of the label.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">ID of new velp label</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.add_velp">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">add_velp</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; int<a class="reference internal" href="_modules/timApp/routes/velp.html#add_velp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.add_velp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new velp and adds it to velp groups user chose.</p>
+<dl class="docutils">
+<dt>Required key(s):</dt>
+<dd><ul class="first last simple">
+<li>content: content of the new velp</li>
+<li>velp_groups: list of velp group IDs of the new velp.</li>
+</ul>
+</dd>
+<dt>Optional key(s):</dt>
+<dd><ul class="first last simple">
+<li>points: velp points</li>
+<li>language_id: language ID</li>
+<li>icon_id: icon ID</li>
+<li>valid_until: time stamp to until velp is still valid</li>
+<li>labels: labels of the velp</li>
+<li>visible_to: visibility group of the velp (1-4)</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">ID of new velp</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.change_all_selections">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">change_all_selections</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/routes/velp.html#change_all_selections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.change_all_selections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change selection for velp group in users VelpGroupSelection in current document.</p>
+<dl class="docutils">
+<dt>Required key(s):</dt>
+<dd><ul class="first last simple">
+<li>selection: 1 or 0 (true or false)</li>
+<li>target_type: target type of the selection (document, paragraph)</li>
+<li>target_id: target id of the selection (paragraph id or 0 for the whole document)</li>
+<li>selection_type: &#8216;show&#8217; or &#8216;default&#8217;.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc_id</strong> &#8211; ID of document</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">okJsonResponse</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.change_default_selection">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">change_default_selection</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/routes/velp.html#change_default_selection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.change_default_selection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change selection for velp group in users VelpGroupSelection in current document.</p>
+<dl class="docutils">
+<dt>Required key(s):</dt>
+<dd><ul class="first last simple">
+<li>id: velp group ID</li>
+<li>target_type: target type of the selection (document, paragraph)</li>
+<li>target_id: target id of the selection (paragraph id or 0 for the whole document)</li>
+<li>default: current default value.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc_id</strong> &#8211; ID of document</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">okJsonResponse</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.change_selection">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">change_selection</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/routes/velp.html#change_selection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.change_selection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change selection for velp group in users VelpGroupSelection in current document.</p>
+<dl class="docutils">
+<dt>Required key(s):</dt>
+<dd><ul class="first last simple">
+<li>id: velp group iD</li>
+<li>target_type: target type of the selection (document, paragraph)</li>
+<li>target_id: target id of the selection (paragraph id or 0 for the whole document)</li>
+<li>selection_type: &#8216;show&#8217; or &#8216;default&#8217;.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc_id</strong> &#8211; ID of document</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">okJsonResponse</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.create_default_velp_group">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">create_default_velp_group</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/routes/velp.html#create_default_velp_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.create_default_velp_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a default velp group document or changes existing document to default velp group.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc_id</strong> &#8211; ID of document</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dictionary containing information of new default velp group.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.create_velp_group">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">create_velp_group</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span> &rarr; typing.Dict[KT, VT]<a class="reference internal" href="_modules/timApp/routes/velp.html#create_velp_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.create_velp_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new velp group.</p>
+<dl class="docutils">
+<dt>Required key(s):</dt>
+<dd><ul class="first last simple">
+<li>name: velp group name</li>
+<li>target_type: document, folder or personal group.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc_id</strong> &#8211; ID of the document</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dictionary containing information of new velp group.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.get_default_personal_velp_group">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">get_default_personal_velp_group</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; typing.Dict[KT, VT]<a class="reference internal" href="_modules/timApp/routes/velp.html#get_default_personal_velp_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.get_default_personal_velp_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get default personal velp group ID and if velp group doesn&#8217;t exist yet, create one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Dictionary containing personal velp group data.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.get_default_velp_group">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">get_default_velp_group</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span> &rarr; typing.Dict[KT, VT]<a class="reference internal" href="_modules/timApp/routes/velp.html#get_default_velp_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.get_default_velp_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get default velp group ID and if  velp group doesn&#8217;t exist yet, create one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc_id</strong> &#8211; ID of document</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dictionary containing default velp group&#8217;s ID and name</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.get_velp_group_default_selections">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">get_velp_group_default_selections</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span> &rarr; typing.Dict[KT, VT]<a class="reference internal" href="_modules/timApp/routes/velp.html#get_velp_group_default_selections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.get_velp_group_default_selections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets default velp group selections for velp groups user has access to in document.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc_id</strong> &#8211; ID of document</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dictionary containing list of default velp groups for each target area IDs</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.get_velp_group_personal_selections">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">get_velp_group_personal_selections</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span> &rarr; typing.Dict[KT, VT]<a class="reference internal" href="_modules/timApp/routes/velp.html#get_velp_group_personal_selections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.get_velp_group_personal_selections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets default velp group selections for velp groups user has access to in document.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc_id</strong> &#8211; ID of document</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dictionary containing list of selected velp groups for each target area IDs</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.get_velp_groups">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">get_velp_groups</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/routes/velp.html#get_velp_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.get_velp_groups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets all velp groups for document user has access to by using VelpGroupSelection table.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc_id</strong> &#8211; ID of document</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">List of dictionaries containing velp group information</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.get_velp_groups_from_tree">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">get_velp_groups_from_tree</code><span class="sig-paren">(</span><em>document_id: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/routes/velp.html#get_velp_groups_from_tree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.get_velp_groups_from_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all velp groups found from tree from document to root and from users own velp folder</p>
+<p>Checks document&#8217;s own velp group folder first, then default velp group folders going up all the
+way to root. Doesn&#8217;t branch side ways or down, only checks parents. After root has been reached,
+finally checks users own velp group folder.</p>
+<p>Checks that user has minimum of view right for velp groups.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>document_id</strong> &#8211; ID of document</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">List of document / velp group information of found hits.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.get_velp_labels">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">get_velp_labels</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/routes/velp.html#get_velp_labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.get_velp_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets all velp labels for document user has access to by using VelpGroupSelection table.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc_id</strong> &#8211; ID of document</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">List of dicts containing velp label IDs and content for the document</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.get_velps">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">get_velps</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/routes/velp.html#get_velps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.get_velps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all velps for document user has access to.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc_id</strong> &#8211; ID of document</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">List of velps as dictionaries containing all needed information</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.reset_all_selections_to_defaults">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">reset_all_selections_to_defaults</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/routes/velp.html#reset_all_selections_to_defaults"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.reset_all_selections_to_defaults" title="Permalink to this definition">¶</a></dt>
+<dd><p>Changes user&#8217;s all personal velp group selections in document to defaults.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc_id</strong> &#8211; ID of document</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">okJsonResponse()</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.reset_target_area_selections_to_defaults">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">reset_target_area_selections_to_defaults</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/routes/velp.html#reset_target_area_selections_to_defaults"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.reset_target_area_selections_to_defaults" title="Permalink to this definition">¶</a></dt>
+<dd><p>Changes user&#8217;s personal velp group selections in target area to defaults.</p>
+<dl class="docutils">
+<dt>Required key(s):</dt>
+<dd><ul class="first last simple">
+<li>target_id: target id of the selection (paragraph id or 0 for the whole document)</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc_id</strong> &#8211; ID of document</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">okJsonResponse()</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.update_velp">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">update_velp</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/routes/velp.html#update_velp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.update_velp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the velp&#8217;s data.</p>
+<dl class="docutils">
+<dt>Required key(s):</dt>
+<dd><ul class="first last simple">
+<li>id: velp ID</li>
+<li>content: velp content</li>
+<li>language_id: language ID</li>
+<li>velp groups: list of velp group IDs.</li>
+</ul>
+</dd>
+<dt>Optional key(s):</dt>
+<dd><ul class="first last simple">
+<li>points: velp points</li>
+<li>icon_id: velp icon</li>
+<li>labels: velp labels</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc_id</strong> &#8211; ID of document</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">okJsonResponse</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.routes.velp.update_velp_label">
+<code class="descclassname">timApp.routes.velp.</code><code class="descname">update_velp_label</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/routes/velp.html#update_velp_label"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.routes.velp.update_velp_label" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates velp label content.</p>
+<dl class="docutils">
+<dt>Required key(s):</dt>
+<dd><ul class="first last simple">
+<li>content: label content</li>
+<li>id: label ID.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">okJsonResponse</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-timApp.routes">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-timApp.routes" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">timApp.routes package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-timApp.routes.annotation">timApp.routes.annotation module</a></li>
+<li><a class="reference internal" href="#module-timApp.routes.velp">timApp.routes.velp module</a></li>
+<li><a class="reference internal" href="#module-timApp.routes">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to the Server-side Class Documentation of Velp Application Version 1.0.0</a></li>
+      <li>Next: <a href="timApp.timdb.html" title="next chapter">timApp.timdb package</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/timApp.routes.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Timber project authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+      |
+      <a href="_sources/timApp.routes.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

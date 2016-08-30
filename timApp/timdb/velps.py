@@ -1,3 +1,14 @@
+"""
+The module contains the database functions related to velps and velp labels. This includes
+adding and modifying velps and their labels. The module also retrieves the data related to velps and their labels
+from the database.
+
+:authors: Joonas Lattu, Petteri Palojärvi
+:copyright: 2016 Timber project members
+:version: 1.0.0
+
+"""
+
 import copy
 from typing import Optional, List
 
@@ -16,6 +27,7 @@ class Velps(TimDbBase):
         """Creates a new velp with all information.
 
         Creates a new velp with all necessary information in one function using three others.
+
         :param creator_id: User ID of creator.
         :param content: Text for velp.
         :param default_points: Default points for velp, None if not given.
@@ -100,7 +112,7 @@ class Velps(TimDbBase):
 
         :param velp_id: ID of velp we're checking
         :param language_id: ID of language
-        :return: ID of version
+        :return: Dictionary containing ID and content of velp version.
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -153,7 +165,6 @@ class Velps(TimDbBase):
         :param label_id: Label id
         :param language_id: Language chosen
         :param content: Updated content
-        :return:
         """
         vlc = self.session.query(VelpLabelContent).filter((VelpLabelContent.velplabel_id == label_id) & (VelpLabelContent.language_id == language_id)).one()
         vlc.content = content
@@ -178,9 +189,9 @@ class Velps(TimDbBase):
         """Associates a set of labels to a velp. (Appends to existing labels)
 
         Do note that update_velp_labels depends on this method
+
         :param velp_id: id of the velp that
         :param labels: list of label ids
-        :return: None
         """
         cursor = self.db.cursor()
         if labels:  # Labels list can theoretically be null at some situations
@@ -195,8 +206,8 @@ class Velps(TimDbBase):
     def update_velp_labels(self, velp_id: int, labels: List[int]):
         """Replaces the labels of a velp with new ones.
 
-        :param velp_id:
-        :param labels: list of label ids.
+        :param velp_id: velp ID
+        :param labels: list of label IDs.
         """
         cursor = self.db.cursor()
         # First nuke existing labels.
@@ -217,6 +228,7 @@ class Velps(TimDbBase):
 
         Uses VelpGroupsInDocument table data to determine which velp groups are usable
         for specific user in specific document.
+
         :param doc_id: ID of document in question
         :param user_id: ID of current user
         :param language_id: ID of language used
@@ -275,6 +287,7 @@ class Velps(TimDbBase):
 
         Uses VelpGroupsInDocument table data to determine which velp groups and via those which velps are usable
         for specific user in specific document.
+
         :param doc_id: ID of document in question
         :param user_id: ID of current user
         :param language_id: ID of language used
@@ -318,6 +331,7 @@ class Velps(TimDbBase):
 
         Uses VelpGroupsInDocument table data to determine which velp groups are usable
         for specific user in specific document.
+
         :param doc_id: ID of document in question
         :param user_id: ID of current user
         :return: List of dicts containing velp ids and velp groups ids
@@ -352,6 +366,7 @@ class Velps(TimDbBase):
 
         Uses VelpGroupsInDocument table data to determine which velp groups and via those which velp labels are usable
         for specific user in specific document.
+
         :param doc_id: ID of document in question
         :param user_id: ID of current user
         :return: List of dicts containing velp ids and label ids
@@ -387,6 +402,7 @@ class Velps(TimDbBase):
 
         Uses VelpGroupsInDocument table data to determine which velp groups and via those which velp labels are usable
         for specific user in specific document.
+
         :param doc_id: ID of document in question
         :param user_id: ID of current user
         :param language_id: ID of language used

@@ -1,0 +1,548 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>timApp.timdb.velps &#8212; Timber 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Timber 1.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for timApp.timdb.velps</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The module contains the database functions related to velps and velp labels. This includes</span>
+<span class="sd">adding and modifying velps and their labels. The module also retrieves the data related to velps and their labels</span>
+<span class="sd">from the database.</span>
+
+<span class="sd">:authors: Joonas Lattu, Petteri Palojärvi</span>
+<span class="sd">:copyright: 2016 Timber project members</span>
+<span class="sd">:version: 1.0.0</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">sqlite3</span> <span class="k">import</span> <span class="n">Connection</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">timdb.timdbbase</span> <span class="k">import</span> <span class="n">TimDbBase</span><span class="p">,</span> <span class="n">TimDbException</span>
+
+
+<div class="viewcode-block" id="Velps"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps">[docs]</a><span class="k">class</span> <span class="nc">Velps</span><span class="p">(</span><span class="n">TimDbBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Used as an interface to query the database about velps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_path</span><span class="p">:</span> <span class="n">Connection</span><span class="p">,</span> <span class="n">files_root_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">type_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">current_user_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initializes TimDB with the specified database and root path.</span>
+
+<span class="sd">        :param type_name: The type name.</span>
+<span class="sd">        :param current_user_name: The name of the current user.</span>
+<span class="sd">        :param db_path: The path of the database file.</span>
+<span class="sd">        :param files_root_path: The root path where all the files will be stored.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">TimDbBase</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_path</span><span class="p">,</span> <span class="n">files_root_path</span><span class="p">,</span> <span class="n">type_name</span><span class="p">,</span> <span class="n">current_user_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Velps.create_new_velp"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps.create_new_velp">[docs]</a>    <span class="k">def</span> <span class="nf">create_new_velp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">creator_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default_points</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">icon_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">valid_until</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">language_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;FI&quot;</span><span class="p">,</span> <span class="n">visible_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new velp with all information.</span>
+
+<span class="sd">        Creates a new velp with all necessary information in one function using three others.</span>
+
+<span class="sd">        :param creator_id: User ID of creator.</span>
+<span class="sd">        :param content: Text for velp.</span>
+<span class="sd">        :param default_points: Default points for velp, None if not given.</span>
+<span class="sd">        :param icon_id: Icon ID attached to velp. Can be null.</span>
+<span class="sd">        :param valid_until: Time after velp becomes unusable.</span>
+<span class="sd">        :param language_id: Language ID of velp.</span>
+<span class="sd">        :param visible_to: Default visibility to annotation.</span>
+<span class="sd">        :return: ID of the new velp.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_velp_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_velp</span><span class="p">(</span><span class="n">creator_id</span><span class="p">,</span> <span class="n">default_points</span><span class="p">,</span> <span class="n">icon_id</span><span class="p">,</span> <span class="n">valid_until</span><span class="p">,</span> <span class="n">visible_to</span><span class="p">)</span>
+        <span class="n">new_version_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_velp_version</span><span class="p">(</span><span class="n">new_velp_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_velp_content</span><span class="p">(</span><span class="n">new_version_id</span><span class="p">,</span> <span class="n">language_id</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_velp_id</span></div>
+
+    <span class="k">def</span> <span class="nf">_create_velp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">creator_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">default_points</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">icon_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                     <span class="n">valid_until</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">visible_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new entry to the velp table.</span>
+
+<span class="sd">        :param creator_id: User ID of creator.</span>
+<span class="sd">        :param default_points: Default points for velp.</span>
+<span class="sd">        :param icon_id: Icon ID attached to velp. Can be null.</span>
+<span class="sd">        :param valid_until: Time after velp becomes unusable.</span>
+<span class="sd">        :param visible_to: Default visibility to annotation.</span>
+<span class="sd">        :return: ID of velp that was just created.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      INSERT INTO</span>
+<span class="s2">                      Velp(creator_id, default_points, icon_id, valid_until, visible_to)</span>
+<span class="s2">                      VALUES(?, ?, ?, ?, ?)</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">creator_id</span><span class="p">,</span> <span class="n">default_points</span><span class="p">,</span> <span class="n">icon_id</span><span class="p">,</span> <span class="n">valid_until</span><span class="p">,</span> <span class="n">visible_to</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="n">velp_id</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">lastrowid</span>
+        <span class="k">return</span> <span class="n">velp_id</span>
+
+<div class="viewcode-block" id="Velps.create_velp_version"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps.create_velp_version">[docs]</a>    <span class="k">def</span> <span class="nf">create_velp_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new version for a velp to use.</span>
+
+<span class="sd">        :param velp_id: ID of velp we&#39;re adding version for</span>
+<span class="sd">        :return: ID of version that was just created</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      INSERT INTO</span>
+<span class="s2">                      VelpVersion(velp_id)</span>
+<span class="s2">                      VALUES(?)</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">velp_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="n">version_id</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">lastrowid</span>
+        <span class="k">return</span> <span class="n">version_id</span></div>
+
+<div class="viewcode-block" id="Velps.create_velp_content"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps.create_velp_content">[docs]</a>    <span class="k">def</span> <span class="nf">create_velp_content</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">version_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">language_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method to create content (text) for velp.</span>
+
+<span class="sd">        :param version_id: Version id where the content will be stored</span>
+<span class="sd">        :param language_id: Language id</span>
+<span class="sd">        :param content: Text of velp</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      INSERT INTO</span>
+<span class="s2">                      VelpContent(version_id, language_id, content)</span>
+<span class="s2">                      VALUES (?, ?, ?)</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">version_id</span><span class="p">,</span> <span class="n">language_id</span><span class="p">,</span> <span class="n">content</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Velps.update_velp"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps.update_velp">[docs]</a>    <span class="k">def</span> <span class="nf">update_velp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">default_points</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">icon_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Changes the non-versioned properties of a velp. Does not update labels.</span>
+
+<span class="sd">        :param velp_id: ID of velp that&#39;s being updated</span>
+<span class="sd">        :param default_points: New default points</span>
+<span class="sd">        :param icon_id: ID of icon</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                       UPDATE Velp</span>
+<span class="s2">                       SET icon_id = ?, default_points = ?</span>
+<span class="s2">                       WHERE id = ?</span>
+<span class="s2">                       &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">icon_id</span><span class="p">,</span> <span class="n">default_points</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Velps.get_latest_velp_version"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps.get_latest_velp_version">[docs]</a>    <span class="k">def</span> <span class="nf">get_latest_velp_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">language_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;FI&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method to fetch the latest version for velp in specific language</span>
+
+<span class="sd">        :param velp_id: ID of velp we&#39;re checking</span>
+<span class="sd">        :param language_id: ID of language</span>
+<span class="sd">        :return: Dictionary containing ID and content of velp version.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      SELECT</span>
+<span class="s2">                      MAX(id),content</span>
+<span class="s2">                      FROM</span>
+<span class="s2">                      VelpInformation</span>
+<span class="s2">                      WHERE velp_id = ? AND language_id = ?</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">velp_id</span><span class="p">,</span> <span class="n">language_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span><span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span></div>
+
+    <span class="c1"># Methods concerning velp labels</span>
+
+<div class="viewcode-block" id="Velps.create_velp_label"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps.create_velp_label">[docs]</a>    <span class="k">def</span> <span class="nf">create_velp_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">language_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new label.</span>
+
+<span class="sd">        :param language_id: Language chosen</span>
+<span class="sd">        :param content: Label content</span>
+<span class="sd">        :return: id of the new label</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">#coalesce so that the first insert doesn&#39;t fail.</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      INSERT INTO</span>
+<span class="s2">                      VelpLabel(language_id, content, id)</span>
+<span class="s2">                      VALUES (?, ?, (SELECT</span>
+<span class="s2">                      coalesce(MAX(VelpLabel.id)+1,1)</span>
+<span class="s2">                      FROM VelpLabel))</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">language_id</span><span class="p">,</span> <span class="n">content</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="n">label_id</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">lastrowid</span>
+        <span class="k">return</span> <span class="n">label_id</span></div>
+
+<div class="viewcode-block" id="Velps.add_velp_label_translation"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps.add_velp_label_translation">[docs]</a>    <span class="k">def</span> <span class="nf">add_velp_label_translation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">language_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds new translation to an existing label.</span>
+
+<span class="sd">        :param label_id: Label id</span>
+<span class="sd">        :param language_id: Language chosen</span>
+<span class="sd">        :param content: New translation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      INSERT INTO</span>
+<span class="s2">                      VelpLabel(id, language_id, content)</span>
+<span class="s2">                      VALUES (?, ?, ?)</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">label_id</span><span class="p">,</span> <span class="n">language_id</span><span class="p">,</span> <span class="n">content</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Velps.update_velp_label"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps.update_velp_label">[docs]</a>    <span class="k">def</span> <span class="nf">update_velp_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">language_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates content of label in specific language.</span>
+
+<span class="sd">        :param label_id: Label id</span>
+<span class="sd">        :param language_id: Language chosen</span>
+<span class="sd">        :param content: Updated content</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      UPDATE VelpLabel</span>
+<span class="s2">                      SET content = ?</span>
+<span class="s2">                      WHERE id = ? AND language_id = ?</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">content</span><span class="p">,</span> <span class="n">label_id</span><span class="p">,</span> <span class="n">language_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Velps.get_velp_label_ids_for_velp"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps.get_velp_label_ids_for_velp">[docs]</a>    <span class="k">def</span> <span class="nf">get_velp_label_ids_for_velp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Gets labels for one velp.</span>
+
+<span class="sd">        :param velp_id: ID of velp</span>
+<span class="sd">        :return: List of labels represented by their ids associated with the velp.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      SELECT LabelInVelp.label_id</span>
+<span class="s2">                      FROM LabelInVelp</span>
+<span class="s2">                      WHERE LabelInVelp.velp_id = ?</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">velp_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">resultAsDictionary</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Velps.add_labels_to_velp"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps.add_labels_to_velp">[docs]</a>    <span class="k">def</span> <span class="nf">add_labels_to_velp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Associates a set of labels to a velp. (Appends to existing labels)</span>
+
+<span class="sd">        Do note that update_velp_labels depends on this method</span>
+
+<span class="sd">        :param velp_id: id of the velp that</span>
+<span class="sd">        :param labels: list of label ids</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">labels</span><span class="p">:</span>  <span class="c1"># Labels list can theoretically be null at some situations</span>
+            <span class="k">for</span> <span class="n">label_id</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+                <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                               INSERT INTO LabelInVelp(label_id, velp_id)</span>
+<span class="s2">                               VALUES (?, ?)</span>
+<span class="s2">                               &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">label_id</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">]</span>
+                               <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Velps.update_velp_labels"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps.update_velp_labels">[docs]</a>    <span class="k">def</span> <span class="nf">update_velp_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Replaces the labels of a velp with new ones.</span>
+
+<span class="sd">        :param velp_id: velp ID</span>
+<span class="sd">        :param labels: list of label IDs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="c1"># First nuke existing labels.</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                       DELETE FROM LabelInVelp</span>
+<span class="s2">                       WHERE velp_id=?</span>
+<span class="s2">                       &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">velp_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="c1"># self.db.commit() # changes will be commited in add_labels_to_velp</span>
+        <span class="c1"># Then add the new ones.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_labels_to_velp</span><span class="p">(</span><span class="n">velp_id</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span></div>
+
+
+    <span class="c1"># Methods for getting information for document</span>
+
+<div class="viewcode-block" id="Velps.get_velp_content_for_document"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps.get_velp_content_for_document">[docs]</a>    <span class="k">def</span> <span class="nf">get_velp_content_for_document</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">language_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;FI&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Gets velp content including labels and velp groups for document.</span>
+
+<span class="sd">        Uses VelpGroupsInDocument table data to determine which velp groups are usable</span>
+<span class="sd">        for specific user in specific document.</span>
+
+<span class="sd">        :param doc_id: ID of document in question</span>
+<span class="sd">        :param user_id: ID of current user</span>
+<span class="sd">        :param language_id: ID of language used</span>
+<span class="sd">        :return: List of velps as dictionaries</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">velp_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_velps_for_document</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">language_id</span><span class="p">)</span>
+        <span class="n">label_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_velp_label_ids_for_document</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+        <span class="n">group_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_velp_group_ids_for_document</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+
+        <span class="c1"># Sort velp label data as lists and link them to velp data</span>
+        <span class="k">if</span> <span class="n">velp_data</span> <span class="ow">and</span> <span class="n">label_data</span><span class="p">:</span>
+            <span class="n">velp_id</span> <span class="o">=</span> <span class="n">label_data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;velp_id&#39;</span><span class="p">]</span>
+            <span class="n">list_help</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">label_dict</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">label_data</span><span class="p">)):</span>
+                <span class="n">next_id</span> <span class="o">=</span> <span class="n">label_data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;velp_id&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">next_id</span> <span class="o">!=</span> <span class="n">velp_id</span><span class="p">:</span>
+                    <span class="n">label_dict</span><span class="p">[</span><span class="n">velp_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">list_help</span><span class="p">)</span>
+                    <span class="n">velp_id</span> <span class="o">=</span> <span class="n">next_id</span>
+                    <span class="k">del</span> <span class="n">list_help</span><span class="p">[:]</span>
+                    <span class="n">list_help</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label_data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;labels&#39;</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">list_help</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label_data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;labels&#39;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">label_data</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">label_dict</span><span class="p">[</span><span class="n">velp_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">list_help</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">velp_data</span><span class="p">)):</span>
+                <span class="n">search_id</span> <span class="o">=</span> <span class="n">velp_data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">search_id</span> <span class="ow">in</span> <span class="n">label_dict</span><span class="p">:</span>
+                    <span class="n">velp_data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">label_dict</span><span class="p">[</span><span class="n">search_id</span><span class="p">]</span>
+
+        <span class="c1"># Sort velp group data as lists and link them to velp data</span>
+        <span class="k">if</span> <span class="n">velp_data</span> <span class="ow">and</span> <span class="n">group_data</span><span class="p">:</span>
+            <span class="n">velp_id</span> <span class="o">=</span> <span class="n">group_data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;velp_id&#39;</span><span class="p">]</span>
+            <span class="n">list_help2</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">label_dict2</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">group_data</span><span class="p">)):</span>
+                <span class="n">next_id</span> <span class="o">=</span> <span class="n">group_data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;velp_id&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">next_id</span> <span class="o">!=</span> <span class="n">velp_id</span><span class="p">:</span>
+                    <span class="n">label_dict2</span><span class="p">[</span><span class="n">velp_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">list_help2</span><span class="p">)</span>
+                    <span class="n">velp_id</span> <span class="o">=</span> <span class="n">next_id</span>
+                    <span class="k">del</span> <span class="n">list_help2</span><span class="p">[:]</span>
+                    <span class="n">list_help2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group_data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;velp_groups&#39;</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">list_help2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group_data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;velp_groups&#39;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">group_data</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">label_dict2</span><span class="p">[</span><span class="n">velp_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">list_help2</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">velp_data</span><span class="p">)):</span>
+                <span class="n">search_id</span> <span class="o">=</span> <span class="n">velp_data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">search_id</span> <span class="ow">in</span> <span class="n">label_dict2</span><span class="p">:</span>
+                    <span class="n">velp_data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;velp_groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">label_dict2</span><span class="p">[</span><span class="n">search_id</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">velp_data</span></div>
+
+<div class="viewcode-block" id="Velps.get_velps_for_document"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps.get_velps_for_document">[docs]</a>    <span class="k">def</span> <span class="nf">get_velps_for_document</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">language_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;FI&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Gets velps for document.</span>
+
+<span class="sd">        Uses VelpGroupsInDocument table data to determine which velp groups and via those which velps are usable</span>
+<span class="sd">        for specific user in specific document.</span>
+
+<span class="sd">        :param doc_id: ID of document in question</span>
+<span class="sd">        :param user_id: ID of current user</span>
+<span class="sd">        :param language_id: ID of language used</span>
+<span class="sd">        :return: List of dicts containing velp ids, default points, content, icon ids and language ids</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      SELECT Velp.id AS id, Velp.default_points AS points, Velp.icon_id AS icon_id,</span>
+<span class="s2">                      y.content AS content, y.language_id AS language_id</span>
+<span class="s2">                      FROM Velp</span>
+<span class="s2">                      INNER JOIN(</span>
+<span class="s2">                        SELECT x.velp_id, VelpContent.content, VelpContent.language_id</span>
+<span class="s2">                        FROM VelpContent</span>
+<span class="s2">                        INNER JOIN (</span>
+<span class="s2">                          SELECT VelpVersion.velp_id, max(VelpVersion.id) AS latest_version</span>
+<span class="s2">                          FROM VelpVersion GROUP BY VelpVersion.velp_id</span>
+<span class="s2">                          ) AS x ON VelpContent.version_id = x.latest_version</span>
+<span class="s2">                      ) AS y ON y.velp_id = velp.id</span>
+<span class="s2">                      WHERE y.language_id = ? AND velp_id IN (</span>
+<span class="s2">                        SELECT Velp.id</span>
+<span class="s2">                        FROM Velp</span>
+<span class="s2">                        WHERE (Velp.valid_until &gt;= current_timestamp OR Velp.valid_until ISNULL) AND Velp.id IN (</span>
+<span class="s2">                          SELECT VelpInGroup.velp_id</span>
+<span class="s2">                          FROM VelpInGroup</span>
+<span class="s2">                          WHERE VelpInGroup.velp_group_id IN (</span>
+<span class="s2">                            SELECT velp_group_id</span>
+<span class="s2">                            FROM VelpGroupsInDocument</span>
+<span class="s2">                            WHERE user_id = ? AND doc_id = ?</span>
+<span class="s2">                          )</span>
+<span class="s2">                        )</span>
+<span class="s2">                      )</span>
+
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">language_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">]</span>
+                      <span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resultAsDictionary</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="Velps.get_velp_group_ids_for_document"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps.get_velp_group_ids_for_document">[docs]</a>    <span class="k">def</span> <span class="nf">get_velp_group_ids_for_document</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Gets velp group ids for document.</span>
+
+<span class="sd">        Uses VelpGroupsInDocument table data to determine which velp groups are usable</span>
+<span class="sd">        for specific user in specific document.</span>
+
+<span class="sd">        :param doc_id: ID of document in question</span>
+<span class="sd">        :param user_id: ID of current user</span>
+<span class="sd">        :return: List of dicts containing velp ids and velp groups ids</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      SELECT</span>
+<span class="s2">                        velp_id,</span>
+<span class="s2">                        velp_group_id AS velp_groups</span>
+<span class="s2">                      FROM VelpInGroup</span>
+<span class="s2">                      WHERE velp_id IN (</span>
+<span class="s2">                        SELECT Velp.id</span>
+<span class="s2">                        FROM Velp</span>
+<span class="s2">                        WHERE (Velp.valid_until &gt;= current_timestamp OR Velp.valid_until ISNULL) AND Velp.id IN (</span>
+<span class="s2">                          SELECT VelpInGroup.velp_id</span>
+<span class="s2">                          FROM VelpInGroup</span>
+<span class="s2">                          WHERE VelpInGroup.velp_group_id IN (</span>
+<span class="s2">                            SELECT velp_group_id</span>
+<span class="s2">                            FROM VelpGroupsInDocument</span>
+<span class="s2">                            WHERE doc_id = ? AND user_id = ?</span>
+<span class="s2">                          )</span>
+<span class="s2">                        )</span>
+<span class="s2">                      )</span>
+<span class="s2">                      ORDER BY velp_id ASC</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">]</span>
+                      <span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resultAsDictionary</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="Velps.get_velp_label_ids_for_document"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps.get_velp_label_ids_for_document">[docs]</a>    <span class="k">def</span> <span class="nf">get_velp_label_ids_for_document</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Gets velp labels ids for document.</span>
+
+<span class="sd">        Uses VelpGroupsInDocument table data to determine which velp groups and via those which velp labels are usable</span>
+<span class="sd">        for specific user in specific document.</span>
+
+<span class="sd">        :param doc_id: ID of document in question</span>
+<span class="sd">        :param user_id: ID of current user</span>
+<span class="sd">        :return: List of dicts containing velp ids and label ids</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      SELECT</span>
+<span class="s2">                        LabelInVelp.velp_id,</span>
+<span class="s2">                        LabelInVelp.label_id AS labels</span>
+<span class="s2">                      FROM LabelInVelp</span>
+<span class="s2">                      WHERE velp_id IN (</span>
+<span class="s2">                        SELECT Velp.id</span>
+<span class="s2">                        FROM Velp</span>
+<span class="s2">                        WHERE (Velp.valid_until &gt;= current_timestamp OR Velp.valid_until ISNULL) AND Velp.id IN (</span>
+<span class="s2">                          SELECT VelpInGroup.velp_id</span>
+<span class="s2">                          FROM VelpInGroup</span>
+<span class="s2">                          WHERE VelpInGroup.velp_group_id IN (</span>
+<span class="s2">                            SELECT velp_group_id</span>
+<span class="s2">                            FROM VelpGroupsInDocument</span>
+<span class="s2">                            WHERE doc_id = ? AND user_id = ?</span>
+<span class="s2">                          )</span>
+<span class="s2">                        )</span>
+<span class="s2">                      )</span>
+<span class="s2">                      ORDER BY velp_id ASC</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">]</span>
+                      <span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resultAsDictionary</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="Velps.get_velp_label_content_for_document"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velps.Velps.get_velp_label_content_for_document">[docs]</a>    <span class="k">def</span> <span class="nf">get_velp_label_content_for_document</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">language_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;FI&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Gets velp label content for document.</span>
+
+<span class="sd">        Uses VelpGroupsInDocument table data to determine which velp groups and via those which velp labels are usable</span>
+<span class="sd">        for specific user in specific document.</span>
+
+<span class="sd">        :param doc_id: ID of document in question</span>
+<span class="sd">        :param user_id: ID of current user</span>
+<span class="sd">        :param language_id: ID of language used</span>
+<span class="sd">        :return: List of dicts containing velp label ids and content</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                       SELECT VelpLabel.id, VelpLabel.content</span>
+<span class="s2">                       FROM VelpLabel</span>
+<span class="s2">                       WHERE VelpLabel.language_id = ? AND VelpLabel.id IN (</span>
+<span class="s2">                         SELECT DISTINCT LabelInVelp.label_id</span>
+<span class="s2">                         FROM LabelInVelp</span>
+<span class="s2">                         WHERE LabelInVelp.velp_id IN (</span>
+<span class="s2">                          SELECT Velp.id</span>
+<span class="s2">                          FROM Velp</span>
+<span class="s2">                            WHERE (Velp.valid_until &gt;= current_timestamp OR Velp.valid_until ISNULL) AND Velp.id IN (</span>
+<span class="s2">                              SELECT VelpInGroup.velp_id</span>
+<span class="s2">                              FROM VelpInGroup</span>
+<span class="s2">                              WHERE VelpInGroup.velp_group_id IN (</span>
+<span class="s2">                                SELECT velp_group_id</span>
+<span class="s2">                                FROM VelpGroupsInDocument</span>
+<span class="s2">                                WHERE doc_id = ? AND user_id = ?</span>
+<span class="s2">                              )</span>
+<span class="s2">                            )</span>
+<span class="s2">                          )</span>
+<span class="s2">                       )</span>
+<span class="s2">                       &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">language_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resultAsDictionary</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Timber project authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

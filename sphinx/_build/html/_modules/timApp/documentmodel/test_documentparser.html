@@ -1,0 +1,343 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>timApp.documentmodel.test_documentparser &#8212; Timber 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Timber 1.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for timApp.documentmodel.test_documentparser</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="kn">from</span> <span class="nn">documentmodel.documentparser</span> <span class="k">import</span> <span class="n">DocumentParser</span><span class="p">,</span> <span class="n">ValidationException</span>
+<span class="kn">from</span> <span class="nn">documentmodel.documentparseroptions</span> <span class="k">import</span> <span class="n">DocumentParserOptions</span>
+<span class="kn">from</span> <span class="nn">documentmodel.documentwriter</span> <span class="k">import</span> <span class="n">DocumentWriter</span>
+
+
+<div class="viewcode-block" id="DocumentParserTest"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.test_documentparser.DocumentParserTest">[docs]</a><span class="k">class</span> <span class="nc">DocumentParserTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="DocumentParserTest.test_parsing"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.test_documentparser.DocumentParserTest.test_parsing">[docs]</a>    <span class="k">def</span> <span class="nf">test_parsing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">doc_text</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">``` {plugin=csPlugin}</span>
+<span class="s2">code</span>
+
+<span class="s2">code</span>
+<span class="s2">```</span>
+
+<span class="s2">text1</span>
+
+<span class="s2">text2</span>
+
+<span class="s2">``` {plugin=mmcq}</span>
+<span class="s2">code2</span>
+<span class="s2">```</span>
+
+<span class="s2"># Header 1</span>
+
+<span class="s2">headerpar 1</span>
+
+<span class="s2">headerpar 2</span>
+
+<span class="s2">```</span>
+<span class="s2">normal code</span>
+<span class="s2">```</span>
+
+<span class="s2"># Header 2</span>
+
+<span class="s2">headerpar 3</span>
+
+<span class="s2">headerpar 4</span>
+
+<span class="s2">#- {.someClass}</span>
+<span class="s2">text 3</span>
+
+
+<span class="s2">text 4</span>
+
+<span class="s2">``` {atom=true}</span>
+<span class="s2"># Test1</span>
+
+<span class="s2"># Test2</span>
+
+<span class="s2"># Test3</span>
+<span class="s2">```</span>
+
+<span class="s2">```</span>
+<span class="s2">code</span>
+<span class="s2">```</span>
+
+<span class="s2">test</span>
+
+<span class="s2"># Test {a=b}</span>
+
+<span class="s2">````</span>
+<span class="s2">#- {rd=x rp=y}</span>
+
+<span class="s2">``` {rp=x rd=y}</span>
+<span class="s2">```</span>
+
+<span class="s2">````</span>
+
+<span class="s2">````</span>
+<span class="s2">test</span>
+<span class="s2">````</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">dp</span> <span class="o">=</span> <span class="n">DocumentParser</span><span class="p">(</span><span class="n">doc_text</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">dp</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">()</span>
+        <span class="n">expected</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;```</span><span class="se">\n</span><span class="s1">code</span><span class="se">\n\n</span><span class="s1">code</span><span class="se">\n</span><span class="s1">```&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;plugin&#39;</span><span class="p">:</span> <span class="s1">&#39;csPlugin&#39;</span><span class="p">},</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;text1</span><span class="se">\n\n</span><span class="s1">text2&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;autonormal&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                    <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;```</span><span class="se">\n</span><span class="s1">code2</span><span class="se">\n</span><span class="s1">```&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;plugin&#39;</span><span class="p">:</span> <span class="s1">&#39;mmcq&#39;</span><span class="p">},</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;# Header 1</span><span class="se">\n\n</span><span class="s1">headerpar 1</span><span class="se">\n\n</span><span class="s1">headerpar 2&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;header&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                    <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;```</span><span class="se">\n</span><span class="s1">normal code</span><span class="se">\n</span><span class="s1">```&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                    <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;# Header 2</span><span class="se">\n\n</span><span class="s1">headerpar 3</span><span class="se">\n\n</span><span class="s1">headerpar 4&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;header&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                    <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;text 3</span><span class="se">\n\n\n</span><span class="s1">text 4&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span>
+                        <span class="p">{</span><span class="s1">&#39;classes&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;someClass&#39;</span><span class="p">]},</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;normal&#39;</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;# Test1</span><span class="se">\n\n</span><span class="s1"># Test2</span><span class="se">\n\n</span><span class="s1"># Test3&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;atom&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                    <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;```</span><span class="se">\n</span><span class="s1">code</span><span class="se">\n</span><span class="s1">```&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                    <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;autonormal&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                    <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;header&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">},</span> <span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;# Test&#39;</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;````</span><span class="se">\n</span><span class="s1">#- {rd=x rp=y}</span><span class="se">\n\n</span><span class="s1">``` {rp=x rd=y}</span><span class="se">\n</span><span class="s1">```</span><span class="se">\n\n</span><span class="s1">````&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                    <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;````</span><span class="se">\n</span><span class="s1">test</span><span class="se">\n</span><span class="s1">````&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}}]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertListEqual</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+        <span class="n">exported</span> <span class="o">=</span> <span class="n">DocumentWriter</span><span class="p">(</span><span class="n">result</span><span class="p">)</span><span class="o">.</span><span class="n">get_text</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertListEqual</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="n">DocumentParser</span><span class="p">(</span><span class="n">exported</span><span class="p">)</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">())</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">dp</span><span class="o">.</span><span class="n">add_missing_attributes</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertListEqual</span><span class="p">([{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;SoMUq2gZwvpI&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;WORjZumBVWdm&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;w8i8M6DPgWyR&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;JPCV9j6K4VSg&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;Hluz6mrkDEWe&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;dZzusTxg3PW5&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;zW05KRpJQOG9&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;E0DvQTlfKkJd&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;T4cWAefPZ9Po&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;ys55kUwXv6jY&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;ziJ7zlQXydZE&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;PCzBis5CPokx&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;AfibcQb2DGgM&#39;</span><span class="p">}],</span>
+                             <span class="p">[{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">block</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]}</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">dp</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">()])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertListEqual</span><span class="p">([{</span><span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="s1">&#39;LTB4NGQwMTZhODI=&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="s1">&#39;MHg3ZjUxNmRhYw==&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="s1">&#39;MHgyZTE2OTQzOA==&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="s1">&#39;LTB4MjQzZTM5MmU=&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="s1">&#39;LTB4MWIyNGU1NzI=&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="s1">&#39;LTB4MzI5Y2Y0ZWM=&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="s1">&#39;MHgzNGFiZTAwYw==&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="s1">&#39;LTB4NTZiNGY3ZGU=&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="s1">&#39;MHg3ZDY2ZjA3MQ==&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="s1">&#39;MHgzMDYzZmNkYg==&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="s1">&#39;MHg3NjQzNzAyYg==&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="s1">&#39;LTB4MmJhMWVlZGI=&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="s1">&#39;MHgyNjJlNzU5OQ==&#39;</span><span class="p">}],</span>
+                             <span class="p">[{</span><span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="n">block</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]}</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">dp</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">()])</span>
+        <span class="n">dp</span><span class="o">.</span><span class="n">validate_structure</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">([],</span> <span class="n">DocumentParser</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">DocumentWriter</span><span class="p">([])</span><span class="o">.</span><span class="n">get_text</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="s1">&#39;#- {a=&quot;b&quot;}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">DocumentWriter</span><span class="p">([{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">}}])</span><span class="o">.</span><span class="n">get_text</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertListEqual</span><span class="p">([{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;```&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}}],</span>
+                             <span class="n">DocumentParser</span><span class="p">(</span><span class="s1">&#39;```&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">())</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">DocumentParser</span><span class="p">(</span><span class="n">doc_text</span><span class="p">)</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">(</span><span class="n">DocumentParserOptions</span><span class="o">.</span><span class="n">break_on_empty_lines</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertListEqual</span><span class="p">([{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;```</span><span class="se">\n</span><span class="s1">code</span><span class="se">\n\n</span><span class="s1">code</span><span class="se">\n</span><span class="s1">```&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;plugin&#39;</span><span class="p">:</span> <span class="s1">&#39;csPlugin&#39;</span><span class="p">},</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;text1&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;autonormal&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                              <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;text2&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;autonormal&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                              <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;```</span><span class="se">\n</span><span class="s1">code2</span><span class="se">\n</span><span class="s1">```&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;plugin&#39;</span><span class="p">:</span> <span class="s1">&#39;mmcq&#39;</span><span class="p">},</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;# Header 1&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;header&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                              <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;headerpar 1&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;autonormal&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                              <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;headerpar 2&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;autonormal&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                              <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;```</span><span class="se">\n</span><span class="s1">normal code</span><span class="se">\n</span><span class="s1">```&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                              <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;# Header 2&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;header&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                              <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;headerpar 3&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;autonormal&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                              <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;headerpar 4&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;autonormal&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                              <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;text 3&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span>
+                                  <span class="p">{</span><span class="s1">&#39;classes&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;someClass&#39;</span><span class="p">]},</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;normal&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;text 4&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;autonormal&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                              <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;# Test1</span><span class="se">\n\n</span><span class="s1"># Test2</span><span class="se">\n\n</span><span class="s1"># Test3&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;atom&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                              <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;```</span><span class="se">\n</span><span class="s1">code</span><span class="se">\n</span><span class="s1">```&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                              <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;autonormal&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                              <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;# Test&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;header&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">}},</span>
+                              <span class="p">{</span><span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;````</span><span class="se">\n</span><span class="s1">#- {rd=x rp=y}</span><span class="se">\n\n</span><span class="s1">``` {rp=x rd=y}</span><span class="se">\n</span><span class="s1">```</span><span class="se">\n\n</span><span class="s1">````&#39;</span><span class="p">},</span>
+                              <span class="p">{</span><span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;````</span><span class="se">\n</span><span class="s1">test</span><span class="se">\n</span><span class="s1">````&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">}],</span> <span class="n">result</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">DocumentParser</span><span class="p">(</span><span class="n">doc_text</span><span class="p">)</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">(</span><span class="n">DocumentParserOptions</span><span class="o">.</span><span class="n">single_paragraph</span><span class="p">())</span>
+        <span class="n">expected</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;```</span><span class="se">\n</span><span class="s1">code</span><span class="se">\n\n</span><span class="s1">code</span><span class="se">\n</span><span class="s1">```&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;plugin&#39;</span><span class="p">:</span> <span class="s1">&#39;csPlugin&#39;</span><span class="p">},</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;text1</span><span class="se">\n\n</span><span class="s1">text2&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;autonormal&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                    <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;```</span><span class="se">\n</span><span class="s1">code2</span><span class="se">\n</span><span class="s1">```&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;plugin&#39;</span><span class="p">:</span> <span class="s1">&#39;mmcq&#39;</span><span class="p">},</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">},</span>
+                    <span class="p">{</span>
+                        <span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;# Header 1</span><span class="se">\n\n</span><span class="s1">headerpar 1</span><span class="se">\n\n</span><span class="s1">headerpar 2</span><span class="se">\n\n</span><span class="s1">```</span><span class="se">\n</span><span class="s1">normal code</span><span class="se">\n</span><span class="s1">```</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+                              <span class="s1">&#39;# Header 2</span><span class="se">\n\n</span><span class="s1">headerpar 3</span><span class="se">\n\n</span><span class="s1">headerpar 4&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;header&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                    <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;text 3</span><span class="se">\n\n\n</span><span class="s1">text 4&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span>
+                        <span class="p">{</span><span class="s1">&#39;classes&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;someClass&#39;</span><span class="p">]},</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;normal&#39;</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;# Test1</span><span class="se">\n\n</span><span class="s1"># Test2</span><span class="se">\n\n</span><span class="s1"># Test3&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;atom&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                    <span class="p">{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;```</span><span class="se">\n</span><span class="s1">code</span><span class="se">\n</span><span class="s1">```</span><span class="se">\n\n</span><span class="s1">test&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">,</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                    <span class="p">{</span><span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">},</span>
+                     <span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;# Test</span><span class="se">\n</span><span class="s1">&#39;</span>
+                           <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+                           <span class="s1">&#39;````</span><span class="se">\n</span><span class="s1">&#39;</span>
+                           <span class="s1">&#39;#- {rd=x rp=y}&#39;</span>
+                           <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+                           <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+                           <span class="s1">&#39;``` {rp=x rd=y}&#39;</span>
+                           <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+                           <span class="s1">&#39;```</span><span class="se">\n</span><span class="s1">&#39;</span>
+                           <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+                           <span class="s1">&#39;````</span><span class="se">\n</span><span class="s1">&#39;</span>
+                           <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+                           <span class="s1">&#39;````</span><span class="se">\n</span><span class="s1">&#39;</span>
+                           <span class="s1">&#39;test</span><span class="se">\n</span><span class="s1">&#39;</span>
+                           <span class="s1">&#39;````&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;header&#39;</span><span class="p">}]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertListEqual</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+        <span class="n">exported</span> <span class="o">=</span> <span class="n">DocumentWriter</span><span class="p">(</span><span class="n">result</span><span class="p">)</span><span class="o">.</span><span class="n">get_text</span><span class="p">()</span>
+
+        <span class="c1"># ignore &#39;type&#39; because some of them are now &#39;atom&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertListEqual</span><span class="p">([{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;md&#39;</span><span class="p">],</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;attrs&#39;</span><span class="p">]}</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">expected</span><span class="p">],</span>
+                             <span class="p">[{</span><span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;md&#39;</span><span class="p">],</span> <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;attrs&#39;</span><span class="p">]}</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">DocumentParser</span><span class="p">(</span><span class="n">exported</span><span class="p">)</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">()])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertListEqual</span><span class="p">([{</span><span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">,</span> <span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;```</span><span class="se">\n</span><span class="s1">asd&#39;</span><span class="p">}],</span> <span class="n">DocumentParser</span><span class="p">(</span><span class="s1">&#39;```</span><span class="se">\n</span><span class="s1">asd&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertListEqual</span><span class="p">([{</span><span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">,</span> <span class="s1">&#39;md&#39;</span><span class="p">:</span> <span class="s1">&#39;```&#39;</span><span class="p">}],</span> <span class="n">DocumentParser</span><span class="p">(</span><span class="s1">&#39;```&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="DocumentParserTest.test_validation"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.test_documentparser.DocumentParserTest.test_validation">[docs]</a>    <span class="k">def</span> <span class="nf">test_validation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">failures</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">#- {id=SoMUq2gZwvpI}</span>
+
+<span class="sd">#- {id=SoMUq2gZwvpI}</span>
+<span class="sd">        &quot;&quot;&quot;</span><span class="p">,</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">#- {area=test}</span>
+<span class="sd">&quot;&quot;&quot;</span><span class="p">,</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">#- {area_end=test}</span>
+<span class="sd">&quot;&quot;&quot;</span><span class="p">,</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">#- {area=test}</span>
+<span class="sd">#- {area_end=test}</span>
+<span class="sd">#- {area=test}</span>
+<span class="sd">#- {area_end=test}</span>
+<span class="sd">&quot;&quot;&quot;</span><span class="p">,</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">#- {area=test .some}</span>
+<span class="sd">#- {area=test2 .some}</span>
+<span class="sd">#- {area_end=test}</span>
+<span class="sd">#- {area_end=test2}</span>
+<span class="sd">&quot;&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">#- {area=test area_end=test}</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">,</span>
+<span class="c1"># &quot;&quot;&quot;</span>
+<span class="c1">##- {#test}</span>
+<span class="c1">##- {#test}</span>
+<span class="c1"># &quot;&quot;&quot;,</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">#- {id=someinvalid}</span>
+<span class="sd">&quot;&quot;&quot;</span><span class="p">,</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">```</span>
+<span class="sd">``` {a=b}</span>
+<span class="sd">&quot;&quot;&quot;</span><span class="p">]</span>
+
+        <span class="n">oks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">#- {area=test}</span>
+<span class="sd">#- {area_end=test}</span>
+<span class="sd">&quot;&quot;&quot;</span><span class="p">,</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">#- {area=test .some}</span>
+<span class="sd">#- {area=test2 .some}</span>
+<span class="sd">#- {area=test4 .some}</span>
+<span class="sd">#- {area_end=test4}</span>
+<span class="sd">#- {area_end=test2}</span>
+<span class="sd">#- {area=test3 .some}</span>
+<span class="sd">#- {area_end=test3}</span>
+<span class="sd">#- {area_end=test}</span>
+<span class="sd">&quot;&quot;&quot;</span><span class="p">,</span>
+<span class="sd">&quot;&quot;&quot;```</span>
+<span class="sd">``{a=b}</span>
+<span class="sd">&quot;&quot;&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">failures</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">ValidationException</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="n">f</span><span class="p">):</span>
+                <span class="n">DocumentParser</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">validate_structure</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">oks</span><span class="p">:</span>
+            <span class="n">DocumentParser</span><span class="p">(</span><span class="n">o</span><span class="p">)</span><span class="o">.</span><span class="n">validate_structure</span><span class="p">()</span></div></div>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Timber project authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,934 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>timApp.routes.velp &#8212; Timber 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Timber 1.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for timApp.routes.velp</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The module handles the main logic related to velps, velp groups and labels. This includes adding and modifiying velps</span>
+<span class="sd">and labels as well as adding new velp groups. The module also retrieves or creates the default velp group for the</span>
+<span class="sd">document and the personal default group for the user. Velp groups can be set to shown or shown as default in specific</span>
+<span class="sd">element (or in the whole document) through this module. The module also retrieves the velps, velp groups and labels to</span>
+<span class="sd">the document.</span>
+
+<span class="sd">:authors: Joonas Lattu, Petteri Palojärvi</span>
+<span class="sd">:copyright: 2016 Timber project members</span>
+<span class="sd">:version: 1.0.0</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Blueprint</span>
+<span class="kn">from</span> <span class="nn">.common</span> <span class="k">import</span> <span class="o">*</span>
+
+<span class="n">velps</span> <span class="o">=</span> <span class="n">Blueprint</span><span class="p">(</span><span class="s1">&#39;velps&#39;</span><span class="p">,</span>
+                  <span class="n">__name__</span><span class="p">,</span>
+                  <span class="n">url_prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+
+<span class="c1"># TODO: Add document handling for all velp group related stuff</span>
+<span class="c1"># TODO: Done create velp, get velp groups from folders (get_velp_groups),</span>
+<span class="c1"># TODO: make default velp group and necessary folder (velpabc)</span>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:doc_id&gt;/get_default_velp_group&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="get_default_velp_group"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.get_default_velp_group">[docs]</a><span class="k">def</span> <span class="nf">get_default_velp_group</span><span class="p">(</span><span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Get default velp group ID and if  velp group doesn&#39;t exist yet, create one.</span>
+
+<span class="sd">    :param doc_id: ID of document</span>
+<span class="sd">    :return: Dictionary containing default velp group&#39;s ID and name</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+
+    <span class="n">owner_group_id</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_owner</span><span class="p">(</span><span class="n">doc_id</span><span class="p">)</span>
+    <span class="n">full_path</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_first_document_name</span><span class="p">(</span><span class="n">doc_id</span><span class="p">)</span>
+    <span class="n">doc_path</span><span class="p">,</span> <span class="n">doc_name</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">split_location</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span>
+    <span class="n">edit_access</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_edit_access</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">):</span>
+        <span class="n">edit_access</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">set_no_cache_headers</span><span class="p">(</span>
+            <span class="n">jsonResponse</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;No access to default group&quot;</span><span class="p">,</span> <span class="s2">&quot;edit_access&quot;</span><span class="p">:</span> <span class="n">edit_access</span><span class="p">}))</span>
+
+    <span class="c1"># Check if document&#39;s path contains velp groups folder and if it does, make document its own default velp group.</span>
+    <span class="c1"># This default document declaration isn&#39;t saved to database (else eventually all velp groups might be defaults).</span>
+    <span class="k">if</span> <span class="s2">&quot;velp groups/&quot;</span> <span class="ow">in</span> <span class="n">full_path</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_edit_access</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">):</span>
+            <span class="n">edit_access</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">set_no_cache_headers</span><span class="p">(</span>
+                <span class="n">jsonResponse</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;No access to default group&quot;</span><span class="p">,</span> <span class="s2">&quot;edit_access&quot;</span><span class="p">:</span> <span class="n">edit_access</span><span class="p">}))</span>
+        <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">make_document_a_velp_group</span><span class="p">(</span><span class="n">doc_name</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">)</span>
+        <span class="n">velp_group</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;target_type&#39;</span><span class="p">:</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;target_id&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">doc_id</span><span class="p">}]</span>
+
+        <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">add_groups_to_document</span><span class="p">(</span><span class="n">velp_group</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+        <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">add_groups_to_selection_table</span><span class="p">(</span><span class="n">velp_group</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Document is a velp group, made default velp group to point itself&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">set_no_cache_headers</span><span class="p">(</span><span class="n">jsonResponse</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">doc_id</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">doc_name</span><span class="p">,</span> <span class="s2">&quot;edit_access&quot;</span><span class="p">:</span> <span class="n">edit_access</span><span class="p">}))</span>
+
+    <span class="k">if</span> <span class="n">doc_path</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">found_velp_groups</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_documents_in_folder</span><span class="p">(</span><span class="n">doc_path</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="s2">&quot;velp groups&quot;</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">doc_name</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># Documents in root folder don&#39;t like / after empty path</span>
+        <span class="n">found_velp_groups</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_documents_in_folder</span><span class="p">(</span><span class="s2">&quot;velp groups&quot;</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">doc_name</span><span class="p">)</span>
+    <span class="n">velp_groups</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">found_velp_groups</span><span class="p">:</span>
+        <span class="c1"># if timdb.users.has_view_access(user_id, timdb.documents.get_document_id(v[&#39;name&#39;])):</span>
+        <span class="n">velp_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span>
+    <span class="n">default_group</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">check_velp_group_ids_for_default_group</span><span class="p">(</span><span class="n">velp_groups</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">default_group</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">default_group</span><span class="p">[</span><span class="s2">&quot;edit_access&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_edit_access</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span><span class="n">default_group</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">set_no_cache_headers</span><span class="p">(</span><span class="n">jsonResponse</span><span class="p">(</span><span class="n">default_group</span><span class="p">))</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">jsonResponse</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">doc_name</span> <span class="o">+</span> <span class="s2">&quot;_default&quot;</span><span class="p">,</span> <span class="s2">&quot;edit_access&quot;</span><span class="p">:</span> <span class="n">edit_access</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">set_no_cache_headers</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/get_default_personal_velp_group&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="get_default_personal_velp_group"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.get_default_personal_velp_group">[docs]</a><span class="k">def</span> <span class="nf">get_default_personal_velp_group</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Get default personal velp group ID and if velp group doesn&#39;t exist yet, create one.</span>
+
+<span class="sd">    :return: Dictionary containing personal velp group data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="n">user_name</span> <span class="o">=</span> <span class="n">getCurrentUserName</span><span class="p">()</span>
+
+    <span class="n">personal_velp_group_path</span> <span class="o">=</span> <span class="s2">&quot;users/&quot;</span> <span class="o">+</span> <span class="n">user_name</span> <span class="o">+</span> <span class="s2">&quot;/velp groups&quot;</span>
+    <span class="n">found_velp_groups</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_documents_in_folder</span><span class="p">(</span><span class="n">personal_velp_group_path</span><span class="p">)</span>
+    <span class="n">velp_groups</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">found_velp_groups</span><span class="p">:</span>
+        <span class="n">velp_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span>
+    <span class="n">default_group</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">check_velp_group_ids_for_default_group</span><span class="p">(</span><span class="n">velp_groups</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">default_group</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">set_no_cache_headers</span><span class="p">(</span><span class="n">jsonResponse</span><span class="p">(</span><span class="n">default_group</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">group_name</span> <span class="o">=</span> <span class="s2">&quot;Personal default&quot;</span>
+        <span class="n">new_group_path</span> <span class="o">=</span> <span class="n">personal_velp_group_path</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">group_name</span>
+        <span class="n">group_exists</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">resolve_doc_id_name</span><span class="p">(</span><span class="n">new_group_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">group_exists</span><span class="p">:</span>
+            <span class="n">default_id</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_document_id</span><span class="p">(</span><span class="n">new_group_path</span><span class="p">)</span>
+            <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">update_velp_group_to_default_velp_group</span><span class="p">(</span><span class="n">default_id</span><span class="p">)</span>
+            <span class="n">created_new</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">user_group</span> <span class="o">=</span> <span class="n">getCurrentUserGroup</span><span class="p">()</span>
+            <span class="n">default_id</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">create_default_velp_group</span><span class="p">(</span><span class="n">group_name</span><span class="p">,</span> <span class="n">user_group</span><span class="p">,</span> <span class="n">new_group_path</span><span class="p">)</span>
+            <span class="n">created_new</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">created_velp_group</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">default_id</span>
+        <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;target_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;target_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span>
+        <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_name</span>
+        <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_group_path</span>
+        <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;show&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;edit_access&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;default_group&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;created_new_group&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">created_new</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="n">set_no_cache_headers</span><span class="p">(</span><span class="n">jsonResponse</span><span class="p">(</span><span class="n">created_velp_group</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:doc_id&gt;/get_velps&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="get_velps"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.get_velps">[docs]</a><span class="k">def</span> <span class="nf">get_velps</span><span class="p">(</span><span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get all velps for document user has access to.</span>
+
+<span class="sd">    :param doc_id: ID of document</span>
+<span class="sd">    :return: List of velps as dictionaries containing all needed information</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+    <span class="n">velp_content</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velps</span><span class="o">.</span><span class="n">get_velp_content_for_document</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">jsonResponse</span><span class="p">(</span><span class="n">velp_content</span><span class="p">)</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;no-store, no-cache, must-revalidate&#39;</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:doc_id&gt;/get_velp_groups&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="get_velp_groups"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.get_velp_groups">[docs]</a><span class="k">def</span> <span class="nf">get_velp_groups</span><span class="p">(</span><span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets all velp groups for document user has access to by using VelpGroupSelection table.</span>
+
+<span class="sd">    :param doc_id: ID of document</span>
+<span class="sd">    :return: List of dictionaries containing velp group information</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+
+    <span class="n">velp_groups</span> <span class="o">=</span> <span class="n">get_velp_groups_from_tree</span><span class="p">(</span><span class="n">doc_id</span><span class="p">)</span>
+    <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">add_groups_to_document</span><span class="p">(</span><span class="n">velp_groups</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+
+    <span class="n">user_groups</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">get_user_groups</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+    <span class="n">user_group_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">user_groups</span><span class="p">:</span>
+        <span class="n">user_group_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span>
+    <span class="n">imported_groups</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">get_groups_from_imported_table</span><span class="p">(</span><span class="n">user_group_list</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">)</span>
+    <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">add_groups_to_document</span><span class="p">(</span><span class="n">imported_groups</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+
+    <span class="n">all_velp_groups</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">get_groups_from_document_table</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+
+    <span class="c1"># if timdb.users.has_manage_access(user_id, doc_id):</span>
+    <span class="c1">#    timdb.velp_groups.add_groups_to_default_table(all_velp_groups, doc_id)</span>
+
+    <span class="c1"># SQLite uses 1/0 instead of True/False, change them to True/False for JavaScript side</span>
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">all_velp_groups</span><span class="p">:</span>
+        <span class="n">group</span><span class="p">[</span><span class="s1">&#39;edit_access&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_edit_access</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">group</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">jsonResponse</span><span class="p">(</span><span class="n">all_velp_groups</span><span class="p">)</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;no-store, no-cache, must-revalidate&#39;</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:doc_id&gt;/get_velp_group_personal_selections&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="get_velp_group_personal_selections"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.get_velp_group_personal_selections">[docs]</a><span class="k">def</span> <span class="nf">get_velp_group_personal_selections</span><span class="p">(</span><span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Gets default velp group selections for velp groups user has access to in document.</span>
+
+<span class="sd">    :param doc_id: ID of document</span>
+<span class="sd">    :return: Dictionary containing list of selected velp groups for each target area IDs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+    <span class="n">velp_group_selections</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">get_personal_selections_for_velp_groups</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">jsonResponse</span><span class="p">(</span><span class="n">velp_group_selections</span><span class="p">)</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;no-store, no-cache, must-revalidate&#39;</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:doc_id&gt;/get_velp_group_default_selections&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="get_velp_group_default_selections"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.get_velp_group_default_selections">[docs]</a><span class="k">def</span> <span class="nf">get_velp_group_default_selections</span><span class="p">(</span><span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Gets default velp group selections for velp groups user has access to in document.</span>
+
+<span class="sd">    :param doc_id: ID of document</span>
+<span class="sd">    :return: Dictionary containing list of default velp groups for each target area IDs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+    <span class="n">velp_group_defaults</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">get_default_selections_for_velp_groups</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">jsonResponse</span><span class="p">(</span><span class="n">velp_group_defaults</span><span class="p">)</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;no-store, no-cache, must-revalidate&#39;</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:doc_id&gt;/get_velp_labels&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="get_velp_labels"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.get_velp_labels">[docs]</a><span class="k">def</span> <span class="nf">get_velp_labels</span><span class="p">(</span><span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;str&#39;</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Gets all velp labels for document user has access to by using VelpGroupSelection table.</span>
+
+<span class="sd">    :param doc_id: ID of document</span>
+<span class="sd">    :return: List of dicts containing velp label IDs and content for the document</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="c1"># Todo select language.</span>
+    <span class="n">label_data</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velps</span><span class="o">.</span><span class="n">get_velp_label_content_for_document</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">getCurrentUserId</span><span class="p">())</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">jsonResponse</span><span class="p">(</span><span class="n">label_data</span><span class="p">)</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;no-store, no-cache, must-revalidate&#39;</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/add_velp&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="add_velp"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.add_velp">[docs]</a><span class="k">def</span> <span class="nf">add_velp</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Creates a new velp and adds it to velp groups user chose.</span>
+
+<span class="sd">    Required key(s):</span>
+<span class="sd">        - content: content of the new velp</span>
+<span class="sd">        - velp_groups: list of velp group IDs of the new velp.</span>
+
+<span class="sd">    Optional key(s):</span>
+<span class="sd">        - points: velp points</span>
+<span class="sd">        - language_id: language ID</span>
+<span class="sd">        - icon_id: icon ID</span>
+<span class="sd">        - valid_until: time stamp to until velp is still valid</span>
+<span class="sd">        - labels: labels of the velp</span>
+<span class="sd">        - visible_to: visibility group of the velp (1-4)</span>
+
+<span class="sd">    :return: ID of new velp</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get_json</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">velp_content</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span>
+        <span class="n">velp_groups</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;velp_groups&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Missing data: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">velp_content</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Empty content string.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Optional stuff</span>
+    <span class="c1"># .get returns null instead of throwing if data is missing.</span>
+    <span class="n">default_points</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;points&#39;</span><span class="p">)</span>
+    <span class="n">language_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;language_id&#39;</span><span class="p">)</span>
+    <span class="n">icon_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;icon_id&#39;</span><span class="p">)</span>
+    <span class="n">valid_until</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;valid_until&#39;</span><span class="p">)</span>
+    <span class="n">velp_labels</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;labels&#39;</span><span class="p">)</span>
+    <span class="n">visible_to</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">(</span><span class="s1">&#39;visible_to&#39;</span><span class="p">)</span>
+
+    <span class="n">default_points</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">default_points</span><span class="p">)</span> <span class="k">if</span> <span class="n">default_points</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">icon_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">icon_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">icon_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="n">verifyLoggedIn</span><span class="p">()</span>
+    <span class="n">current_user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+
+    <span class="n">velp_groups_rights</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">can_add_velp</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># Check where user has edit rights and only add new velp to those</span>
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">velp_groups</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_edit_access</span><span class="p">(</span><span class="n">current_user_id</span><span class="p">,</span> <span class="n">group</span><span class="p">):</span>
+            <span class="n">can_add_velp</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">velp_groups_rights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No edit access for velp group:&quot;</span><span class="p">,</span> <span class="n">group</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">can_add_velp</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Can&#39;t add velp without any velp groups&quot;</span><span class="p">)</span>
+
+    <span class="n">velp_groups</span> <span class="o">=</span> <span class="n">velp_groups_rights</span>
+
+    <span class="n">new_velp_id</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velps</span><span class="o">.</span><span class="n">create_new_velp</span><span class="p">(</span><span class="n">current_user_id</span><span class="p">,</span> <span class="n">velp_content</span><span class="p">,</span> <span class="n">default_points</span><span class="p">,</span>
+                                              <span class="n">icon_id</span><span class="p">,</span> <span class="n">valid_until</span><span class="p">,</span> <span class="n">language_id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">velp_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">timdb</span><span class="o">.</span><span class="n">velps</span><span class="o">.</span><span class="n">add_labels_to_velp</span><span class="p">(</span><span class="n">new_velp_id</span><span class="p">,</span> <span class="n">velp_labels</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">velp_groups</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">group_id</span> <span class="ow">in</span> <span class="n">velp_groups</span><span class="p">:</span>
+            <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">add_velp_to_group</span><span class="p">(</span><span class="n">new_velp_id</span><span class="p">,</span> <span class="n">group_id</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;No velp groups&quot;</span><span class="p">)</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">jsonResponse</span><span class="p">(</span><span class="n">new_velp_id</span><span class="p">)</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;no-store, no-cache, must-revalidate&#39;</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:doc_id&gt;/update_velp&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="update_velp"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.update_velp">[docs]</a><span class="k">def</span> <span class="nf">update_velp</span><span class="p">(</span><span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Updates the velp&#39;s data.</span>
+
+<span class="sd">    Required key(s):</span>
+<span class="sd">        - id: velp ID</span>
+<span class="sd">        - content: velp content</span>
+<span class="sd">        - language_id: language ID</span>
+<span class="sd">        - velp groups: list of velp group IDs.</span>
+
+<span class="sd">    Optional key(s):</span>
+<span class="sd">        - points: velp points</span>
+<span class="sd">        - icon_id: velp icon</span>
+<span class="sd">        - labels: velp labels</span>
+
+<span class="sd">    :param doc_id: ID of document</span>
+<span class="sd">    :return: okJsonResponse</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">json_data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get_json</span><span class="p">()</span>
+        <span class="n">velp_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
+        <span class="n">new_content</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
+        <span class="n">language_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;language_id&#39;</span><span class="p">)</span>
+        <span class="n">velp_groups</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;velp_groups&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Missing data &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">new_content</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Empty content string.&quot;</span><span class="p">)</span>
+
+    <span class="n">default_points</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;points&#39;</span><span class="p">)</span>
+    <span class="n">icon_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;icon_id&#39;</span><span class="p">)</span>
+    <span class="n">new_labels</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;labels&#39;</span><span class="p">)</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="n">verifyLoggedIn</span><span class="p">()</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+    <span class="n">edit_access</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">all_velp_groups</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">get_groups_for_velp</span><span class="p">(</span><span class="n">velp_id</span><span class="p">)</span>
+
+    <span class="c1"># Check that user has edit access to velp via any velp group in database</span>
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">all_velp_groups</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_edit_access</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">group</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]):</span>
+            <span class="n">edit_access</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">break</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">edit_access</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">403</span><span class="p">,</span> <span class="s2">&quot;No edit access to velp via any velp group.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check which velp groups velp should belong to after update</span>
+    <span class="n">edit_access</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">groups_to_remove</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">groups_to_add</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Add all velp group ids user has edit access to in a document to a remove list</span>
+    <span class="n">doc_groups</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">get_groups_from_document_table</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">doc_groups</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_edit_access</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">group</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]):</span>
+            <span class="n">groups_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span>
+            <span class="n">edit_access</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># Check that user has edit access to velp groups in given velp group list and add them to an add list</span>
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">velp_groups</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_edit_access</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">group</span><span class="p">):</span>
+            <span class="n">edit_access</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">groups_to_add</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+
+    <span class="c1"># Add and remove velp from velp groups</span>
+    <span class="k">if</span> <span class="n">edit_access</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups_to_add</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">remove_velp_from_groups</span><span class="p">(</span><span class="n">velp_id</span><span class="p">,</span> <span class="n">groups_to_remove</span><span class="p">)</span>
+        <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">add_velp_to_groups</span><span class="p">(</span><span class="n">velp_id</span><span class="p">,</span> <span class="n">groups_to_add</span><span class="p">)</span>
+
+    <span class="n">old_content</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velps</span><span class="o">.</span><span class="n">get_latest_velp_version</span><span class="p">(</span><span class="n">velp_id</span><span class="p">,</span> <span class="n">language_id</span><span class="p">)[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span>
+    <span class="n">old_labels</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velps</span><span class="o">.</span><span class="n">get_velp_label_ids_for_velp</span><span class="p">(</span><span class="n">velp_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">old_content</span> <span class="o">!=</span> <span class="n">new_content</span><span class="p">:</span>
+        <span class="c1"># Todo this does not really work correctly, now any update to any language creates a new version, and we can not</span>
+        <span class="c1"># produce different contents with the same version but different language.</span>
+
+        <span class="n">version_id</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velps</span><span class="o">.</span><span class="n">create_velp_version</span><span class="p">(</span><span class="n">velp_id</span><span class="p">)</span>
+        <span class="n">timdb</span><span class="o">.</span><span class="n">velps</span><span class="o">.</span><span class="n">create_velp_content</span><span class="p">(</span><span class="n">version_id</span><span class="p">,</span> <span class="n">language_id</span><span class="p">,</span> <span class="n">new_content</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">old_labels</span> <span class="o">!=</span> <span class="n">new_labels</span><span class="p">:</span>
+        <span class="n">timdb</span><span class="o">.</span><span class="n">velps</span><span class="o">.</span><span class="n">update_velp_labels</span><span class="p">(</span><span class="n">velp_id</span><span class="p">,</span> <span class="n">new_labels</span><span class="p">)</span>
+    <span class="n">timdb</span><span class="o">.</span><span class="n">velps</span><span class="o">.</span><span class="n">update_velp</span><span class="p">(</span><span class="n">velp_id</span><span class="p">,</span> <span class="n">default_points</span><span class="p">,</span> <span class="n">icon_id</span><span class="p">)</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">okJsonResponse</span><span class="p">()</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;no-store, no-cache, must-revalidate&#39;</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/add_velp_label&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<div class="viewcode-block" id="add_label"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.add_label">[docs]</a><span class="k">def</span> <span class="nf">add_label</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Creates new velp label.</span>
+
+<span class="sd">    Required key(s):</span>
+<span class="sd">        - content: label content</span>
+
+<span class="sd">    Optional key(s):</span>
+<span class="sd">        - language_id: language ID of the label.</span>
+
+<span class="sd">    :return: ID of new velp label</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get_json</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Missing data: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">language_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;language_id&#39;</span><span class="p">)</span>
+    <span class="n">language_id</span> <span class="o">=</span> <span class="s2">&quot;FI&quot;</span> <span class="k">if</span> <span class="n">language_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">language_id</span>
+
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="n">label_id</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velps</span><span class="o">.</span><span class="n">create_velp_label</span><span class="p">(</span><span class="n">language_id</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">label_id</span><span class="p">)</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/update_velp_label&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<div class="viewcode-block" id="update_velp_label"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.update_velp_label">[docs]</a><span class="k">def</span> <span class="nf">update_velp_label</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Updates velp label content.</span>
+
+<span class="sd">    Required key(s):</span>
+<span class="sd">        - content: label content</span>
+<span class="sd">        - id: label ID.</span>
+
+<span class="sd">    :return: okJsonResponse</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get_json</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span>
+        <span class="n">velp_label_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Missing data: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">language_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;language_id&#39;</span><span class="p">)</span>
+    <span class="n">language_id</span> <span class="o">=</span> <span class="s2">&quot;FI&quot;</span> <span class="k">if</span> <span class="n">language_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">language_id</span>
+
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="c1"># TODO: Add some check so a random person can&#39;t use the route?</span>
+    <span class="n">timdb</span><span class="o">.</span><span class="n">velps</span><span class="o">.</span><span class="n">update_velp_label</span><span class="p">(</span><span class="n">velp_label_id</span><span class="p">,</span> <span class="n">language_id</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">okJsonResponse</span><span class="p">()</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;no-store, no-cache, must-revalidate&#39;</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:doc_id&gt;/change_selection&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<div class="viewcode-block" id="change_selection"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.change_selection">[docs]</a><span class="k">def</span> <span class="nf">change_selection</span><span class="p">(</span><span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Change selection for velp group in users VelpGroupSelection in current document.</span>
+
+<span class="sd">    Required key(s):</span>
+<span class="sd">        - id: velp group iD</span>
+<span class="sd">        - target_type: target type of the selection (document, paragraph)</span>
+<span class="sd">        - target_id: target id of the selection (paragraph id or 0 for the whole document)</span>
+<span class="sd">        - selection_type: &#39;show&#39; or &#39;default&#39;.</span>
+
+<span class="sd">    :param doc_id: ID of document</span>
+<span class="sd">    :return: okJsonResponse</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get_json</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">velp_group_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+        <span class="n">target_type</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;target_type&#39;</span><span class="p">]</span>
+        <span class="n">target_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;target_id&#39;</span><span class="p">]</span>
+        <span class="n">selection_type</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;selection_type&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Missing data: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">verifyLoggedIn</span><span class="p">()</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">selection_type</span> <span class="o">==</span> <span class="s2">&quot;show&quot;</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">selection</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;show&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Missing data: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">change_selection</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">selection</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">selection_type</span> <span class="o">==</span> <span class="s2">&quot;default&quot;</span> <span class="ow">and</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_manage_access</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">selection</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Missing data: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">change_default_selection</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">selection</span><span class="p">)</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">okJsonResponse</span><span class="p">()</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;no-store, no-cache, must-revalidate&#39;</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:doc_id&gt;/change_all_selections&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<div class="viewcode-block" id="change_all_selections"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.change_all_selections">[docs]</a><span class="k">def</span> <span class="nf">change_all_selections</span><span class="p">(</span><span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Change selection for velp group in users VelpGroupSelection in current document.</span>
+
+<span class="sd">    Required key(s):</span>
+<span class="sd">        - selection: 1 or 0 (true or false)</span>
+<span class="sd">        - target_type: target type of the selection (document, paragraph)</span>
+<span class="sd">        - target_id: target id of the selection (paragraph id or 0 for the whole document)</span>
+<span class="sd">        - selection_type: &#39;show&#39; or &#39;default&#39;.</span>
+
+<span class="sd">    :param doc_id: ID of document</span>
+<span class="sd">    :return: okJsonResponse</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get_json</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">selection</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;selection&#39;</span><span class="p">]</span>
+        <span class="n">target_type</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;target_type&#39;</span><span class="p">]</span>
+        <span class="n">target_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;target_id&#39;</span><span class="p">]</span>
+        <span class="n">selection_type</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;selection_type&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Missing data: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">verifyLoggedIn</span><span class="p">()</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">selection_type</span> <span class="o">==</span> <span class="s2">&quot;show&quot;</span><span class="p">:</span>
+        <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">change_all_target_area_selections</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">selection</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">selection_type</span> <span class="o">==</span> <span class="s2">&quot;default&quot;</span> <span class="ow">and</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_manage_access</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">):</span>
+        <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">change_all_target_area_default_selections</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">selection</span><span class="p">)</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">okJsonResponse</span><span class="p">()</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;no-store, no-cache, must-revalidate&#39;</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:doc_id&gt;/change_default_selection&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<div class="viewcode-block" id="change_default_selection"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.change_default_selection">[docs]</a><span class="k">def</span> <span class="nf">change_default_selection</span><span class="p">(</span><span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Change selection for velp group in users VelpGroupSelection in current document.</span>
+
+<span class="sd">    Required key(s):</span>
+<span class="sd">        - id: velp group ID</span>
+<span class="sd">        - target_type: target type of the selection (document, paragraph)</span>
+<span class="sd">        - target_id: target id of the selection (paragraph id or 0 for the whole document)</span>
+<span class="sd">        - default: current default value.</span>
+
+<span class="sd">    :param doc_id: ID of document</span>
+<span class="sd">    :return: okJsonResponse</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get_json</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">velp_group_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+        <span class="n">target_type</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;target_type&#39;</span><span class="p">]</span>
+        <span class="n">target_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;target_id&#39;</span><span class="p">]</span>
+        <span class="n">selection</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Missing data: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">verifyLoggedIn</span><span class="p">()</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_manage_access</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">):</span>
+        <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">change_default_selection</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">velp_group_id</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">selection</span><span class="p">)</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">okJsonResponse</span><span class="p">()</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;no-store, no-cache, must-revalidate&#39;</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:doc_id&gt;/reset_target_area_selections_to_defaults&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="reset_target_area_selections_to_defaults"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.reset_target_area_selections_to_defaults">[docs]</a><span class="k">def</span> <span class="nf">reset_target_area_selections_to_defaults</span><span class="p">(</span><span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Changes user&#39;s personal velp group selections in target area to defaults.</span>
+
+<span class="sd">    Required key(s):</span>
+<span class="sd">        - target_id: target id of the selection (paragraph id or 0 for the whole document)</span>
+
+<span class="sd">    :param doc_id: ID of document</span>
+<span class="sd">    :return: okJsonResponse()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get_json</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">target_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;target_id&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Missing data: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+
+    <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">reset_target_area_selections_to_defaults</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">okJsonResponse</span><span class="p">()</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;no-store, no-cache, must-revalidate&#39;</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:doc_id&gt;/reset_all_selections_to_defaults&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="reset_all_selections_to_defaults"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.reset_all_selections_to_defaults">[docs]</a><span class="k">def</span> <span class="nf">reset_all_selections_to_defaults</span><span class="p">(</span><span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Changes user&#39;s all personal velp group selections in document to defaults.</span>
+
+<span class="sd">    :param doc_id: ID of document</span>
+<span class="sd">    :return: okJsonResponse()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+
+    <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">reset_all_selections_to_defaults</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">okJsonResponse</span><span class="p">()</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;no-store, no-cache, must-revalidate&#39;</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:doc_id&gt;/create_velp_group&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="create_velp_group"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.create_velp_group">[docs]</a><span class="k">def</span> <span class="nf">create_velp_group</span><span class="p">(</span><span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Creates a new velp group.</span>
+
+<span class="sd">    Required key(s):</span>
+<span class="sd">        - name: velp group name</span>
+<span class="sd">        - target_type: document, folder or personal group.</span>
+
+<span class="sd">    :param doc_id: ID of the document</span>
+<span class="sd">    :return: Dictionary containing information of new velp group.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get_json</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">velp_group_name</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+        <span class="n">target_type</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;target_type&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Missing data: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+
+    <span class="n">full_path</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_first_document_name</span><span class="p">(</span><span class="n">doc_id</span><span class="p">)</span>
+    <span class="n">doc_path</span><span class="p">,</span> <span class="n">doc_name</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">split_location</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span>
+
+    <span class="c1"># valid_until = json_data.get(&#39;valid_until&#39;)</span>
+
+    <span class="n">verifyLoggedIn</span><span class="p">()</span>
+    <span class="n">user_group_id</span> <span class="o">=</span> <span class="n">getCurrentUserGroup</span><span class="p">()</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+
+    <span class="c1"># Create a new velp group / document in users/username/velp groups folder</span>
+    <span class="k">if</span> <span class="n">target_type</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">user_name</span> <span class="o">=</span> <span class="n">getCurrentUserName</span><span class="p">()</span>
+        <span class="n">user_velp_path</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">folders</span><span class="o">.</span><span class="n">check_personal_velp_folder</span><span class="p">(</span><span class="n">user_name</span><span class="p">,</span> <span class="n">user_group_id</span><span class="p">)</span>
+        <span class="n">new_group_path</span> <span class="o">=</span> <span class="n">user_velp_path</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">velp_group_name</span>
+        <span class="n">group_exists</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">resolve_doc_id_name</span><span class="p">(</span><span class="n">new_group_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">group_exists</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">velp_group_id</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">create_velp_group</span><span class="p">(</span><span class="n">velp_group_name</span><span class="p">,</span> <span class="n">user_group_id</span><span class="p">,</span> <span class="n">new_group_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Velp group with same name and location exists already.&quot;</span><span class="p">)</span>
+
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">target_type</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">target_id</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">folders</span><span class="o">.</span><span class="n">get_folder_id</span><span class="p">(</span><span class="n">doc_path</span><span class="p">)</span>
+            <span class="n">doc_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">elif</span> <span class="n">target_type</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">target_id</span> <span class="o">=</span> <span class="n">doc_id</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Unknown velp group target type.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_edit_access</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">target_id</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">403</span><span class="p">,</span> <span class="s2">&quot;Edit access is required.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Gives path to either velp groups or velp groups/document name folder</span>
+        <span class="n">velps_folder_path</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">folders</span><span class="o">.</span><span class="n">check_velp_group_folder_path</span><span class="p">(</span><span class="n">doc_path</span><span class="p">,</span> <span class="n">user_group_id</span><span class="p">,</span> <span class="n">doc_name</span><span class="p">)</span>
+
+        <span class="n">new_group_path</span> <span class="o">=</span> <span class="n">velps_folder_path</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">velp_group_name</span>
+        <span class="n">group_exists</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">resolve_doc_id_name</span><span class="p">(</span><span class="n">new_group_path</span><span class="p">)</span>  <span class="c1"># Check name so no duplicates are made</span>
+        <span class="k">if</span> <span class="n">group_exists</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">original_owner</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">folders</span><span class="o">.</span><span class="n">get_owner</span><span class="p">(</span><span class="n">target_id</span><span class="p">)</span>
+            <span class="n">velp_group_id</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">create_velp_group</span><span class="p">(</span><span class="n">velp_group_name</span><span class="p">,</span> <span class="n">original_owner</span><span class="p">,</span> <span class="n">new_group_path</span><span class="p">)</span>
+            <span class="n">rights</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">get_rights_holders</span><span class="p">(</span><span class="n">target_id</span><span class="p">)</span>
+            <span class="c1"># Copy all rights but view</span>
+            <span class="k">for</span> <span class="n">right</span> <span class="ow">in</span> <span class="n">rights</span><span class="p">:</span>
+                <span class="c1"># TODO once someone implements a grant_access that takes access ids instead of strings, change to that</span>
+                <span class="c1"># function.</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">right</span><span class="p">[</span><span class="s1">&#39;access_name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;view&#39;</span><span class="p">:</span>
+                    <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">grant_access</span><span class="p">(</span><span class="n">right</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">],</span> <span class="n">velp_group_id</span><span class="p">,</span> <span class="n">right</span><span class="p">[</span><span class="s1">&#39;access_name&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Velp group with same name and location exists already.&quot;</span><span class="p">)</span>
+
+    <span class="n">created_velp_group</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">velp_group_id</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;target_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;target_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">velp_group_name</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_group_path</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;show&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;edit_access&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;default_group&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+    <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">add_groups_to_document</span><span class="p">([</span><span class="n">created_velp_group</span><span class="p">],</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+    <span class="c1"># TODO Do we want to make just created velp group selected in document immediately?</span>
+    <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">add_groups_to_selection_table</span><span class="p">([</span><span class="n">created_velp_group</span><span class="p">],</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">jsonResponse</span><span class="p">(</span><span class="n">created_velp_group</span><span class="p">)</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;no-store, no-cache, must-revalidate&#39;</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="nd">@velps</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:doc_id&gt;/create_default_velp_group&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="create_default_velp_group"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.create_default_velp_group">[docs]</a><span class="k">def</span> <span class="nf">create_default_velp_group</span><span class="p">(</span><span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a default velp group document or changes existing document to default velp group.</span>
+
+<span class="sd">    :param doc_id: ID of document</span>
+<span class="sd">    :return: Dictionary containing information of new default velp group.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+
+    <span class="n">full_path</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_first_document_name</span><span class="p">(</span><span class="n">doc_id</span><span class="p">)</span>
+    <span class="n">doc_path</span><span class="p">,</span> <span class="n">doc_name</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">split_location</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span>
+
+    <span class="n">verifyLoggedIn</span><span class="p">()</span>
+    <span class="n">user_group_id</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_owner</span><span class="p">(</span><span class="n">doc_id</span><span class="p">)</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+
+    <span class="c1"># if not timdb.users.is_user_id_in_group_id(user_id, user_group_id):</span>
+    <span class="c1">#     print(&quot;User is not owner of current document&quot;)</span>
+    <span class="c1">#     return abort(403, &quot;User is not owner of current document&quot;)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_edit_access</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;User has no edit access to current document&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">403</span><span class="p">,</span> <span class="s2">&quot;User has no edit access to current document&quot;</span><span class="p">)</span>
+
+    <span class="n">velps_folder_path</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">folders</span><span class="o">.</span><span class="n">check_velp_group_folder_path</span><span class="p">(</span><span class="n">doc_path</span><span class="p">,</span> <span class="n">user_group_id</span><span class="p">,</span> <span class="n">doc_name</span><span class="p">)</span>
+    <span class="n">velp_group_name</span> <span class="o">=</span> <span class="n">doc_name</span> <span class="o">+</span> <span class="s2">&quot;_default&quot;</span>
+
+    <span class="n">new_group_path</span> <span class="o">=</span> <span class="n">velps_folder_path</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">velp_group_name</span>
+    <span class="n">group_exists</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">resolve_doc_id_name</span><span class="p">(</span><span class="n">new_group_path</span><span class="p">)</span>  <span class="c1"># Check name so no duplicates are made</span>
+    <span class="k">if</span> <span class="n">group_exists</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">velp_group_id</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">create_default_velp_group</span><span class="p">(</span><span class="n">velp_group_name</span><span class="p">,</span> <span class="n">user_group_id</span><span class="p">,</span> <span class="n">new_group_path</span><span class="p">)</span>
+        <span class="n">created_new_group</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">rights</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">get_rights_holders</span><span class="p">(</span><span class="n">doc_id</span><span class="p">)</span>
+        <span class="c1"># Copy all rights but view</span>
+        <span class="k">for</span> <span class="n">right</span> <span class="ow">in</span> <span class="n">rights</span><span class="p">:</span>
+            <span class="c1"># TODO once someone implements a grant_access that takes access ids instead of strings, change to that</span>
+            <span class="c1"># function.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">right</span><span class="p">[</span><span class="s1">&#39;access_name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;view&#39;</span><span class="p">:</span>
+                <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">grant_access</span><span class="p">(</span><span class="n">right</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">],</span> <span class="n">velp_group_id</span><span class="p">,</span> <span class="n">right</span><span class="p">[</span><span class="s1">&#39;access_name&#39;</span><span class="p">])</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">default_id</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_document_id</span><span class="p">(</span><span class="n">new_group_path</span><span class="p">)</span>
+        <span class="n">velp_group_id</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">make_document_a_velp_group</span><span class="p">(</span><span class="n">velp_group_name</span><span class="p">,</span> <span class="n">default_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">update_velp_group_to_default_velp_group</span><span class="p">(</span><span class="n">default_id</span><span class="p">)</span>
+        <span class="n">created_new_group</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">created_velp_group</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">velp_group_id</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;target_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;target_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">velp_group_name</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_group_path</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;show&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;edit_access&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;default_group&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">created_velp_group</span><span class="p">[</span><span class="s1">&#39;created_new_group&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">created_new_group</span>
+
+    <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">add_groups_to_document</span><span class="p">([</span><span class="n">created_velp_group</span><span class="p">],</span> <span class="n">doc_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+
+    <span class="c1"># TODO Do we want to make just created default velp group selected in document immediately?</span>
+    <span class="c1"># timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, user_id)</span>
+
+    <span class="k">return</span> <span class="n">jsonResponse</span><span class="p">(</span><span class="n">created_velp_group</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_velp_groups_from_tree"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.velp.get_velp_groups_from_tree">[docs]</a><span class="k">def</span> <span class="nf">get_velp_groups_from_tree</span><span class="p">(</span><span class="n">document_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns all velp groups found from tree from document to root and from users own velp folder</span>
+
+<span class="sd">    Checks document&#39;s own velp group folder first, then default velp group folders going up all the</span>
+<span class="sd">    way to root. Doesn&#39;t branch side ways or down, only checks parents. After root has been reached,</span>
+<span class="sd">    finally checks users own velp group folder.</span>
+
+<span class="sd">    Checks that user has minimum of view right for velp groups.</span>
+
+<span class="sd">    :param document_id: ID of document</span>
+<span class="sd">    :return: List of document / velp group information of found hits.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">doc_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">document_id</span><span class="p">)</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="n">full_path</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_first_document_name</span><span class="p">(</span><span class="n">doc_id</span><span class="p">)</span>
+    <span class="n">doc_path</span><span class="p">,</span> <span class="n">doc_name</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">split_location</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span>
+    <span class="n">velp_group_folder</span> <span class="o">=</span> <span class="s2">&quot;velp groups&quot;</span>
+
+    <span class="n">current_path</span> <span class="o">=</span> <span class="n">doc_path</span>
+    <span class="k">if</span> <span class="n">current_path</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">velp_groups_path</span> <span class="o">=</span> <span class="n">current_path</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">velp_group_folder</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># Documents in root folder don&#39;t like / after empty path</span>
+        <span class="n">velp_groups_path</span> <span class="o">=</span> <span class="n">velp_group_folder</span>
+    <span class="n">doc_velp_path</span> <span class="o">=</span> <span class="n">velp_groups_path</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">doc_name</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">getCurrentUserName</span><span class="p">()</span>
+    <span class="n">personal_velps_path</span> <span class="o">=</span> <span class="s2">&quot;users/&quot;</span> <span class="o">+</span> <span class="n">username</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">velp_group_folder</span>
+    <span class="n">owner_group_id</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># TODO: Choose owner group correctly, now uses All Korppi users</span>
+
+    <span class="n">velp_groups</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Velp groups for areas, plugins etc</span>
+    <span class="n">deeper_path</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">folders</span><span class="o">.</span><span class="n">get_folders</span><span class="p">(</span><span class="n">doc_velp_path</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">deeper_path</span><span class="p">:</span>
+        <span class="n">full_path</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="s1">&#39;fullname&#39;</span><span class="p">]</span>
+        <span class="n">found_velp_groups</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_documents_in_folder</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">found_velp_groups</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_view_access</span><span class="p">(</span><span class="n">getCurrentUserId</span><span class="p">(),</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_document_id</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])):</span>
+                <span class="n">v</span><span class="p">[</span><span class="s1">&#39;target_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">v</span><span class="p">[</span><span class="s1">&#39;target_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">velp_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+    <span class="c1"># Document&#39;s own velp group</span>
+    <span class="k">if</span> <span class="n">current_path</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">found_velp_groups</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_documents_in_folder</span><span class="p">(</span><span class="n">current_path</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">velp_group_folder</span> <span class="o">+</span>
+                                                                    <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">doc_name</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># Documents in root folder don&#39;t like / after empty path</span>
+        <span class="n">found_velp_groups</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_documents_in_folder</span><span class="p">(</span><span class="n">velp_group_folder</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">doc_name</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">found_velp_groups</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_view_access</span><span class="p">(</span><span class="n">getCurrentUserId</span><span class="p">(),</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_document_id</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])):</span>
+            <span class="n">v</span><span class="p">[</span><span class="s1">&#39;target_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">v</span><span class="p">[</span><span class="s1">&#39;target_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">velp_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+    <span class="c1"># Velp group folder when going towards root in tree</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">current_path</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">found_velp_groups</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_documents_in_folder</span><span class="p">(</span><span class="n">current_path</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">velp_group_folder</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">found_velp_groups</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_documents_in_folder</span><span class="p">(</span><span class="n">velp_group_folder</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">found_velp_groups</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_view_access</span><span class="p">(</span><span class="n">getCurrentUserId</span><span class="p">(),</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_document_id</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])):</span>
+                <span class="n">v</span><span class="p">[</span><span class="s1">&#39;target_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">v</span><span class="p">[</span><span class="s1">&#39;target_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">velp_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">current_path</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">current_path</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">folders</span><span class="o">.</span><span class="n">split_location</span><span class="p">(</span><span class="n">current_path</span><span class="p">)</span>
+
+    <span class="c1"># User&#39;s own velp groups</span>
+    <span class="n">found_velp_groups</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_documents_in_folder</span><span class="p">(</span><span class="n">personal_velps_path</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">found_velp_groups</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_view_access</span><span class="p">(</span><span class="n">getCurrentUserId</span><span class="p">(),</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_document_id</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])):</span>
+            <span class="n">v</span><span class="p">[</span><span class="s1">&#39;target_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">v</span><span class="p">[</span><span class="s1">&#39;target_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">velp_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">velp_groups</span><span class="p">)]</span>  <span class="c1"># Remove possible doubles</span>
+
+    <span class="c1"># Add found documents to VelpGroup table if they weren&#39;t there yet</span>
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+        <span class="n">id_number</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+        <span class="n">is_velp_group</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">is_id_velp_group</span><span class="p">(</span><span class="n">id_number</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_velp_group</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">group_name</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">split_location</span><span class="p">(</span><span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">get_first_document_name</span><span class="p">(</span><span class="n">id_number</span><span class="p">))</span>
+            <span class="n">timdb</span><span class="o">.</span><span class="n">velp_groups</span><span class="o">.</span><span class="n">make_document_a_velp_group</span><span class="p">(</span><span class="n">group_name</span><span class="p">,</span> <span class="n">id_number</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">results</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Timber project authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
