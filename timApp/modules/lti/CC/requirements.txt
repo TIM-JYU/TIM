@@ -1,0 +1,6 @@
+urllib3
+lxml
+requests
+xmltodict
+oauth2
+bs4

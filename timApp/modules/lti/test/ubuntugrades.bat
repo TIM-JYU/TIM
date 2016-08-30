@@ -1,0 +1,1 @@
+curl -L -X POST -H "Content-Type: application/xml" --data @grades.xml http://192.168.43.111/grades/

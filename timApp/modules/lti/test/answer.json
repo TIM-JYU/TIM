@@ -1,0 +1,14 @@
+{
+    "markup": {
+        'stem': 'Harjoitusautomaattia käytetään tuomalla hiiri tämän laatikon päälle ja painamalla nappia Aloita kun se ilmestyy ruudulle.',
+    },
+    "taskID": "ltidemo1",
+    "input": {
+        "markup": {
+            "user_id": "josakepp",
+            "taskId": "ltidemo1"
+        },
+        "solution": "x-1"
+    },
+    "state": "{\"tries\": 1, \"solution\": \"x-1\"}"
+}

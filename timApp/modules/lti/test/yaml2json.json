@@ -1,0 +1,28 @@
+[		
+{
+	"user_id": "pealkasa",
+	
+	"markup": {
+		"-nohex": true,
+		"-lazy": true,
+		"-header": "Eka Quiz",
+		"-stem": "Ensimmäinen kysymysjoukko Moodlesta.",
+		"lti_message_type": "basic-lti-launch-request",
+		"lti_version": "LTI-1p0",
+		"launch_url": "http://timstack.it.jyu.fi:8080/moodle/local/ltiprovider/tool.php?id=1",
+		"-consumer_secret": "__lti_secret__",
+		"consumer_key": "__consumer_key__",
+		"resource_link_id": "tim.jyu.fi",
+		"lis_result_sourcedid": "__sourcedid__",
+		"lis_outcome_service_url": "http://timstack.it.jyu.fi/grades/",
+		"lis_course_offering_sourcedid": "DD-ST101",
+		"lis_course_section_sourcedid": "DD-ST101:C1",
+		"lis_person_contact_email_primary": "jbaird@uni.ac.uk",
+		"lis_person_name_family": "Baird",
+		"lis_person_name_full": "John Logie Baird",
+		"lis_person_name_given": "John",
+		"lis_person_sourcedid": "sis:942a8dd9"
+	},
+	"taskID-": "oma-lti-json"
+}
+]

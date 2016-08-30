@@ -1,0 +1,1 @@
+curl -L -X POST -H "Content-Type: application/json" --data @yaml2json.json timstack.it.jyu.fi:50000/multihtml
