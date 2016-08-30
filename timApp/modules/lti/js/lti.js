@@ -44,12 +44,8 @@ ltiApp.directiveTemplate = function () {
                 'Aloita alusta' +
             '</button>' +
             // Default state
-            '<button ng-if="' + "state === 'default' && use_lti" + '" class="btn btn-success" ng-click="run()">' +
+            '<button ng-if="' + "state === 'default'" + '" class="btn btn-success" ng-click="run()">' +
                 'Aloita' +
-            '</button>' +
-            // Login
-            '<button ng-if="' + "state === 'default' && !use_lti" + '" class="btn btn-success" ng-click="runNoLTI()">' +
-                'Aloita kirjautumalla sisään' +
             '</button>' +
             // Inactive state
             '<button ng-if="' + "state === 'inactive'" + '" class="btn btn-danger" ng-click="forceOpen()">' +
@@ -85,6 +81,14 @@ ltiApp.directiveTemplate = function () {
         '</iframe>' +
 
         '<div class="lti lti-text">' +
+            '<p ng-if="!use_lti" class="login-text">' +
+                'Jos et ole kirjautunut Moodleen, ' +
+                    '<button ng-click="openLoginPage()">' +
+                        'kirjaudu ensin sisään' +
+                    '</button>. ' +
+                'Tämän jälkeen voit aloittaa tehtävän painamalla "Aloita".</p>' +
+                '<p ng-if="!use_lti" class="login-text">Jos jokin muu tehtävä tulee esiin, voit siirtyä oikeean tehtävään "Aloita" tai "Aloita alusta" painikkeilla.' +
+            '</p>' +
             '<pre class="lti" ng-if="isInactive()">{{::inactiveText}}</pre>' +
             '<pre ng-if="use_js && use_lti" class="lti">Pisteesi tehtävästä: {{grade}}</pre>' +
         '</div>' +
@@ -217,7 +221,7 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
     };
 
     $scope.updateGrade = function() {
-        $http.get("/lti/grades?hash=" + $scope.hash)
+        $http.get("../lti/grades?hash=" + $scope.hash)
             .then(function(res) {
                 var newGrade = res.data;
                 var lastSaved = $scope.lastSaved;
@@ -233,14 +237,25 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
 
     // Called when "Aja" button is pressed.
     $scope.run = function() {
-        $scope.iframe.src = $sce.trustAsResourceUrl('/lti/getform?hash=' + $scope.hash);
+        var url = "";
+        if ($scope.use_lti) {
+            url = $sce.trustAsResourceUrl('../lti/getform?hash=' + $scope.hash);
+            //$scope.iframe.src = url;
+        } else {
+            url = $sce.trustAsResourceUrl('../lti/getlink?page=' + $scope.view_url);
+            //$scope.reload(url, false);
+        }
+        $scope.iframe.src = url;
         ltiApp.container.update($scope, 'active');
     };
 
-    $scope.runNoLTI = function() {
-        console.log($scope.view_url)
-        $scope.iframe.src = $sce.trustAsResourceUrl($scope.view_url);
-        ltiApp.container.update($scope, 'active');
+    $scope.openLoginPage = function() {
+        var url = $sce.trustAsResourceUrl('../lti/getlink?page=' + $scope.login_url);
+        if (!$scope.iframe.src) {
+            $scope.iframe.src = url;
+        } else {
+            $scope.reload(url, false); // Forces the <iframe> to load login page always.
+        }
     };
 
     $scope.close = function() {
@@ -252,10 +267,15 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
         return is_sure;
     };
 
-    $scope.reload = function() {
-        var is_sure = confirm("Menetät työsi aloittamalla tehtävän uudestaan. Oletko varma?");
-        if (is_sure) {
-            document.getElementById($scope.iframe.id).src = $scope.iframe.src;
+    $scope.reload = function(url, confirmation) {
+        url = url || $scope.iframe.src;
+        if (confirmation === true || confirmation === undefined) {
+            var is_sure = confirm("Menetät työsi aloittamalla tehtävän uudestaan. Oletko varma?");
+        }
+        if (!confirmation || is_sure) {
+            document.getElementById($scope.iframe.id).src = url;
+        } else {
+            $scope.iframe.src = url;
         }
     };
 
@@ -291,8 +311,8 @@ ltiApp.initScope = function (scope, element, attrs) {
 
     // Etsitään kullekin attribuutille arvo joko scope.attrs tai attrs-parametrista. Jos ei ole, käytetään oletusta.
     timHelper.set(scope, attrs, "stem");
-    timHelper.set(scope, attrs, "hash", undefined);     // 'use_lti': true
-    timHelper.set(scope, attrs, "view_url", undefined); // 'use_lti': false
+    timHelper.set(scope, attrs, "hash", undefined); // if 'use_lti' is true
+    timHelper.set(scope, attrs, "view_url", undefined);
     timHelper.set(scope, attrs, "button", "Tallenna");
     //timHelper.set(scope, attrs, "max_grade", 1);
     timHelper.set(scope, attrs, "initgrade", "ei pisteitä");
@@ -300,6 +320,7 @@ ltiApp.initScope = function (scope, element, attrs) {
     //timHelper.set(scope, attrs, "state.oldgrade", -1);
     timHelper.set(scope, attrs, "use_js", true);
     timHelper.set(scope, attrs, "use_lti", true);
+    timHelper.set(scope, attrs, "login_url", "https://moodle.jyu.fi/login/jyulogin.php"); // JY Moodlen login page as default
     timHelper.set(scope, attrs, "state.tries", 0);
     timHelper.set(scope, attrs, "max_tries");
     timHelper.setn(scope, "tid", attrs, ".taskID"); // vain kokeilu että "juuresta" ottaminen toimii
@@ -361,6 +382,9 @@ LTIScope.prototype.doSaveGrade = function(nosave) {
             }
         }
     };
+
+    console.log("taskId", $scope.taskId);
+    console.log("params", params);
 
     if (nosave) params.input.nosave = true;
     var url = "/lti/answer";

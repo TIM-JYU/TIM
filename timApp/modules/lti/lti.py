@@ -28,7 +28,7 @@ users = {} # Dict of all users (keys are user IDs)
 fixed_lti_params = {
     'lti_message_type': 'basic-lti-launch-request',
     'lti_version': 'LTI-1p0',
-    #'launch_url': "http://timstack.it.jyu.fi:8080/moodle/local/ltiprovider/tool.php?id=8",
+    #'tool_url': "http://timstack.it.jyu.fi:8080/moodle/local/ltiprovider/tool.php?id=8",
     'consumer_secret': '__lti_secret__',
     'consumer_key': '__consumer_key__',
     'resource_link_id': 'tim.jyu.fi',
@@ -89,22 +89,22 @@ def CreateConsumer(query: QueryParams = None):
         key = '__consumer_key__'
         secret = '__lti_secret__'
         tim_id = query.get_param('user_id', 'Query exists but no USER_ID')
-        launch_url = query.get_param('launch_url', 'DEFAULT_launch_url')
+        tool_url = query.get_param('tool_url', 'DEFAULT_tool_url')
         view_url = query.get_param('view_url', 'DEFAULT_view_url')
     else:
         key = '__consumer_key__'
         secret = '__lti_secret__'
         tim_id = 'Query does not exist: using default ID'
-        launch_url = 'http://timstack.it.jyu.fi' # Should actually be some 404 page...
+        tool_url = 'http://timstack.it.jyu.fi' # Should actually be some 404 page...
         view_url = 'http://timstack.it.jyu.fi' # Should actually be some 404 page...
 
     # Get question ID that matches given Moodle question URL
     #qid = getQID(question_url)
     #qid = question_url
-    qid = launch_url
+    qid = tool_url
 
     LTI_params = fixed_lti_params
-    LTI_params['launch_url'] = launch_url
+    LTI_params['tool_url'] = tool_url
     LTI_params['user_id'] = tim_id
     LTI_params['lis_person_contact_email_primary'] = tim_id + "@jyu.fi"
     LTI_params['lis_person_sourcedid'] = 'PERSONSOURCEDID_' + tim_id
@@ -113,10 +113,10 @@ def CreateConsumer(query: QueryParams = None):
     LTI_params['lis_person_name_full'] = 'user_id: ' + tim_id
     LTI_params['lis_result_sourcedid'] = tim_id + '_' + qid
 
-    launch_url = LTI_params['launch_url']
+    tool_url = LTI_params['tool_url']
     LTI_credentials = {'consumer_key': key, 'consumer_secret': secret}
 
-    NewConsumer = Consumer(credentials=LTI_credentials, lti_params=LTI_params, tp_url=launch_url)
+    NewConsumer = Consumer(credentials=LTI_credentials, lti_params=LTI_params, tp_url=tool_url)
     return NewConsumer
 
 
@@ -147,6 +147,13 @@ class LtiServer(tim_server.TimServer):
 
         except KeyError as e:
             return self.wout("Did not find any consumer with hash_in_GET: " + hash_in_GET)
+
+    def do_getlink(self):
+
+        do_headers(self, 'text/html')
+        link = str(get_params(self).get_param('page', "DEFAULT LINK"))
+        page_html = '<script>document.location.href="' + link + '";</script>'
+        return self.wout(page_html)
 
     def do_new_consumer(self, query: QueryParams):
 
@@ -201,7 +208,7 @@ class LtiServer(tim_server.TimServer):
                  + "user_id: <input type=\"text\" name=\"user_id\" value=\"consumeri\" size=\"50\">" \
                  + "<input type=\"submit\" value=\"New Consumer\"><br>" \
                  \
-                 + "launch_url: <input type=\"text\" name=\"launch_url\" size=\"100\"" \
+                 + "tool_url: <input type=\"text\" name=\"tool_url\" size=\"100\"" \
                  + "value=\"http://timstack.it.jyu.fi:8080/moodle/local/ltiprovider/tool.php?id=1\">" \
                  \
                  + "</form>"
@@ -286,6 +293,9 @@ class LtiServer(tim_server.TimServer):
 
         if self.path.find('/getform') >= 0:
             return self.do_getform()
+
+        if self.path.find('/getlink') >= 0:
+            return self.do_getlink()
 
         if self.path.find('/getconsumers') >= 0:
             return self.do_getconsumers()
@@ -384,6 +394,8 @@ class LtiServer(tim_server.TimServer):
         JSO_from_YAML_without_hyphens = query.to_json(accept_nonhyphen)
         AngularJS_directive_name = 'lti-runner'  # REMEMBER: Angular.JS treats lti-runner <=> ltiRunner
 
+        use_lti = query.get_param("use_lti", True)
+
         try:
             # Create our LTI Consumer (don't authorize yet!)
             New_Consumer = CreateConsumer(query)
@@ -394,7 +406,8 @@ class LtiServer(tim_server.TimServer):
             List_of_Consumers.update(consumer_hash_dict)
 
             # Store New_Consumer data into global users dict under the question id (qid)
-            qid = JSO_from_YAML_without_hyphens['markup']['launch_url']
+            #qid = JSO_from_YAML_without_hyphens['markup']['tool_url']
+            qid = query.get_param('tool_url', '')
             users[user_id] = users.get(user_id) or {}
             users[user_id][qid] = users[user_id].get(qid) or {}
             users[user_id][qid] = [{'hash': consumer_hash, 'consumer': New_Consumer, 'grade': None}]
@@ -497,8 +510,6 @@ class LtiServer(tim_server.TimServer):
         self.wout(sresult)
 
         print(sresult)
-
-        print("==== end of do_answer ====")
 
 
 if __name__ == '__main__':

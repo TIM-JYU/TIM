@@ -18,3 +18,8 @@ div.lti button {
     justify-content: space-between;
     margin: 5px 10px;
 }
+
+.lti-text > p.login-text {
+    color: rgb(122, 122, 122);
+    margin: 10px;
+}
