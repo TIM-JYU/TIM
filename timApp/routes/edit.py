@@ -13,6 +13,8 @@ from timdb.timdbbase import TimDbException
 from typing import List
 from utils import get_error_html
 from .common import *
+import yaml
+
 
 edit_page = Blueprint('edit_page',
                       __name__,
@@ -183,6 +185,30 @@ def rename_task_ids():
         return jsonResponse({'versions': chg, 'fulltext': doc.export_markdown(), 'duplicates': duplicates})
 
 
+def question_convert_js_to_yaml(md):
+    mdjson = json.loads(md)
+    question = mdjson["question"]
+    del mdjson["question"]
+    mdyaml = yaml.dump(mdjson) # spoils ä and so on..
+    mdyaml = mdyaml.replace("\\xC4","Ä").replace("\\xD6","Ö").replace("\\xC5","Å").replace("\\xE4","ä").replace("\\xF6","ö").replace("\\xE5","å")
+    return '``` {question="' + question + '"}\n'  + mdyaml + '```\n'
+
+
+@edit_page.route("/postParagraphQ/", methods=['POST'])
+def modify_paragraphQ():
+    """
+    Route for modifying a question editor paragraph in a document.
+
+    :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
+    """
+    doc_id, md, par_id, par_next_id = verify_json_params('docId', 'text', 'par', 'par_next')
+    # abort(400, 'Not yet: ' + par_id)
+    md = question_convert_js_to_yaml(md)
+    ret = modify_paragraph_common(doc_id, md, par_id, par_next_id)
+    # ret["questionjson"] = ""
+    return ret
+
+
 @edit_page.route("/postParagraph/", methods=['POST'])
 def modify_paragraph():
     """
@@ -190,8 +216,12 @@ def modify_paragraph():
 
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
     """
-    timdb = getTimDb()
     doc_id, md, par_id, par_next_id = verify_json_params('docId', 'text', 'par', 'par_next')
+    return modify_paragraph_common(doc_id, md, par_id, par_next_id)
+
+
+def modify_paragraph_common(doc_id, md, par_id, par_next_id):
+    timdb = getTimDb()
     verify_edit_access(doc_id)
 
     log_info("Editing file: {}, paragraph {}".format(doc_id, par_id))
@@ -542,14 +572,25 @@ def cancel_save_paragraphs():
     return jsonResponse({"status": "cancel"})
 
 
+@edit_page.route("/newParagraphQ/", methods=["POST"])
+def add_paragraphQ():
+    md, doc_id, par_next_id = verify_json_params('text', 'docId', 'par_next')
+    md = question_convert_js_to_yaml(md)
+    return add_paragraph_common(md, doc_id, par_next_id)
+
+
 @edit_page.route("/newParagraph/", methods=["POST"])
 def add_paragraph():
     """Route for adding a new paragraph to a document.
 
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
     """
-    timdb = getTimDb()
     md, doc_id, par_next_id = verify_json_params('text', 'docId', 'par_next')
+    return add_paragraph_common(md, doc_id, par_next_id)
+
+
+def add_paragraph_common(md, doc_id, par_next_id):
+    timdb = getTimDb()
     verify_edit_access(doc_id)
     doc = get_newest_document(doc_id)
     try:

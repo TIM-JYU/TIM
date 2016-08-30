@@ -565,4 +565,5 @@ def start_app():
             port=5000,
             use_evalex=False,
             use_reloader=False,
+            # debug=True,
             threaded=not (app.config['DEBUG'] and app.config['PROFILE']))

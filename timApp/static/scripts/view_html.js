@@ -425,7 +425,7 @@ timApp.controller("ViewCtrl", [
             })
                 .success(function (data) {
                     sc.json = JSON.parse(data.questionjson);
-                    $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.TITLE});
+                    $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.title});
                     $rootScope.$broadcast("setPreviewJson", {
                         questionjson: sc.json,
                         questionId: sc.qId,
@@ -468,7 +468,7 @@ timApp.controller("ViewCtrl", [
             })
                 .success(function (data) {
                     sc.json = data.questionjson;
-                    $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.TITLE});
+                    $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.title});
                     $rootScope.$broadcast("setPreviewJson", {
                         questionjson: sc.json,
                         questionParId: sc.questionParId,
@@ -1337,12 +1337,22 @@ timApp.controller("ViewCtrl", [
 
             // TODO: Think better way to get the ID of question.
             for (var i = 0; i < questions.length; i++) {
+
                 var img = new Image(30, 30);
                 img.src = questionImage;
                 img.title = questions[i].question_title;
                 var $questionDiv = $("<span>", {
                     class: 'questionAdded', html: img, id: questions[i].question_id
                 });
+                /*
+                var img = new Span(30, 30); // TODO: katso toimiiko
+                // img.src = questionImage;
+                img.title = questions[i].question_title;
+                img.class = "glyphicon-question-sign";
+                var $questionDiv = $("<span>", {
+                    class: 'questionAdded', html: img, id: questions[i].question_id
+                });
+                */
                 $questionsDiv.append($questionDiv);
             }
             return $questionsDiv;

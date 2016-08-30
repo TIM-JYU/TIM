@@ -230,6 +230,11 @@ class DocParagraph:
         """
         question_title = self.is_question()
         if question_title:
+            # class="glyphicon glyphicon-
+            # return self.__set_html('<span class="questionAddedNew glyphicon-question-sign" title="%s" width="30" height="30" ></span>' % question_title)
+            #return self.__set_html(('<button class="questionAdded timButton btn-lg" width="30" height="30" title = "%s"' +
+            #                       '<span class="glyphicon glyphicon-question-sign" aria-hidden="true" > </span>' +
+            #                       '</button>') % question_title) # TODO: tarkista miksi ei näy glyphtinä
             return self.__set_html('<img class="questionAddedNew" title="%s" width="30" height="30" src=/static/images/show-question-icon.png/>' % question_title)
         if self.html is not None:
             return self.html

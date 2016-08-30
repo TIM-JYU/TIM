@@ -30,7 +30,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
         $scope.questionParId = args.questionParId;
         $scope.isLecturer = args.isLecturer;
         $scope.json = args.questionjson;
-        $scope.questionTitle = args.questionjson.TITLE;
+        $scope.questionTitle = args.questionjson.title;
         $scope.askedTime = args.askedTime;
         $scope.clockOffset = args.clockOffset;
         $scope.expl = args.expl;
@@ -106,7 +106,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
         })
             .success(function (data) {
                 var json = JSON.parse(data.json);
-                $rootScope.$broadcast('changeQuestionTitle', {'title': json.TITLE});
+                $rootScope.$broadcast('changeQuestionTitle', {'title': json.title});
                 $rootScope.$broadcast("editQuestion", {
                     "asked_id": $scope.askedId,
                     "json": json,

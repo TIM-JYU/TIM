@@ -165,15 +165,15 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 $scope.ctx = $($scope.canvasId).get(0).getContext("2d");
                 $scope.x = 10;
                 $scope.y = 20;
-                if (typeof question.ANSWERFIELDTYPE !== "undefined" && question.ANSWERFIELDTYPE === "text") {
+                if (typeof question.answerFieldType !== "undefined" && question.answerFieldType === "text") {
                     $scope.isText = true;
                     return;
                 }
                 $scope.isText = false;
                 var labels = [];
                 var emptyData = [];
-                if (angular.isDefined(question.DATA.ROWS)) {
-                    angular.forEach(question.DATA.ROWS, function (row) {
+                if (angular.isDefined(question.data.rows)) {
+                    angular.forEach(question.data.rows, function (row) {
                         var text = row.text;
                         var max = 15;
                         if (text.length > max) text = text.substring(0, max-1) + '...';
@@ -182,16 +182,16 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     });
                 }
 
-                if (angular.isDefined(question.DATA.COLUMNS)) {
-                    angular.forEach(question.DATA.COLUMNS, function (column) {
-                        angular.forEach(column.ROWS, function (row) {
+                if (angular.isDefined(question.data.columns)) {
+                    angular.forEach(question.data.columns, function (column) {
+                        angular.forEach(column.rows, function (row) {
                             labels.push(row.Value);
                             emptyData.push(0);
                         });
                     });
                 }
 
-                if (!(question.TYPE === "matrix" || question.TYPE === "true-false")) {
+                if (!(question.questionType === "matrix" || question.questionType === "true-false")) {
                     labels.push("No answer");
                     emptyData.push(0);
                 }
@@ -199,13 +199,13 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 var usedDataSets = [];
 
 
-                if (question.TYPE === "true-false") {
-                    question.DATA.HEADERS[0] = {"type": "header", "id": 0, "text": "True"};
-                    question.DATA.HEADERS[1] = {"type": "header", "id": 1, "text": "False"};
+                if (question.questionType === "true-false") {
+                    question.data.headers[0] = {"type": "header", "id": 0, "text": "True"};
+                    question.data.headers[1] = {"type": "header", "id": 1, "text": "False"};
                 }
 
-                if (question.TYPE === "matrix" || question.TYPE === "true-false") {
-                    for (var i = 0; i < question.DATA.ROWS[0].COLUMNS.length; i++) {
+                if (question.questionType === "matrix" || question.questionType === "true-false") {
+                    for (var i = 0; i < question.data.rows[0].columns.length; i++) {
                         usedDataSets.push(basicSets[i]);
                         usedDataSets[i].data = emptyData;
                     }
@@ -213,8 +213,8 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     usedDataSets[usedDataSets.length - 1].data = emptyData;
                     usedDataSets[usedDataSets.length - 1].label = "No answer";
 
-                    for (i = 0; i < question.DATA.HEADERS.length; i++) {
-                        usedDataSets[i].label = question.DATA.HEADERS[i].text;
+                    for (i = 0; i < question.data.headers.length; i++) {
+                        usedDataSets[i].label = question.data.headers[i].text;
                     }
                 } else {
                     usedDataSets.push(basicSets[0]);

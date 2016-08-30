@@ -605,6 +605,7 @@ def get_running_lectures(doc_id=None):
 
 @lecture_routes.route('/createLecture', methods=['POST'])
 def create_lecture():
+    # TODO: Check right to create lecture
     if not request.args.get("doc_id") or not request.args.get("start_date") or not request.args.get(
             "end_date") or not request.args.get("lecture_code"):
         abort(400, "Missing parameters")
@@ -884,10 +885,10 @@ def ask_question():
 
     question_json = json.loads(question_json_str)
 
-    if not question_json["TIMELIMIT"]:
+    if not question_json["timeLimit"]:
         question_timelimit = 0
     else:
-        question_timelimit = int(question_json["TIMELIMIT"])
+        question_timelimit = int(question_json["timeLimit"])
 
     ask_time = int(time.time() * 1000)
     end_time = ask_time + question_timelimit * 1000

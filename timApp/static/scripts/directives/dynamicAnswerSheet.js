@@ -57,10 +57,10 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
 
                 $scope.expl = $scope.$parent.expl;
                 $scope.askedTime = $scope.$parent.askedTime - $scope.$parent.clockOffset;
-                $scope.endTime = $scope.$parent.askedTime + $scope.json.TIMELIMIT * 1000 - $scope.$parent.clockOffset;
+                $scope.endTime = $scope.$parent.askedTime + $scope.json.timeLimit * 1000 - $scope.$parent.clockOffset;
 
                 var htmlSheet = $('<div>', {class: 'answerSheet'});
-                if ($scope.json.TIMELIMIT !== "" && !$scope.preview && !$scope.result) {
+                if ($scope.json.timeLimit !== "" && !$scope.preview && !$scope.result) {
                     htmlSheet.append($('<progress>', {
                         max: ($scope.endTime - $scope.askedTime),
                         id: 'progressBar'
@@ -68,47 +68,47 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     htmlSheet.append($('<span>', {
                         class: 'progresslabel',
                         id: 'progressLabel',
-                        text: $scope.json.TIMELIMIT + " s"
+                        text: $scope.json.timeLimit + " s"
                     }));
                 }
-                htmlSheet.append($('<h2>', {text: $scope.json.QUESTION}));
+                htmlSheet.append($('<h2>', {text: $scope.json.questionText}));
                 var table = $('<table>', {id: 'answer-sheet-table', class: 'table table-borderless'});
 
-                if ($scope.json.TYPE === "true-false") {
-                    $scope.json.DATA.HEADERS[0] = {"type": "header", "id": 0, "text": "True"};
-                    $scope.json.DATA.HEADERS[1] = {"type": "header", "id": 1, "text": "False"};
+                if ($scope.json.questionType === "true-false") {
+                    $scope.json.data.headers[0] = {"type": "header", "id": 0, "text": "True"};
+                    $scope.json.data.headers[1] = {"type": "header", "id": 1, "text": "False"};
                 }
 
-                if ($scope.json.DATA.HEADERS.length > 0 && !($scope.json.DATA.HEADERS[0].text === "" && $scope.json.DATA.HEADERS.length === 1)) {
+                if ($scope.json.data.headers.length > 0 && !($scope.json.data.headers[0].text === "" && $scope.json.data.headers.length === 1)) {
                     var tr = $('<tr>');
-                    if ($scope.json.DATA.HEADERS.length > 1) {
+                    if ($scope.json.data.headers.length > 1) {
                         tr.append($('<th>'));
                     }
-                    angular.forEach($scope.json.DATA.HEADERS, function (header) {
+                    angular.forEach($scope.json.data.headers, function (header) {
                         tr.append($('<th>', {class: 'answer-button', text: header.text}));
                     });
                     tr.append($('<th>', {class: 'answer-button'}));
                     table.append(tr);
                 }
 
-                angular.forEach($scope.json.DATA.ROWS, function (row) {
+                angular.forEach($scope.json.data.rows, function (row) {
                     var tr = $('<tr>');
-                    if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
+                    if ($scope.json.questionType === "matrix" || $scope.json.questionType === "true-false") {
                         tr.append($('<td>', {text: row.text}));
                     }
                     var header = 0;
                     //TODO: Needs correct JSON to be made better way
-                    for (var i = 0; i < row.COLUMNS.length; i++) {
+                    for (var i = 0; i < row.columns.length; i++) {
                         var group;
-                        if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
-                            if ($scope.json.ANSWERFIELDTYPE === "text") {
+                        if ($scope.json.questionType === "matrix" || $scope.json.questionType === "true-false") {
+                            if ($scope.json.answerFieldType === "text") {
                                 group = "group" + i;
                                 var textArea = $('<textarea>', {
                                     id: 'textarea-answer',
                                     name: group
                                 });
                                 if (disabled !== '') textArea.attr('disabled', true);
-                                if ($scope.json.DATA.HEADERS[0].text === "" && $scope.json.DATA.HEADERS.length === 1 && $scope.json.DATA.ROWS.length === 1) {
+                                if ($scope.json.data.headers[0].text === "" && $scope.json.data.headers.length === 1 && $scope.json.data.rows.length === 1) {
                                     textArea.attr('style', 'height:200px');
                                 }
                                 tr.append($('<td>', {class: 'answer-button'}).append($('<label>').append(textArea)));
@@ -117,13 +117,13 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                 group = "group" + row.text.replace(/[^a-zA-Z0-9]/g, "");
                                 var checked = false;
                                 if ($scope.answerTable && $scope.answerTable.length > row.id) {
-                                    var value = (row.COLUMNS[i].id + 1).toString();
+                                    var value = (row.columns[i].id + 1).toString();
                                     checked = ($scope.answerTable[row.id].indexOf(value) >= 0);
                                 }
                                 var input = $('<input>', {
-                                    type: $scope.json.ANSWERFIELDTYPE,
+                                    type: $scope.json.answerFieldType,
                                     name: group,
-                                    value: parseInt(row.COLUMNS[i].id) + 1,
+                                    value: parseInt(row.columns[i].id) + 1,
                                     checked: checked
                                 });
                                 if (disabled !== '') input.attr('disabled', true);
@@ -138,7 +138,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                 checked = ($scope.answerTable[0].indexOf(value) >= 0);
                             }
                             var input = $('<input>', {
-                                type: $scope.json.ANSWERFIELDTYPE,
+                                type: $scope.json.answerFieldType,
                                 name: group,
                                 value: parseInt(row.id) + 1,
                                 checked: checked
@@ -165,7 +165,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     window.setTimeout(function () {
                         var $table = $element.find('#answer-sheet-table');
                         var $input = null;
-                        if ($scope.json.ANSWERFIELDTYPE !== "text")
+                        if ($scope.json.answerFieldType !== "text")
                             $input = $table.find('input:first');
                         else
                             $input = $table.find('textarea:first');
@@ -248,15 +248,15 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
              */
             $scope.internalControl.answerToQuestion = function () {
                 var answers = [];
-                if (angular.isDefined($scope.json.DATA.ROWS)) {
+                if (angular.isDefined($scope.json.data.rows)) {
                     var groupName = "";
-                    if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
-                        for (var i = 0; i < $scope.json.DATA.ROWS.length; i++) {
+                    if ($scope.json.questionType === "matrix" || $scope.json.questionType === "true-false") {
+                        for (var i = 0; i < $scope.json.data.rows.length; i++) {
                             var answer = [];
                             var matrixInputs;
-                            groupName = "group" + $scope.json.DATA.ROWS[i].text.replace(/[^a-zA-Z0-9]/g, '');
+                            groupName = "group" + $scope.json.data.rows[i].text.replace(/[^a-zA-Z0-9]/g, '');
 
-                            if ($scope.json.ANSWERFIELDTYPE === "text") {
+                            if ($scope.json.answerFieldType === "text") {
                                 matrixInputs = $('textarea[name=' + "group" + i + ']');
                                 for (var c = 0; c < matrixInputs.length; c++) {
                                     answer.push(matrixInputs[c].value);
@@ -279,7 +279,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     }
                     else {
                         answers.push([]);
-                        groupName = "group" + $scope.json.DATA.ROWS[0].type.replace(/[^a-zA-Z0-9]/g, '');
+                        groupName = "group" + $scope.json.data.rows[0].type.replace(/[^a-zA-Z0-9]/g, '');
                         var checkedInputs = $('input[name=' + groupName + ']:checked');
                         for (var j = 0; j < checkedInputs.length; j++) {
                             answers[0].push(checkedInputs[j].value);
@@ -291,8 +291,8 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     }
                 }
 
-                if (angular.isDefined($scope.json.DATA.COLUMNS)) {
-                    angular.forEach($scope.json.DATA.COLUMNS, function (column) {
+                if (angular.isDefined($scope.json.data.columns)) {
+                    angular.forEach($scope.json.data.columns, function (column) {
                         var groupName = "group" + column.Value.replace(/ /g, '');
                         answers.push($('input[name=' + groupName + ']:checked').val());
                     });
