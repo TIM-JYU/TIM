@@ -1,13 +1,13 @@
 /**
- * ReviewController handles the logic behind adding and removing annotations. It also handles the way how selected
- * area is defined in view. Requires velpSelection directive.
+ * The controller handles the logic related to adding and removing annotations. It also handles the way how
+ * the selected area is defined in the view. Requires `velpSelection` directive.
  *
  * @module reviewController
  * @author Joonas Lattu
  * @author Petteri Palojärvi
  * @author Seppo Tarvainen
  * @licence MIT
- * @copyright 2016 Timber project authors
+ * @copyright 2016 Timber project members
  */
 
 var angular, $;
@@ -16,7 +16,7 @@ var timApp = angular.module('timApp');
 var UNDEFINED = "undefined";
 
 /**
- * Angular controller for handling annotations
+ * Angular controller for handling annotations.
  * @lends module:reviewController
  */
 timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile', function ($scope, $http, $window, $compile) {
@@ -34,11 +34,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.zIndex = 1;
 
     /**
-     * Makes post request to given url
+     * Makes a post request to the given URL.
      * @method makePostRequest
-     * @param url - Request url
+     * @param url - Request URL
      * @param params - Query parameters
-     * @param successMethod - Method that is run when request is successful.
+     * @param successMethod - Method to run if the request was successful.
      */
     $scope.makePostRequest = function (url, params, successMethod) {
         $http({
@@ -52,7 +52,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
 
     /**
-     * Loads document annotations into view
+     * Loads the document annotations into the view.
      * @method loadDocumentAnnotations
      */
     $scope.loadDocumentAnnotations = function () {
@@ -116,10 +116,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Get children (not childNodes) of the element.
+     * Gets the children (not childNodes) of the element.
      * @method getElementChildren
-     * @param element - Element that children is requested.
-     * @returns {Array}
+     * @param element - Element whose children are requested
+     * @returns {Array} Element children
      */
     var getElementChildren = function (element) {
         /*if (typeof element.children !== "undefined")
@@ -135,10 +135,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Get parent element of the given element
+     * Gets the parent element of the given element.
      * @method getElementParent
-     * @param element - Element which parent is queried
-     * @returns {Element} element parent
+     * @param element - Element whose parent is queried for
+     * @returns {Element} Element parent
      */
     var getElementParent = function (element) {
         /*
@@ -155,11 +155,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
 
     /**
-     * Gets element parent element when certain attribute is present.
+     * Gets element parent element until given attribute is present.
      * @method getElementParentUntilAttribute
-     * @param element - Element which parent is queried
-     * @param attribute - Attribute as string
-     * @returns {Element} first element parent that has given attribute
+     * @param element - Element whose parent is queried for
+     * @param attribute - Attribute as a string
+     * @returns {Element} First element that has the given attribute
      */
     var getElementParentUntilAttribute = function (element, attribute) {
         //console.log(element);
@@ -171,10 +171,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Checks if given element is an annotation
+     * Checks if the given element is an annotation or not.
      * @method checkIfAnnotation
      * @param element - Element to check
-     * @returns boolean
+     * @returns {boolean} - Whether the element is an annotation or not
      */
     var checkIfAnnotation = function (element) {
         if (element.nodeName === "ANNOTATION")
@@ -188,10 +188,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Loads annotations to given answer.
+     * Loads the annotations to the given answer.
      * @method loadAnnotationsToAnswer
-     * @param answer_id - Answer id
-     * @param par_id - Paragraph id
+     * @param answer_id - Answer ID
+     * @param par_id - Paragraph ID
      */
     $scope.loadAnnotationsToAnswer = function (answer_id, par_id, showInPlace) {
         var par = document.getElementById(par_id);
@@ -227,10 +227,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Get all annotaions by given answer id.
+     * Gets all the annotations with a given answer ID.
      * @method getAnnotationsByAnswerId
-     * @param id - Answer id
-     * @returns {Array} answer's annotation
+     * @param id - Answer ID
+     * @returns {Array} Annotations of the answer
      */
     $scope.getAnnotationsByAnswerId = function (id) {
         var annotations = [];
@@ -250,11 +250,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Adds annotation to given element on given coordinate
+     * Adds an annotation to the given element in a given coordinate.
      * @method addAnnotationToCoord
-     * @param range - Annotation location
+     * @param range - Annotation coordinate
      * @param annotation - Annotation info
-     * @param show - Whether annotation is shown when created
+     * @param show - Whether annotation is shown when created or not
      */
     $scope.addAnnotationToCoord = function (range, annotation, show) {
         var span = $scope.createPopOverElement(annotation, show);
@@ -282,12 +282,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Adds annotation to given element. Puts annotation to the "club of missing velps".
+     * Adds an annotation to the given element. The annotation will be placed in the margin.
      * @method addAnnotationToElement
      * @param el - Given element
      * @param annotation - Annotation info
-     * @param show - Whether annotation is shown when created
-     * @param reason - Reason why annotation is put here, not implemented yet
+     * @param show - Whether annotation is shown when created or not
+     * @param reason - The reason why the annotation is put here (not implemented yet)
      */
     var addAnnotationToElement = function (el, annotation, show, reason) {
         annotation.reason = reason;
@@ -301,9 +301,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Adds element to paragraph margin.
+     * Adds an element to the paragraph margin.
      * @method addElementToParagraphMargin
-     * @param par - Paragraph where element is added
+     * @param par - Paragraph where the element will be added
      * @param el - Element to add
      */
     var addElementToParagraphMargin = function (par, el) {
@@ -319,7 +319,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Stores element for velping.
+     * Creates the velp badge button (the button with letter 'V' on it).
      * @method createVelpBadge
      */
     var createVelpBadge = function () {
@@ -335,10 +335,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Updates velp badge to correct element
+     * Moves the velp badge to the correct element.
      * @method updateVelpBadge
-     * @param oldElement - Element, where badge was
-     * @param newElement - Element, where badge needs to go
+     * @param oldElement - Element where the badge was
+     * @param newElement - Element where the badge needs to be attached
      */
     $scope.updateVelpBadge = function (oldElement, newElement) {
         if (newElement === null) {
@@ -352,8 +352,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Closes element selection
-     * @param e - event
+     * Removes the velp badge and clears the element selection.
+     * @param e - Current click event
      */
     $scope.clearVelpBadge = function (e) {
         var btn = document.getElementById("velpBadge");
@@ -366,7 +366,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             console.log(e);
             $scope.selectedElement = null;
             $scope.selectedArea = null;
-
+ID
             $scope.updateVelpList();
             e.stopPropagation();
         }
@@ -374,10 +374,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
 
     /**
-     * Returns real ids of annotations
+     * Returns the real ID of an annotation.
      * @method getRealAnnotationId
-     * @param id - Annotation ID
-     * @returns {int} Annotation ID
+     * @param id - Annotation ID generated by the client
+     * @returns {int} Annotation ID generated by the server
      */
     $scope.getRealAnnotationId = function (id) {
         if (id < 0) {
@@ -387,10 +387,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Delete annotation
+     * Deletes the given annotation.
      * @method deleteAnnotation
-     * @param id - Annotation id
-     * @param inmargin - Whether annotation is margin annotation or not
+     * @param id - Annotation ID
+     * @param inmargin - Whether annotation is a margin annotation or not
      */
     $scope.deleteAnnotation = function (id, inmargin) {
         console.log(inmargin);
@@ -421,10 +421,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             console.log(json);
         });
     };
+
      /**
-     * Update changed annotation to margin annotation
+     * Updates annotation data.
      * @method updateAnnotation
-     * @param id - Annotation id
+     * @param id - Annotation ID
+     * @param inmargin - Whether the annotation is to be placed in the margin or not
      */
     $scope.updateAnnotation = function (id, inmargin) {
         var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
@@ -460,10 +462,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
 
     /**
-     * Change annotation points
+     * Changes annotation points.
      * @method changeAnnotationPoints
-     * @param id - annotation id
-     * @param points - annotation points
+     * @param id - Annotation ID
+     * @param points - Annotation points
      */
     $scope.changeAnnotationPoints = function (id, points) {
         for (var i = 0; i < $scope.annotations.length; i++) {
@@ -475,11 +477,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Add comment to given annotation
+     * Adds a comment to the given annotation.
      * @method addComment
-     * @param id
-     * @param name
-     * @param comment
+     * @param id - Annotation ID
+     * @param name - Commenter name
+     * @param comment - Content of the given comment
      */
      $scope.addComment = function (id, name, comment) {
         for (var i = 0; i < $scope.annotations.length; i++) {
@@ -496,10 +498,16 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Change visibility
+     * Changes the visibility of an annotation. Visibility can be one of the following:
+     *
+     * - 1 = Myself
+     * - 2 = Document owner
+     * - 3 = Teacher
+     * - 4 = Everyone.
+     *
      * @method changeVisibility
-     * @param id - annoation id
-     * @param visibility - annotation visibility
+     * @param id - Annoation ID
+     * @param visibility - Annotation visibility (1, 2, 3 or 4)
      */
     $scope.changeVisibility = function (id, visiblity) {
         for (var i = 0; i < $scope.annotations.length; i++) {
@@ -511,9 +519,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Select text range.
+     * Selects text range or just the element.
      * @method selectText
-     * TODO: When annotations can break tags, check annotations from all elements in selection
+     * @todo When annotations can break tags, check annotations from all elements in the selection.
      */
     $scope.selectText = function () {
 
@@ -561,10 +569,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Checks if given range object breaks taglines. Returns true if taglines are broken.
+     * Checks if the selection breaks HTML tags. Returns true if the tags were broken.
      * @method isSelectionTagParentsUnequal
-     * @param range - Range object
-     * @returns {boolean}
+     * @param range - Range object containing the user's selection
+     * @returns {boolean} Whether the HTML tags were broken or not.
      */
     var isSelectionTagParentsUnequal = function (range) {
         console.log("check tags");
@@ -572,10 +580,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Checks iteratively if element has annotation as parent
+     * Checks iteratively if the element has an annotation element as its parent.
      * @method hasSelectionParentAnnotation
-     * @param range - Range object
-     * @returns {boolean}
+     * @param range - Range object containing the user's selection
+     * @returns {boolean} Whether the element has an annotation element as its parent or not
      */
     var hasSelectionParentAnnotation = function (range) {
         console.log("check parents");
@@ -597,10 +605,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Checks if element has any class in illegalClasses array.
+     * Checks if the element has any class in `illegalClasses` array.
      * @method hasAnyIllegalClass
      * @param element - Element to be checked
-     * @returns {boolean} whether illegal class was found or not.
+     * @returns {boolean} Whether illegal classes were found or not.
      */
     var hasAnyIllegalClass = function (element) {
         for (var i = 0; i < illegalClasses.length; i++) {
@@ -611,10 +619,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Checks recursively if selection has annotations as children.
+     * Checks recursively if the selection has any annotation elements as children.
      * @method hasSelectionChildrenAnnotation
-     * @param range - Selection
-     * @returns {boolean} whether range has annotations as children or not.
+     * @param range - Range object containing the user's selection
+     * @returns {boolean} Whether the selection has any annotation elements as children or not
      */
     var hasSelectionChildrenAnnotation = function (range) {
         console.log("check children");
@@ -633,10 +641,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Check if element children has annotation
+     * Checks if the element children has an annotation element.
      * @method hasElementChildrenAnnotation
      * @param element - Element to check
-     * @returns {boolean} Whether annotatin was found or not
+     * @returns {boolean} Whether annotation was found or not
      */
     var hasElementChildrenAnnotation = function (element) {
 
@@ -654,10 +662,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Get velp by its id
+     * Gets the velp by its ID. If no velps are found, this method returns null.
      * @method getVelpById
-     * @param id - Velp to find
-     * @returns velp or undefined
+     * @param id - Velp to be found
+     * @returns {Object|null} Velp or null
      */
     $scope.getVelpById = function (id) {
         for (var i = 0; i < $scope.velps.length; i++)
@@ -668,12 +676,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Get marking highlight style
-     * @method getMarkingHighlight
+     * Get marking highlight style.
+     * @method getAnnotationHighlight
      * @param points - Points given in marking
      * @returns {string} Highlight style
      */
-    $scope.getMarkingHighlight = function (points) {
+    $scope.getAnnotationHighlight = function (points) {
         var highlightStyle = "positive";
         if (points === 0)
             highlightStyle = "neutral";
@@ -684,8 +692,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     /**
      * Detect user right to annotation to document.
-     * @param points - Points given in velp or annotation.
-     * @returns {boolean} - right to make annotations.
+     * @param points - Points given in velp or annotation
+     * @returns {boolean} - Right to make annotations
      */
 
     $scope.notAnnotationRights = function (points) {
@@ -698,26 +706,27 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 return true;
             }
         }
-    }
+    };
 
     /**
-     * Return title text if no annotation right
-     * @param state -
-     * @returns {string}
+     * Return caption text if the user has no rights to the annotation.
+     * @param state - Whether the annotation is disabled to the user or not
+     * @returns {string} - Caption text
      */
 
     $scope.showDisabledText = function(state) {
         if (state){
             return "You need to have teacher rights to make annotations with points.";
         }
-    }
+    };
 
     /**
-     * Uses selected velp, if area is selected.
+     * Adds an annotation with the selected velp's data to
+     * the selected text area or element.
      * @method useVelp
-     * @todo When annotations can cross HTML-tags, change end coordinate according to end element.
-     * @todo Also get parelement according to endContainer
-     * @param velp - Velp selected in velpSelection directive
+     * @todo When the annotations can cross HTML tags, end coordinate needs to be changed according to the end element.
+     * @todo Also get the paragraph element (parelement) according to endContainer.
+     * @param velp - Velp selected in the `velpSelection` directive
      */
     $scope.useVelp = function (velp) {
 
@@ -843,10 +852,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Gets answer info of element. Returns null if no answer found.
+     * Gets the answer info of the element. Returns null if no answer found.
      * @method getAnswerInfo
-     * @param start - Paragaph where answerbrowser element is searched.
-     * @returns {*}
+     * @param start - Paragraph where the answerbrowser element is searched for.
+     * @returns {Element|null} answerbrowser element or null.
      */
     var getAnswerInfo = function (start) {
 
@@ -872,11 +881,16 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Gets array of element indexes from parent to start
+     * Gets an array of element indexes from the TIM paragraph element to the given element.
+     * TIM paragraph element is defined as an element containing a 't' attribute.
+     * If the given element is inside the TIM paragraph element, this method returns the following array: [0].
+     * If the given element is inside the second child element of the TIM paragraph element, the following
+     * array is returned: [0, 1].
+     *
      * @method getElementPositionInTree
      * @param start - Starting element
      * @param array - Array of indexes
-     * @returns {*}
+     * @returns {Array} Array of element indexes
      */
     var getElementPositionInTree = function (start, array) {
         var myparent = getElementParent(start);
@@ -911,12 +925,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Get start offset according to "original state" of DOM tree.
-     * Ignores annoations elements, but not elements inside annotation
+     * Get start offset according to the "original state" of DOM.
+     * Ignores `annotation` elements, but not the elements inside the annotation.
      * @method getRealStartOffset
      * @param el - Start container
      * @param startoffset - Original start offset
-     * @returns {*}
+     * @returns {int} Start offset according to the "original state" of the DOM.
      */
     var getRealStartOffset = function (el, startoffset) {
 
@@ -945,13 +959,13 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Get start and end node numbers of created annotation element.
+     * Gets the start and end node numbers of created annotation element.
      * Ignores annoations elements, but not elements inside it.
      * @method getNodeNumbers
      * @param el - Start container
-     * @param aid - Annotation id
+     * @param aid - Annotation ID
      * @param innerElement - Annotation content
-     * @returns {*}
+     * @returns {Array} array with the start and end node numbers
      */
     var getNodeNumbers = function (el, aid, innerElement) {
         var parent = el;
@@ -996,12 +1010,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Get comments of given marking
-     * @method getMarkingComments
-     * @param id - Marking id
-     * @returns {Array|*|string|boolean}
+     * Gets the comments of the given annotation.
+     * @method getAnnotationComments
+     * @param id - Marking ID
+     * @returns {Array} Annotation comments
      */
-    $scope.getMarkingComments = function (id) {
+    $scope.getAnnotationComments = function (id) {
         for (var i = 0; i < $scope.annotations.length; i++) {
             if (id === $scope.annotations[i].id)
                 return $scope.annotations[i].comments;
@@ -1009,11 +1023,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Create pop over marking element
+     * Creates the actual (pop over) annotation element.
      * @method createPopOverElement
-     * @param annotation marking info
-     * @param show wether to show marking or not
-     * @returns {Element}
+     * @param annotation - Annotation info
+     * @param show - Whether to show the annotation on creation or not
+     * @returns {Element} - Annotation element
      */
     $scope.createPopOverElement = function (annotation, show) {
         var element = document.createElement("span");
@@ -1052,9 +1066,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Annotation to be showed, despite the name...
+     * Shows the annotation (despite the name).
+     * @todo If the annotation should be toggled, change all `showAnnotation()` methods to `toggleAnnotation()`.
      * @method toggleAnnotation
-     * @param annotation - Annotatin to be showed.
+     * @param annotation - Annotation to be showed.
      */
     $scope.toggleAnnotation = function (annotation) {
         var parent = document.getElementById(annotation.coord.start.par_id);
@@ -1110,7 +1125,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     };
 
     /**
-     * Scroll window to given element.
+     * Scroll window to the given element.
      * @method scrollToElement
      * @param element - Element to scroll to.
      */

@@ -1,12 +1,12 @@
 /**
- * Handles velp summary. Requires reviewController.
+ * The directive handles velp summary. Requires reviewController.
  *
  * @module velpSummary
  * @author Joonas Lattu
  * @author Petteri Palojärvi
  * @author Seppo Tarvainen
  * @licence MIT
- * @copyright 2016 Timber project authors
+ * @copyright 2016 Timber project members
  */
 
 var angular;
@@ -30,9 +30,9 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
     $scope.settings = {selectedAll: false};
 
     /**
-     * Toggles annotation in document
+     * Toggles annotation in the document
      * @method toggleAnnotation
-     * @param annotation - annotation to toggle
+     * @param annotation - Annotation to toggle
      */
     $scope.toggleAnnotation = function (annotation) {
         console.log("Annotation");
@@ -40,9 +40,9 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
     };
 
     /**
-     * Get total number of points
+     * Gets total number of points.
      * @method getTotalPoints
-     * @returns {number}
+     * @returns {number} Total number of points
      */
     $scope.getTotalPoints = function (annotations) {
         var p = 0;
@@ -59,7 +59,7 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
     };
 
     /**
-     * Check all annotations in velp summary.
+     * Checks all checkboxes linked to the annotations in the velp summary.
      * @method checkAll
      */
     $scope.checkAll = function () {

@@ -1,0 +1,196 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>timApp.timdb.velpgrouplabels &#8212; Timber 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Timber 1.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for timApp.timdb.velpgrouplabels</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The module contains the database functions related to labels that are used in velp groups.</span>
+<span class="sd">This includes adding, modifying and deleting velp group labels. The module also retrieves</span>
+<span class="sd">the velp group labels from the database. The module is not yet used in production.</span>
+
+<span class="sd">:authors: Joonas Lattu, Petteri Palojärvi</span>
+<span class="sd">:copyright: 2016 Timber project members</span>
+<span class="sd">:version: 1.0.0</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">sqlite3</span> <span class="k">import</span> <span class="n">Connection</span>
+<span class="kn">from</span> <span class="nn">timdb.timdbbase</span> <span class="k">import</span> <span class="n">TimDbBase</span><span class="p">,</span> <span class="n">TimDbException</span>
+
+
+<div class="viewcode-block" id="VelpGroupLabels"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgrouplabels.VelpGroupLabels">[docs]</a><span class="k">class</span> <span class="nc">VelpGroupLabels</span><span class="p">(</span><span class="n">TimDbBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_path</span><span class="p">:</span> <span class="s1">&#39;Connection&#39;</span><span class="p">,</span> <span class="n">files_root_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">type_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">current_user_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initializes TimDB with the specified database and root path.</span>
+
+<span class="sd">        :param type_name: The type name.</span>
+<span class="sd">        :param current_user_name: The name of the current user.</span>
+<span class="sd">        :param db_path: The path of the database file.</span>
+<span class="sd">        :param files_root_path: The root path where all the files will be stored.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">TimDbBase</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_path</span><span class="p">,</span> <span class="n">files_root_path</span><span class="p">,</span> <span class="n">type_name</span><span class="p">,</span> <span class="n">current_user_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="VelpGroupLabels.create_velp_group_label"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgrouplabels.VelpGroupLabels.create_velp_group_label">[docs]</a>    <span class="k">def</span> <span class="nf">create_velp_group_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">language_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new label</span>
+
+<span class="sd">        :param language_id: Language chosen</span>
+<span class="sd">        :param content: Label content</span>
+<span class="sd">        :return: id of the new label.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      INSERT INTO</span>
+<span class="s2">                      VelpGroupLabel(language_id, content)</span>
+<span class="s2">                      VALUES (?, ?)</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">language_id</span><span class="p">,</span> <span class="n">content</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cursor</span><span class="o">.</span><span class="n">lastrowid</span></div>
+
+<div class="viewcode-block" id="VelpGroupLabels.add_translation"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgrouplabels.VelpGroupLabels.add_translation">[docs]</a>    <span class="k">def</span> <span class="nf">add_translation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">language_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds new translation to an existing label</span>
+
+<span class="sd">        :param label_id: Label id</span>
+<span class="sd">        :param language_id: Language chosen</span>
+<span class="sd">        :param content: New translation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      INSERT INTO</span>
+<span class="s2">                      VelpGroupLabel(id, language_id, content)</span>
+<span class="s2">                      VALUES (?, ?, ?)</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">label_id</span><span class="p">,</span> <span class="n">language_id</span><span class="p">,</span> <span class="n">content</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VelpGroupLabels.update_velp_group_label"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgrouplabels.VelpGroupLabels.update_velp_group_label">[docs]</a>    <span class="k">def</span> <span class="nf">update_velp_group_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">language_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates content of label in specific language</span>
+
+<span class="sd">        :param label_id: Label id</span>
+<span class="sd">        :param language_id: Language chosen</span>
+<span class="sd">        :param content: Updated content</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      UPDATE VelpGroupLabel</span>
+<span class="s2">                      SET content = ?</span>
+<span class="s2">                      WHERE id = ? AND language_id = ?</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">content</span><span class="p">,</span> <span class="n">label_id</span><span class="p">,</span> <span class="n">language_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VelpGroupLabels.get_velp_group_labels"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgrouplabels.VelpGroupLabels.get_velp_group_labels">[docs]</a>    <span class="k">def</span> <span class="nf">get_velp_group_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">language_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets information of labels for one velp in specific language</span>
+
+<span class="sd">        :param velp_id: ID of velp</span>
+<span class="sd">        :param language_id: Language chosen</span>
+<span class="sd">        :return: List of labels associated with velp as a dictionary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="c1"># todo get label content also. return something.</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      SELECT *</span>
+<span class="s2">                      FROM VelpGroupLabel</span>
+<span class="s2">                      WHERE language_id = ? AND (id IN</span>
+<span class="s2">                      (SELECT velp_id FROM LabelInVelpGroup WHERE velp_id = ?))</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">language_id</span><span class="p">,</span> <span class="n">velp_id</span><span class="p">]</span>
+                       <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">resultAsDictionary</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VelpGroupLabels.delete_velp_group_label"><a class="viewcode-back" href="../../../timApp.timdb.html#timApp.timdb.velpgrouplabels.VelpGroupLabels.delete_velp_group_label">[docs]</a>    <span class="k">def</span> <span class="nf">delete_velp_group_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deletes label (use with extreme caution)</span>
+
+<span class="sd">        :param label_id: Label ID</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      DELETE</span>
+<span class="s2">                      FROM VelpGroupLabel</span>
+<span class="s2">                      WHERE id = ?</span>
+<span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">label_id</span><span class="p">]</span>
+                       <span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Timber project authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,3 +1,13 @@
+"""
+The module contains the database functions related to icons that are used in velps and annotations.
+Icons are be retrieved from the database through this module. The module is not yet used in production.
+
+:authors: Joonas Lattu, Petteri Palojärvi
+:copyright: 2016 Timber project members
+:version: 1.0.0
+
+"""
+
 from sqlite3 import Connection
 from timdb.timdbbase import TimDbBase,TimDbException
 

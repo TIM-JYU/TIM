@@ -1,0 +1,975 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>timApp.documentmodel.document &#8212; Timber 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Timber 1.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for timApp.documentmodel.document</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">difflib</span> <span class="k">import</span> <span class="n">SequenceMatcher</span>
+<span class="kn">from</span> <span class="nn">tempfile</span> <span class="k">import</span> <span class="n">mkstemp</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="k">import</span> <span class="n">time</span>
+
+<span class="kn">from</span> <span class="nn">contracts</span> <span class="k">import</span> <span class="n">contract</span><span class="p">,</span> <span class="n">new_contract</span>
+<span class="kn">from</span> <span class="nn">lxml</span> <span class="k">import</span> <span class="n">etree</span><span class="p">,</span> <span class="n">html</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">documentmodel.docparagraph</span> <span class="k">import</span> <span class="n">DocParagraph</span>
+<span class="kn">from</span> <span class="nn">documentmodel.docsettings</span> <span class="k">import</span> <span class="n">DocSettings</span>
+<span class="kn">from</span> <span class="nn">documentmodel.documentparser</span> <span class="k">import</span> <span class="n">DocumentParser</span>
+<span class="kn">from</span> <span class="nn">documentmodel.documentwriter</span> <span class="k">import</span> <span class="n">DocumentWriter</span>
+<span class="kn">from</span> <span class="nn">documentmodel.exceptions</span> <span class="k">import</span> <span class="n">DocExistsError</span>
+<span class="kn">from</span> <span class="nn">timdb.timdbbase</span> <span class="k">import</span> <span class="n">TimDbException</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="k">import</span> <span class="n">get_error_html</span>
+
+
+<div class="viewcode-block" id="Document"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document">[docs]</a><span class="k">class</span> <span class="nc">Document</span><span class="p">:</span>
+    <span class="n">default_files_root</span> <span class="o">=</span> <span class="s1">&#39;tim_files&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">files_root</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">modifier_group_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span> <span class="o">=</span> <span class="n">doc_id</span> <span class="k">if</span> <span class="n">doc_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">Document</span><span class="o">.</span><span class="n">get_next_free_id</span><span class="p">(</span><span class="n">files_root</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">files_root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_default_files_root</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">files_root</span> <span class="k">else</span> <span class="n">files_root</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modifier_group_id</span> <span class="o">=</span> <span class="n">modifier_group_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Used to cache paragraphs in memory on request so the pars don&#39;t have to be read from disk in every for loop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Used for accessing previous/next paragraphs quickly based on id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">par_map</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Document.get_default_files_root"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_default_files_root">[docs]</a>    <span class="k">def</span> <span class="nf">get_default_files_root</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">default_files_root</span></div>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">count</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Union[DocParagraphIter, CacheIterator]&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">DocParagraphIter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CacheIterator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span><span class="o">.</span><span class="n">__iter__</span><span class="p">())</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__get_largest_file_number</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">default</span>
+
+        <span class="n">largest</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">largest</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">largest</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">return</span> <span class="n">largest</span> <span class="k">if</span> <span class="n">largest</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="n">default</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Document.doc_exists"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.doc_exists">[docs]</a>    <span class="k">def</span> <span class="nf">doc_exists</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">files_root</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if a document id exists.</span>
+<span class="sd">        :param doc_id: Document id.</span>
+<span class="sd">        :return: Boolean.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">froot</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_default_files_root</span><span class="p">()</span> <span class="k">if</span> <span class="n">files_root</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">files_root</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">froot</span><span class="p">,</span> <span class="s1">&#39;docs&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc_id</span><span class="p">)))</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Document.version_exists"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.version_exists">[docs]</a>    <span class="k">def</span> <span class="nf">version_exists</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">doc_ver</span><span class="p">:</span> <span class="s1">&#39;tuple(int,int)&#39;</span><span class="p">,</span> <span class="n">files_root</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if a document version exists.</span>
+<span class="sd">        :param doc_id: Document id.</span>
+<span class="sd">        :param doc_ver: Document version.</span>
+<span class="sd">        :return: Boolean.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">froot</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_default_files_root</span><span class="p">()</span> <span class="k">if</span> <span class="n">files_root</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">files_root</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">froot</span><span class="p">,</span> <span class="s1">&#39;docs&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc_id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc_ver</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc_ver</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span></div>
+
+    <span class="k">def</span> <span class="nf">__update_par_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">par_map</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span><span class="p">)):</span>
+            <span class="n">curr_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get_id</span><span class="p">()</span>
+            <span class="n">prev_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">next_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">par_map</span><span class="p">[</span><span class="n">curr_p</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;p&#39;</span><span class="p">:</span> <span class="n">prev_p</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">:</span> <span class="n">next_p</span><span class="p">}</span>
+
+<div class="viewcode-block" id="Document.load_pars"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.load_pars">[docs]</a>    <span class="k">def</span> <span class="nf">load_pars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span> <span class="o">=</span> <span class="p">[</span><span class="n">par</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__update_par_map</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Document.get_previous_par"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_previous_par">[docs]</a>    <span class="k">def</span> <span class="nf">get_previous_par</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par</span><span class="p">,</span> <span class="n">get_last_if_no_prev</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_pars</span><span class="p">()</span>
+        <span class="n">prev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">par</span><span class="o">.</span><span class="n">get_id</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">prev</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">prev</span><span class="p">[</span><span class="s1">&#39;p&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">get_last_if_no_prev</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Document.get_pars_till"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_pars_till">[docs]</a>    <span class="k">def</span> <span class="nf">get_pars_till</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par</span><span class="p">):</span>
+        <span class="n">pars</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__iter__</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">pars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">par</span><span class="o">.</span><span class="n">get_id</span><span class="p">()</span> <span class="o">==</span> <span class="n">p</span><span class="o">.</span><span class="n">get_id</span><span class="p">():</span>
+                    <span class="k">break</span>
+        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="c1"># TODO: improve this</span>
+        <span class="c1"># &#39;i&#39; might be a ListIterator or DocParagraphIter depending on whether the pars were cached</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">i</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">return</span> <span class="n">pars</span></div>
+
+<div class="viewcode-block" id="Document.add_setting"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.add_setting">[docs]</a>    <span class="k">def</span> <span class="nf">add_setting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">current_settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_settings</span><span class="p">()</span><span class="o">.</span><span class="n">get_dict</span><span class="p">()</span>
+        <span class="n">current_settings</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_settings</span><span class="p">(</span><span class="n">current_settings</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Document.set_settings"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.set_settings">[docs]</a>    <span class="k">def</span> <span class="nf">set_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">first_par</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">__iter__</span><span class="p">()</span> <span class="k">as</span> <span class="n">i</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">i</span><span class="p">:</span>
+                <span class="n">first_par</span> <span class="o">=</span> <span class="n">p</span>
+                <span class="k">break</span>
+        <span class="n">new_par</span> <span class="o">=</span> <span class="n">DocSettings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span><span class="o">.</span><span class="n">to_paragraph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">first_par</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_paragraph_obj</span><span class="p">(</span><span class="n">new_par</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">first_par</span><span class="o">.</span><span class="n">is_setting</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">insert_paragraph_obj</span><span class="p">(</span><span class="n">new_par</span><span class="p">,</span> <span class="n">insert_before_id</span><span class="o">=</span><span class="n">first_par</span><span class="o">.</span><span class="n">get_id</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">modify_paragraph_obj</span><span class="p">(</span><span class="n">first_par</span><span class="o">.</span><span class="n">get_id</span><span class="p">(),</span> <span class="n">new_par</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Document.get_settings"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_settings">[docs]</a>    <span class="k">def</span> <span class="nf">get_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DocSettings</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">DocSettings</span><span class="o">.</span><span class="n">from_paragraph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">DocSettings</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__iter__</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">DocSettings</span><span class="o">.</span><span class="n">from_paragraph</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">DocSettings</span><span class="p">()</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">i</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Document.create"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ignore_exists</span> <span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files_root</span><span class="p">,</span> <span class="s1">&#39;docs&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">ignore_exists</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DocExistsError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Document.exists"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.exists">[docs]</a>    <span class="k">def</span> <span class="nf">exists</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Document</span><span class="o">.</span><span class="n">doc_exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">files_root</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Document.export_markdown"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.export_markdown">[docs]</a>    <span class="k">def</span> <span class="nf">export_markdown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">export_hashes</span> <span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">DocumentWriter</span><span class="p">([</span><span class="n">par</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">],</span> <span class="n">export_hashes</span><span class="o">=</span><span class="n">export_hashes</span><span class="p">)</span><span class="o">.</span><span class="n">get_text</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Document.export_section"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.export_section">[docs]</a>    <span class="k">def</span> <span class="nf">export_section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_id_start</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">par_id_end</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">export_hashes</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">DocumentWriter</span><span class="p">([</span><span class="n">par</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_section</span><span class="p">(</span><span class="n">par_id_start</span><span class="p">,</span> <span class="n">par_id_end</span><span class="p">)],</span>
+                              <span class="n">export_hashes</span><span class="o">=</span><span class="n">export_hashes</span><span class="p">)</span><span class="o">.</span><span class="n">get_text</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Document.get_section"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_section">[docs]</a>    <span class="k">def</span> <span class="nf">get_section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_id_start</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">par_id_end</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">DocParagraph</span><span class="p">]:</span>
+        <span class="n">all_pars</span> <span class="o">=</span> <span class="p">[</span><span class="n">par</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">]</span>
+        <span class="n">all_par_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">par</span><span class="o">.</span><span class="n">get_id</span><span class="p">()</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">all_pars</span><span class="p">]</span>
+        <span class="n">start_index</span><span class="p">,</span> <span class="n">end_index</span> <span class="o">=</span> <span class="n">all_par_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">par_id_start</span><span class="p">),</span> <span class="n">all_par_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">par_id_end</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">all_pars</span><span class="p">[</span><span class="n">start_index</span><span class="p">:</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Document.remove"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.remove">[docs]</a>    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">files_root</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ignore_exists</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes the whole document.</span>
+<span class="sd">        :param doc_id: Document id to remove.</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">froot</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_default_files_root</span><span class="p">()</span> <span class="k">if</span> <span class="n">files_root</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">files_root</span>
+        <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">doc_exists</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">files_root</span><span class="o">=</span><span class="n">froot</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">froot</span><span class="p">,</span> <span class="s1">&#39;docs&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc_id</span><span class="p">)))</span>
+            <span class="c1"># todo: remove all paragraph links</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">ignore_exists</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DocExistsError</span><span class="p">(</span><span class="n">doc_id</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Document.get_next_free_id"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_next_free_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_next_free_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">files_root</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the next free document id.</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">froot</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_default_files_root</span><span class="p">()</span> <span class="k">if</span> <span class="n">files_root</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">files_root</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">cls</span><span class="o">.</span><span class="n">__get_largest_file_number</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">froot</span><span class="p">,</span> <span class="s1">&#39;docs&#39;</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="Document.get_version"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_version">[docs]</a>    <span class="k">def</span> <span class="nf">get_version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the latest version of the document as a major-minor tuple.</span>
+<span class="sd">        :return: Latest version, or (-1, 0) if there isn&#39;t yet one.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span>
+        <span class="n">basedir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files_root</span><span class="p">,</span> <span class="s1">&#39;docs&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">))</span>
+        <span class="n">major</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_largest_file_number</span><span class="p">(</span><span class="n">basedir</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">minor</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">major</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_largest_file_number</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">basedir</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">major</span><span class="p">)),</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">major</span><span class="p">,</span> <span class="n">minor</span>
+        <span class="k">return</span> <span class="n">major</span><span class="p">,</span> <span class="n">minor</span></div>
+
+<div class="viewcode-block" id="Document.get_id_version"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_id_version">[docs]</a>    <span class="k">def</span> <span class="nf">get_id_version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="n">major</span><span class="p">,</span> <span class="n">minor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_version</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">major</span><span class="p">,</span> <span class="n">minor</span></div>
+
+<div class="viewcode-block" id="Document.get_document_path"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_document_path">[docs]</a>    <span class="k">def</span> <span class="nf">get_document_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files_root</span><span class="p">,</span> <span class="s1">&#39;docs&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Document.get_version_path"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_version_path">[docs]</a>    <span class="k">def</span> <span class="nf">get_version_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ver</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_version</span><span class="p">()</span> <span class="k">if</span> <span class="n">ver</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ver</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files_root</span><span class="p">,</span> <span class="s1">&#39;docs&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">version</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">str</span><span class="p">(</span><span class="n">version</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="Document.get_refs_dir"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_refs_dir">[docs]</a>    <span class="k">def</span> <span class="nf">get_refs_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ver</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_version</span><span class="p">()</span> <span class="k">if</span> <span class="n">ver</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ver</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files_root</span><span class="p">,</span> <span class="s1">&#39;refs&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">version</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">str</span><span class="p">(</span><span class="n">version</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="Document.get_reflist_filename"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_reflist_filename">[docs]</a>    <span class="k">def</span> <span class="nf">get_reflist_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ver</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_refs_dir</span><span class="p">(</span><span class="n">ver</span><span class="p">),</span> <span class="s1">&#39;reflist_to&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Document.getlogfilename"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.getlogfilename">[docs]</a>    <span class="k">def</span> <span class="nf">getlogfilename</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_document_path</span><span class="p">(),</span> <span class="s1">&#39;changelog&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__write_changelog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ver</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">operation</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">par_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">op_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">logname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getlogfilename</span><span class="p">()</span>
+        <span class="n">src</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">logname</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">logname</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">destfd</span><span class="p">,</span> <span class="n">tmpname</span> <span class="o">=</span> <span class="n">mkstemp</span><span class="p">()</span>
+        <span class="n">dest</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fdopen</span><span class="p">(</span><span class="n">destfd</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span>
+        <span class="n">entry</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;group_id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">modifier_group_id</span><span class="p">,</span>
+            <span class="s1">&#39;par_id&#39;</span><span class="p">:</span> <span class="n">par_id</span><span class="p">,</span>
+            <span class="s1">&#39;op&#39;</span><span class="p">:</span> <span class="n">operation</span><span class="p">,</span>
+            <span class="s1">&#39;op_params&#39;</span><span class="p">:</span> <span class="n">op_params</span><span class="p">,</span>
+            <span class="s1">&#39;ver&#39;</span><span class="p">:</span> <span class="n">ver</span><span class="p">,</span>
+            <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">timestamp</span>
+        <span class="p">}</span>
+        <span class="n">dest</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">entry</span><span class="p">))</span>
+        <span class="n">dest</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="c1">#dest.write(&#39;{} {}.{} {}\n&#39;.format(timestamp, ver[0], ver[1], msg))</span>
+
+        <span class="k">while</span> <span class="n">src</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">dest</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">src</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="n">src</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">dest</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">tmpname</span><span class="p">,</span> <span class="n">logname</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">tmpname</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__increment_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">par_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">increment_major</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+                            <span class="n">op_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="n">ver_exists</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">ver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_version</span><span class="p">()</span>
+        <span class="k">while</span> <span class="n">ver_exists</span><span class="p">:</span>
+            <span class="n">old_ver</span> <span class="o">=</span> <span class="n">ver</span>
+            <span class="n">ver</span> <span class="o">=</span> <span class="p">(</span><span class="n">old_ver</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">increment_major</span> <span class="k">else</span> <span class="p">(</span><span class="n">old_ver</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">old_ver</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">ver_exists</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_version_path</span><span class="p">(</span><span class="n">ver</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">increment_major</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files_root</span><span class="p">,</span> <span class="s1">&#39;docs&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">ver</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+        <span class="k">if</span> <span class="n">old_ver</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_version_path</span><span class="p">(</span><span class="n">old_ver</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_version_path</span><span class="p">(</span><span class="n">ver</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_version_path</span><span class="p">(</span><span class="n">ver</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">):</span>
+                <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__write_changelog</span><span class="p">(</span><span class="n">ver</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">par_id</span><span class="p">,</span> <span class="n">op_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">ver</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">par_map</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">ver</span>
+
+    <span class="k">def</span> <span class="nf">__update_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DocParagraph</span><span class="p">],</span> <span class="n">old_ver</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">new_ver</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">old_ver</span> <span class="o">==</span> <span class="n">new_ver</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TimDbException</span><span class="p">(</span><span class="s2">&quot;__update_metadata called with old_ver == new_ver&quot;</span><span class="p">)</span>
+        <span class="n">new_reflist_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_reflist_filename</span><span class="p">(</span><span class="n">new_ver</span><span class="p">)</span>
+        <span class="n">reflist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_referenced_document_ids</span><span class="p">(</span><span class="n">old_ver</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pars</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_reference</span><span class="p">():</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">referenced_pars</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">get_referenced_pars</span><span class="p">()</span>
+                <span class="k">except</span> <span class="n">TimDbException</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">referenced_pars</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">reflist</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">par</span><span class="o">.</span><span class="n">get_doc_id</span><span class="p">()))</span>
+                        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Invalid document reference: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">par</span><span class="o">.</span><span class="n">get_rd</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__save_reflist</span><span class="p">(</span><span class="n">new_reflist_file</span><span class="p">,</span> <span class="n">reflist</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Document.has_paragraph"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.has_paragraph">[docs]</a>    <span class="k">def</span> <span class="nf">has_paragraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if the document has the given paragraph.</span>
+<span class="sd">        :param par_id: The paragraph id.</span>
+<span class="sd">        :return: Boolean.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_version_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_version</span><span class="p">()),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">line</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">par_id</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Document.get_paragraph"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_paragraph">[docs]</a>    <span class="k">def</span> <span class="nf">get_paragraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DocParagraph</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">DocParagraph</span><span class="o">.</span><span class="n">get_latest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">files_root</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Document.add_paragraph_obj"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.add_paragraph_obj">[docs]</a>    <span class="k">def</span> <span class="nf">add_paragraph_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">:</span> <span class="n">DocParagraph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DocParagraph</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Appends a new paragraph into the document.</span>
+<span class="sd">        :param p: Paragraph to be added.</span>
+<span class="sd">        :return: The same paragraph object, or None if could not add.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">add_link</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">set_latest</span><span class="p">()</span>
+        <span class="n">old_ver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_version</span><span class="p">()</span>
+        <span class="n">new_ver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__increment_version</span><span class="p">(</span><span class="s1">&#39;Added&#39;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">get_id</span><span class="p">(),</span> <span class="n">increment_major</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">old_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_version_path</span><span class="p">(</span><span class="n">old_ver</span><span class="p">)</span>
+        <span class="n">new_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_version_path</span><span class="p">(</span><span class="n">new_ver</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">old_path</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">old_path</span><span class="p">,</span> <span class="n">new_path</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">new_path</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">get_id</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">p</span><span class="o">.</span><span class="n">get_hash</span><span class="p">())</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">p</span></div>
+
+<div class="viewcode-block" id="Document.add_paragraph"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.add_paragraph">[docs]</a>    <span class="k">def</span> <span class="nf">add_paragraph</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">par_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">attrs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">properties</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DocParagraph</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Appends a new paragraph into the document.</span>
+<span class="sd">        :param par_id: The id of the paragraph or None if it should be autogenerated.</span>
+<span class="sd">        :param attrs: The attributes for the paragraph.</span>
+<span class="sd">        :param text: New paragraph text.</span>
+<span class="sd">        :return: The new paragraph object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">DocParagraph</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+            <span class="n">doc</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">par_id</span><span class="o">=</span><span class="n">par_id</span><span class="p">,</span>
+            <span class="n">md</span><span class="o">=</span><span class="n">text</span><span class="p">,</span>
+            <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">,</span>
+            <span class="n">props</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span>
+            <span class="n">files_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">files_root</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_paragraph_obj</span><span class="p">(</span><span class="n">p</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Document.add_ref_paragraph"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.add_ref_paragraph">[docs]</a>    <span class="k">def</span> <span class="nf">add_ref_paragraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src_par</span><span class="p">:</span> <span class="n">DocParagraph</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                          <span class="n">attrs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DocParagraph</span><span class="p">:</span>
+
+        <span class="n">ref_attrs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">attrs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">attrs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">ref_attrs</span><span class="p">[</span><span class="s1">&#39;rp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">src_par</span><span class="o">.</span><span class="n">get_id</span><span class="p">()</span>
+        <span class="n">ref_attrs</span><span class="p">[</span><span class="s1">&#39;rt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">src_par</span><span class="o">.</span><span class="n">get_hash</span><span class="p">()</span>
+
+        <span class="n">rd</span> <span class="o">=</span> <span class="n">src_par</span><span class="o">.</span><span class="n">get_doc_id</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_settings</span><span class="p">()</span><span class="o">.</span><span class="n">get_source_document</span><span class="p">()</span> <span class="o">!=</span> <span class="n">rd</span><span class="p">:</span>
+            <span class="n">ref_attrs</span><span class="p">[</span><span class="s1">&#39;rd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">rd</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ref_attrs</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;tr&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_paragraph</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">ref_attrs</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Document.add_area_ref_paragraph"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.add_area_ref_paragraph">[docs]</a>    <span class="k">def</span> <span class="nf">add_area_ref_paragraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src_doc</span><span class="p">:</span> <span class="s1">&#39;Document&#39;</span><span class="p">,</span> <span class="n">src_area_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                               <span class="n">attrs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DocParagraph</span><span class="p">:</span>
+
+        <span class="n">ref_attrs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">attrs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">attrs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">ref_attrs</span><span class="p">[</span><span class="s1">&#39;ra&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">src_area_name</span>
+        <span class="n">ref_attrs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;rt&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_settings</span><span class="p">()</span><span class="o">.</span><span class="n">get_source_document</span><span class="p">()</span> <span class="o">!=</span> <span class="n">src_doc</span><span class="o">.</span><span class="n">doc_id</span><span class="p">:</span>
+            <span class="n">ref_attrs</span><span class="p">[</span><span class="s1">&#39;rd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">src_doc</span><span class="o">.</span><span class="n">doc_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ref_attrs</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;tr&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_paragraph</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">ref_attrs</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Document.delete_paragraph"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.delete_paragraph">[docs]</a>    <span class="k">def</span> <span class="nf">delete_paragraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes a paragraph from the document.</span>
+<span class="sd">        :param par_id: Paragraph id to remove.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_paragraph</span><span class="p">(</span><span class="n">par_id</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="n">old_ver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_version</span><span class="p">()</span>
+        <span class="n">new_ver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__increment_version</span><span class="p">(</span><span class="s1">&#39;Deleted&#39;</span><span class="p">,</span> <span class="n">par_id</span><span class="p">,</span> <span class="n">increment_major</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__update_metadata</span><span class="p">([],</span> <span class="n">old_ver</span><span class="p">,</span> <span class="n">new_ver</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_version_path</span><span class="p">(</span><span class="n">old_ver</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_src</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_version_path</span><span class="p">(</span><span class="n">new_ver</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">f_src</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+                        <span class="k">return</span>
+                    <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">par_id</span><span class="p">):</span>
+                        <span class="n">p</span> <span class="o">=</span> <span class="n">DocParagraph</span><span class="o">.</span><span class="n">get_latest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_id</span><span class="p">,</span> <span class="n">files_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">files_root</span><span class="p">)</span>
+                        <span class="n">p</span><span class="o">.</span><span class="n">remove_link</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Document.insert_paragraph"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.insert_paragraph">[docs]</a>    <span class="k">def</span> <span class="nf">insert_paragraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                         <span class="n">insert_before_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+                         <span class="n">attrs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                         <span class="n">par_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DocParagraph</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Inserts a paragraph before a given paragraph id.</span>
+<span class="sd">        :param par_id: The id of the new paragraph or None if it should be autogenerated.</span>
+<span class="sd">        :param attrs: The attributes for the paragraph.</span>
+<span class="sd">        :param text: New paragraph text.</span>
+<span class="sd">        :param insert_before_id: Id of the paragraph to insert before, or None if last.</span>
+<span class="sd">        :return: The inserted paragraph object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">insert_before_id</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_paragraph</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">,</span> <span class="n">par_id</span><span class="o">=</span><span class="n">par_id</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">)</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="n">DocParagraph</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+            <span class="n">doc</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">par_id</span><span class="o">=</span><span class="n">par_id</span><span class="p">,</span>
+            <span class="n">md</span><span class="o">=</span><span class="n">text</span><span class="p">,</span>
+            <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">,</span>
+            <span class="n">props</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span>
+            <span class="n">files_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">files_root</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">insert_paragraph_obj</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">insert_before_id</span><span class="o">=</span><span class="n">insert_before_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Document.insert_paragraph_obj"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.insert_paragraph_obj">[docs]</a>    <span class="k">def</span> <span class="nf">insert_paragraph_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">:</span> <span class="n">DocParagraph</span><span class="p">,</span> <span class="n">insert_before_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DocParagraph</span><span class="p">:</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">add_link</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">set_latest</span><span class="p">()</span>
+        <span class="n">old_ver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_version</span><span class="p">()</span>
+        <span class="n">new_ver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__increment_version</span><span class="p">(</span><span class="s1">&#39;Inserted&#39;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">get_id</span><span class="p">(),</span> <span class="n">increment_major</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                           <span class="n">op_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;before_id&#39;</span><span class="p">:</span> <span class="n">insert_before_id</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__update_metadata</span><span class="p">([</span><span class="n">p</span><span class="p">],</span> <span class="n">old_ver</span><span class="p">,</span> <span class="n">new_ver</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_version_path</span><span class="p">(</span><span class="n">old_ver</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_src</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_version_path</span><span class="p">(</span><span class="n">new_ver</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">f_src</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">p</span>
+                    <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">insert_before_id</span><span class="p">):</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">get_id</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">p</span><span class="o">.</span><span class="n">get_hash</span><span class="p">())</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Document.modify_paragraph"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.modify_paragraph">[docs]</a>    <span class="k">def</span> <span class="nf">modify_paragraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">new_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">new_attrs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">new_properties</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DocParagraph</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Modifies the text of the given paragraph.</span>
+<span class="sd">        :param par_id: Paragraph id.</span>
+<span class="sd">        :param new_text: New text.</span>
+<span class="sd">        :return: The new paragraph object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">new_attrs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">new_attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_paragraph</span><span class="p">(</span><span class="n">par_id</span><span class="p">)</span><span class="o">.</span><span class="n">get_attrs</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">new_properties</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">new_properties</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_paragraph</span><span class="p">(</span><span class="n">par_id</span><span class="p">)</span><span class="o">.</span><span class="n">get_properties</span><span class="p">()</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="n">DocParagraph</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+            <span class="n">md</span><span class="o">=</span><span class="n">new_text</span><span class="p">,</span>
+            <span class="n">doc</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">par_id</span><span class="o">=</span><span class="n">par_id</span><span class="p">,</span>
+            <span class="n">attrs</span><span class="o">=</span><span class="n">new_attrs</span><span class="p">,</span>
+            <span class="n">props</span><span class="o">=</span><span class="n">new_properties</span><span class="p">,</span>
+            <span class="n">files_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">files_root</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">modify_paragraph_obj</span><span class="p">(</span><span class="n">par_id</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Document.modify_paragraph_obj"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.modify_paragraph_obj">[docs]</a>    <span class="k">def</span> <span class="nf">modify_paragraph_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">p</span><span class="p">:</span> <span class="n">DocParagraph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DocParagraph</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_paragraph</span><span class="p">(</span><span class="n">par_id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;No paragraph </span><span class="si">{}</span><span class="s1"> in document </span><span class="si">{}</span><span class="s1"> version </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">par_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_version</span><span class="p">()))</span>
+
+        <span class="n">p_src</span> <span class="o">=</span> <span class="n">DocParagraph</span><span class="o">.</span><span class="n">get_latest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_id</span><span class="p">,</span> <span class="n">files_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">files_root</span><span class="p">)</span>
+        <span class="n">p_src</span><span class="o">.</span><span class="n">remove_link</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">set_id</span><span class="p">(</span><span class="n">par_id</span><span class="p">)</span>
+        <span class="n">new_hash</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">get_hash</span><span class="p">()</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">add_link</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">set_latest</span><span class="p">()</span>
+        <span class="n">old_ver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_version</span><span class="p">()</span>
+        <span class="n">old_hash</span> <span class="o">=</span> <span class="n">p_src</span><span class="o">.</span><span class="n">get_hash</span><span class="p">()</span>
+        <span class="n">new_ver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__increment_version</span><span class="p">(</span><span class="s1">&#39;Modified&#39;</span><span class="p">,</span> <span class="n">par_id</span><span class="p">,</span> <span class="n">increment_major</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                           <span class="n">op_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;old_hash&#39;</span><span class="p">:</span> <span class="n">old_hash</span><span class="p">,</span> <span class="s1">&#39;new_hash&#39;</span><span class="p">:</span> <span class="n">new_hash</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__update_metadata</span><span class="p">([</span><span class="n">p</span><span class="p">],</span> <span class="n">old_ver</span><span class="p">,</span> <span class="n">new_ver</span><span class="p">)</span>
+
+        <span class="n">old_line</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">par_id</span><span class="p">,</span> <span class="n">old_hash</span><span class="p">)</span>
+        <span class="n">old_line_legacy</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">par_id</span><span class="p">)</span>
+        <span class="n">new_line</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">par_id</span><span class="p">,</span> <span class="n">new_hash</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_version_path</span><span class="p">(</span><span class="n">old_ver</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_src</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_version_path</span><span class="p">(</span><span class="n">new_ver</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">f_src</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">p</span>
+                    <span class="k">if</span> <span class="n">line</span> <span class="o">==</span> <span class="n">old_line</span> <span class="ow">or</span> <span class="n">line</span> <span class="o">==</span> <span class="n">old_line_legacy</span><span class="p">:</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">new_line</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">p</span></div>
+
+<div class="viewcode-block" id="Document.update_section"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.update_section">[docs]</a>    <span class="k">def</span> <span class="nf">update_section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">par_id_first</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">par_id_last</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;tuple(str,str)&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Updates a section of the document.</span>
+
+<span class="sd">        :param text: The text of the section.</span>
+<span class="sd">        :param par_id_first: The id of the paragraph that denotes the start of the section.</span>
+<span class="sd">        :param par_id_last: The id of the paragraph that denotes the end of the section.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_pars</span> <span class="o">=</span> <span class="n">DocumentParser</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">add_missing_attributes</span><span class="p">()</span><span class="o">.</span><span class="n">validate_structure</span><span class="p">(</span><span class="n">is_whole_document</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">()</span>
+        <span class="n">new_par_id_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">par</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">new_pars</span><span class="p">])</span>
+        <span class="n">all_pars</span> <span class="o">=</span> <span class="p">[</span><span class="n">par</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">]</span>
+        <span class="n">all_par_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">par</span><span class="o">.</span><span class="n">get_id</span><span class="p">()</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">all_pars</span><span class="p">]</span>
+        <span class="n">start_index</span><span class="p">,</span> <span class="n">end_index</span> <span class="o">=</span> <span class="n">all_par_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">par_id_first</span><span class="p">),</span> <span class="n">all_par_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">par_id_last</span><span class="p">)</span>
+        <span class="n">old_pars</span> <span class="o">=</span> <span class="n">all_pars</span><span class="p">[</span><span class="n">start_index</span><span class="p">:</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">other_par_ids</span> <span class="o">=</span> <span class="n">all_par_ids</span><span class="p">[:]</span>
+        <span class="k">del</span> <span class="n">other_par_ids</span><span class="p">[</span><span class="n">start_index</span><span class="p">:</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">intersection</span> <span class="o">=</span> <span class="n">new_par_id_set</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">other_par_ids</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">intersection</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TimDbException</span><span class="p">(</span><span class="s1">&#39;Duplicate id(s): &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">intersection</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_perform_update</span><span class="p">(</span><span class="n">new_pars</span><span class="p">,</span>
+                                    <span class="n">old_pars</span><span class="p">,</span>
+                                    <span class="n">last_par_id</span><span class="o">=</span><span class="n">all_par_ids</span><span class="p">[</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                                    <span class="k">if</span> <span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_par_ids</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Document.update"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">original</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">strict_validation</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Replaces the document&#39;s contents with the specified text.</span>
+
+<span class="sd">        :param text: The new text for the document.</span>
+<span class="sd">        :param original: The original text for the document.</span>
+<span class="sd">        :param strict_validation: Whether to use stricter validation rules for areas etc.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_pars</span> <span class="o">=</span> <span class="n">DocumentParser</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">add_missing_attributes</span><span class="p">()</span><span class="o">.</span><span class="n">validate_structure</span><span class="p">(</span><span class="n">is_whole_document</span><span class="o">=</span><span class="n">strict_validation</span><span class="p">)</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">()</span>
+        <span class="n">old_pars</span> <span class="o">=</span> <span class="p">[</span><span class="n">DocParagraph</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">doc</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">DocumentParser</span><span class="p">(</span><span class="n">original</span><span class="p">)</span><span class="o">.</span><span class="n">add_missing_attributes</span><span class="p">()</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">()]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_perform_update</span><span class="p">(</span><span class="n">new_pars</span><span class="p">,</span> <span class="n">old_pars</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_perform_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_pars</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
+                        <span class="n">old_pars</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DocParagraph</span><span class="p">],</span>
+                        <span class="n">last_par_id</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="n">old_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">par</span><span class="o">.</span><span class="n">get_id</span><span class="p">()</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">old_pars</span><span class="p">]</span>
+        <span class="n">new_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">par</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">new_pars</span><span class="p">]</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">SequenceMatcher</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">old_ids</span><span class="p">,</span> <span class="n">new_ids</span><span class="p">)</span>
+        <span class="n">opcodes</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_opcodes</span><span class="p">()</span>
+        <span class="c1"># Do delete operations first to avoid duplicate ids</span>
+        <span class="k">for</span> <span class="n">tag</span><span class="p">,</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">,</span> <span class="n">j1</span><span class="p">,</span> <span class="n">j2</span> <span class="ow">in</span> <span class="p">[</span><span class="n">opcode</span> <span class="k">for</span> <span class="n">opcode</span> <span class="ow">in</span> <span class="n">opcodes</span> <span class="k">if</span> <span class="n">opcode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;delete&#39;</span><span class="p">,</span> <span class="s1">&#39;replace&#39;</span><span class="p">]]:</span>
+            <span class="k">for</span> <span class="n">par_id</span> <span class="ow">in</span> <span class="n">old_ids</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">delete_paragraph</span><span class="p">(</span><span class="n">par_id</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">tag</span><span class="p">,</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">,</span> <span class="n">j1</span><span class="p">,</span> <span class="n">j2</span> <span class="ow">in</span> <span class="n">opcodes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;replace&#39;</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">new_pars</span><span class="p">[</span><span class="n">j1</span><span class="p">:</span><span class="n">j2</span><span class="p">]:</span>
+                    <span class="n">before_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_insert_index</span><span class="p">(</span><span class="n">i2</span><span class="p">,</span> <span class="n">old_ids</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">insert_paragraph</span><span class="p">(</span><span class="n">par</span><span class="p">[</span><span class="s1">&#39;md&#39;</span><span class="p">],</span>
+                                          <span class="n">attrs</span><span class="o">=</span><span class="n">par</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;attrs&#39;</span><span class="p">),</span>
+                                          <span class="n">par_id</span><span class="o">=</span><span class="n">par</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+                                          <span class="n">insert_before_id</span><span class="o">=</span><span class="n">old_ids</span><span class="p">[</span><span class="n">before_i</span><span class="p">]</span> <span class="k">if</span> <span class="n">before_i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">old_ids</span><span class="p">)</span> <span class="k">else</span> <span class="n">last_par_id</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;insert&#39;</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">new_pars</span><span class="p">[</span><span class="n">j1</span><span class="p">:</span><span class="n">j2</span><span class="p">]:</span>
+                    <span class="n">before_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_insert_index</span><span class="p">(</span><span class="n">i2</span><span class="p">,</span> <span class="n">old_ids</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">insert_paragraph</span><span class="p">(</span><span class="n">par</span><span class="p">[</span><span class="s1">&#39;md&#39;</span><span class="p">],</span>
+                                          <span class="n">attrs</span><span class="o">=</span><span class="n">par</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;attrs&#39;</span><span class="p">),</span>
+                                          <span class="n">par_id</span><span class="o">=</span><span class="n">par</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+                                          <span class="n">insert_before_id</span><span class="o">=</span><span class="n">old_ids</span><span class="p">[</span><span class="n">before_i</span><span class="p">]</span> <span class="k">if</span> <span class="n">before_i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">old_ids</span><span class="p">)</span> <span class="k">else</span> <span class="n">last_par_id</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;equal&#39;</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">new_par</span><span class="p">,</span> <span class="n">old_par</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">new_pars</span><span class="p">[</span><span class="n">j1</span><span class="p">:</span><span class="n">j2</span><span class="p">],</span> <span class="n">old_pars</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="p">])):</span>
+                    <span class="k">if</span> <span class="n">new_par</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">old_par</span><span class="o">.</span><span class="n">get_hash</span><span class="p">()</span> <span class="ow">or</span> <span class="n">new_par</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;attrs&#39;</span><span class="p">,</span> <span class="p">{})</span> <span class="o">!=</span> <span class="n">old_par</span><span class="o">.</span><span class="n">get_attrs</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_paragraph</span><span class="p">(</span><span class="n">old_par</span><span class="o">.</span><span class="n">get_id</span><span class="p">()):</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">modify_paragraph</span><span class="p">(</span><span class="n">old_par</span><span class="o">.</span><span class="n">get_id</span><span class="p">(),</span>
+                                                  <span class="n">new_par</span><span class="p">[</span><span class="s1">&#39;md&#39;</span><span class="p">],</span>
+                                                  <span class="n">new_attrs</span><span class="o">=</span><span class="n">new_par</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;attrs&#39;</span><span class="p">))</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">before_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_insert_index</span><span class="p">(</span><span class="n">j1</span> <span class="o">+</span> <span class="n">idx</span><span class="p">,</span> <span class="n">new_ids</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">insert_paragraph</span><span class="p">(</span><span class="n">new_par</span><span class="p">[</span><span class="s1">&#39;md&#39;</span><span class="p">],</span>
+                                                  <span class="n">attrs</span><span class="o">=</span><span class="n">new_par</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;attrs&#39;</span><span class="p">),</span>
+                                                  <span class="n">par_id</span><span class="o">=</span><span class="n">new_par</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+                                                  <span class="n">insert_before_id</span><span class="o">=</span><span class="n">old_ids</span><span class="p">[</span><span class="n">before_i</span><span class="p">]</span> <span class="k">if</span> <span class="n">before_i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span>
+                                                      <span class="n">old_ids</span><span class="p">)</span> <span class="k">else</span> <span class="n">last_par_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_ids</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Document.find_insert_index"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.find_insert_index">[docs]</a>    <span class="k">def</span> <span class="nf">find_insert_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i2</span><span class="p">,</span> <span class="n">old_ids</span><span class="p">):</span>
+        <span class="n">before_i</span> <span class="o">=</span> <span class="n">i2</span>
+        <span class="k">while</span> <span class="n">before_i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">old_ids</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_paragraph</span><span class="p">(</span><span class="n">old_ids</span><span class="p">[</span><span class="n">before_i</span><span class="p">]):</span>
+            <span class="n">before_i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">before_i</span></div>
+
+<div class="viewcode-block" id="Document.get_index"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_index">[docs]</a>    <span class="k">def</span> <span class="nf">get_index</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">]:</span>
+        <span class="n">pars</span> <span class="o">=</span> <span class="p">[</span><span class="n">par</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">DocParagraphIter</span><span class="p">(</span><span class="bp">self</span><span class="p">)]</span>
+        <span class="n">DocParagraph</span><span class="o">.</span><span class="n">preload_htmls</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_settings</span><span class="p">())</span>
+        <span class="n">pars</span> <span class="o">=</span> <span class="n">dereference_pars</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">edit_window</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">source_doc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_original_document</span><span class="p">())</span>
+
+        <span class="c1"># Skip plugins</span>
+        <span class="n">html_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">par</span><span class="o">.</span><span class="n">get_html</span><span class="p">(</span><span class="n">from_preview</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">pars</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">par</span><span class="o">.</span><span class="n">is_dynamic</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="n">get_index_from_html_list</span><span class="p">(</span><span class="n">html_list</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Document.add_index_entry"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.add_index_entry">[docs]</a>    <span class="k">def</span> <span class="nf">add_index_entry</span><span class="p">(</span><span class="n">index_table</span><span class="p">,</span> <span class="n">current_headers</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">tag</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">),</span> <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">header</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s1">&#39;level&#39;</span><span class="p">:</span> <span class="n">level</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">current_headers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">index_table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_headers</span><span class="p">)</span>
+            <span class="n">current_headers</span> <span class="o">=</span> <span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">elif</span> <span class="n">current_headers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">current_headers</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">current_headers</span></div>
+
+<div class="viewcode-block" id="Document.get_changelog"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_changelog">[docs]</a>    <span class="k">def</span> <span class="nf">get_changelog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_entries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">logname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getlogfilename</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">logname</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="n">lc</span> <span class="o">=</span> <span class="n">max_entries</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">logname</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">while</span> <span class="n">lc</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;doc id </span><span class="si">{}</span><span class="s2">: malformed log line: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">line</span><span class="p">))</span>
+                <span class="n">lc</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">log</span></div>
+
+<div class="viewcode-block" id="Document.get_paragraph_by_task"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_paragraph_by_task">[docs]</a>    <span class="k">def</span> <span class="nf">get_paragraph_by_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_id_name</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">__iter__</span><span class="p">()</span> <span class="k">as</span> <span class="n">it</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">it</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">get_attr</span><span class="p">(</span><span class="s1">&#39;taskId&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">task_id_name</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">p</span>
+                <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_reference</span><span class="p">():</span>
+                    <span class="k">for</span> <span class="n">rp</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">get_referenced_pars</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="n">rp</span><span class="o">.</span><span class="n">get_attr</span><span class="p">(</span><span class="s1">&#39;taskId&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">task_id_name</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="n">rp</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Document.get_last_modified"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_last_modified">[docs]</a>    <span class="k">def</span> <span class="nf">get_last_modified</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_changelog</span><span class="p">(</span><span class="n">max_entries</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">log</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">log</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">log</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span></div>
+
+<div class="viewcode-block" id="Document.delete_section"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.delete_section">[docs]</a>    <span class="k">def</span> <span class="nf">delete_section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">area_start</span><span class="p">,</span> <span class="n">area_end</span><span class="p">):</span>
+        <span class="n">all_par_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">par</span><span class="o">.</span><span class="n">get_id</span><span class="p">()</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">]</span>
+        <span class="n">start_index</span><span class="p">,</span> <span class="n">end_index</span> <span class="o">=</span> <span class="n">all_par_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">area_start</span><span class="p">),</span> <span class="n">all_par_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">area_end</span><span class="p">)</span>
+        <span class="n">old_pars</span> <span class="o">=</span> <span class="n">all_par_ids</span><span class="p">[</span><span class="n">start_index</span><span class="p">:</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">old_pars</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delete_paragraph</span><span class="p">(</span><span class="n">par</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Document.get_named_section"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_named_section">[docs]</a>    <span class="k">def</span> <span class="nf">get_named_section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">start_found</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">end_found</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">pars</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">__iter__</span><span class="p">()</span> <span class="k">as</span> <span class="n">i</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">i</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">par</span><span class="o">.</span><span class="n">get_attr</span><span class="p">(</span><span class="s1">&#39;area&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">section_name</span><span class="p">:</span>
+                    <span class="n">start_found</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">if</span> <span class="n">start_found</span><span class="p">:</span>
+                    <span class="n">pars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">par</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">par</span><span class="o">.</span><span class="n">get_attr</span><span class="p">(</span><span class="s1">&#39;area_end&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">section_name</span><span class="p">:</span>
+                    <span class="n">end_found</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">start_found</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">end_found</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TimDbException</span><span class="p">(</span><span class="s1">&#39;Area not found: &#39;</span> <span class="o">+</span> <span class="n">section_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pars</span></div>
+
+<div class="viewcode-block" id="Document.calculate_referenced_document_ids"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.calculate_referenced_document_ids">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_referenced_document_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ver</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Gets all the document ids that are referenced from this document recursively.</span>
+<span class="sd">        :return: The set of the document ids.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">refs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">if</span> <span class="n">ver</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">documentmodel.documentversion</span> <span class="k">import</span> <span class="n">DocumentVersion</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="n">DocumentVersion</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">ver</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">files_root</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">source</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_reference</span><span class="p">():</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">referenced_pars</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">get_referenced_pars</span><span class="p">()</span>
+                <span class="k">except</span> <span class="n">TimDbException</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">referenced_pars</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">refs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">par</span><span class="o">.</span><span class="n">get_doc_id</span><span class="p">()))</span>
+                        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Invalid document reference: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">par</span><span class="o">.</span><span class="n">get_rd</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="n">refs</span></div>
+
+    <span class="k">def</span> <span class="nf">__load_reflist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reflist_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">reflist_name</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reffile</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">reffile</span><span class="o">.</span><span class="n">read</span><span class="p">()))</span>
+
+    <span class="k">def</span> <span class="nf">__save_reflist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reflist_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">reflist</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+        <span class="n">reflist_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">reflist_name</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">reflist_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">reflist_name</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reffile</span><span class="p">:</span>
+            <span class="n">reffile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">reflist</span><span class="p">)))</span>
+
+<div class="viewcode-block" id="Document.get_referenced_document_ids"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_referenced_document_ids">[docs]</a>    <span class="k">def</span> <span class="nf">get_referenced_document_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ver</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="n">reflist_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_reflist_filename</span><span class="p">(</span><span class="n">ver</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">reflist_name</span><span class="p">):</span>
+            <span class="n">reflist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__load_reflist</span><span class="p">(</span><span class="n">reflist_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reflist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_referenced_document_ids</span><span class="p">(</span><span class="n">ver</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__save_reflist</span><span class="p">(</span><span class="n">reflist_name</span><span class="p">,</span> <span class="n">reflist</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">reflist</span></div>
+
+<div class="viewcode-block" id="Document.get_paragraphs"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_paragraphs">[docs]</a>    <span class="k">def</span> <span class="nf">get_paragraphs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">DocParagraph</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">par</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Document.get_closest_paragraph_title"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_closest_paragraph_title">[docs]</a>    <span class="k">def</span> <span class="nf">get_closest_paragraph_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+        <span class="n">last_title</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">par</span><span class="o">.</span><span class="n">get_title</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">last_title</span> <span class="o">=</span> <span class="n">title</span>
+            <span class="k">if</span> <span class="n">par</span><span class="o">.</span><span class="n">get_id</span><span class="p">()</span> <span class="o">==</span> <span class="n">par_id</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">last_title</span>
+
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Document.get_latest_version"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_latest_version">[docs]</a>    <span class="k">def</span> <span class="nf">get_latest_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">documentmodel.documentversion</span> <span class="k">import</span> <span class="n">DocumentVersion</span>
+        <span class="k">return</span> <span class="n">DocumentVersion</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_version</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">files_root</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modifier_group_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Document.get_original_document"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_original_document">[docs]</a>    <span class="k">def</span> <span class="nf">get_original_document</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">src_docid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_settings</span><span class="p">()</span><span class="o">.</span><span class="n">get_source_document</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">Document</span><span class="p">(</span><span class="n">src_docid</span><span class="p">)</span> <span class="k">if</span> <span class="n">src_docid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Document.get_last_par"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.get_last_par">[docs]</a>    <span class="k">def</span> <span class="nf">get_last_par</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pars</span> <span class="o">=</span> <span class="p">[</span><span class="n">par</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">pars</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">pars</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Document.insert_temporary_pars"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.insert_temporary_pars">[docs]</a>    <span class="k">def</span> <span class="nf">insert_temporary_pars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">context_par</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_pars</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">context_par</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span> <span class="o">=</span> <span class="n">pars</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">par</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">par</span><span class="o">.</span><span class="n">get_id</span><span class="p">()</span> <span class="o">==</span> <span class="n">context_par</span><span class="o">.</span><span class="n">get_id</span><span class="p">():</span>
+                    <span class="k">break</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span><span class="p">[:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">pars</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__update_par_map</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Document.clear_mem_cache"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.Document.clear_mem_cache">[docs]</a>    <span class="k">def</span> <span class="nf">clear_mem_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">par_cache</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">par_map</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="kc">None</span></div></div>
+
+
+<span class="n">new_contract</span><span class="p">(</span><span class="s1">&#39;Document&#39;</span><span class="p">,</span> <span class="n">Document</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CacheIterator"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.CacheIterator">[docs]</a><span class="k">class</span> <span class="nc">CacheIterator</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="n">i</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">i</span>
+
+    <span class="k">def</span> <span class="nf">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DocParagraph</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="o">.</span><span class="n">__next__</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="DocParagraphIter"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.DocParagraphIter">[docs]</a><span class="k">class</span> <span class="nc">DocParagraphIter</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">:</span> <span class="n">Document</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">doc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">next_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">get_version_path</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get_version</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DocParagraph</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">StopIteration</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="k">raise</span> <span class="ne">StopIteration</span>
+            <span class="k">if</span> <span class="n">line</span> <span class="o">!=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">14</span><span class="p">:</span>
+                    <span class="c1"># Line contains both par_id and t</span>
+                    <span class="n">par_id</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+                    <span class="c1"># Make a copy of the paragraph to avoid modifying cached instance</span>
+                    <span class="k">return</span> <span class="n">DocParagraph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="p">,</span> <span class="n">par_id</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="o">.</span><span class="n">files_root</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Line contains just par_id, use the latest t</span>
+                    <span class="k">return</span> <span class="n">DocParagraph</span><span class="o">.</span><span class="n">get_latest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="o">.</span><span class="n">files_root</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DocParagraphIter.close"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.DocParagraphIter.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="kc">None</span></div></div>
+
+
+<span class="nd">@contract</span>
+<div class="viewcode-block" id="get_index_from_html_list"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.get_index_from_html_list">[docs]</a><span class="k">def</span> <span class="nf">get_index_from_html_list</span><span class="p">(</span><span class="n">html_table</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">]:</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">current_headers</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">htmlstr</span> <span class="ow">in</span> <span class="n">html_table</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">index_entry</span> <span class="o">=</span> <span class="n">html</span><span class="o">.</span><span class="n">fragment_fromstring</span><span class="p">(</span><span class="n">htmlstr</span><span class="p">,</span> <span class="n">create_parent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">etree</span><span class="o">.</span><span class="n">XMLSyntaxError</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">index_entry</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;div&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">header</span> <span class="ow">in</span> <span class="n">index_entry</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="s1">&#39;h1&#39;</span><span class="p">,</span> <span class="s1">&#39;h2&#39;</span><span class="p">,</span> <span class="s1">&#39;h3&#39;</span><span class="p">):</span>
+                <span class="n">current_headers</span> <span class="o">=</span> <span class="n">Document</span><span class="o">.</span><span class="n">add_index_entry</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">current_headers</span><span class="p">,</span> <span class="n">header</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">index_entry</span><span class="o">.</span><span class="n">tag</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;h&#39;</span><span class="p">):</span>
+            <span class="n">current_headers</span> <span class="o">=</span> <span class="n">Document</span><span class="o">.</span><span class="n">add_index_entry</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">current_headers</span><span class="p">,</span> <span class="n">index_entry</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">current_headers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">index</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_headers</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">index</span></div>
+
+
+<div class="viewcode-block" id="dereference_pars"><a class="viewcode-back" href="../../../timApp.documentmodel.html#timApp.documentmodel.document.dereference_pars">[docs]</a><span class="k">def</span> <span class="nf">dereference_pars</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">edit_window</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">source_doc</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Resolves references in the given paragraphs.</span>
+
+<span class="sd">    :type pars: list[DocParagraph]</span>
+<span class="sd">    :param pars: The DocParagraphs to be processed.</span>
+<span class="sd">    :param edit_window: Calling from edit window or not.</span>
+<span class="sd">    :param source_doc: Default document for referencing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">new_pars</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">pars</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">par</span><span class="o">.</span><span class="n">is_reference</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">new_pars</span> <span class="o">+=</span> <span class="n">par</span><span class="o">.</span><span class="n">get_referenced_pars</span><span class="p">(</span><span class="n">edit_window</span><span class="o">=</span><span class="n">edit_window</span><span class="p">,</span> <span class="n">source_doc</span><span class="o">=</span><span class="n">source_doc</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">TimDbException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">err_par</span> <span class="o">=</span> <span class="n">DocParagraph</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+                    <span class="n">par</span><span class="o">.</span><span class="n">doc</span><span class="p">,</span>
+                    <span class="n">par_id</span><span class="o">=</span><span class="n">par</span><span class="o">.</span><span class="n">get_id</span><span class="p">(),</span>
+                    <span class="n">md</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                    <span class="n">html</span><span class="o">=</span><span class="n">get_error_html</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+                <span class="n">new_pars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">err_par</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_pars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">par</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">new_pars</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Timber project authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
