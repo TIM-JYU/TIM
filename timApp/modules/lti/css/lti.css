@@ -23,3 +23,13 @@ div.lti button {
     color: rgb(122, 122, 122);
     margin: 10px;
 }
+
+form.lti.lti-resizing {
+    display: block;
+    margin: 10px 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    background-color: gainsboro;
+    padding: 10px;
+}

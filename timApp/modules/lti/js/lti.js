@@ -70,6 +70,17 @@ ltiApp.directiveTemplate = function () {
             '</button>' +
         '</div>';
 
+    // Buttons to allow user to resize the <iframe>
+    var resizing_buttons = '' +
+        '<div class="lti lti-buttons">' +
+            '<button ng-hide="iframeControls" class="btn btn-default" ng-click="toggleIframeControls()">' +
+                'Avaa ikkunan asetukset' +
+            '</button>' +
+            '<button ng-show="iframeControls" class="btn btn-default" ng-click="toggleIframeControls()">' +
+                'Sulje ikkunan asetukset' +
+            '</button>' +
+        '</div>';
+
     // HTML templating is for frauds
     return '' +
     '<div class="csRunDiv no-popup-menu" id="{{::parentId}}">' +
@@ -77,7 +88,8 @@ ltiApp.directiveTemplate = function () {
         '<p>{{header}}</p>' +
         '<p ng-if="stem" class="stem" >{{stem}}</p>' +
 
-        '<iframe ng-if="iframe.src" src="{{::iframe.src}}" class="lti" id="{{::iframe.id}}" name="{{::iframe.name}}">' +
+        '<iframe ng-if="iframe.src" src="{{::iframe.src}}" class="lti" id="{{::iframe.id}}" name="{{::iframe.name}}" ' +
+            'style="width:{{::iframe_size[0]}}; height: {{::iframe_size[1]}};">' +
         '</iframe>' +
 
         '<div class="lti lti-text">' +
@@ -93,8 +105,19 @@ ltiApp.directiveTemplate = function () {
             '<pre ng-if="use_js && use_lti" class="lti">Pisteesi tehtävästä: {{grade}}</pre>' +
         '</div>' +
 
+        '<form novalidate ng-show="iframeControls" ng-submit="resizeIframe()" class="lti lti-resizing">' +
+            '<label for="iframe_width">Leveys:</label>' +
+            //'<input type="text" name="iframe_width" id="iframe_width" value="{{::iframe_size[0]}}">' +
+            '<input type="text" name="iframe_width" id="iframe_width" ng-model="iframe_width">' +
+            '<label for="iframe_height">Pituus:</label>' +
+            //'<input type="text" name="iframe_height" id="iframe_height" value="{{::iframe_size[1]}}">' +
+            '<input type="text" name="iframe_height" id="iframe_height" ng-model="iframe_height">' +
+            '<input type="submit" value="Muuta">' +
+        '</form>' +
+
         '<div class="lti lti-button-container">' +
             iframe_buttons +
+            resizing_buttons +
             answerbrowser_buttons +
         '</div>' +
 
@@ -195,15 +218,30 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
     $scope.iframe = { // TODO: use view_url and launch_url params here
         'src': '',
         'id': '',
-        'name': ''
+        'name': '',
+        'size': '[]'
     };
-
     $scope.disableSaving = true;
     $scope.lastSaved = undefined;
-
+    $scope.iframeControls = false;
     $scope.parentId = "";
     $scope.inactiveText = "";
-    //$scope.grade = "ei pisteitä";
+
+    $scope.toggleIframeControls = function() {
+        $scope.iframeControls = !$scope.iframeControls;
+        $scope.iframe_width = $scope.iframe_size[0] || "";
+        $scope.iframe_height = $scope.iframe_size[1] || "";
+    };
+
+    $scope.resizeIframe = function() {
+        $scope.iframe_size[0] = $scope.iframe_width;
+        $scope.iframe_size[1] = $scope.iframe_height;
+        var iframeInScope = document.getElementById($scope.iframe.id);
+        if (iframeInScope) {
+            iframeInScope.style.width = $scope.iframe_size[0];
+            iframeInScope.style.height = $scope.iframe_size[1];
+        }
+    };
 
     $scope.goBack = function() {
         var active = ltiApp.container.getActiveState();
@@ -320,6 +358,7 @@ ltiApp.initScope = function (scope, element, attrs) {
     //timHelper.set(scope, attrs, "state.oldgrade", -1);
     timHelper.set(scope, attrs, "use_js", true);
     timHelper.set(scope, attrs, "use_lti", true);
+    timHelper.set(scope, attrs, "iframe_size", ["100%", "600px"]);
     timHelper.set(scope, attrs, "login_url", "https://moodle.jyu.fi/login/jyulogin.php"); // JY Moodlen login page as default
     timHelper.set(scope, attrs, "state.tries", 0);
     timHelper.set(scope, attrs, "max_tries");
