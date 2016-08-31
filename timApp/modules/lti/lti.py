@@ -448,13 +448,14 @@ class LtiServer(tim_server.TimServer):
 
         try:
 
-            grade = float(query.get_json_param("input", "grade", 0))
+            grade = query.get_json_param("input", "grade", None)
             # oldgrade = float(query.get_json_param("state", "oldgrade", -1))
             # max_grade = float(query.get_json_param("max_grade", 1))
             max_tries = int(query.get_param("max_tries", 1000000))
             tries = int(query.get_json_param("state", "tries", 0))
 
-            if grade is not None:
+            if grade:
+                grade = float(grade)
 
                 # TODO: add max_grade as upper bound (if present)
                 grade_ok = True if grade >= 0 else False
