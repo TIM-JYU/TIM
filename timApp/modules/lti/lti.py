@@ -32,14 +32,15 @@ fixed_lti_params = {
     'consumer_secret': '__lti_secret__',
     'consumer_key': '__consumer_key__',
     'resource_link_id': 'tim.jyu.fi',
-    'lis_outcome_service_url': "http://timstack.it.jyu.fi/grades/",
     'lis_person_sourcedid': 'sis:111',
     'lis_result_sourcedid': '__sourcedid__',
     'lis_course_offering_sourcedid': 'JYU-MATA123',
     'lis_course_section_sourcedid': 'JYU-MATA123-Kappale1-Teht15',
-    'roles': 'Learner',
-    'ext_ims_lis_basic_outcome_url': 'http://timstack.it.jyu.fi/lti/grades/',
-    'ext_ims_lis_resultvalue_sourcedids': 'decimal'
+    'roles': 'Learner'
+    # Outcomes params (commented out because they don't work)
+    #'lis_outcome_service_url': "http://timstack.it.jyu.fi/grades/",
+    #'ext_ims_lis_basic_outcome_url': 'http://timstack.it.jyu.fi/lti/grades/',
+    #'ext_ims_lis_resultvalue_sourcedids': 'decimal'
 }
 
 
@@ -74,37 +75,13 @@ qid_lookup = {
         'http://timstack.it.jyu.fi:8080/moodle/local/ltiprovider/tool.php?id=11'  # Testaus 3
 }
 
-
-# Get question ID from URL
-def getQID(url):
-    for qid in qid_lookup:
-        if qid_lookup[qid] == url:
-            return qid
-    print("getQID returned None!")
-    return None
-
-
 def CreateConsumer(query: QueryParams = None):
 
-    if query:
-        # key = query.get_param('consumer_key', default='Query exists but no KEY')
-        # secret = query.get_param('consumer_secret', default='Query exists but no SECRET')
-        # TODO: placeholders
-        key = '__consumer_key__'
-        secret = '__lti_secret__'
-        tim_id = query.get_param('user_id', 'Query exists but no USER_ID')
-        tool_url = query.get_param('tool_url', 'DEFAULT_tool_url')
-        view_url = query.get_param('view_url', 'DEFAULT_view_url')
-    else:
-        key = '__consumer_key__'
-        secret = '__lti_secret__'
-        tim_id = 'Query does not exist: using default ID'
-        tool_url = 'http://timstack.it.jyu.fi' # Should actually be some 404 page...
-        view_url = 'http://timstack.it.jyu.fi' # Should actually be some 404 page...
-
-    # Get question ID that matches given Moodle question URL
-    # qid = getQID(question_url)
-    # qid = question_url
+    key = '__consumer_key' if query else 'DEFAULT_key'
+    secret = '__lti_secret__' if query else 'DEFAULT_secret'
+    tim_id = query.get_param('user_id', 'Query exists but no USER_ID')
+    tool_url = query.get_param('tool_url', 'DEFAULT_tool_url')
+    view_url = query.get_param('view_url', 'DEFAULT_view_url')
     qid = tool_url
 
     LTI_params = fixed_lti_params
@@ -117,7 +94,6 @@ def CreateConsumer(query: QueryParams = None):
     LTI_params['lis_person_name_full'] = 'user_id: ' + tim_id
     LTI_params['lis_result_sourcedid'] = tim_id + '_' + qid
 
-    tool_url = LTI_params['tool_url']
     LTI_credentials = {'consumer_key': key, 'consumer_secret': secret}
 
     NewConsumer = Consumer(credentials=LTI_credentials, lti_params=LTI_params, tp_url=tool_url)

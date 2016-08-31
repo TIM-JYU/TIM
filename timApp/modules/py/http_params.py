@@ -291,7 +291,7 @@ def multi_post_params(request: http.server.BaseHTTPRequestHandler) -> [QueryPara
     for jso in jsons:
         results.append(QueryParams(jso))
 
-    print(str(results))
+    #print(str(results))
     return results
     # tai:
     # return {QueryParams(jso) for jso in jsons]
@@ -434,17 +434,17 @@ def join_dict(a: dict,b: dict):
     result.update(b)
     return result
 
-    
+
 LAZYSTART="<!--lazy "
 LAZYEND =" lazy-->"
 NOLAZY = "<!--nolazy-->"
 NEVERLAZY = "NEVERLAZY"
- 
- 
+
+
 def is_lazy(query: QueryParams) -> bool:
     """
     Tells if plugins need to be done in lazy-mode
-    :param query: query params where lazy options can be read 
+    :param query: query params where lazy options can be read
     :return true if lazy plugin is needed
     """
     caller_lazy = query.get_param("doLazy", NEVERLAZY)
@@ -457,14 +457,14 @@ def is_lazy(query: QueryParams) -> bool:
     if str(lazy).lower() == "true":  do_lazy = True
     if str(lazy).lower() == "false": do_lazy = False
     # print("do_lazy=",do_lazy)
-    return do_lazy  
-        
-    
+    return do_lazy
+
+
 def make_lazy(plugin_html: str, query: QueryParams, htmlfunc) -> str:
     """
     Makes plugin string to lazy
     :param plugin_html: ready html for the plugin
-    :param query: query params where lazy options can be read 
+    :param query: query params where lazy options can be read
     :param htmlfunc: function to generate the lazy version of plugin html
     :return true if lazy plugin is needed
     """
@@ -472,31 +472,30 @@ def make_lazy(plugin_html: str, query: QueryParams, htmlfunc) -> str:
     lazy_html = htmlfunc(query)
     lazy_plugin_html = LAZYSTART + plugin_html + LAZYEND + lazy_html
     return lazy_plugin_html
-    
-    
+
+
 def replace_template_params(query: QueryParams, template: str, cond_itemname: str, itemnames=None) -> str:
     """
     Replaces all occurances of itemnames and cond_item_name in template by their value in query
-    if  cond_itemname exists in query. 
-    :param query: query params where items can be read 
+    if  cond_itemname exists in query.
+    :param query: query params where items can be read
     :param template: string that may include items like {{userword}} that are replaced
     :param cond_itemname: name for the item that decides if the template is non empty.  None means no condition
     :param itemnames: list of other item names that are replaced by their value in Query
     :return true if lazy plugin is needed
     """
-    items = [] 
+    items = []
     if cond_itemname:
         item = query.get_param(cond_itemname, "")
         if not item: return ""
         items = [cond_itemname]
-     
+
     if itemnames: items += itemnames
     result = template
-       
+
     for name in items:
         n,d,dummy = (name+"::").split(":",2)
         item = str(query.get_param(n, d))
         result = result.replace("{{"+n+"}}", item)
-        
-    return result    
-    
+
+    return result
