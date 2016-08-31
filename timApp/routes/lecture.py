@@ -226,8 +226,6 @@ def get_updates():
                  "lectureId": lecture_id, "isLecture": True, "lecturers": lecturers, "students": students,
                  "lectureEnding": lecture_ending})
 
-        db.session.remove()
-
         if current_app.config['TESTING']:
             # Don't loop when testing
             break
