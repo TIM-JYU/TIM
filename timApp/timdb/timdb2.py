@@ -6,7 +6,7 @@ import sqlalchemy
 from sqlalchemy.orm import scoped_session
 
 from routes.logger import log_info
-from tim_app import db
+from tim_app import db, app
 
 from timdb.notes import Notes
 from timdb.tim_models import Version
@@ -55,9 +55,13 @@ class TimDb(object):
         self.session = session
         if session is None:
             self.session = db.create_scoped_session()
+            self.owns_session = True
+            engine = sqlalchemy.create_engine(db_path)
+            self.db = engine.connect().connection  # psycopg2.connect(db_path)  # type: psycopg2.extensions.connection
+        else:
+            self.db = db.get_engine(app, 'tim_main').connect().connection
+            self.owns_session = False
 
-        engine = sqlalchemy.create_engine(db_path)
-        self.db = engine.connect().connection  # psycopg2.connect(db_path)  # type: psycopg2.extensions.connection
         self.notes = Notes(self.db, files_root_path, 'notes', current_user_name, self.session)
         self.readings = Readings(self.db, files_root_path, 'notes', current_user_name, self.session)
         self.users = Users(self.db, files_root_path, 'users', current_user_name, self.session)
@@ -87,8 +91,10 @@ class TimDb(object):
         """Closes the database connection."""
         if hasattr(self, 'db') and self.db is not None:
             self.db.close()
-            self.session.remove()
+            if self.owns_session:
+                self.session.remove()
             self.db = None
+            self.session = None
 
     def execute_script(self, sql_file):
         """Executes an SQL file on the database.

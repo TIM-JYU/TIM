@@ -8,6 +8,8 @@ from functools import lru_cache
 import flask
 from flask import session
 from lxml import html
+
+from tim_app import db
 from timdbtest import TimDbTest
 
 import tim
@@ -178,6 +180,11 @@ class TimRouteTest(TimDbTest):
         if settings is not None:
             doc.set_settings(settings)
         return doc
+
+    def tearDown(self):
+        """While testing, the Flask-SQLAlchemy session needs to be removed manually;
+        see https://pythonhosted.org/Flask-Testing/#testing-with-sqlalchemy"""
+        db.session.remove()
 
 
 if __name__ == '__main__':
