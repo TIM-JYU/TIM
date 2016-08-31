@@ -21,31 +21,29 @@ Serving from local port 5000
 PORT = 5000
 PROGDIR = "."
 
-users = {} # Dict of all users (keys are user IDs)
+users = {}  # Dict of all users (keys are user IDs)
 
 # LTI param set that stays constant regardless of question, course
 # (Commented out ones are variable)
 fixed_lti_params = {
     'lti_message_type': 'basic-lti-launch-request',
     'lti_version': 'LTI-1p0',
-    #'tool_url': "http://timstack.it.jyu.fi:8080/moodle/local/ltiprovider/tool.php?id=8",
+    # 'tool_url': "http://timstack.it.jyu.fi:8080/moodle/local/ltiprovider/tool.php?id=8",
     'consumer_secret': '__lti_secret__',
     'consumer_key': '__consumer_key__',
     'resource_link_id': 'tim.jyu.fi',
     'lis_outcome_service_url': "http://timstack.it.jyu.fi/grades/",
-    'lis_course_offering_sourcedid': 'DD-ST101', # Is this needed?
-    'lis_course_section_sourcedid': 'DD-ST101:C1', # Or this?
     'lis_person_sourcedid': 'sis:111',
     'lis_result_sourcedid': '__sourcedid__',
-    'resource_link_id': 'jyu.fi',
-    'lis_course_offering_sourcedid': 'Calculus 1',
-    'lis_course_section_sourcedid': 'Osio 1',
+    'lis_course_offering_sourcedid': 'JYU-MATA123',
+    'lis_course_section_sourcedid': 'JYU-MATA123-Kappale1-Teht15',
     'roles': 'Learner',
     'ext_ims_lis_basic_outcome_url': 'http://timstack.it.jyu.fi/lti/grades/',
     'ext_ims_lis_resultvalue_sourcedids': 'decimal'
 }
 
-def get_lazy_pali_html(query: QueryParams) -> str:
+
+def get_lazy_lti_html(query: QueryParams) -> str:
     """
     Returns a lazy version of plugins html
     :param query: query params where lazy options can be read
@@ -66,11 +64,16 @@ def get_lazy_pali_html(query: QueryParams) -> str:
 
 # Question IDs mapped to their respective URLs
 qid_lookup = {
-    'http://timstack.it.jyu.fi:8080/moodle/mod/quiz/view.php?id=6': 'http://timstack.it.jyu.fi:8080/moodle/local/ltiprovider/tool.php?id=7', # Järjestelmän käyttöharjoittelutehtävä
-    'http://timstack.it.jyu.fi:8080/moodle/mod/quiz/view.php?id=16': 'http://timstack.it.jyu.fi:8080/moodle/local/ltiprovider/tool.php?id=8', # Polynomin derivaatta
-    'http://timstack.it.jyu.fi:8080/moodle/mod/quiz/view.php?id=2': 'http://timstack.it.jyu.fi:8080/moodle/local/ltiprovider/tool.php?id=9', # Kolme derivaattaa
-    'http://timstack.it.jyu.fi:8080/moodle/mod/quiz/view.php?id=17': 'http://timstack.it.jyu.fi:8080/moodle/local/ltiprovider/tool.php?id=11' # Testaus 3
+    'http://timstack.it.jyu.fi:8080/moodle/mod/quiz/view.php?id=6':
+        'http://timstack.it.jyu.fi:8080/moodle/local/ltiprovider/tool.php?id=7',  # Järjestelmän käyttöharjoitteluteht.
+    'http://timstack.it.jyu.fi:8080/moodle/mod/quiz/view.php?id=16':
+        'http://timstack.it.jyu.fi:8080/moodle/local/ltiprovider/tool.php?id=8',  # Polynomin derivaatta
+    'http://timstack.it.jyu.fi:8080/moodle/mod/quiz/view.php?id=2':
+        'http://timstack.it.jyu.fi:8080/moodle/local/ltiprovider/tool.php?id=9',  # Kolme derivaattaa
+    'http://timstack.it.jyu.fi:8080/moodle/mod/quiz/view.php?id=17':
+        'http://timstack.it.jyu.fi:8080/moodle/local/ltiprovider/tool.php?id=11'  # Testaus 3
 }
+
 
 # Get question ID from URL
 def getQID(url):
@@ -80,11 +83,12 @@ def getQID(url):
     print("getQID returned None!")
     return None
 
+
 def CreateConsumer(query: QueryParams = None):
 
     if query:
-        #key = query.get_param('consumer_key', default='Query exists but no KEY')
-        #secret = query.get_param('consumer_secret', default='Query exists but no SECRET')
+        # key = query.get_param('consumer_key', default='Query exists but no KEY')
+        # secret = query.get_param('consumer_secret', default='Query exists but no SECRET')
         # TODO: placeholders
         key = '__consumer_key__'
         secret = '__lti_secret__'
@@ -99,8 +103,8 @@ def CreateConsumer(query: QueryParams = None):
         view_url = 'http://timstack.it.jyu.fi' # Should actually be some 404 page...
 
     # Get question ID that matches given Moodle question URL
-    #qid = getQID(question_url)
-    #qid = question_url
+    # qid = getQID(question_url)
+    # qid = question_url
     qid = tool_url
 
     LTI_params = fixed_lti_params
@@ -121,6 +125,7 @@ def CreateConsumer(query: QueryParams = None):
 
 
 List_of_Consumers = {}
+
 
 class LtiServer(tim_server.TimServer):
     """
@@ -331,8 +336,8 @@ class LtiServer(tim_server.TimServer):
         print("do_POST =================================================")
         if self.path.find('/multihtml') < 0:
             if self.path.find('/grades') >= 0:
-                bytecount = int(self.headers['Content-Length']) # Size of request body in bytes
-                req_body = self.rfile.read(bytecount).decode('UTF8') # XML-formatted request body
+                bytecount = int(self.headers['Content-Length'])  # Size of request body in bytes
+                req_body = self.rfile.read(bytecount).decode('UTF8')  # XML-formatted request body
 
                 outcomes = Outcomes(xml=req_body)
                 req_data = outcomes.parse_request()
@@ -381,7 +386,7 @@ class LtiServer(tim_server.TimServer):
         :param query: get or put params
         :return : html string for this markup
         """
-        #print(query.dump()) # uncomment to see query
+        # print(query.dump()) # uncomment to see query
         user_id = query.get_param("user_id", "--")
 
         # do the next if Anonymoys is not allowed to use plugins
@@ -406,7 +411,7 @@ class LtiServer(tim_server.TimServer):
             List_of_Consumers.update(consumer_hash_dict)
 
             # Store New_Consumer data into global users dict under the question id (qid)
-            #qid = JSO_from_YAML_without_hyphens['markup']['tool_url']
+            # qid = JSO_from_YAML_without_hyphens['markup']['tool_url']
             qid = query.get_param('tool_url', '')
             users[user_id] = users.get(user_id) or {}
             users[user_id][qid] = users[user_id].get(qid) or {}
@@ -423,7 +428,7 @@ class LtiServer(tim_server.TimServer):
                     AngularJS_directive_attributes.encode("UTF8")).decode()
 
             s = '<' + AngularJS_directive_name + '>' + AngularJS_directive_attributes + '</' + AngularJS_directive_name + '>'
-            s = make_lazy(s, query, get_lazy_pali_html)
+            s = make_lazy(s, query, get_lazy_lti_html)
 
             return s
 
@@ -431,7 +436,6 @@ class LtiServer(tim_server.TimServer):
             import traceback
             error_str = "<div><p>" + traceback.format_exc() + "</p></div>"
             return error_str
-
 
     def get_reqs_result(self) -> dict:
         """
@@ -444,7 +448,7 @@ class LtiServer(tim_server.TimServer):
         result = query.dump()
         self.wout(result)
 
-    def do_answer(self, query: QueryParams): # TODO: currently using only grade --> use answer!
+    def do_answer(self, query: QueryParams):  # TODO: currently using only grade --> use answer!
         """
         Do answer route.
         Check if grade is different than the old word.  If it is save the
@@ -469,8 +473,8 @@ class LtiServer(tim_server.TimServer):
         try:
 
             grade = float(query.get_json_param("input", "grade", 0))
-            #oldgrade = float(query.get_json_param("state", "oldgrade", -1))
-            #max_grade = float(query.get_json_param("max_grade", 1))
+            # oldgrade = float(query.get_json_param("state", "oldgrade", -1))
+            # max_grade = float(query.get_json_param("max_grade", 1))
             max_tries = int(query.get_param("max_tries", 1000000))
             tries = int(query.get_json_param("state", "tries", 0))
 
@@ -486,7 +490,7 @@ class LtiServer(tim_server.TimServer):
                 # plugin can ask not to save the word
                 nosave = query.get_json_param("input", "nosave", None)
 
-                #if (not nosave) and tries < max_tries and grade != oldgrade:
+                # if (not nosave) and tries < max_tries and grade != oldgrade:
                 if (not nosave) and tries < max_tries:
                     tries += 1
                     tim_info = {"points": points}
@@ -494,7 +498,7 @@ class LtiServer(tim_server.TimServer):
                     result["save"] = save
                     result["tim_info"] = tim_info
                     out = "Tallennettu"
-                    #print(tries,max_tries)
+                    # print(tries,max_tries)
 
         except Exception as e:
             err = str(e)
