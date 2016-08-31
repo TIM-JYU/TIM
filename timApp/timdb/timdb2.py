@@ -63,8 +63,8 @@ class TimDb(object):
             self.db = db.get_engine(app, 'tim_main').connect().connection
             self.owns_session = False
         TimDb.instances += 1
-        # num_connections = self.get_pg_connections()
-        # log_info('TimDb instances/PG connections: {}/{} (constructor)'.format(TimDb.instances, num_connections))
+        num_connections = self.get_pg_connections()
+        log_info('TimDb instances/PG connections: {}/{} (constructor)'.format(TimDb.instances, num_connections))
         self.notes = Notes(self.db, files_root_path, 'notes', current_user_name, self.session)
         self.readings = Readings(self.db, files_root_path, 'notes', current_user_name, self.session)
         self.users = Users(self.db, files_root_path, 'users', current_user_name, self.session)
