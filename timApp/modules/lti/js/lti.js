@@ -72,7 +72,7 @@ ltiApp.directiveTemplate = function () {
 
     // Buttons to allow user to resize the <iframe>
     var resizing_buttons = '' +
-        '<div class="lti lti-buttons">' +
+        '<div ng-show="resizingButtonsDiv()" class="lti lti-buttons">' +
             '<button ng-hide="iframeControls" class="btn btn-default" ng-click="toggleIframeControls()">' +
                 'Avaa ikkunan asetukset' +
             '</button>' +
@@ -107,10 +107,8 @@ ltiApp.directiveTemplate = function () {
 
         '<form novalidate ng-show="iframeControls" ng-submit="resizeIframe()" class="lti lti-resizing">' +
             '<label for="iframe_width">Leveys:</label>' +
-            //'<input type="text" name="iframe_width" id="iframe_width" value="{{::iframe_size[0]}}">' +
             '<input type="text" name="iframe_width" id="iframe_width" ng-model="iframe_width">' +
-            '<label for="iframe_height">Pituus:</label>' +
-            //'<input type="text" name="iframe_height" id="iframe_height" value="{{::iframe_size[1]}}">' +
+            '<label for="iframe_height">Korkeus:</label>' +
             '<input type="text" name="iframe_height" id="iframe_height" ng-model="iframe_height">' +
             '<input type="submit" value="Muuta">' +
         '</form>' +
@@ -226,6 +224,11 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
     $scope.iframeControls = false;
     $scope.parentId = "";
     $scope.inactiveText = "";
+
+    // whether to display iframe options to user
+    $scope.resizingButtonsDiv = function() {
+        return $scope.iframe.src !== '';
+    };
 
     $scope.toggleIframeControls = function() {
         $scope.iframeControls = !$scope.iframeControls;
