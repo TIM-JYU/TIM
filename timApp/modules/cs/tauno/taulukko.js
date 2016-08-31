@@ -1,19 +1,25 @@
-// -*- coding: utf-8; tab-width: 4;  -*-
+// -*- coding: utf-8; tab-width: 4; indent-tabs-mode: nil; -*-
 //
 // Tauno - taulukot nohevasti
 //
 // Leikkikenttä taulukoiden käytön opetteluun.
 //
-// (c)2014 Jonne Itkonen, GPLv3-lisenssillä
+// (c)2014 Jonne Itkonen, Vesa Lappalainen GPLv3-lisenssillä
 
 
 /**********************************************************************
  TODO-kohdat
+ - tee undo
+   - ei peruutusta, vaan ohjelma ajetaan alusta uudestaan
+   - tee ohjelman ajo
+     - tee reset-metodi olioille
+     - uusiTila palautukseen tarjolle myös NullTila
+       tai VirheTila olio (kuin Maybe)
+ - this.muuuttujat arvoiksi Muuttuja-oliot, tai tilalle Muuttujat-olio
  - mobiili-UI
  - yhdistä askel ja lause
- - tee ohjelman ajo
- + uusi muuttuja uusiksi, jottei tartte prompt()-funktiota
- + jos vetää solun itseensä tai muuttujan itseensä, ei generoidu koodia (=>cancel)
+ - jos vetää solun itseensä tai muuttujan itseensä,
+   ei generoidu koodia (=>cancel)
  - if end
  - indeksi ylittyessä lopettaa olemasta indeksi
  - vakionumerot -1 ja n, joka kysyy numeron arvon (raahattavia)
@@ -28,11 +34,11 @@
  - silmukat muotoon 'toista kohdasta (pc) kunnes (ehto)'
    -> gotomaisuus
  - jos muuttujan nimessä on alussa 'int', niin urvelletaan
- - loput :)
+ - loput 
  - samanakaltaisten lauseiden tunnistus (versiossa 98)
  **********************************************************************/
 
-// Globaalit sanoat, jotka käännetään 
+// Globaalit sanoat, jotka käännetään
 var wordMuuttujat = "muuttujat:";
 var wordUusiMuuttuja = "uusi muuttuja";
 var wordMuuttujatTitle = "muuttujalista, lisää muuttuja yllä olevasta painikkeesta";
@@ -54,6 +60,8 @@ var echo = null;
 // TODO ilkeä, ilkeä globaali virtuaalikone
 var vk = null;
 
+// globaali muuttuja debuggauksen ajonaikaiseen sallimiseen/estämiseen
+var debis = false;
 
 // Palauttaa ajan merkkijonona, käytetään id:iden luomisessa.
 function timestring() { return (new Date()).getTime().toString(16); }
@@ -100,12 +108,13 @@ function parametrit(str) {
             continue;
     }
 
-    if (tulos.el === undefined) tulos.el = 'r';
+    if (typeof tulos.el === 'undefined') tulos.el = 'r';
 
     return tulos;
 }
 
-// namespace source: http://elegantcode.com/2011/01/26/basic-javascript-part-8-namespaces/
+// namespace source:
+//      http://elegantcode.com/2011/01/26/basic-javascript-part-8-namespaces/
 function namespace(namespaceString) {
     var parts = namespaceString.split('.'),
         parent = window,
@@ -121,24 +130,25 @@ function namespace(namespaceString) {
 }
 
 
-// http://stackoverflow.com/questions/5778020/check-whether-an-input-string-contains-number
+// http://stackoverflow.com/questions/5778020/
+//       check-whether-an-input-string-contains-number
 function isNumeric(n) {
     return !isNaN(parseInt(n)) && isFinite(n);
 }
 
 function isNotNumeric(n) {
     return !isNumeric(n);
-} 
+}
 
 var Operaatio = {
-    mista: null,
+    mistä: null,
     mihin: null,
     data: {},
     odottaaLähdettä: function () {
-        return this.mista === null;
+        return this.mistä === null;
     },
     asetaLähde: function (l) {
-        this.mista = l;
+        this.mistä = l;
         l.classList.add('valittu');
         if (this.mihin) {
             this.mihin.classList.remove('valittu');
@@ -149,13 +159,13 @@ var Operaatio = {
         this.mihin = k;
         k.classList.add('valittu');
     },
-    lähde: function () { return this.mista; },
+    lähde: function () { return this.mistä; },
     kohde: function () { return this.mihin; },
     tehty: function () {
-        if (this.mista) {
-            this.mista.classList.remove('valittu');
-            this.mista.style.background = "";
-            this.mista = null;
+        if (this.mistä) {
+            this.mistä.classList.remove('valittu');
+            this.mistä.style.background = "";
+            this.mistä = null;
         }
         if (this.mihin) {
             this.mihin.classList.remove('valittu');
@@ -180,11 +190,41 @@ var Operaatio = {
     }
 };
 
+function copyViesti(msg) {
+    return new Viesti(
+        msg.kuka,
+        msg.mitä,
+        msg.mistä,
+        msg.mihin);
+}
+
+function Viesti(kuka, mitä, mistä, mihin) {
+    this.kuka = kuka;
+    this.mitä = mitä;
+    this.mistä = mistä;
+    this.mihin = mihin;
+}
+
+function stringTaiArvo(x) {
+    return x;
+    if (typeof x !== 'object')
+        x = String(x);
+    else
+        x = String(x.arvo());
+    return x;
+}
+
+Viesti.prototype.toString = function() {
+    var mistä = stringTaiArvo(this.mistä);
+    var mihin = stringTaiArvo(this.mihin);
+    return '<'+this.kuka.constructor.name+' '+this.mitä+': '+mistä+' ~> '+mihin+'>';
+};
+
 function Virtuaalikone() {
     this.pc = 0; // TODO täällä vai Ohjelmassa?
 
-    this.alkutila = new Tila([], {});
-    this._tila = this.alkutila;
+    this._alkutila = new Tila([], {});
+    this._tila = this._alkutila.klooni();
     this._ohjelma = [];
     this._tekstina = [];
 }
@@ -227,14 +267,15 @@ Virtuaalikone.prototype.kysyMuuttuja = function(diviin, arvolla) {
     var validiNimi = false;
 
     do {
-        if (this._tila.muuttujat.hasOwnProperty(nimi)) {
-            nimi = prompt("Muuttuja "+nimi+" on jo olemassa, anna uusi nimi:",'');
+        if (this._tila.löytyyMuuttuja(nimi)) {
+            nimi = prompt("Muuttuja "+nimi+" on jo olemassa, anna uusi nimi:",
+                          '');
             if (nimi===null || nimi==='') return null;
             nimi = nimi.trim();
             validiNimi = false;
-        } else  if (nimi != nimi.match('[a-zA-Z_][a-zA-Z_0-9]*')) {
-            nimi = prompt("Muuttujan nimi saa sisältää vain kirjaimia ja numeroita,"+
-                          "ensin kirjain.  Anna uusi nimi:",'');
+        } else  if (nimi != nimi.match('[a-zA-Z_åäöÅÄÖ][a-zA-Z_åäöÅÄÖ0-9]*')) {
+            nimi = prompt("Muuttujan nimi saa sisältää vain kirjaimia "+
+                          " ja numeroita, ensin kirjain.  Anna uusi nimi:",'');
             if (nimi===null || nimi==='') return null;
             nimi = nimi.trim();
             validiNimi = false;
@@ -251,7 +292,7 @@ Virtuaalikone.prototype.kysyMuuttuja = function(diviin, arvolla) {
             if (arvo === null || arvo === '') {
                 arvo = null;
             } else {
-                arvo = parseInt(arvo);
+                arvo = new Luku(parseInt(arvo));
             }
         } while (arvo!==null && isNotNumeric(arvo));
     } else {
@@ -267,53 +308,56 @@ function alkaaNumerolla(nimi) {
     return numero;
 }
 
-Virtuaalikone.prototype.lisääMuuttuja = function(nimi, arvo, diviin, lisaaVaikkaNumero) {
-    if ( !diviin ) {
-        diviin = haeOlio('muuttujat');
-    }
-    var vakio = alkaaNumerolla(nimi);
-    if (vakio) {
-        a = parseInt(nimi);
-        arvo = a;
-    }
+Virtuaalikone.prototype.lisääMuuttuja =
+    function(nimi, arvo, diviin, lisääVaikkaNumero) {
+        if (diviin == null) {
+            diviin = haeOlio('muuttujat');
+        }
+        var vakio = alkaaNumerolla(nimi);
+        if (vakio) {
+            var a = parseInt(nimi);
+            arvo = a;
+        }
 
-    var muuttuja = this.ohjelma().uusiMuuttuja(nimi, arvo, vakio);
+        var muuttuja = this.ohjelma().uusiMuuttuja(nimi, arvo, vakio, diviin);
 
-    if ( !vakio || lisaaVaikkaNumero ) muuttuja.liitä(diviin);
-    return muuttuja;
-};
+        // XXX XXX ??? if ( !vakio || lisääVaikkaNumero ) muuttuja.liitä(diviin);
+        return muuttuja;
+    };
 
 
 Virtuaalikone.prototype.teeMuuttuja = function(diviin, arvolla) {
-    nimi = document.getElementById("uusi-nimi").value;
-    arvo = document.getElementById("uusi-arvo").value;
-    if (this._tila.muuttujat.hasOwnProperty(nimi)) return null;
-    if (arvo === null || arvo === '') { arvo = null;  } 
-    else { arvo = parseInt(arvo); }
+    var nimi = document.getElementById("uusi-nimi").value;
+    var arvo = document.getElementById("uusi-arvo").value;
+    if (this._tila.löytyyMuuttuja(nimi)) return null;
+    if (arvo === null || arvo === '') { arvo = null;  }
+    else { arvo = parseInt(arvo); } // TODO muuttuu Luvuksi lisääMuuttujassa?
+    // TODO ei toimi "new Luku(arvo);" koska seuraava rivi }
     if (arvo !== null && isNotNumeric(arvo)) return null;
     if (nimi ) nimi = nimi.trim();
-    if (nimi && !nimi.match(/^[a-zA-Z_][a-zA-Z_0-9]*$/)) return null;
+    if (nimi && !nimi.match(/^[a-zöäåA-ZÖÄÅ_][a-zöäåA-ZÖÄÅ_0-9]*$/))
+        return null;
     this.piilotaMuuttujanLisäys();
     if ((nimi === null || nimi === '')) {
         if (arvo == null) return null;
-        nimi = "" + arvo;
+        nimi = arvo.toString(); // Joo, hitaampi, mutta selittää paremmin
     }
-    return this.lisääMuuttuja(nimi, arvo, diviin,true);
+    return this.lisääMuuttuja(nimi, arvo, diviin);
 };
 
 Virtuaalikone.prototype.piilotaMuuttujanLisäys = function(diviin, arvolla) {
     document.getElementById("uuden-muuttujan-alue").style.visibility="collapse";
     document.getElementById("muuttuja-button-alue").style.visibility="visible";
 };
- 
+
 // event.type must be keypress
 Virtuaalikone.prototype.getChar = function(event) {
     if (event.which === null) {
-	return String.fromCharCode(event.keyCode); // IE
+        return String.fromCharCode(event.keyCode); // IE
     } else if (event.which!==0 && event.charCode!==0) {
-	return String.fromCharCode(event.which);   // the rest
+        return String.fromCharCode(event.which);   // the rest
     } else {
-	return null; // special key
+        return null; // special key
     }
 };
 
@@ -331,7 +375,7 @@ Virtuaalikone.prototype.uusiNimiKeypress = function(event,diviin) {
     if (ch.match(/[a-zöäåA-ZÖÄÅ_]/)) return true;
     var uusiNimi =  document.getElementById('uusi-nimi').value;
     if (uusiNimi.length >= 1 && ch.match(/[0-9]/)) return true;
-    if (" " < ch) return false; 
+    if (" " < ch) return false;
     var uusiArvo =  document.getElementById('uusi-arvo');
     uusiArvo.focus();
     return false;
@@ -339,8 +383,8 @@ Virtuaalikone.prototype.uusiNimiKeypress = function(event,diviin) {
 
 Virtuaalikone.prototype.uusiArvoKeypress = function(event,diviin) {
     var ch = this.getChar(event || window.event);
-    if (ch ="-" || "0" <= ch && ch <= "9") return true; 
-    if (" " <  ch) return false; 
+    if (ch == "-" || "0" <= ch && ch <= "9") return true;
+    if (" " <  ch) return false;
     this.teeMuuttuja(diviin);
     return false;
 };
@@ -350,25 +394,31 @@ Virtuaalikone.prototype.muuttuja = function(nimi) {
     return haeOlio('muuttuja-'+nimi).olio;
 };
 
-Virtuaalikone.prototype.solu = function (indeksi) {
-    var s = haeOlio('solu-' + indeksi);
-    if ( !s ) return null;
-    return s.olio;
+Virtuaalikone.prototype.solu = function(indeksi) {
+    console.log('dbg.solu: '+ typeof indeksi );
+    var s =  haeOlio('solu-'+indeksi).olio; // TODO pois .olio?
+    if (!s) return null;
+    return s; // TODO lisää .olio?
 };
 
 Virtuaalikone.prototype.alkuun = function () {
-    this._tila = this.alkutila;
-    return this.alkutila;
+    this._tila = this._alkutila.klooni();
+    return this._tila;
 };
 
+Virtuaalikone.prototype.päivitäAlkutila = function () {
+    this._alkutila = this._tila.klooni();
+    return this._tila;
+};
 
-Virtuaalikone.prototype.luoTaulukko = function (parametrit) {
+Virtuaalikone.prototype.luoTaulukko = function(parametrit) {
+    if (debis) debugger; // XXX
     this.simple = false;
     if (parametrit.s) this.simple = true;
     if (parametrit.t) {
         var alkiot = parametrit.t.split(',');
-        alkiot = alkiot.map(function (i) { return parseInt(i); });
-        for (var i = 0; i < alkiot.length; ++i) {
+        alkiot = alkiot.map(function (i) { return parseInt(i); }); // TODO Luku?
+        for (var i=0; i<alkiot.length; ++i) {
             this._tila.asetaIndeksiin(i, alkiot[i]);
         }
     } else {
@@ -377,7 +427,8 @@ Virtuaalikone.prototype.luoTaulukko = function (parametrit) {
         for (var j = 0; j < alkioita; ++j)
             this._tila.asetaIndeksiin(j, Math.floor((Math.random() * 100)));
     }
-    return new Taulukko(this); // XXX tää on niiiiin väärin...
+    this.taulukko = new Taulukko(this); // XXX tää on niiiiin väärin...
+    return this.taulukko;
 };
 
 Virtuaalikone.prototype.luoIndeksi = function (nimi,inro) {
@@ -399,29 +450,53 @@ Virtuaalikone.prototype.luoIndeksi = function (nimi,inro) {
 
 Virtuaalikone.prototype.luoMuuttujat = function (parametrit) {
     "use strict";
+    if (debis) debugger; // XXX
     var mu = document.getElementById('muuttujat');
     mu.innerHTML = '';
 
     for (var pn in parametrit) {
         if (pn[0]=='m') {
-            var val = parseInt(parametrit[pn]);
-            if ( isNaN(val) ) val = null;
+            var val = new Luku(parametrit[pn]);
+            // if ( isNaN(val) ) val = null;
             this.lisääMuuttuja(pn.substring(1), val ,null, true);
+
+            //this.lisääMuuttuja(pn.substring(1), new Luku(parametrit[pn]));
+            //parseInt(parametrit[pn])); // TODO Luku?
         } else if (pn[0]=='i') {
-            var inro = parseInt(parametrit[pn]);
-            this.luoIndeksi(pn.substring(1), inro);
+            var inro = parseInt(parametrit[pn]); // TODO Luku? Ei, vaan alle.
+            var muuttuja = this.lisääMuuttuja(pn.substring(1), new Luku(inro));
+
+            var solu = this.solu(inro);
+
+            var io = this.uusiIndeksi(solu, muuttuja);
         }
     }
+    // HUOMIO! Yllä luodut muuttujat voidaan poistaa undolla.
+    // Jos tämä ei sovi, korjaa ominaisuus koodista.
 
-    if (!vk.simple) return;
-    var n = vk.tila().taulukko.length;
-    for (var i = 0; i < n; i++)
-        this.luoIndeksi("" + i, i);
+    if (vk.simple) {
+        var n = vk.tila().taulukko.length;
+        for (var i = 0; i < n; i++)
+            this.luoIndeksi("" + i, i);
+    }
 };
 
+Virtuaalikone.prototype.uusiIndeksi = function (solu, muuttuja) {
+    var io = new Indeksi(this, solu);
+    io.indeksoi(muuttuja);
+    io.div.innerHTML = muuttuja.nimi();
+    // XXX väärä paikkako, ei, koska nyt Indeksissä ei ole UI-koodia => ongelma silti
 
+    solu.divSi.appendChild(io.div);  // XXX väärä paikka???
+    solu.indeksimuuttujat.push(io);
+    io.siirry(); // XXX TODO tää tekee jo edelliset 2 riviä
 
+    return io;
+};
 
+Virtuaalikone.prototype.poistaMuuttuja = function (muuttujaNimi) {
+    this._tila.poistaMuuttuja(muuttujaNimi);
+};
 
 function Taulukko(vk) {
     if (vk.tila().taulukko.length < 1) return;
@@ -452,6 +527,92 @@ function Taulukko(vk) {
     haeOlio('ohjelma').appendChild(tldiv);
     haeOlio('taulunaytto').appendChild(this.divi);
 }
+
+
+Taulukko.prototype.reset = function () {
+    // jokaiselle alidiville (indeksille)
+    var lkm = this.divi.childNodes.length;
+    for (var i = 0; i<lkm; ++i) {
+        this.divi.childNodes[i].olio.reset();
+    }
+};
+
+
+// Taulukko.prototype.toString = function() {
+//     var ts = this.taulukko.join(', ');
+//     return "t=["+ts+"]";
+// };
+
+
+function Tila(taulukko, muuttujat) {
+        this.taulukko = taulukko;
+        this.muuttujat = muuttujat;
+}
+
+Tila.prototype.klooni = function() {
+    // Tämän pitäisi olla tarpeeksi syvä kopio,
+    // sillä yksittäiset alkiot ovat (tai pitäs olla)
+    // muuttumattomia.
+    var uusiTaulukko = this.taulukko.slice(0);
+    uusiTaulukko.olio = this.taulukko.olio;
+
+    var uudetMuuttujat = this.muuttujat.constructor();
+    for (var attr in this.muuttujat)
+        if (this.muuttujat.hasOwnProperty(attr))
+            uudetMuuttujat[attr] = this.muuttujat[attr];
+    return new Tila(uusiTaulukko, uudetMuuttujat);
+};
+
+Tila.prototype.asetaIndeksiin = function(i, v) {
+    this.taulukko[i] = v;
+};
+
+Tila.prototype.asetaMuuttuja = function(n, v) {
+    this.muuttujat[n] = v;
+};
+
+Tila.prototype.muuttujassa = function(n) {
+    return this.muuttujat[n];
+};
+
+Tila.prototype.indeksissa = function(i) {
+    return this.taulukko[i];
+};
+
+Tila.prototype.muuttujaan = function(i, k) {
+    this.muuttujat[k] = this.taulukko[i];
+};
+
+Tila.prototype.muuttujasta = function(k, i) {
+    this.taulukko[i] = this.muuttujat[k];
+};
+
+// muuttujasta k taulukkoon muuttujan ki arvon mukaiseen indeksiin
+Tila.prototype.indeksiin = function(k, ki) {
+    if (debis) debugger;
+    this.taulukko[this.muuttujat[ki]] = this.muuttujat[k];
+};
+
+// taulukosta muuttujan ki arvon mukaisesta indeksistä muuttujaan k
+Tila.prototype.indeksista = function(ki, k) {
+    if (debis) debugger;
+    this.muuttujat[k] = this.taulukko[this.muuttujat[ki]];
+};
+
+Tila.prototype.löytyyMuuttuja = function(nimi) {
+    return this.muuttujat.hasOwnProperty(nimi);
+};
+
+Tila.prototype.poistaMuuttuja = function(nimi) {
+    delete this.muuttujat[nimi];
+};
+
+Tila.prototype.toString = function() {
+    var m = [];
+    for (var k in this.muuttujat) m.push(k);
+    var ts = this.taulukko.join(', ');
+    return "["+m.join(', ')+"; "+ts+"]";
+};
 
 
 function siivoaHTML(s) {
@@ -495,22 +656,35 @@ Ohjelma.prototype.tekstinä = function (tila) {
         return s.trim(); // poistetaan taulukkorivi
     }
 
-   
-
     return this.askeleet.map(function(x) {
         return x.tekstinä();
     }).join('\n');
 };
 
+Ohjelma.prototype.reset = function () {
+};
+
 Ohjelma.prototype.aja = function () {
     this.pc = 0;
     var uusiTila = this.vk.alkuun();
+    this.vk.taulukko.reset();
     var ok = true;
+
+    vk.lauseke.katoa(); // TODO kludge, tarkista toimivuus
+
+    var muuttujatDiv = haeOlio('muuttujat');
+    var children = [];
+    for (var mui = 0; mui < muuttujatDiv.childElementCount; ++mui) {
+        var mu = muuttujatDiv.childNodes[mui];
+        mu.olio.reset();
+        children.push(mu);
+    };
+    for (var c in children) muuttujatDiv.removeChild(children[c]);
 
     while (this.pc < this.askeleet.length) {
         ok = this.askeleet[this.pc].sovita(uusiTila);
         if (!ok) return false;
-        uusiTila = this.askeleet[this.pc].uusiTila;
+        uusiTila = ok; // this.askeleet[this.pc].uusiTila;
         ++this.pc;
     }
     this.vk.tila(uusiTila);
@@ -526,7 +700,6 @@ Ohjelma.prototype.irrota = function (kooste) {
     var koosteolio = haeOlio(kooste);
     koosteolio.removeChild(this.divi);
 };
- 
 
 Ohjelma.prototype.tila = function () {
     return this.vk.tila();
@@ -542,14 +715,16 @@ Ohjelma.prototype.viimeisinAskel = function () {
 
 Ohjelma.prototype.poistaViimeisin = function () {
     this.divi.removeChild(this.divi.lastChild);
-    return this.askeleet.pop();
+    var lause = this.askeleet.pop();
+    lause.poista();
+    return lause;
 };
 
 Ohjelma.prototype.ehto = function (ehto, ohjelma) {
     var ohj=this.divi;
     var e = new Ehto(ehto, ohjelma);
     var ok = e.sovita(this.tila());  // TODO entä jos ei onnistu?
-    var uusiTila = e.uusiTila;
+    var uusiTila = ok; // e.uusiTila;
     var a = new Askel(e, uusiTila, this.viimeisinAskel());
     this.tilaksi(uusiTila);
     this.askeleet.push(a);
@@ -565,12 +740,12 @@ Ohjelma.prototype.lisääDiviNäkyville = function (uusiDivi) {
     ohj.scrollTop = uusiDivi.offsetTop;
 };
 
-Ohjelma.prototype.sijoitus = function (mihin, mista) {
-    if (mista == mihin) return;
+Ohjelma.prototype.sijoitus = function (mihin, mistä) {
+    if (mistä == mihin) return;
     if (mihin.vakio) return;
-    var s = new Sijoitus(mihin, mista, this.viimeisinAskel());
-    var ok = s.sovita(this.tila());  // TODO entä jos ei onnistu?
-    this.tilaksi(s.uusiTila);
+    var s = new Sijoitus(mihin, mistä, this.viimeisinAskel());
+    var uusiTila = s.sovita(this.tila());  // TODO entä jos ei onnistu?
+    this.tilaksi(uusiTila); // XXX Se uusiTilaMaybe s.uusiTila);
     this.askeleet.push(s);
 
     this.lisääDiviNäkyville(s.divinä());
@@ -579,8 +754,7 @@ Ohjelma.prototype.sijoitus = function (mihin, mista) {
 Ohjelma.prototype.unplus = function (mihin, määrä) {
     if (mihin.vakio) return;
     var up = new UnaariPlus(mihin, määrä, this.viimeisinAskel());
-    var ok = up.sovita(this.tila());  // TODO entä jos ei onnistu?;
-    var uusiTila = up.uusiTila;
+    var uusiTila = up.sovita(this.tila());  // TODO entä jos ei onnistu?;
     this.tilaksi(uusiTila);
     this.askeleet.push(up);
 
@@ -590,8 +764,7 @@ Ohjelma.prototype.unplus = function (mihin, määrä) {
 Ohjelma.prototype.unmiinus = function (mihin, määrä) {
     if (mihin.vakio) return;
     var um = new UnaariMiinus(mihin, määrä, this.viimeisinAskel());
-    var ok = um.sovita(this.tila());  // TODO entä jos ei onnistu?
-    var uusiTila = um.uusiTila;
+    var uusiTila = um.sovita(this.tila());  // TODO entä jos ei onnistu?
     this.tilaksi(uusiTila);
     this.askeleet.push(um);
 
@@ -599,18 +772,19 @@ Ohjelma.prototype.unmiinus = function (mihin, määrä) {
 };
 
 
-Ohjelma.prototype.uusiMuuttuja = function (nimi, arvo, vakio) {
-    var lm = new LuoMuuttuja(nimi, arvo, vakio);
-    var ok = lm.sovita(this.tila());
-    var uusiTila = lm.uusiTila;
+Ohjelma.prototype.uusiMuuttuja = function (nimi, arvo, vakio, diviin) {
+    var lm = new LuoMuuttuja(this.vk, nimi, arvo, vakio, diviin);
+    // XXX diviin => Muuttujat-olio tarvitaan...
+    var uusiTila = lm.sovita(this.tila()); // = lm.uusiTila;
     this.tilaksi(uusiTila);
     if (!alkaaNumerolla(nimi)) {
         this.askeleet.push(lm);
         this.lisääDiviNäkyville(lm.divinä());
     }
 
-    var muuttuja = new Muuttuja(this, nimi, arvo, vakio);
-    return muuttuja;
+    // var muuttuja = new Muuttuja(this.vk, nimi, arvo, true);
+    // return muuttuja;
+    return lm.muuttuja();
 };
 
 
@@ -648,6 +822,9 @@ Lause.prototype.suorita = function (tila) {
     return tila;
 };
 
+Lause.prototype.poista = function () {
+};
+
 Lause.prototype.divinä = function () {
     this.divi = luoDiv('lause'+this.arvo().toString(),
                         {'className': "lause",
@@ -668,7 +845,7 @@ function Lohko(ehto, edellinen) {
 }
 
 Lohko.prototype.arvo = function () {
-    return this.mista.arvo();
+    return this.mistä.arvo();
 };
 
 Lohko.prototype = new Lause();
@@ -688,46 +865,51 @@ Lohko.prototype.asetaEhto = function(ehto) {
 
 Lohko.prototype.sovita = function(tila) {
     this.tila = tila ? tila : vk.tila();
-    this.uusiTila = tila.klooni();
+    var uusiTila = tila.klooni();
     for (var l in this.lauseet) {
-        var ok = l.sovita(this.uusiTila);
-        this.uusiTila = l.uusiTila;
+        var ok = l.sovita(uusiTila);
+        uusiTila = ok; // l.uusiTila;
     }
-    return true; // this.uusiTila;
+    return uusiTila; // true; // this.uusiTila;
 };
 
 
-function Sijoitus(mihin, mista, edellinen) {
+
+
+function Sijoitus(mihin, mistä, edellinen) {
     this.mihin = mihin;
-    this.mista = mista;
+    this.mistä = mistä;
     this.edellinenAskel = edellinen;
 }
 
 Sijoitus.prototype.arvo = function () {
-    return this.mista.arvo();
+    return this.mistä.arvo();
 };
 
 Sijoitus.prototype = new Lause();
 Sijoitus.prototype.constructor = Sijoitus;
 
-Sijoitus.prototype.sovita = function (tila) {
-    this.uusiTila = tila.klooni();
-    var arvo = this.mista.arvo(this.uusiTila);  // TODO pitäs huomioida, jos ei onnistu
-    this.mihin.arvoksi(arvo, this.uusiTila);
-    return true; // this.uusiTila;
+Sijoitus.prototype.sovita = function (tila) { // TODO XXX tämäkin voisi tajuta eron luku/indeksiluku
+    // this.uusiTila = tila.klooni();
+    var uusiTila = tila.klooni();
+    var arvo = this.mistä.arvo(uusiTila);
+    // TODO pitäs huomioida, jos ei onnistu ANS:
+    //         ei voi olla väärin, koska drag-drop
+    this.mihin.arvoksi(arvo, uusiTila);
+    return uusiTila; // true; // this.uusiTila;
 };
 
 Sijoitus.prototype.divinä = function (tila) {
     this.divi = luoDiv('sijoitus'+this.mihin.nimi()+
-                       this.mista.nimi()+this.mista.arvo(tila), {
+                       this.mistä.nimi()+this.mistä.arvo(tila), {
                            className: "lause sijoitus",
-                           title: this.mihin.nimi()+' = '+this.mista.arvo(tila),
-                           innerHTML: this.mihin.nimi()+' = '+ this.mista.htmlksi(tila) +';<br/>'});
+                           title: this.mihin.nimi()+' = '+this.mistä.arvo(tila),
+                           innerHTML: this.mihin.nimi()+' = '+ this.mistä.htmlksi(tila) +';<br/>'});
     return this.divi;
 };
 
 Sijoitus.prototype.tekstinä = function (tila) {
-    return this.mihin.htmlksi(tila)+' = '+this.mista.htmlksi(tila)+';';
+    return this.mihin.htmlksi(tila)+' = '+this.mistä.htmlksi(tila)+';';
 };
 
 
@@ -749,13 +931,14 @@ Ehto.prototype.ohjelma = function () {
 };
 
 Ehto.prototype.sovita = function (tila) {
-    this.uusiTila = tila.klooni();
+    var uusiTila = tila.klooni();
     // jos this.ehto tosi
     // if (this.ehto.sovita(this.uusiTila))
     //   sovita ohjelma tilaan
     //   this.uusiTila = this.ohjelma.sovita(this.uusiTila);
     // muuten vanha tila voimassa
-    return true; // this.uusiTila;
+
+    return uusiTila; // true; // this.uusiTila;
 };
 
 Ehto.prototype.divinä = function (tila) {
@@ -784,11 +967,12 @@ UnaariPlus.prototype = new Lause();
 UnaariPlus.prototype.constructor = UnaariPlus;
 
 UnaariPlus.prototype.sovita = function (tila) {
-    this.uusiTila = tila.klooni();
-    var arvo = this.mihin.arvo(tila);
-    arvo += this.määrä.arvo();
-    this.mihin.arvoksi(arvo, this.uusiTila);
-    return true;
+    var uusiTila = tila.klooni();
+    var arvo_mihin = this.mihin;
+    var arvo_määrä = this.määrä;
+    var arvo = arvo_mihin.add(arvo_määrä, uusiTila);
+    this.mihin.arvoksi(arvo, uusiTila);
+    return uusiTila; // true;
 };
 
 UnaariPlus.prototype.divinä = function (tila) {
@@ -802,6 +986,9 @@ UnaariPlus.prototype.divinä = function (tila) {
 UnaariPlus.prototype.tekstinä = function (tila) {
     return this.mihin.nimi()+' += '+this.määrä.arvo()+';';
 };
+
+
+
 
 function UnaariMiinus(mihin, määrä) {
     this.mihin = mihin;
@@ -820,18 +1007,20 @@ UnaariMiinus.prototype = new Lause();
 UnaariMiinus.prototype.constructor = UnaariMiinus;
 
 UnaariMiinus.prototype.sovita = function (tila) {
-    this.uusiTila = tila.klooni();
+    var uusiTila = tila.klooni();
     var arvo = this.mihin.arvo(tila);
     arvo -= this.määrä.arvo();
-    this.mihin.arvoksi(arvo, this.uusiTila);
-    return true;
+    this.mihin.arvoksi(arvo, uusiTila);
+    return uusiTila; // true;
 };
 
 UnaariMiinus.prototype.divinä = function (tila) {
-    this.divi = luoDiv('umiinus'+this.mihin.nimi()+this.mihin.arvo(tila),
-                        {'className': "lause unaari",
-                         'title': this.tekstinä(tila),
-                         'innerHTML': this.mihin.nimi()+' -= '+ this.määrä.arvo() +';<br/>'});
+    this.divi =
+        luoDiv('umiinus'+this.mihin.nimi()+this.mihin.arvo(tila),
+               {'className': "lause unaari",
+                'title': this.tekstinä(tila),
+                'innerHTML': this.mihin.nimi()+' -= '
+                           + this.määrä.arvo()+';<br/>'});
     return this.divi;
 };
 
@@ -840,10 +1029,13 @@ UnaariMiinus.prototype.tekstinä = function (tila) {
 };
 
 
-function LuoMuuttuja(nimi, arvo, vakio) {
+function LuoMuuttuja(vk, nimi, arvo, vakio, diviin) {
     this.nimi = nimi;
     this._arvo = arvo;
     this.vakio = vakio;
+    this.vk = vk;
+    this.muuttujatDivi = diviin;
+    this._muuttuja = new Muuttuja(vk, nimi, arvo);
 }
 
 LuoMuuttuja.prototype.arvo = function () {
@@ -854,10 +1046,16 @@ LuoMuuttuja.prototype = new Lause();
 LuoMuuttuja.prototype.constructor = LuoMuuttuja;
 
 LuoMuuttuja.prototype.sovita = function (tila) {
-    // if (this.vakio) return true;
-    this.uusiTila = tila.klooni();
-    this.uusiTila.muuttujat[this.nimi] = this._arvo;
-    return true; // this.uusiTila;
+    var uusiTila = tila.klooni();
+    uusiTila.muuttujat[this.nimi] = this._arvo;// ÖÖÖ XXX tulis olla  uusiTila.muuttujat[this.nimi] = this._muuttuja;
+    // var uusiTila = this._muuttuja.sovita(tila);  // XXX sittenkin tämä pois ja yllä oleva takas XXX-muutoksin?
+    this._muuttuja.liitä(this.muuttujatDivi);
+    return uusiTila; // true; // uusiTila;
+};
+
+LuoMuuttuja.prototype.poista = function () {
+    this.vk.poistaMuuttuja(this.nimi);
+    this._muuttuja.irrota(this.muuttujatDivi);
 };
 
 LuoMuuttuja.prototype.divinä = function (tila) {
@@ -877,13 +1075,32 @@ LuoMuuttuja.prototype.tekstinä = function (tila) {
     return lause;
 };
 
+LuoMuuttuja.prototype.muuttuja = function () {
+    return this._muuttuja;
+};
+
+
+
 
 function Luku(arvo) {
-    this.sisältö = arvo;
+    if (typeof arvo === 'string')
+        this.sisältö = parseInt(arvo);
+    else
+        this.sisältö = arvo;
 }
 
 Luku.prototype.arvo = function (tila) {
     return this.sisältö;
+};
+
+Luku.prototype.add = function(toinen) {
+    var tulos = new Luku(this.arvo()+toinen.arvo());
+    return tulos;
+};
+
+Luku.prototype.sub = function(toinen) {
+    var tulos = new Luku(this.arvo()-toinen.arvo());
+    return tulos;
 };
 
 Luku.prototype.nimi = function () {
@@ -906,125 +1123,81 @@ Luku.prototype.tekstinä = function (tila) {
     return this.sisältö.toString();
 };
 
+Luku.prototype.toString = function() {
+    return this.tekstinä();
+};
 
- 
-function Tila(taulukko, muuttujat) {
-        this.taulukko = taulukko;
-        this.muuttujat = muuttujat;
+function Indeksiluku(arvo) { // TODO Korjaa, vai tarvitaanko sittenkään?
+    this.sisältö = arvo;
 }
 
-Tila.prototype.klooni = function() {
-    // Tämän pitäisi olla tarpeeksi syvä kopio,
-    // sillä yksittäiset alkiot ovat (tai pitäs olla)
-    // muuttumattomia.
-    var uusiTaulukko = this.taulukko.slice(0);
-    uusiTaulukko.olio = this.taulukko.olio;
+Indeksiluku.prototype = new Luku();
+Indeksiluku.prototype.constructor = Indeksiluku;
 
-    var uudetMuuttujat = this.muuttujat.constructor();
-    for (var attr in this.muuttujat)
-        if (this.muuttujat.hasOwnProperty(attr))
-            uudetMuuttujat[attr] = this.muuttujat[attr];
-    return new Tila(uusiTaulukko, uudetMuuttujat);
-};
-
-Tila.prototype.asetaIndeksiin = function(i, v) {
-    this.taulukko[i]=v;
-};
-
-Tila.prototype.asetaMuuttuja = function(n, v) {
-    this.muuttujat[n]=v;
-};
-
-Tila.prototype.muuttujassa = function(n) {
-    return this.muuttujat[n];
-};
-
-Tila.prototype.indeksissa = function(i) {
-    return this.taulukko[i];
-};
-
-Tila.prototype.muuttujaan = function(i, k) {
-    this.muuttujat[k] = this.taulukko[i];
-};
-
-Tila.prototype.muuttujasta = function(k, i) {
-    this.taulukko[i] = this.muuttujat[k];
-};
-
-// muuttujasta k taulukkoon muuttujan ki arvon mukaiseen indeksiin
-Tila.prototype.indeksiin = function(k, ki) {
-    this.taulukko[this.muuttujat[ki]] = this.muuttujat[k];
-};
-
-// taulukosta muuttujan ki arvon mukaisesta indeksistä muuttujaan k
-Tila.prototype.indeksista = function(ki, k) {
-    this.muuttujat[k] = this.taulukko[this.muuttujat[ki]];
+Indeksiluku.prototype.nimi = function() {
+    return '<'+this.sisältö.toString()+'>';
 };
 
 
-function pudotaIndeksialueeseen(vm, event, data, mihin, mista) {
+function pudotaIndeksialueeseen(vm, event, data, mihin, mistä) {
     var nimi   = data.nimi;
     var tyyppi = data.tyyppi;
     var ohj = document.getElementById('ohjelma').olio;
 
     event.stopPropagation();
 
-    if (mihin.constructor === mista.constructor) return;
+    if (mihin.constructor === mistä.constructor) return;
 
     if (tyyppi==='indeksi') {
-        var erotus = mihin.indeksi - mista.div.solu.indeksi;
+        var erotus = mihin.indeksi - mistä.div.solu.indeksi;
 
-        if (erotus<0) ohj.unmiinus(mista.muuttuja, -erotus);
-        else ohj.unplus(mista.muuttuja, erotus);
-
-
+        if (erotus<0) ohj.unmiinus(mistä.muuttuja, -erotus);
+        else ohj.unplus(mistä.muuttuja, erotus);
 
         return;
-    } else if (tyyppi==='muuttuja') {
-        var indeksi = mista.arvo() === null ? mihin.indeksi : mista.arvo();
-        var luotuMuuttuja = false;
+    } else if (tyyppi==='muuttuja') { // XXX XXX XXX ihan sekaisin
+        var indeksi = mistä.arvo() === null ? mihin.indeksi : mistä.arvo();
+        var muuttujaAlustamatta = false;
 
-        if ((indeksi < 0) || (indeksi >= vm.tila().taulukko.length)) return;
-
-        if (mista.arvo() === null) {
-            mista.arvoksi(mihin.indeksi);
-            luotuMuuttuja = true;
+        if ((indeksi < 0) || (indeksi >= vm.tila().taulukko.length)) {
+            return;
         }
 
-        var io = new Indeksi(vm, mihin);
-        io.indeksoi(mista);
-        io.div.innerHTML = mista.nimi();
+        if (mistä.arvo() === null) {
+            mistä.arvoksi(mihin.indeksi); // TODO mihin.indeksi == indeksi
+            muuttujaAlustamatta = true;   // TODO yllä '.indeksi' on int,
+                                          // -> Indeksiarvo-olioksi?
+        }
 
-        mihin.divSi.appendChild(io.div);
-        mihin.indeksimuuttujat.push(io);
-        io.siirry();
+        var io = vm.uusiIndeksi(mihin, mistä);
 
-        if (luotuMuuttuja) {
-            ohj.sijoitus(mista, new Luku(mihin.indeksi));
+        if (muuttujaAlustamatta) {
+            // XXX TODO Tämä voisi luoda uuden indeksiarvon lukuarvon sijaan:
+            ohj.sijoitus(mistä, new Indeksiluku(mihin.indeksi));
         } else {
-            var f = io.div.solu.indeksimuuttujat.filter(
+            var f = mihin.indeksimuuttujat.filter(
                 function (x) {
-                    return x.muuttuja.nimi()===mista.nimi();
+                    return x.muuttuja.nimi() === mistä.nimi();
                 });
             if (f.length>1) {
-                io.div.solu.indeksimuuttujat =
-                    io.div.solu.indeksimuuttujat.filter(function (x) { return x !==io; });
-                io.div.solu.divSi.removeChild(io.div);
+                mihin.indeksimuuttujat =
+                    mihin.indeksimuuttujat.filter(
+                        function (x) { return x !== io; });
+                mihin.divSi.removeChild(io.div);
             }
         }
 
         return;
     } else if (tyyppi==='unop') {
-      //  if (nimi === 'miinus') ohj.unmiinus(mihin);
-      //  else if (nimi === 'plus') ohj.unplus(mihin);
+        if (nimi === 'miinus') ohj.unmiinus(mihin);
+        else if (nimi === 'plus') ohj.unplus(mihin);
 
         return;
     }
 }
 
 
-function lisaaDragKuuntelija(div,fSallittu) {
-    
+function lisääDragKuuntelija(div,fSallittu) {
     if (typeof (fSallittu) != "function") fSallittu = false;
     div.original = div.style.background;
 
@@ -1034,7 +1207,7 @@ function lisaaDragKuuntelija(div,fSallittu) {
         event.dataTransfer.effectAllowed = 'copy';
         return false;
     }, false);
-    
+
     div.addEventListener('dragenter', function (event) {
         if (fSallittu && fSallittu()) return true;
         event.preventDefault();
@@ -1051,26 +1224,28 @@ function lisaaDragKuuntelija(div,fSallittu) {
     }, false);
 }
 
-function lisaaKuuntelijat(div, asetaLahde, kaytaKohde, salliPudotus) {
-    if (asetaLahde) div.addEventListener('dragstart', function (event) {
-        asetaLahde(event);
-        event.dataTransfer.effectAllowed = 'copy';
-        event.dataTransfer.setData('text/plain',""); // FF ei muuten toimi
-    }, false);
+function lisääKuuntelijat(div, asetaLähde, käytäKohde, salliPudotus) {
+    if (asetaLähde)
+        div.addEventListener('dragstart', function (event) {
+            asetaLähde(event);
+            event.dataTransfer.effectAllowed = 'copy';
+            event.dataTransfer.setData('text/plain',""); // FF ei muuten toimi
+        }, false);
 
-    if (kaytaKohde) div.addEventListener('drop', function (event) {
-        kaytaKohde(event);
-    }, false);
+    if (käytäKohde)
+        div.addEventListener('drop', function (event) {
+            käytäKohde(event);
+        }, false);
 
     div.addEventListener('click', function (event) {
         if (Operaatio.odottaaLähdettä()) {
-            if (asetaLahde) asetaLahde(event);
+            if (asetaLähde) asetaLähde(event);
         } else {
-            if (kaytaKohde) kaytaKohde(event);
+            if (käytäKohde) käytäKohde(event);
         }
     }, false);
 
-    if (salliPudotus) lisaaDragKuuntelija(div, salliPudotus);
+    if (salliPudotus) lisääDragKuuntelija(div, salliPudotus);
 }
 
 
@@ -1079,16 +1254,15 @@ function Solu(vm, indeksi, arvo) {
 
     var divid = 'solu-'+indeksi;
     this.divid = divid;
-    this.div = luoDiv(divid,
+    this.div = luoDiv(divid,                  // solun kehys sisältäen:
                        {'className':'solu'});
-    this.divSn = luoDiv('solu-n'+indeksi,
+    this.divSn = luoDiv('solu-n'+indeksi,     // - solun numero
                           {'className':'solu-n',
                            'innerHTML':indeksi.toString()});
-    this.divSa = luoDiv('solu-a'+indeksi,
-                          {'className':'solu-a',
-                           'draggable':true});
-
-    this.divSi = luoDiv('solu-i'+indeksi,
+    this.divSa = luoDiv('solu-a'+indeksi,     // - solun arvo
+                        {'className':'solu-a',
+                         'draggable':true});
+    this.divSi = luoDiv('solu-i'+indeksi,     // - soluun osoittavat indeksit
                           {'className':'solu-i',
                            'draggable':false,
                            'innerHTML':''});
@@ -1105,45 +1279,46 @@ function Solu(vm, indeksi, arvo) {
     this.divSa.olio = this;
     this.divSi.olio = this;
     this.arvoksi(arvo||0);
+    this._alkuarvo = arvo;
 
     this.div.solu = this;    // TODO tarvitaanko näitä .soluja?
     this.divSa.solu = this;
     this.divSi.solu = this;
 
-    var tama = this; // varmistetaan että tapahtuman käsittelijässä on oikea olio
-    
-    function asetaLahde(event) {
-        if (tama.suljettu()) {
+    var self = this;
+    function asetaLähde(event) {
+        if (self.suljettu()) {
             event.preventDefault();
             event.stopPropagation();
             return;
         }
-        if (tama.divSi.children.length > 1) {
+        if (self.divSi.children.length>1) {
             event.preventDefault();
             event.stopPropagation();
-            alert('Solulla on useampia indeksejä, joten raahaa indekseistä valitaksesi sopivan.');
+            alert('Solulla on useampia indeksejä, '+
+                  'joten siirrä indeksi valitaksesi sopivan.');
             return;
         }
         if (Operaatio.odottaaLähdettä()) {
             Operaatio.asetaLähde(event.target);
-            Operaatio.asetaData({
-                tyyppi: 'solu',
-                indeksi: event.target.solu.indeksi.toString(),
-                oid: event.target.id
-            });
+            Operaatio.asetaData({tyyppi:  'solu',
+                                 indeksi: event.target.solu.indeksi.toString(),
+                                 oid:     event.target.id});
             return;
         }
     }
 
-    function kaytaKohde(event) {
-        //if (this.olio.suljettu()) return;
+    function käytäKohde(event) {
         Operaatio.asetaKohde(event.target);
-        if (tama.divSi.children.length > 1) {
+
+        if (self.divSi.children.length > 1) {
             event.preventDefault();
             event.stopPropagation();
-            alert('Solulla on useampia indeksejä, joten pudota indeksiin valitaksesi sopivan.');
+            alert('Solulla on useampia indeksejä, '+
+                  'joten pudota indeksiin valitaksesi sopivan.');
             return Operaatio.tehty();
         }
+
         event.preventDefault();
         var data = Operaatio.haeData();
         var tyyppi = data.tyyppi;
@@ -1151,55 +1326,55 @@ function Solu(vm, indeksi, arvo) {
         var olio = haeOlio(oid).olio;
         var mihin = event.target.olio;
         if (mihin.suljettu && mihin.suljettu() ) { return Operaatio.tehty(); }
-        var mista = olio;
-        var ohj = document.getElementById('ohjelma').olio;
+        var mistä = olio;
+        var ohj = document.getElementById("ohjelma").olio;
 
         if (tyyppi == "muuttuja" || tyyppi == "solu" ||
-            tyyppi === 'indeksi' || tyyppi === 'vakio') {
+            tyyppi === "indeksi" || tyyppi === "vakio") {
             event.stopPropagation();
 
-            ohj.sijoitus(mihin, mista);
+            ohj.sijoitus(mihin, mistä);
             Operaatio.tehty();
             return;
-        } else if (tyyppi == "lauseke") {
+        } else if (tyyppi === "lauseke") {
             var lausekediv = haeOlio(oid);
             event.stopPropagation();
 
-            ohj.sijoitus(mihin, mista);
+            ohj.sijoitus(mihin, mistä);
             lausekediv.olio.katoa();
             Operaatio.tehty();
             return;
-        } else if (tyyppi === 'unop') {
+        } else if (tyyppi === "unop") {
             event.stopPropagation();
 
-            if (data.nimi === 'miinus') ohj.unmiinus(mihin);
-            else if (data.nimi === 'plus') ohj.unplus(mihin);
+            if (data.nimi === "miinus")    ohj.unmiinus(mihin);
+            else if (data.nimi === "plus") ohj.unplus(mihin);
             Operaatio.tehty();
             return;
         }
-        return true;
+    } // XXX tarkista return arvo
+
+    lisääKuuntelijat(this.divSa, asetaLähde, käytäKohde,
+                     function () { return self.suljettu(); } );
+
+    function käytäKohdeSi(event) {
+            event.preventDefault();
+            Operaatio.asetaKohde(event.target);
+            var data = Operaatio.haeData();
+            var mihin = event.target.olio;
+            var mistä = Operaatio.lähde().olio; // muuta kuin olio...
+            var tulos = pudotaIndeksialueeseen(vm, event, data, mihin, mistä);
+            Operaatio.tehty();
     }
 
-    lisaaKuuntelijat(this.divSa, asetaLahde, kaytaKohde, function () { return tama.suljettu(); } );
-
-    function kaytaKohdeSi(event) {
-        event.preventDefault();
-        Operaatio.asetaKohde(event.target);
-        var data = Operaatio.haeData();
-        var mihin = event.target.olio;
-        var mista = Operaatio.lähde().olio; // muuta kuin olio...
-        var tulos = pudotaIndeksialueeseen(vm, event, data, mihin, mista);
-        Operaatio.tehty();
-    }
-
-    lisaaKuuntelijat(this.divSi, null, kaytaKohdeSi, true);
+    lisääKuuntelijat(this.divSi, null, käytäKohdeSi, true);
 
     this.div.appendChild(this.divSn);
     this.div.appendChild(this.divSa);
     if ( !vk.simple )  this.div.appendChild(this.divSi);
 }
 
-Solu.prototype.sidoIndeksi = function(i) {
+Solu.prototype.sidoIndeksi = function(i) { // XXX tätä ei kutsuta
     this.kuuntelijat.push(i);
 };
 
@@ -1214,27 +1389,53 @@ Solu.prototype.päivitäIndeksit = function (tila) {
         function (x) { x.muuttujaPäivitetty(this, _tila); });
 };
 
+Solu.prototype.poistaIndeksimuuttuja = function (im) {
+    if (this.diviSi.children.length>0)
+        this.diviSi.removeChild(im.div);
+};
 
 Solu.prototype.arvoksi = function (x, tila) {
     tila = tila ? tila : this.vm.tila();
-    tila.asetaIndeksiin(this.indeksi,  x);  // XXX ZZZ TODO vai asetaIndeksiin
-    this.divSa.innerHTML = x.toString();
-
+    // XXX x voi olla null, jos alustamattoman muuttujan sijoittaa taulukkoon
+    if (x != null) { // TODO järkevämmäksi: alustamattomat muuttujat pois?
+        tila.asetaIndeksiin(this.indeksi,  x);  // XXX ZZZ TODO vai asetaIndeksiin
+        this.divSa.innerHTML = x.toString();
+    }
     return tila.indeksissa(this.indeksi);
 };
 
 Solu.prototype.arvo = function (tila) {
-    return tila ? tila.indeksissa(this.indeksi) : this.vm.tila().indeksissa(this.indeksi);
+    return new Luku(tila ? tila.indeksissa(this.indeksi)
+                    : this.vm.tila().indeksissa(this.indeksi));
 };
 
-Solu.prototype.nimi = function (r) { // TODO XXX vuoden kludge, joka estää rekursion
-    if ((this.indeksimuuttujat.length !== 0) && (r!==this))  // ei osaa "uudelleenajossa" esim sorsatulostuksessa huomioida indeksisyyttä oikein :(
+Solu.prototype.reset = function () {
+    this.indeksimuuttujat.forEach(function (im) { im.reset(); });
+    // TODO KUUN this.indeksimuuttujat = [];
+    // TODO XXX poistuvatko indeksimuuttujat? tarvitseeko?
+    // pitäiskö tässä nollata kuuntelijat?
+    this.sulje();
+    return this.arvoksi(this._alkuarvo);
+};
+
+Solu.prototype.add = function(mitä, tila) {
+    var _tila = tila || this.vm.tila();
+    var lkm = this.arvo(tila);
+    return lkm.add(mitä);
+};
+
+Solu.prototype.nimi = function (r) {
+    // TODO XXX vuoden kludge, joka estää rekursion
+    if ((this.indeksimuuttujat.length !== 0) && (r!==this)) {
+        // ei osaa "uudelleenajossa"
+        // esim sorsatulostuksessa huomioida indeksisyyttä oikein 
         return this.indeksimuuttujat[0].nimi(this);
+    }
     return 't['+this.indeksi+']';  // katso Indeksi.prototype.nimi
 };
 
 Solu.prototype.sovita = function (tila) {
-    return true;
+    return tila; // true;
 };
 
 Solu.prototype.htmlksi = function () {
@@ -1256,16 +1457,22 @@ Solu.prototype.suljettu = function () {
 Solu.prototype.avaa = function () {
     if (!this.suljettu()) {
         this.divSa.classList.remove('suljettu');
-        this.divSa.classList.add('avattu'); // style.background = '#fdf6e3'; // TODO Vaihda luokaksi
+        this.divSa.classList.add('avattu');
     }
 };
 
 Solu.prototype.sulje = function () {
     if (this.suljettu()) {
         this.divSa.classList.remove('avattu');
-        this.divSa.classList.add('suljettu'); // style.background = '#444'; // TODO Vaihda luokaksi
+        this.divSa.classList.add('suljettu');
     }
 };
+
+Solu.prototype.muuttujaPäivitetty = function (a,b) {
+    // TODO keskeneräisen lausekkeen t[i] arvo pitää päivittyä
+};
+
+
 
 
 function Indeksi(vm, solu) {
@@ -1274,9 +1481,11 @@ function Indeksi(vm, solu) {
     this.divid = divid;
     this.div = luoDiv(divid, {
         'className':'indeksi',
-        'draggable': true,
-        'title': 'raahaa tähän muuttuja, niin voit viitata taulukon alkioihin\n' +
-            'muuttujan arvon muuttaminen tai tämän raahaaminen siirtää viittausta',
+        'draggable':true,
+        'title': 'siirrä tähän muuttuja, niin voit viitata '+
+            'taulukon alkioihin\n' +
+            'muuttujan arvon muuttaminen tai tämän raahaaminen '+
+            'siirtää viittausta',
         'innerHTML':'&nbsp;'});
     this.vm = vm;
     this.muuttuja = null;
@@ -1284,7 +1493,7 @@ function Indeksi(vm, solu) {
 
     this.div.solu = solu;
 
-    function asetaLahde(event) {
+    function asetaLähde(event) {
         Operaatio.asetaLähde(event.target);
         event.stopPropagation();
         Operaatio.asetaData({tyyppi: 'indeksi',
@@ -1292,52 +1501,48 @@ function Indeksi(vm, solu) {
                              oid:event.target.id});
     }
 
-    function kaytaKohde(event) {
-                Operaatio.asetaKohde(event.target);
-				event.stopPropagation();
-                event.preventDefault();
-                var data = Operaatio.haeData();
+    function käytäKohde(event) {
+        Operaatio.asetaKohde(event.target);
+        event.stopPropagation();
+        event.preventDefault();
 
-                var tyyppi = data.tyyppi;
-                var oid = data.oid;
+        var data = Operaatio.haeData();
 
-                var olio = haeOlio(oid).olio;
-                var mihin = event.target.olio;
-                var mista = olio;
-                var ohj = document.getElementById('ohjelma').olio;
+        var tyyppi = data.tyyppi;
+        var oid = data.oid;
 
+        var olio = haeOlio(oid).olio;
+        var mihin = event.target.olio;
+        var mistä = olio;
+        var ohj = document.getElementById('ohjelma').olio;
 
-                if (tyyppi == "muuttuja") {
-
-
-                    if (mihin.div.solu.divSi.children.length===0) {
-                        mihin.indeksoi(mista);
-                        mihin.div.innerHTML = mista.nimi(); //
-                        // TODO tänne seuraava lause &
-                        // indeksin siirto muuttujan arvon mukaan
-                        mihin.siirry();
-                        // ohj.sijoitus(mihin, mista);
-                    } else {
-                        ohj.sijoitus(mihin, mista);
-                    }
-                } else if (tyyppi=="indeksi" || tyyppi == "solu" ||
-                           tyyppi === "vakio" ) {
-                    ohj.sijoitus(mihin, mista);
-                } else if (tyyppi=="lauseke") {
-                    var lausekediv = haeOlio(oid);
-
-                    ohj.sijoitus(mihin, mista);
-                    lausekediv.olio.katoa();
-                } else if (tyyppi === 'unop') {
-                     var nimi = data.nimi;
-                     if (nimi === 'miinus') ohj.unmiinus(mihin);
-                     else if (nimi === 'plus') ohj.unplus(mihin);
-                }
-
-                Operaatio.tehty();
+        if (tyyppi == "muuttuja") {
+            if (mihin.div.solu.divSi.children.length === 0) {
+                mihin.indeksoi(mistä);
+                mihin.div.innerHTML = mistä.nimi(); //
+                // TODO tänne seuraava lause &
+                // indeksin siirto muuttujan arvon mukaan
+                mihin.siirry();
+                // ohj.sijoitus(mihin, mistä);
+            } else {
+                ohj.sijoitus(mihin, mistä);
+            }
+        } else if (tyyppi === "indeksi" || tyyppi == "solu" ||
+                   tyyppi === "vakio" ) {
+            ohj.sijoitus(mihin, mistä);
+        } else if (tyyppi === "lauseke") {
+            var lausekediv = haeOlio(oid);
+            ohj.sijoitus(mihin, mistä);
+            lausekediv.olio.katoa();
+        } else if (tyyppi === "unop") {
+            var nimi = data.nimi;
+            if (nimi === "miinus") ohj.unmiinus(mihin);
+            else if (nimi === "plus") ohj.unplus(mihin);
+        }
+        Operaatio.tehty();
     }
 
-    lisaaKuuntelijat(this.div, asetaLahde, kaytaKohde, true);
+    lisääKuuntelijat(this.div, asetaLähde, käytäKohde, true);
 }
 
 Indeksi.prototype.validi = function (tila) {
@@ -1348,6 +1553,8 @@ Indeksi.prototype.validi = function (tila) {
     var taulukko = tila ? tila.taulukko : this.vm.tila().taulukko;
     var ind = this.muuttuja.arvo(tila);
 
+    // TODO XXX ind voi olla myös null
+
     if ((ind < 0) || (ind >= taulukko.length)) return false;
 
     return true;
@@ -1355,6 +1562,18 @@ Indeksi.prototype.validi = function (tila) {
 
 Indeksi.prototype.muuttujaPäivitetty = function (m, tila) {
     this.siirry(tila);
+};
+
+Indeksi.prototype.reset = function () {
+    if (this.muuttuja !== null) {
+        var indeksiDivi = this.div.solu.divSi;
+        if (indeksiDivi.children.length>0) {
+            indeksiDivi.removeChild(this.div);
+        }
+        // this.div.solu.vapautaIndeksi(this);
+        // this.muuttuja.vapautaIndeksi(this);
+        // this.muuttuja = null;
+    }
 };
 
 Indeksi.prototype.arvoksi = function (x, tila) {
@@ -1378,11 +1597,20 @@ Indeksi.prototype.siirry = function (tila) {
     if (!this.validi(tila)) return;
 
     var ind = this.muuttuja.arvo(tila);
+    if (ind === null) return;
+    // XXX uudelleen alustettaessa muuttuja voi olla alustamaton,
+    //     vaikka tätä kutsutaan.
+    // TODO XXX jos ind==null, saattaa indeksi olla muuttujassa
+    //          kuuntelijana. poistetaanko nyt vai muualla?
     var s = this.vm.solu(ind);
     var d = this.div.solu;
     var ti = this;
 
-    d.divSi.removeChild(this.div);
+    if (d.divSi.children.length>0) {
+        // resetin jälkeen lapsia ei ole,
+        // mutta alla appendChild luo ensimmäisen, jep kludge
+        d.divSi.removeChild(this.div);
+    }
     d.indeksimuuttujat =
         d.indeksimuuttujat.filter(function (x) { return x !== ti; });
 
@@ -1454,43 +1682,39 @@ function Vakio(value, vm) {
     this.divi = luoDiv(this.divid, {
         className: 'const',
         title: 'raahaan tämä arvoon, tai tähän arvo, '+
-			'muuttaaksesi sen arvoksi '+this.value,
-            'draggable':true});
-    this.divi.innerHTML = '_&larr;'+this.value.toString();
+               'muuttaaksesi sen arvoksi '+this.value});
+    this.divi.innerHTML = '_ &larr; '+this.value.toString();
 
-    function asetaLahde(event) {
-        Operaatio.asetaLähde(event.target);
-        Operaatio.asetaData({
-            tyyppi: 'vakio',
-            nimi: value.toString(),
-            oid: divid
-        });
+    function asetaLähde(event) {
+            Operaatio.asetaLähde(event.target);
+            Operaatio.asetaData({tyyppi: 'vakio',
+                                 nimi: value.toString(),
+                                 oid: divid});
+    }
+    function käytäKohde(event) {
+            Operaatio.asetaKohde(event.target);
+            var data = Operaatio.haeData();
+            var tyyppi = data.tyyppi;
+            var nimi  = data.nimi;
+            var oid = data.oid;
+            var ohj = document.getElementById('ohjelma').olio;
+            var olio = haeOlio(oid).olio;
+            var mihin = event.target.olio;
+            var mistä = olio;
+
+            var kohde = mistä;
+
+            if ((tyyppi === 'muuttuja') || (tyyppi === 'solu') ||
+                (tyyppi === 'indeksi')) {
+                event.stopPropagation();
+
+                var luku = new Luku(value);
+                ohj.sijoitus(kohde, luku);
+            }
+            Operaatio.tehty();
     }
 
-    function kaytaKohde(event) {
-        Operaatio.asetaKohde(event.target);
-        var data = Operaatio.haeData();
-        var tyyppi = data.tyyppi;
-        var nimi = data.nimi;
-        var oid = data.oid;
-        var ohj = document.getElementById('ohjelma').olio;
-        var olio = haeOlio(oid).olio;
-        var mihin = event.target.olio;
-        var mista = olio;
-
-        var kohde = mista;
-
-        if ((tyyppi === 'muuttuja') || (tyyppi === 'solu') ||
-            (tyyppi === 'indeksi')) {
-            event.stopPropagation();
-
-            var luku = new Luku(value);
-            ohj.sijoitus(kohde, luku);
-        }
-        Operaatio.tehty();
-    }
-
-    lisaaKuuntelijat(this.divi, asetaLahde, kaytaKohde, false);
+    lisääKuuntelijat(this.divi, asetaLähde, käytäKohde, false);
 
     this.divi.olio = this;
 }
@@ -1525,34 +1749,33 @@ function UnOpPlus(vm) {
 
     this.divi = luoDiv(this.divid, {
         className: 'unop',
-        title: 'raahaan tämä arvoon, tai tähän arvo, kasvattaaksesi arvoa yhdellä',
-        'draggable':true});
-    this.divi.innerHTML ='_+1';
+        title:
+        'siirrä tämä arvoon, tai tähän arvo, kasvattaaksesi arvoa yhdellä',
+        'draggable': true});
+    this.divi.innerHTML ='_ + 1';
     this.divi.olio = this;
 
-
-    function asetaLahde(event) {
+    function asetaLähde(event) {
         Operaatio.asetaLähde(event.target);
         Operaatio.asetaData({
             tyyppi: 'unop',
             nimi: 'plus',
-            oid: divid
-        });
+            oid: divid});
     }
 
-    function kaytaKohde(event) {
+    function käytäKohde(event) {
         Operaatio.asetaKohde(event.target);
         var data = Operaatio.haeData();
         var tyyppi = data.tyyppi;
-        var nimi = data.nimi;
+        var nimi  = data.nimi;
         var oid = data.oid;
         var ohj = document.getElementById('ohjelma').olio;
 
         var olio = haeOlio(oid).olio;
         var mihin = event.target.olio;
-        var mista = olio;
+        var mistä = olio;
 
-        var kohde = mista;
+        var kohde = mistä;
 
         if ((tyyppi === 'muuttuja') || (tyyppi === 'solu') ||
             (tyyppi === 'indeksi')) {
@@ -1568,7 +1791,7 @@ function UnOpPlus(vm) {
         Operaatio.tehty();
     }
 
-    lisaaKuuntelijat(this.divi, asetaLahde, kaytaKohde,true);
+    lisääKuuntelijat(this.divi, asetaLähde, käytäKohde, true);
 }
 
 UnOpPlus.prototype.liitä = function (kooste) {
@@ -1588,34 +1811,32 @@ function UnOpMiinus(vm) {
 
     this.divi = luoDiv(this.divid, {
         className: 'unop',
-        title:'raahaa tähän arvo, tai tämä arvoon, vähentääksesi arvoa yhdellä',
-        'draggable':true});
-    this.divi.innerHTML ='_-1';
+        title:
+        'raahaa tähän arvo, tai tämä arvoon, vähentääksesi arvoa yhdellä',
+        'draggable': true});
+    this.divi.innerHTML ='_ - 1';
     this.divi.olio = this;
 
-    function asetaLahde(event) {
+    function asetaLähde(event) {
         Operaatio.asetaLähde(event.target);
-        Operaatio.asetaData({
-            tyyppi: 'unop',
-            nimi: 'miinus',
-            oid: divid
-        });
+        Operaatio.asetaData({tyyppi: 'unop',
+                             nimi: 'miinus',
+                             oid: divid});
     }
 
-
-    function kaytaKohde(event) {
+    function käytäKohde(event) {
         Operaatio.asetaKohde(event.target);
         var data = Operaatio.haeData();
         var tyyppi = data.tyyppi;
-        var nimi = data.nimi;
+        var nimi  = data.nimi;
         var oid = data.oid;
         var ohj = document.getElementById('ohjelma').olio;
 
         var olio = haeOlio(oid).olio;
         var mihin = event.target.olio;
-        var mista = olio;
+        var mistä = olio;
 
-        var kohde = mista;
+        var kohde = mistä;
 
         if ((tyyppi === 'muuttuja') || (tyyppi === 'solu') ||
             (tyyppi === 'indeksi')) {
@@ -1631,7 +1852,7 @@ function UnOpMiinus(vm) {
         Operaatio.tehty();
     }
 
-    lisaaKuuntelijat(this.divi, asetaLahde, kaytaKohde, true);
+    lisääKuuntelijat(this.divi, asetaLähde, käytäKohde, true);
 }
 
 UnOpMiinus.prototype.liitä = function (kooste) {
@@ -1653,12 +1874,16 @@ function Muuttuja(vm, nimi, arvo, vakio) {
     this.vakio = vakio;
     if (alkaaNumerolla(nimi)) this.vakio = true;
 
+    this._alkuarvo = arvo;
+
     this.kuuntelijat = [];
 
     this.divi = luoDiv(this.divid+'-b', {});
+    this.divi.olio = this;
+
 
     var ntext = nimi + ":";
-    if (vakio) ntext = "";
+    if (vakio) ntext = "(dbg:"+vakio+"):"; // "";
     var no = luoDiv(this.divid,
                      {'className': 'muuttuja',
                       'innerHTML': ntext});
@@ -1672,67 +1897,66 @@ function Muuttuja(vm, nimi, arvo, vakio) {
     ma.arvo = arvo;
     ma.nimi = nimi;
 
-	// ma.addEventListener('dblclick', muutaMuuttujanArvoa);
+    // ma.addEventListener('dblclick', muutaMuuttujanArvoa);
 
-    function asetaLahde(event) {
+    function asetaLähde(event) {
         Operaatio.asetaLähde(event.target);
-        Operaatio.asetaData({
-            tyyppi: "muuttuja",
-            nimi: event.target.olio.nimi(),
-            oid: divid
-        });
+        Operaatio.asetaData({tyyppi: "muuttuja",
+                             nimi:   event.target.olio.nimi(),
+                             oid:    divid});
+        return;
     }
 
-
-    function kaytaKohde(event) {
+    function käytäKohde(event) {
         if (vakio) return Operaatio.tehty();
+
         Operaatio.asetaKohde(event.target);
 
         var data = Operaatio.haeData();
         var tyyppi = data.tyyppi;
-        var nimi = data.nimi;
+        var nimi  = data.nimi;
         var oid = data.oid;
         var ohj = document.getElementById('ohjelma').olio;
 
         var olio = haeOlio(oid).olio;
         var mihin = event.target.olio;
-        var mista = olio;
+        var mistä = olio;
 
-        if ((tyyppi === "solu") || (tyyppi === 'indeksi') || (tyyppi === 'vakio') ||
-            ((tyyppi === "muuttuja") && (nimi != event.target.nimi))) {
+        if ((tyyppi === "solu")
+            || (tyyppi=== 'indeksi')
+            || (tyyppi=== 'vakio')
+            || ((tyyppi === "muuttuja") && (nimi != event.target.nimi))) {
 
             event.stopPropagation();
 
-            ohj.sijoitus(mihin, mista);
+            ohj.sijoitus(mihin, mistä);
+
         } else if (tyyppi === "lauseke") {
             var lausekediv = haeOlio(oid);
 
             event.stopPropagation();
 
-            ohj.sijoitus(mihin, mista);
+            ohj.sijoitus(mihin, mistä);
             lausekediv.olio.katoa();
 
         } else if (tyyppi == 'unop') {
             event.stopPropagation();
 
-            if (nimi === 'miinus')
+            if (nimi==='miinus')
                 ohj.unmiinus(mihin);
-            else if (nimi === 'plus')
+            else if (nimi==='plus')
                 ohj.unplus(mihin);
 
-
         } else {
-            Operaatio.tehty();
             return;
         }
 
         Operaatio.tehty();
         return;
-    }
+    } // XXX return value?
 
-    lisaaKuuntelijat(ma, asetaLahde, kaytaKohde, !vakio);
-
-    ma.muuttujat = this.vm.tila().muuttujat; // XXX ei toimi näin
+    lisääKuuntelijat(ma, asetaLähde, käytäKohde, !vakio);
+    ma.muuttujat = this.vm.tila().muuttujat; // XXX ei toimi näin ÖÖÖ
     ma.nimi = nimi;
 
     this.divi.appendChild(no);
@@ -1741,16 +1965,28 @@ function Muuttuja(vm, nimi, arvo, vakio) {
     no.olio = this;
     this.diviArvo = ma;
 
+    this.indeksoiva = false; // XXX Kludge
+
     this.arvoksi(arvo);
+    Muuttuja.prototype.instanssit.push(this); // XXX Pois?
 }
+
+Muuttuja.prototype.instanssit = [];
+
+Muuttuja.prototype.reset = function() {
+    this.arvoksi(this._alkuarvo);
+    // TODO KUUN this.kuuntelijat = [];
+};
 
 Muuttuja.prototype.sidoIndeksi = function(i) {
     this.kuuntelijat.push(i);
+    this.indeksoiva = true;
 };
 
 Muuttuja.prototype.vapautaIndeksi = function (i) {
     this.kuuntelijat = this.kuuntelijat.filter(
         function (x) { return x !== i; });
+    this.indeksoiva = false;
 };
 
 Muuttuja.prototype.päivitäIndeksit = function (tila) {
@@ -1773,25 +2009,41 @@ Muuttuja.prototype.arvo = function(tila) {
 };
 
 Muuttuja.prototype.arvoksi = function (x, tila) {
+    if (x === null) {
+        console.log("x = null"); if (debis) debugger;
+    } else {
+        console.log("x type "+(typeof x)+" "+(typeof x === 'object' && x !== null ? x.constructor.name : '-')+" "+x.toString()); if (debis) debugger;
+    }
+    // if (typeof x !== 'object') debugger;
     tila = tila ? tila : this.vm.tila();
     // var muuttujat = tila ? tila.muuttujat : this.vm.tila().muuttujat;
     // muuttujat[this.nimi()] = x;
+    var vanha = this.arvo();
     tila.asetaMuuttuja(this.nimi(), x);
     if (x!==null)
         this.diviArvo.innerHTML = x.toString();
     else
         this.diviArvo.innerHTML = '&nbsp;&nbsp;';
 
-    this.päivitäIndeksit(tila);
+    this.päivitäIndeksit(tila); // XXX TODO ei tee mitään?
 
     return tila.muuttujassa(this.nimi());
 };
 
-Muuttuja.prototype.sovita = function (tila) {
-    return true;
+Muuttuja.prototype.add = function (toinen, tila) {
+    var _tila = tila ? tila : this.vm.tila();
+    var lkm = this.arvo(_tila);
+    return lkm.add(toinen, _tila);
 };
 
-Muuttuja.prototype.nimeä = function (n) { // TODO Mietipä vähän :)
+Muuttuja.prototype.sovita = function (tila) {
+    return tila;
+    // var uusiTila = tila.klooni();
+    // uusiTila.muuttujat[this.nimi] = this._arvo;
+    // return uusiTila;
+};
+
+Muuttuja.prototype.nimeä = function (n) { // TODO Mietipä vähän 
     this._nimi = n;
 };
 
@@ -1838,17 +2090,19 @@ function luoOperaattorit(divid, kohde, opers) {
         var op = document.createElement('option');
         op.value = on;
         op.label = on;
-        op.text = on;      // firefox vaatii tämänkin, webkitille riittää ylemmät...
+        op.text = on;  // firefox vaatii tämänkin, webkitille riittää ylemmät...
         op.accessKey = on; // elvistelyä
         op.fn = opers[on];
 
         sel.appendChild(op);
     }
     sel.addEventListener('change',
-                         function (event) { kohde.asetaOper(sel.value); }, false);
+                         function (event) { kohde.asetaOper(sel.value); },
+                         false);
     divi.appendChild(sel);
     return divi;
 }
+
 
 function Nappi(divid, tunnus, toimintoFn) {
     this.divid = divid;
@@ -1882,18 +2136,17 @@ function Lauseke(divid) {
 
     this.divid = divid;
     this.arg1 = null;
-    this.operators = {'+': function (a,b) { return a+b; },
-                      '-': function (a,b) { return a-b; } // ,
+    this.operators = {'+': function (a,b) { return a.add(b); },
+                      '-': function (a,b) { return a.sub(b); } // ,
                      //  '<': function (a,b) { return a<b; }
-		     };
+                     };
     this.operator = '+';
     this.arg2 = null;
 
     this.divi     = luoDiv(divid, {
         className:'lauseke',
-        title: 'Raahaamalla tähän arvoja suoritat laskutoimituksen,\n'+
-            'jonka tuloksen voit raahata muuttujaan tai taulukkoon.'
-            });
+        title: 'Laittamalla tähän arvoja suoritat laskutoimituksen,\n'+
+            'jonka tuloksen voit siirtää muuttujaan tai taulukkoon.'});
     this.diviA1  = luoDiv(divid+'-a1',
                             {'className':'arg'});
     this.diviOp  = luoOperaattorit(divid+'-op', this, this.operators);
@@ -1902,9 +2155,8 @@ function Lauseke(divid) {
     this.diviEq  = luoDiv(divid+'-eq',
                             {'className':'equals-literal'});
     this.diviVal = luoDiv(divid+'-v',
-                            {'className':'arvo',
-                            'draggable':true
-                            });
+                          {'className':'arvo',
+                           'draggable': true});
 
     this.diviA1.innerHTML = "&nbsp; &nbsp; &nbsp;";
     this.diviA2.innerHTML = "&nbsp; &nbsp; &nbsp;";
@@ -1917,58 +2169,57 @@ function Lauseke(divid) {
     this.divi.appendChild(this.diviEq);
     this.divi.appendChild(this.diviVal);
 
-    var tama = this;
-
     this.divi.olio = this;
     this.diviA1.olio = this;
     this.diviOp.olio = this;
     this.diviA2.olio = this;
     this.diviVal.olio = this;
 
-    var asetaLahde = function(event) {
+    var self = this;
+
+    function asetaLähde(event) {
         Operaatio.asetaLähde(event.target);
-        if (!tama.validi()) {
+        if (!self.validi()) {
             alert('Vain valmiin lausekkeen voi siirtää!');
             echo.aseta('Vain valmiin lausekkeen voi siirtää!');
             event.preventDefault();
             Operaatio.peruuta();
             return;
         }
-        Operaatio.asetaData({
-            tyyppi: "lauseke",
-            oid: tama.divi.id
-        });
+        Operaatio.asetaData({tyyppi: "lauseke",
+                             oid: self.divi.id});
     }
 
-
-    lisaaKuuntelijat(this.diviVal, asetaLahde, null, false);
+    lisääKuuntelijat(this.diviVal, asetaLähde, null, false);
 
     var asetus = function (asfn) {
-		return function (event) {
+        return function (event) {
             if (!Operaatio.odottaaLähdettä()) {
-				Operaatio.asetaKohde(event.target);
-				var data = Operaatio.haeData();
-				var tyyppi = data.tyyppi;
-                if (tyyppi == "solu" || tyyppi == "muuttuja" || tyyppi === 'indeksi') {
+                Operaatio.asetaKohde(event.target);
+                var data = Operaatio.haeData();
+                var tyyppi = data.tyyppi;
+
+                if (tyyppi == "solu"
+                    || tyyppi == "muuttuja"
+                    || tyyppi === 'indeksi') {
                     event.stopPropagation();
 
                     var oid = data.oid;
                     var olio = document.getElementById(oid).olio;
                     event.target.olio[asfn](olio);
                 }
-				event.preventDefault();
-				Operaatio.tehty();
+                event.preventDefault();
+                Operaatio.tehty();
             }
-		};
+        };
     };
-    
-    lisaaKuuntelijat(this.diviA1, null, asetus('asetaArg1'), true);
-    lisaaKuuntelijat(this.diviA2, null, asetus('asetaArg2'), true);
+
+    lisääKuuntelijat(this.diviA1, null, asetus('asetaArg1'), true);
+    lisääKuuntelijat(this.diviA2, null, asetus('asetaArg2'), true);
 
     // this.diviA1.addEventListener('click', asetus('asetaArg1'), false);
     // this.diviA2.addEventListener('click', asetus('asetaArg2'), false);
 }
-
 
 Lauseke.prototype.validi = function () {
     return this.arg1 && this.operator && this.arg2;
@@ -1976,33 +2227,39 @@ Lauseke.prototype.validi = function () {
 
 
 Lauseke.prototype.sovita = function (tila) {
-    return this.arvo(tila) !== null;
+    return tila;
+//    return this.arvo(tila) !== null;
 };
 
 Lauseke.prototype.arvo = function (tila) {
     if (!this.validi()) return null;
-    return this.operators[this.operator](this.arg1.arvo(tila), this.arg2.arvo(tila));
+    return this.operators[this.operator](this.arg1.arvo(tila),
+                                         this.arg2.arvo(tila));
 };
 
 Lauseke.prototype.asetaArg1 = function (arvo) { // XXXXXX tila ei välity!!!
     this.arg1 = arvo;
-    var nimiTaiIndeksi = arvo.nimi() + ":";// || ('t['+arvo.indeksi+"]"); // TODO Kauhee kludge!
-    if (arvo.vakio) nimiTaiIndeksi = "";
-    this.diviA1.innerHTML = nimiTaiIndeksi+arvo.arvo();
-    this.diviVal.innerHTML = ""+(this.validi()?this.arvo():'__');
+    if (debis) debugger;
+    // XXX Lausekkeen argumentit eivät tyhjene, kun ajo aloitetaan uusiksi
+    var nimiTaiIndeksi = arvo.nimi();
+    //                || ('t['+arvo.indeksi+"]"); // TODO Kauhee kludge!
+    if (arvo.vakio) nimiTaiIndeksi = "(dbg:vakio)";
+    this.diviA1.innerHTML = nimiTaiIndeksi+':'+arvo.arvo();
+    this.diviVal.innerHTML = this.validi()? this.arvo().toString() : '__';
 };
 
 Lauseke.prototype.asetaArg2 = function (arvo) {
     this.arg2 = arvo;
-    var nimiTaiIndeksi = arvo.nimi() +":"; // || ('t['+arvo.indeksi+"]"); // TODO Kauhee kludge!
-    if (arvo.vakio) nimiTaiIndeksi = "";
-    this.diviA2.innerHTML = nimiTaiIndeksi + arvo.arvo();
-    this.diviVal.innerHTML = ""+(this.validi()?this.arvo():'__');
+    var nimiTaiIndeksi = arvo.nimi();
+    //                || ('t['+arvo.indeksi+"]"); // TODO Kauhee kludge!
+    if (arvo.vakio) nimiTaiIndeksi = "(dbg:vakio)";
+    this.diviA2.innerHTML = nimiTaiIndeksi+':'+arvo.arvo();
+    this.diviVal.innerHTML = this.validi()? this.arvo().toString() : '__' ;
 };
 
 Lauseke.prototype.asetaOper = function (symboli) {
     this.operator = symboli;
-    this.diviVal.innerHTML = ""+(this.arvo());
+    this.diviVal.innerHTML = this.arvo().toString();
 };
 
 Lauseke.prototype.liitä = function (kooste) {
@@ -2017,9 +2274,11 @@ Lauseke.prototype.irrota = function (kooste) {
 
 Lauseke.prototype.katoa = function () {
     var parent = this.divi.parentElement;
-    parent.removeChild(this.divi);
-    var lauseke = new Lauseke();
-    lauseke.liitä(parent);
+    if (parent != null) {
+        parent.removeChild(this.divi);  // XXX null is not an object
+        var lauseke = new Lauseke();
+        lauseke.liitä(parent);
+    }
 };
 
 Lauseke.prototype.nimi = function () {
@@ -2027,7 +2286,9 @@ Lauseke.prototype.nimi = function () {
 };
 
 Lauseke.prototype.htmlksi = function () {
-    return this.arg1.nimi()+' '+this.operator.replace('>','&lt;')+' '+this.arg2.nimi();
+    return this.arg1.nimi()
+        +' '+this.operator.replace('>','&lt;')
+        +' '+this.arg2.nimi();
 };
 
 function uusiLauseke(diviin) {
@@ -2050,63 +2311,66 @@ function ehtolauseLoppu(event) {
     alert('ei tee mitään vielä');
 }
 
-
+function undo() {
+    vk.ohjelma().poistaViimeisin();
+    vk.ohjelma().aja();
+}
 
 function alustaTauno(event) {
     var naytto = haeOlio('naytto');
     var tnimi = '<p class="muuttujan-nimi">t:</p>';
     var prt = parametrit();
     if (prt.ts && prt.ts == "0") tnimi = "";
-    
-    
     if (prt.lang && prt.lang == "en" || prt.help ) {
        wordMuuttujat = "variables:";
        wordUusiMuuttuja = "new variable";
        wordMuuttujatTitle = "list of variables, add varibale from button above";
        wordOhjelma = "program";
-       wordApua = 'Parameters:\n' +
-              '  help=help in english\n'+
-              '  apua=apua suomeksi\n'+
-              '  lang=en - user interface as english\n'+
-              '  s    - simple, no indeces\n'+
-              '  mx=v - variable x by value v.\n'+
-              '  ix=v - index variable x by value v.\n'+
-              '  ts=n - set array size as n.\n'+
-              '  t=[x,y,...] - Create array by values x,y,...\n'
+       wordApua = "Parameters:\n" +
+              "  help=help in english\n"+
+              "  apua=apua suomeksi\n"+
+              "  lang=en - user interface as english\n"+
+              "  s    - simple, no indeces\n"+
+              "  mx=v - variable x by value v.\n"+
+              "  ix=v - index variable x by value v.\n"+
+              "  ts=n - set array size as n.\n"+
+            "  t=[x,y,...] - Create array by values x,y,...\n";
     }
 
-    naytto.innerHTML = '' +
-        '    <div id="tiedot" class="tiedotd">' + tnimi +
+    naytto.innerHTML =
+        '      <div id="tiedot" class="tiedotd">taulukko: '+
+        'int[<span id="taulukon_pituus" '+
+        'title="tähän tulee taulukon pituus joskus">...</span>] t = '+
         '        <div id="taulunaytto" class="syottod">'+
         ' '+
         '        </div> '+
-        '    </div> ' +
-        ' ' +
-        '      <div id="toiminta" class="toiminta" ondragover="event.preventDefault();" '+
-	    '         ondragleave="event.preventDefault();" ondragenter="event.preventDefault();"> '+
+        '      </div> '+
+        ' '+
+        '      <div id="toiminta" class="toiminta"  ondragover="event.preventDefault();" '+
+        '         ondragleave="event.preventDefault();" ondragenter="event.preventDefault();"> '+
         '        <div id="vasen" class="vasen">'+
-		'          <div class="vasen-top">'+
-	    '            <div id="muuttuja-button-alue" class="muuttuja-button-alue">'+
-	    '              ' + wordMuuttujat + 
-		'                <button id="uusi-muuttuja" onclick="vk.luoMuuttujaKentistä(\'muuttujat\')">'+
-		'                  ' + wordUusiMuuttuja + '</button>'+
-	    '            </div>'+
-		'            <div id="uuden-muuttujan-alue" class="uuden-muuttujan-alue">'+
-		'                <label>nimi:</label>'+
+        '          <div class="vasen-top">'+
+        '            <div id="muuttuja-button-alue" class="muuttuja-button-alue">'+
+        '              '+ wordMuuttujat +
+        '                <button id="uusi-muuttuja" onclick="vk.luoMuuttujaKentistä(\'muuttujat\')">'+
+        '                  '+ wordUusiMuuttuja +'</button>'+
+        '            </div>'+
+        '            <div id="uuden-muuttujan-alue" class="uuden-muuttujan-alue">'+
+        '                <label>nimi:</label>'+
         '                <input id="uusi-nimi" style="width:6em;" '+
-		'                       onkeypress="return vk.uusiNimiKeypress(event,\'muuttujat\')"/>'+
+        '                       onkeypress="return vk.uusiNimiKeypress(event,\'muuttujat\')"/>'+
         '                <label>arvo:</label>'+
         '                <input id="uusi-arvo"  style="width:2em;" '+
-		'                       onkeypress="return vk.uusiArvoKeypress(event,\'muuttujat\')"/>'+
+        '                       onkeypress="return vk.uusiArvoKeypress(event,\'muuttujat\')"/>'+
         '                <button id="uuden-lisays" onclick="vk.teeMuuttuja(\'muuttujat\')">lisää'+
-		'                </button>'+
-		'            </div>'+
+        '                </button>'+
+        '            </div>'+
         '            <div id="muuttujat" class="muuttujatd" '+
-        '                 title="' + wordMuuttujatTitle + '"'+
-		'                 onclick="vk.piilotaMuuttujanLisäys()">'+
-		'              <!-- hyi, globaali vk... TODO XXX -->'+
-		'            </div>'+
-		'          </div>'+
+        '                 title="' + wordMuuttujatTitle + '"' +
+        '                 onclick="vk.piilotaMuuttujanLisäys()">'+
+        '              <!-- hyi, globaali vk... TODO XXX -->'+
+        '            </div>'+
+        '          </div>'+
         '          <div class="scratch" id="scratch"> '+
         '            <div class="compound-statements" id="compound-statements" '+
         '                 title="täytä lausekkeen puuttuvat osat raahaamalla, ja raahaa sitten tulos kohteeseen"> '+
@@ -2115,16 +2379,21 @@ function alustaTauno(event) {
         '            </div> '+
         '          </div> '+
         '        </div> '+
-        '        <div id="oikea" class="oikea">' + wordOhjelma + ':' + // ' <button onclick="alert(getUserCodeFromTauno());">lähdekoodi</button>'+
+        '        <div id="oikea" class="oikea">' + wordOhjelma + /*': <button onclick="alert(getUserCodeFromTauno());">lähdekoodi</button>'+*/
+        '                                               <button onclick="undo();">undo</button>'+
         '        </div> '+
         '      </div> '+
         ' '+
         '      <div id="echo" class="echo" title="Viestialue, johon ohjelma tulostaa viestejä toiminnastaan. Puhdista klikkaamalla."></div> '+
         '';
 
-    // var prt = parametrit();
     if (('help' in prt)||('apua' in prt)) {
         alert(wordApua);
+        // 'Parametrit:\n'+
+        //      '  mx=v - Luo muuttuja x arvolla v.\n'+
+        //      '  ix=v - Luo indeksimuuttuja x arvolla v.\n'+
+        //      '  ts=n - Aseta taulukon kooksi n.\n'+
+        //      '  t=[x,y,...] - Luo taulukko alkioilla x,y,...\n');
     }
 
     // vk on globaali... hyi...
@@ -2134,10 +2403,20 @@ function alustaTauno(event) {
     var ohjelmadivi = ohjelma.divinä('ohjelma');
     vk.lisääOhjelma(ohjelma);
 
-    vk.luoTaulukko(prt); // XXX TODO taulukon ja muuttujat voi luoda vasta ohjelman jälkeen... gui-riippuvuus, hyi!
-    vk.luoMuuttujat(prt);
+    vk.luoTaulukko(prt);  // XXX TODO taulukon ja muuttujat voi luoda vasta
+    vk.luoMuuttujat(prt); // XXX TODO ohjelman jälkeen... gui-riippuvuus, hyi!
 
-    uusiLauseke('compound-statements');
+    // HUOMIO HUOMIO
+    // Jos alkutilan päivittää, jotta parametrina annetut muuttujat säilyy,
+    // tulisi huomioida tämä myös tilan 'resetoinnissa'.
+    // Tämä on kuitenkin hassua:
+    //  - muuttujat voi generoida nopeasti uudestaan uudelleenlataamalla
+    //  - muuttujien luonti on aina ensimmäinen vaihe
+    // kannattaa seuraava komento pitää poiskommentoituna.
+    // // // vk.päivitäAlkutila();
+    // ja jos tuon joskus aktivoi, tulee korjata edellä esitetty ominaisuus.
+
+    vk.lauseke = uusiLauseke('compound-statements');
     var up = new UnOpPlus(vk);
     up.liitä('tools');
     var um = new UnOpMiinus(vk);
@@ -2157,7 +2436,6 @@ function alustaTauno(event) {
 }
 
 
-
 if (navigator.userAgent.indexOf('MSIE')>-1 &&
     navigator.userAgent.indexOf('MSIE 10')<0) {
     alert('Ajat liian vanhaa IE:tä tai IE10 on yhteensopivuustilassa. '+
@@ -2173,3 +2451,4 @@ if (navigator.userAgent.indexOf('MSIE')>-1 &&
     window.addEventListener('unload', function (event) {}, false);
 
 } else { /* yes, qunit go go go */ }
+

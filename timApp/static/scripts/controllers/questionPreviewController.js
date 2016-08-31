@@ -31,7 +31,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
             $scope.questionParIdNext = args.questionParIdNext;
             $scope.isLecturer = args.isLecturer;
             $scope.json = args.questionjson;
-            $scope.questionTitle = args.questionjson.TITLE;
+            $scope.questionTitle = args.questionjson.title;
             $scope.points = args.points;
             $scope.expl = args.expl;
             $scope.dynamicAnswerSheetControl.createAnswer();

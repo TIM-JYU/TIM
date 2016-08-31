@@ -953,8 +953,10 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         }
                         $window.localStorage.setItem("proeditor" + $scope.lstag, $scope.proeditor);
                         
-                        if ( $scope.isAce ) 
+                        if ( $scope.isAce ) {
                             $scope.setLocalValue("acewrap", $scope.editor.getSession().getUseWrapMode());
+                            $scope.setLocalValue("acebehaviours", $scope.editor.getBehavioursEnabled()); // some of these are in editor and some in session?
+                        }
 
 
                     }).error(function (data, status, headers, config) {
@@ -1974,6 +1976,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.editor = neweditor;
                         // $scope.createAce($scope.editor, text);
                         $scope.editor.getSession().on('change', $scope.aceChanged);
+                        neweditor.setBehavioursEnabled($scope.getLocalBool("acebehaviours"),false);
                         neweditor.getSession().setUseWrapMode($scope.getLocalBool("acewrap"),false);
                         neweditor.setOptions({maxLines: 28});
                     }

@@ -80,7 +80,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
         })
             .success(function (data) {
                 var json = JSON.parse(data.json);
-                $scope.$broadcast('changeQuestionTitle', {'title': json.TITLE});
+                $scope.$broadcast('changeQuestionTitle', {'title': json.title});
                 $scope.$broadcast("editQuestion", {
                     "asked_id": asked_id,
                     "json": json,

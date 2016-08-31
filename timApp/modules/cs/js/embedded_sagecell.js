@@ -21,7 +21,7 @@ var undefined;
 window.sagecell = window.sagecell || {};
 
 if (!document.head) {
-    document.head = document.getElementsByTagName("head")[0];
+    //document.head = document.getElementsByTagName("head")[0];
 }
 
 var $ = jQuery.noConflict(true);

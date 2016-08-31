@@ -1122,7 +1122,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             if (answer.expl) {
                 expl = JSON.parse(answer.expl)
             }
-            $scope.questionTitle = showPoints + json.TITLE;
+            $scope.questionTitle = showPoints + json.title;
             if (answer.result) {
                 $scope.current_question_id = false;
                 $scope.current_points_id = answer.askedId;

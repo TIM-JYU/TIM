@@ -31,3 +31,4 @@ SQLALCHEMY_BINDS = {
     'tempdb': "postgresql://postgres:postgres@postgresql:5432/tempdb_" + TIM_NAME
 }
 SASS_GEN_PATH = 'gen'
+TEMPLATES_AUTO_RELOAD = True

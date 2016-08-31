@@ -78,19 +78,19 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 scope.par_id_next = par_id_next;
             }
 
-            if (json["TITLE"]) scope.question.title = scope.putBackQuotations(json["TITLE"]);
+            if (json["title"]) scope.question.title = scope.putBackQuotations(json["title"]);
             if (scope.question.title == "Untitled") {
                 scope.question.title = "";
                 scope.titleChanged = true;
             }
-            if (json["QUESTION"]) scope.question.question = scope.putBackQuotations(json["QUESTION"]);
-            if (json["TYPE"]) scope.question.type = json["TYPE"];
-            if (json["MATRIXTYPE"]) scope.question.matrixType = json["MATRIXTYPE"];
-            if (json["ANSWERFIELDTYPE"]) scope.question.answerFieldType = (json["ANSWERFIELDTYPE"]);
+            if (json["questionText"]) scope.question.question = scope.putBackQuotations(json["questionText"]);
+            if (json["questionType"]) scope.question.type = json["questionType"];
+            if (json["matrixType"]) scope.question.matrixType = json["matrixType"];
+            if (json["answerFieldType"]) scope.question.answerFieldType = (json["answerFieldType"]);
 
-            var jsonData = json["DATA"];
-            var jsonHeaders = jsonData["HEADERS"];
-            var jsonRows = jsonData["ROWS"];
+            var jsonData = json["data"];
+            var jsonHeaders = jsonData["headers"];
+            var jsonRows = jsonData["rows"];
 
             var columnHeaders = [];
             for (var i = 0; i < jsonHeaders.length; i++) {
@@ -131,7 +131,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                     rows[i].expl = data.expl[idString];
                 }
 
-                var jsonColumns = jsonRows[i]["COLUMNS"];
+                var jsonColumns = jsonRows[i]["columns"];
                 var columns = [];
                 for (var j = 0; j < jsonColumns.length; j++) {
                     var columnPoints = '';
@@ -164,8 +164,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             }
             scope.rows = rows;
 
-            if (json["TIMELIMIT"] && json["TIMELIMIT"] > 0) {
-                var time = json["TIMELIMIT"];
+            if (json["timeLimit"] && json["timeLimit"] > 0) {
+                var time = json["timeLimit"];
                 scope.question.endTimeSelected = true;
                 if (time > 3600) {
                     scope.question.timeLimit.hours = Math.floor(time / 3600);
@@ -580,8 +580,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
     /**
      * Creates question json
-     * @returns {{QUESTION: string, TITLE: string, TYPE: *, ANSWERFIELDTYPE: string, MATRIXTYPE: string,
-     * TIMELIMIT: string, DATA: {HEADERS: Array, ROWS: Array}}}
+     * @returns {{questionText: string, title: string, questionType: *, answerFieldType: string, matrixType: string,
+     * timeLimit: string, data: {headers: Array, rows: Array}}}
      */
     scope.createJson = function () {
         if (scope.asked_id) {
@@ -694,18 +694,18 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 };
                 columnsJson.push(column);
             }
-            row['COLUMNS'] = columnsJson;
+            row['columns'] = columnsJson;
             rowsJson.push(row);
         }
 
         var questionjson = {
-            'QUESTION': scope.question.question,
-            'TITLE': scope.question.title,
-            'TYPE': scope.question.type,
-            'ANSWERFIELDTYPE': scope.question.answerFieldType,
-            'MATRIXTYPE': scope.question.matrixType,
-            'TIMELIMIT': timeLimit,
-            'DATA': {'HEADERS': headersJson, 'ROWS': rowsJson}
+            'questionText': scope.question.question,
+            'title': scope.question.title,
+            'questionType': scope.question.type,
+            'answerFieldType': scope.question.answerFieldType,
+            'matrixType': scope.question.matrixType,
+            'timeLimit': timeLimit,
+            'data': {'headers': headersJson, 'rows': rowsJson}
         };
 
         scope.json = questionjson;
@@ -724,6 +724,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         var expl = scope.createExplanation();
         var doc_id = scope.docId;
 
+        /*
         // Create markdown for question to be saved as a paragraph
         var md = '``` {question="' + scope.question.title + '"}\n';
         md += 'points: ' + points + '\n';
@@ -733,17 +734,26 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         questionjsonmd = questionjsonmd.replace(/.+/g, '    $&');
         md += questionjsonmd + '\n';
         md += '```';
+        */
+        var md = {}; // '``` {question="' + scope.question.title + '"}\n';
+        md.question = scope.question.title;
+        md .points = points;
+        md.expl = expl;
+        md.json = questionjson;
+        md = JSON.stringify(md, null, 4);
 
+        // var yaml = JSON2YAML(questionjson);
+        // console.log(yaml);
 
         // Without timeout 'timelimit' won't be saved in settings session variable. Thread issue?
-        scope.settings['timelimit'] = questionjson.TIMELIMIT.toString();
+        scope.settings['timelimit'] = questionjson.timeLimit.toString();
         setTimeout(function () {
-            setsetting('timelimit', questionjson.TIMELIMIT.toString());
+            setsetting('timelimit', questionjson.timeLimit.toString());
         }, 1000);
         
-        var route = '/postParagraph/';
+        var route = '/postParagraphQ/';
         if (scope.new_question) {
-            route = '/newParagraph/';
+            route = '/newParagraphQ/';
         }
         http.post(route, angular.extend({
             docId: doc_id,
@@ -756,13 +766,16 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             scope.removeErrors();
             scope.addSavedParToDom(data, {docId: scope.docId, par: scope.par_id, par_next: scope.par_id_next});
             //TODO: This can be optimized to get only the new one.
-            scope.$parent.getQuestions();
+            // scope.$parent.getQuestions();
             if (ask) {
-                scope.json = JSON.parse(data.questionjson);
+                var pid = scope.par_id;
+                if ( data.new_par_ids.length > 0 ) pid = data.new_par_ids[0];
+                scope.json = questionjson;
                 scope.$emit('askQuestion', {
                     "lecture_id": scope.lectureId,
                     "question_id": scope.qId,
                     "doc_id": scope.docId,
+                    "par_id": pid,
                     "json": scope.json
                 });
             }

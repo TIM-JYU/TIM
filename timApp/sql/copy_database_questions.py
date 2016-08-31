@@ -26,7 +26,7 @@ for question in questions:
     question_json = json.dumps(question_parsed, indent=4, sort_keys=True)
     lines = ['    ' + line for line in question_json.splitlines()]
     question_json = '\n'.join(lines)
-    title = question_parsed['QUESTION']
+    title = question_parsed['questionText']
     new_par_id = question[2]
     if par_id != new_par_id:
         par_id = new_par_id
