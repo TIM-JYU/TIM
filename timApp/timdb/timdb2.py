@@ -29,6 +29,7 @@ import os
 
 
 class TimDb(object):
+    instances = 0
     """Handles saving and retrieving information from TIM database.
     """
 
@@ -61,7 +62,9 @@ class TimDb(object):
         else:
             self.db = db.get_engine(app, 'tim_main').connect().connection
             self.owns_session = False
-
+        TimDb.instances += 1
+        # num_connections = self.get_pg_connections()
+        # log_info('TimDb instances/PG connections: {}/{} (constructor)'.format(TimDb.instances, num_connections))
         self.notes = Notes(self.db, files_root_path, 'notes', current_user_name, self.session)
         self.readings = Readings(self.db, files_root_path, 'notes', current_user_name, self.session)
         self.users = Users(self.db, files_root_path, 'users', current_user_name, self.session)
@@ -79,6 +82,13 @@ class TimDb(object):
         self.velp_groups = VelpGroups(self.db, files_root_path, 'velp_groups', current_user_name, self.session)
         self.annotations = Annotations(self.db, files_root_path, 'annotations', current_user_name, self.session)
 
+    def get_pg_connections(self):
+        """Returns the number of clients currently connected to PostgreSQL."""
+        cursor = self.db.cursor()
+        cursor.execute('SELECT sum(numbackends) FROM pg_stat_database')
+        num_connections = cursor.fetchone()[0]
+        return num_connections
+
     def __del__(self):
         """Release the database connection when the object is deleted."""
         self.close()
@@ -90,11 +100,13 @@ class TimDb(object):
     def close(self):
         """Closes the database connection."""
         if hasattr(self, 'db') and self.db is not None:
+            TimDb.instances -= 1
             self.db.close()
             if self.owns_session:
                 self.session.remove()
             self.db = None
             self.session = None
+            # log_info('TimDb instances: {} (destructor)'.format(TimDb.instances))
 
     def execute_script(self, sql_file):
         """Executes an SQL file on the database.
