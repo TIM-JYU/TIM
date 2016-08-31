@@ -88,7 +88,7 @@ ltiApp.directiveTemplate = function () {
         '<p>{{header}}</p>' +
         '<p ng-if="stem" class="stem" >{{stem}}</p>' +
 
-        '<iframe ng-show="iframe.src" src="{{::iframe.src}}" class="lti" id="{{::iframe.id}}" name="{{::iframe.name}}" ' +
+        '<iframe ng-if="iframe.src" src="{{::iframe.src}}" class="lti" id="{{::iframe.id}}" name="{{::iframe.name}}" ' +
             'style="width:{{::iframe.size[0]}}; height: {{::iframe.size[1]}};">' +
         '</iframe>' +
 
@@ -225,29 +225,30 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
     $scope.iframeControls = false; // show <iframe> controls panel
     $scope.parentId = ""; // parent <div> id
     $scope.inactiveText = ""; // what text to display if <iframe> is inactive
+    var uniqId = $scope.attrs.taskIDExt; // use this to uniquely identify the <iframe> even after a refresh
 
+    // Get local <iframe> settings from localStorage or return an empty object if none found
     function getLocalIframeSettings() {
         var settings = $window.localStorage.getItem("local_iframe_settings");
         settings = (settings && JSON.parse(settings)) || {};
         return Array.isArray(settings) ? {} : settings; // compat. fix
     }
 
+    // Update localStorage's <iframe> settings
     function setLocalIframeSettings(dimensions) {
         dimensions = dimensions || $scope.iframe.size;
         var settings = getLocalIframeSettings();
-        settings[$scope.iframe.id] = $scope.iframe.size;
-        console.log(settings);
+        settings[uniqId] = $scope.iframe.size;
         $window.localStorage.setItem("local_iframe_settings", JSON.stringify(settings));
     }
 
+    // Update <iframe> dimensions
     function forceSettingsUpdate() {
-        // Handle localStorage saving of <iframe> dimensions
-        // localStorage doesn't store it as an array (instead as a string), so we use split
         var settings = getLocalIframeSettings();
-        if (settings && settings[$scope.iframe.id]) {
-            $scope.iframe.size = settings[$scope.iframe.id];
-            $scope.resizeIframe();
+        if (settings && settings[uniqId]) {
+            $scope.iframe.size = settings[uniqId];
         }
+        $scope.resizeIframe();
     }
 
     // whether to display iframe options to user
@@ -258,13 +259,14 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
     // Toggle hide/show for iframe settings panel
     $scope.toggleIframeControls = function() {
         var settings = getLocalIframeSettings();
-        var size = settings && settings[$scope.iframe.id];
+        var size = settings && settings[uniqId];
         $scope.iframeControls = !$scope.iframeControls;
-        $scope.iframe.size = size || $scope.iframe_size || []; // iframe_size is a YAML param
+        $scope.iframe.size = (Object.keys(size).length > 0) ? size : $scope.iframe_size; // iframe_size is a YAML param
         // These are the ng-model versions for the settings form (yes, it's hacky)
         // It will display default values for easier editing.
         $scope.iframe_width = $scope.iframe.size[0] || "";
         $scope.iframe_height = $scope.iframe.size[1] || "";
+        forceSettingsUpdate();
     };
 
     // Handle <iframe> resizing via the settings panel
@@ -307,7 +309,6 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
                     newGrade = parseFloat(newGrade).toFixed(2);
                 }
                 $scope.grade = newGrade;
-                console.log($scope.grade);
             });
     };
 
@@ -468,9 +469,6 @@ LTIScope.prototype.doSaveGrade = function(nosave) {
         }
     };
 
-    console.log("taskId", $scope.taskId);
-    console.log("params", params);
-
     if (nosave) params.input.nosave = true;
     var url = "/lti/answer";
     if ($scope.plugin) {
@@ -497,7 +495,6 @@ LTIScope.prototype.doSaveGrade = function(nosave) {
             $scope.error = data.web.error;
             $scope.result = data.web.result;
             $scope.tries = data.web.tries;
-            console.log("new tries: " + $scope.tries);
         }).error(function (data, status) {
             $scope.isRunning = false;
             $scope.errors.push(status);
