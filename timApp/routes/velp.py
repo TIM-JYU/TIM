@@ -1,3 +1,16 @@
+"""
+The module handles the main logic related to velps, velp groups and labels. This includes adding and modifiying velps
+and labels as well as adding new velp groups. The module also retrieves or creates the default velp group for the
+document and the personal default group for the user. Velp groups can be set to shown or shown as default in specific
+element (or in the whole document) through this module. The module also retrieves the velps, velp groups and labels to
+the document.
+
+:authors: Joonas Lattu, Petteri Palojärvi
+:copyright: 2016 Timber project members
+:version: 1.0.0
+
+"""
+
 from typing import Dict
 from flask import Blueprint
 from .common import *
@@ -14,7 +27,7 @@ velps = Blueprint('velps',
 
 @velps.route("/<int:doc_id>/get_default_velp_group", methods=['GET'])
 def get_default_velp_group(doc_id: int) -> Dict:
-    """Get default velp group id and if default velp group doesn't exist yet, create one.
+    """Get default velp group ID and if  velp group doesn't exist yet, create one.
 
     :param doc_id: ID of document
     :return: Dictionary containing default velp group's ID and name
@@ -67,6 +80,10 @@ def get_default_velp_group(doc_id: int) -> Dict:
 
 @velps.route("/get_default_personal_velp_group", methods=['GET'])
 def get_default_personal_velp_group() -> Dict:
+    """ Get default personal velp group ID and if velp group doesn't exist yet, create one.
+
+    :return: Dictionary containing personal velp group data.
+    """
     timdb = getTimDb()
     user_name = getCurrentUserName()
 
@@ -176,7 +193,7 @@ def get_velp_group_personal_selections(doc_id: int) -> Dict:
 
 @velps.route("/<int:doc_id>/get_velp_group_default_selections", methods=['GET'])
 def get_velp_group_default_selections(doc_id: int) -> Dict:
-    """Gets default velp group selections for velp groups user has access to in document
+    """Gets default velp group selections for velp groups user has access to in document.
 
     :param doc_id: ID of document
     :return: Dictionary containing list of default velp groups for each target area IDs
@@ -209,6 +226,18 @@ def get_velp_labels(doc_id: int) -> 'str':
 @velps.route("/add_velp", methods=['POST'])
 def add_velp() -> int:
     """Creates a new velp and adds it to velp groups user chose.
+
+    Required key(s):
+        - content: content of the new velp
+        - velp_groups: list of velp group IDs of the new velp.
+
+    Optional key(s):
+        - points: velp points
+        - language_id: language ID
+        - icon_id: icon ID
+        - valid_until: time stamp to until velp is still valid
+        - labels: labels of the velp
+        - visible_to: visibility group of the velp (1-4)
 
     :return: ID of new velp
     """
@@ -272,7 +301,18 @@ def add_velp() -> int:
 
 @velps.route("/<int:doc_id>/update_velp", methods=['POST'])
 def update_velp(doc_id: int):
-    """Updates velp data.
+    """Updates the velp's data.
+
+    Required key(s):
+        - id: velp ID
+        - content: velp content
+        - language_id: language ID
+        - velp groups: list of velp group IDs.
+
+    Optional key(s):
+        - points: velp points
+        - icon_id: velp icon
+        - labels: velp labels
 
     :param doc_id: ID of document
     :return: okJsonResponse
@@ -351,6 +391,12 @@ def update_velp(doc_id: int):
 def add_label() -> int:
     """Creates new velp label.
 
+    Required key(s):
+        - content: label content
+
+    Optional key(s):
+        - language_id: language ID of the label.
+
     :return: ID of new velp label
     """
     json_data = request.get_json()
@@ -370,6 +416,10 @@ def add_label() -> int:
 @velps.route("/update_velp_label", methods=["POST"])
 def update_velp_label():
     """Updates velp label content.
+
+    Required key(s):
+        - content: label content
+        - id: label ID.
 
     :return: okJsonResponse
     """
@@ -394,6 +444,12 @@ def update_velp_label():
 @velps.route("/<int:doc_id>/change_selection", methods=["POST"])
 def change_selection(doc_id: int):
     """Change selection for velp group in users VelpGroupSelection in current document.
+
+    Required key(s):
+        - id: velp group iD
+        - target_type: target type of the selection (document, paragraph)
+        - target_id: target id of the selection (paragraph id or 0 for the whole document)
+        - selection_type: 'show' or 'default'.
 
     :param doc_id: ID of document
     :return: okJsonResponse
@@ -432,6 +488,12 @@ def change_selection(doc_id: int):
 def change_all_selections(doc_id: int):
     """Change selection for velp group in users VelpGroupSelection in current document.
 
+    Required key(s):
+        - selection: 1 or 0 (true or false)
+        - target_type: target type of the selection (document, paragraph)
+        - target_id: target id of the selection (paragraph id or 0 for the whole document)
+        - selection_type: 'show' or 'default'.
+
     :param doc_id: ID of document
     :return: okJsonResponse
     """
@@ -459,7 +521,13 @@ def change_all_selections(doc_id: int):
 
 @velps.route("/<int:doc_id>/change_default_selection", methods=["POST"])
 def change_default_selection(doc_id: int):
-    """Change selection for velp group in users VelpGroupSelection in current document
+    """Change selection for velp group in users VelpGroupSelection in current document.
+
+    Required key(s):
+        - id: velp group ID
+        - target_type: target type of the selection (document, paragraph)
+        - target_id: target id of the selection (paragraph id or 0 for the whole document)
+        - default: current default value.
 
     :param doc_id: ID of document
     :return: okJsonResponse
@@ -486,7 +554,10 @@ def change_default_selection(doc_id: int):
 
 @velps.route("/<int:doc_id>/reset_target_area_selections_to_defaults", methods=['POST'])
 def reset_target_area_selections_to_defaults(doc_id: int):
-    """Changes user's personal velp group selections in target area to defaults
+    """Changes user's personal velp group selections in target area to defaults.
+
+    Required key(s):
+        - target_id: target id of the selection (paragraph id or 0 for the whole document)
 
     :param doc_id: ID of document
     :return: okJsonResponse()
@@ -510,7 +581,7 @@ def reset_target_area_selections_to_defaults(doc_id: int):
 
 @velps.route("/<int:doc_id>/reset_all_selections_to_defaults", methods=['POST'])
 def reset_all_selections_to_defaults(doc_id: int):
-    """Changes user's all personal velp group selections in document to defaults
+    """Changes user's all personal velp group selections in document to defaults.
 
     :param doc_id: ID of document
     :return: okJsonResponse()
@@ -528,10 +599,14 @@ def reset_all_selections_to_defaults(doc_id: int):
 
 @velps.route("/<int:doc_id>/create_velp_group", methods=['POST'])
 def create_velp_group(doc_id: int) -> Dict:
-    """Creates a new velp group
+    """Creates a new velp group.
 
-    :param doc_id: ID of document
-    :return: Dictionary containing information of new velp group
+    Required key(s):
+        - name: velp group name
+        - target_type: document, folder or personal group.
+
+    :param doc_id: ID of the document
+    :return: Dictionary containing information of new velp group.
     """
 
     json_data = request.get_json()
@@ -620,7 +695,7 @@ def create_default_velp_group(doc_id: int):
     """Creates a default velp group document or changes existing document to default velp group.
 
     :param doc_id: ID of document
-    :return: Dictionary containing information of new default velp group
+    :return: Dictionary containing information of new default velp group.
     """
 
     timdb = getTimDb()

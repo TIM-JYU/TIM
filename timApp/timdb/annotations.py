@@ -1,3 +1,13 @@
+"""
+The module contains the database functions related to annotations. This includes adding, modifiying and deleting
+annotations as well as adding comments to the annotations. The module also retrieves the annotations from the database.
+
+:authors: Joonas Lattu, Petteri Palojärvi
+:copyright: 2016 Timber project members
+:version: 1.0.0
+
+"""
+
 import copy
 from enum import Enum, unique
 from typing import Dict, List, Optional
@@ -13,7 +23,13 @@ class Annotations(TimDbBase):
 
     @unique
     class AnnotationVisibility(Enum):
-        """Enum for storing the visibility"""
+        """Enum for storing the visibility
+
+            - myself = 1
+            - owner = 2
+            - teacher = 3
+            - everyone = 4
+        """
         myself = 1
         owner = 2
         teacher = 3
@@ -80,7 +96,7 @@ class Annotations(TimDbBase):
                           points: Optional[float], icon_id: Optional[int]):
         """Changes an existing annotation.
 
-        :param annotation_id annotation to be changed.
+        :param annotation_id: annotation to be changed.
         :param version_id: version of the velp that the annotation uses
         :param visible_to: visibility of the annotation
         :param points: Points given, overrides velp's default and can be null
@@ -223,10 +239,10 @@ class Annotations(TimDbBase):
                                     user_has_owner: bool, document_id: int) -> List[Dict]:
         """Gets all annotations made in a document. Both in document and in answers.
 
-        :param user_has_see_answers:
+        :param user_has_see_answers: whether user has 'see answer' rights or not.
         :param user_id: user that is viewing annotations. Affects which annotations are returned.
-        :param user_has_teacher:
-        :param user_has_owner:
+        :param user_has_teacher: whether user has 'teacher' rights or not.
+        :param user_has_owner: whether user is document owner or not.
         :param document_id: The relevant document.
         :return: List of dictionaries, each dictionary representing a single annotation.
         """

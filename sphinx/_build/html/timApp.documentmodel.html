@@ -1,0 +1,2154 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>timApp.documentmodel package &#8212; Timber 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Timber 1.0.0 documentation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="timapp-documentmodel-package">
+<h1>timApp.documentmodel package<a class="headerlink" href="#timapp-documentmodel-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-timApp.documentmodel.attributeparser">
+<span id="timapp-documentmodel-attributeparser-module"></span><h2>timApp.documentmodel.attributeparser module<a class="headerlink" href="#module-timApp.documentmodel.attributeparser" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="timApp.documentmodel.attributeparser.AttributeParser">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.attributeparser.</code><code class="descname">AttributeParser</code><span class="sig-paren">(</span><em>string=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/attributeparser.html#AttributeParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.attributeparser.AttributeParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+</tbody>
+</table>
+<dl class="staticmethod">
+<dt id="timApp.documentmodel.attributeparser.AttributeParser.attr_list_end_char">
+<em class="property">static </em><code class="descname">attr_list_end_char</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/attributeparser.html#AttributeParser.attr_list_end_char"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.attributeparser.AttributeParser.attr_list_end_char" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="timApp.documentmodel.attributeparser.AttributeParser.attr_list_start_char">
+<em class="property">static </em><code class="descname">attr_list_start_char</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/attributeparser.html#AttributeParser.attr_list_start_char"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.attributeparser.AttributeParser.attr_list_start_char" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.attributeparser.AttributeParser.current_char">
+<code class="descname">current_char</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/attributeparser.html#AttributeParser.current_char"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.attributeparser.AttributeParser.current_char" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.attributeparser.AttributeParser.eat_whitespace">
+<code class="descname">eat_whitespace</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/attributeparser.html#AttributeParser.eat_whitespace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.attributeparser.AttributeParser.eat_whitespace" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.attributeparser.AttributeParser.find_attr_list_start_char">
+<code class="descname">find_attr_list_start_char</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/attributeparser.html#AttributeParser.find_attr_list_start_char"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.attributeparser.AttributeParser.find_attr_list_start_char" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.attributeparser.AttributeParser.get_attributes">
+<code class="descname">get_attributes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/attributeparser.html#AttributeParser.get_attributes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.attributeparser.AttributeParser.get_attributes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.attributeparser.AttributeParser.get_char">
+<code class="descname">get_char</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/attributeparser.html#AttributeParser.get_char"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.attributeparser.AttributeParser.get_char" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.attributeparser.AttributeParser.has_chars">
+<code class="descname">has_chars</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/attributeparser.html#AttributeParser.has_chars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.attributeparser.AttributeParser.has_chars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.attributeparser.AttributeParser.set_str">
+<code class="descname">set_str</code><span class="sig-paren">(</span><em>string</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/attributeparser.html#AttributeParser.set_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.attributeparser.AttributeParser.set_str" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.attributeparser.AttributeParser.try_parse_attr_list_end_char">
+<code class="descname">try_parse_attr_list_end_char</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/attributeparser.html#AttributeParser.try_parse_attr_list_end_char"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.attributeparser.AttributeParser.try_parse_attr_list_end_char" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.attributeparser.AttributeParser.try_parse_class">
+<code class="descname">try_parse_class</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/attributeparser.html#AttributeParser.try_parse_class"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.attributeparser.AttributeParser.try_parse_class" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.attributeparser.AttributeParser.try_parse_hash">
+<code class="descname">try_parse_hash</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/attributeparser.html#AttributeParser.try_parse_hash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.attributeparser.AttributeParser.try_parse_hash" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.attributeparser.AttributeParser.try_parse_helper">
+<code class="descname">try_parse_helper</code><span class="sig-paren">(</span><em>char</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/attributeparser.html#AttributeParser.try_parse_helper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.attributeparser.AttributeParser.try_parse_helper" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.attributeparser.AttributeParser.try_parse_keyvaluepair">
+<code class="descname">try_parse_keyvaluepair</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/attributeparser.html#AttributeParser.try_parse_keyvaluepair"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.attributeparser.AttributeParser.try_parse_keyvaluepair" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="timApp.documentmodel.attributeparser.AttributeParserException">
+<em class="property">exception </em><code class="descclassname">timApp.documentmodel.attributeparser.</code><code class="descname">AttributeParserException</code><a class="reference internal" href="_modules/timApp/documentmodel/attributeparser.html#AttributeParserException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.attributeparser.AttributeParserException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-timApp.documentmodel.clipboard">
+<span id="timapp-documentmodel-clipboard-module"></span><h2>timApp.documentmodel.clipboard module<a class="headerlink" href="#module-timApp.documentmodel.clipboard" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="timApp.documentmodel.clipboard.Clipboard">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.clipboard.</code><code class="descname">Clipboard</code><span class="sig-paren">(</span><em>files_root: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="class">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard">
+<em class="property">class </em><code class="descname">UserClipboard</code><span class="sig-paren">(</span><em>parent: timApp.documentmodel.clipboard.Clipboard</em>, <em>user_id: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard.clear">
+<code class="descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard.clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard.clear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard.clear_refs">
+<code class="descname">clear_refs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard.clear_refs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard.clear_refs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard.copy_pars">
+<code class="descname">copy_pars</code><span class="sig-paren">(</span><em>doc: documentmodel.document.Document</em>, <em>par_start: str</em>, <em>par_end: str</em>, <em>area_name: typing.Union[str</em>, <em>NoneType] = None</em>, <em>ref_doc: typing.Union[documentmodel.document.Document</em>, <em>NoneType] = None</em>, <em>disable_ref: bool = False</em><span class="sig-paren">)</span> &rarr; typing.List[documentmodel.docparagraph.DocParagraph]<a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard.copy_pars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard.copy_pars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard.cut_pars">
+<code class="descname">cut_pars</code><span class="sig-paren">(</span><em>doc: documentmodel.document.Document</em>, <em>par_start: str</em>, <em>par_end: str</em>, <em>area_name: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &rarr; typing.List[documentmodel.docparagraph.DocParagraph]<a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard.cut_pars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard.cut_pars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard.delete_from_source">
+<code class="descname">delete_from_source</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard.delete_from_source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard.delete_from_source" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard.get_clipfilename">
+<code class="descname">get_clipfilename</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard.get_clipfilename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard.get_clipfilename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard.get_metafilename">
+<code class="descname">get_metafilename</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard.get_metafilename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard.get_metafilename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard.get_parreffilename">
+<code class="descname">get_parreffilename</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard.get_parreffilename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard.get_parreffilename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard.get_reffilename">
+<code class="descname">get_reffilename</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard.get_reffilename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard.get_reffilename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard.paste_after">
+<code class="descname">paste_after</code><span class="sig-paren">(</span><em>doc: documentmodel.document.Document</em>, <em>par_id: str</em>, <em>as_ref: bool = False</em><span class="sig-paren">)</span> &rarr; typing.List[documentmodel.docparagraph.DocParagraph]<a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard.paste_after"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard.paste_after" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard.paste_before">
+<code class="descname">paste_before</code><span class="sig-paren">(</span><em>doc: documentmodel.document.Document</em>, <em>par_id: str</em>, <em>as_ref: bool = False</em><span class="sig-paren">)</span> &rarr; typing.List[documentmodel.docparagraph.DocParagraph]<a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard.paste_before"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard.paste_before" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard.read">
+<code class="descname">read</code><span class="sig-paren">(</span><em>as_ref: typing.Union[bool</em>, <em>NoneType] = False</em>, <em>force_parrefs: typing.Union[bool</em>, <em>NoneType] = False</em><span class="sig-paren">)</span> &rarr; typing.Union[typing.List[typing.Dict[str, str]], NoneType]<a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard.read" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard.read_metadata">
+<code class="descname">read_metadata</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; typing.Dict[str, str]<a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard.read_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard.read_metadata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>pars: typing.List[typing.Dict[str, typing.Generic]]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard.write_metadata">
+<code class="descname">write_metadata</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard.write_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard.write_metadata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.UserClipboard.write_refs">
+<code class="descname">write_refs</code><span class="sig-paren">(</span><em>pars: typing.List[documentmodel.docparagraph.DocParagraph], area_name: typing.Union[str, NoneType]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.UserClipboard.write_refs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.UserClipboard.write_refs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.clear_all">
+<code class="descclassname">Clipboard.</code><code class="descname">clear_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.clear_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.clear_all" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.get">
+<code class="descclassname">Clipboard.</code><code class="descname">get</code><span class="sig-paren">(</span><em>user_id: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.clipboard.Clipboard.get_path">
+<code class="descclassname">Clipboard.</code><code class="descname">get_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/clipboard.html#Clipboard.get_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.clipboard.Clipboard.get_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-timApp.documentmodel.docparagraph">
+<span id="timapp-documentmodel-docparagraph-module"></span><h2>timApp.documentmodel.docparagraph module<a class="headerlink" href="#module-timApp.documentmodel.docparagraph" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.docparagraph.</code><code class="descname">DocParagraph</code><span class="sig-paren">(</span><em>doc</em>, <em>files_root: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.add_class">
+<code class="descname">add_class</code><span class="sig-paren">(</span><em>class_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.add_class"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.add_class" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.add_link">
+<code class="descname">add_link</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.add_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.add_link" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.create">
+<em class="property">classmethod </em><code class="descname">create</code><span class="sig-paren">(</span><em>doc, par_id: typing.Union[str, NoneType] = None, md: str = '', t: typing.Union[str, NoneType] = None, html: typing.Union[str, NoneType] = None, attrs: typing.Union[typing.Dict[KT, VT], NoneType] = None, props: typing.Union[typing.Dict[KT, VT], NoneType] = None, files_root: typing.Union[str, NoneType] = None</em><span class="sig-paren">)</span> &rarr; timApp.documentmodel.docparagraph.DocParagraph<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.create_area_reference">
+<em class="property">classmethod </em><code class="descname">create_area_reference</code><span class="sig-paren">(</span><em>doc</em>, <em>area_name: str</em>, <em>r: typing.Union[str</em>, <em>NoneType] = None</em>, <em>add_rd: typing.Union[bool</em>, <em>NoneType] = True</em>, <em>files_root: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.create_area_reference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.create_area_reference" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.create_reference">
+<code class="descname">create_reference</code><span class="sig-paren">(</span><em>doc</em>, <em>r: typing.Union[str</em>, <em>NoneType] = None</em>, <em>add_rd: bool = True</em><span class="sig-paren">)</span> &rarr; timApp.documentmodel.docparagraph.DocParagraph<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.create_reference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.create_reference" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.default_files_root">
+<code class="descname">default_files_root</code><em class="property"> = 'tim_files'</em><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.default_files_root" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.dict">
+<code class="descname">dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; typing.Dict[KT, VT]<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.from_dict">
+<em class="property">classmethod </em><code class="descname">from_dict</code><span class="sig-paren">(</span><em>doc, d: typing.Dict[KT, VT], files_root: typing.Union[str, NoneType] = None</em><span class="sig-paren">)</span> &rarr; timApp.documentmodel.docparagraph.DocParagraph<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get">
+<em class="property">classmethod </em><code class="descname">get</code><span class="sig-paren">(</span><em>doc</em>, <em>par_id: str</em>, <em>t: str</em>, <em>files_root: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &rarr; timApp.documentmodel.docparagraph.DocParagraph<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_attr">
+<code class="descname">get_attr</code><span class="sig-paren">(</span><em>attr_name: str</em>, <em>default_value: typing.Generic = None</em>, <em>dereference: bool = False</em><span class="sig-paren">)</span> &rarr; typing.Generic<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_attr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_attr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_attrs">
+<code class="descname">get_attrs</code><span class="sig-paren">(</span><em>base_attrs: typing.Union[typing.Dict[KT, VT], NoneType] = None</em><span class="sig-paren">)</span> &rarr; typing.Dict[KT, VT]<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_attrs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_attrs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_attrs_str">
+<code class="descname">get_attrs_str</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_attrs_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_attrs_str" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_auto_macro_values">
+<code class="descname">get_auto_macro_values</code><span class="sig-paren">(</span><em>macros</em>, <em>macro_delim</em>, <em>auto_macro_cache</em>, <em>heading_cache</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_auto_macro_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_auto_macro_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the auto macros values for the current paragraph.
+Auto macros include things like current heading/table/figure numbers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>heading_cache</strong> &#8211; A cache object to store headings into. The key is paragraph id and value is a list of headings
+in that paragraph.</li>
+<li><strong>macros</strong> &#8211; Macros to apply for the paragraph.</li>
+<li><strong>auto_macro_cache</strong> &#8211; The cache object from which to retrieve and store the auto macro data.</li>
+<li><strong>macro_delim</strong> &#8211; Delimiter for macros.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Auto macro values as a dict.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A dict(str, dict(int,int)) containing the auto macro information.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_base_path">
+<code class="descname">get_base_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_base_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_base_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_class_str">
+<code class="descname">get_class_str</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_class_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_class_str" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_default_files_root">
+<em class="property">classmethod </em><code class="descname">get_default_files_root</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_default_files_root"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_default_files_root" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_doc_id">
+<code class="descname">get_doc_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; int<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_doc_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_doc_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_exported_markdown">
+<code class="descname">get_exported_markdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_exported_markdown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_exported_markdown" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_hash">
+<code class="descname">get_hash</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_hash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_hash" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_html">
+<code class="descname">get_html</code><span class="sig-paren">(</span><em>from_preview: bool = True</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_html"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_html" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the html for the paragraph.
+:param from_preview: Whether this is called from a preview window or not.</p>
+<blockquote>
+<div>If True, previous paragraphs are preloaded too and the result is not cached.
+Safer, but slower. Set explicitly False if you know what you&#8217;re doing.</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">html string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_id">
+<code class="descname">get_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_latest">
+<em class="property">classmethod </em><code class="descname">get_latest</code><span class="sig-paren">(</span><em>doc</em>, <em>par_id: str</em>, <em>files_root: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &rarr; timApp.documentmodel.docparagraph.DocParagraph<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_latest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_latest" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_links">
+<code class="descname">get_links</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; typing.List[str]<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_links"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_links" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_markdown">
+<code class="descname">get_markdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_markdown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_markdown" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_original">
+<code class="descname">get_original</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; timApp.documentmodel.docparagraph.DocParagraph<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_original"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_original" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_path">
+<code class="descname">get_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_properties">
+<code class="descname">get_properties</code><span class="sig-paren">(</span><em>base_props: typing.Union[typing.Dict[KT, VT], NoneType] = None</em><span class="sig-paren">)</span> &rarr; typing.Dict[KT, VT]<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_properties"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_properties" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_rd">
+<code class="descname">get_rd</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; typing.Union[int, NoneType]<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_rd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_rd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_referenced_pars">
+<code class="descname">get_referenced_pars</code><span class="sig-paren">(</span><em>edit_window: bool = False, set_html: bool = True, source_doc: bool = None, tr_get_one: bool = True, cycle: typing.Union[typing.List[typing.Tuple[int, str]], NoneType] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_referenced_pars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_referenced_pars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_title">
+<code class="descname">get_title</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; typing.Union[str, NoneType]<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_title" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.get_unloaded_pars">
+<em class="property">classmethod </em><code class="descname">get_unloaded_pars</code><span class="sig-paren">(</span><em>pars</em>, <em>settings</em>, <em>auto_macro_cache</em>, <em>heading_cache</em>, <em>clear_cache=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.get_unloaded_pars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.get_unloaded_pars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds out which of the given paragraphs need to be preloaded again.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pars</strong> &#8211; The list of paragraphs to be processed.</li>
+<li><strong>settings</strong> &#8211; The settings for the document.</li>
+<li><strong>auto_macro_cache</strong> &#8211; The cache object from which to retrieve and store the auto macro data.</li>
+<li><strong>heading_cache</strong> &#8211; A cache object to store headings into. The key is paragraph id and value is a list of headings
+in that paragraph.</li>
+<li><strong>clear_cache</strong> &#8211; Whether all caches should be refreshed.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A 5-tuple of the form:
+(paragraph, hash of the auto macro values, auto macros, so far used headings, old HTML).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.has_class">
+<code class="descname">has_class</code><span class="sig-paren">(</span><em>class_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.has_class"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.has_class" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.has_headers">
+<code class="descname">has_headers</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.has_headers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.has_headers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.html_dict">
+<code class="descname">html_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; typing.Dict[KT, VT]<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.html_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.html_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.is_area_reference">
+<code class="descname">is_area_reference</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.is_area_reference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.is_area_reference" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.is_different_from">
+<code class="descname">is_different_from</code><span class="sig-paren">(</span><em>par: timApp.documentmodel.docparagraph.DocParagraph</em><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.is_different_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.is_different_from" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.is_dynamic">
+<code class="descname">is_dynamic</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.is_dynamic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.is_dynamic" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.is_multi_block">
+<code class="descname">is_multi_block</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.is_multi_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.is_multi_block" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.is_par_reference">
+<code class="descname">is_par_reference</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.is_par_reference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.is_par_reference" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.is_plugin">
+<code class="descname">is_plugin</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.is_plugin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.is_plugin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.is_question">
+<code class="descname">is_question</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.is_question"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.is_question" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.is_reference">
+<code class="descname">is_reference</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.is_reference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.is_reference" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.is_setting">
+<code class="descname">is_setting</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.is_setting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.is_setting" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.is_translation">
+<code class="descname">is_translation</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.is_translation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.is_translation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.preload_htmls">
+<em class="property">classmethod </em><code class="descname">preload_htmls</code><span class="sig-paren">(</span><em>pars: typing.List[typing.DocParagraph], settings, clear_cache: bool = False, context_par: typing.Union[typing.DocParagraph, NoneType] = None, persist: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.preload_htmls"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.preload_htmls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the HTML for each paragraph in the given list.
+:param context_par: The context paragraph. Required only for previewing for now.
+:param persist: Whether the result of preloading should be saved to disk.
+:param clear_cache: Whether all caches should be refreshed.
+:param settings: The document settings.
+:param pars: Paragraphs to preload.
+:return: A list of paragraphs whose HTML changed as the result of preloading.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.remove_link">
+<code class="descname">remove_link</code><span class="sig-paren">(</span><em>doc_id: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.remove_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.remove_link" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.sanitize_html">
+<code class="descname">sanitize_html</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.sanitize_html"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.sanitize_html" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.set_attr">
+<code class="descname">set_attr</code><span class="sig-paren">(</span><em>attr_name: str</em>, <em>attr_val: typing.Generic</em>, <em>dereference: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.set_attr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.set_attr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.set_id">
+<code class="descname">set_id</code><span class="sig-paren">(</span><em>par_id: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.set_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.set_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.set_latest">
+<code class="descname">set_latest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.set_latest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.set_latest" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.set_original">
+<code class="descname">set_original</code><span class="sig-paren">(</span><em>orig: timApp.documentmodel.docparagraph.DocParagraph</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.set_original"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.set_original" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraph.DocParagraph.update_links">
+<code class="descname">update_links</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraph.html#DocParagraph.update_links"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraph.DocParagraph.update_links" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-timApp.documentmodel.docparagraphencoder">
+<span id="timapp-documentmodel-docparagraphencoder-module"></span><h2>timApp.documentmodel.docparagraphencoder module<a class="headerlink" href="#module-timApp.documentmodel.docparagraphencoder" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="timApp.documentmodel.docparagraphencoder.DocParagraphEncoder">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.docparagraphencoder.</code><code class="descname">DocParagraphEncoder</code><span class="sig-paren">(</span><em>skipkeys=False</em>, <em>ensure_ascii=True</em>, <em>check_circular=True</em>, <em>allow_nan=True</em>, <em>sort_keys=False</em>, <em>indent=None</em>, <em>separators=None</em>, <em>default=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraphencoder.html#DocParagraphEncoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraphencoder.DocParagraphEncoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">json.encoder.JSONEncoder</span></code></p>
+<dl class="method">
+<dt id="timApp.documentmodel.docparagraphencoder.DocParagraphEncoder.default">
+<code class="descname">default</code><span class="sig-paren">(</span><em>o</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docparagraphencoder.html#DocParagraphEncoder.default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docparagraphencoder.DocParagraphEncoder.default" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="timapp-documentmodel-docsettings-module">
+<h2>timApp.documentmodel.docsettings module<a class="headerlink" href="#timapp-documentmodel-docsettings-module" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-timApp.documentmodel.docsettings"></span><dl class="class">
+<dt id="timApp.documentmodel.docsettings.DocSettings">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.docsettings.</code><code class="descname">DocSettings</code><a class="reference internal" href="_modules/timApp/documentmodel/docsettings.html#DocSettings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="timApp.documentmodel.docsettings.DocSettings.auto_number_headings">
+<code class="descname">auto_number_headings</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/docsettings.html#DocSettings.auto_number_headings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.auto_number_headings" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">bool</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="timApp.documentmodel.docsettings.DocSettings.auto_number_headings_key">
+<code class="descname">auto_number_headings_key</code><em class="property"> = 'auto_number_headings'</em><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.auto_number_headings_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docsettings.DocSettings.css">
+<code class="descname">css</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docsettings.html#DocSettings.css"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.css" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="timApp.documentmodel.docsettings.DocSettings.css_key">
+<code class="descname">css_key</code><em class="property"> = 'css'</em><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.css_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="timApp.documentmodel.docsettings.DocSettings.from_paragraph">
+<em class="property">classmethod </em><code class="descname">from_paragraph</code><span class="sig-paren">(</span><em>par</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docsettings.html#DocSettings.from_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.from_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs DocSettings from the given DocParagraph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>par</strong> (<a class="reference internal" href="#timApp.documentmodel.docparagraph.DocParagraph" title="timApp.documentmodel.docparagraph.DocParagraph"><em>DocParagraph</em></a>) &#8211; The DocParagraph to extract settings from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The DocSettings object.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docsettings.DocSettings.get_dict">
+<code class="descname">get_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; dict<a class="reference internal" href="_modules/timApp/documentmodel/docsettings.html#DocSettings.get_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.get_dict" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">dict</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docsettings.DocSettings.get_macro_delimiter">
+<code class="descname">get_macro_delimiter</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/docsettings.html#DocSettings.get_macro_delimiter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.get_macro_delimiter" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">str</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docsettings.DocSettings.get_macros">
+<code class="descname">get_macros</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; dict<a class="reference internal" href="_modules/timApp/documentmodel/docsettings.html#DocSettings.get_macros"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.get_macros" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">dict</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docsettings.DocSettings.get_source_document">
+<code class="descname">get_source_document</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docsettings.html#DocSettings.get_source_document"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.get_source_document" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">int|None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docsettings.DocSettings.global_plugin_attrs">
+<code class="descname">global_plugin_attrs</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; dict<a class="reference internal" href="_modules/timApp/documentmodel/docsettings.html#DocSettings.global_plugin_attrs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.global_plugin_attrs" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">dict</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="timApp.documentmodel.docsettings.DocSettings.global_plugin_attrs_key">
+<code class="descname">global_plugin_attrs_key</code><em class="property"> = 'global_plugin_attrs'</em><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.global_plugin_attrs_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docsettings.DocSettings.heading_format">
+<code class="descname">heading_format</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; dict<a class="reference internal" href="_modules/timApp/documentmodel/docsettings.html#DocSettings.heading_format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.heading_format" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">dict</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="timApp.documentmodel.docsettings.DocSettings.heading_format_key">
+<code class="descname">heading_format_key</code><em class="property"> = 'heading_format'</em><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.heading_format_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="timApp.documentmodel.docsettings.DocSettings.is_valid_paragraph">
+<em class="property">classmethod </em><code class="descname">is_valid_paragraph</code><span class="sig-paren">(</span><em>par</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docsettings.html#DocSettings.is_valid_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.is_valid_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="timApp.documentmodel.docsettings.DocSettings.macro_delimiter_key">
+<code class="descname">macro_delimiter_key</code><em class="property"> = 'macro_delimiter'</em><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.macro_delimiter_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="timApp.documentmodel.docsettings.DocSettings.macros_key">
+<code class="descname">macros_key</code><em class="property"> = 'macros'</em><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.macros_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="timApp.documentmodel.docsettings.DocSettings.parse_values">
+<em class="property">static </em><code class="descname">parse_values</code><span class="sig-paren">(</span><em>par</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docsettings.html#DocSettings.parse_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.parse_values" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docsettings.DocSettings.sanitize_macros">
+<code class="descname">sanitize_macros</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docsettings.html#DocSettings.sanitize_macros"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.sanitize_macros" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docsettings.DocSettings.set_source_document">
+<code class="descname">set_source_document</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docsettings.html#DocSettings.set_source_document"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.set_source_document" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>source_docid</strong> (<code class="docutils literal"><span class="pre">int|None</span></code>) &#8211; </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docsettings.DocSettings.show_task_summary">
+<code class="descname">show_task_summary</code><span class="sig-paren">(</span><em>default=False</em><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/docsettings.html#DocSettings.show_task_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.show_task_summary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="timApp.documentmodel.docsettings.DocSettings.show_task_summary_key">
+<code class="descname">show_task_summary_key</code><em class="property"> = 'show_task_summary'</em><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.show_task_summary_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="timApp.documentmodel.docsettings.DocSettings.source_document_key">
+<code class="descname">source_document_key</code><em class="property"> = 'source_document'</em><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.source_document_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.docsettings.DocSettings.to_paragraph">
+<code class="descname">to_paragraph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/docsettings.html#DocSettings.to_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.docsettings.DocSettings.to_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">DocParagraph</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="timapp-documentmodel-document-module">
+<h2>timApp.documentmodel.document module<a class="headerlink" href="#timapp-documentmodel-document-module" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-timApp.documentmodel.document"></span><dl class="class">
+<dt id="timApp.documentmodel.document.CacheIterator">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.document.</code><code class="descname">CacheIterator</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#CacheIterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.CacheIterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="timApp.documentmodel.document.DocParagraphIter">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.document.</code><code class="descname">DocParagraphIter</code><span class="sig-paren">(</span><em>doc: timApp.documentmodel.document.Document</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#DocParagraphIter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.DocParagraphIter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="timApp.documentmodel.document.DocParagraphIter.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#DocParagraphIter.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.DocParagraphIter.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="timApp.documentmodel.document.Document">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.document.</code><code class="descname">Document</code><span class="sig-paren">(</span><em>doc_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>files_root=None</em>, <em>modifier_group_id: typing.Union[int</em>, <em>NoneType] = 0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.add_area_ref_paragraph">
+<code class="descname">add_area_ref_paragraph</code><span class="sig-paren">(</span><em>src_doc: timApp.documentmodel.document.Document</em>, <em>src_area_name: str</em>, <em>text: typing.Union[str</em>, <em>NoneType] = None</em>, <em>attrs: typing.Union[dict</em>, <em>NoneType] = None</em>, <em>properties: typing.Union[dict</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &rarr; documentmodel.docparagraph.DocParagraph<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.add_area_ref_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.add_area_ref_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="timApp.documentmodel.document.Document.add_index_entry">
+<em class="property">static </em><code class="descname">add_index_entry</code><span class="sig-paren">(</span><em>index_table</em>, <em>current_headers</em>, <em>header</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.add_index_entry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.add_index_entry" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.add_paragraph">
+<code class="descname">add_paragraph</code><span class="sig-paren">(</span><em>text: str</em>, <em>par_id: typing.Union[str</em>, <em>NoneType] = None</em>, <em>attrs: typing.Union[dict</em>, <em>NoneType] = None</em>, <em>properties: typing.Union[dict</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &rarr; documentmodel.docparagraph.DocParagraph<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.add_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.add_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Appends a new paragraph into the document.
+:param par_id: The id of the paragraph or None if it should be autogenerated.
+:param attrs: The attributes for the paragraph.
+:param text: New paragraph text.
+:return: The new paragraph object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.add_paragraph_obj">
+<code class="descname">add_paragraph_obj</code><span class="sig-paren">(</span><em>p: documentmodel.docparagraph.DocParagraph</em><span class="sig-paren">)</span> &rarr; documentmodel.docparagraph.DocParagraph<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.add_paragraph_obj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.add_paragraph_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Appends a new paragraph into the document.
+:param p: Paragraph to be added.
+:return: The same paragraph object, or None if could not add.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.add_ref_paragraph">
+<code class="descname">add_ref_paragraph</code><span class="sig-paren">(</span><em>src_par: documentmodel.docparagraph.DocParagraph</em>, <em>text: typing.Union[str</em>, <em>NoneType] = None</em>, <em>attrs: typing.Union[dict</em>, <em>NoneType] = None</em>, <em>properties: typing.Union[dict</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &rarr; documentmodel.docparagraph.DocParagraph<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.add_ref_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.add_ref_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.add_setting">
+<code class="descname">add_setting</code><span class="sig-paren">(</span><em>key: str</em>, <em>value</em><span class="sig-paren">)</span> &rarr; None<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.add_setting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.add_setting" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.calculate_referenced_document_ids">
+<code class="descname">calculate_referenced_document_ids</code><span class="sig-paren">(</span><em>ver: typing.Union[typing.Tuple[int, int], NoneType] = None</em><span class="sig-paren">)</span> &rarr; typing.Set[int]<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.calculate_referenced_document_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.calculate_referenced_document_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets all the document ids that are referenced from this document recursively.
+:return: The set of the document ids.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.clear_mem_cache">
+<code class="descname">clear_mem_cache</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.clear_mem_cache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.clear_mem_cache" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.create">
+<code class="descname">create</code><span class="sig-paren">(</span><em>ignore_exists: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="timApp.documentmodel.document.Document.default_files_root">
+<code class="descname">default_files_root</code><em class="property"> = 'tim_files'</em><a class="headerlink" href="#timApp.documentmodel.document.Document.default_files_root" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.delete_paragraph">
+<code class="descname">delete_paragraph</code><span class="sig-paren">(</span><em>par_id: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.delete_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.delete_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes a paragraph from the document.
+:param par_id: Paragraph id to remove.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.delete_section">
+<code class="descname">delete_section</code><span class="sig-paren">(</span><em>area_start</em>, <em>area_end</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.delete_section"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.delete_section" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="timApp.documentmodel.document.Document.doc_exists">
+<em class="property">classmethod </em><code class="descname">doc_exists</code><span class="sig-paren">(</span><em>doc_id: int</em>, <em>files_root: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.doc_exists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.doc_exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if a document id exists.
+:param doc_id: Document id.
+:return: Boolean.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.exists">
+<code class="descname">exists</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.exists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.exists" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.export_markdown">
+<code class="descname">export_markdown</code><span class="sig-paren">(</span><em>export_hashes: bool = False</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.export_markdown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.export_markdown" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.export_section">
+<code class="descname">export_section</code><span class="sig-paren">(</span><em>par_id_start: str</em>, <em>par_id_end: str</em>, <em>export_hashes=False</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.export_section"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.export_section" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.find_insert_index">
+<code class="descname">find_insert_index</code><span class="sig-paren">(</span><em>i2</em>, <em>old_ids</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.find_insert_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.find_insert_index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_changelog">
+<code class="descname">get_changelog</code><span class="sig-paren">(</span><em>max_entries: int = 100</em><span class="sig-paren">)</span> &rarr; typing.List[dict]<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_changelog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_changelog" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_closest_paragraph_title">
+<code class="descname">get_closest_paragraph_title</code><span class="sig-paren">(</span><em>par_id: typing.Union[str, NoneType]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_closest_paragraph_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_closest_paragraph_title" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="timApp.documentmodel.document.Document.get_default_files_root">
+<em class="property">classmethod </em><code class="descname">get_default_files_root</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_default_files_root"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_default_files_root" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_document_path">
+<code class="descname">get_document_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_document_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_document_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_id_version">
+<code class="descname">get_id_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; typing.Tuple[int, int, int]<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_id_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_id_version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_index">
+<code class="descname">get_index</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; typing.List[typing.Tuple]<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_last_modified">
+<code class="descname">get_last_modified</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_last_modified"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_last_modified" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_last_par">
+<code class="descname">get_last_par</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_last_par"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_last_par" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_latest_version">
+<code class="descname">get_latest_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_latest_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_latest_version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_named_section">
+<code class="descname">get_named_section</code><span class="sig-paren">(</span><em>section_name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_named_section"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_named_section" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="timApp.documentmodel.document.Document.get_next_free_id">
+<em class="property">classmethod </em><code class="descname">get_next_free_id</code><span class="sig-paren">(</span><em>files_root: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &rarr; int<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_next_free_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_next_free_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the next free document id.
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_original_document">
+<code class="descname">get_original_document</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_original_document"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_original_document" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_paragraph">
+<code class="descname">get_paragraph</code><span class="sig-paren">(</span><em>par_id: str</em><span class="sig-paren">)</span> &rarr; documentmodel.docparagraph.DocParagraph<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_paragraph_by_task">
+<code class="descname">get_paragraph_by_task</code><span class="sig-paren">(</span><em>task_id_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_paragraph_by_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_paragraph_by_task" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_paragraphs">
+<code class="descname">get_paragraphs</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; typing.List[documentmodel.docparagraph.DocParagraph]<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_paragraphs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_paragraphs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_pars_till">
+<code class="descname">get_pars_till</code><span class="sig-paren">(</span><em>par</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_pars_till"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_pars_till" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_previous_par">
+<code class="descname">get_previous_par</code><span class="sig-paren">(</span><em>par</em>, <em>get_last_if_no_prev=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_previous_par"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_previous_par" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_referenced_document_ids">
+<code class="descname">get_referenced_document_ids</code><span class="sig-paren">(</span><em>ver: typing.Union[typing.Tuple[int, int], NoneType] = None</em><span class="sig-paren">)</span> &rarr; typing.Set[int]<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_referenced_document_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_referenced_document_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_reflist_filename">
+<code class="descname">get_reflist_filename</code><span class="sig-paren">(</span><em>ver: typing.Union[typing.Tuple[int, int], NoneType] = None</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_reflist_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_reflist_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_refs_dir">
+<code class="descname">get_refs_dir</code><span class="sig-paren">(</span><em>ver: typing.Union[typing.Tuple[int, int], NoneType] = None</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_refs_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_refs_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_section">
+<code class="descname">get_section</code><span class="sig-paren">(</span><em>par_id_start: str</em>, <em>par_id_end: str</em><span class="sig-paren">)</span> &rarr; typing.List[documentmodel.docparagraph.DocParagraph]<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_section"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_section" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_settings">
+<code class="descname">get_settings</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; documentmodel.docsettings.DocSettings<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_settings" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_version">
+<code class="descname">get_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; typing.Tuple[int, int]<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the latest version of the document as a major-minor tuple.
+:return: Latest version, or (-1, 0) if there isn&#8217;t yet one.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.get_version_path">
+<code class="descname">get_version_path</code><span class="sig-paren">(</span><em>ver: typing.Union[typing.Tuple[int, int], NoneType] = None</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.get_version_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.get_version_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.getlogfilename">
+<code class="descname">getlogfilename</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.getlogfilename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.getlogfilename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.has_paragraph">
+<code class="descname">has_paragraph</code><span class="sig-paren">(</span><em>par_id: str</em><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.has_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.has_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the document has the given paragraph.
+:param par_id: The paragraph id.
+:return: Boolean.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.insert_paragraph">
+<code class="descname">insert_paragraph</code><span class="sig-paren">(</span><em>text: str, insert_before_id: typing.Union[str, NoneType], attrs: typing.Union[dict, NoneType] = None, properties: typing.Union[dict, NoneType] = None, par_id: typing.Union[str, NoneType] = None</em><span class="sig-paren">)</span> &rarr; documentmodel.docparagraph.DocParagraph<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.insert_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.insert_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inserts a paragraph before a given paragraph id.
+:param par_id: The id of the new paragraph or None if it should be autogenerated.
+:param attrs: The attributes for the paragraph.
+:param text: New paragraph text.
+:param insert_before_id: Id of the paragraph to insert before, or None if last.
+:return: The inserted paragraph object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.insert_paragraph_obj">
+<code class="descname">insert_paragraph_obj</code><span class="sig-paren">(</span><em>p: documentmodel.docparagraph.DocParagraph, insert_before_id: typing.Union[str, NoneType]</em><span class="sig-paren">)</span> &rarr; documentmodel.docparagraph.DocParagraph<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.insert_paragraph_obj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.insert_paragraph_obj" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.insert_temporary_pars">
+<code class="descname">insert_temporary_pars</code><span class="sig-paren">(</span><em>pars</em>, <em>context_par</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.insert_temporary_pars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.insert_temporary_pars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.load_pars">
+<code class="descname">load_pars</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.load_pars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.load_pars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.modify_paragraph">
+<code class="descname">modify_paragraph</code><span class="sig-paren">(</span><em>par_id: str</em>, <em>new_text: str</em>, <em>new_attrs: typing.Union[dict</em>, <em>NoneType] = None</em>, <em>new_properties: typing.Union[dict</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &rarr; documentmodel.docparagraph.DocParagraph<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.modify_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.modify_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modifies the text of the given paragraph.
+:param par_id: Paragraph id.
+:param new_text: New text.
+:return: The new paragraph object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.modify_paragraph_obj">
+<code class="descname">modify_paragraph_obj</code><span class="sig-paren">(</span><em>par_id: str</em>, <em>p: documentmodel.docparagraph.DocParagraph</em><span class="sig-paren">)</span> &rarr; documentmodel.docparagraph.DocParagraph<a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.modify_paragraph_obj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.modify_paragraph_obj" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="timApp.documentmodel.document.Document.remove">
+<em class="property">classmethod </em><code class="descname">remove</code><span class="sig-paren">(</span><em>doc_id: int</em>, <em>files_root: typing.Union[str</em>, <em>NoneType] = None</em>, <em>ignore_exists=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the whole document.
+:param doc_id: Document id to remove.
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.set_settings">
+<code class="descname">set_settings</code><span class="sig-paren">(</span><em>settings: dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.set_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.set_settings" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>text: str</em>, <em>original: str</em>, <em>strict_validation=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replaces the document&#8217;s contents with the specified text.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>text</strong> &#8211; The new text for the document.</li>
+<li><strong>original</strong> &#8211; The original text for the document.</li>
+<li><strong>strict_validation</strong> &#8211; Whether to use stricter validation rules for areas etc.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.document.Document.update_section">
+<code class="descname">update_section</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.update_section"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.update_section" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates a section of the document.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>text</strong> &#8211; The text of the section.</li>
+<li><strong>par_id_first</strong> &#8211; The id of the paragraph that denotes the start of the section.</li>
+<li><strong>par_id_last</strong> &#8211; The id of the paragraph that denotes the end of the section.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="timApp.documentmodel.document.Document.version_exists">
+<em class="property">classmethod </em><code class="descname">version_exists</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#Document.version_exists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.Document.version_exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if a document version exists.
+:param doc_id: Document id.
+:param doc_ver: Document version.
+:return: Boolean.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.documentmodel.document.dereference_pars">
+<code class="descclassname">timApp.documentmodel.document.</code><code class="descname">dereference_pars</code><span class="sig-paren">(</span><em>pars</em>, <em>edit_window: bool = False</em>, <em>source_doc: typing.Union[timApp.documentmodel.document.Document</em>, <em>NoneType] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/document.html#dereference_pars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.dereference_pars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resolves references in the given paragraphs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pars</strong> (<em>list[DocParagraph]</em>) &#8211; The DocParagraphs to be processed.</li>
+<li><strong>edit_window</strong> &#8211; Calling from edit window or not.</li>
+<li><strong>source_doc</strong> &#8211; Default document for referencing.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.documentmodel.document.get_index_from_html_list">
+<code class="descclassname">timApp.documentmodel.document.</code><code class="descname">get_index_from_html_list</code><span class="sig-paren">(</span><em>html_table</em><span class="sig-paren">)</span> &rarr; typing.List[typing.Tuple]<a class="reference internal" href="_modules/timApp/documentmodel/document.html#get_index_from_html_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.document.get_index_from_html_list" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">List</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-timApp.documentmodel.documentparser">
+<span id="timapp-documentmodel-documentparser-module"></span><h2>timApp.documentmodel.documentparser module<a class="headerlink" href="#module-timApp.documentmodel.documentparser" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="timApp.documentmodel.documentparser.DocReader">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.documentparser.</code><code class="descname">DocReader</code><span class="sig-paren">(</span><em>lines</em>, <em>i=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#DocReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.DocReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>lines</strong> (<em>list[str]</em>) &#8211; </li>
+<li><strong>i</strong> (<em>int</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="timApp.documentmodel.documentparser.DocReader.get_line_and_advance">
+<code class="descname">get_line_and_advance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#DocReader.get_line_and_advance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.DocReader.get_line_and_advance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentparser.DocReader.has_more_lines">
+<code class="descname">has_more_lines</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#DocReader.has_more_lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.DocReader.has_more_lines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentparser.DocReader.peek_line">
+<code class="descname">peek_line</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#DocReader.peek_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.DocReader.peek_line" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="timApp.documentmodel.documentparser.DocumentParser">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.documentparser.</code><code class="descname">DocumentParser</code><span class="sig-paren">(</span><em>doc_text=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#DocumentParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.DocumentParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Splits documents into paragraphs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+</tbody>
+</table>
+<dl class="method">
+<dt id="timApp.documentmodel.documentparser.DocumentParser.add_missing_attributes">
+<code class="descname">add_missing_attributes</code><span class="sig-paren">(</span><em>hash_func=&lt;function hashfunc&gt;</em>, <em>id_func=&lt;function random_id&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#DocumentParser.add_missing_attributes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.DocumentParser.add_missing_attributes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentparser.DocumentParser.eat_whitespace">
+<code class="descname">eat_whitespace</code><span class="sig-paren">(</span><em>doc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#DocumentParser.eat_whitespace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.DocumentParser.eat_whitespace" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">NoneType</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentparser.DocumentParser.extract_attrs">
+<code class="descname">extract_attrs</code><span class="sig-paren">(</span><em>result</em>, <em>tokens</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#DocumentParser.extract_attrs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.DocumentParser.extract_attrs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentparser.DocumentParser.get_blocks">
+<code class="descname">get_blocks</code><span class="sig-paren">(</span><em>options: typing.Union[documentmodel.documentparseroptions.DocumentParserOptions</em>, <em>NoneType] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#DocumentParser.get_blocks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.DocumentParser.get_blocks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentparser.DocumentParser.is_beginning_of_code_block">
+<code class="descname">is_beginning_of_code_block</code><span class="sig-paren">(</span><em>doc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#DocumentParser.is_beginning_of_code_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.DocumentParser.is_beginning_of_code_block" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentparser.DocumentParser.is_beginning_of_header_block">
+<code class="descname">is_beginning_of_header_block</code><span class="sig-paren">(</span><em>doc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#DocumentParser.is_beginning_of_header_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.DocumentParser.is_beginning_of_header_block" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentparser.DocumentParser.is_empty_line">
+<code class="descname">is_empty_line</code><span class="sig-paren">(</span><em>doc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#DocumentParser.is_empty_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.DocumentParser.is_empty_line" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentparser.DocumentParser.parse_normal_block">
+<code class="descname">parse_normal_block</code><span class="sig-paren">(</span><em>doc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#DocumentParser.parse_normal_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.DocumentParser.parse_normal_block" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentparser.DocumentParser.try_parse_code_block">
+<code class="descname">try_parse_code_block</code><span class="sig-paren">(</span><em>doc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#DocumentParser.try_parse_code_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.DocumentParser.try_parse_code_block" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#timApp.documentmodel.docparagraph.DocParagraph.dict" title="timApp.documentmodel.docparagraph.DocParagraph.dict">dict</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentparser.DocumentParser.try_parse_header_block">
+<code class="descname">try_parse_header_block</code><span class="sig-paren">(</span><em>doc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#DocumentParser.try_parse_header_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.DocumentParser.try_parse_header_block" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#timApp.documentmodel.docparagraph.DocParagraph.dict" title="timApp.documentmodel.docparagraph.DocParagraph.dict">dict</a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc</strong> (<a class="reference internal" href="#timApp.documentmodel.documentparser.DocReader" title="timApp.documentmodel.documentparser.DocReader"><em>DocReader</em></a>) &#8211; </td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentparser.DocumentParser.validate_structure">
+<code class="descname">validate_structure</code><span class="sig-paren">(</span><em>id_validator_func=&lt;function is_valid_id&gt;</em>, <em>is_whole_document=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#DocumentParser.validate_structure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.DocumentParser.validate_structure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="timApp.documentmodel.documentparser.SplitterException">
+<em class="property">exception </em><code class="descclassname">timApp.documentmodel.documentparser.</code><code class="descname">SplitterException</code><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#SplitterException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.SplitterException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="timApp.documentmodel.documentparser.ValidationException">
+<em class="property">exception </em><code class="descclassname">timApp.documentmodel.documentparser.</code><code class="descname">ValidationException</code><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#ValidationException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.ValidationException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="timApp.documentmodel.documentparser.ValidationWarning">
+<em class="property">exception </em><code class="descclassname">timApp.documentmodel.documentparser.</code><code class="descname">ValidationWarning</code><a class="reference internal" href="_modules/timApp/documentmodel/documentparser.html#ValidationWarning"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparser.ValidationWarning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#timApp.documentmodel.documentparser.ValidationException" title="timApp.documentmodel.documentparser.ValidationException"><code class="xref py py-class docutils literal"><span class="pre">timApp.documentmodel.documentparser.ValidationException</span></code></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-timApp.documentmodel.documentparseroptions">
+<span id="timapp-documentmodel-documentparseroptions-module"></span><h2>timApp.documentmodel.documentparseroptions module<a class="headerlink" href="#module-timApp.documentmodel.documentparseroptions" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="timApp.documentmodel.documentparseroptions.DocumentParserOptions">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.documentparseroptions.</code><code class="descname">DocumentParserOptions</code><span class="sig-paren">(</span><em>break_on_empty_line=False</em>, <em>break_on_code_block=True</em>, <em>break_on_header=True</em>, <em>break_on_normal=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentparseroptions.html#DocumentParserOptions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparseroptions.DocumentParserOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="staticmethod">
+<dt id="timApp.documentmodel.documentparseroptions.DocumentParserOptions.break_on_empty_lines">
+<em class="property">static </em><code class="descname">break_on_empty_lines</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; timApp.documentmodel.documentparseroptions.DocumentParserOptions<a class="reference internal" href="_modules/timApp/documentmodel/documentparseroptions.html#DocumentParserOptions.break_on_empty_lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparseroptions.DocumentParserOptions.break_on_empty_lines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="timApp.documentmodel.documentparseroptions.DocumentParserOptions.single_paragraph">
+<em class="property">static </em><code class="descname">single_paragraph</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; timApp.documentmodel.documentparseroptions.DocumentParserOptions<a class="reference internal" href="_modules/timApp/documentmodel/documentparseroptions.html#DocumentParserOptions.single_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparseroptions.DocumentParserOptions.single_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="timApp.documentmodel.documentparseroptions.DocumentParserOptions.whole_document">
+<em class="property">static </em><code class="descname">whole_document</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; timApp.documentmodel.documentparseroptions.DocumentParserOptions<a class="reference internal" href="_modules/timApp/documentmodel/documentparseroptions.html#DocumentParserOptions.whole_document"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentparseroptions.DocumentParserOptions.whole_document" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="timapp-documentmodel-documentversion-module">
+<h2>timApp.documentmodel.documentversion module<a class="headerlink" href="#timapp-documentmodel-documentversion-module" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-timApp.documentmodel.documentversion"></span><dl class="class">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.documentversion.</code><code class="descname">DocumentVersion</code><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">documentmodel.document.Document</span></code></p>
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.add_paragraph">
+<code class="descname">add_paragraph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.add_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.add_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>text</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; </li>
+<li><strong>properties</strong> (<code class="docutils literal"><span class="pre">dict|None</span></code>) &#8211; </li>
+<li><strong>attrs</strong> (<code class="docutils literal"><span class="pre">dict|None</span></code>) &#8211; </li>
+<li><strong>par_id</strong> (<code class="docutils literal"><span class="pre">str|None</span></code>) &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="docutils literal"><span class="pre">DocParagraph</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.add_paragraph_obj">
+<code class="descname">add_paragraph_obj</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.add_paragraph_obj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.add_paragraph_obj" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>p</strong> (<code class="docutils literal"><span class="pre">DocParagraph</span></code>) &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">DocParagraph</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.add_ref_paragraph">
+<code class="descname">add_ref_paragraph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.add_ref_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.add_ref_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.cache_index">
+<code class="descname">cache_index</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.cache_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.cache_index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.create">
+<code class="descname">create</code><span class="sig-paren">(</span><em>ignore_exists: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.create" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ignore_exists</strong> (<code class="docutils literal"><span class="pre">bool</span></code>) &#8211; </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.delete_paragraph">
+<code class="descname">delete_paragraph</code><span class="sig-paren">(</span><em>par_id: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.delete_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.delete_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>par_id</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.delete_section">
+<code class="descname">delete_section</code><span class="sig-paren">(</span><em>area_start: str</em>, <em>area_end: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.delete_section"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.delete_section" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>area_start</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; </li>
+<li><strong>area_end</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.exists">
+<code class="descname">exists</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.exists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.exists" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">bool</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.get_diff">
+<em class="property">static </em><code class="descname">get_diff</code><span class="sig-paren">(</span><em>d1</em>, <em>d2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.get_diff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.get_diff" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.get_paragraph">
+<code class="descname">get_paragraph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.get_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.get_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>par_id</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">DocParagraph</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.get_settings">
+<code class="descname">get_settings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.get_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.get_settings" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">DocSettings</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.get_version">
+<code class="descname">get_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.get_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.get_version" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">tuple(int,int)</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.has_paragraph">
+<code class="descname">has_paragraph</code><span class="sig-paren">(</span><em>par_id: str</em><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.has_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.has_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Checks if the document has the given paragraph.</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>par_id</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; The paragraph id.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Boolean.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">bool</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.insert_paragraph">
+<code class="descname">insert_paragraph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.insert_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.insert_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>text</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; </li>
+<li><strong>properties</strong> (<code class="docutils literal"><span class="pre">dict|None</span></code>) &#8211; </li>
+<li><strong>insert_before_id</strong> (<code class="docutils literal"><span class="pre">str|None</span></code>) &#8211; </li>
+<li><strong>attrs</strong> (<code class="docutils literal"><span class="pre">dict|None</span></code>) &#8211; </li>
+<li><strong>par_id</strong> (<code class="docutils literal"><span class="pre">str|None</span></code>) &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="docutils literal"><span class="pre">DocParagraph</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.insert_paragraph_obj">
+<code class="descname">insert_paragraph_obj</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.insert_paragraph_obj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.insert_paragraph_obj" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>p</strong> (<code class="docutils literal"><span class="pre">DocParagraph</span></code>) &#8211; </li>
+<li><strong>insert_before_id</strong> (<code class="docutils literal"><span class="pre">str|None</span></code>) &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="docutils literal"><span class="pre">DocParagraph</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.modify_paragraph">
+<code class="descname">modify_paragraph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.modify_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.modify_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>new_attrs</strong> (<code class="docutils literal"><span class="pre">dict|None</span></code>) &#8211; </li>
+<li><strong>new_properties</strong> (<code class="docutils literal"><span class="pre">dict|None</span></code>) &#8211; </li>
+<li><strong>par_id</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; </li>
+<li><strong>new_text</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="docutils literal"><span class="pre">DocParagraph</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.modify_paragraph_obj">
+<code class="descname">modify_paragraph_obj</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.modify_paragraph_obj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.modify_paragraph_obj" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>p</strong> (<code class="docutils literal"><span class="pre">DocParagraph</span></code>) &#8211; </li>
+<li><strong>par_id</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="docutils literal"><span class="pre">DocParagraph</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.remove">
+<em class="property">classmethod </em><code class="descname">remove</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.remove" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>doc_id</strong> (<code class="docutils literal"><span class="pre">int</span></code>) &#8211; </li>
+<li><strong>files_root</strong> (<code class="docutils literal"><span class="pre">str|None</span></code>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>text: str</em>, <em>original: str</em>, <em>strict_validation=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.update" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>text</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; </li>
+<li><strong>original</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentversion.DocumentVersion.update_section">
+<code class="descname">update_section</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentversion.html#DocumentVersion.update_section"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentversion.DocumentVersion.update_section" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>text</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; </li>
+<li><strong>par_id_first</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; </li>
+<li><strong>par_id_last</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="docutils literal"><span class="pre">tuple(str,str)</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-timApp.documentmodel.documentwriter">
+<span id="timapp-documentmodel-documentwriter-module"></span><h2>timApp.documentmodel.documentwriter module<a class="headerlink" href="#module-timApp.documentmodel.documentwriter" title="Permalink to this headline">¶</a></h2>
+<p>Defines the DocumentWriter class.</p>
+<dl class="class">
+<dt id="timApp.documentmodel.documentwriter.DocumentWriter">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.documentwriter.</code><code class="descname">DocumentWriter</code><span class="sig-paren">(</span><em>pars</em>, <em>export_hashes=False</em>, <em>export_ids=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentwriter.html#DocumentWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentwriter.DocumentWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Converts a sequence of document blocks to text.</p>
+<dl class="method">
+<dt id="timApp.documentmodel.documentwriter.DocumentWriter.attrs_to_str">
+<code class="descname">attrs_to_str</code><span class="sig-paren">(</span><em>attrs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentwriter.html#DocumentWriter.attrs_to_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentwriter.DocumentWriter.attrs_to_str" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.documentwriter.DocumentWriter.get_text">
+<code class="descname">get_text</code><span class="sig-paren">(</span><em>options: typing.Union[documentmodel.documentparseroptions.DocumentParserOptions</em>, <em>NoneType] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/documentwriter.html#DocumentWriter.get_text"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.documentwriter.DocumentWriter.get_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the full text for the document.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The full text of the document.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-timApp.documentmodel.exceptions">
+<span id="timapp-documentmodel-exceptions-module"></span><h2>timApp.documentmodel.exceptions module<a class="headerlink" href="#module-timApp.documentmodel.exceptions" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="timApp.documentmodel.exceptions.DocExistsError">
+<em class="property">exception </em><code class="descclassname">timApp.documentmodel.exceptions.</code><code class="descname">DocExistsError</code><span class="sig-paren">(</span><em>doc_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/exceptions.html#DocExistsError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.exceptions.DocExistsError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-timApp.documentmodel.randutils">
+<span id="timapp-documentmodel-randutils-module"></span><h2>timApp.documentmodel.randutils module<a class="headerlink" href="#module-timApp.documentmodel.randutils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="timApp.documentmodel.randutils.hashfunc">
+<code class="descclassname">timApp.documentmodel.randutils.</code><code class="descname">hashfunc</code><span class="sig-paren">(</span><em>text</em>, <em>attrs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/randutils.html#hashfunc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.randutils.hashfunc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="timApp.documentmodel.randutils.idchecksum">
+<code class="descclassname">timApp.documentmodel.randutils.</code><code class="descname">idchecksum</code><span class="sig-paren">(</span><em>randid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/randutils.html#idchecksum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.randutils.idchecksum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="timApp.documentmodel.randutils.is_valid_id">
+<code class="descclassname">timApp.documentmodel.randutils.</code><code class="descname">is_valid_id</code><span class="sig-paren">(</span><em>randid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/randutils.html#is_valid_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.randutils.is_valid_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="timApp.documentmodel.randutils.random_id">
+<code class="descclassname">timApp.documentmodel.randutils.</code><code class="descname">random_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/randutils.html#random_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.randutils.random_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="timApp.documentmodel.randutils.random_jsonpar">
+<code class="descclassname">timApp.documentmodel.randutils.</code><code class="descname">random_jsonpar</code><span class="sig-paren">(</span><em>par_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/randutils.html#random_jsonpar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.randutils.random_jsonpar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="timApp.documentmodel.randutils.random_paragraph">
+<code class="descclassname">timApp.documentmodel.randutils.</code><code class="descname">random_paragraph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/randutils.html#random_paragraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.randutils.random_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="timApp.documentmodel.randutils.random_sentence">
+<code class="descclassname">timApp.documentmodel.randutils.</code><code class="descname">random_sentence</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/randutils.html#random_sentence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.randutils.random_sentence" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="timApp.documentmodel.randutils.random_sentences">
+<code class="descclassname">timApp.documentmodel.randutils.</code><code class="descname">random_sentences</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/randutils.html#random_sentences"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.randutils.random_sentences" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="timApp.documentmodel.randutils.random_word">
+<code class="descclassname">timApp.documentmodel.randutils.</code><code class="descname">random_word</code><span class="sig-paren">(</span><em>min_len=2</em>, <em>max_len=12</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/randutils.html#random_word"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.randutils.random_word" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-timApp.documentmodel.test_attributeparser">
+<span id="timapp-documentmodel-test-attributeparser-module"></span><h2>timApp.documentmodel.test_attributeparser module<a class="headerlink" href="#module-timApp.documentmodel.test_attributeparser" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="timApp.documentmodel.test_attributeparser.AttributeParserTest">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.test_attributeparser.</code><code class="descname">AttributeParserTest</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_attributeparser.html#AttributeParserTest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_attributeparser.AttributeParserTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">unittest.case.TestCase</span></code></p>
+<dl class="method">
+<dt id="timApp.documentmodel.test_attributeparser.AttributeParserTest.check_invalid">
+<code class="descname">check_invalid</code><span class="sig-paren">(</span><em>string</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_attributeparser.html#AttributeParserTest.check_invalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_attributeparser.AttributeParserTest.check_invalid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_attributeparser.AttributeParserTest.check_valid">
+<code class="descname">check_valid</code><span class="sig-paren">(</span><em>string</em>, <em>expected</em>, <em>expected_index=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_attributeparser.html#AttributeParserTest.check_valid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_attributeparser.AttributeParserTest.check_valid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_attributeparser.AttributeParserTest.test_broken">
+<code class="descname">test_broken</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_attributeparser.html#AttributeParserTest.test_broken"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_attributeparser.AttributeParserTest.test_broken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_attributeparser.AttributeParserTest.test_keyvalues">
+<code class="descname">test_keyvalues</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_attributeparser.html#AttributeParserTest.test_keyvalues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_attributeparser.AttributeParserTest.test_keyvalues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_attributeparser.AttributeParserTest.test_random">
+<code class="descname">test_random</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_attributeparser.html#AttributeParserTest.test_random"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_attributeparser.AttributeParserTest.test_random" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_attributeparser.AttributeParserTest.test_whitespace">
+<code class="descname">test_whitespace</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_attributeparser.html#AttributeParserTest.test_whitespace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_attributeparser.AttributeParserTest.test_whitespace" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-timApp.documentmodel.test_clipboard">
+<span id="timapp-documentmodel-test-clipboard-module"></span><h2>timApp.documentmodel.test_clipboard module<a class="headerlink" href="#module-timApp.documentmodel.test_clipboard" title="Permalink to this headline">¶</a></h2>
+<p>Unit tests for Clipboard class.</p>
+<p>Run from parent directory with command:
+python3 -m unittest dumboclient filemodehelper documentmodel/test_clipboard.py</p>
+<dl class="class">
+<dt id="timApp.documentmodel.test_clipboard.ClipboardTest">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.test_clipboard.</code><code class="descname">ClipboardTest</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_clipboard.html#ClipboardTest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_clipboard.ClipboardTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">timdbtest.TimDbTest</span></code></p>
+<dl class="method">
+<dt id="timApp.documentmodel.test_clipboard.ClipboardTest.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_clipboard.html#ClipboardTest.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_clipboard.ClipboardTest.setUp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_clipboard.ClipboardTest.test_copy">
+<code class="descname">test_copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_clipboard.html#ClipboardTest.test_copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_clipboard.ClipboardTest.test_copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_clipboard.ClipboardTest.test_empty">
+<code class="descname">test_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_clipboard.html#ClipboardTest.test_empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_clipboard.ClipboardTest.test_empty" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_clipboard.ClipboardTest.test_paste">
+<code class="descname">test_paste</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_clipboard.html#ClipboardTest.test_paste"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_clipboard.ClipboardTest.test_paste" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_clipboard.ClipboardTest.test_persistence">
+<code class="descname">test_persistence</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_clipboard.html#ClipboardTest.test_persistence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_clipboard.ClipboardTest.test_persistence" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_clipboard.ClipboardTest.test_readwrite">
+<code class="descname">test_readwrite</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_clipboard.html#ClipboardTest.test_readwrite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_clipboard.ClipboardTest.test_readwrite" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="timApp.documentmodel.test_clipboard.test_paste_ref">
+<code class="descclassname">timApp.documentmodel.test_clipboard.</code><code class="descname">test_paste_ref</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_clipboard.html#test_paste_ref"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_clipboard.test_paste_ref" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-timApp.documentmodel.test_document">
+<span id="timapp-documentmodel-test-document-module"></span><h2>timApp.documentmodel.test_document module<a class="headerlink" href="#module-timApp.documentmodel.test_document" title="Permalink to this headline">¶</a></h2>
+<p>Unit tests for Document class.</p>
+<p>Run from parent directory with command:
+python3 -m unittest dumboclient filemodehelper documentmodel/test_document.py</p>
+<dl class="class">
+<dt id="timApp.documentmodel.test_document.DocumentTest">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.test_document.</code><code class="descname">DocumentTest</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_document.html#DocumentTest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_document.DocumentTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">timdbtest.TimDbTest</span></code></p>
+<dl class="method">
+<dt id="timApp.documentmodel.test_document.DocumentTest.add_pars">
+<code class="descname">add_pars</code><span class="sig-paren">(</span><em>d</em>, <em>num_docs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_document.html#DocumentTest.add_pars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_document.DocumentTest.add_pars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_document.DocumentTest.init_testdoc">
+<code class="descname">init_testdoc</code><span class="sig-paren">(</span><em>doc_id=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_document.html#DocumentTest.init_testdoc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_document.DocumentTest.init_testdoc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_document.DocumentTest.test_addparagraph">
+<code class="descname">test_addparagraph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_document.html#DocumentTest.test_addparagraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_document.DocumentTest.test_addparagraph" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_document.DocumentTest.test_delparagraph">
+<code class="descname">test_delparagraph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_document.html#DocumentTest.test_delparagraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_document.DocumentTest.test_delparagraph" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_document.DocumentTest.test_document_create">
+<code class="descname">test_document_create</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_document.html#DocumentTest.test_document_create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_document.DocumentTest.test_document_create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_document.DocumentTest.test_document_remove">
+<code class="descname">test_document_remove</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_document.html#DocumentTest.test_document_remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_document.DocumentTest.test_document_remove" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_document.DocumentTest.test_get_html">
+<code class="descname">test_get_html</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_document.html#DocumentTest.test_get_html"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_document.DocumentTest.test_get_html" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_document.DocumentTest.test_import">
+<code class="descname">test_import</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_document.html#DocumentTest.test_import"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_document.DocumentTest.test_import" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_document.DocumentTest.test_insertparagraph">
+<code class="descname">test_insertparagraph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_document.html#DocumentTest.test_insertparagraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_document.DocumentTest.test_insertparagraph" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_document.DocumentTest.test_iterator">
+<code class="descname">test_iterator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_document.html#DocumentTest.test_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_document.DocumentTest.test_iterator" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_document.DocumentTest.test_macros">
+<code class="descname">test_macros</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_document.html#DocumentTest.test_macros"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_document.DocumentTest.test_macros" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_document.DocumentTest.test_modify">
+<code class="descname">test_modify</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_document.html#DocumentTest.test_modify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_document.DocumentTest.test_modify" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_document.DocumentTest.test_update">
+<code class="descname">test_update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_document.html#DocumentTest.test_update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_document.DocumentTest.test_update" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_document.DocumentTest.test_update_section">
+<code class="descname">test_update_section</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_document.html#DocumentTest.test_update_section"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_document.DocumentTest.test_update_section" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-timApp.documentmodel.test_documentparser">
+<span id="timapp-documentmodel-test-documentparser-module"></span><h2>timApp.documentmodel.test_documentparser module<a class="headerlink" href="#module-timApp.documentmodel.test_documentparser" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="timApp.documentmodel.test_documentparser.DocumentParserTest">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.test_documentparser.</code><code class="descname">DocumentParserTest</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_documentparser.html#DocumentParserTest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_documentparser.DocumentParserTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">unittest.case.TestCase</span></code></p>
+<dl class="method">
+<dt id="timApp.documentmodel.test_documentparser.DocumentParserTest.test_parsing">
+<code class="descname">test_parsing</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_documentparser.html#DocumentParserTest.test_parsing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_documentparser.DocumentParserTest.test_parsing" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_documentparser.DocumentParserTest.test_validation">
+<code class="descname">test_validation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_documentparser.html#DocumentParserTest.test_validation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_documentparser.DocumentParserTest.test_validation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-timApp.documentmodel.test_references">
+<span id="timapp-documentmodel-test-references-module"></span><h2>timApp.documentmodel.test_references module<a class="headerlink" href="#module-timApp.documentmodel.test_references" title="Permalink to this headline">¶</a></h2>
+<p>Unit tests for testing paragraph referencing.</p>
+<p>Run from parent directory with command:
+python3 -m unittest dumboclient filemodehelper documentmodel/test_references.py</p>
+<dl class="class">
+<dt id="timApp.documentmodel.test_references.RefTest">
+<em class="property">class </em><code class="descclassname">timApp.documentmodel.test_references.</code><code class="descname">RefTest</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_references.html#RefTest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_references.RefTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">timdbtest.TimDbTest</span></code></p>
+<dl class="method">
+<dt id="timApp.documentmodel.test_references.RefTest.assert_dict_issubset">
+<code class="descname">assert_dict_issubset</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_references.html#RefTest.assert_dict_issubset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_references.RefTest.assert_dict_issubset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_references.RefTest.dict_issubset">
+<code class="descname">dict_issubset</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_references.html#RefTest.dict_issubset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_references.RefTest.dict_issubset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_references.RefTest.dict_merge">
+<code class="descname">dict_merge</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_references.html#RefTest.dict_merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_references.RefTest.dict_merge" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_references.RefTest.doc_create">
+<code class="descname">doc_create</code><span class="sig-paren">(</span><em>db</em>, <em>doc_name</em>, <em>doc_group</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_references.html#RefTest.doc_create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_references.RefTest.doc_create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_references.RefTest.init_testdb">
+<code class="descname">init_testdb</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_references.html#RefTest.init_testdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_references.RefTest.init_testdb" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_references.RefTest.test_circular">
+<code class="descname">test_circular</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_references.html#RefTest.test_circular"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_references.RefTest.test_circular" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_references.RefTest.test_editparagraph_cite">
+<code class="descname">test_editparagraph_cite</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_references.html#RefTest.test_editparagraph_cite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_references.RefTest.test_editparagraph_cite" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_references.RefTest.test_editparagraph_citearea">
+<code class="descname">test_editparagraph_citearea</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_references.html#RefTest.test_editparagraph_citearea"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_references.RefTest.test_editparagraph_citearea" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_references.RefTest.test_editparagraph_translate">
+<code class="descname">test_editparagraph_translate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_references.html#RefTest.test_editparagraph_translate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_references.RefTest.test_editparagraph_translate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_references.RefTest.test_editparagraph_translatearea">
+<code class="descname">test_editparagraph_translatearea</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_references.html#RefTest.test_editparagraph_translatearea"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_references.RefTest.test_editparagraph_translatearea" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_references.RefTest.test_simpleref">
+<code class="descname">test_simpleref</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_references.html#RefTest.test_simpleref"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_references.RefTest.test_simpleref" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_references.RefTest.test_transitive">
+<code class="descname">test_transitive</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_references.html#RefTest.test_transitive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_references.RefTest.test_transitive" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="timApp.documentmodel.test_references.RefTest.test_translation">
+<code class="descname">test_translation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/timApp/documentmodel/test_references.html#RefTest.test_translation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timApp.documentmodel.test_references.RefTest.test_translation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-timApp.documentmodel">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-timApp.documentmodel" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">timApp.documentmodel package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-timApp.documentmodel.attributeparser">timApp.documentmodel.attributeparser module</a></li>
+<li><a class="reference internal" href="#module-timApp.documentmodel.clipboard">timApp.documentmodel.clipboard module</a></li>
+<li><a class="reference internal" href="#module-timApp.documentmodel.docparagraph">timApp.documentmodel.docparagraph module</a></li>
+<li><a class="reference internal" href="#module-timApp.documentmodel.docparagraphencoder">timApp.documentmodel.docparagraphencoder module</a></li>
+<li><a class="reference internal" href="#timapp-documentmodel-docsettings-module">timApp.documentmodel.docsettings module</a></li>
+<li><a class="reference internal" href="#timapp-documentmodel-document-module">timApp.documentmodel.document module</a></li>
+<li><a class="reference internal" href="#module-timApp.documentmodel.documentparser">timApp.documentmodel.documentparser module</a></li>
+<li><a class="reference internal" href="#module-timApp.documentmodel.documentparseroptions">timApp.documentmodel.documentparseroptions module</a></li>
+<li><a class="reference internal" href="#timapp-documentmodel-documentversion-module">timApp.documentmodel.documentversion module</a></li>
+<li><a class="reference internal" href="#module-timApp.documentmodel.documentwriter">timApp.documentmodel.documentwriter module</a></li>
+<li><a class="reference internal" href="#module-timApp.documentmodel.exceptions">timApp.documentmodel.exceptions module</a></li>
+<li><a class="reference internal" href="#module-timApp.documentmodel.randutils">timApp.documentmodel.randutils module</a></li>
+<li><a class="reference internal" href="#module-timApp.documentmodel.test_attributeparser">timApp.documentmodel.test_attributeparser module</a></li>
+<li><a class="reference internal" href="#module-timApp.documentmodel.test_clipboard">timApp.documentmodel.test_clipboard module</a></li>
+<li><a class="reference internal" href="#module-timApp.documentmodel.test_document">timApp.documentmodel.test_document module</a></li>
+<li><a class="reference internal" href="#module-timApp.documentmodel.test_documentparser">timApp.documentmodel.test_documentparser module</a></li>
+<li><a class="reference internal" href="#module-timApp.documentmodel.test_references">timApp.documentmodel.test_references module</a></li>
+<li><a class="reference internal" href="#module-timApp.documentmodel">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/timApp.documentmodel.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Timber project authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+      |
+      <a href="_sources/timApp.documentmodel.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

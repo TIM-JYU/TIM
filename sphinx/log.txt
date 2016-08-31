@@ -1,0 +1,148 @@
+/usr/local/lib/python3.5/dist-packages/flask/exthook.py:71: ExtDeprecationWarning: Importing flask.ext.sqlalchemy is deprecated, use flask_sqlalchemy instead.
+  .format(x=modname), ExtDeprecationWarning
+/usr/local/lib/python3.5/dist-packages/flask/exthook.py:71: ExtDeprecationWarning: Importing flask.ext.assets is deprecated, use flask_assets instead.
+  .format(x=modname), ExtDeprecationWarning
+/usr/local/lib/python3.5/dist-packages/flask/exthook.py:71: ExtDeprecationWarning: Importing flask.ext.script is deprecated, use flask_script instead.
+  .format(x=modname), ExtDeprecationWarning
+/usr/local/lib/python3.5/dist-packages/flask/exthook.py:71: ExtDeprecationWarning: Importing flask.ext.cache is deprecated, use flask_cache instead.
+  .format(x=modname), ExtDeprecationWarning
+/service/timber/timApp/ReverseProxied.py:docstring of timApp.ReverseProxied.ReverseProxied:8: ERROR: Unexpected indentation.
+/service/timber/sphinx/timApp.rst:67: WARNING: error while formatting arguments for timApp.dumboclient.call_dumbo: 'type' object is not iterable
+/service/timber/sphinx/timApp.rst:115: WARNING: error while formatting arguments for timApp.markdownconverter.md_to_html: ForwardRef must be an expression -- got 'dict(str:str)|None'
+/service/timber/timApp/pluginControl.py:docstring of timApp.pluginControl.plugin_deps:3: WARNING: Field list ends without a blank line; unexpected unindent.
+/service/timber/timApp/pluginControl.py:docstring of timApp.pluginControl.pluginify:9: ERROR: Unexpected indentation.
+/service/timber/timApp/pluginControl.py:docstring of timApp.pluginControl.pluginify:10: WARNING: Block quote ends without a blank line; unexpected unindent.
+/service/timber/timApp/pluginControl.py:docstring of timApp.pluginControl.pluginify:11: WARNING: Field list ends without a blank line; unexpected unindent.
+/service/timber/sphinx/timApp.rst:307: WARNING: autodoc: failed to import module 'timApp.tim'; the following exception was raised:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.5/dist-packages/sphinx/ext/autodoc.py", line 519, in import_object
+    __import__(self.modname)
+  File "/service/timber/timApp/tim.py", line 70, in <module>
+    static_url_path='/static/scripts/bower_components'))
+  File "/usr/local/lib/python3.5/dist-packages/flask/app.py", line 65, in wrapper_func
+    return f(self, *args, **kwargs)
+  File "/usr/local/lib/python3.5/dist-packages/flask/app.py", line 963, in register_blueprint
+    (blueprint, self.blueprints[blueprint.name], blueprint.name)
+AssertionError: A blueprint's name collision occurred between <flask.blueprints.Blueprint object at 0x7fe2b80670f0> and <flask.blueprints.Blueprint object at 0x7fe2b7cfa4a8>.  Both share the same name "bower".  Blueprints that are created on the fly need unique names.
+/service/timber/timApp/utils.py:docstring of timApp.utils.correct_yaml:1: WARNING: Inline substitution_reference start-string without end-string.
+/service/timber/timApp/utils.py:docstring of timApp.utils.generate_theme_scss:10: WARNING: Enumerated list ends without a blank line; unexpected unindent.
+/service/timber/timApp/utils.py:docstring of timApp.utils.generate_theme_scss:13: WARNING: Block quote ends without a blank line; unexpected unindent.
+/service/timber/timApp/utils.py:docstring of timApp.utils.generate_theme_scss:15: WARNING: Enumerated list ends without a blank line; unexpected unindent.
+/service/timber/timApp/documentmodel/docparagraph.py:docstring of timApp.documentmodel.docparagraph.DocParagraph.get_html:3: ERROR: Unexpected indentation.
+/service/timber/timApp/documentmodel/docparagraph.py:docstring of timApp.documentmodel.docparagraph.DocParagraph.get_html:5: WARNING: Block quote ends without a blank line; unexpected unindent.
+/service/timber/sphinx/timApp.documentmodel.rst:42: WARNING: error while formatting arguments for timApp.documentmodel.docsettings.DocSettings: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.documentmodel.rst:42: WARNING: error while formatting arguments for timApp.documentmodel.docsettings.DocSettings.get_source_document: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.documentmodel.rst:42: WARNING: error while formatting arguments for timApp.documentmodel.docsettings.DocSettings.set_source_document: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.documentmodel.rst:50: WARNING: error while formatting arguments for timApp.documentmodel.document.Document.update_section: tuple() takes at most 1 argument (2 given)
+/service/timber/sphinx/timApp.documentmodel.rst:50: WARNING: error while formatting arguments for timApp.documentmodel.document.Document.version_exists: tuple() takes at most 1 argument (2 given)
+/service/timber/sphinx/timApp.documentmodel.rst:74: WARNING: error while formatting arguments for timApp.documentmodel.documentversion.DocumentVersion: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.documentmodel.rst:74: WARNING: error while formatting arguments for timApp.documentmodel.documentversion.DocumentVersion.add_paragraph: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.documentmodel.rst:74: WARNING: error while formatting arguments for timApp.documentmodel.documentversion.DocumentVersion.add_ref_paragraph: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.documentmodel.rst:74: WARNING: error while formatting arguments for timApp.documentmodel.documentversion.DocumentVersion.get_settings: name 'DocSettings' is not defined
+/service/timber/sphinx/timApp.documentmodel.rst:74: WARNING: error while formatting arguments for timApp.documentmodel.documentversion.DocumentVersion.get_version: tuple() takes at most 1 argument (2 given)
+/service/timber/sphinx/timApp.documentmodel.rst:74: WARNING: error while formatting arguments for timApp.documentmodel.documentversion.DocumentVersion.insert_paragraph: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.documentmodel.rst:74: WARNING: error while formatting arguments for timApp.documentmodel.documentversion.DocumentVersion.insert_paragraph_obj: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.documentmodel.rst:74: WARNING: error while formatting arguments for timApp.documentmodel.documentversion.DocumentVersion.modify_paragraph: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.documentmodel.rst:74: WARNING: error while formatting arguments for timApp.documentmodel.documentversion.DocumentVersion.remove: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.documentmodel.rst:74: WARNING: error while formatting arguments for timApp.documentmodel.documentversion.DocumentVersion.update_section: tuple() takes at most 1 argument (2 given)
+/service/timber/timApp/routes/filters.py:docstring of timApp.routes.filters.map_format:3: ERROR: Unexpected indentation.
+/service/timber/timApp/routes/filters.py:docstring of timApp.routes.filters.map_format:3: WARNING: Inline substitution_reference start-string without end-string.
+/service/timber/sphinx/timApp.routes.rst:162: WARNING: error while formatting arguments for timApp.routes.view.get_document: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.routes.rst:162: WARNING: error while formatting arguments for timApp.routes.view.get_partial_document: 'type' object is not iterable
+/service/timber/sphinx/timApp.routes.rst:162: WARNING: error while formatting arguments for timApp.routes.view.parse_range: unsupported operand type(s) for |: 'type' and 'type'
+/service/timber/sphinx/timApp.timdb.rst:18: WARNING: error while formatting arguments for timApp.timdb.answers.Answers: name 'Connection' is not defined
+/service/timber/sphinx/timApp.timdb.rst:18: WARNING: error while formatting arguments for timApp.timdb.answers.Answers.getAnswersForGroup: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:18: WARNING: error while formatting arguments for timApp.timdb.answers.Answers.getUsersForTasks: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:18: WARNING: error while formatting arguments for timApp.timdb.answers.Answers.get_all_answers: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:18: WARNING: error while formatting arguments for timApp.timdb.answers.Answers.get_answer: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:18: WARNING: error while formatting arguments for timApp.timdb.answers.Answers.get_answers: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:18: WARNING: error while formatting arguments for timApp.timdb.answers.Answers.get_common_answers: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:18: WARNING: error while formatting arguments for timApp.timdb.answers.Answers.get_newest_answers: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:18: WARNING: error while formatting arguments for timApp.timdb.answers.Answers.get_task_id: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:18: WARNING: error while formatting arguments for timApp.timdb.answers.Answers.get_users: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:18: WARNING: error while formatting arguments for timApp.timdb.answers.Answers.saveAnswer: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:26: WARNING: error while formatting arguments for timApp.timdb.documents.Documents.add_paragraph: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:26: WARNING: error while formatting arguments for timApp.timdb.documents.Documents.add_translation: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:26: WARNING: error while formatting arguments for timApp.timdb.documents.Documents.create: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:26: WARNING: error while formatting arguments for timApp.timdb.documents.Documents.create_translation: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:26: WARNING: error while formatting arguments for timApp.timdb.documents.Documents.get_doc_title: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:26: WARNING: error while formatting arguments for timApp.timdb.documents.Documents.get_document: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:26: WARNING: error while formatting arguments for timApp.timdb.documents.Documents.get_document_id: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:26: WARNING: error while formatting arguments for timApp.timdb.documents.Documents.get_document_names: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:26: WARNING: error while formatting arguments for timApp.timdb.documents.Documents.get_documents_in_folder: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:26: WARNING: error while formatting arguments for timApp.timdb.documents.Documents.get_translation: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:26: WARNING: error while formatting arguments for timApp.timdb.documents.Documents.get_translation_path: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:26: WARNING: error while formatting arguments for timApp.timdb.documents.Documents.get_translation_title: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:26: WARNING: error while formatting arguments for timApp.timdb.documents.Documents.get_translations: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:26: WARNING: error while formatting arguments for timApp.timdb.documents.Documents.modify_paragraph: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:26: WARNING: error while formatting arguments for timApp.timdb.documents.Documents.resolve_doc_id_name: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:26: WARNING: error while formatting arguments for timApp.timdb.documents.Documents.translation_exists: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:34: WARNING: error while formatting arguments for timApp.timdb.files.Files: name 'Connection' is not defined
+/service/timber/sphinx/timApp.timdb.rst:34: WARNING: error while formatting arguments for timApp.timdb.files.Files.getFiles: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:34: WARNING: error while formatting arguments for timApp.timdb.files.Files.saveFile: tuple() takes at most 1 argument (2 given)
+/service/timber/sphinx/timApp.timdb.rst:42: WARNING: error while formatting arguments for timApp.timdb.folders.Folders: name 'Connection' is not defined
+/service/timber/sphinx/timApp.timdb.rst:42: WARNING: error while formatting arguments for timApp.timdb.folders.Folders.get: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:42: WARNING: error while formatting arguments for timApp.timdb.folders.Folders.get_folder_id: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:42: WARNING: error while formatting arguments for timApp.timdb.folders.Folders.get_folders: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:42: WARNING: error while formatting arguments for timApp.timdb.folders.Folders.get_id: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:58: WARNING: error while formatting arguments for timApp.timdb.images.Images: name 'Connection' is not defined
+/service/timber/sphinx/timApp.timdb.rst:58: WARNING: error while formatting arguments for timApp.timdb.images.Images.getImages: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:58: WARNING: error while formatting arguments for timApp.timdb.images.Images.saveImage: tuple() takes at most 1 argument (2 given)
+/service/timber/sphinx/timApp.timdb.rst:66: WARNING: error while formatting arguments for timApp.timdb.lectureanswers.LectureAnswers: name 'Connection' is not defined
+/service/timber/sphinx/timApp.timdb.rst:66: WARNING: error while formatting arguments for timApp.timdb.lectureanswers.LectureAnswers.get_answers_to_question: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:66: WARNING: error while formatting arguments for timApp.timdb.lectureanswers.LectureAnswers.get_answers_to_questions_from_lecture: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:66: WARNING: error while formatting arguments for timApp.timdb.lectureanswers.LectureAnswers.get_user_answer_to_question: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:66: WARNING: error while formatting arguments for timApp.timdb.lectureanswers.LectureAnswers.get_user_answers_to_questions_from_lecture: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:74: WARNING: error while formatting arguments for timApp.timdb.lectures.Lectures: name 'Connection' is not defined
+/service/timber/sphinx/timApp.timdb.rst:74: WARNING: error while formatting arguments for timApp.timdb.lectures.Lectures.check_if_correct_name: name 'string' is not defined
+/service/timber/sphinx/timApp.timdb.rst:74: WARNING: error while formatting arguments for timApp.timdb.lectures.Lectures.create_lecture: name 'string' is not defined
+/service/timber/sphinx/timApp.timdb.rst:74: WARNING: error while formatting arguments for timApp.timdb.lectures.Lectures.extend_lecture: name 'string' is not defined
+/service/timber/sphinx/timApp.timdb.rst:74: WARNING: error while formatting arguments for timApp.timdb.lectures.Lectures.get_all_lectures_from_document: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:74: WARNING: error while formatting arguments for timApp.timdb.lectures.Lectures.get_document_lectures: name 'string' is not defined
+/service/timber/sphinx/timApp.timdb.rst:74: WARNING: error while formatting arguments for timApp.timdb.lectures.Lectures.get_lecture: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:74: WARNING: error while formatting arguments for timApp.timdb.lectures.Lectures.get_lecture_by_code: name 'string' is not defined
+/service/timber/sphinx/timApp.timdb.rst:74: WARNING: error while formatting arguments for timApp.timdb.lectures.Lectures.get_lecture_by_name: name 'string' is not defined
+/service/timber/sphinx/timApp.timdb.rst:74: WARNING: error while formatting arguments for timApp.timdb.lectures.Lectures.get_users_from_leture: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:74: WARNING: error while formatting arguments for timApp.timdb.lectures.Lectures.set_end_for_lecture: name 'string' is not defined
+/service/timber/sphinx/timApp.timdb.rst:74: WARNING: error while formatting arguments for timApp.timdb.lectures.Lectures.update_lecture: name 'string' is not defined
+/service/timber/sphinx/timApp.timdb.rst:74: WARNING: error while formatting arguments for timApp.timdb.lectures.Lectures.update_lecture_starting_time: name 'string' is not defined
+/service/timber/sphinx/timApp.timdb.rst:82: WARNING: error while formatting arguments for timApp.timdb.messages.Messages: name 'Connection' is not defined
+/service/timber/sphinx/timApp.timdb.rst:82: WARNING: error while formatting arguments for timApp.timdb.messages.Messages.get_last_message: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:82: WARNING: error while formatting arguments for timApp.timdb.messages.Messages.get_messages: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:82: WARNING: error while formatting arguments for timApp.timdb.messages.Messages.get_new_messages: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:98: WARNING: error while formatting arguments for timApp.timdb.notes.Notes.addNote: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:98: WARNING: error while formatting arguments for timApp.timdb.notes.Notes.getNotes: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:98: WARNING: error while formatting arguments for timApp.timdb.notes.Notes.modifyNote: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:98: WARNING: error while formatting arguments for timApp.timdb.notes.Notes.process_notes: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:106: WARNING: error while formatting arguments for timApp.timdb.questions.Questions: name 'Connection' is not defined
+/service/timber/sphinx/timApp.timdb.rst:106: WARNING: error while formatting arguments for timApp.timdb.questions.Questions.add_asked_questions: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:106: WARNING: error while formatting arguments for timApp.timdb.questions.Questions.get_asked_json_by_hash: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:106: WARNING: error while formatting arguments for timApp.timdb.questions.Questions.get_asked_json_by_id: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:106: WARNING: error while formatting arguments for timApp.timdb.questions.Questions.get_asked_question: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:106: WARNING: error while formatting arguments for timApp.timdb.questions.Questions.get_doc_questions: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:106: WARNING: error while formatting arguments for timApp.timdb.questions.Questions.get_multiple_asked_questions: ForwardRef must be an expression -- got 'int[]'
+/service/timber/sphinx/timApp.timdb.rst:106: WARNING: error while formatting arguments for timApp.timdb.questions.Questions.get_multiple_questions: ForwardRef must be an expression -- got 'int[]'
+/service/timber/sphinx/timApp.timdb.rst:106: WARNING: error while formatting arguments for timApp.timdb.questions.Questions.get_question: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:106: WARNING: error while formatting arguments for timApp.timdb.questions.Questions.get_questions: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:114: WARNING: error while formatting arguments for timApp.timdb.readings.Readings.getReadings: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:170: WARNING: error while formatting arguments for timApp.timdb.timdbbase.TimDbBase: name 'Connection' is not defined
+/service/timber/sphinx/timApp.timdb.rst:170: WARNING: error while formatting arguments for timApp.timdb.timdbbase.TimDbBase.getBlockRelations: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:170: WARNING: error while formatting arguments for timApp.timdb.timdbbase.TimDbBase.getOwnedBlockRelations: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:170: WARNING: error while formatting arguments for timApp.timdb.timdbbase.TimDbBase.get_owner: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:170: WARNING: error while formatting arguments for timApp.timdb.timdbbase.TimDbBase.insertBlockToDb: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:170: WARNING: error while formatting arguments for timApp.timdb.timdbbase.TimDbBase.split_location: tuple() takes at most 1 argument (2 given)
+/service/timber/sphinx/timApp.timdb.rst:186: WARNING: error while formatting arguments for timApp.timdb.users.Users: name 'Connection' is not defined
+/service/timber/sphinx/timApp.timdb.rst:186: WARNING: error while formatting arguments for timApp.timdb.users.Users.create_user_with_group: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:186: WARNING: error while formatting arguments for timApp.timdb.users.Users.get_accessible_blocks: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:186: WARNING: error while formatting arguments for timApp.timdb.users.Users.get_group_users: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:186: WARNING: error while formatting arguments for timApp.timdb.users.Users.get_personal_usergroup_by_id: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:186: WARNING: error while formatting arguments for timApp.timdb.users.Users.get_user: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:186: WARNING: error while formatting arguments for timApp.timdb.users.Users.get_user_by_email: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:186: WARNING: error while formatting arguments for timApp.timdb.users.Users.get_user_group_name: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:186: WARNING: error while formatting arguments for timApp.timdb.users.Users.get_user_groups: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:186: WARNING: error while formatting arguments for timApp.timdb.users.Users.get_user_id_by_name: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:186: WARNING: error while formatting arguments for timApp.timdb.users.Users.get_usergroup_by_name: unsupported operand type(s) for |: 'type' and 'NoneType'
+/service/timber/sphinx/timApp.timdb.rst:186: WARNING: error while formatting arguments for timApp.timdb.users.Users.get_usergroups_printable: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:186: WARNING: error while formatting arguments for timApp.timdb.users.Users.get_users_in_group: 'type' object is not iterable
+/service/timber/sphinx/timApp.timdb.rst:186: WARNING: error while formatting arguments for timApp.timdb.users.Users.get_viewable_blocks: 'type' object is not iterable
+/service/timber/sphinx/modules.rst:: WARNING: document isn't included in any toctree

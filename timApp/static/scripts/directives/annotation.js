@@ -1,13 +1,15 @@
 /**
- * Handles logic behind single annotation. Annotations uses attribute as a directive declaration, 
- * because IE does not support custom elements reliably.
+ * The directive handles the logic behind a single annotation.
+ * The annotation must be implemented to the element as a directive declaration,
+ * because IE does not support custom elements reliably. In example, use:
+ * `<span annotation="">...</span>` instead of `<annotation>...</annotation>`.
  * 
  * @module annotation
  * @author Joonas Lattu
  * @author Petteri Palojärvi
  * @author Seppo Tarvainen
  * @licence MIT
- * @copyright 2016 Timber project authors
+ * @copyright 2016 Timber project members
  */
 
 /*
@@ -15,7 +17,7 @@
  var timApp = angular.module('timApp');
  */
 
-/** Directive for marking
+/** Directive for a single annotation.
  * @lends module:reviewController
  */
 timApp.directive("annotation",['$window', function ($window, $timeout) {
@@ -67,7 +69,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             };
 
             /**
-             * Toggle annotation visibility
+             * Toggles the visibility of the annotation.
              * @method toggleAnnotation
              */
             scope.toggleAnnotation = function () {
@@ -110,7 +112,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
 
             /**
-             * Update annotation z-index attribute.
+             * Updates the z-index attribute of the annotation.
              * @method updateVelpZIndex
              */
             scope.updateVelpZIndex = function () {
@@ -125,7 +127,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             };
 
             /**
-             * Show annotation, used in summary
+             * Shows the annotation.
              * @method showAnnotation
              */
             scope.showAnnotation = function () {
@@ -137,7 +139,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             };
 
             /**
-             * Focus comment field.
+             * Focuses on the comment field of the annotation.
              * @method focusTextarea
              */
             scope.focusTextarea =function(){
@@ -147,7 +149,8 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
 
             /**
-             * Delete selected annotation. Queries parent scope.
+             * Deletes the selected annotation. Queries parent scope and deletes
+             * the corresponding annotation from there.
              * @method deleteAnnotation
              */
             scope.deleteAnnotation = function () {
@@ -162,7 +165,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             };
 
             /**
-             * Update annotation to margin
+             * Updates the annotation and toggles its visibility in the margin.
              * @method updateAnnotation
              */
             scope.updateAnnotation = function () {
@@ -174,7 +177,8 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             };
 
             /**
-             * Changes points of selected annotation. Queries parent scope.
+             * Changes points of the selected annotation. Qeries parent scope
+             * and changes the points of the corresponding annotation.
              * @method changePoints
              */
             scope.changePoints = function () {
@@ -183,7 +187,8 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             };
 
             /**
-             * Save changes to annotation
+             * Saves the changes made to the annotation. Queries parent scope
+             * and updates the changes of the corresponding annotation.
              * @method saveChanges
              */
             scope.saveChanges = function () {
@@ -227,9 +232,9 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             };
 
             /**
-             * Check if user has rights to edit annoatation.
+             * Checks if the user has rights to edit the annotation.
              * @method checkRights
-             * @returns {boolean} if user has rights or not.
+             * @returns {boolean} Whether the user has rights or not
              */
             scope.checkRights = function () {
                 return scope.editaccess !== 1;
@@ -237,8 +242,8 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
             /**
              * Detect user right to annotation to document.
-             * @param points - Points given in velp or annotation.
-             * @returns {boolean} - right to make annotations.
+             * @param points - Points given in velp or annotation
+             * @returns {boolean} - Whether user has rights to make annotations
              */
 
             scope.notAnnotationRights = function (points) {
@@ -253,11 +258,10 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 }
             };
 
-             /**
+            /**
              * Return true if user has teacher rights.
-             * @returns {boolean}
+             * @returns {boolean} Whether the user has teacher rights or not
              */
-
             scope.allowChangePoints = function () {
                 return scope.$parent.rights.teacher;
             };
@@ -265,9 +269,9 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
 
             /**
-             * Check if annotation is changed comparing to last saved state.
+             * Checks if the annotation is changed compared to its last saved state.
              * @method checkIfChanged
-             * @returns {boolean}
+             * @returns {boolean} - Whether any modifications were made or not
              */
             scope.checkIfChanged = function () {
                 if (scope.original.points !== scope.points)
@@ -282,9 +286,9 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             };
 
             /**
-             * Detect cntr-S and cntr-Enter on textarea
+             * Detects the `Ctrl + S` and `Ctrl+Enter` key strokes on the text area.
              * @method keyDownFunc
-             * @param event - current event
+             * @param event - Current event
              */
             scope.keyDownFunc = function (event) {
                  if (event.keyCode === scope.ctrlKey) {
@@ -302,9 +306,9 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 		    };
 
             /**
-             * Detect if key is released
+             * Detects if `Ctrl`-key is released.
              * @method keyUpFunc
-             * @param event - current event
+             * @param event - Current event
              */
             scope.keyUpFunc = function (event) {
                  if (event.keyCode === scope.ctrlKey) {

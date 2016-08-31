@@ -1,0 +1,311 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>timApp.routes.annotation &#8212; Timber 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Timber 1.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for timApp.routes.annotation</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The module handles the main logic related to annotations. This includes adding, modifiying and deleting annotations</span>
+<span class="sd">as well as adding comments to the annotations. The module also retrieves the annotations to the document.</span>
+
+<span class="sd">:authors: Joonas Lattu, Petteri Palojärvi</span>
+<span class="sd">:copyright: 2016 Timber project members</span>
+<span class="sd">:version: 1.0.0</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Blueprint</span>
+<span class="kn">from</span> <span class="nn">.common</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">timdb.annotations</span> <span class="k">import</span> <span class="n">Annotations</span>
+
+<span class="n">annotations</span> <span class="o">=</span> <span class="n">Blueprint</span><span class="p">(</span><span class="s1">&#39;annotations&#39;</span><span class="p">,</span>
+                        <span class="n">__name__</span><span class="p">,</span>
+                        <span class="n">url_prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+
+<span class="c1"># TODO connect the routes in this file to the ui.</span>
+<span class="nd">@annotations</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/add_annotation&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="add_annotation"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.annotation.add_annotation">[docs]</a><span class="k">def</span> <span class="nf">add_annotation</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Creates a new annotation to the database.</span>
+
+<span class="sd">    Required key(s):</span>
+<span class="sd">        - velp: velp ID</span>
+<span class="sd">        - visible_to: visibility group (1-4)</span>
+<span class="sd">        - doc_id: document ID</span>
+<span class="sd">        - coord: start and end coordinates of the annotation.</span>
+
+<span class="sd">    :return: Dictionary oontaining annotation id and annotator name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get_json</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">json_data</span><span class="p">)</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+
+    <span class="c1"># first get the non-optional arguments and abort if there is missing data.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">velp_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;velp&#39;</span><span class="p">]</span>
+        <span class="n">visible_to</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">AnnotationVisibility</span><span class="p">(</span><span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;visible_to&#39;</span><span class="p">])</span>
+        <span class="n">document_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;doc_id&#39;</span><span class="p">]</span>
+        <span class="n">coordinates</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;coord&#39;</span><span class="p">]</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">coordinates</span><span class="p">[</span><span class="s1">&#39;start&#39;</span><span class="p">]</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">coordinates</span><span class="p">[</span><span class="s1">&#39;end&#39;</span><span class="p">]</span>
+
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># one of the json_data[&#39;foo&#39;] fails</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Missing data: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># one of the element paths is not a list of integers</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Malformed element path. &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># visible_to could not be casted to the enum used.</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1"># .get() returns None if there is no data instead of throwing.</span>
+    <span class="n">offset_start</span> <span class="o">=</span> <span class="n">start</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;offset&#39;</span><span class="p">)</span>
+    <span class="n">depth_start</span> <span class="o">=</span> <span class="n">start</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;depth&#39;</span><span class="p">)</span>
+    <span class="n">node_start</span> <span class="o">=</span> <span class="n">start</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;node&#39;</span><span class="p">)</span>
+
+    <span class="n">offset_end</span> <span class="o">=</span> <span class="n">end</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;offset&#39;</span><span class="p">)</span>
+    <span class="n">depth_end</span> <span class="o">=</span> <span class="n">end</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;depth&#39;</span><span class="p">)</span>
+    <span class="n">node_end</span> <span class="o">=</span> <span class="n">end</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;node&#39;</span><span class="p">)</span>
+
+    <span class="n">element_path_start</span> <span class="o">=</span> <span class="n">start</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;el_path&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">element_path_start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">element_path_start</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">element_path_start</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Malformed element path. &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">element_path_start</span><span class="p">))</span>
+        <span class="n">element_path_start</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">element_path_start</span><span class="p">)</span>
+
+    <span class="n">element_path_end</span> <span class="o">=</span> <span class="n">end</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;el_path&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">element_path_end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">element_path_end</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">element_path_end</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Malformed element path. &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">element_path_end</span><span class="p">))</span>
+        <span class="n">element_path_end</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">element_path_end</span><span class="p">)</span>
+
+    <span class="n">points</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;points&#39;</span><span class="p">)</span>
+    <span class="n">icon_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;icon_id&#39;</span><span class="p">)</span>
+    <span class="n">answer_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;answer_id&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">paragraph_id_start</span> <span class="o">=</span> <span class="n">start</span><span class="p">[</span><span class="s1">&#39;par_id&#39;</span><span class="p">]</span>
+        <span class="n">hash_start</span> <span class="o">=</span> <span class="n">start</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span>
+        <span class="n">paragraph_id_end</span> <span class="o">=</span> <span class="n">end</span><span class="p">[</span><span class="s1">&#39;par_id&#39;</span><span class="p">]</span>
+        <span class="n">hash_end</span> <span class="o">=</span> <span class="n">end</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Missing data: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">verifyLoggedIn</span><span class="p">()</span>
+    <span class="n">annotator_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+    <span class="n">velp_version_id</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">velps</span><span class="o">.</span><span class="n">get_latest_velp_version</span><span class="p">(</span><span class="n">velp_id</span><span class="p">)[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+
+    <span class="n">new_id</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">create_annotation</span><span class="p">(</span><span class="n">velp_version_id</span><span class="p">,</span> <span class="n">visible_to</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">annotator_id</span><span class="p">,</span> <span class="n">document_id</span><span class="p">,</span>
+                                                 <span class="n">paragraph_id_start</span><span class="p">,</span> <span class="n">paragraph_id_end</span><span class="p">,</span> <span class="n">offset_start</span><span class="p">,</span> <span class="n">node_start</span><span class="p">,</span>
+                                                 <span class="n">depth_start</span><span class="p">,</span> <span class="n">offset_end</span><span class="p">,</span> <span class="n">node_end</span><span class="p">,</span> <span class="n">depth_end</span><span class="p">,</span> <span class="n">hash_start</span><span class="p">,</span> <span class="n">hash_end</span><span class="p">,</span>
+                                                 <span class="n">element_path_start</span><span class="p">,</span> <span class="n">element_path_end</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">icon_id</span><span class="p">,</span> <span class="n">answer_id</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">jsonResponse</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">new_id</span><span class="p">,</span> <span class="s2">&quot;annotator_name&quot;</span><span class="p">:</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">annotator_id</span><span class="p">)[</span><span class="s1">&#39;name&#39;</span><span class="p">]})</span></div>
+
+
+<span class="nd">@annotations</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/update_annotation&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="update_annotation"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.annotation.update_annotation">[docs]</a><span class="k">def</span> <span class="nf">update_annotation</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Updates the visibility and/or points of the annotation.</span>
+
+<span class="sd">    Required key(s):</span>
+<span class="sd">        - annotation_id: annotation ID.</span>
+
+<span class="sd">    Optional key(s):</span>
+<span class="sd">        - visible_to: visibility group number (1-4)</span>
+<span class="sd">        - points: number of points</span>
+<span class="sd">        - doc_id: document ID.</span>
+
+<span class="sd">    :return: okJsonResponse()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">verifyLoggedIn</span><span class="p">()</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get_json</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">annotation_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;annotation_id&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Missing data: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">visible_to</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;visible_to&#39;</span><span class="p">)</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;points&#39;</span><span class="p">)</span>
+    <span class="n">doc_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;doc_id&#39;</span><span class="p">)</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="c1"># Get values from the database to fill in unchanged new values.</span>
+    <span class="n">new_values</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">get_annotation</span><span class="p">(</span><span class="n">annotation_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">new_values</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="s2">&quot;No such annotation.&quot;</span><span class="p">)</span>
+    <span class="n">new_values</span> <span class="o">=</span> <span class="n">new_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># Todo panic if there is more than one item in the list.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">new_values</span><span class="p">[</span><span class="s1">&#39;annotator_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">403</span><span class="p">,</span> <span class="s2">&quot;You are not the annotator.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">visible_to</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">visible_to</span> <span class="o">=</span> <span class="n">Annotations</span><span class="o">.</span><span class="n">AnnotationVisibility</span><span class="p">(</span><span class="n">visible_to</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Visibility should be 1, 2, 3 or 4.&quot;</span><span class="p">)</span>
+        <span class="n">new_values</span><span class="p">[</span><span class="s1">&#39;visible_to&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">visible_to</span>
+    <span class="k">if</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_teacher_access</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">):</span>
+        <span class="n">new_values</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">points</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">new_values</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_values</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">timdb</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">update_annotation</span><span class="p">(</span><span class="n">new_values</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">new_values</span><span class="p">[</span><span class="s1">&#39;velp_version_id&#39;</span><span class="p">],</span>
+                                        <span class="n">new_values</span><span class="p">[</span><span class="s1">&#39;visible_to&#39;</span><span class="p">],</span> <span class="n">new_values</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">],</span> <span class="n">new_values</span><span class="p">[</span><span class="s1">&#39;icon_id&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">okJsonResponse</span><span class="p">()</span></div>
+
+
+<span class="nd">@annotations</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/invalidate_annotation&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="invalidate_annotation"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.annotation.invalidate_annotation">[docs]</a><span class="k">def</span> <span class="nf">invalidate_annotation</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Invalidates annotation by setting its valid from to current moment.</span>
+
+<span class="sd">    Required key(s):</span>
+<span class="sd">        - annotation_id: annotation ID</span>
+
+<span class="sd">    :return: okJsonResponse()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get_json</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">annotation_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;annotation_id&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Missing data: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="n">annotation</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">get_annotation</span><span class="p">(</span><span class="n">annotation_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">annotation</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="s2">&quot;No such annotation.&quot;</span><span class="p">)</span>
+    <span class="n">annotation</span> <span class="o">=</span> <span class="n">annotation</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">verifyLoggedIn</span><span class="p">()</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">annotation</span><span class="p">[</span><span class="s1">&#39;annotator_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">403</span><span class="p">,</span> <span class="s2">&quot;You are not the annotator.&quot;</span><span class="p">)</span>
+    <span class="c1"># TODO: Add option to choose when annotation gets invalidated</span>
+    <span class="n">timdb</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">invalidate_annotation</span><span class="p">(</span><span class="n">annotation_id</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">okJsonResponse</span><span class="p">()</span></div>
+
+
+<span class="nd">@annotations</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/add_annotation_comment&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="add_comment"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.annotation.add_comment">[docs]</a><span class="k">def</span> <span class="nf">add_comment</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Adds new comment to the annotation.</span>
+
+<span class="sd">    Required key(s):</span>
+<span class="sd">        - annotation_id: annotation ID</span>
+<span class="sd">        - content: content of the comment.</span>
+
+<span class="sd">    :return: Dictionary of information about user who added the comment</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get_json</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">annotation_id</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;annotation_id&#39;</span><span class="p">]</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Missing data: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="c1"># Todo maybe check that content isn&#39;t an empty string</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="n">verifyLoggedIn</span><span class="p">()</span>
+    <span class="n">commenter_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+    <span class="n">timdb</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">add_comment</span><span class="p">(</span><span class="n">annotation_id</span><span class="p">,</span> <span class="n">commenter_id</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span>
+    <span class="c1"># TODO notice with email to annotator if commenter is not itself</span>
+    <span class="k">return</span> <span class="n">jsonResponse</span><span class="p">(</span><span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">commenter_id</span><span class="p">))</span></div>
+
+
+<span class="nd">@annotations</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:doc_id&gt;/get_annotations&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="get_annotations"><a class="viewcode-back" href="../../../timApp.routes.html#timApp.routes.annotation.get_annotations">[docs]</a><span class="k">def</span> <span class="nf">get_annotations</span><span class="p">(</span><span class="n">doc_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns all annotations with comments user can see, e.g. has access to them in a document.</span>
+
+<span class="sd">    :param doc_id: ID of the document</span>
+<span class="sd">    :return: List of dictionaries containing annotations with comments</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">timdb</span> <span class="o">=</span> <span class="n">getTimDb</span><span class="p">()</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">getCurrentUserId</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">timdb</span><span class="o">.</span><span class="n">documents</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">doc_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="s2">&quot;No such document.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_view_access</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">403</span><span class="p">,</span> <span class="s2">&quot;View access required.&quot;</span><span class="p">)</span>
+    <span class="n">user_has_see_answers</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_seeanswers_access</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">)</span>
+    <span class="n">user_has_teacher</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">has_teacher_access</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">)</span>
+    <span class="n">user_has_owner</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">user_is_owner</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="n">timdb</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">get_annotations_with_comments_in_document</span><span class="p">(</span><span class="n">getCurrentUserId</span><span class="p">(),</span> <span class="n">user_has_see_answers</span><span class="p">,</span>
+                                                                          <span class="n">user_has_teacher</span><span class="p">,</span> <span class="n">user_has_owner</span><span class="p">,</span> <span class="n">doc_id</span><span class="p">)</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">jsonResponse</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;no-store, no-cache, must-revalidate&#39;</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Timber project authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
