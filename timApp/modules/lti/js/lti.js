@@ -88,7 +88,7 @@ ltiApp.directiveTemplate = function () {
         '<p>{{header}}</p>' +
         '<p ng-if="stem" class="stem" >{{stem}}</p>' +
 
-        '<iframe ng-if="iframe.src" src="{{::iframe.src}}" class="lti" id="{{::iframe.id}}" name="{{::iframe.name}}" ' +
+        '<iframe ng-show="iframe.src" src="{{::iframe.src}}" class="lti" id="{{::iframe.id}}" name="{{::iframe.name}}" ' +
             'style="width:{{::iframe.size[0]}}; height: {{::iframe.size[1]}};">' +
         '</iframe>' +
 
@@ -226,6 +226,30 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
     $scope.parentId = ""; // parent <div> id
     $scope.inactiveText = ""; // what text to display if <iframe> is inactive
 
+    function getLocalIframeSettings() {
+        var settings = $window.localStorage.getItem("local_iframe_settings");
+        settings = (settings && JSON.parse(settings)) || {};
+        return Array.isArray(settings) ? {} : settings; // compat. fix
+    }
+
+    function setLocalIframeSettings(dimensions) {
+        dimensions = dimensions || $scope.iframe.size;
+        var settings = getLocalIframeSettings();
+        settings[$scope.iframe.id] = $scope.iframe.size;
+        console.log(settings);
+        $window.localStorage.setItem("local_iframe_settings", JSON.stringify(settings));
+    }
+
+    function forceSettingsUpdate() {
+        // Handle localStorage saving of <iframe> dimensions
+        // localStorage doesn't store it as an array (instead as a string), so we use split
+        var settings = getLocalIframeSettings();
+        if (settings && settings[$scope.iframe.id]) {
+            $scope.iframe.size = settings[$scope.iframe.id];
+            $scope.resizeIframe();
+        }
+    }
+
     // whether to display iframe options to user
     $scope.resizingButtonsDiv = function() {
         return $scope.iframe.src !== '';
@@ -233,25 +257,27 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
 
     // Toggle hide/show for iframe settings panel
     $scope.toggleIframeControls = function() {
+        var settings = getLocalIframeSettings();
+        var size = settings && settings[$scope.iframe.id];
         $scope.iframeControls = !$scope.iframeControls;
-        $scope.iframe.size = $scope.iframe_size || [];
-        var local_iframe_size = $window.localStorage.getItem("local_iframe_size").split(',');
+        $scope.iframe.size = size || $scope.iframe_size || []; // iframe_size is a YAML param
         // These are the ng-model versions for the settings form (yes, it's hacky)
         // It will display default values for easier editing.
-        $scope.iframe_width = local_iframe_size[0] || $scope.iframe.size[0] || "";
-        $scope.iframe_height = local_iframe_size[1] || $scope.iframe.size[1] || "";
+        $scope.iframe_width = $scope.iframe.size[0] || "";
+        $scope.iframe_height = $scope.iframe.size[1] || "";
     };
 
     // Handle <iframe> resizing via the settings panel
     $scope.resizeIframe = function(dimensions) {
-        $scope.iframe.size = dimensions || $scope.iframe.size;
+        var settings = getLocalIframeSettings();
         var iframeInScope = document.getElementById($scope.iframe.id);
+        $scope.iframe.size = dimensions || $scope.iframe.size;
         // If <iframe> is currently in scope and therefore visible
         if (iframeInScope) {
             iframeInScope.style.width = $scope.iframe.size[0];
             iframeInScope.style.height = $scope.iframe.size[1];
         }
-        $window.localStorage.setItem("local_iframe_size", $scope.iframe.size);
+        setLocalIframeSettings($scope.iframe.size);
     };
 
     // Scroll the user's browser to the location of the active iframe
@@ -297,6 +323,7 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
             iframeInScope.src = url;
         }
         ltiApp.container.update($scope, 'active');
+        forceSettingsUpdate();
     };
 
     // Open Moodle login page in <iframe>
@@ -307,6 +334,7 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
         } else {
             $scope.reload(url, false); // Forces the <iframe> to load login page always.
         }
+        forceSettingsUpdate();
     };
 
     // Handle <iframe> closing
@@ -350,11 +378,6 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
         return true;
     };
 
-    // Handle localStorage saving of <iframe> dimensions
-    // localStorage doesn't store it as an array (instead as a string), so we use split
-    var local_iframe_size = $window.localStorage.getItem("local_iframe_size").split(',');
-    $scope.iframe.size = local_iframe_size || [];
-    $scope.resizeIframe();
 
     // Register scope with global container object
     // Must be done last since we need to use the various $scope methods and variables.
