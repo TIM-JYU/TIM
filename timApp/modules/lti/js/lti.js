@@ -356,7 +356,7 @@ ltiApp.initScope = function (scope, element, attrs) {
     timHelper.set(scope, attrs, "initgrade", "ei pisteitä");
     timHelper.set(scope, attrs, "state.grade", scope.initgrade);
     //timHelper.set(scope, attrs, "state.oldgrade", -1);
-    timHelper.set(scope, attrs, "use_js", true);
+    timHelper.set(scope, attrs, "use_js", false);
     timHelper.set(scope, attrs, "use_lti", true);
     timHelper.set(scope, attrs, "iframe_size", ["100%", "600px"]);
     timHelper.set(scope, attrs, "login_url", "https://moodle.jyu.fi/login/jyulogin.php"); // JY Moodlen login page as default
