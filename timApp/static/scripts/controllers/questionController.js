@@ -58,6 +58,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         scope.par_id = "NEW_PAR";
         scope.par_id_next = data.par_id_next;
         scope.titleChanged = false;
+        scope.addKeyListeners();
     });
 
     scope.$on("editQuestion", function (event, data) {
@@ -193,28 +194,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             }
 
             scope.$emit('toggleQuestion');
+        
 
-            if ( scope.questionForm ) return; // allready keys binded
-            scope.questionForm = $("#question-form")[0];
+            scope.addKeyListeners();
 
-            scope.questionForm.addEventListener('keydown', function(event) {
-                if (event.ctrlKey || event.metaKey) {
-                    switch (String.fromCharCode(event.which).toLowerCase()) {
-                    case 's':
-                        event.preventDefault();
-                        scope.createQuestion(false);
-                        break;
-                    case 'r':
-                        event.preventDefault();
-                        if ( scope.lectureSettings.inLecture )
-                            scope.createQuestion(true);
-                        break;
-                    case 'g':
-                        event.preventDefault();
-                        break;
-                    }
-                }
-            });
+            scope.textAreas = $(".questiontext");
    /*
             scope.questionForm.addEventListener( "keydown", function(event) {
             // $("#question-form").keypress(function(event) {
@@ -226,6 +210,65 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             */
         }
     );
+
+
+    scope.moveToElement = function(event, dir) {
+        event.preventDefault();
+        var activeObj = document.activeElement;
+        var id = activeObj.id;
+        if ( !id || id[0] !== "r" ) return 0;
+        var edits = $("#question-form").find(".questiontext");
+        var ind = parseInt(id.substr(1)) + dir;
+        if ( ind < 0 ) return 0;
+        if ( ind >= edits.length ) {
+            scope.addRow(-1);
+            edits[ind-2].focus();
+            edits[ind-1].focus();
+            $("#question-form").find("#r"+ind).focus();
+            return 0;
+        }
+        edits[ind].focus();
+        return 0;
+    }
+
+
+    scope.addKeyListeners = function() {
+        if ( scope.questionForm ) return; // allready keys binded
+
+        scope.questionForm = $("#question-form")[0];
+
+        // var activeObj = document.activeElement;
+        // activeObj.value = event.keyCode;
+
+        scope.questionForm.addEventListener('keydown', function (event) {
+            if (event.ctrlKey || event.metaKey) {
+                switch (event.keyCode) {
+                    case 37: // left
+                        return;
+                    case 38: // up
+                        return scope.moveToElement(event, -1);
+                    case 39: // right
+                        return;
+                    case 13: // down
+                    case 40: // down
+                        return scope.moveToElement(event, +1);
+                }
+
+                switch (String.fromCharCode(event.which).toLowerCase()) {
+                    case 's':
+                        event.preventDefault();
+                        scope.createQuestion(false);
+                        break;
+                    case 'r':
+                        event.preventDefault();
+                        if (scope.lectureSettings.inLecture)
+                            scope.createQuestion(true);
+                        break;
+                    case 'g':
+                }
+            }
+        });
+    }
 
     scope.question = {
         title: "",

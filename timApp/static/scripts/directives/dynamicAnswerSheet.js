@@ -145,7 +145,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                             });
                             if (disabled !== '') input.attr('disabled', true);
                             var label = $('<label>');
-                            label.append(input).append(row.text);
+                            label.append(input).append(" " + row.text);
                             tr.append($('<td>', {class: 'answer-button2'}).append(label));
                         }
                     }

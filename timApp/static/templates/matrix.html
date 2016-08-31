@@ -33,7 +33,7 @@
                 <th id="row-heading">
                     {{ asked_id !== false ? row.text : "" }}
                     <div style="position: relative" ng-if="asked_id === false">
-                    <textarea class="rowHeading" ng-model="row.text" form="question-form" rows="1"></textarea>
+                    <textarea class="rowHeading questiontext" ng-model="row.text" form="question-form" rows="1"  id = "{{ 'r'+row.id }}"></textarea>
                     <div class="matrixButtons">
                         <button class="timButton btn-xs btn-block" tabindex="-1" ng-click="addRow($index)"><span class="glyphicon glyphicon-plus"></span></button>
                         <button class="btn btn-danger btn-xs btn-block" tabindex="-1" ng-click="delRow($index)" style="margin-top: 13px;"><span class="glyphicon glyphicon-minus"></span></button>
