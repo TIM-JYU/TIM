@@ -17,7 +17,7 @@ SVNPLUGIN_NAME = 'showfile'
 HASKELLPLUGIN_NAME = 'haskellplugins2'
 PALIPLUGIN_NAME = 'pali'
 IMAGEXLUGIN_NAME = 'imagex'
-
+LTIPLUGIN_NAME = 'lti'
 
 TIM_HOST = os.environ.get('TIM_HOST', default='http://localhost')
 
@@ -41,6 +41,7 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
         "pali":          {"host": TIM_HOST + ":61000/"},
         "imagex":        {"host": TIM_HOST + ":62000/"},
         "echo":          {"host": TIM_HOST + "/echoRequest/"},
+	"lti":		 {"host": TIM_HOST + ":63000/"},
     }
 else:
     print("Using container network for plugins")
@@ -58,7 +59,8 @@ else:
         "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
         "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
         "imagex":        {"host": "http://" + IMAGEXLUGIN_NAME + ":5000/"},
-        "echo":          {"host": "http://" + "tim" + ":5000/echoRequest/"}
+        "echo":          {"host": "http://" + "tim" + ":5000/echoRequest/"},
+	"lti":		 {"host": "http://" + LTIPLUGIN_NAME + ":5000/"},
     }
 
 
