@@ -89,7 +89,7 @@ ltiApp.directiveTemplate = function () {
         '<p ng-if="stem" class="stem" >{{stem}}</p>' +
 
         '<iframe ng-if="iframe.src" src="{{::iframe.src}}" class="lti" id="{{::iframe.id}}" name="{{::iframe.name}}" ' +
-            'style="width:{{::iframe_size[0]}}; height: {{::iframe_size[1]}};">' +
+            'style="width:{{::iframe.size[0]}}; height: {{::iframe.size[1]}};">' +
         '</iframe>' +
 
         '<div class="lti lti-text">' +
@@ -105,7 +105,7 @@ ltiApp.directiveTemplate = function () {
             '<pre ng-if="use_js && use_lti" class="lti">Pisteesi tehtävästä: {{grade}}</pre>' +
         '</div>' +
 
-        '<form novalidate ng-show="iframeControls" ng-submit="resizeIframe()" class="lti lti-resizing">' +
+        '<form novalidate ng-show="iframeControls" ng-submit="resizeIframe([iframe_width, iframe_height])" class="lti lti-resizing">' +
             '<label for="iframe_width">Leveys:</label>' +
             '<input type="text" name="iframe_width" id="iframe_width" ng-model="iframe_width">' +
             '<label for="iframe_height">Korkeus:</label>' +
@@ -194,7 +194,7 @@ ltiApp.container = {
     }
 };
 
-ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $anchorScroll) {
+ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $anchorScroll, $window) {
 "use strict";
     // Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
     // Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Controlleriksi.
@@ -213,39 +213,48 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
     $scope.muokattu = false;
     $scope.result = "";
 
-    $scope.iframe = { // TODO: use view_url and launch_url params here
+    // <iframe> related attributes and CSS styling
+    $scope.iframe = {
         'src': '',
         'id': '',
         'name': '',
-        'size': '[]'
+        'size': []
     };
-    $scope.disableSaving = true;
-    $scope.lastSaved = undefined;
-    $scope.iframeControls = false;
-    $scope.parentId = "";
-    $scope.inactiveText = "";
+    $scope.disableSaving = true; // allow saving?
+    $scope.lastSaved = undefined; // last saved grade value
+    $scope.iframeControls = false; // show <iframe> controls panel
+    $scope.parentId = ""; // parent <div> id
+    $scope.inactiveText = ""; // what text to display if <iframe> is inactive
 
     // whether to display iframe options to user
     $scope.resizingButtonsDiv = function() {
         return $scope.iframe.src !== '';
     };
 
+    // Toggle hide/show for iframe settings panel
     $scope.toggleIframeControls = function() {
         $scope.iframeControls = !$scope.iframeControls;
-        $scope.iframe_width = $scope.iframe_size[0] || "";
-        $scope.iframe_height = $scope.iframe_size[1] || "";
+        $scope.iframe.size = $scope.iframe_size || [];
+        var local_iframe_size = $window.localStorage.getItem("local_iframe_size").split(',');
+        // These are the ng-model versions for the settings form (yes, it's hacky)
+        // It will display default values for easier editing.
+        $scope.iframe_width = local_iframe_size[0] || $scope.iframe.size[0] || "";
+        $scope.iframe_height = local_iframe_size[1] || $scope.iframe.size[1] || "";
     };
 
-    $scope.resizeIframe = function() {
-        $scope.iframe_size[0] = $scope.iframe_width;
-        $scope.iframe_size[1] = $scope.iframe_height;
+    // Handle <iframe> resizing via the settings panel
+    $scope.resizeIframe = function(dimensions) {
+        $scope.iframe.size = dimensions || $scope.iframe.size;
         var iframeInScope = document.getElementById($scope.iframe.id);
+        // If <iframe> is currently in scope and therefore visible
         if (iframeInScope) {
-            iframeInScope.style.width = $scope.iframe_size[0];
-            iframeInScope.style.height = $scope.iframe_size[1];
+            iframeInScope.style.width = $scope.iframe.size[0];
+            iframeInScope.style.height = $scope.iframe.size[1];
         }
+        $window.localStorage.setItem("local_iframe_size", $scope.iframe.size);
     };
 
+    // Scroll the user's browser to the location of the active iframe
     $scope.goBack = function() {
         var active = ltiApp.container.getActiveState();
         var active_markup = active.attrs.markup || active;
@@ -290,6 +299,7 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
         ltiApp.container.update($scope, 'active');
     };
 
+    // Open Moodle login page in <iframe>
     $scope.openLoginPage = function() {
         var url = $sce.trustAsResourceUrl('../lti/getlink?page=' + $scope.login_url);
         if (!$scope.iframe.src) {
@@ -299,6 +309,7 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
         }
     };
 
+    // Handle <iframe> closing
     $scope.close = function() {
         var is_sure = confirm("Menetät työsi lopettamalla tehtävän. Oletko varma?");
         if (is_sure) {
@@ -308,6 +319,7 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
         return is_sure;
     };
 
+    // Handle <iframe> "reloading"
     $scope.reload = function(url, confirmation) {
         url = url || $scope.iframe.src;
         if (confirmation === true || confirmation === undefined) {
@@ -320,12 +332,14 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
         }
     };
 
+    // Forcibly open $scope's <iframe> (typically called via the ltiApp.container)
     $scope.forceOpen = function() {
         if (ltiApp.container.forceCloseActive()) {
             $scope.run();
         }
     };
 
+    // Is $scope's <iframe> inactive?
     $scope.isInactive = function() {
         if ($scope.state === 'active' || $scope.state === 'default') {
             $scope.inactiveText = "";
@@ -335,6 +349,12 @@ ltiApp.Controller = function($scope, $http, $transclude, $interval, $sce, $ancho
             "Voit sulkea sen ja aloittaa uuden tai palata aiempaan.";
         return true;
     };
+
+    // Handle localStorage saving of <iframe> dimensions
+    // localStorage doesn't store it as an array (instead as a string), so we use split
+    var local_iframe_size = $window.localStorage.getItem("local_iframe_size").split(',');
+    $scope.iframe.size = local_iframe_size || [];
+    $scope.resizeIframe();
 
     // Register scope with global container object
     // Must be done last since we need to use the various $scope methods and variables.
