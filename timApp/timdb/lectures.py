@@ -103,13 +103,15 @@ class Lectures(TimDbBase):
 
     def join_lecture(self, lecture_id: int, user_id: int, commit: bool=True):
         cursor = self.db.cursor()
-
-        cursor.execute("""
-                       INSERT INTO LectureUsers(lecture_id, user_id)
-                       VALUES (%s,%s)
-                       """, [lecture_id, user_id])
-        if commit:
-            self.db.commit()
+        try:
+            cursor.execute("""
+                           INSERT INTO LectureUsers(lecture_id, user_id)
+                           VALUES (%s,%s)
+                           """, [lecture_id, user_id])
+            if commit:
+                self.db.commit()
+        except:
+            return # was allready
 
     def leave_lecture(self, lecture_id: int, user_id: int, commit: bool=True):
         cursor = self.db.cursor()

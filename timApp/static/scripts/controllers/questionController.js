@@ -20,6 +20,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         angular.element('#calendarStart').datepicker({dateFormat: 'dd.m.yy'});
     }, 0);
 
+
     scope.dynamicAnswerSheetControl = {};
     scope.asked_id = false;
 
@@ -192,6 +193,37 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             }
 
             scope.$emit('toggleQuestion');
+
+            if ( scope.questionForm ) return; // allready keys binded
+            scope.questionForm = $("#question-form")[0];
+
+            scope.questionForm.addEventListener('keydown', function(event) {
+                if (event.ctrlKey || event.metaKey) {
+                    switch (String.fromCharCode(event.which).toLowerCase()) {
+                    case 's':
+                        event.preventDefault();
+                        scope.createQuestion(false);
+                        break;
+                    case 'r':
+                        event.preventDefault();
+                        if ( scope.lectureSettings.inLecture )
+                            scope.createQuestion(true);
+                        break;
+                    case 'g':
+                        event.preventDefault();
+                        break;
+                    }
+                }
+            });
+   /*
+            scope.questionForm.addEventListener( "keydown", function(event) {
+            // $("#question-form").keypress(function(event) {
+                var c = String.fromCharCode(event.keyCode);
+                if ( (event.which == 115 && event.ctrlKey) || (event.which == 19) ) { // ctrl-s
+                    event.preventDefault();
+                }
+            });
+            */
         }
     );
 
@@ -897,5 +929,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     scope.titleIsChanged = function () {
         scope.titleChanged = true;
     };
+
+
+    scope.checkKeydown = function(e) {
+        var c = String.fromCharCode(event.keyCode);
+    }
+
 }])
 ;

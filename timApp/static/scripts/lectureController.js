@@ -728,9 +728,9 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
 
             var dateTime3 = new Date(dateTime2);
 
-            var endTimeDate = dateTime3.getUTCFullYear() + '-' + $scope.leftPadder((dateTime3.getUTCMonth() + 1), 2) + '-' +
-                $scope.leftPadder(dateTime3.getUTCDate(), 2) + ' ' +
-                $scope.leftPadder(dateTime3.getUTCHours(), 2) + ':' + $scope.leftPadder(dateTime3.getUTCMinutes(), 2);
+            var endTimeDate = dateTime3.getFullYear() + '-' + $scope.leftPadder((dateTime3.getMonth() + 1), 2) + '-' +
+                $scope.leftPadder(dateTime3.getDate(), 2) + ' ' +
+                $scope.leftPadder(dateTime3.getHours(), 2) + ':' + $scope.leftPadder(dateTime3.getMinutes(), 2);
 
             console.log(endTimeDate);
             $scope.lectureEndTime = "Ends: " + endTimeDate;

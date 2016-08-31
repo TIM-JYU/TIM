@@ -37,6 +37,8 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
         "showVideo":     {"host": TIM_HOST + ":55000/svn/video/", "browser": False},
         "mcq":           {"host": TIM_HOST + ":57000/"},
         "mmcq":          {"host": TIM_HOST + ":58000/"},
+        #"mcq":           {"host": "http://ciao.it.jyu.fi:41941"},
+        #"mmcq":          {"host": "http://ciao.it.jyu.fi:41940"},
         "shortNote":     {"host": TIM_HOST + ":59000/"},
         "graphviz":      {"host": TIM_HOST + ":60000/", "browser": False},
         "pali":          {"host": TIM_HOST + ":61000/"},

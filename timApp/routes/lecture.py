@@ -336,7 +336,7 @@ def send_message():
     new_message = request.args.get("message")
     lecture_id = int(request.args.get("lecture_id"))
 
-    new_timestamp = datetime.datetime.now(timezone.utc)
+    new_timestamp = datetime.datetime.now() # was timezone.utc)
     msg_id = timdb.messages.add_message(getCurrentUserId(), lecture_id, new_message, new_timestamp, True)
     return jsonResponse({'id': msg_id, 'time': new_timestamp})
 
