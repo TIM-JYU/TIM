@@ -20,13 +20,13 @@ NOLAZY = "<!--nolazy-->"
 NEVERLAZY = "NEVERLAZY"
 
 
-def get_error_html_plugin(plugin_name, message):
+def get_error_html_plugin(plugin_name, message, response=None):
     """
 
     :type message: str
     :type plugin_name: str
     """
-    return get_error_html('Plugin {} error: {}'.format(plugin_name, message))
+    return get_error_html('Plugin {} error: {}'.format(plugin_name, message), response)
 
 
 def find_task_ids(blocks):
@@ -163,9 +163,9 @@ def pluginify(doc,
             reqs = json.loads(resp)
             if plugin_name == 'mmcq':
                 reqs['multihtml'] = True
-        except ValueError:
+        except ValueError as e:
             for idx in plugin_block_map.keys():
-                html_pars[idx]['html'] = get_error_html_plugin(plugin_name, 'Failed to parse JSON from plugin reqs route.')
+                html_pars[idx]['html'] = get_error_html_plugin(plugin_name, 'Failed to parse JSON from plugin reqs route: {}'.format(e), resp)
             continue
         plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
         for src in plugin_js_files:
@@ -199,9 +199,10 @@ def pluginify(doc,
                 continue
             try:
                 plugin_htmls = json.loads(response)
-            except ValueError:
+            except ValueError as e:
                 for idx in plugin_block_map.keys():
-                    html_pars[idx]['html'] = get_error_html_plugin(plugin_name, 'Failed to parse plugin response from reqs route.')
+                    html_pars[idx]['html'] = get_error_html_plugin(plugin_name,
+                                                                   'Failed to parse plugin response from multihtml route: {}'.format(e), response)
                 continue
 
             needs_browser = get_plugin_needs_browser(plugin_name)

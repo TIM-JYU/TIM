@@ -137,7 +137,7 @@ def count_chars(md, char):
     return num_ticks
 
 
-def get_error_html(message):
+def get_error_html(message, response=None):
     """
     Wraps an error message in an HTML element with class 'error'.
 
@@ -145,7 +145,9 @@ def get_error_html(message):
 
     """
 
-    return sanitize_html('<div class="error">{}</div>'.format(str(message)))
+    return sanitize_html('<div class="error">{}{}</div>'.format(str(message),
+                                                                '<pre>---Full response string start---\n{}\n---Full response string end---</pre>'.format(
+                                                                    response) if response is not None else ''))
 
 
 def del_content(directory, onerror=None):
