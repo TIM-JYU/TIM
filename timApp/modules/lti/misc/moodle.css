@@ -1,0 +1,125 @@
+/*
+ * Custom CSS rules for Moodle's LTI Provider plugin
+ */
+
+body {
+    padding: 0;
+}
+
+/* Intro page */
+div[role="main"] > h2,
+div#intro.box.generalbox,
+.quizattemptsummary,
+div[role="main"] > h3,
+div.box.quizinfo > p {
+    display: none;
+}
+div.box.generalbox > p,
+#page-mod-quiz-view #feedback.generalbox h3 {
+    text-align: center;
+}
+div.quizstartbuttondiv input[type="submit"] {
+    display: none;
+}
+div#page {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+#page-content {
+    overflow: auto;
+}
+
+/* Question page */
+div.que.stack > div.content {
+    margin: 0;
+}
+div.que.stack > div.info,
+#mod_quiz_navblock,
+aside#block-region-side-pre,
+table.quizreviewsummary {
+    display: none;
+}
+div.que.stack div.formulation {
+    padding: 30px;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    background-color: white;
+    border: 0;
+}
+.que.stack .stackinputfeedback {
+    background-color: rgb(231, 254, 253);
+    padding: 5px 20px;
+}
+div.im-controls,
+div.submitbtns,
+#page-mod-quiz-summary .submitbtns {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin: 0;
+}
+#page-mod-quiz-summary #page .controls {
+    margin: 0;
+}
+div.im-controls {
+    border-top: 1px solid gainsboro;
+    padding-top: 25px;
+    padding-bottom: 10px;
+}
+#page-mod-quiz-attempt .submitbtns {
+    margin: 0 30px;
+    margin-bottom: 25px;
+    padding-top: 0;
+}
+input[type="submit"],
+.path-mod-quiz input[type="submit"].mod_quiz-redo_question_button {
+    margin: 0;
+    width: 250px;
+}
+div.extra-feedback {
+    text-align: center;
+}
+div.que.stack {
+    margin-bottom: 0;
+}
+.que .formulation, .que .outcome, .que .comment {
+    padding: 8px 35px;
+}
+
+
+/* Overrides */
+/*
+
+.btn-success {
+color: #fff;
+background-color: #5cb85c;
+border-color: #4cae4c;
+}
+
+.btn-info {
+color: #fff;
+background-color: #5bc0de;
+border-color: #46b8da;
+}
+
+*/
+
+/*
+div.outcome.clearfix {
+    background: white;
+    border: 0;
+    margin: 0;
+}
+input[type="submit"] {
+    margin: 0 !important;
+    text-shadow: none !important;
+    border: 0 !important;
+    padding: 5px !important;
+}
+div.outcome.clearfix input[type="submit"] {
+    color: white;
+    background: #5bc0de;
+}
+*/
