@@ -139,7 +139,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 $scope.dataLoaded = false; // allow load in first time what ever editor
 
                 $scope.setInitialText = function () {
-                    if ( $scope.dataLoaded ) return;
+                    if ( $scope.dataLoaded || !$scope.initialTextUrl ) return;
                     $scope.setEditorText('Loading text...');
                     $http.get($scope.initialTextUrl, {
                         params: angular.extend({
