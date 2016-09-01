@@ -65,7 +65,7 @@ if param postgre ; then
     docker stop postgre-${TIM_NAME} > /dev/null 2>&1 &
 fi
 
-if [ "$USE_FUNNEL" = true ] && [ param funnel ]; then
+if [ "$USE_FUNNEL" = true ] && param funnel ; then
     docker stop funnel > /dev/null 2>&1 &
 fi
 wait
@@ -79,7 +79,7 @@ if param postgre ; then
     docker rm postgresql-${TIM_NAME} > /dev/null 2>&1 &
 fi
 
-if [ "$USE_FUNNEL" = true ] && [ param funnel ]; then
+if [ "$USE_FUNNEL" = true ] && param funnel ; then
     docker rm funnel > /dev/null 2>&1 &
 fi
 wait
@@ -111,7 +111,7 @@ if param sshd ; then
   LAUNCH_COMMAND='/usr/sbin/sshd -D'
 fi
 
-if [ "$USE_FUNNEL" = true ] && [ param funnel ]; then
+if [ "$USE_FUNNEL" = true ] && param funnel ; then
 docker run --net=timnet -dti --name funnel \
     -v /opt/funnel:/service \
     -v /opt/tim/tim_logs:/var/log/funnel \
@@ -152,7 +152,7 @@ if param nginx; then
   docker run --net=timnet -d --name nginx -p 80:80 -v /opt/cs/:/opt/cs/ local_nginx /startup.sh
 fi
 
-if [ "$USE_WUFF" = true ] && [ param wuff ]; then
+if [ "$USE_WUFF" = true ] && param wuff ; then
 # (Re)start the watchdog
 wuffpid=$(ps a | grep 'python3 wuff' | grep -v grep | awk -F" " '{ print $1 }')
 if [ ! -z "$wuffpid" ] ; then
