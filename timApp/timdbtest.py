@@ -1,6 +1,8 @@
 import os
 import unittest
 
+import sqlalchemy.exc
+
 import dumboclient
 import initdb2
 from filemodehelper import change_permission_and_retry
@@ -27,10 +29,15 @@ class TimDbTest(unittest.TestCase):
         else:
             os.mkdir(cls.test_files_path)
         initdb2.initialize_temp_database()
-        # Safety mechanism
-        assert app.config['SQLALCHEMY_BINDS']['tim_main'] == "postgresql://postgres@postgresql:5432/tempdb_" + 'timtest'
+        # Safety mechanism to make sure we are not wiping some production database
+        assert app.config['SQLALCHEMY_BINDS']['tim_main'] == "postgresql://postgres@postgresql-timtest:5432/timtest"
         db.session.commit()
-        db.drop_all(bind='tim_main')
+
+        # The following throws if the testing database has not been created yet; we can safely ignore it
+        try:
+            db.drop_all(bind='tim_main')
+        except sqlalchemy.exc.OperationalError:
+            pass
         initdb2.initialize_database(create_docs=False)
         cls.dumbo = dumboclient.launch_dumbo()
 

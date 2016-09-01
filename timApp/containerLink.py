@@ -20,7 +20,7 @@ PALIPLUGIN_NAME = 'pali'
 IMAGEXLUGIN_NAME = 'imagex'
 
 
-TIM_HOST = os.environ.get('TIM_HOST', default='http://localhost')
+TIM_HOST = app.config['TIM_HOST']
 
 if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'nginx':
     # To use this, put your IP in TIM_HOST environment variable

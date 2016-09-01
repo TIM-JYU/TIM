@@ -9,6 +9,7 @@
 dist/
 bower_components/
 .stack-work/
+/variables.sh
 /timApp/.hypothesis/
 /timApp/static/gen/
 /timApp/static/testgen/

@@ -23,12 +23,13 @@ LIBSASS_STYLE      = "compressed"
 LIBSASS_INCLUDES   = ["static/scripts/bower_components/bootstrap-sass/assets/stylesheets",
                       "static/scripts/bower_components/jquery-ui/themes/base",
                       "static"]
-TIM_NAME = os.environ.get('TIM_NAME', 'tim')
+TIM_NAME = os.environ.get('TIM_NAME', 'timlocal')
+TIM_HOST = os.environ.get('TIM_HOST', 'http://localhost')
 OLD_SQLITE_DATABASE       = 'tim_files/tim.db'
-DATABASE           = "postgresql://postgres@postgresql:5432/" + TIM_NAME
+DATABASE           = "postgresql://postgres@postgresql-{0}:5432/{0}".format(TIM_NAME)
 SQLALCHEMY_BINDS = {
     'tim_main': DATABASE,
-    'tempdb': "postgresql://postgres:postgres@postgresql:5432/tempdb_" + TIM_NAME
+    'tempdb': "postgresql://postgres:postgres@postgresql-{0}:5432/tempdb_{0}".format(TIM_NAME)
 }
 SASS_GEN_PATH = 'gen'
 TEMPLATES_AUTO_RELOAD = True

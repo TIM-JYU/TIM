@@ -12,8 +12,8 @@ from time import sleep
 TIM_HOST = 'localhost'
 USE_HTTPS = False
 PLUGIN_HTTPS = False
-TIM_NAME = 'tim'
-RESTART_SCRIPT = './restart_local.sh'
+TIM_NAME = 'timlocal'
+RESTART_SCRIPT = './restart.sh'
 MONITOR_INTERVAL = 120
 
 

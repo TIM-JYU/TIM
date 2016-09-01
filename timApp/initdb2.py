@@ -19,8 +19,8 @@ from timdb.users import LOGGED_IN_USERNAME
 NEWEST_DB_VERSION = 9
 
 
-def postgre_create_database(db_name):
-    engine = sqlalchemy.create_engine("postgresql://postgres@postgresql:5432/postgres")
+def postgre_create_database(host, db_name):
+    engine = sqlalchemy.create_engine("postgresql://postgres@postgresql-{}:5432/postgres".format(host))
     conn = engine.connect()
     conn.execute("commit")
     try:
@@ -35,7 +35,7 @@ def postgre_create_database(db_name):
 
 
 def initialize_temp_database():
-    postgre_create_database('tempdb_' + app.config['TIM_NAME'])
+    postgre_create_database(app.config['TIM_NAME'], 'tempdb_' + app.config['TIM_NAME'])
     tempdb_models.initialize_temp_database()
 
 
@@ -47,7 +47,7 @@ def initialize_database(create_docs=True):
     files_root_path = app.config['FILES_PATH']
     Document.default_files_root = files_root_path
     DocParagraph.default_files_root = files_root_path
-    was_created = postgre_create_database(app.config['TIM_NAME'])
+    was_created = postgre_create_database(app.config['TIM_NAME'], app.config['TIM_NAME'])
     log_info('Database {} {}.'.format(app.config['TIM_NAME'], 'was created' if was_created else 'exists'))
     timdb = TimDb(db_path=db_path, files_root_path=files_root_path)
     db.create_all(bind='tim_main')

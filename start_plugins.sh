@@ -1,6 +1,6 @@
 #!/bin/bash
 
-/opt/cs/startPlugins.sh
-/opt/svn/startPlugins.sh
-/opt/tim/timApp/modules/Haskell/startPlugins.sh
-/opt/tim/timApp/modules/imagex/startPlugins.sh 
+(cd timApp/modules/cs && ./startPlugins.sh)
+(cd timApp/modules/svn && ./startPlugins.sh)
+(cd timApp/modules/Haskell && ./startPlugins.sh)
+(cd timApp/modules/imagex && ./startPlugins.sh)

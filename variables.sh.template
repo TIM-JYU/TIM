@@ -1,0 +1,12 @@
+#!/bin/bash
+
+echo variables.sh: Fill in appropriate variable values and comment this line. ; exit 1
+
+TIM_NAME=timlocal                   # Name of TIM instance, must be "timlocal" when running locally for now because it is hardcoded in local_nginx
+TIM_PORT=50000                      # Outbound port of TIM container
+TIM_HOST=http://localhost           # Hostname for the TIM instance
+USE_WUFF=false                      # Whether to use the wuff service, only works for production instance for now
+USE_FUNNEL=false                    # Whether to use the funnel service for sending email
+CREATE_SYMLINKS=true                # Whether to create symlinks
+IS_PRODUCTION=false                 # Whether this is production instance
+OPEN_PG_PORT=false                  # Whether to open PostgreSQL port to outside timnet

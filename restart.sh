@@ -6,11 +6,19 @@
 set -e
 #trap 'echo ABORTED on line \"$BASH_COMMAND\"' 0
 
+if [ ! -f ./variables.sh ]; then
+  echo "The file variables.sh does not exist, copying template. See variables.sh for how to proceed."
+  cp variables.sh.template variables.sh
+  chmod u+x variables.sh
+  exit 1
+fi
+. ./variables.sh
+
 params=${*/all/tim postgre plugins funnel}
 
 if [ "$params" = "" ] ; then
-    echo "Usage: restart [tim|timbeta|timdev|plugins|postgre|funnel]..."
-    echo "Example: restart tim timdev"
+    echo "Usage: restart [tim|plugins|postgre|funnel|nginx|sshd]..."
+    echo "Example: restart tim plugins"
     exit
 fi
 
@@ -32,51 +40,46 @@ checkdir() {
   fi
 }
 
-checkdir /var/log/funnel $PWD/tim_logs
-checkdir /var/log/wuff $PWD/tim_logs
+if [ "$CREATE_SYMLINKS" = true ]; then
+checkdir /opt/tim $PWD
+checkdir /opt/svn $PWD/timApp/modules/svn
+checkdir /opt/cs $PWD/timApp/modules/cs
+checkdir /opt/funnel $PWD/funnel
+fi
 
+if [ "$USE_FUNNEL" = true ]; then
+checkdir /var/log/funnel $PWD/tim_logs
+fi
+
+if [ "$USE_WUFF" = true ]; then
+checkdir /var/log/wuff $PWD/tim_logs
 # Set a lock for the watchdog
-touch /opt/tim/restarting
+touch ${PWD}/restarting
+fi
 
 if param tim ; then
-    docker stop tim > /dev/null 2>&1 &
-fi
-
-if param timbeta ; then
-    docker stop timbeta > /dev/null 2>&1 &
-fi
-
-if param timdev ; then
-    docker stop timdev > /dev/null 2>&1 &
+    docker stop ${TIM_NAME} > /dev/null 2>&1 &
 fi
 
 if param postgre ; then
-    docker stop postgre > /dev/null 2>&1 &
+    docker stop postgre-${TIM_NAME} > /dev/null 2>&1 &
 fi
 
-if param funnel; then
+if [ "$USE_FUNNEL" = true ] && [ param funnel ]; then
     docker stop funnel > /dev/null 2>&1 &
 fi
 wait
 
 # Remove stopped containers
 if param tim ; then
-    docker rm tim > /dev/null 2>&1 &
-fi
-
-if param timbeta ; then
-    docker rm timbeta > /dev/null 2>&1 &
-fi
-
-if param timdev ; then
-    docker rm timdev > /dev/null 2>&1 &
+    docker rm ${TIM_NAME} > /dev/null 2>&1 &
 fi
 
 if param postgre ; then
-    docker rm postgresql > /dev/null 2>&1 &
+    docker rm postgresql-${TIM_NAME} > /dev/null 2>&1 &
 fi
 
-if param funnel; then
+if [ "$USE_FUNNEL" = true ] && [ param funnel ]; then
     docker rm funnel > /dev/null 2>&1 &
 fi
 wait
@@ -88,48 +91,68 @@ fi
 TIM_SETTINGS=''
 END_SHELL='; /bin/bash'
 DAEMON_FLAG='-d'
+LAUNCH_COMMAND='python3 launch.py --with-gunicorn'
 if param debug ; then
-  TIM_SETTINGS='TIM_SETTINGS=/service/timApp/debugconfig.py'
+  TIM_SETTINGS='TIM_SETTINGS=debugconfig.py'
+  LAUNCH_COMMAND='python3 launch.py'
   END_SHELL=''
   DAEMON_FLAG=''
 fi
 if param profile ; then
-  TIM_SETTINGS='TIM_SETTINGS=/service/timApp/profileconfig.py'
+  TIM_SETTINGS='TIM_SETTINGS=profileconfig.py'
+  LAUNCH_COMMAND='python3 launch.py'
   END_SHELL=''
   DAEMON_FLAG=''
 fi
+SSHD_FLAGS=''
+if param sshd ; then
+  ./start_pg_test_container.sh
+  SSHD_FLAGS='--tmpfs /tmp/doctest_files:rw,noexec,nosuid,size=2m -p 49999:22'
+  LAUNCH_COMMAND='/usr/sbin/sshd -D'
+fi
 
-if param funnel; then
+if [ "$USE_FUNNEL" = true ] && [ param funnel ]; then
 docker run --net=timnet -dti --name funnel \
     -v /opt/funnel:/service \
     -v /opt/tim/tim_logs:/var/log/funnel \
     funnel /service/run.sh
 fi
 
+PG_PORT=''
+if [ "$OPEN_PG_PORT" = true ]; then
+  PG_PORT='-p 5432:5432'
+fi
+
 if param postgre ; then
-docker volume create --name pg_data
-docker run --net=timnet -d --name postgresql \
-  -v pg_data:/var/lib/postgresql/data \
+  docker volume create --name ${TIM_NAME}_data
+  docker run --net=timnet -d --name postgresql-${TIM_NAME} \
+  -v ${TIM_NAME}_data:/var/lib/postgresql/data \
+  ${PG_PORT} \
   -t -i postgres:9.5
-  ./wait_for_postgre.sh
-fi
-
-if param timdev ; then
-# Start timdev
-docker run --net=timnet --name timdev -p 50002:5000 -v /opt/tim-dev/:/service ${DAEMON_FLAG} -t -i timimages/tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source /service/scripts/_initenv.sh ; export TIM_NAME=timdev ; export TIM_HOST=https://tim-dev.it.jyu.fi ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
-fi
-
-if param timbeta ; then
-# Start timbeta
-docker run --net=timnet --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service ${DAEMON_FLAG} -t -i timimages/tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source /service/scripts/_initenv.sh ; export TIM_NAME=timbeta ; export TIM_HOST=https://tim-beta.it.jyu.fi ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
+  . ./wait_for_postgre.sh
 fi
 
 if param tim ; then
 # Start tim
-docker run --net=timnet --name tim -p 50001:5000  -v /opt/tim/:/service ${DAEMON_FLAG} -t -i timimages/tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source /service/scripts/_initenv.sh ; export TIM_NAME=tim ; export TIM_HOST=https://tim.jyu.fi ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
+docker run \
+ --net=timnet \
+ --name ${TIM_NAME} \
+ --env TIM_NAME=${TIM_NAME} \
+ --env TIM_HOST=${TIM_HOST} \
+ --env TIM_SETTINGS=${TIM_SETTINGS} \
+ ${SSHD_FLAGS} \
+ -p ${TIM_PORT}:5000 \
+ -v ${PWD}:/service \
+ ${DAEMON_FLAG} -t -i \
+ timimages/tim:$(./get_latest_date.sh) \
+ /bin/bash -c "cd /service/timApp && source /service/scripts/_initenv.sh ; $LAUNCH_COMMAND $END_SHELL"
 fi
 
-if param wuff ; then
+if param nginx; then
+  docker run --net=timnet -d --name nginx -p 80:80 -v /opt/cs/:/opt/cs/ local_nginx /startup.sh
+fi
+
+if [ "$USE_WUFF" = true ] && [ param wuff ]; then
 # (Re)start the watchdog
 wuffpid=$(ps a | grep 'python3 wuff' | grep -v grep | awk -F" " '{ print $1 }')
 if [ ! -z "$wuffpid" ] ; then
@@ -139,8 +162,10 @@ fi
 screen -dmS wuff sudo python3 wuff.py tim
 fi
 
+if [ "$USE_WUFF" = true ]; then
 # Remove the lock
-rm /opt/tim/restarting
+rm ${PWD}/restarting
+fi
 
 #trap '' 0
 exit 0
