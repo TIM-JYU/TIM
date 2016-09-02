@@ -62,7 +62,7 @@ if param tim ; then
 fi
 
 if param postgre ; then
-    docker stop postgre-${TIM_NAME} > /dev/null 2>&1 &
+    docker stop postgresql-${TIM_NAME} > /dev/null 2>&1 &
 fi
 
 if [ "$USE_FUNNEL" = true ] && param funnel ; then
