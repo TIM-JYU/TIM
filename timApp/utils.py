@@ -13,7 +13,8 @@ from theme import Theme
 
 
 def datestr_to_relative(dstr):
-    return date_to_relative(datetime.strptime(dstr, '%Y-%m-%d %H:%M:%S')) if dstr else ''
+    if isinstance(dstr, str): dstr = datetime.strptime(dstr, '%Y-%m-%d %H:%M:%S')
+    return date_to_relative(dstr) if dstr else ''
 
 
 def date_to_relative(d: Optional[datetime]):

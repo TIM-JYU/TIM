@@ -133,17 +133,17 @@ class Documents(TimDbBase):
                 continue
             try:
                 doc_id = int(doc_item)
-                cursor.execute('SELECT EXISTS(SELECT id FROM Block WHERE id = ?)', [doc_id])
+                cursor.execute('SELECT EXISTS(SELECT id FROM Block WHERE id = %s)', [doc_id])
                 if not cursor.fetchone()[0]:
                     doc_name = "Recovered document " + str(doc_id)
                     cursor.execute("""INSERT INTO Block (id, type_id, description, created, UserGroup_id)
-                                      VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?)""",
+                                      VALUES (%s, %s, %s, CURRENT_TIMESTAMP, %s)""",
                                            [doc_id, blocktypes.DOCUMENT, doc_name, usergroup_id])
                     recovered += 1
                     doc_fullname = doc_name if not folder else folder + '/' + doc_name
-                    cursor.execute('SELECT EXISTS(SELECT id FROM DocEntry WHERE id = ?)', [doc_id])
+                    cursor.execute('SELECT EXISTS(SELECT id FROM DocEntry WHERE id = %s)', [doc_id])
                     if not cursor.fetchone()[0]:
-                        cursor.execute('INSERT INTO DocEntry (id, name, public) VALUES (?, ?, 1)',
+                        cursor.execute('INSERT INTO DocEntry (id, name, public) VALUES (%s, %s, 1)',
                                            [doc_id, doc_fullname])
 
             except ValueError:
