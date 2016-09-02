@@ -164,5 +164,6 @@ def get_file(file_id, file_filename):
     verify_view_access(file_id)
     mime = magic.Magic(mime=True)
     file_path = timdb.files.getFilePath(file_id, file_filename)
-    mt = mime.from_file(file_path).decode('utf-8')
+    mt = mime.from_file(file_path)
+    if isinstance(mt, bytes): mt = mt.decode('utf-8')
     return send_file(file_path, mimetype=mt)

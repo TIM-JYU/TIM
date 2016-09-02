@@ -279,7 +279,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 			  '<input class="csTinyText no-popup-menu" ng-hide="noeditor && !viewCode" size="{{cols}}" ng-model="usercode" ng-trim="false" ng-attr-placeholder="{{placeholder}}" ng-keypress="runCodeIfCR($event);" />'+
 			  '<button ng-if="isRun"  ng-disabled="isRunning" title="(Ctrl-S)" ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
 			  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>&nbsp&nbsp' +
-			  '<span class="csRunError" ng-if="runError">{{error}}</span>'+
+			  '<span class="csRunError"  ng-if="runError" ng-style="tinyErrorStyle">{{error}}</span>'+
 			  '</div>';
     }
     
@@ -399,7 +399,8 @@ csApp.set = function(scope,attrs,name,def) {
     scope[name] = def;
     if ( attrs && attrs[name] ) scope[name] = attrs[name];
     if ( scope.attrs && scope.attrs[name] ) scope[name] = scope.attrs[name];
-    if ( scope[name] == "None" ) scope[name] = "";
+    if ( scope[name] === "None" ) scope[name] = "";
+    if ( scope[name] === "False" ) scope[name] = false;
     return scope[name];
 };
 
@@ -409,7 +410,8 @@ csApp.getParam = function(scope,name,def) {
     var result = def;
     if ( scope.attrs && scope.attrs[name] ) result = scope.attrs[name];
     if ( scope[name] ) result = scope[name];
-    if ( result == "None" ) scope[name] = "";
+    if ( result === "None" ) result = "";
+    if ( result === "False" ) result = false;
     return result;
 }
 
@@ -467,6 +469,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"file");
 			csApp.set(scope,attrs,"viewCode",false);
 			csApp.set(scope,attrs,"filename");
+			csApp.set(scope,attrs,"nosave",false);
 			csApp.set(scope,attrs,"upload",iupload); if ( scope.attrs.uploadbycode ) scope.upload = true;
 			csApp.set(scope,attrs,"uploadstem");
 			csApp.set(scope,attrs,"nocode",inocode);
@@ -520,6 +523,8 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"words",false);
             csApp.set(scope,attrs,"editorModes","01");
             csApp.set(scope,attrs,"justSave",false);
+            csApp.set(scope,attrs,"validityCheck","");
+            csApp.set(scope,attrs,"validityCheckMessage","");
             // csApp.set(scope,attrs,"program");
 
             
@@ -583,6 +588,7 @@ csApp.directiveFunction = function(t,isInput) {
             
 			scope.edit = element.find("textarea")[0]; // angular.element(e); // $("#"+scope.editid);
 			scope.preview = element.find(".csrunPreview")[0]; // angular.element(e); // $("#"+scope.editid);
+
             scope.element0 = element[0];
 			element[0].childNodes[0].outerHTML = csApp.getHeading(attrs,"header",scope,"h4");
 			var n = element[0].childNodes.length;
@@ -984,7 +990,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 			csApp.updateEditSize($scope);
 		if ( $scope.viewCode ) $scope.pushShowCodeNow();
         window.clearInterval($scope.runTimer);
-        if ( $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
+        if ( $scope.runned && $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
 
 		/* // tällä koodilla on se vika, että ei voi pyyhkiä alusta välilyönteä ja yhdistää rivejä
 		if ( $scope.carretPos && $scope.carretPos >= 0 ) {
@@ -999,12 +1005,12 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
     
 	$scope.$watch('userargs', function() {
         window.clearInterval($scope.runTimer);
-        if ( $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
+        if ( $scope.runned && $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
 	}, true);
     
 	$scope.$watch('userinput', function() {
         window.clearInterval($scope.runTimer);
-        if ( $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
+        if ( $scope.runned && $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
 	}, true);
     
     $scope.logTime = function(msg) {
@@ -1019,10 +1025,11 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 
     $scope.runCodeCommon = function(nosave, extraMarkUp)
     {
+        $scope.runned = true;
 		var t = languageTypes.getRunType($scope.selectedLanguage,"cs");  
-        if ( t == "md" ) { $scope.showMD(); if (nosave) return; }
-        if ( languageTypes.isInArray(t, csJSTypes ) ) { $scope.jstype = t; $scope.showJS(); if (nosave) return; } 
-		$scope.doRunCode(t,nosave);
+        if ( t == "md" ) { $scope.showMD(); if (nosave || $scope.nosave) return; }
+        if ( languageTypes.isInArray(t, csJSTypes ) ) { $scope.jstype = t; $scope.showJS(); if (nosave || $scope.nosave) return; } 
+		$scope.doRunCode(t,nosave || $scope.nosave);
     }
     
     $scope.runCodeAuto = function() {
@@ -1031,7 +1038,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 	};
 	
 	$scope.runCodeLink = function(nosave) {
-		$scope.runCodeCommon(nosave);
+		$scope.runCodeCommon(nosave || $scope.nosave);
 	};
 	
 	$scope.runCode = function() {
@@ -1132,6 +1139,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         // if ( runType == "md" ) { $scope.showMD(); return; }
 		$scope.checkIndent();
 		if ( !$scope.autoupdate ) {
+            $scope.tinyErrorStyle = {};
             $scope.error = "... running ...";
             $scope.runError = true;
             $scope.isRunning = true;
@@ -1155,6 +1163,17 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         if ( $scope.userargs ) uargs = $scope.userargs;
 		var t = runType;
 		// if ( t == "tauno" ) t = "comtest";
+        if ( $scope.validityCheck ) {
+            var re = new RegExp($scope.validityCheck);
+            if ( !ucode.match(re)) {
+                $scope.tinyErrorStyle = {color: "red"};
+                var msg = $scope.validityCheckMessage;
+                if ( !msg ) msg = "Did not match to " + $scope.validityCheck;
+                $scope.error = msg;
+                $scope.isRunning = false;
+                return;
+            }
+        }
     
 		// params = 'type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&replace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
 		// $http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
@@ -1172,7 +1191,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 			}
         };
 		//		  alert($scope.usercode);
-        if ( nosave ) params.input.nosave = true;
+        if ( nosave  || $scope.nosave) params.input.nosave = true;
         if ( extraMarkUp ) jQuery.extend(params.input.markup, extraMarkUp);
         if ( $scope.isAll ) jQuery.extend(params.input, {'selectedLanguage': $scope.selectedLanguage});
         var url = "/cs/answer";
@@ -1209,7 +1228,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 
 			if ( docURL ) {
 				$scope.docURL = docURL;
-				$scope.result = data.web.console.trim();
+				$scope.error = data.web.console.trim();
 			}
 
             if ( wavURL ) {

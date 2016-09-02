@@ -2,7 +2,7 @@
 # Restart csPlugin 
 # run with option i to get interactive mode
 # option p for pure start (no wget for files)
-dockername="csPlugin"
+dockername="csplugin"
 dockerImage="cs3"
 extraPorts=""
 extraCmds="/bin/bash"
@@ -41,10 +41,16 @@ fi
 
 
 if [ ! -d MIRToolbox ]; then
-  echo "GET MIR"
-  wget --quiet https://www.dropbox.com/s/hvufxm3t8o1r2k4/MIRToolbox.zip
-  unzip -o MIRToolbox.zip 1>/dev/null
-  rm -rf MIRToolbox.zip
+    echo "GET MIR"
+    mkdir MIRToolbox
+    cd MIRToolbox
+    rm -rf *
+
+    #Here we download MIRToolbox:
+    git clone http://github.com/martinarielhartmann/mirtooloct .
+    #To reduce the size of the folder a bit:
+    cd mirtooloct
+    rm -rf *.pdf
 fi
 
 
@@ -80,7 +86,9 @@ sudo mkdir -p /opt/cs/jypeli
 cd /opt/cs/jypeli
 curl http://kurssit.it.jyu.fi/npo/MonoJypeli/TIM/Jypeli.headless.tar.gz | sudo tar -xz --overwrite --warning=none
 
+sudo mkdir -p /opt/cs/java
 cd /opt/cs/java
+sudo chmod 777 .
 rm -f comtest*.jar*
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtest.jar -O comtest.jar -nv
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar -O comtestcpp.jar -nv
@@ -95,6 +103,11 @@ sudo mkdir -p cs
 sudo chmod 777 cs
 cd cs
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/tojukarp/trunk/dist/ComTest.jar -O ComTest.jar -nv
+
+sudo mkdir -p /opt/cs/simcir/check
+sudo chmod 777 /opt/cs/simcir/check
+cd /opt/cs/simcir/check
+wget https://yousource.it.jyu.fi/opetus-ji/logik-py/blobs/raw/master/simcirtest.py -O simcirtest.py -nv
 
 fi
 
