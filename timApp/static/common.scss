@@ -1,6 +1,10 @@
 .logintext {
-    @extend .text-center, .small;
+    @extend .text-center;
     margin-top: 13px;
+}
+
+.margin-4 {
+    margin: 4px;
 }
 
 .draghandle {

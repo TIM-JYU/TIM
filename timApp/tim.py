@@ -96,7 +96,7 @@ def inject_custom_css() -> dict:
 @app.context_processor
 def inject_user() -> dict:
     """"Injects the user object to all templates."""
-    return dict(current_user=get_current_user())
+    return dict(current_user=get_current_user(), other_users=get_other_users_as_list())
 
 
 @app.errorhandler(400)
@@ -498,6 +498,7 @@ def start_page():
 
 @app.route("/view/")
 def index_page():
+    save_last_page()
     timdb = getTimDb()
     current_user = getCurrentUserId()
     in_lecture = user_in_lecture()

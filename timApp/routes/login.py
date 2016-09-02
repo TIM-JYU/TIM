@@ -1,4 +1,5 @@
 """Routes for login view."""
+from options import get_option
 import codecs
 import random
 import string
@@ -33,17 +34,25 @@ def is_valid_email(email):
 
 @login_page.route("/logout", methods=['POST'])
 def logout():
-    session.pop('user_id', None)
-    session.pop('user_name', None)
-    session.pop('email', None)
-    session.pop('real_name', None)
-    session.pop('appcookie', None)
-    session.pop('altlogin', None)
-    session.pop('came_from', None)
-    session.pop('last_doc', None)
-    session.pop('anchor', None)
-    session['user_name'] = 'Anonymous'
-    return redirect(url_for('start_page'))
+    user_id, = verify_json_params('user_id', require=False)
+    if user_id != getCurrentUserId():
+        group = get_other_users()
+        group.pop(str(user_id), None)
+        session['other_users'] = group
+    else:
+        session.pop('user_id', None)
+        session.pop('user_name', None)
+        session.pop('email', None)
+        session.pop('real_name', None)
+        session.pop('appcookie', None)
+        session.pop('altlogin', None)
+        session.pop('came_from', None)
+        session.pop('last_doc', None)
+        session.pop('anchor', None)
+        session.pop('other_users', None)
+        session.pop('adding_user', None)
+        session['user_name'] = 'Anonymous'
+    return jsonResponse(dict(current_user=get_current_user(), other_users=get_other_users_as_list()))
 
 
 @login_page.route("/login")
@@ -66,6 +75,11 @@ def login():
 
 @login_page.route("/korppiLogin")
 def login_with_korppi():
+    add_user = get_option(request, 'add_user', False)
+    if not logged_in() and add_user:
+        return abort(403, 'You must be logged in before adding users to session.')
+    if session.get('adding_user') is None:
+        session['adding_user'] = add_user
     urlfile = request.url_root + "korppiLogin"
     save_came_from()
 
@@ -113,12 +127,28 @@ def login_with_korppi():
         if real_name:
             timdb.users.update_user(user_id, user_name, real_name, email)
 
-    session['user_id'] = user_id
-    session['user_name'] = user_name
-    session['real_name'] = real_name
-    session['email'] = email
+    user = {'id': user_id, 'name': user_name, 'real_name': real_name, 'email': email}
+
+    set_user_to_session(user)
 
     return finish_login()
+
+
+def set_user_to_session(user: Dict):
+    if session.get('adding_user'):
+        if getCurrentUserId() == user['id']:
+            abort(400, 'You cannot add yourself to the session.')
+        other_users = session.get('other_users', dict())
+        other_users[str(user['id'])] = user
+        session['other_users'] = other_users
+    else:
+        session['user_id'] = user['id']
+        session['user_name'] = user['name']
+        session['real_name'] = user['real_name']
+        session['email'] = user['email']
+    session.pop('appcookie', None)
+    session.pop('altlogin', None)
+    session.pop('adding_user', None)
 
 
 def login_with_email():
@@ -230,22 +260,17 @@ def alt_login():
     save_came_from()
     email = request.form['email']
     password = request.form['password']
+    session['adding_user'] = request.form['add_user'] == 'true'
     timdb = getTimDb()
 
     if timdb.users.test_user(email, password):
         # Registered user
         user = timdb.users.get_user_by_email(email)
-        session.pop('altlogin', None)
-        session['user_id'] = user['id']
-        session['user_name'] = user['name']
-        session['real_name'] = user['real_name']
-        session['email'] = user['email']
-
         # Check if the users' group exists
         if (len(timdb.users.get_usergroups_by_name(user['name'])) == 0):
             gid = timdb.users.create_usergroup(user['name'])
             timdb.users.add_user_to_group(gid, user['id'])
-
+        set_user_to_session(user)
         return finish_login()
 
     elif timdb.users.test_potential_user(email, password):
@@ -258,7 +283,11 @@ def alt_login():
         session['token'] = password
         
     else:
-        flash("Email address or password did not match. Please try again.", 'loginmsg')
+        error_msg = "Email address or password did not match. Please try again."
+        if request.is_xhr:
+            return abort(403, error_msg)
+        else:
+            flash(error_msg, 'loginmsg')
 
     return finish_login(ready=False)
 
@@ -288,7 +317,10 @@ def finish_login(ready=True):
     if anchor:
         anchor = "#" + anchor
     came_from = session.get('came_from', '/')
-    return safe_redirect(came_from + anchor)
+    if not request.is_xhr:
+        return safe_redirect(came_from + anchor)
+    else:
+        return jsonResponse(dict(current_user=get_current_user(), other_users=get_other_users_as_list()))
 
 
 @login_page.route("/quickLogin/<username>")
