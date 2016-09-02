@@ -35,7 +35,7 @@ def is_valid_email(email):
 @login_page.route("/logout", methods=['POST'])
 def logout():
     user_id, = verify_json_params('user_id', require=False)
-    if user_id != getCurrentUserId():
+    if user_id is not None and user_id != getCurrentUserId():
         group = get_other_users()
         group.pop(str(user_id), None)
         session['other_users'] = group
@@ -146,6 +146,7 @@ def set_user_to_session(user: Dict):
         session['user_name'] = user['name']
         session['real_name'] = user['real_name']
         session['email'] = user['email']
+        session.pop('other_users', None)
     session.pop('appcookie', None)
     session.pop('altlogin', None)
     session.pop('adding_user', None)
@@ -214,9 +215,9 @@ def alt_signup_after():
     if not timdb.users.test_potential_user(email, oldpass):
         return jsonResponse({'message': 'Authentication failure'}, 403)
 
-    if timdb.users.get_user_by_email(email) is not None:
+    user_data = timdb.users.get_user_by_email(email)
+    if user_data is not None:
         # User with this email already exists
-        user_data = timdb.users.get_user_by_email(email)
         user_id = user_data['id']
         nameId = timdb.users.get_user_id_by_name(username)
 
@@ -260,7 +261,7 @@ def alt_login():
     save_came_from()
     email = request.form['email']
     password = request.form['password']
-    session['adding_user'] = request.form['add_user'] == 'true'
+    session['adding_user'] = request.form.get('add_user', 'false').lower() == 'true'
     timdb = getTimDb()
 
     if timdb.users.test_user(email, password):

@@ -17,13 +17,12 @@ class LectureTest(TimRouteTest):
         start_time = (current_time - datetime.timedelta(minutes=15))
         end_time = (current_time + datetime.timedelta(hours=2))
         lecture_code = 'test lecture'
-        resp = self.app.post('/createLecture', query_string=dict(doc_id=doc.doc_id,
-                                                                 end_date=end_time,
-                                                                 lecture_code=lecture_code,
-                                                                 max_students=50,
-                                                                 password='1234',
-                                                                 start_date=start_time))
-        j = self.assertResponseStatus(resp, 200, return_json=True)
+        j = self.post('/createLecture', query_string=dict(doc_id=doc.doc_id,
+                                                          end_date=end_time,
+                                                          lecture_code=lecture_code,
+                                                          max_students=50,
+                                                          password='1234',
+                                                          start_date=start_time), expect_status=200, as_json=True)
         lecture_id = j['lectureId']
         self.assertIsInstance(lecture_id, int)
         j = self.get('/checkLecture', as_json=True, expect_status=200, query_string=dict(doc_id=doc.doc_id))
@@ -57,9 +56,7 @@ class LectureTest(TimRouteTest):
                               'students': []}, resp)
 
         msg_text = 'hi'
-        resp = self.app.post('/sendMessage', query_string=dict(lecture_id=lecture_id, message=msg_text))
-
-        j = self.assertResponseStatus(resp, return_json=True)
+        j = self.post('/sendMessage', query_string=dict(lecture_id=lecture_id, message=msg_text), expect_status=200, as_json=True)
 
         msg_id = j['id']
         self.assertIsInstance(msg_id, int)

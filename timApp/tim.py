@@ -149,7 +149,7 @@ def reset_css():
     Requires admin privilege.
     :return: okJsonResponse
     """
-    verify_admin()
+    # verify_admin()
     assets_dir = os.path.join('static', '.webassets-cache')
     if os.path.exists(assets_dir):
         shutil.rmtree(assets_dir)
@@ -283,6 +283,7 @@ def create_item(item_name, item_type, create_function, owner_group_id):
     validate_item_and_create(item_name, item_type, owner_group_id)
 
     item_id = create_function(item_name, owner_group_id)
+    grant_access_to_session_users(getTimDb(), item_id)
     return jsonResponse({'id': item_id, 'name': item_name})
 
 
