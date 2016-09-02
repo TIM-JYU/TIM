@@ -189,7 +189,6 @@ class Folders(TimDbBase):
         # If velps folder doesn't exists, create one
         if velps_folder is False:
             new_block = self.create(velps_folder_path, owner_group_id)
-            print("Created new folder, id: " + str(new_block))
 
         if doc_name == "":
             return velps_folder_path
@@ -197,7 +196,6 @@ class Folders(TimDbBase):
         # If folder for document in velps folder doesn't exists, create one
         if doc_velp_folder is False:
             new_block = self.create(doc_folder_path, owner_group_id)
-            print("Created new folder, id: " + str(new_block))
 
         return doc_folder_path
 
@@ -220,6 +218,5 @@ class Folders(TimDbBase):
 
         if velps_folder is False:
             new_block = self.create(user_velps_path, user_id)
-            print("Created new folder, id: " + str(new_block))
 
         return user_velps_path

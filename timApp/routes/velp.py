@@ -712,7 +712,6 @@ def create_default_velp_group(doc_id: int):
     #     return abort(403, "User is not owner of current document")
 
     if not timdb.users.has_edit_access(user_id, doc_id):
-        print("User has no edit access to current document")
         return abort(403, "User has no edit access to current document")
 
     velps_folder_path = timdb.folders.check_velp_group_folder_path(doc_path, user_group_id, doc_name)
