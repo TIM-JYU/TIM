@@ -94,6 +94,7 @@ run bower --allow-root install angular-animate#~1.4
 run bower --allow-root install angular-touch#~1.4
 run bower --allow-root install angular-ui-grid#~3.2
 run bower --allow-root install angular-bootstrap-colorpicker#~3.0
+run bower --allow-root install eonasdan-bootstrap-datetimepicker#latest
 
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
 run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js

@@ -16,16 +16,16 @@
         </div>
     </div>
 
-    <div class="row" style="padding-top: 6px" ng-show="editButton && rights.editable">
-        <div ng-class="colClass">
-            <button class="wideButton parEditButton"
-                    onclick="this.blur()"
-                    ng-model="model.editState"
-                    uib-btn-radio="'par'"
-                    uncheckable="true"
-                    title="Toggle paragraph edit mode">
-
+    <div class="row" style="padding-top: 6px" ng-if="editButton && rights.editable">
+        <div ng-class="halfColClass" style="padding-right: 0">
+            <button class="wideButton parEditButton" ng-model="model.editState" uib-btn-radio="'par'" uncheckable="true" title="Toggle paragraph edit mode">
                 <i class="glyphicon glyphicon-minus"></i>
+                <i class="glyphicon glyphicon-pencil"></i>
+            </button>
+        </div>
+        <div ng-class="halfColClass" style="padding-left: 0">
+            <button class="wideButton areaEditButton" ng-model="model.editState" ng-disabled="areaEditButton ? '' : 'disabled'" uib-btn-radio="'area'" uncheckable="true" title="Toggle area edit mode">
+                <i class="glyphicon glyphicon-align-justify"></i>
                 <i class="glyphicon glyphicon-pencil"></i>
             </button>
         </div>

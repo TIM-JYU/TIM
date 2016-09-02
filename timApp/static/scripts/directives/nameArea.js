@@ -24,6 +24,10 @@ timApp.directive('nameArea', ['$http', '$window', '$filter', function ($http, $w
                 if (e.which == 13)
                     $scope.addArea();
             });
+
+            $(function() {
+                $('.date').datetimepicker({format: "DD.MM.YYYY HH:mm", locale: "en-GB"});
+            });
         },
 
         controller: function ($scope, $element) {
@@ -36,6 +40,8 @@ timApp.directive('nameArea', ['$http', '$window', '$filter', function ($http, $w
             };
             
             $scope.addArea = function () {
+                $scope.options.starttime = $('#starttime').val();
+                $scope.options.endtime = $('#endtime').val();
                 $scope.closePopup();
 
                 if ($scope.onOk)
@@ -57,8 +63,16 @@ timApp.directive('nameArea', ['$http', '$window', '$filter', function ($http, $w
                 }
             };
 
+            $scope.toggleTimed = function () {
+                if ($scope.options.timed) {
+                    $('#timed-options').removeClass('hidden');
+                } else {
+                    $('#timed-options').addClass('hidden');
+                }
+            };
+
             $scope.areaName = "";
-            $scope.options = {collapse: true};
+            $scope.options = {collapse: true, hlevel: 3};
             $element.css('position', 'absolute'); // IE needs this
 
             $('#areaname').focus();

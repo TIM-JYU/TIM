@@ -270,7 +270,6 @@ p.caption {
     }
 }
 
-
 .pluginError, .error {
     border: 1px solid red;
     background-color: pink;
@@ -378,6 +377,10 @@ p.caption {
     border-color: #F60;
 }
 
+.areareadline {
+    @extend .readline
+}
+
 .editline {
     position: absolute;
     left: -$editline-width;
@@ -402,13 +405,106 @@ p.caption {
      background: $editline-bg-color;
 }
 
-.areacollapse::before {
+.editline.menuopen {
+     opacity: 0.5;
+     background: $editline-bg-color;
+}
+
+.areaeditline {
+    opacity: 0;
+    position: absolute;
+    left: -$areaeditline-width;
+    width: $areaeditline-width;
+    height: 100%;
+    top: 0;
+
+    &.show {
+        opacity: 0.2;
+    }
+
+    &:hover, &.manualhover, &.menuopen, &.show.menuopen {
+        opacity: 0.5;
+    }
+}
+
+.areaeditline1 {
+    @extend .areaeditline;
+    background: #d874ff; /* rgb(236,103,27); */
+
+    @media (max-width: $screen-xs-max) {
+        left: 0;
+    }
+}
+
+.areaeditline2 {
+    @extend .areaeditline;
+    background: #b2aaff; /* rgb(236,103,27); */
+    left: -2 * $areaeditline-width;
+    width: $areaeditline-width;
+
+    @media (max-width: $screen-xs-max) {
+        left: $areaeditline-width;
+    }
+}
+
+.areaeditline3 {
+    @extend .areaeditline;
+    left: -3 * $areaeditline-width;
+    width: $areaeditline-width;
+    background: #ff9851; /* rgb(236,103,27); */
+
+    @media (max-width: $screen-xs-max) {
+        left: 2 * $areaeditline-width;
+    }
+}
+
+.area {
+    position: relative;
+}
+
+.areacollapse, .areaexpand, .disabledcollapse, .disabledexpand {
+    cursor: pointer;
+    position: relative;
+}
+
+.areatitle {
+    padding-left: 10px;
+    display: inline;
+
+    h1, h2, h3, h4, h5, h6 {
+        display: inline;
+        vertical-align: middle;
+    }
+}
+
+.areaexpand, .disabledexpand, .areacollapse, .disabledcollapse {
+    left: -4em;
+    margin-right: -4em;
+    margin-bottom: 1em;
+
+    @media (max-width: $screen-sm + 6) {
+        left: -1em;
+        margin-right: -1em;
+    }
+    @media (max-width: $screen-xs-max) {
+        left: 0.8em;
+        margin-right: -0.8em;
+    }
+}
+
+.areacollapse::before, .areaexpand::before {
     color: $areacollapse-color;
+}
+
+.disabledcollapse::before, .disabledexpand::before {
+    color: #ccc;
+}
+
+.areacollapse::before, .disabledcollapse::before {
     content: "[-]";
 }
 
-.areaexpand::before {
-    color: $areacollapse-color;
+.areaexpand::before, .disabledexpand::before {
     content: "[+]";
 }
 
@@ -820,7 +916,7 @@ pre.sagecell_stdout {
     border: none;
 }
 
-button:disabled, input[type="submit"]:disabled, input[type="button"]:disabled {
+button:disabled, input[type="submit"]:disabled, input[type="button"]:disabled, .areaEditButton[disabled]:hover {
     background: #AAA;
     color: #CCC;
 }

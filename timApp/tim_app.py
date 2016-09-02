@@ -36,5 +36,6 @@ app.jinja_env.filters['map_format'] = map_format
 app.jinja_env.filters['datestr_to_relative'] = datestr_to_relative
 app.jinja_env.filters['date_to_relative'] = date_to_relative
 app.jinja_env.filters['timdate'] = timdate
+app.jinja_env.add_extension('jinja2.ext.do')
 
 mimetypes.add_type('text/plain', '.scss')
