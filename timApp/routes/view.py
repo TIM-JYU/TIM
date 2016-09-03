@@ -45,7 +45,8 @@ def get_document(doc_id: int, view_range: Optional[Range] = None) -> Tuple[Docum
 
 @view_page.route("/show_slide/<path:doc_name>")
 def show_slide(doc_name):
-    return view(doc_name, 'show_slide.html')
+    html = view(doc_name, 'show_slide.html')
+    return html
 
 
 @view_page.route("/view_content/<path:doc_name>")
@@ -85,7 +86,8 @@ def lecture_view(doc_name):
 
 @view_page.route("/slide/<path:doc_name>")
 def slide_document(doc_name):
-    return view(doc_name, 'view_html.html', route="slide")
+    html = view(doc_name, 'view_html.html', route="slide")
+    return html
 
 
 @view_page.route("/par_info/<int:doc_id>/<par_id>")
