@@ -63,6 +63,7 @@ a .glyphicon {
 
 // all document-related styles under .paragraphs selector!
 .paragraphs, .slides {
+//.paragraphs {
     @include center-block();
     @media (min-width: $screen-md-min) {
         min-width: $paragraph-preferred-width;
