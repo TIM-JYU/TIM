@@ -30,6 +30,10 @@ body::-ms-backdrop {
   font-weight: normal;
   color: #000; }
 
+.slides {
+    min-width: 80%;
+}
+
 ::selection {
   color: #fff;
   background: rgba(0, 0, 0, 0.99);

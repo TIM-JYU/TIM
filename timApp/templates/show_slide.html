@@ -35,13 +35,14 @@
                                 {{ text[0].html|safe }}
                         </div>
                         {% else %}
-                            {% set prev_is_empty = False %}
+                            {% set prev_is_empty = True %}
                     {% endif %}
 
                     {% for t in text[1:] %}
                         {% if t.md.startswith('---') and t.md.endswith('---') and not prev_is_empty %}
                             </section>
                             <section>
+                            {% set prev_is_empty = True %}
                                 {% else %}
                                 {% if ((t.html|safe).startswith("<h1") or (t.html|safe).startswith("<h2") or (t.html|safe).startswith("<h3")) and not prev_is_empty %}
                                     </section>
@@ -53,6 +54,7 @@
                                     attrs="{{ t.attrs_str }}">
                                         {{ t.html|safe }}
                                 </div>
+                            {% set prev_is_empty = False %}
                         {% endif %}
                     {% endfor %}
                 {% endif %}
