@@ -2029,7 +2029,22 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.goToEditor = function (e, $par) {
+            /*
+            var element = $('pareditor')[0];
+            var viewport = {};
+            viewport.top = $(window).scrollTop();
+            viewport.bottom = viewport.top + $(window).height();
+            var bounds = {};
+            bounds.top = element.offset().top;
+            bounds.bottom = bounds.top + element.outerHeight();
+            if (bounds.bottom > viewport.bottom || bounds.top < viewport.top) {
+                /*$('html, body').animate({
+                    scrollTop: $element.offset().top
+                }, 2000); * /
+                $('html, body').scrollTop(element.offset().top);
+            }
             $('pareditor')[0].scrollIntoView();
+            */
         };
 
         sc.closeAndSave = function (e, $par) {

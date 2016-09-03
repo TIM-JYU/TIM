@@ -165,7 +165,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         // If preview is released make sure that preview doesn't go out of bounds
                         if ($scope.previewReleased) {
                             var previewOffset = previewDiv.offset();
-                            if (previewOffset.top < 0 || previewOffset.top > $window.innerHeight) {
+                            if (previewOffset.top < 0 /*|| previewOffset.top > $window.innerHeight */ ) {
                                 previewDiv.offset({'top': 0, 'left': previewDiv.offset().left});
                             }
                             if (previewOffset.left < 0 || previewOffset.left > $window.innerWidth) {
@@ -906,7 +906,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         }
                     });
                     // Scroll the rename form to view
-                    $('html, body').scrollTop($editorTop.offset().top);
+                    //$('html, body').scrollTop($editorTop.offset().top);
                 };
 
 
