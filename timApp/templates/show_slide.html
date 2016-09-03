@@ -35,7 +35,7 @@
                                 {{ text[0].html|safe }}
                         </div>
                         {% else %}
-                            {% set prev_is_empty = True %}
+                            {% set prev_is_empty = False %}
                     {% endif %}
 
                     {% for t in text[1:] %}
