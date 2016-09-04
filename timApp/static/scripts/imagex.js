@@ -885,7 +885,7 @@ imagexApp.initDrawing = function(scope, canvas) {
             init:
                 function (initValues) {
                     this.cornerRadius = getValue(initValues.cornerradius, 0);
-                    this.borderWidth = getValue(initValues.borderWidth, 2);
+                    this.borderWidth = getValueDef(initValues,"borderWidth", 2);
                     if (this.cornerRadius > this.r1 / 2 || this.cornerRadius > this.r2 / 2) {
                         if (this.cornerRadius > this.r1 / 2) this.cornerRadius = this.r1 / 2;
                         if (this.cornerRadius > this.r2 / 2) this.cornerRadius = this.r2 / 2; }

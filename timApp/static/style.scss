@@ -156,6 +156,10 @@ $buttons-width: 75%;
     max-width: 100%;
 }
 
+.answerButton {
+    min-width: 200px;
+}
+
 .answerSheet table {
     font-size: large;
 }
@@ -166,7 +170,8 @@ $buttons-width: 75%;
 }
 
 .answerSheet h2 {
-    margin-bottom: 10;
+    margin-top: 10px;
+    margin-bottom: 10px;
     text-align: center;
 }
 

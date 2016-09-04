@@ -11,7 +11,7 @@
 }
 
 .pop-up-dialog {
-    max-height: 100%;
+    max-height: 120%;
     max-width: 100%;
     z-index: 6;
     position: fixed;
@@ -25,22 +25,25 @@
 .pop-up-dialog-content {
     padding: 0 10px 10px 10px;
     text-align: center;
-    max-height: calc(100vh - 40px);
+    max-height: calc(100vh - 40px);  /* TODO: Check good value here.  40 px  was not enough for iPad to show 20 questions and Send button */
+    /* without previous does not show the Answer button if there is more than 19 questions */
     overflow: auto;
 }
 
 /* Special style for mobile devices with width less than 500 px*/
-@media only screen and (max-device-width: 500px){
+/* TODO: Think what is suitable width here to get best result, 800 is old iPad width */
+@media only screen and (max-device-width: 800px){
     .pop-up-dialog {
         width: 100%;
         height: 100% !important;
         top: 0;
         max-width: 100%;
         min-width: 100%;
-        min-height: 100%;
-        position: absolute;
+        min-height: 120%;
+        /*position: absolute; */
         padding: 0;
         margin : 0;
+       /* max-height: calc(100vh + 120px);  /* TODO: Check good value here.  40 px  was not enough for iPad to show 20 questions and Send button */
     }
 
     .pop-up-dialog.label{

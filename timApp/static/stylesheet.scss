@@ -791,6 +791,7 @@ input[type="file"] {
     direction: ltr;
 }
 
+/* TODO: check how to prevent too narrow menu better way than min-width */
 .actionButtons {
     @include container-fixed();
     position: absolute;
@@ -799,6 +800,7 @@ input[type="file"] {
     background-color: #f8f8ff;
     z-index: 100;
     min-height: 50px;
+    min-width: 200px;
 }
 
 .menuButtons {
