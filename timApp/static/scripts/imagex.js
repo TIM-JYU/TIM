@@ -233,7 +233,17 @@ imagexApp.directiveTemplate = function () {
 };
 
 
+
+
 imagexApp.initDrawing = function(scope, canvas) {
+
+    function toRange(range, p) {
+        if ( !range ) return p;
+        if ( p.length < 2 ) return p;
+        if ( p < range[0]) return range[0];
+        if ( p > range[1]) return range[1];
+        return p;
+    }
 
     function getPos(canvas, p) {
         var rect = canvas.getBoundingClientRect();
@@ -328,11 +338,13 @@ imagexApp.initDrawing = function(scope, canvas) {
                 try {
                     this.drawObjects[i].ctx = this.ctx;
                     if (this.activeDragObject) {
-                        this.activeDragObject.x =
-                            this.mousePosition.x - this.activeDragObject.xoffset;
-                        this.activeDragObject.y = 
-                            this.mousePosition.y - this.activeDragObject.yoffset;
-                        if (this.drawObjects[i] == this.activeDragObject) {
+                        var dobj = this.activeDragObject;
+                        var p;
+                        if (dobj.lock != 'x')
+                            dobj.x = toRange(dobj.xlimits, this.mousePosition.x - dobj.xoffset);
+                        if ( dobj.lock != 'y')
+                            dobj.y = toRange(dobj.ylimits, this.mousePosition.y - dobj.yoffset);
+                        if (this.drawObjects[i] == dobj) {
                             topmostIndex = i;
                             topmostElement = this.drawObjects[i]; }
                     }
@@ -596,6 +608,9 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.origPos.x = this.x;
         this.origPos.y = this.y;
         this.origPos.pos = this.position;
+        this.lock = getValueDef(values, "lock", "");
+        this.xlimits = getValueDef(values, "xlimits", null);
+        this.ylimits = getValueDef(values, "ylimits", null);
 
         // If default values of type, size, a or position are changed, check also imagex.py
         if (this.type === 'vector') this.size = getValueDef(values, "size", [50, 4]);
@@ -870,6 +885,7 @@ imagexApp.initDrawing = function(scope, canvas) {
             init:
                 function (initValues) {
                     this.cornerRadius = getValue(initValues.cornerradius, 0);
+                    this.borderWidth = getValue(initValues.borderWidth, 2);
                     if (this.cornerRadius > this.r1 / 2 || this.cornerRadius > this.r2 / 2) {
                         if (this.cornerRadius > this.r1 / 2) this.cornerRadius = this.r1 / 2;
                         if (this.cornerRadius > this.r2 / 2) this.cornerRadius = this.r2 / 2; }
@@ -878,7 +894,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                 function (objectValues) {
                     this.ctx = objectValues.ctx;
                     this.ctx.strokeStyle = this.color;
-                    this.ctx.lineWidth = 2;
+                    this.ctx.lineWidth = this.borderWidth;
                     this.ctx.save();
                     this.ctx.translate(this.x, this.y);
                     this.ctx.rotate(this.a * to_radians);
