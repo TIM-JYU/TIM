@@ -149,7 +149,7 @@ def reset_css():
     Requires admin privilege.
     :return: okJsonResponse
     """
-    # verify_admin()
+    verify_admin()
     assets_dir = os.path.join('static', '.webassets-cache')
     if os.path.exists(assets_dir):
         shutil.rmtree(assets_dir)
