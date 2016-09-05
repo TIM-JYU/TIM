@@ -17,7 +17,11 @@ class TimTest(TimRouteTest):
         a = self.app
 
         login_resp = self.login_test1(force=True)
-        self.assertInResponse('Logged in as: Test user 1 (testuser1)', login_resp)
+        self.assertDictEqual({'current_user': {'email': 'test1@example.com',
+                                               'id': 4,
+                                               'name': 'testuser1',
+                                               'real_name': 'Test user 1'},
+                              'other_users': []}, login_resp)
         doc_names = ['users/testuser1/testing',
                      'users/testuser1/testing2',
                      'users/testuser1/testing3',
@@ -92,7 +96,7 @@ class TimTest(TimRouteTest):
         # Login as another user
         self.login_test2()
         view_resp = a.get('/view/' + doc_name)
-        self.assertInResponse('Logged in as: Test user 2 (testuser2)', view_resp)
+        self.assertInResponse('Test user 2', view_resp)
         self.assertInResponse(edited_comment_html, view_resp)
         not_viewable_docs = {7}
         viewable_docs = doc_ids - not_viewable_docs
@@ -173,7 +177,7 @@ class TimTest(TimRouteTest):
         table_html = md_to_html(table_text, sanitize=True, macros={'rivi': 'kerros'}, macro_delimiter='%%')
 
         self.assertInResponse(table_html, self.new_par(doc, table_text), json_key='texts')
-        self.assertInResponse(table_html, self.app.get('/view/{}'.format(doc.doc_id)))
+        self.assertInResponse(table_html, self.get('/view/{}'.format(doc.doc_id), as_response=True))
 
     def test_macro_only_delimiter(self):
         self.login_test1()
@@ -183,7 +187,7 @@ class TimTest(TimRouteTest):
     def test_same_heading_as_par(self):
         self.login_test1()
         doc = self.create_doc(initial_par="""# Hello\n#-\nHello""")
-        self.app.get('/view/{}'.format(doc.doc_id))
+        self.get('/view/{}'.format(doc.doc_id), expect_status=200)
 
     def test_broken_comment(self):
         self.login_test1()

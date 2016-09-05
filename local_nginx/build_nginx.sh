@@ -1,2 +1,2 @@
 #!/bin/bash
-docker build --tag=local_nginx $@ .
+docker build --tag=timimages/local_nginx $@ .

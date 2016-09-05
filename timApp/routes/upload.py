@@ -13,7 +13,7 @@ from werkzeug.utils import secure_filename
 from plugin import Plugin
 from routes.common import logged_in, getTimDb, jsonResponse, getCurrentUserGroup, okJsonResponse, validate_item_and_create, \
     verify_view_access, verify_task_access, getCurrentUserName, \
-    verify_seeanswers_access
+    verify_seeanswers_access, grant_access_to_session_users
 from timdb.tim_models import Block
 from timdb.timdbbase import blocktypes
 
@@ -87,6 +87,8 @@ def pluginupload_file(doc_id: int, task_id: str):
     answerupload = timdb.uploads.save_file(content, p,
                                            secure_filename(file.filename),
                                            getCurrentUserGroup())
+    block_id = answerupload.block.id
+    grant_access_to_session_users(timdb, block_id)
     relfilename = answerupload.block.description
     p = os.path.join(timdb.uploads.blocks_path, relfilename)
     mt = get_mimetype(p)

@@ -20,7 +20,6 @@ docker tag timimages/svn svn
 docker tag timimages/stackage_builder stackage_builder
 docker tag timimages/postgre postgre
 docker tag timimages/pali pali
-docker tag timimages/local_nginx local_nginx
 docker tag timimages/funnel funnel
 
 # Remove leftover untagged images

@@ -1,5 +1,7 @@
 from typing import List
 
+from typing import Dict
+
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from timdb.timdbbase import TimDbBase
@@ -69,3 +71,20 @@ WHERE doc_id = %s AND par_id = %s
 
         if commit:
             self.db.commit()
+
+    def get_common_readings(self, usergroup_ids: List[int], doc: Document):
+        users = [] # type: List[Dict[str, Dict]]
+        for u in usergroup_ids:
+            reading_map = {}
+            rs = self.get_readings(u, doc)
+            for r in rs:
+                reading_map[r['par_id']] = r
+            users.append(reading_map)
+        common_par_ids = users[0].keys()
+        for r in users[1:]:
+            common_par_ids &= r.keys()
+        # If the hashes are not the same for every user, it means someone has not read the latest one. We remove
+        # such paragraphs.
+        final_pars = [par_id for par_id in common_par_ids if all(
+            (read_pars[par_id]['par_hash'] == users[0][par_id]['par_hash']) for read_pars in users)]
+        return [users[0][key] for key in final_pars]

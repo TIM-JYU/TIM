@@ -6,6 +6,9 @@ from collections import defaultdict
 from urllib.parse import urlparse, urljoin
 
 from flask import current_app, session, abort, g, Response, request, redirect, url_for, flash
+from typing import List
+
+from typing import Dict
 
 import documentmodel.document
 import pluginControl
@@ -34,7 +37,27 @@ def safe_redirect(url, **values):
 
 
 def get_current_user():
-    return getTimDb().users.get_user(getCurrentUserId())
+    return {'id': getCurrentUserId(),
+            'name': getCurrentUserName(),
+            'real_name': session.get('real_name'),
+            'email': session.get('email')}
+
+
+def get_other_users() -> Dict[int, Dict[str, str]]:
+    return session.get('other_users', {})
+
+
+def get_other_users_as_list() -> List[Dict[str, str]]:
+    return list(session.get('other_users', {}).values())
+
+
+def get_session_users():
+    return [get_current_user()] + get_other_users_as_list()
+
+
+def get_session_usergroup_ids():
+    timdb = getTimDb()
+    return [timdb.users.get_personal_usergroup(u) for u in get_session_users()]
 
 
 def getCurrentUserId():
@@ -324,7 +347,7 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
 
     group = timdb.users.get_personal_usergroup(user) if user is not None else timdb.users.get_anon_group_id()
     if user is not None:
-        readings = timdb.readings.get_readings(group, doc)
+        readings = timdb.readings.get_common_readings(get_session_usergroup_ids(), doc)
         for r in readings:
             key = (r['par_id'], r['doc_id'])
             pars = pars_dict.get(key)
@@ -558,3 +581,16 @@ def verify_task_access(doc_id, task_id_name):
         pars = documentmodel.document.dereference_pars([par])
         if not any(p.get_attr('taskId') == task_id_name for p in pars):
             abort(403)
+
+
+def save_last_page():
+    session['last_doc'] = request.path
+
+
+def grant_access_to_session_users(timdb: TimDb, block_id: int):
+    for u in get_other_users_as_list():
+        timdb.users.grant_access(timdb.users.get_personal_usergroup_by_id(u['id']),
+                                 block_id,
+                                 'manage',
+                                 commit=False)
+    timdb.commit()
