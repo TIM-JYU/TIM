@@ -258,15 +258,16 @@ class Users(TimDbBase):
                        [block_id])
         return self.resultAsDictionary(cursor)[0]
 
-    def get_user(self, user_id: int) -> Optional[dict]:
+    def get_user(self, user_id: int, include_authdata=False) -> Optional[dict]:
         """Gets the user with the specified id.
         
-        :param user_id:
-        :returns: An sqlite3 row object representing the user. Columns: id, name.
+        :param include_authdata: Whether to include authentication-related fields in the result. Default False.
+        :param user_id: The user id.
+        :returns: A dict object representing the user. Columns: id, name.
         """
-
+        authtemplate = ', yubikey, pass' if include_authdata else ''
         cursor = self.db.cursor()
-        cursor.execute('SELECT * FROM UserAccount WHERE id = %s', [user_id])
+        cursor.execute('SELECT id, name, real_name, email {} FROM UserAccount WHERE id = %s'.format(authtemplate), [user_id])
         result = self.resultAsDictionary(cursor)
         return result[0] if len(result) > 0 else None
 

@@ -385,7 +385,7 @@ def yubi_login(username, otp):
     user = timdb.users.get_user_id_by_name(username)
     if user is None:
         abort(404, 'User not found.')
-    user = timdb.users.get_user(user)
+    user = timdb.users.get_user(user, include_authdata=True)
 
     user_pubid = user.get('yubikey')
     if user_pubid is None or len(user_pubid) != 12:
