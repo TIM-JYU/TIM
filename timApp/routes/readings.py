@@ -2,7 +2,7 @@ from flask import Blueprint, abort
 
 from documentmodel.document import Document
 from routes.common import verify_read_marking_right, getTimDb, jsonResponse, getCurrentUserGroup, \
-    get_referenced_pars_from_req, okJsonResponse
+    get_referenced_pars_from_req, okJsonResponse, get_session_usergroup_ids
 
 readings = Blueprint('readings',
                      __name__,
@@ -14,6 +14,7 @@ def get_read_paragraphs(doc_id):
     verify_read_marking_right(doc_id)
     timdb = getTimDb()
     doc = Document(doc_id)
+    # TODO: Get the intersection of read markings of all session users
     readings = timdb.readings.get_readings(getCurrentUserGroup(), doc)
     return jsonResponse(readings)
 
@@ -22,7 +23,6 @@ def get_read_paragraphs(doc_id):
 def set_read_paragraph(doc_id, specifier):
     verify_read_marking_right(doc_id)
     timdb = getTimDb()
-    group_id = getCurrentUserGroup()
 
     # todo: document versions
     # version = request.headers.get('Version', 'latest')
@@ -32,9 +32,10 @@ def set_read_paragraph(doc_id, specifier):
     if par is None:
         return abort(400, 'Non-existent paragraph')
 
-    for p in get_referenced_pars_from_req(par):
-        timdb.readings.mark_read(group_id, Document(p.get_doc_id()), p)
-
+    for group_id in get_session_usergroup_ids():
+        for p in get_referenced_pars_from_req(par):
+            timdb.readings.mark_read(group_id, Document(p.get_doc_id()), p, commit=False)
+    timdb.commit()
     return okJsonResponse()
 
 
@@ -45,6 +46,8 @@ def mark_all_read(doc_id):
     # todo: document versions
     # version = request.headers.get('Version', 'latest')
     # verify_document_version(doc_id, version)
-    doc = Document(doc_id, modifier_group_id=getCurrentUserGroup())
-    timdb.readings.mark_all_read(getCurrentUserGroup(), doc)
+    doc = Document(doc_id)
+    for group_id in get_session_usergroup_ids():
+        timdb.readings.mark_all_read(group_id, doc, commit=False)
+    timdb.commit()
     return okJsonResponse()

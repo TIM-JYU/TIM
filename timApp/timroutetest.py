@@ -91,30 +91,47 @@ class TimRouteTest(TimDbTest):
         self.assertEqual(expect_status, resp.status_code)
         self.assertListEqual(expected, load_json(resp))
 
-    def get(self, url: str, as_tree=False, as_json=False, expect_status=None, **kwargs):
-        resp = self.app.get(url, **kwargs)
+    def get(self, url: str, as_tree=False, as_json=False, as_response=False, expect_status=None, expect_content=None, **kwargs):
+        return self.request(url, 'GET', as_tree=as_tree, as_response=as_response, as_json=as_json, expect_status=expect_status, expect_content=expect_content, **kwargs)
+
+    def post(self, url: str, as_tree=False, as_json=False, as_response=False, expect_status=None, expect_content=None, **kwargs):
+        return self.request(url, 'POST', as_tree=as_tree, as_response=as_response, as_json=as_json, expect_status=expect_status, expect_content=expect_content, **kwargs)
+
+    def request(self, url: str, method, as_tree=False, as_json=False, as_response=False, expect_status=None, expect_content=None, headers=None, **kwargs):
+        if headers is None:
+            headers = []
+        headers.append(('X-Requested-With', 'XMLHttpRequest'))
+        resp = self.app.open(url, method=method, headers=headers, **kwargs)
         if expect_status:
             self.assertResponseStatus(resp, expect_status)
-        resp = resp.get_data(as_text=True)
+        resp_data = resp.get_data(as_text=True)
         if as_tree:
-            return html.fromstring(resp)
+            return html.fromstring(resp_data)
         elif as_json:
-            return json.loads(resp)
-        else:
+            loaded = json.loads(resp_data)
+            if expect_content is not None:
+                self.assertDictEqual(expect_content, loaded)
+            return loaded
+        elif as_response:
             return resp
+        else:
+            if expect_content is not None:
+                self.assertEqual(expect_content, resp_data)
+            return resp_data
 
-    def json_put(self, url: str, json_data=None):
-        return self.json_req(url, json_data, 'PUT')
+    def json_put(self, url: str, json_data=None, **kwargs):
+        return self.json_req(url, json_data, 'PUT', **kwargs)
 
-    def json_post(self, url: str, json_data=None):
-        return self.json_req(url, json_data, 'POST')
+    def json_post(self, url: str, json_data=None, **kwargs):
+        return self.json_req(url, json_data, 'POST', **kwargs)
 
     def json_req(self, url: str, json_data=None, method='GET', **kwargs):
-        return self.app.open(url,
-                             data=json.dumps(json_data),
-                             content_type='application/json',
-                             method=method,
-                             **kwargs)
+        return self.request(url,
+                            method=method,
+                            data=json.dumps(json_data),
+                            content_type='application/json',
+                            as_response=True,
+                            **kwargs)
 
     def post_par(self, doc: Document, text: str, par_id: str):
         doc.clear_mem_cache()
@@ -136,31 +153,41 @@ class TimRouteTest(TimDbTest):
     def current_user_name(self):
         return session['user_name']
 
-    def login_test1(self, force=False):
-        return self.login('testuser1', 'test1@example.com', 'test1pass', force=force)
+    def login_test1(self, force=False, add=False):
+        return self.login('testuser1', 'test1@example.com', 'test1pass', force=force, add=add)
 
-    def login_test2(self, force=False):
-        return self.login('testuser2', 'test2@example.com', 'test2pass', force=force)
+    def login_test2(self, force=False, add=False):
+        return self.login('testuser2', 'test2@example.com', 'test2pass', force=force, add=add)
 
-    def login_test3(self, force=False):
-        return self.login('testuser3', 'test3@example.com', 'test3pass', force=force)
+    def login_test3(self, force=False, add=False):
+        return self.login('testuser3', 'test3@example.com', 'test3pass', force=force, add=add)
 
-    def logout(self):
-        self.assertResponseStatus(self.app.post('/logout'), expect_status=302)
+    def logout(self, user_id=None):
+        return self.json_post('/logout', json_data={'user_id': user_id}, expect_status=200, as_json=True)
 
-    def login(self, username, email, passw, force=False, clear_last_doc=True):
+    def login(self, username, email, passw, force=False, clear_last_doc=True, add=False):
         if self.app.application.got_first_request:
-            if not force:
-                if flask.session.get('user_name') == username \
-                        and flask.session.get('user_id') != 0:
-                    return
+            if not force and not add:
+                db = self.get_db()
+                u = db.users.get_user_by_name(username)
+                # if not flask.has_request_context():
+                #     print('creating request context')
+                #     tim.app.test_request_context().__enter__()
+                with self.app.session_transaction() as s:
+                    s['user_name'] = username
+                    s['email'] = email
+                    s['user_id'] = u.id
+                    s['real_name'] = u.real_name
+                    s.pop('other_users', None)
+                self.app.session_transaction().__enter__()
+                return
             if clear_last_doc:
                 with self.app.session_transaction() as s:
                     s.pop('last_doc', None)
                     s.pop('came_from', None)
-        return self.app.post('/altlogin',
-                             data={'email': email, 'password': passw},
-                             follow_redirects=True)
+        return self.post('/altlogin',
+                         data={'email': email, 'password': passw, 'add_user': add},
+                         follow_redirects=True, as_json=True)
 
     def create_doc(self, docname=None, from_file=None, initial_par=None, settings=None, assert_status=200):
         if docname is None:

@@ -8,6 +8,8 @@ from lxml import html
 
 from timroutetest import TimRouteTest
 
+TEST_USER_1_ID = 4
+TEST_USER_2_ID = 5
 
 class PluginTest(TimRouteTest):
     def post_answer(self, plugin_type, task_id, user_input,
@@ -23,9 +25,8 @@ class PluginTest(TimRouteTest):
     def test_plugin(self):
         self.login_test1()
         doc = self.create_doc(from_file='example_docs/mmcq_example.md')
-        resp = self.app.get('/view/{}'.format(doc.doc_id))
-        self.assertResponseStatus(resp)
-        tree = html.fromstring(resp.get_data(as_text=True))
+        resp = self.get('/view/{}'.format(doc.doc_id), expect_status=200)
+        tree = html.fromstring(resp)
         mmcq_xpath = r'.//div[@class="par mmcq"]/div[@class="parContent"]/div[@id="{}.mmcqexample.{}"]'.format(
             doc.doc_id, doc.get_paragraphs()[0].get_id())
         plugs = tree.findall(mmcq_xpath)
@@ -75,20 +76,22 @@ class PluginTest(TimRouteTest):
 
         resp = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']))
         answer_list = self.assertResponseStatus(resp, expect_status=200, return_json=True)  # type: list(dict)
+        self.maxDiff = None
+
         self.assertListEqual(
-            [{'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, true]',
-              'id': 6, 'points': 9.0, 'task_id': task_id, 'valid': 1, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[false, false, true]',
-              'id': 5, 'points': None, 'task_id': task_id, 'valid': 1, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, true, true]',
-              'id': 4, 'points': 2.0, 'task_id': task_id, 'valid': 1, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, false]',
-              'id': 3, 'points': 2.0, 'task_id': task_id, 'valid': 0, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, true, false]',
-              'id': 2, 'points': 1.0, 'task_id': task_id, 'valid': 1, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, false]',
-              'id': 1, 'points': 2.0, 'task_id': task_id, 'valid': 1, 'last_points_modifier': None}],
-            [{k: v for k, v in ans.items() if k != 'answered_on'} for ans in answer_list])
+            [{'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[true, false, true]',
+               'points': 9.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
+             {'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[false, false, true]',
+               'points': None, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
+             {'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[true, true, true]',
+               'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
+             {'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[true, false, false]',
+               'points': 2.0, 'task_id': task_id, 'valid': False, 'last_points_modifier': None},
+             {'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[true, true, false]',
+               'points': 1.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
+             {'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[true, false, false]',
+               'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None}],
+            [{k: v for k, v in ans.items() if k not in ('answered_on', 'id')} for ans in answer_list])
         for ans in answer_list:
             d = dateutil.parser.parse(ans['answered_on'])
             self.assertLess(d - datetime.now(tz=timezone.utc), timedelta(seconds=5))
@@ -152,23 +155,20 @@ class PluginTest(TimRouteTest):
 
         self.assertListEqual([{'collaborators': [{'real_name': None, 'user_id': anon_id}],
                                'content': '[true, false, false]',
-                               'id': 7,
                                'points': 6.0,
                                'task_id': task_id,
                                'valid': 1,
                                'last_points_modifier': None}],
-                             [{k: v for k, v in ans.items() if k != 'answered_on'} for ans in anon_answers])
+                             [{k: v for k, v in ans.items() if k not in ('answered_on', 'id')} for ans in anon_answers])
 
-        self.assertResponseStatus(self.app.get('/getState',
-                                               query_string={'user_id': anon_id,
-                                                             'answer_id': answer_list[0]['id'],
-                                                             'par_id': par_id,
-                                                             'doc_id': doc.doc_id}), expect_status=403)
-        self.assertResponseStatus(self.app.get('/getState',
-                                               query_string={'user_id': anon_id,
-                                                             'answer_id': anon_answers[0]['id'],
-                                                             'par_id': par_id,
-                                                             'doc_id': doc.doc_id}), expect_status=403)
+        self.get('/getState', query_string={'user_id': anon_id,
+                                            'answer_id': answer_list[0]['id'],
+                                            'par_id': par_id,
+                                            'doc_id': doc.doc_id}, expect_status=403)
+        self.get('/getState', query_string={'user_id': anon_id,
+                                            'answer_id': anon_answers[0]['id'],
+                                            'par_id': par_id,
+                                            'doc_id': doc.doc_id}, expect_status=403)
         tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True, query_string={'lazy': False})
         plugs = tree.findall(mmcq_xpath)
         summary = tree.findall('.//div[@class="taskSummary"]')
@@ -181,9 +181,8 @@ class PluginTest(TimRouteTest):
     def test_idless_plugin(self):
         self.login_test1()
         doc = self.create_doc(from_file='example_docs/idless_plugin.md')
-        resp = self.app.get('/view/{}'.format(doc.doc_id))
-        self.assertResponseStatus(resp)
-        tree = html.fromstring(resp.get_data(as_text=True))
+        resp = self.get('/view/{}'.format(doc.doc_id), expect_status=200)
+        tree = html.fromstring(resp)
         mmcq_xpath = r'.//div[@class="par csPlugin"]/div[@class="parContent"]/div[@id="{}..{}"]'.format(
             doc.doc_id, doc.get_paragraphs()[0].get_id())
         plugs = tree.findall(mmcq_xpath)
@@ -192,7 +191,6 @@ class PluginTest(TimRouteTest):
     def test_upload(self):
         self.login_test1()
         db = self.get_db()
-        ug = db.users.get_personal_usergroup_by_id(session['user_id'])
         doc = self.create_doc(from_file='example_docs/upload_plugin.md')
         task_name = 'testupload'
         task_name2 = 'testupload2'
@@ -214,15 +212,14 @@ class PluginTest(TimRouteTest):
                                  "markup": {"type": "upload"}},
                                 )
         self.assertDictResponse({'error': 'Non-existent upload: {}'.format(invalid_file)}, resp, expect_status=400)
-        self.assertResponse(file_content, self.app.get(ur['file']))
-        self.assertResponse(file_content,
-                            self.app.get('/uploads/{}/{}/{}/'.format(doc.doc_id, task_name, session['user_name'])))
+        self.assertEqual(file_content, self.get(ur['file'], expect_status=200))
+        self.assertEqual(file_content,
+                            self.get('/uploads/{}/{}/{}/'.format(doc.doc_id, task_name, session['user_name']), expect_status=200))
 
         self.login_test2()
 
         # Another user cannot see the file
-        resp = self.app.get(ur['file'])
-        self.assertDictResponse(self.permission_error, resp, expect_status=403)
+        self.get(ur['file'], expect_status=403, expect_content=self.permission_error, as_json=True)
 
         # and cannot post answers
         resp = self.post_answer('csPlugin', task_id, user_input)
@@ -239,18 +236,15 @@ class PluginTest(TimRouteTest):
         self.assertDictResponse({'error': "You don't have permission to touch this file."},
                                 resp,
                                 expect_status=403)
-        resp = self.app.get(ur['file'])
-        self.assertDictResponse(self.permission_error, resp, expect_status=403)
+        self.get(ur['file'], expect_status=403, expect_content=self.permission_error, as_json=True)
 
         # until the 'see answers' right is granted for the document
         db.users.grant_access(ug, doc.doc_id, 'see answers')
-        resp = self.app.get(ur['file'])
-        self.assertResponse(file_content, resp)
+        self.get(ur['file'], expect_status=200, expect_content=file_content)
 
     def do_plugin_upload(self, doc, file_content, filename, task_id, task_name, expect_version=1):
-        resp = self.app.post('/pluginUpload/{}/{}/'.format(doc.doc_id, task_name),
-                             data={'file': (io.BytesIO(bytes(file_content, encoding='utf-8')), filename)})
-        ur = self.assertResponseStatus(resp, return_json=True)
+        ur = self.post('/pluginUpload/{}/{}/'.format(doc.doc_id, task_name),
+                             data={'file': (io.BytesIO(bytes(file_content, encoding='utf-8')), filename)}, as_json=True, expect_status=200)
         mimetype = "text/plain"
         self.assertDictEqual({'file': '/uploads/{}/{}/{}/{}/{}'.format(doc.doc_id,
                                                                        task_name,
@@ -276,3 +270,25 @@ class PluginTest(TimRouteTest):
         self.assertIn('web', j)
         self.assertNotIn('error', j)
         self.assertEqual(is_new, j['savedNew'])
+
+    def test_group_answering(self):
+        self.login_test1()
+        self.login_test2(add=True)
+        doc = self.create_doc(from_file='example_docs/upload_plugin.md')
+        task_name = 'testupload'
+        task_id = '{}.{}'.format(doc.doc_id, task_name)
+        filename = 'test.txt'
+        file_content = 'test file'
+        mimetype, ur, user_input = self.do_plugin_upload(doc, file_content, filename, task_id, task_name)
+        answer_list = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']), expect_status=200, as_json=True)
+        self.assertEqual(1, len(answer_list))
+        self.assertListEqual([{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID},
+                              {'real_name': 'Test user 2', 'user_id': TEST_USER_2_ID}], answer_list[0]['collaborators'])
+        self.assertEqual(file_content, self.get(ur['file'], expect_status=200))
+        self.login_test2()
+        answer_list = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']), expect_status=200,
+                                    as_json=True)
+        self.assertEqual(1, len(answer_list))
+        self.assertListEqual([{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID},
+                              {'real_name': 'Test user 2', 'user_id': TEST_USER_2_ID}], answer_list[0]['collaborators'])
+        self.assertEqual(file_content, self.get(ur['file'], expect_status=200))

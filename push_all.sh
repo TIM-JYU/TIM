@@ -4,7 +4,6 @@ docker tag cs3 timimages/cs3
 docker tag stackage_builder timimages/stackage_builder
 docker tag postgre timimages/postgre
 docker tag pali timimages/pali
-docker tag local_nginx timimages/local_nginx
 docker tag funnel timimages/funnel
 
 docker push timimages/tim:$(./get_latest_date.sh)

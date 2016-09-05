@@ -103,7 +103,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     current_user_id = getCurrentUserId()
 
     if users is None:
-        users = [current_user_id]
+        users = [u['id'] for u in get_session_users()]
 
     old_answers = timdb.answers.get_common_answers(users, task_id)
 
@@ -160,7 +160,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                     else:
                         points_given_by = getCurrentUserGroup()
                         points = custom_points_float
-            result['savedNew'], saved_answer_id = timdb.answers.saveAnswer([current_user_id],
+            result['savedNew'], saved_answer_id = timdb.answers.saveAnswer(users,
                                                           task_id,
                                                           json.dumps(save_object),
                                                           points,

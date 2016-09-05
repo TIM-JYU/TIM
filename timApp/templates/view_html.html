@@ -74,11 +74,9 @@
         var group = {{group|tojson}};
         var lectureMode = {{lecture_mode|tojson}};
         var in_lecture = {{in_lecture|tojson}};
-        var users;
+        var users = [];
         {% if teacher_mode %}
             users = {{plugin_users|tojson}};
-        {% else %}
-            users = [{{current_user|tojson}}];
         {% endif %}
         {% if lecture_mode or in_lecture %}
             var noQuestionAutoNumbering = {{ no_question_auto_numbering|tojson}};

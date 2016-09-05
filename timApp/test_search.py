@@ -13,4 +13,4 @@ class SearchTest(TimRouteTest):
 
     def test_failed_search(self):
         self.login_test1()
-        self.assertResponseStatus(self.app.get('/search/aa'), expect_status=400)
+        self.get('/search/aa', expect_status=400)

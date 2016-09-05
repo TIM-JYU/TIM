@@ -48,6 +48,7 @@ run pip3 install flask-assets
 run pip3 install yubico-client
 run pip3 install pytz  # Not necessarily needed after all, as Python's stdlib supports UTC
 run pip3 install python-dateutil
+run pip3 install cssselect
 
 # requests must be the last package to be installed!
 # After this, pip3 stops working because it depends
