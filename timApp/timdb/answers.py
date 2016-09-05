@@ -141,7 +141,7 @@ class Answers(TimDbBase):
 
         c = self.db.cursor()
         sql = """
-SELECT u.name, a.task_id, a.content, a.answered_on, n, a.points
+SELECT DISTINCT u.name, a.task_id, a.content, a.answered_on, n, a.points
 FROM
 (SELECT {} (a.id) AS id, {} as n
 FROM answer AS a, userAnswer AS ua, useraccount AS u
