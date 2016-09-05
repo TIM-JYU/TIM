@@ -76,8 +76,8 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
     }]);
 
 
-timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$window', '$filter',
-    function (Upload, $http, $sce, $compile, $window, $filter) {
+timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$window', '$filter', 'Users',
+    function (Upload, $http, $sce, $compile, $window, $filter, Users) {
         "use strict";
         timLogTime("answerbrowser directive function","answ");
         return {
@@ -403,12 +403,12 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                 else if ($scope.$parent && $scope.$parent.users && $scope.$parent.users.length > 0) { 
                     $scope.user = $scope.$parent.users[0];
                 } else {
-                    $scope.user = null;
+                    $scope.user = Users.getCurrent();
                 }
 
                 $scope.fetchedUser = null;
                 $scope.firstLoad = true;
-                $scope.shouldUpdateHtml = $scope.user !== $scope.$parent.users[0];
+                $scope.shouldUpdateHtml = $scope.$parent.users.length > 0 && $scope.user !== $scope.$parent.users[0];
                 if ($scope.shouldUpdateHtml) {
                     $scope.dimPlugin();
                 }
