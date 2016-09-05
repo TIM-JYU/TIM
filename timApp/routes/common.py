@@ -537,7 +537,8 @@ def get_preferences():
     """
     prefs = {}
     if logged_in():
-        prefs = getTimDb().users.get_preferences(getCurrentUserId())
+        timdb = getTimDb()
+        prefs = timdb.users.get_preferences(getCurrentUserId())
         prefs = json.loads(prefs) if prefs is not None else {}
     if not prefs:
         prefs['css_files'] = {}
