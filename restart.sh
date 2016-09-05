@@ -149,7 +149,7 @@ docker run \
 fi
 
 if param nginx; then
-  docker run --net=timnet -d --name nginx -p 80:80 -v /opt/cs/:/opt/cs/ local_nginx /startup.sh
+  docker run --net=timnet -d --name nginx -p 80:80 -v /opt/cs/:/opt/cs/ timimages/local_nginx /startup.sh
 fi
 
 if [ "$USE_WUFF" = true ] && param wuff ; then
