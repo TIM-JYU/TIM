@@ -93,7 +93,9 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                 $scope.parContent = $scope.element.find('.parContent');
                 //$scope.$parent = $scope.$parent; // muutos koska scope on syntynyt tuon toisen lapseksi
                 timLogTime("answerbrowser link","answ");
-                
+
+
+
                 $scope.$watch("taskId", function (newValue, oldValue) {
                     if (newValue === oldValue) {
                         return;
@@ -358,6 +360,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
 
 
                 $scope.getAllAnswers = function() {
+                    return;
                     var sPageURL = decodeURIComponent(window.location.search.substring(1));
                     var age = "";
                     var valid = "&valid=1";
@@ -394,8 +397,22 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
 
 
                 $scope.getLink = function() {
-                     return 'data:text/plain;charset=UTF-8,' + encodeURIComponent($scope.allAnswers);
+                     //return 'data:text/plain;charset=UTF-8,' + encodeURIComponent($scope.allAnswers);
+
+                                        var sPageURL = decodeURIComponent(window.location.search.substring(1));
+                    var age = "";
+                    var valid = "&valid=1";
+                    if ( sPageURL.indexOf("age=min") >= 0 ) age = "&age=min";
+                    if ( sPageURL.indexOf("age=all") >= 0 ) age = "&age=all";
+                    if ( sPageURL.indexOf("valid=all") >= 0 ) valid = "&valid=all";
+                    if ( sPageURL.indexOf("valid=0") >= 0 ) valid = "&valid=0";
+                    if ( sPageURL.indexOf("valid=1") >= 0 ) valid = "&valid=1";
+                    var url = '/allAnswersHtml/' + $scope.taskId + '?rnd='+Math.random() + age + valid;
+                    return url;
+
                 };
+
+                $scope.allLink = $scope.getLink();
 
                 if ( $scope.$parent.selectedUser ) {
                     $scope.user = $scope.$parent.selectedUser;

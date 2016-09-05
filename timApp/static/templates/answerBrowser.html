@@ -29,8 +29,9 @@
                             ng-click="setNewest()">{{ filteredAnswers.length }}</a></span>
                     <label class="checkbox-inline" ng-show="anyInvalid">
                         <input type="checkbox" ng-model="onlyValid">Show valid only</label>
-                    <span ng-show="showTeacher()"> | <a href="{{ getLink() }}"
-                                                        ng-mousedown="getAllAnswers()">All answers</a></span>
+                    <!--<span ng-show="showTeacher()"> | <a href="{{ getLink() }}"
+                                                        ng-mousedown="getAllAnswers()">All answers</a></span> -->
+                    <span ng-show="showTeacher()"> | <a href="{{allLink}}">All answers</a></span>
                 </div>
             </div>
             <div class="row">

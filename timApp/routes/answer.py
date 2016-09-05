@@ -245,8 +245,13 @@ def get_answers(task_id, user_id):
     return jsonResponse(user_answers)
 
 
-@answers.route("/allAnswers/<task_id>")
-def get_all_answers(task_id):
+@answers.route("/allAnswersHtml/<task_id>")
+def get_all_answers_html(task_id):
+    all_answers = get_all_answers_as_list(request, task_id)
+    text = "\n\n----------------------------------------------------------------------------------\n".join(all_answers)
+    return Response(text, mimetype='text/plain')
+
+def get_all_answers_as_list(request, task_id):
     verifyLoggedIn()
     timdb = getTimDb()
     doc_id, _, _ = Plugin.parse_task_id(task_id)
@@ -262,6 +267,12 @@ def get_all_answers(task_id):
     # Require full teacher rights for getting all answers
     verify_teacher_access(doc_id)
     all_answers = timdb.answers.get_all_answers(task_id, usergroup, hide_names_in_teacher(doc_id), age, valid)
+    return all_answers
+
+
+@answers.route("/allAnswers/<task_id>")
+def get_all_answers(task_id):
+    all_answers = get_all_answers_as_list(request, task_id)
     return jsonResponse(all_answers)
 
 
