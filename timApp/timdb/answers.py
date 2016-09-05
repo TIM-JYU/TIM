@@ -229,7 +229,7 @@ JOIN answer a ON a.id = t.id JOIN useranswer ua ON ua.answer_id = a.id JOIN user
             user_ids = []
         cursor.execute(
             """
-                SELECT UserAccount.id, name, real_name, COUNT(DISTINCT task_id) AS task_count, ROUND(SUM(cast(points as float))::numeric,2) as total_points
+                SELECT UserAccount.id, name, real_name, email, COUNT(DISTINCT task_id) AS task_count, ROUND(SUM(cast(points as float))::numeric,2) as total_points
                 FROM UserAccount
                 JOIN UserAnswer ON UserAccount.id = UserAnswer.user_id
                 JOIN (

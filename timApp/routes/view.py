@@ -231,8 +231,6 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     doc, xs = get_document(doc_id, view_range)
 
-    user = getCurrentUserId()
-
     clear_cache = get_option(request, "nocache", False)
     hide_answers = get_option(request, 'noanswers', False)
 
@@ -253,7 +251,8 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     total_points = None
     tasks_done = None
     task_ids = None
-    users = []
+    user_list = []
+    current_user = get_current_user() if logged_in() else None
     if teacher_or_see_answers or (doc_settings.show_task_summary() and logged_in()):
         task_ids = pluginControl.find_task_ids(xs)
         total_tasks = len(task_ids)
@@ -261,15 +260,13 @@ def view(doc_path, template_name, usergroup=None, route="view"):
         user_list = None
         if usergroup is not None:
             user_list = [user['id'] for user in timdb.users.get_users_for_group(usergroup)]
-        users = timdb.answers.getUsersForTasks(task_ids, user_list)
-        if len(users) > 0:
-            user = users[0]['id']
+        user_list = timdb.answers.getUsersForTasks(task_ids, user_list)
     elif doc_settings.show_task_summary() and logged_in():
-        info = timdb.answers.getUsersForTasks(task_ids, [user])
+        info = timdb.answers.getUsersForTasks(task_ids, [current_user['id']])
         if info:
             total_points = info[0]['total_points']
             tasks_done = info[0]['task_count']
-    current_user = timdb.users.get_user(user)
+    current_list_user = user_list[0] if user_list else None
 
     raw_css = doc_settings.css() if doc_settings else None
     doc_css = sanitize_html('<style type="text/css">' + raw_css + '</style>') if raw_css else None
@@ -294,7 +291,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     texts, jsPaths, cssPaths, modules = post_process_pars(doc,
                                                           xs,
-                                                          current_user if teacher_or_see_answers or logged_in() else None,
+                                                          current_list_user or current_user,
                                                           sanitize=False,
                                                           do_lazy=do_lazy,
                                                           load_plugin_states=not hide_answers,
@@ -303,22 +300,25 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     index = get_index_from_html_list(t['html'] for t in texts)
 
     if hide_names_in_teacher(doc_id):
-        pass
-        if not timdb.users.user_is_owner(current_user['id'], doc_id)\
-           and current_user['id'] != getCurrentUserId():
-            current_user['name'] = '-'
-            current_user['real_name'] = 'Undisclosed student'
-        for user in users:
+        if not timdb.users.user_is_owner(current_list_user['id'], doc_id)\
+           and current_list_user['id'] != getCurrentUserId():
+            current_list_user['name'] = '-'
+            current_list_user['real_name'] = 'Someone'
+            current_list_user['email'] = 'someone@example.com'
+        for user in user_list:
             if not timdb.users.user_is_owner(user['id'], doc_id)\
                and user['id'] != getCurrentUserId():
                 user['name'] = '-'
-                user['real_name'] = 'Undisclosed student %d' % user['id']
+                user['real_name'] = 'Someone {}'.format(user['id'])
+                user['email'] = 'someone_{}@example.com'.format(user['id'])
 
     settings = get_user_settings()
 
-    is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
-    if is_in_lecture:
-        is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
+    is_in_lecture = False
+    if logged_in():
+        is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user['id'])
+        if is_in_lecture:
+            is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
 
     result = render_template(template_name,
                              route=route,
@@ -326,8 +326,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                              doc=doc_info,
                              text=texts,
                              headers=index,
-                             plugin_users=users,
-                             current_user=current_user,
+                             plugin_users=user_list,
                              version=doc.get_version(),
                              js=jsPaths,
                              cssFiles=cssPaths,
