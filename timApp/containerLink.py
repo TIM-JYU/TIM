@@ -17,7 +17,7 @@ CSPLUGIN_NAME = 'csplugin'
 SVNPLUGIN_NAME = 'showfile'
 HASKELLPLUGIN_NAME = 'haskellplugins2'
 PALIPLUGIN_NAME = 'pali'
-IMAGEXLUGIN_NAME = 'imagex'
+IMAGEXPLUGIN_NAME = 'imagex'
 
 
 TIM_HOST = app.config['TIM_HOST']
@@ -60,7 +60,7 @@ else:
         "shortNote":     {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
         "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
         "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
-        "imagex":        {"host": "http://" + IMAGEXLUGIN_NAME + ":5000/"},
+        "imagex":        {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
         "echo":          {"host": "http://" + "tim" + ":5000/echoRequest/"}
     }
 
