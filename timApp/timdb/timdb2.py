@@ -1,6 +1,7 @@
 """
 Defines the TimDb database class.
 """
+from time import sleep
 
 import sqlalchemy
 from sqlalchemy.orm import scoped_session
