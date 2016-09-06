@@ -54,14 +54,21 @@ class TimDb(object):
                 os.makedirs(path)
 
         self.session = session
-        if session is None:
-            self.session = db.create_scoped_session()
-            self.owns_session = True
-            self.engine = sqlalchemy.create_engine(db_path)
-            self.db = self.engine.connect().connection  # psycopg2.connect(db_path)  # type: psycopg2.extensions.connection
-        else:
-            self.db = db.get_engine(app, 'tim_main').connect().connection
-            self.owns_session = False
+        while True:
+            try:
+                if session is None:
+                    self.session = db.create_scoped_session()
+                    self.owns_session = True
+                    self.engine = sqlalchemy.create_engine(db_path)
+                    self.db = self.engine.connect().connection  # psycopg2.connect(db_path)  # type$
+                    break
+                else:
+                    self.db = db.get_engine(app, 'tim_main').connect().connection
+                    self.owns_session = False
+                    break
+            except:
+                sleep(0.5)
+                log_info("Wait db")
         TimDb.instances += 1
         # num_connections = self.get_pg_connections()
         # log_info('TimDb instances/PG connections: {}/{} (constructor)'.format(TimDb.instances, num_connections))
