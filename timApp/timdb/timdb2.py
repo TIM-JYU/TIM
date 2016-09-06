@@ -57,8 +57,8 @@ class TimDb(object):
         if session is None:
             self.session = db.create_scoped_session()
             self.owns_session = True
-            engine = sqlalchemy.create_engine(db_path)
-            self.db = engine.connect().connection  # psycopg2.connect(db_path)  # type: psycopg2.extensions.connection
+            self.engine = sqlalchemy.create_engine(db_path)
+            self.db = self.engine.connect().connection  # psycopg2.connect(db_path)  # type: psycopg2.extensions.connection
         else:
             self.db = db.get_engine(app, 'tim_main').connect().connection
             self.owns_session = False
@@ -104,6 +104,7 @@ class TimDb(object):
             self.db.close()
             if self.owns_session:
                 self.session.remove()
+                self.engine.dispose()
             self.db = None
             self.session = None
             # log_info('TimDb instances: {} (destructor)'.format(TimDb.instances))
