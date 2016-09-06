@@ -26,7 +26,7 @@
 
                 <div class="col-md-4">
                     {% if session.user_id %}
-                        <login-menu></login-menu>
+                        {{ session.real_name }}
                         <ul>
                             <li><a href="/view/users/{{ session.user_name }}">My documents</a></li>
                             <li><a href="/view/">All documents</a></li>
