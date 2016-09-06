@@ -61,7 +61,7 @@ else:
         "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
         "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
         "imagex":        {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
-        "echo":          {"host": "http://" + "tim" + ":5000/echoRequest/"}
+        "echo":          {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
     }
 
 

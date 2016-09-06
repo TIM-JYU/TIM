@@ -253,7 +253,9 @@ def make_lazy(html, markup, do_lazy):
 
 def get_all_reqs():
     allreqs = {}
-    for plugin in PLUGINS.keys():
+    for plugin, vals in PLUGINS.items():
+        if vals.get('skip_reqs', False):
+            continue
         try:
             resp = plugin_reqs(plugin)
         except PluginException:
