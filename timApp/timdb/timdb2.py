@@ -5,6 +5,7 @@ from time import sleep
 
 import sqlalchemy
 from sqlalchemy.orm import scoped_session
+from sqlalchemy.pool import QueuePool
 
 from routes.logger import log_info
 from tim_app import db, app
@@ -29,7 +30,8 @@ from timdb.annotations import Annotations
 import os
 
 
-engine = sqlalchemy.create_engine(app.config['DATABASE'], pool_size=1)
+engine = sqlalchemy.create_engine(app.config['DATABASE'], pool_size=20, pool_timeout=600, poolclass=QueuePool)
+num = 0
 
 
 class TimDb(object):
@@ -57,7 +59,13 @@ class TimDb(object):
                 log_info('Creating directory: {}'.format(path))
                 os.makedirs(path)
 
+        global engine
+        global num
+        num += 1
+        self.num = num
+        log_info("get db " + str(self.num))
         self.session = session
+        waiting = False
         while True:
             try:
                 if session is None:
@@ -70,9 +78,13 @@ class TimDb(object):
                     self.db = db.get_engine(app, 'tim_main').connect().connection
                     self.owns_session = False
                     break
-            except:
+            except Exception as err:
+                if not waiting: log_info("Wait db " + str(self.num) + " " + str(err))
+                waiting = True
                 sleep(0.5)
-                log_info("Wait db")
+
+        if waiting: log_info("Ready db " + str(self.num))
+
         TimDb.instances += 1
         # num_connections = self.get_pg_connections()
         # log_info('TimDb instances/PG connections: {}/{} (constructor)'.format(TimDb.instances, num_connections))
@@ -111,13 +123,14 @@ class TimDb(object):
     def close(self):
         """Closes the database connection."""
         if hasattr(self, 'db') and self.db is not None:
+            bes = self.get_pg_connections()
             TimDb.instances -= 1
             self.db.close()
             if self.owns_session:
                 self.session.remove()
             self.db = None
             self.session = None
-            # log_info('TimDb instances: {} (destructor)'.format(TimDb.instances))
+            log_info('TimDb instances: {} (destructor) {} {} {}'.format(TimDb.instances, self.num, TimDb.instances, bes))
 
     def execute_script(self, sql_file):
         """Executes an SQL file on the database.
