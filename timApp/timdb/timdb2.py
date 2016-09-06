@@ -29,6 +29,9 @@ from timdb.annotations import Annotations
 import os
 
 
+engine = sqlalchemy.create_engine(app.config['DATABASE'], pool_size=1)
+
+
 class TimDb(object):
     instances = 0
     """Handles saving and retrieving information from TIM database.
@@ -60,7 +63,7 @@ class TimDb(object):
                 if session is None:
                     self.session = db.create_scoped_session()
                     self.owns_session = True
-                    self.engine = sqlalchemy.create_engine(db_path)
+                    self.engine = engine
                     self.db = self.engine.connect().connection  # psycopg2.connect(db_path)  # type$
                     break
                 else:
@@ -112,7 +115,6 @@ class TimDb(object):
             self.db.close()
             if self.owns_session:
                 self.session.remove()
-                self.engine.dispose()
             self.db = None
             self.session = None
             # log_info('TimDb instances: {} (destructor)'.format(TimDb.instances))
