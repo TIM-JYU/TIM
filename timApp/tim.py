@@ -524,6 +524,9 @@ def index_redirect():
 
 @app.route("/getslidestatus/")
 def getslidestatus():
+    # TODO: Fix tempdb, this is a temporary aid
+    return jsonResponse(None)
+
     if 'doc_id' not in request.args:
         abort(404, "Missing doc id")
     doc_id = int(request.args['doc_id'])
