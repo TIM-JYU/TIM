@@ -35,7 +35,7 @@ def postgre_create_database(host, db_name):
 
 
 def initialize_temp_database():
-    postgre_create_database(app.config['TIM_NAME'], 'tempdb_' + app.config['TIM_NAME'])
+    postgre_create_database('tempdb-' + app.config['TIM_NAME'], 'tempdb_' + app.config['TIM_NAME'])
     tempdb_models.initialize_temp_database()
 
 
