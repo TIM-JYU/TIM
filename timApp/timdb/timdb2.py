@@ -30,7 +30,7 @@ from timdb.annotations import Annotations
 import os
 
 
-engine = sqlalchemy.create_engine(app.config['DATABASE'], pool_size=20, pool_timeout=600, poolclass=QueuePool)
+engine = sqlalchemy.create_engine(app.config['DATABASE'], pool_size=40, pool_timeout=1600, poolclass=QueuePool)
 num = 0
 
 
@@ -123,11 +123,16 @@ class TimDb(object):
     def close(self):
         """Closes the database connection."""
         if hasattr(self, 'db') and self.db is not None:
-            bes = self.get_pg_connections()
+            bes = "???"
             TimDb.instances -= 1
-            self.db.close()
-            if self.owns_session:
-                self.session.remove()
+            try:
+                bes = self.get_pg_connections()
+                self.db.close()
+                if self.owns_session:
+                    self.session.remove()
+            except Exception as err:
+                log_info('close error: ' + str(self.num) + ' ' + str(err))
+
             self.db = None
             self.session = None
             log_info('TimDb instances: {} (destructor) {} {} {}'.format(TimDb.instances, self.num, TimDb.instances, bes))
