@@ -58,7 +58,7 @@ else:
         "showVideo":     {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
         "mcq":           {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
         "mmcq":          {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
-        "uploader":      {"host": TIM_HOST + ":41419/"},
+        "uploader":      {"host": "http://uploader" + ":41419/"},
         "shortNote":     {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
         "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
         "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
