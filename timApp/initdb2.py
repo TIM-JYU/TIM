@@ -58,6 +58,7 @@ def initialize_database(create_docs=True):
         old_db = app.config['OLD_SQLITE_DATABASE']
         if old_db and os.path.exists(old_db):
             perform_migration(app.config['OLD_SQLITE_DATABASE'], app.config['DATABASE'])
+            timdb.close()
             return
         sess.add(AccessType(id=1, name='view'))
         sess.add(AccessType(id=2, name='edit'))
@@ -89,7 +90,7 @@ def initialize_database(create_docs=True):
                                                       'Multiple choice plugin example',
                                                       anon_group)
         log_info('Database initialization done.')
-
+    timdb.close()
 
 def update_database():
     """Updates the database structure if needed.
