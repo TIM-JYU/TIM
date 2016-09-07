@@ -63,7 +63,8 @@ timApp.controller("ViewCtrl", [
     '$localStorage',
     '$filter',
     '$timeout',
-    function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout) {
+    'Users',
+    function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, Users) {
         "use strict";
         timLogTime("ViewCtrl start","view");
 
@@ -85,7 +86,7 @@ timApp.controller("ViewCtrl", [
         if (sc.users.length > 0) {
             sc.selectedUser = sc.users[0];
         } else {
-            sc.selectedUser = null;
+            sc.selectedUser = Users.getCurrent();
         }
         if (sc.lectureMode) {
             sc.noQuestionAutoNumbering = $window.noQuestionAutoNumbering;
@@ -1097,8 +1098,7 @@ timApp.controller("ViewCtrl", [
             if (sc.isReference($par)) {
                 data = sc.getRefAttrs($par);
             }
-            if ( !sc.selectedUser ) return true;
-            if ( sc.selectedUser.name.indexOf("Anonymous") == 0 ) return true;
+            if ( !Users.isLoggedIn() ) return true;
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now(), data)
                 .success(function (data, status, headers, config) {
                     sc.markPageDirty();
@@ -1117,8 +1117,7 @@ timApp.controller("ViewCtrl", [
             var oldClass = $this.attr("class");
             $this.attr("class", "readline read");
 
-            if ( !sc.selectedUser ) return true;
-            if ( sc.selectedUser.name.indexOf("Anonymous") == 0 ) return true;
+            if ( !Users.isLoggedIn() ) return true;
 
             // Collapsible area
             var area_id = $this.parent().attr('data-area');
