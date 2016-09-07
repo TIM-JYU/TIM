@@ -106,7 +106,7 @@ if param profile ; then
 fi
 SSHD_FLAGS=''
 if param sshd ; then
-  ./start_pg_test_container.sh
+  ./start_pg_test_containers.sh
   SSHD_FLAGS='--tmpfs /tmp/doctest_files:rw,noexec,nosuid,size=2m -p 49999:22'
   LAUNCH_COMMAND='/usr/sbin/sshd -D'
 fi
@@ -129,7 +129,11 @@ if param postgre ; then
   -v ${TIM_NAME}_data:/var/lib/postgresql/data \
   ${PG_PORT} \
   -t -i postgres:9.5
-  . ./wait_for_postgre.sh
+  . ./wait_for_postgre.sh postgresql-${TIM_NAME}
+
+  docker run --net=timnet -d --name postgresql-tempdb-${TIM_NAME} \
+  -t -i postgres:9.5
+  . ./wait_for_postgre.sh postgresql-tempdb-${TIM_NAME}
 fi
 
 if param tim ; then
@@ -149,6 +153,8 @@ docker run \
 fi
 
 if param nginx; then
+  docker rm -f nginx > /dev/null 2>&1 &
+  wait
   docker run --net=timnet -d --name nginx -p 80:80 -v /opt/cs/:/opt/cs/ timimages/local_nginx /startup.sh
 fi
 
