@@ -127,7 +127,7 @@ class TimDb(object):
                 self.session.remove()
             self.db = None
             self.session = None
-            log_info('TimDb instances: {} (destructor) {} {} {}'.format(TimDb.instances, self.num, TimDb.instances, bes))
+            log_info('TimDb instances: {} (destructor) {} {}'.format(TimDb.instances, self.num, bes))
 
     def execute_script(self, sql_file):
         """Executes an SQL file on the database.
