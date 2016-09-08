@@ -113,6 +113,7 @@
         var oldh = 0, oldv = 0;
 
         function refresh() {
+            return; // TODO: think this so that things are paired
             clearTimeout(pollTimeout);
             $.ajax({
                 cache: false,
