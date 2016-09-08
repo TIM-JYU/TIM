@@ -1,36 +1,31 @@
 """
 Defines the TimDb database class.
 """
+import os
 from time import sleep
 
-import sqlalchemy
 from sqlalchemy.orm import scoped_session
-from sqlalchemy.pool import QueuePool
 
 from routes.logger import log_info
 from tim_app import db, app
-
+from timdb.annotations import Annotations
+from timdb.answers import Answers
+from timdb.documents import Documents
+from timdb.files import Files
+from timdb.folders import Folders
+from timdb.images import Images
+from timdb.lectureanswers import LectureAnswers
+from timdb.lectures import Lectures
+from timdb.messages import Messages
 from timdb.notes import Notes
+from timdb.questions import Questions
+from timdb.readings import Readings
 from timdb.tim_models import Version
 from timdb.uploads import Uploads
 from timdb.users import Users
-from timdb.images import Images
-from timdb.files import Files
-from timdb.documents import Documents
-from timdb.answers import Answers
-from timdb.readings import Readings
-from timdb.questions import Questions
-from timdb.messages import Messages
-from timdb.lectures import Lectures
-from timdb.folders import Folders
-from timdb.lectureanswers import LectureAnswers
-from timdb.velps import Velps
 from timdb.velpgroups import VelpGroups
-from timdb.annotations import Annotations
-import os
+from timdb.velps import Velps
 
-
-engine = sqlalchemy.create_engine(app.config['DATABASE'], pool_size=40, pool_timeout=1600, poolclass=QueuePool)
 
 num = 0
 
