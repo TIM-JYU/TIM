@@ -63,6 +63,7 @@ fi
 
 if param postgre ; then
     docker stop postgresql-${TIM_NAME} > /dev/null 2>&1 &
+    docker stop postgresql-tempdb-${TIM_NAME} > /dev/null 2>&1 &
 fi
 
 if [ "$USE_FUNNEL" = true ] && param funnel ; then
@@ -77,6 +78,7 @@ fi
 
 if param postgre ; then
     docker rm postgresql-${TIM_NAME} > /dev/null 2>&1 &
+    docker rm postgresql-tempdb-${TIM_NAME} > /dev/null 2>&1 &
 fi
 
 if [ "$USE_FUNNEL" = true ] && param funnel ; then
