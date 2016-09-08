@@ -270,7 +270,7 @@ def get_documents(folder):
         doc['name'] = docname
         doc['fullname'] = fullname
         doc['canEdit'] = timdb.users.has_edit_access(uid, doc['id'])
-        doc['isOwner'] = timdb.users.user_is_owner(getCurrentUserId(), doc['id']) or timdb.users.has_admin_access(uid)
+        doc['isOwner'] = timdb.users.user_is_owner(getCurrentUserId(), doc['id'])
         doc['owner'] = timdb.users.get_owner_group(doc['id'])
         doc['modified'] = date_to_relative(doc['modified'])
         final_docs.append(doc)
