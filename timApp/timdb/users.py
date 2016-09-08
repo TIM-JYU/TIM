@@ -1,7 +1,8 @@
 from typing import Optional, List, Set
 
-from timdb.tim_models import User, UserGroup
-from timdb.timdbbase import TimDbBase, TimDbException
+from timdb.tim_models import User, UserGroup, Block
+from timdb.timdbbase import TimDbBase
+from timdb.timdbexception import TimDbException
 
 import hashlib
 import re
@@ -247,16 +248,12 @@ class Users(TimDbBase):
                           WHERE Block_id = %s""", [block_id])
         return self.resultAsDictionary(cursor)
 
-    def get_owner_group(self, block_id: int):
+    def get_owner_group(self, block_id: int) -> UserGroup:
         """Returns the owner group of the specified block.
         
         :param block_id: The id of the block.
         """
-
-        cursor = self.db.cursor()
-        cursor.execute('SELECT id, name FROM UserGroup WHERE id IN (SELECT UserGroup_id FROM Block WHERE id = %s)',
-                       [block_id])
-        return self.resultAsDictionary(cursor)[0]
+        return self.session.query(Block).filter_by(id = block_id).one().owner
 
     def get_user(self, user_id: int, include_authdata=False) -> Optional[dict]:
         """Gets the user with the specified id.

@@ -13,7 +13,7 @@ from tim_app import app, db
 from timdb import tempdb_models
 from timdb.tim_models import Version, AccessType
 from timdb.timdb2 import TimDb
-from timdb.timdbbase import TimDbException
+from timdb.timdbexception import TimDbException
 from timdb.users import LOGGED_IN_USERNAME
 
 NEWEST_DB_VERSION = 9

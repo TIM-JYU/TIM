@@ -49,6 +49,7 @@
                     </td>
                     <td>
                         <a href="/view/{{ '{{ doc.fullname | escape }}' }}">{{ '{{ doc.name }}' }}</a>
+                        <a><i ng-show="doc.unpublished" class="glyphicon glyphicon-lock" title="Unpublished folder"></i></a>
                     </td>
                     <td></td>
                     <td>{{ '{{ doc.modified }}' }}</td>
@@ -61,6 +62,7 @@
                     <td></td>
                     <td>
                         <a href="/view/{{ '{{ doc.fullname | escape }}' }}">{{ '{{ doc.name }}' }}</a>
+                        <a><i ng-show="doc.unpublished" class="glyphicon glyphicon-lock" title="Unpublished document"></i></a>
                     </td>
                     <td></td>
                     <td>{{ '{{ doc.modified }}' }}</td>

@@ -216,6 +216,7 @@ def get_folders():
     for f in allowed_folders:
         f['isOwner'] = is_admin or timdb.users.user_is_owner(uid, f['id'])
         f['owner'] = timdb.users.get_owner_group(f['id'])
+        f['unpublished'] = is_considered_unpublished(f['id'])
 
     allowed_folders.sort(key=lambda folder: folder['name'].lower())
     return jsonResponse(allowed_folders)
@@ -273,6 +274,7 @@ def get_documents(folder):
         doc['isOwner'] = timdb.users.user_is_owner(getCurrentUserId(), doc['id'])
         doc['owner'] = timdb.users.get_owner_group(doc['id'])
         doc['modified'] = date_to_relative(doc['modified'])
+        doc['unpublished'] = is_considered_unpublished(doc['id'])
         final_docs.append(doc)
 
     final_docs.sort(key=lambda d: d['name'].lower())

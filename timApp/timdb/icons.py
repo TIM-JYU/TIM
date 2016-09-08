@@ -8,7 +8,8 @@ Icons are be retrieved from the database through this module. The module is not 
 
 """
 
-from timdb.timdbbase import TimDbBase, TimDbException
+from timdb.timdbbase import TimDbBase
+from timdb.timdbexception import TimDbException
 
 
 class Icons(TimDbBase):

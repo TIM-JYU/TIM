@@ -8,6 +8,7 @@ import sys
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
+from documentmodel.docparagraphencoder import DocParagraphEncoder
 from routes.filters import map_format, timdate
 from routes.logger import setup_logging, log_info, log_warning
 from utils import datestr_to_relative, date_to_relative
@@ -39,3 +40,5 @@ app.jinja_env.filters['timdate'] = timdate
 app.jinja_env.add_extension('jinja2.ext.do')
 
 mimetypes.add_type('text/plain', '.scss')
+
+app.json_encoder = DocParagraphEncoder

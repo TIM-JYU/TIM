@@ -1,15 +1,15 @@
 """Routes for document view."""
-from typing import Tuple, Union, Optional, List
-
-import routes.lecture
-from documentmodel.document import DocParagraph, get_index_from_html_list, dereference_pars
-from htmlSanitize import sanitize_html
+import time
+from typing import Tuple, Union, Optional
 
 from flask import Blueprint, render_template
-from .common import *
+
 import pluginControl
+import routes.lecture
+from documentmodel.document import get_index_from_html_list, dereference_pars
+from htmlSanitize import sanitize_html
 from options import *
-import time
+from .common import *
 
 Range = Tuple[int, int]
 
@@ -102,11 +102,11 @@ def par_info(doc_id, par_id):
     info['doc_name'] = just_name(doc_name) if doc_name is not None else 'Document #{}'.format(doc_id)
 
     group = timdb.users.get_owner_group(doc_id)
-    users = timdb.users.get_users_in_group(group['id'], limit=2)
+    users = timdb.users.get_users_in_group(group.id, limit=2)
     if len(users) == 1:
-        info['doc_author'] = '{} ({})'.format(users[0]['name'], group['name'])
+        info['doc_author'] = '{} ({})'.format(users[0]['name'], group.name)
     else:
-        info['doc_author'] = group['name']
+        info['doc_author'] = group.name
 
     par_name = Document(doc_id).get_closest_paragraph_title(par_id)
     if par_name is not None:
@@ -320,34 +320,37 @@ def view(doc_path, template_name, usergroup=None, route="view"):
         if is_in_lecture:
             is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
 
-    result = render_template(template_name,
-                             route=route,
-                             edit_mode=edit_mode,
-                             doc=doc_info,
-                             text=texts,
-                             headers=index,
-                             plugin_users=user_list,
-                             version=doc.get_version(),
-                             js=jsPaths,
-                             cssFiles=cssPaths,
-                             jsMods=modules,
-                             doc_css=doc_css,
-                             start_index=start_index,
-                             in_lecture=is_in_lecture,
-                             group=usergroup,
-                             rights=get_rights(doc_id),
-                             translations=timdb.documents.get_translations(doc_id),
-                             reqs=pluginControl.get_all_reqs(),
-                             settings=settings,
-                             no_browser=hide_answers,
-                             no_question_auto_numbering=no_question_auto_numbering,
-                             slide_background_url=slide_background_url,
-                             slide_background_color=slide_background_color,
-                             message=message,
-                             task_info={'total_points': total_points,
-                                        'tasks_done': tasks_done,
-                                        'total_tasks': total_tasks})
-    return result
+
+    show_unpublished_bg = is_considered_unpublished(doc_id)
+
+    return render_template(template_name,
+                           show_unpublished_bg=show_unpublished_bg,
+                           route=route,
+                           edit_mode=edit_mode,
+                           doc=doc_info,
+                           text=texts,
+                           headers=index,
+                           plugin_users=user_list,
+                           version=doc.get_version(),
+                           js=jsPaths,
+                           cssFiles=cssPaths,
+                           jsMods=modules,
+                           doc_css=doc_css,
+                           start_index=start_index,
+                           in_lecture=is_in_lecture,
+                           group=usergroup,
+                           rights=get_rights(doc_id),
+                           translations=timdb.documents.get_translations(doc_id),
+                           reqs=pluginControl.get_all_reqs(),
+                           settings=settings,
+                           no_browser=hide_answers,
+                           no_question_auto_numbering=no_question_auto_numbering,
+                           slide_background_url=slide_background_url,
+                           slide_background_color=slide_background_color,
+                           message=message,
+                           task_info={'total_points': total_points,
+                                      'tasks_done': tasks_done,
+                                      'total_tasks': total_tasks})
 
 
 def redirect_to_login():

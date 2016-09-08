@@ -231,11 +231,16 @@ def can_write_to_folder(folderName):
 
 
 def jsonResponse(jsondata, status_code=200):
-    response = Response(json.dumps(jsondata,
-                                   separators=(',', ':'),
-                                   cls=DocParagraphEncoder), mimetype='application/json')
+    response = Response(to_json_str(jsondata), mimetype='application/json')
     response.status_code = status_code
     return response
+
+
+def to_json_str(jsondata):
+    return json.dumps(jsondata,
+                      separators=(',', ':'),
+                      cls=DocParagraphEncoder)
+
 
 def set_no_cache_headers(response: Response) -> Response:
     """
@@ -595,3 +600,9 @@ def grant_access_to_session_users(timdb: TimDb, block_id: int):
                                  'manage',
                                  commit=False)
     timdb.commit()
+
+
+def is_considered_unpublished(doc_id):
+    timdb = getTimDb()
+    owner = timdb.users.get_owner_group(doc_id)
+    return has_ownership(doc_id) and not owner.is_anonymous() and len(timdb.users.get_rights_holders(doc_id)) == 0

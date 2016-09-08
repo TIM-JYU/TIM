@@ -1,7 +1,8 @@
 from typing import List, Tuple
 
 from timdb.tim_models import Block
-from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
+from timdb.timdbbase import TimDbBase, blocktypes
+from timdb.timdbexception import TimDbException
 import os
 import datetime
 

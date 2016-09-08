@@ -97,7 +97,7 @@
         <title>{% block title %}{% endblock %} - TIM</title>
     {% endblock %}
 </head>
-<body>
+<body class="{% if show_unpublished_bg %}bg-unpublished{% endif %}">
 
 {# Set default column widths if they are not defined in a child template #}
 {% set col_1_lg = col_1_lg|default(2) %}

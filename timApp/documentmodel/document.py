@@ -15,7 +15,7 @@ from documentmodel.docsettings import DocSettings
 from documentmodel.documentparser import DocumentParser, AttributesAtEndOfCodeBlockException, ValidationException
 from documentmodel.documentwriter import DocumentWriter
 from documentmodel.exceptions import DocExistsError
-from timdb.timdbbase import TimDbException
+from timdb.timdbexception import TimDbException
 from utils import get_error_html
 
 

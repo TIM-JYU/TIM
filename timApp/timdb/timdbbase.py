@@ -1,22 +1,16 @@
 """"""
-import os
 import collections
+import decimal
+import os
 from typing import Optional, Tuple
 
-import decimal
-from sqlalchemy.orm import scoped_session
-
 from psycopg2._psycopg import connection
+from sqlalchemy.orm import scoped_session
 
 from timdb.tim_models import Block
 
 BLOCKTYPES = collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE', 'ANSWER', 'IMAGE', 'READING', 'FOLDER', 'FILE', 'UPLOAD', 'VELPGROUP', 'ANNOTATION'))
 blocktypes = BLOCKTYPES(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-
-
-class TimDbException(Exception):
-    """The exception that is thrown when an error occurs during a TimDb operation."""
-    pass
 
 
 class TimDbBase(object):

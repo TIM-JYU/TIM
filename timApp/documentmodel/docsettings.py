@@ -2,7 +2,7 @@ from typing import Optional
 
 from utils import parse_yaml
 from documentmodel.docparagraph import DocParagraph
-from timdb.timdbbase import TimDbException
+from timdb.timdbexception import TimDbException
 import yaml
 
 

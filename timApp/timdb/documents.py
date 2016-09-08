@@ -9,7 +9,8 @@ from documentmodel.docparagraph import DocParagraph
 from documentmodel.docsettings import DocSettings
 from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser
-from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
+from timdb.timdbbase import TimDbBase, blocktypes
+from timdb.timdbexception import TimDbException
 
 NOTIFICATION_TYPES = ['email_doc_modify', 'email_comment_add', 'email_comment_modify']
 

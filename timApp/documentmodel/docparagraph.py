@@ -8,7 +8,7 @@ from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
 from htmlSanitize import sanitize_html
 from markdownconverter import par_list_to_html_list, expand_macros
-from timdb.timdbbase import TimDbException
+from timdb.timdbexception import TimDbException
 from typing import Generic, Optional, Dict, List, Tuple
 from utils import count_chars, get_error_html
 from .randutils import *

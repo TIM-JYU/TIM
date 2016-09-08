@@ -41,17 +41,20 @@ class FolderTest(TimRouteTest):
         self.assertListResponse([{'id': j['id'], 'name': 'testing1',
                                   'isOwner': True,
                                   'fullname': new_name,
-                                  'owner': {'id': 7, 'name': 'testuser1'}},
+                                  'owner': {'id': 7, 'name': 'testuser1'},
+                                  'unpublished': True},
                                  {'id': j3['id'], 'name': 'testing2',
                                   'isOwner': True,
                                   'fullname': fname2,
-                                  'owner': {'id': 7, 'name': 'testuser1'}}],
+                                  'owner': {'id': 7, 'name': 'testuser1'},
+                                  'unpublished': False}],
                                 self.json_req('/getFolders', query_string={'root_path': user_folder}))
         self.logout()
         self.assertListResponse([{'id': j3['id'], 'name': 'testing2',
                                   'isOwner': False,
                                   'fullname': fname2,
-                                  'owner': {'id': 7, 'name': 'testuser1'}}],
+                                  'owner': {'id': 7, 'name': 'testuser1'},
+                                  'unpublished': False}],
                                 self.json_req('/getFolders', query_string={'root_path': user_folder}))
         db.close()
 

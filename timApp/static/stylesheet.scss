@@ -24,6 +24,10 @@ a .glyphicon {
     color: inherit;
 }
 
+.bg-unpublished {
+    background-image: url("/static/images/unpublished.svg");
+}
+
 .siteheader {
     @include clearfix;
     border-bottom: $header-footer-border;
@@ -241,7 +245,6 @@ p.caption {
 }
 
 .material {
-    background-color: white;
     box-shadow: $material-shadow;
     border: $material-border;
     border-radius: $material-border-radius;

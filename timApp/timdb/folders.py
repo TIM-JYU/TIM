@@ -1,6 +1,7 @@
 from typing import List, Optional
 
-from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
+from timdb.timdbbase import TimDbBase, blocktypes
+from timdb.timdbexception import TimDbException
 
 ID_ROOT_FOLDER = -1
 
