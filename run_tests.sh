@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-./start_pg_test_container.sh
+./start_pg_test_containers.sh
 
 docker run \
  --net=timnet \
