@@ -16,7 +16,7 @@ TESTING = True
 OLD_SQLITE_DATABASE = None
 SQLALCHEMY_BINDS = {
     'tim_main': DATABASE,
-    'tempdb': "postgresql://postgres@postgresql-{0}:5432/tempdb_{0}".format(TIM_NAME)
+    'tempdb': "postgresql://postgres@postgresql-tempdb-{0}:5432/tempdb_{0}".format(TIM_NAME)
 }
 SASS_GEN_PATH = 'testgen'
 

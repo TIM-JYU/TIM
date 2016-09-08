@@ -29,9 +29,11 @@ OLD_SQLITE_DATABASE       = 'tim_files/tim.db'
 DATABASE           = "postgresql://postgres@postgresql-{0}:5432/{0}".format(TIM_NAME)
 SQLALCHEMY_BINDS = {
     'tim_main': DATABASE,
-    'tempdb': "postgresql://postgres:postgres@postgresql-{0}:5432/tempdb_{0}".format(TIM_NAME)
+    'tempdb': "postgresql://postgres:postgres@postgresql-tempdb-{0}:5432/tempdb_{0}".format(TIM_NAME)
 }
 SASS_GEN_PATH = 'gen'
 TEMPLATES_AUTO_RELOAD = True
 SQLALCHEMY_DATABASE_URI = DATABASE
 SQLALCHEMY_POOL_SIZE = 1
+SQLALCHEMY_POOL_TIMEOUT = 120
+SQLALCHEMY_MAX_OVERFLOW = 1

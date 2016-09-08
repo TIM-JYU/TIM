@@ -563,6 +563,12 @@ def close_db(response):
     return response
 
 
+@app.teardown_appcontext
+def close_db(e):
+    if not app.config['TESTING'] and hasattr(g, 'timdb'):
+        g.timdb.close()
+
+
 def start_app():
     if app.config['PROFILE']:
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',), restrictions=[100])
