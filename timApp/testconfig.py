@@ -24,3 +24,5 @@ SASS_GEN_PATH = 'testgen'
 # so we cannot modify them. And without the cache, running the tests is twice as slow.
 # ASSETS_DIRECTORY = '/tmp/doctest_files'
 # ASSETS_CACHE = '.webassets-cache'
+
+SQLALCHEMY_POOL_SIZE = 50
