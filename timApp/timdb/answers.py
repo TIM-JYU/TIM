@@ -168,7 +168,7 @@ JOIN answer a ON a.id = t.id JOIN useranswer ua ON ua.answer_id = a.id JOIN user
             # print(separator + header)
             line = json.loads(row[2])
             answ = str(line)
-            if isinstance(line, object) and "usercode" in line:
+            if isinstance(line, dict) and "usercode" in line:
                 answ = line.get("usercode", "-")
 
             result.append(header + "\n" + answ)
