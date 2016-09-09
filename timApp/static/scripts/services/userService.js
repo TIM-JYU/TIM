@@ -48,8 +48,7 @@ timApp.factory('Users', ['$http', '$window', '$q', '$httpParamSerializer', funct
                 }));
         };
         if (addUser) {
-            $q.all([
-                $http.get('https://korppi.jyu.fi/kotka/portal/showLogout.jsp', {withCredentials: true}),
+            $http.get('https://korppi.jyu.fi/kotka/portal/showLogout.jsp', {withCredentials: true}).finally(function () {
                 $http(
                     {
                         withCredentials: true,
@@ -59,7 +58,8 @@ timApp.factory('Users', ['$http', '$window', '$q', '$httpParamSerializer', funct
                             'Content-Type': 'application/x-www-form-urlencoded'
                         },
                         data: $httpParamSerializer({logout: 'Logout'})
-                    })]).finally(redirectFn);
+                    }).finally(redirectFn);
+            });
         } else {
             redirectFn();
         }
