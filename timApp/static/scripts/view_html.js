@@ -68,8 +68,6 @@ timApp.controller("ViewCtrl", [
         "use strict";
         timLogTime("ViewCtrl start","view");
 
-        http.defaults.headers.common.Version = $window.version.hash;
-        http.defaults.headers.common.RefererPath = $window.refererPath;
         sc.noBrowser = $window.noBrowser;
         sc.docId = $window.docId;
         sc.docName = $window.docName;
@@ -979,7 +977,6 @@ timApp.controller("ViewCtrl", [
 
         sc.handleDelete = function (data, extraData) {
             var $par = sc.getElementByParId(extraData.par);
-            http.defaults.headers.common.Version = data.version;
             if (extraData.area_start !== null && extraData.area_end !== null) {
                 $par = sc.getElementByParId(extraData.area_start);
                 var $endpar = sc.getElementByParId(extraData.area_end);
@@ -1039,7 +1036,6 @@ timApp.controller("ViewCtrl", [
 
             $par.replaceWith($newPars);
             sc.processAllMathDelayed($newPars);
-            http.defaults.headers.common.Version = data.version;
             sc.editing = false;
             sc.cancelArea();
             sc.removeDefaultPars();

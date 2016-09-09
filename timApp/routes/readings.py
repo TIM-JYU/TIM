@@ -24,9 +24,6 @@ def set_read_paragraph(doc_id, specifier):
     verify_read_marking_right(doc_id)
     timdb = getTimDb()
 
-    # todo: document versions
-    # version = request.headers.get('Version', 'latest')
-    # verify_document_version(doc_id, version)
     doc = Document(doc_id)
     par = doc.get_paragraph(specifier)
     if par is None:
@@ -43,9 +40,6 @@ def set_read_paragraph(doc_id, specifier):
 def mark_all_read(doc_id):
     verify_read_marking_right(doc_id)
     timdb = getTimDb()
-    # todo: document versions
-    # version = request.headers.get('Version', 'latest')
-    # verify_document_version(doc_id, version)
     doc = Document(doc_id)
     for group_id in get_session_usergroup_ids():
         timdb.readings.mark_all_read(group_id, doc, commit=False)
