@@ -55,6 +55,10 @@ def get_session_users():
     return [get_current_user()] + get_other_users_as_list()
 
 
+def get_session_users_ids():
+    return [u['id'] for u in get_session_users()]
+
+
 def get_session_usergroup_ids():
     timdb = getTimDb()
     return [timdb.users.get_personal_usergroup(u) for u in get_session_users()]

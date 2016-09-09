@@ -135,9 +135,14 @@ def login_with_korppi():
 
 
 def set_user_to_session(user: Dict):
-    if session.get('adding_user'):
-        if getCurrentUserId() == user['id']:
-            abort(400, 'You cannot add yourself to the session.')
+    adding = session.get('adding_user')
+    session.pop('appcookie', None)
+    session.pop('altlogin', None)
+    session.pop('adding_user', None)
+    if adding:
+        if user['id'] in get_session_users_ids():
+            flash('{} is already logged in.'.format(user['real_name']))
+            return
         other_users = session.get('other_users', dict())
         other_users[str(user['id'])] = user
         session['other_users'] = other_users
@@ -147,9 +152,6 @@ def set_user_to_session(user: Dict):
         session['real_name'] = user['real_name']
         session['email'] = user['email']
         session.pop('other_users', None)
-    session.pop('appcookie', None)
-    session.pop('altlogin', None)
-    session.pop('adding_user', None)
 
 
 def login_with_email():
