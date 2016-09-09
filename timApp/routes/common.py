@@ -605,4 +605,4 @@ def grant_access_to_session_users(timdb: TimDb, block_id: int):
 def is_considered_unpublished(doc_id):
     timdb = getTimDb()
     owner = timdb.users.get_owner_group(doc_id)
-    return has_ownership(doc_id) and not owner.is_anonymous() and len(timdb.users.get_rights_holders(doc_id)) == 0
+    return has_ownership(doc_id) and not owner.is_large() and len(timdb.users.get_rights_holders(doc_id)) == 0

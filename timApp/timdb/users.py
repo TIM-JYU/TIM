@@ -1,20 +1,12 @@
+import hashlib
+import re
 from typing import Optional, List, Set
 
+from timdb.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
+    LOGGED_IN_USERNAME, ADMIN_GROUPNAME
 from timdb.tim_models import User, UserGroup, Block
 from timdb.timdbbase import TimDbBase
 from timdb.timdbexception import TimDbException
-
-import hashlib
-import re
-
-ANONYMOUS_USERNAME = "Anonymous"
-ANONYMOUS_GROUPNAME = "Anonymous users"
-KORPPI_GROUPNAME = "Korppi users"
-LOGGED_IN_GROUPNAME = "Logged-in users"
-LOGGED_IN_USERNAME = "Logged-in user"
-ADMIN_GROUPNAME = "Administrators"
-
-SPECIAL_GROUPS = {ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, ADMIN_GROUPNAME}
 
 # These will be cached in memory to reduce amount of db load
 ANON_USER_ID = None

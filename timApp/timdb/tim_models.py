@@ -20,6 +20,7 @@ import inspect
 import sys
 
 from tim_app import db, app
+from timdb.special_group_names import LARGE_GROUPS, ANONYMOUS_GROUPNAME
 
 
 class AccessType(db.Model):
@@ -263,7 +264,10 @@ class UserGroup(db.Model):
     name = db.Column(db.Text, nullable=False, unique=True)
 
     def is_anonymous(self):
-        return self.name == "Anonymous users"
+        return self.name == ANONYMOUS_GROUPNAME
+
+    def is_large(self):
+        return self.name in LARGE_GROUPS
 
     def __json__(self):
         return ['id', 'name']
