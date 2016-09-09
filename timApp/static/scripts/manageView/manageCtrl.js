@@ -28,12 +28,6 @@ PermApp.controller("PermCtrl", [
     '$compile',
     function (sc, $http, Upload, $window, $timeout, $compile) {
         sc.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/"; // Todo: replace something remembers users last choice
-        $http.defaults.headers.common.Version = function() {
-            if ('versions' in sc.doc && sc.doc.versions.length > 0 && 'hash' in sc.doc.versions[0]) {
-                return sc.doc.versions[0];
-            }
-            return ""; 
-        };
 
         sc.getJustDocName = function(fullName) {
             var i = fullName.lastIndexOf('/');
