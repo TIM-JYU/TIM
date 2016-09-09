@@ -8,6 +8,7 @@
 .webassets-cache/
 dist/
 bower_components/
+MIRToolbox/
 .stack-work/
 /variables.sh
 /timApp/.hypothesis/

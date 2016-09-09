@@ -314,7 +314,6 @@ def get_state():
     if not access:
         abort(403, "You don't have access to this answer.")
 
-    # version = request.headers['Version']
     doc = Document(doc_id)
     block = doc.get_paragraph(par_id)
 
