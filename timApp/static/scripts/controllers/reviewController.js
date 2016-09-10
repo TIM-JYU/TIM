@@ -373,7 +373,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             console.log(e);
             $scope.selectedElement = null;
             $scope.selectedArea = null;
-ID
             $scope.updateVelpList();
             e.stopPropagation();
         }
