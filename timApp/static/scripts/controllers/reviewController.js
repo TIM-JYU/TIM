@@ -749,7 +749,7 @@ ID
             visible_to: 4,
             content: velp.content,
             annotator_name: "me",
-            edit_access: 1,
+            edit_access: true,
             email: "",
             timesince: "just now",
             creationtime: "now",
