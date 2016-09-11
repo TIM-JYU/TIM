@@ -12,14 +12,37 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
         link: function (scope, element, attr) {
 
             var clickFn = null;
+            var areaMinimized = false;
+            var areaHeight = 0;
+
             if (attr.click) {
-                clickFn = $parse(attr.click);
+                if ( attr.click === "true" )
+                    clickFn = minimize;
+                else
+                    clickFn = $parse(attr.click);
             }
 
             var closeFn = null;
             if (attr.close) {
                 closeFn = $parse(attr.close);
             }
+
+            function minimize() {
+                areaMinimized = !areaMinimized;
+                var base = element.find('.draggable-content');
+                if (areaMinimized) {
+                    areaHeight = element.height();
+                    element.height(15);
+                    base.css('display', 'none');
+                    element.css('min-height', '0');
+                } else {
+                    base.css('display', '');
+                    element.css('min-height', '');
+                    element.height(areaHeight);
+                }
+                scope.$apply();
+            };
+
 
             function resizeElement(e, up, right, down, left) {
                 upResize = up;
@@ -103,7 +126,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 });
                 handle.append(close);
             }
-            element.prepend(handle);
+            element.prepend(handle); // TODO.  Laita elementin ympärille se mitä raahataan.
 
             attr.$observe('resize', function () {
                 if (attr.resize === "true") {

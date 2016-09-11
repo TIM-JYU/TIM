@@ -944,6 +944,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
          * @memberof module:lectureController
          */
         $scope.getLectureAnswers = function (answer) {
+            var timeoutLectureAnswers;
             $scope.gettingAnswers = true;
             http({
                 url: '/getLectureAnswers',
@@ -959,7 +960,12 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 .success(function (answer) {
                     $rootScope.$broadcast("putAnswers", {"answers": answer.answers});
                     if ($scope.gettingAnswers && !angular.isDefined(answer.noAnswer)) {
-                        $scope.getLectureAnswers(answer);
+                            $window.clearTimeout(timeoutLectureAnswers);
+
+                            // Odottaa sekunnin ennen kuin pollaa uudestaan.
+                            timeoutLectureAnswers = setTimeout(function () {
+                                $scope.getLectureAnswers(answer);
+                            }, 1000);
                     }
 
                 })
@@ -1051,7 +1057,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                             // Odottaa sekunnin ennen kuin pollaa uudestaan.
                             timeout = setTimeout(function () {
                                 message_longPolling(answer.lastid);
-                            }, 1000);
+                            }, 2000);
 
                             if (answer.status === 'results') {
                                 var newMessages = 0;

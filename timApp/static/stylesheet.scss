@@ -382,6 +382,12 @@ p.caption {
     @extend .readline
 }
 
+.timFixed {
+    position: fixed;
+    right: 0;
+    top: 50px;
+}
+
 .editline {
     position: absolute;
     left: -$editline-width;
@@ -746,7 +752,9 @@ input[type="file"] {
 }
 
 /* For user list in teacher view ================================*/
-.userlist {
+.userFixed {
+    position: fixed;
+    right: 0;
     @media(max-width: $screen-xs-max) {
         width: 200px;
     }
@@ -759,15 +767,19 @@ input[type="file"] {
     @media(min-width: $screen-lg-min) {
         width: 423px;
     }
+}
+
+.userlist {
 
     $list-max-height: 95vh;
 
     overflow: auto;
     overflow-x: hidden;
-    min-height: $list-max-height;
-    max-height: $list-max-height;
+    min-height: 25em;
+    /* min-height: $list-max-height; */
+    /*max-height: $list-max-height; */
 
-    position: relative;
+    /*position: relative;*/
     background-color: #e6e6e6;
     padding: 2px;
 }

@@ -46,20 +46,48 @@
 }
 
 /** Velp area styles **/
-.velpMenu {
+.velpMenu .tab-content {
+    overflow-y: auto;
+    bottom: 0;
+    top:0;
+    height: 90%;
+}
+
+
+.velpFill {
+    top: 0;
+    bottom: 0;
+    height: 100%;
+}
+
+.velpFixed {
     position: fixed;
     min-width: 15em;
     max-width: 22.5em;
-    word-wrap: break-word;
+    min-height: 17em;
     right: 0;
     top: 50px;
     bottom: 0;
     border: 1px solid gainsboro;
     background: white;
     z-index: 1000;
-    overflow-y: auto;
-    padding: 0.5em;
     border-top-left-radius: 8px;
+}
+
+/** Velp area styles **/
+.velpMenu {
+    /* position: fixed; */
+    min-width: 15em;
+    max-width: 22.5em;
+    word-wrap: break-word;
+    border: 1px solid gainsboro;
+    background: white;
+    z-index: 1001;
+    /*overflow-y: auto;*/
+    padding-left: 0.5em;
+    top: 0;
+    bottom: 0;
+    height: 95%;
 }
 
 #advView {
@@ -69,7 +97,7 @@
 
 .velpMenu .nav-tabs {
     margin-left: 0;
-    margin-top: 1em;
+    margin-top: 0em;
 }
 
 .velpMenu .nav-tabs > li.active > a {

@@ -523,7 +523,8 @@ ID
      * @method selectText
      * @todo When annotations can break tags, check annotations from all elements in the selection.
      */
-    $scope.selectText = function () {
+    $scope.selectText = function($event) {
+        var $par = $($event.target).parents('.par')[0];
 
         var oldElement = null;
         if ($scope.selectedElement !== null)
@@ -555,11 +556,16 @@ ID
                 hasSelectionChildrenAnnotation($scope.selectedArea)) {
                 $scope.selectedArea = null;
             }
-        } else if ($scope.selectedArea === null) {
+        } else  {
+            /*
             var elements = document.getElementsByClassName("lightselect");
             console.log(elements);
             if (elements.length > 0)
                 $scope.selectedElement = elements[0];
+            */
+            if ( $par && $par.id )
+                $scope.selectedElement = $par;
+
         }
 
         var newElement = $scope.selectedElement;

@@ -2,6 +2,7 @@
 Defines the TimDb database class.
 """
 import os
+import time
 from time import sleep
 
 from sqlalchemy.orm import scoped_session
@@ -58,7 +59,8 @@ class TimDb(object):
         global num
         num += 1
         self.num = num
-        log_info("get db " + str(self.num))
+        self.time = time.time()
+        log_info("get db " + str(self.num) )
         self.session = session
         waiting = False
         while True:
@@ -129,7 +131,7 @@ class TimDb(object):
 
             self.db = None
             self.session = None
-            log_info('TimDb instances: {} (destructor) {} {}'.format(TimDb.instances, self.num, bes))
+            log_info('TimDb instances: {} (destructor) {} {} {}'.format(TimDb.instances, self.num, bes,  time.time() - self.time ))
 
     def execute_script(self, sql_file):
         """Executes an SQL file on the database.
