@@ -755,6 +755,7 @@ input[type="file"] {
 .userFixed {
     position: fixed;
     bottom: 0;
+    top: 20px;
     right: 0;
     @media(max-width: $screen-xs-max) {
         width: 200px;
