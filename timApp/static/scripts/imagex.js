@@ -260,6 +260,10 @@ imagexApp.initDrawing = function(scope, canvas) {
     }
     
     function isObjectOnTopOf(position, object, name, grabOffset) {
+        if (!position)
+            return false;
+        if (!object)
+            return false;
         var sina = Math.sin(-object.a * to_radians);
         var cosa = Math.cos(-object.a * to_radians);
         var rotatedX = cosa * (position.x - object.x) - sina * (position.y - object.y);
@@ -456,12 +460,13 @@ imagexApp.initDrawing = function(scope, canvas) {
 
 
         this.upEvent = function(event, p) {
+            /*
             var isObjectInTarget = 
                 areObjectsOnTopOf(this.drawObjects[i], this.drawObjects, 'target');
             if (isObjectInTarget) {
                 //isObjectInTarget.objectCount++;
             }
-            
+            */
             //this.drawObjects[i].objectCount--;
 
 
