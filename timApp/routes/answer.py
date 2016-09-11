@@ -126,6 +126,15 @@ def post_answer(plugintype: str, task_id_ext: str):
     if 'web' not in jsonresp:
         return jsonResponse({'error': 'The key "web" is missing in plugin response.'}, 400)
     result = {'web': jsonresp['web']}
+
+    def addReply(obj, key):
+        if key not in plugin.values: return
+        textToAdd = plugin.values[key]
+        obj[key] = textToAdd
+
+    addReply(result['web'], '-replyImage')
+    addReply(result['web'], '-replyMD')
+    addReply(result['web'], '-replyHTML')
     if 'save' in jsonresp:
         save_object = jsonresp['save']
         tags = []

@@ -48,7 +48,7 @@
 /** Velp area styles **/
 .velpMenu {
     position: fixed;
-    min-width: 19em;
+    min-width: 15em;
     max-width: 22.5em;
     word-wrap: break-word;
     right: 0;
@@ -238,9 +238,12 @@
 .notes .velp-badge {
     position: absolute;
     top: 0;
-    left: -3em;
+    left: -2em;
+    font-size: 9px;
+    padding: 0;
     z-index: 10;
 }
+
 
 .velp:hover .emphasise{
     margin-top: -1em;

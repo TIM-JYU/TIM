@@ -831,6 +831,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # answer-route
 
+        points_rule = None
+
         try:
             # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
             uploadedFile = get_json_param(query.jso, "input", "uploadedFile", None)
