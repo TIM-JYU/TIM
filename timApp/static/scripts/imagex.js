@@ -6,7 +6,7 @@ imagexApp.directive('imagexRunner',
     ['$sanitize','$compile',
         function ($sanitize,$compile1) {
             "use strict";
-            // Tätä kutsutaan yhden kerran kun plugin otetaan käyttöön
+            // Tata kutsutaan yhden kerran kun plugin otetaan kayttoon
             timHelper.sanitize = $sanitize;
             imagexApp.sanitize = $sanitize;
             imagexApp.compile = $compile1;
@@ -18,7 +18,7 @@ var globalPreviewColor = "#fff"
 
 imagexApp.directiveFunction = function() {
     "use strict";
-    // Koska tätä kutsutaan direktiivistä, tätä kutsutaan yhden kerran
+    // Koska tata kutsutaan direktiivista, tata kutsutaan yhden kerran
     return {
         scope: {},
         controller: imagexApp.Controller,
@@ -186,7 +186,7 @@ function drawFreeHand(ctx, dr) {
 
 imagexApp.directiveTemplate = function () {
     "use strict";
-    // Koska tätä kutsutaan directiveFunction-metodista, tätä kutsutaan yhden kerran
+    // Koska tata kutsutaan directiveFunction-metodista, tata kutsutaan yhden kerran
 
     if ( imagexApp.TESTWITHOUTPLUGINS ) return '';
     return '<div class="csRunDiv no-popup-menu">' +
@@ -228,6 +228,10 @@ imagexApp.directiveTemplate = function () {
         '<span class="tries" ng-if="max_tries"> Tries: {{tries}}/{{max_tries}}</span>' +
         '<pre class="" ng-if="error && preview">{{error}}</pre>' +
         '<pre class="" ng-show="result">{{result}}</pre>' +
+    	'<div  class="replyHTML" ng-if="replyHTML" ><span ng-bind-html="imagexScope.svgImageSnippet()"></span></div>'+
+        '<img ng-if="replyImage" class="grconsole" ng-src="{{replyImage}}" alt=""  />' +
+
+
         '<p class="plgfooter">Here comes footer</p>' +
     '</div>'
 };
@@ -389,7 +393,7 @@ imagexApp.initDrawing = function(scope, canvas) {
             this.freeHand.draw(this.ctx);
             if (scope.incompleteImages !== 0) {
                 setTimeout(this.draw, 500);
-                // tee tÃ¤hÃ¤n rajoitus
+                // tee tahan rajoitus
             }
             if (this.activeDragObject) this.activeDragObject.draw(this.activeDragObject);
         }.bind(this);
@@ -494,7 +498,7 @@ imagexApp.initDrawing = function(scope, canvas) {
             }
 
             
-            this.draw(); // TODO: Miksi tämä on täällä?
+            this.draw(); // TODO: Miksi tama on taalla?
         };
 
         function te(event) {
@@ -530,7 +534,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                 if ( c == "f" && scope.freeHandShortCut ) { scope.freeHand = !scope.freeHand; scope.$apply()}
             }, false);
 
-        // Lisätty eventlistenereiden poistamiseen.
+        // Lisatty eventlistenereiden poistamiseen.
         /*
         this.removeEventListeners = function() {
             this.canvas.removeEventListener('mousemove', moveEvent);
@@ -592,7 +596,14 @@ imagexApp.initDrawing = function(scope, canvas) {
         values.id = this.id;
 
         this.draw = Empty;
-        this.type = getValueDef(values, "type", "textbox", true);
+        this.draggableObject = {};
+        this.draggablePin = getValueDef(values, "pin.draggable", false);
+        if (this.draggablePin) {
+            this.type = 'pin';
+            this.draggableObject.type = getValueDef(values, "type", "textbox", true);
+        }
+        else
+            this.type = getValueDef(values, "type", "textbox", true);
         this.name = 'dragobject';
         this.ctx = dt.ctx;
         if (values.state === 'state') {
@@ -603,6 +614,8 @@ imagexApp.initDrawing = function(scope, canvas) {
             this.position = getValueDef(values, "position", [0, 0]);
             this.x = this.position[0];
             this.y = this.position[1]; }
+        this.draggableObject.x = this.x;
+        this.draggableObject.y = this.y;
 
         this.origPos = {};
         this.origPos.x = this.x;
@@ -632,13 +645,13 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.textbox.init = shapeFunctions['textbox'].init;
         this.textbox.init(values);
 
-        if (this.type === 'vector') {
+        if (this.type === 'vector' || this.draggableObject.type === 'vector') {
             this.vectorInit = shapeFunctions['vector'].init;
             this.vectorInit(values);
             this.vectorDraw = shapeFunctions['vector'].draw;
         }
 
-        if (this.type === 'img') {
+        if (this.type === 'img' || this.draggableObject.type === 'img') {
             this.init2 = shapeFunctions['img'].init2;
             this.imageDraw = shapeFunctions['img'].draw;
         }
@@ -725,7 +738,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.init(values);
         this.draw = shapeFunctions[this.type].draw;
     }
-    // Kutsuu viivaa piirtÃ¤vÃ¤Ã¤ funktiota.
+    // Kutsuu viivaa piirtavaa funktiota.
     function Line(dt, values){
         this.ctx = dt.ctx;
         this.beg = values.beg;
@@ -846,14 +859,14 @@ imagexApp.initDrawing = function(scope, canvas) {
 
 
     var shapeFunctions = {
-        //TÃ¤mÃ¤ piirtÃ¤Ã¤ viivan, mutta vain kerran.
+        //Tama piirtaa viivan, mutta vain kerran.
         line: {
             init:
                 function (initValues) {},
             draw:
                 function (objectValues) {
                     this.ctx = objectValues.ctx;
-                    //attribuuteista vÃ¤ri ja leveys sekÃ¤ aseta dash
+                    //attribuuteista vari ja leveys seka aseta dash
                     this.ctx.beginPath();
                     this.ctx.moveTo(this.beg.x,this.beg.y);
                     this.ctx.lineTo(this.end.x,this.end.y);
@@ -1047,16 +1060,17 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.rightMargin = getValue(this.margins[1], this.topMargin);
                     this.bottomMargin = getValue(this.margins[2], this.topMargin);
                     this.leftMargin = getValue(this.margins[3], this.rightMargin);
-                    
+                    this.draggableObject = {};
                     this.type = getValueDef(initValues, "type", "textbox");
+                    this.draggableObject.type = getValueDef(initValues, 'type', null)
+                    this.textBoxOffset = getValueDef(initValues, "textboxproperties.position", [0, 0]);
                     if (this.type === 'img' || this.type === 'vector') {
-                        this.textBoxOffset = 
-                            getValueDef(initValues, "textboxproperties.position", [0, 0]);
+                        // this.textBoxOffset = getValueDef(initValues, "textboxproperties.position", [0, 0]);
                         this.x = getValue( this.textBoxOffset[0], 0);
                         this.y = getValue( this.textBoxOffset[1], 0); }
 
                     var fontDraw = document.createElement("canvas");
-                    // TODO: sopessa voisi olla alustusken aikana yksi dummy canvas
+                    // TODO: scopessa voisi olla alustuksen aikana yksi dummy canvas
                     // joka sitten poistetaan
                     this.font = getValueDef(initValues, "textboxproperties.font", '14px Arial');
                     var auxctx = fontDraw.getContext('2d');
@@ -1135,7 +1149,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.ctx.fill();
                     this.ctx.fillStyle = this.textColor;
 
-                    // täällä laitetaan tekstiä
+                    // taalla laitetaan tekstia
                     var textStart = this.topMargin;
                     for (var i = 0; i < this.lines.length; i++) {
                         this.ctx.fillText(this.lines[i], this.leftMargin, textStart);
@@ -1154,6 +1168,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.pinProperties = {}; // getValue(initValues.pinPoint, {});
                     this.pinProperties.visible = getValueDef(initValues, "pin.visible", true);
                     this.pinProperties.position = {};
+                    this.pinProperties.draggable = getValueDef(initValues, "pin.draggable", false);
                     this.pinLength = getValueDef(initValues, "pin.length",
                                                  (this.type === "vector") ? 0 : 15);
                     // this.pinLength = getValueDef(initValues, "pin.length", 15);
@@ -1224,17 +1239,24 @@ imagexApp.initDrawing = function(scope, canvas) {
                         this.ctx.beginPath();
                         this.ctx.moveTo(0, 0);
                         this.ctx.lineWidth = this.lineWidth;
-                        this.ctx.lineTo(- this.pinPosition.off.x + this.pinsx,
+                        if (this.draggablePin)
+                            this.ctx.lineTo(this.draggableObject.x , this.draggableObject.y);
+                        else
+                            this.ctx.lineTo(- this.pinPosition.off.x + this.pinsx,
                                         - this.pinPosition.off.y + this.pinsy);
                         this.ctx.stroke();
                     }
-                    if (this.type === 'textbox') this.textbox.draw(objectValues);
-                    if (this.type === 'img') this.imageDraw(objectValues);
-                    if (this.type === 'vector') this.vectorDraw(objectValues);
+                    if (this.type === 'textbox' || this.draggableObject.type === 'textbox')
+                        this.textbox.draw(objectValues);
+                    if (this.type === 'img' || this.draggableObject.type === 'img')
+                        this.imageDraw(objectValues);
+                    if (this.type === 'vector' || this.draggableObject.type === 'vector')
+                        this.vectorDraw(objectValues);
                     this.ctx.restore();
                 }
         }
     };
+
 
     //scope.yamlobjects = scope.attrs.markup.objects;
 
@@ -1252,7 +1274,7 @@ imagexApp.initDrawing = function(scope, canvas) {
     if (scope.attrs.state && scope.attrs.state.userAnswer ) {
         // used to reset object positions.
        // scope.yamlobjects = scope.attrs.state.markup.objects.yamlobjects;
-        // lisätty oikeiden vastausten lukemiseen ja piirtämiseen.
+        // lisatty oikeiden vastausten lukemiseen ja piirtamiseen.
         var userDrags = scope.attrs.state.userAnswer.drags;
         if (userObjects && userDrags && userDrags.length > 0) {
             for (var i = 0; i < userObjects.length; i++) {
@@ -1332,7 +1354,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         scope.userHasAnswered = true;
         // used to reset object positions.
        // scope.yamlobjects = scope.attrs.state.markup.objects.yamlobjects;
-        // lisätty oikeiden vastausten lukemiseen ja piirtämiseen.
+        // lisatty oikeiden vastausten lukemiseen ja piirtamiseen.
         var userDrags = scope.attrs.state.userAnswer.drags;
         if (objects && userDrags && userDrags.length > 0) {
             for (var i = 0; i < objects.length; i++) {
@@ -1368,19 +1390,20 @@ imagexApp.initDrawing = function(scope, canvas) {
 };
 
 
-imagexApp.Controller = function($scope, $http, $transclude, $interval) {
+imagexApp.Controller = function($scope, $http, $transclude, $sce, $interval) {
     "use strict";
-    // Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
-    // Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Controlleriksi.
-    // Tähän tullaan ensin ja sitten initScope-metodiin
-    // Siitä ei ole mitään hajua mistä se keksii tälle nuo parametrit???
+    // Tata kutsutaan kerran jokaiselle pluginin esiintymalle.
+    // Angular kutsuu tata koska se on sanottu direktiivifunktiossa Controlleriksi.
+    // Tahan tullaan ensin ja sitten initScope-metodiin
+    // Siita ei ole mitaan hajua mista se keksii talle nuo parametrit???
     if (imagexApp.TESTWITHOUTPLUGINS) return;
     $scope.imagexScope = new ImagexScope($scope);
     $scope.attrs = {};
+    $scope.sce = $sce;
     $scope.http = $http;
     $scope.interval = $interval;
 
-    // Luodaan $scope.attrs joka on avattuna sisällössä olev JSON tai HEX
+    // Luodaan $scope.attrs joka on avattuna sisallossa olev JSON tai HEX
     $transclude(function(clone,scope) { timHelper.initAttributes(clone,$scope); });
     $scope.errors = [];
     $scope.muokattu = false;
@@ -1390,8 +1413,8 @@ imagexApp.Controller = function($scope, $http, $transclude, $interval) {
 
 imagexApp.initScope = function (scope, element, attrs) {
     "use strict";
-    // Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
-    // Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Link-metodiksi.
+    // Tata kutsutaan kerran jokaiselle pluginin esiintymalle.
+    // Angular kutsuu tata koska se on sanottu direktiivifunktiossa Link-metodiksi.
     scope.freeHandDrawing = new FreeHand();
 
     scope.cursor = "\u0383"; //"\u0347"; // "\u02FD";
@@ -1399,8 +1422,8 @@ imagexApp.initScope = function (scope, element, attrs) {
     scope.taskId = element.parent().attr("id");
     scope.app = imagexApp;
 
-    // Etsitään kullekin attribuutille arvo joko scope.attrs tai attrs-parametrista.
-    // Jos ei ole, käytetään oletusta.
+    // Etsitaan kullekin attribuutille arvo joko scope.attrs tai attrs-parametrista.
+    // Jos ei ole, kaytetaan oletusta.
     timHelper.set(scope, attrs, "stem");
     timHelper.set(scope, attrs, "user_id");
     timHelper.set(scope, attrs, "button", "Save");
@@ -1409,12 +1432,12 @@ imagexApp.initScope = function (scope, element, attrs) {
     timHelper.set(scope, attrs, "max_tries");
     timHelper.set(scope, attrs, "cols", 20);
     timHelper.set(scope, attrs, "autoupdate", 500);
-    timHelper.setn(scope, "tid", attrs, ".taskID"); //vain kokeilu että "juuresta" ottaminen toimii
+    timHelper.setn(scope, "tid", attrs, ".taskID"); //vain kokeilu etta "juuresta" ottaminen toimii
     timHelper.set(scope, attrs, "extraGrabAreaHeight", 30);
     timHelper.set(scope, attrs, "background");
-    // Tässä on nyt kaikki raahattavat objektit
+    // Tassa on nyt kaikki raahattavat objektit
     timHelper.set(scope, attrs, "objects","http://localhost/static/images/jyulogo.png");
-    // Tässä pitäisi olla kaikki targetit
+    // Tassa pitaisi olla kaikki targetit
     timHelper.set(scope, attrs, "targets");
     timHelper.set(scope, attrs, "fixedobjects");
     timHelper.set(scope, attrs, "finalanswer");
@@ -1451,7 +1474,7 @@ imagexApp.initScope = function (scope, element, attrs) {
     };
 
 
-    // Otsikot.  Oletetaan että 1. elementti korvaatan header-otsikolla ja viimeinen footerilla
+    // Otsikot.  Oletetaan etta 1. elementti korvaatan header-otsikolla ja viimeinen footerilla
     element[0].childNodes[0].outerHTML = timHelper.getHeading(scope, attrs, "header", "h4");
     var n = element[0].childNodes.length;
     if (n > 1) element[0].childNodes[n - 1].outerHTML = 
@@ -1482,8 +1505,8 @@ imagexApp.initScope = function (scope, element, attrs) {
 };
 
 
-// Tehdään kaikista toiminnallisista funktioista oma luokka, jotta
-// niitä ei erikseen lisätä jokaisen pluginin esiintymän kohdalla uudelleen.
+// Tehdaan kaikista toiminnallisista funktioista oma luokka, jotta
+// niita ei erikseen lisata jokaisen pluginin esiintyman kohdalla uudelleen.
 function ImagexScope(scope) {
     "use strict";
     this.scope = scope;
@@ -1586,7 +1609,7 @@ ImagexScope.prototype.doshowAnswer = function(){
         url = $scope.plugin;
         var i = url.lastIndexOf("/");
         if (i > 0) url = url.substring(i);
-        url += "/" + $scope.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
+        url += "/" + $scope.taskId + "/answer/";  // Hack piti vahan muuttaa, jotta kone haviaa.
     }
 
     $scope.http({method: 'PUT', url: url, data: params, headers: {'Content-Type': 'application/json'}, timeout: 20000}
@@ -1639,6 +1662,13 @@ ImagexScope.prototype.resetExercise = function(){
 };
 
 
+ImagexScope.prototype.svgImageSnippet = function() {
+    var $scope = this.scope;
+    var s = $scope.sce.trustAsHtml($scope.replyHTML);
+    return s;
+};
+
+
 ImagexScope.prototype.doSave = function(nosave) {
     "use strict";
     var $scope = this.scope;
@@ -1665,7 +1695,7 @@ ImagexScope.prototype.doSave = function(nosave) {
         url = $scope.plugin;
         var i = url.lastIndexOf("/");
         if (i > 0) url = url.substring(i);
-        url += "/" + $scope.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
+        url += "/" + $scope.taskId + "/answer/";  // Hack piti vahan muuttaa, jotta kone haviaa.
     }
 
     $scope.http({method: 'PUT', url: url, data: params, headers: {'Content-Type': 'application/json'}, timeout: 20000}
@@ -1675,6 +1705,8 @@ ImagexScope.prototype.doSave = function(nosave) {
         $scope.result = data.web.result;
         $scope.tries = data.web.tries;
         $scope.userHasAnswered = true;
+        $scope.replyImage = data.web["-replyImage"];
+        $scope.replyHTML = data.web["-replyHTML"];
     }).error(function (data, status) {
         $scope.isRunning = false;
         $scope.errors.push(status);
