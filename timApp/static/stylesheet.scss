@@ -754,6 +754,7 @@ input[type="file"] {
 /* For user list in teacher view ================================*/
 .userFixed {
     position: fixed;
+    bottom: 0;
     right: 0;
     @media(max-width: $screen-xs-max) {
         width: 200px;
@@ -772,6 +773,7 @@ input[type="file"] {
 .userlist {
 
     $list-max-height: 95vh;
+    height: 100%;
 
     overflow: auto;
     overflow-x: hidden;
