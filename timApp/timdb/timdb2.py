@@ -77,7 +77,7 @@ class TimDb(object):
             except Exception as err:
                 if not waiting: log_info("Wait db " + str(self.num) + " " + str(err))
                 waiting = True
-                sleep(0.5)
+                sleep(0.1)
 
         if waiting: log_info("Ready db " + str(self.num))
 
