@@ -39,7 +39,8 @@ class TimDb(object):
     def __init__(self, db_path: str,
                  files_root_path: str,
                  session: scoped_session = None,
-                 current_user_name: str = 'Anonymous'):
+                 current_user_name: str = 'Anonymous',
+                 route_path: str = ''):
         """Initializes TimDB with the specified database, files root path, SQLAlchemy session and user name.
         
         :param session: The scoped_session to be used for SQLAlchemy operations. If None, a scoped_session will be
@@ -47,8 +48,10 @@ class TimDb(object):
         :param current_user_name: The username of the current user.
         :param db_path: The path of the database file.
         :param files_root_path: The root path where all the files will be stored.
+        :param route_path: Path for the route requesting the db
         """
         self.files_root_path = os.path.abspath(files_root_path)
+        self.route_path = route_path
         
         self.blocks_path = os.path.join(self.files_root_path, 'blocks')
         for path in [self.blocks_path]:
@@ -60,7 +63,8 @@ class TimDb(object):
         num += 1
         self.num = num
         self.time = time.time()
-        log_info("get db " + str(self.num) )
+        log_info(  "GetDb      {0:6d} {1:2s} {2:3s} {3:7s} {4:s}".format(self.num,"","","",route_path))
+        # log_info('TimDb-dstr {0:6d} {1:2d} {2:3d} {3:7.5f} {4:s}'.format(self.num, TimDb.instances, bes, time.time() - self.time, self.route_path))
         self.session = session
         waiting = False
         while True:
@@ -75,11 +79,11 @@ class TimDb(object):
                     self.owns_session = False
                     break
             except Exception as err:
-                if not waiting: log_info("Wait db " + str(self.num) + " " + str(err))
+                if not waiting: log_info("WaitDb " + str(self.num) + " " + str(err))
                 waiting = True
                 sleep(0.1)
 
-        if waiting: log_info("Ready db " + str(self.num))
+        if waiting: log_info("ReadyDb " + str(self.num))
 
         TimDb.instances += 1
         # num_connections = self.get_pg_connections()
@@ -131,7 +135,7 @@ class TimDb(object):
 
             self.db = None
             self.session = None
-            log_info('TimDb instances: {} (destructor) {} {} {}'.format(TimDb.instances, self.num, bes,  time.time() - self.time ))
+            log_info('TimDb-dstr {0:6d} {1:2d} {2:3d} {3:7.5f} {4:s}'.format(self.num, TimDb.instances , bes,  time.time() - self.time, self.route_path ))
 
     def execute_script(self, sql_file):
         """Executes an SQL file on the database.

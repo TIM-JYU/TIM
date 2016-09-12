@@ -86,11 +86,13 @@ def getTimDb():
     :rtype : TimDb
     """
     if not hasattr(g, 'timdb'):
-        log_info('Opening timdb in route: {}'.format(request.path))
+        # log_info('Opening timdb in route: {}'.format(request.path))
+        rpath = request.path
         g.timdb = TimDb(db_path=current_app.config['DATABASE'],
                         files_root_path=current_app.config['FILES_PATH'],
                         session=db.session,
-                        current_user_name=getCurrentUserName())
+                        current_user_name=getCurrentUserName(),
+                        route_path=rpath)
     return g.timdb
 
 
