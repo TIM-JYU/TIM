@@ -151,7 +151,7 @@ timApp.controller("ViewCtrl", [
         sc.processAllMathDelayed = function ($elem) {
             $timeout(function () {
                 sc.processAllMath($elem);
-            }, 500);
+            }, 1500);
         };
 
         sc.processAllMath = function ($elem) {
