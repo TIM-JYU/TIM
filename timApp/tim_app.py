@@ -15,7 +15,7 @@ from utils import datestr_to_relative, date_to_relative
 sys.setrecursionlimit(10000)
 app = Flask(__name__)
 
-app.jinja_env.auto_reload = True # uncoment this to autorealod templates
+app.jinja_env.auto_reload = True # uncomment this to autoreload templates
 
 app.jinja_env.trim_blocks = True
 app.jinja_env.lstrip_blocks = True
