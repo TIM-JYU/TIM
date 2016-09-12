@@ -585,9 +585,14 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.cancelClicked(); // when empty and save clicked there is no par
                         return;
                     }
+                    if ($scope.saving) {
+                        return;
+                    }
                     if (!$window.confirm("Delete - are you sure?")) {
                         return;
                     }
+                    $scope.saving = true;
+
                     $http.post($scope.deleteUrl, $scope.extraData).
                         success(function (data, status, headers, config) {
                             $scope.afterDelete({
@@ -597,9 +602,11 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             if ($scope.options.destroyAfterSave) {
                                 $element.remove();
                             }
+                            $scope.saving = false;
                         }).
                         error(function (data, status, headers, config) {
                             $window.alert("Failed to delete: " + data.error);
+                            $scope.saving = false;
                         });
                     if ($scope.options.touchDevice) $scope.changeMeta();
                 };
@@ -911,7 +918,10 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
 
                 $scope.saveClicked = function () {
-                    saving = true;
+                    if ($scope.saving) {
+                        return;
+                    }
+                    $scope.saving = true;
                     if ($scope.renameFormShowing) {
                         $scope.renameTaskNamesClicked($scope.inputs, $scope.duplicates, true);
                     }
@@ -957,11 +967,11 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             $scope.setLocalValue("acewrap", $scope.editor.getSession().getUseWrapMode());
                             $scope.setLocalValue("acebehaviours", $scope.editor.getBehavioursEnabled()); // some of these are in editor and some in session?
                         }
-
+                        $scope.saving = false;
 
                     }).error(function (data, status, headers, config) {
                         $window.alert("Failed to save: " + data.error);
-                        saving = false;
+                        $scope.saving = false;
                     });
                     if ($scope.options.touchDevice) $scope.changeMeta();
                 };
