@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from documentmodel.document import Document
+from routes.logger import log_info
 from theme import Theme
 from tim_app import db
 from timdb.timdb2 import TimDb
@@ -85,6 +86,7 @@ def getTimDb():
     :rtype : TimDb
     """
     if not hasattr(g, 'timdb'):
+        log_info('Opening timdb in route: {}'.format(request.path))
         g.timdb = TimDb(db_path=current_app.config['DATABASE'],
                         files_root_path=current_app.config['FILES_PATH'],
                         session=db.session,
