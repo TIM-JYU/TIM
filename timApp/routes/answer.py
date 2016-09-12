@@ -114,6 +114,9 @@ def post_answer(plugintype: str, task_id_ext: str):
     plugin.values['user_id'] = ';'.join([timdb.users.get_user(uid)['name'] for uid in users])
     plugin.values['look_answer'] = is_teacher and not save_teacher
 
+    timdb.close(); # TODO: make a "weak" close that free databse, but can reconnect
+    delattr(g, 'timdb')
+
     answer_call_data = {'markup': plugin.values, 'state': state, 'input': answerdata, 'taskID': task_id}
     plugin_response = containerLink.call_plugin_answer(plugintype, answer_call_data)
 
@@ -136,6 +139,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     addReply(result['web'], '-replyMD')
     addReply(result['web'], '-replyHTML')
     if 'save' in jsonresp:
+        timdb = getTimDb()  # TODO: is there an idea to make a reconnect to db???
         save_object = jsonresp['save']
         tags = []
         tim_info = jsonresp.get('tim_info', {})
