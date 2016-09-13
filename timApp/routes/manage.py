@@ -34,7 +34,6 @@ def manage(path):
             session['message'] = "Did someone give you a wrong link? Showing normal view instead of manage view."
             return redirect('/view/' + str(block_id))
 
-    possible_groups = timdb.users.get_usergroups_printable(getCurrentUserId())
     grouprights = timdb.users.get_rights_holders(block_id)
     access_types = timdb.users.get_access_types()
 
@@ -66,7 +65,6 @@ def manage(path):
                            doc=doc_data,
                            grouprights=grouprights,
                            access_types=access_types,
-                           user_groups=possible_groups,
                            rights=get_rights(block_id))
 
 

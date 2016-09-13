@@ -129,7 +129,6 @@ def try_return_folder(doc_name):
     if is_in_lecture:
         is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
 
-    possible_groups = timdb.users.get_usergroups_printable(getCurrentUserId())
     settings = get_user_settings()
 
     item_name = doc_name.rstrip('/')
@@ -156,7 +155,6 @@ def try_return_folder(doc_name):
         return render_template('create_new.html',
                            userName=getCurrentUserName(),
                            userId=user,
-                           userGroups=possible_groups,
                            rights=rights,
                            in_lecture=is_in_lecture,
                            settings=settings,
@@ -167,7 +165,6 @@ def try_return_folder(doc_name):
     doc = timdb.folders.get(block_id)
     return render_template('index.html',
                            doc=doc,
-                           userGroups=possible_groups,
                            rights=get_rights(block_id),
                            folder=True,
                            in_lecture=is_in_lecture,

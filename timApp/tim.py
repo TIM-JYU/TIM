@@ -503,11 +503,9 @@ def index_page():
     timdb = getTimDb()
     current_user = getCurrentUserId()
     in_lecture = user_in_lecture()
-    possible_groups = timdb.users.get_usergroups_printable(current_user)
     return render_template('index.html',
                            userName=getCurrentUserName(),
                            userId=current_user,
-                           userGroups=possible_groups,
                            in_lecture=in_lecture,
                            doc={'id': -1, 'fullname': ''},
                            rights={})
