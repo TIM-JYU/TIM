@@ -59,7 +59,7 @@ def try_load_json(json_str: str):
 def pluginify(doc,
               pars,
               user,
-              answer_db,
+              timdb,
               custom_state=None,
               sanitize=True,
               do_lazy=False,
@@ -73,7 +73,7 @@ def pluginify(doc,
     :param doc Document / DocumentVersion object.
     :param pars: A list of DocParagraphs to be processed.
     :param user: The current user object.
-    :param answer_db: A reference to the answer database.
+    :param timdb: A reference to the database.
     :param custom_state: Optional state that will used as the state for the plugin instead of answer database.
                          If this parameter is specified, the expression len(blocks) MUST be 1.
     :param sanitize: Whether the blocks should be sanitized before processing.
@@ -138,9 +138,10 @@ def pluginify(doc,
 
     # taketime("answ", "markup", len(plugins))
 
-    answers = []
     if load_states and custom_state is None and user is not None:
-        answers = answer_db.get_newest_answers(user['id'], list(state_map.keys()))
+        answers = timdb.answers.get_newest_answers(user['id'], list(state_map.keys()))
+        # Close database here because we won't need it for a while
+        timdb.close()
         for answer in answers:
             state = try_load_json(answer['content'])
             map_entry = state_map[answer['task_id']]

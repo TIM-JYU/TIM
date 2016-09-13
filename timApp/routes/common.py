@@ -319,7 +319,7 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
     html_pars, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                       pars,
                                                                       user,
-                                                                      timdb.answers,
+                                                                      timdb,
                                                                       sanitize=sanitize,
                                                                       do_lazy=do_lazy,
                                                                       edit_window=edit_window,
@@ -368,12 +368,15 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
                         p['status'] = 'modified'
 
     notes = timdb.notes.get_notes(group, doc)
+    is_owner = timdb.users.user_is_owner(getCurrentUserId(), doc.doc_id)
+    # Close database here because we won't need it for a while
+    timdb.close()
 
     for n in notes:
         key = (n['par_id'], n['doc_id'])
         pars = pars_dict.get(key)
         if pars:
-            n['editable'] = n['usergroup_id'] == group or timdb.users.user_is_owner(getCurrentUserId(), doc.doc_id)
+            n['editable'] = n['usergroup_id'] == group or is_owner
             n.pop('usergroup_id', None)
             n['private'] = n['access'] == 'justme'
             for p in pars:

@@ -331,13 +331,13 @@ def get_state():
     texts, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                   [block],
                                                                   user,
-                                                                  timdb.answers,
+                                                                  timdb,
                                                                   custom_state=answer['content'])
 
     [reviewhtml], _, _, _ = pluginControl.pluginify(doc,
                                                     [block],
                                                     user,
-                                                    timdb.answers,
+                                                    timdb,
                                                     custom_state=answer['content'],
                                                     plugin_params=plugin_params,
                                                     wrap_in_div=False) if review else ([None], None, None, None)
