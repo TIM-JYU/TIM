@@ -1,3 +1,7 @@
+import os, sys
+# Without this, the timdb import will fail
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import multiprocessing
 
 from timdb import timdb2
