@@ -30,6 +30,8 @@ from timdb.velps import Velps
 
 num = 0
 
+# The following will be set (before request) by gunicorn; see gunicornconf.py. Always 0 if running without gunicorn.
+worker_pid = 0
 
 class TimDb(object):
     instances = 0
@@ -63,8 +65,8 @@ class TimDb(object):
         num += 1
         self.num = num
         self.time = time.time()
-        log_info(  "GetDb      {0:6d} {1:2s} {2:3s} {3:7s} {4:s}".format(self.num,"","","",route_path))
-        # log_info('TimDb-dstr {0:6d} {1:2d} {2:3d} {3:7.5f} {4:s}'.format(self.num, TimDb.instances, bes, time.time() - self.time, self.route_path))
+        log_info(  "GetDb      {:2d} {:6d} {:2s} {:3s} {:7s} {:s}".format(worker_pid,self.num,"","","",route_path))
+        # log_info('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid,self.num, TimDb.instances, bes, time.time() - self.time, self.route_path))
         self.session = session
         waiting = False
         while True:
@@ -135,7 +137,7 @@ class TimDb(object):
 
             self.db = None
             self.session = None
-            log_info('TimDb-dstr {0:6d} {1:2d} {2:3d} {3:7.5f} {4:s}'.format(self.num, TimDb.instances , bes,  time.time() - self.time, self.route_path ))
+            log_info('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid, self.num, TimDb.instances , bes,  time.time() - self.time, self.route_path ))
 
     def execute_script(self, sql_file):
         """Executes an SQL file on the database.
