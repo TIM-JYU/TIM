@@ -134,7 +134,7 @@ def try_return_folder(doc_name):
     item_name = doc_name.rstrip('/')
     block_id = timdb.folders.get_folder_id(item_name)
 
-    if block_id is None and item_name == 'users/' + user_name and timdb.folders.get_folder_id('users') is not None:
+    if block_id is None and item_name == 'users/' + user_name:
         # This is the user's personal folder and it doesn't exist yet.
         # Create it
         block_id = timdb.folders.create('users/' + user_name, getCurrentUserGroup())
