@@ -33,6 +33,9 @@ num = 0
 # The following will be set (before request) by gunicorn; see gunicornconf.py. Always 0 if running without gunicorn.
 worker_pid = 0
 
+DB_PART_NAMES = {'notes', 'readings', 'users', 'images', 'uploads', 'files', 'documents', 'answers', 'questions',
+                 'messages', 'lectures', 'folders', 'lecture_answers', 'velps', 'velp_groups', 'annotations', 'session'}
+
 class TimDb(object):
     instances = 0
     """Handles saving and retrieving information from TIM database.
@@ -54,32 +57,60 @@ class TimDb(object):
         """
         self.files_root_path = os.path.abspath(files_root_path)
         self.route_path = route_path
+        self.current_user_name = current_user_name
         
         self.blocks_path = os.path.join(self.files_root_path, 'blocks')
         for path in [self.blocks_path]:
             if not os.path.exists(path):
                 log_info('Creating directory: {}'.format(path))
                 os.makedirs(path)
+        self.session = session
+        self.owns_session = session is None
+        self.reset_attrs()
 
+    def reset_attrs(self):
+        self.num = 0
+        self.time = 0
+        self.engine = None
+        self.db = None
+        self.notes = None
+        self.readings = None
+        self.users = None
+        self.images = None
+        self.uploads = None
+        self.files = None
+        self.documents = None
+        self.answers = None
+        self.questions = None
+        self.messages = None
+        self.lectures = None
+        self.folders = None
+        self.lecture_answers = None
+        self.velps = None
+        self.velp_groups = None
+        self.annotations = None
+
+    def __getattribute__(self, item):
+        """Used to open TimDb connection lazily."""
+        if item in DB_PART_NAMES and self.db is None:
+            self.open()
+        return object.__getattribute__(self, item)
+
+    def open(self):
         global num
         num += 1
         self.num = num
         self.time = time.time()
-        log_info(  "GetDb      {:2d} {:6d} {:2s} {:3s} {:7s} {:s}".format(worker_pid,self.num,"","","",route_path))
+        log_info(  "GetDb      {:2d} {:6d} {:2s} {:3s} {:7s} {:s}".format(worker_pid,self.num,"","","",self.route_path))
         # log_info('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid,self.num, TimDb.instances, bes, time.time() - self.time, self.route_path))
-        self.session = session
         waiting = False
         while True:
             try:
                 self.engine = db.get_engine(app, 'tim_main')
                 self.db = self.engine.connect().connection
-                if session is None:
+                if self.owns_session:
                     self.session = db.create_scoped_session()
-                    self.owns_session = True
-                    break
-                else:
-                    self.owns_session = False
-                    break
+                break
             except Exception as err:
                 if not waiting: log_info("WaitDb " + str(self.num) + " " + str(err))
                 waiting = True
@@ -90,22 +121,22 @@ class TimDb(object):
         TimDb.instances += 1
         # num_connections = self.get_pg_connections()
         # log_info('TimDb instances/PG connections: {}/{} (constructor)'.format(TimDb.instances, num_connections))
-        self.notes = Notes(self.db, files_root_path, 'notes', current_user_name, self.session)
-        self.readings = Readings(self.db, files_root_path, 'notes', current_user_name, self.session)
-        self.users = Users(self.db, files_root_path, 'users', current_user_name, self.session)
-        self.images = Images(self.db, files_root_path, 'images', current_user_name, self.session)
-        self.uploads = Uploads(self.db, files_root_path, 'uploads', current_user_name, self.session)
-        self.files = Files(self.db, files_root_path, 'files', current_user_name, self.session)
-        self.documents = Documents(self.db, files_root_path, 'documents', current_user_name, self.session)
-        self.answers = Answers(self.db, files_root_path, 'answers', current_user_name, self.session)
-        self.questions = Questions(self.db, files_root_path, 'questions', current_user_name, self.session)
-        self.messages = Messages(self.db, files_root_path, 'messages', current_user_name, self.session)
-        self.lectures = Lectures(self.db, files_root_path, 'lectures', current_user_name, self.session)
-        self.folders = Folders(self.db, files_root_path, 'folders', current_user_name, self.session)
-        self.lecture_answers = LectureAnswers(self.db, files_root_path, 'lecture_answers', current_user_name, self.session)
-        self.velps = Velps(self.db, files_root_path, 'velps', current_user_name, self.session)
-        self.velp_groups = VelpGroups(self.db, files_root_path, 'velp_groups', current_user_name, self.session)
-        self.annotations = Annotations(self.db, files_root_path, 'annotations', current_user_name, self.session)
+        self.notes = Notes(self.db, self.files_root_path, 'notes', self.current_user_name, self.session)
+        self.readings = Readings(self.db, self.files_root_path, 'notes', self.current_user_name, self.session)
+        self.users = Users(self.db, self.files_root_path, 'users', self.current_user_name, self.session)
+        self.images = Images(self.db, self.files_root_path, 'images', self.current_user_name, self.session)
+        self.uploads = Uploads(self.db, self.files_root_path, 'uploads', self.current_user_name, self.session)
+        self.files = Files(self.db, self.files_root_path, 'files', self.current_user_name, self.session)
+        self.documents = Documents(self.db, self.files_root_path, 'documents', self.current_user_name, self.session)
+        self.answers = Answers(self.db, self.files_root_path, 'answers', self.current_user_name, self.session)
+        self.questions = Questions(self.db, self.files_root_path, 'questions', self.current_user_name, self.session)
+        self.messages = Messages(self.db, self.files_root_path, 'messages', self.current_user_name, self.session)
+        self.lectures = Lectures(self.db, self.files_root_path, 'lectures', self.current_user_name, self.session)
+        self.folders = Folders(self.db, self.files_root_path, 'folders', self.current_user_name, self.session)
+        self.lecture_answers = LectureAnswers(self.db, self.files_root_path, 'lecture_answers', self.current_user_name, self.session)
+        self.velps = Velps(self.db, self.files_root_path, 'velps', self.current_user_name, self.session)
+        self.velp_groups = VelpGroups(self.db, self.files_root_path, 'velp_groups', self.current_user_name, self.session)
+        self.annotations = Annotations(self.db, self.files_root_path, 'annotations', self.current_user_name, self.session)
 
     def get_pg_connections(self):
         """Returns the number of clients currently connected to PostgreSQL."""
@@ -132,11 +163,11 @@ class TimDb(object):
                 self.db.close()
                 if self.owns_session:
                     self.session.remove()
+                    self.session = None
             except Exception as err:
                 log_info('close error: ' + str(self.num) + ' ' + str(err))
 
-            self.db = None
-            self.session = None
+            self.reset_attrs()
             log_info('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid, self.num, TimDb.instances , bes,  time.time() - self.time, self.route_path ))
 
     def execute_script(self, sql_file):
