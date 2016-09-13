@@ -160,7 +160,6 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                         return;
                     }
                     scope.$parent.deleteAnnotation(scope.aid, scope.ismargin);
-                    scope.toggleAnnotation();
                 }
             };
 
@@ -237,7 +236,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
              * @returns {boolean} Whether the user has rights or not
              */
             scope.checkRights = function () {
-                return scope.editaccess !== 1;
+                return scope.editaccess !== true;
             };
 
             /**
