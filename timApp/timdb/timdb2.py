@@ -167,8 +167,8 @@ class TimDb(object):
             except Exception as err:
                 log_info('close error: ' + str(self.num) + ' ' + str(err))
 
-            self.reset_attrs()
             log_info('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid, self.num, TimDb.instances , bes,  time.time() - self.time, self.route_path ))
+            self.reset_attrs()
 
     def execute_script(self, sql_file):
         """Executes an SQL file on the database.
