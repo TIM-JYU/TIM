@@ -6,10 +6,13 @@ from documentmodel.document import DocParagraph, get_index_from_html_list, deref
 from htmlSanitize import sanitize_html
 
 from flask import Blueprint, render_template
+
+from utils import date_to_relative
 from .common import *
 import pluginControl
 from options import *
 import time
+from routes.lecture import user_in_lecture
 
 Range = Tuple[int, int]
 
@@ -115,6 +118,22 @@ def par_info(doc_id, par_id):
     return jsonResponse(info)
 
 
+@view_page.route("/getItems")
+def items_route():
+    return jsonResponse(get_items(request.args.get('folder', '')))
+
+
+@view_page.route("/view/")
+def index_page():
+    save_last_page()
+    in_lecture = user_in_lecture()
+    return render_template('index.html',
+                           items=get_items(''),
+                           in_lecture=in_lecture,
+                           doc={'id': -1, 'fullname': ''},
+                           rights={})
+
+
 def parse_range(start_index: Union[int, str, None], end_index: Union[int, str, None]) -> Optional[Range]:
     if start_index is None and end_index is None:
         return None
@@ -165,6 +184,7 @@ def try_return_folder(doc_name):
     doc = timdb.folders.get(block_id)
     return render_template('index.html',
                            doc=doc,
+                           items=get_items(item_name),
                            rights=get_rights(block_id),
                            folder=True,
                            in_lecture=is_in_lecture,
@@ -363,3 +383,25 @@ def redirect_to_login():
     return render_template('loginpage.html',
                            came_from=request.url,
                            anchor=session['anchor']), 403
+
+
+def get_items(folder: str):
+    timdb = getTimDb()
+    docs = timdb.documents.get_documents(filter_ids=get_viewable_blocks(),
+                                         search_recursively=False,
+                                         filter_folder=folder)
+    docs.sort(key=lambda d: d['name'].lower())
+    folders = timdb.folders.get_folders(root_path=folder,
+                                        filter_ids=get_viewable_blocks())
+    folders.sort(key=lambda d: d['name'].lower())
+    for f in folders:
+        f['isFolder'] = True
+    items = folders + docs
+    uid = getCurrentUserId()
+    for item in items:
+        item['isFolder'] = item.get('isFolder', False)
+        item['canEdit'] = timdb.users.has_edit_access(uid, item['id'])
+        item['isOwner'] = timdb.users.user_is_owner(uid, item['id'])
+        item['owner'] = timdb.users.get_owner_group(item['id'])
+        item['modified'] = date_to_relative(item.get('modified'))
+    return items

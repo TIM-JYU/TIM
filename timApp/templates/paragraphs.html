@@ -4,11 +4,11 @@
     {% set editlineQuestion = '<div class="editline editlineQuestion" title="Click to edit this paragraph"></div>' %}
 {% endif %}
 
+{# TODO This template list should not be here! #}
 {% if route == "view" and text|length == 0 and rights.editable %}
     <script>
         var folder = "{{doc.fullname if doc else ''}}";
         var templates = true;
-        var noIndex = true;
     </script>
     <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
     <div class="par"

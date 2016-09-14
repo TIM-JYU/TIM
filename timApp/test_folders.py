@@ -40,19 +40,28 @@ class FolderTest(TimRouteTest):
 
         self.assertListResponse([{'id': j['id'], 'name': 'testing1',
                                   'isOwner': True,
+                                  'isFolder': True,
+                                  'modified': None,
+                                  'canEdit': True,
                                   'fullname': new_name,
                                   'owner': {'id': 7, 'name': 'testuser1'}},
                                  {'id': j3['id'], 'name': 'testing2',
                                   'isOwner': True,
+                                  'isFolder': True,
+                                  'modified': None,
+                                  'canEdit': True,
                                   'fullname': fname2,
                                   'owner': {'id': 7, 'name': 'testuser1'}}],
-                                self.json_req('/getFolders', query_string={'root_path': user_folder}))
+                                self.json_req('/getItems', query_string={'folder': user_folder}))
         self.logout()
         self.assertListResponse([{'id': j3['id'], 'name': 'testing2',
                                   'isOwner': False,
+                                  'isFolder': True,
+                                  'modified': None,
+                                  'canEdit': False,
                                   'fullname': fname2,
                                   'owner': {'id': 7, 'name': 'testuser1'}}],
-                                self.json_req('/getFolders', query_string={'root_path': user_folder}))
+                                self.json_req('/getItems', query_string={'folder': user_folder}))
         db.close()
 
     def test_folders_invalid(self):

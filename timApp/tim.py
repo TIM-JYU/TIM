@@ -199,28 +199,6 @@ def get_image(image_id, image_filename):
     return send_file(f, mimetype='image/' + imgtype)
 
 
-@app.route("/getDocuments")
-def get_docs():
-    return jsonResponse(get_documents(request.args.get('folder', '')))
-
-
-@app.route("/getFolders")
-def get_folders():
-    root_path = request.args.get('root_path')
-    timdb = getTimDb()
-    folders = timdb.folders.get_folders(root_path)
-    viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
-    allowed_folders = [f for f in folders if f['id'] in viewable]
-    uid = getCurrentUserId()
-    is_admin = timdb.users.has_admin_access(uid)
-    for f in allowed_folders:
-        f['isOwner'] = is_admin or timdb.users.user_is_owner(uid, f['id'])
-        f['owner'] = timdb.users.get_owner_group(f['id'])
-
-    allowed_folders.sort(key=lambda folder: folder['name'].lower())
-    return jsonResponse(allowed_folders)
-
-
 @app.route("/getTemplates")
 def get_templates():
     current_path = request.args.get('root_path', '')
@@ -228,34 +206,14 @@ def get_templates():
     templates = []
 
     while True:
-        templates += get_documents(current_path + '/Templates')
+        templates += timdb.documents.get_documents(filter_ids=get_viewable_blocks(),
+                                      filter_folder=current_path + '/Templates',
+                                      search_recursively=False)
         if current_path == '':
             break
         current_path, _ = timdb.folders.split_location(current_path)
-
+    templates.sort(key=lambda d: d['name'].lower())
     return jsonResponse(templates)
-
-
-def get_documents(folder: str) -> List[dict]:
-    timdb = getTimDb()
-    viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
-    docs = timdb.documents.get_documents(filter_ids=viewable, filter_folder=folder, search_recursively=False)
-    allowed_docs = docs
-    final_docs = []
-
-    for doc in allowed_docs:
-        fullname = doc['name']
-        uid = getCurrentUserId()
-        doc['name'] = timdb.documents.get_short_name(fullname)
-        doc['fullname'] = fullname
-        doc['canEdit'] = timdb.users.has_edit_access(uid, doc['id'])
-        doc['isOwner'] = timdb.users.user_is_owner(uid, doc['id'])
-        doc['owner'] = timdb.users.get_owner_group(doc['id'])
-        doc['modified'] = date_to_relative(doc['modified'])
-        final_docs.append(doc)
-
-    final_docs.sort(key=lambda d: d['name'].lower())
-    return final_docs
 
 
 def create_item(item_name, item_type, create_function, owner_group_id):
@@ -474,20 +432,6 @@ def start_page():
     in_lecture = user_in_lecture()
     return render_template('start.html',
                            in_lecture=in_lecture)
-
-
-@app.route("/view/")
-def index_page():
-    save_last_page()
-    timdb = getTimDb()
-    current_user = getCurrentUserId()
-    in_lecture = user_in_lecture()
-    return render_template('index.html',
-                           userName=getCurrentUserName(),
-                           userId=current_user,
-                           in_lecture=in_lecture,
-                           doc={'id': -1, 'fullname': ''},
-                           rights={})
 
 
 @app.route("/manage/")

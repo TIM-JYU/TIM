@@ -73,37 +73,18 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
            sc.parentfolder = sc.folder.substr(0, sc.folder.lastIndexOf('/'));
     };
 
-    sc.getFolders = function() {
+    sc.getItems = function() {
        http({
             method : 'GET',
-            url : '/getFolders',
+            url : '/getItems',
             params: {
-                root_path: sc.folder,
-                _: Date.now()
-            }
-        }).success(function(data, status, headers, config) {
-            sc.folderList = data;
-            sc.displayIndex++;
-        }).error(function(data, status, headers, config) {
-            sc.folderList = [];
-            // TODO: Show some error message.
-        });
-    };
-
-    sc.getDocs = function() {
-       http({
-            method : 'GET',
-            url : '/getDocuments',
-            params: {
-                versions: 0,
                 folder: sc.folder,
                 _: Date.now()
             }
         }).success(function(data, status, headers, config) {
-            sc.documentList = data;
-            sc.displayIndex++;
+            sc.itemList = data;
         }).error(function(data, status, headers, config) {
-            sc.documentList = [];
+            sc.itemList = [];
             // TODO: Show some error message.
         });
     };
@@ -127,17 +108,9 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
     sc.folderOwner = $window.current_user.name;
 	sc.parentfolder = "";
     sc.initFolderVars();
-    sc.folderList = [];
-    sc.documentList = [];
+    sc.itemList = $window.items;
     sc.templateList = [];
-    sc.templates = $window.templates
-    sc.noIndex = $window.noIndex
-    if (sc.noIndex == null || !sc.noIndex)
-    {
-        sc.getFolders();
-        sc.getDocs();
-        sc.displayIndex = 0;
-    }
+    sc.templates = $window.templates;
     if (sc.templates)
     {
         sc.getTemplates();
@@ -157,7 +130,7 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
 
             file.upload.then(function (response) {
                 $timeout(function () {
-                    sc.getDocs();
+                    sc.getItems();
                 });
             }, function (response) {
                 if (response.status > 0)
