@@ -22,16 +22,15 @@ def search(query):
     if len(query.strip()) < 3:
         abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
     timdb = getTimDb()
-    docs = timdb.documents.get_documents()
     viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
-    allowed_docs = set(doc['id'] for doc in docs if doc['id'] in viewable)
+    docs = timdb.documents.get_documents(filter_ids=viewable)
     current_user = get_current_user()
     all_texts = []
     all_js = []
     all_css = []
     all_modules = []
-    for doc_id in allowed_docs:
-        doc = Document(doc_id)
+    for doc in docs:
+        doc = Document(doc['id'])
         pars = doc.get_paragraphs()
         found_pars = []
         for t in pars:
@@ -64,7 +63,6 @@ def search(query):
                            doc={'id': -1, 'name': 'Search results', 'fullname': 'Search results',
                                 'title': 'Search results'},
                            text=all_texts,
-                           current_user=current_user,
                            js=all_js,
                            cssFiles=all_css,
                            jsMods=all_modules,
