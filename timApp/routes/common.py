@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from documentmodel.document import Document
+from routes.logger import log_info
 from theme import Theme
 from tim_app import db
 from timdb.timdb2 import TimDb
@@ -85,10 +86,13 @@ def getTimDb():
     :rtype : TimDb
     """
     if not hasattr(g, 'timdb'):
+        # log_info('Opening timdb in route: {}'.format(request.path))
+        rpath = request.path
         g.timdb = TimDb(db_path=current_app.config['DATABASE'],
                         files_root_path=current_app.config['FILES_PATH'],
                         session=db.session,
-                        current_user_name=getCurrentUserName())
+                        current_user_name=getCurrentUserName(),
+                        route_path=rpath)
     return g.timdb
 
 
@@ -320,7 +324,7 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
     html_pars, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                       pars,
                                                                       user,
-                                                                      timdb.answers,
+                                                                      timdb,
                                                                       sanitize=sanitize,
                                                                       do_lazy=do_lazy,
                                                                       edit_window=edit_window,
@@ -369,12 +373,15 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
                         p['status'] = 'modified'
 
     notes = timdb.notes.get_notes(group, doc)
+    is_owner = timdb.users.user_is_owner(getCurrentUserId(), doc.doc_id)
+    # Close database here because we won't need it for a while
+    timdb.close()
 
     for n in notes:
         key = (n['par_id'], n['doc_id'])
         pars = pars_dict.get(key)
         if pars:
-            n['editable'] = n['usergroup_id'] == group or timdb.users.user_is_owner(getCurrentUserId(), doc.doc_id)
+            n['editable'] = n['usergroup_id'] == group or is_owner
             n.pop('usergroup_id', None)
             n['private'] = n['access'] == 'justme'
             for p in pars:

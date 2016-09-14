@@ -19,7 +19,7 @@ from geometry import*
 # For copying dicts.
 from copy import deepcopy
 # Methods for checking contents of JSON.
-from fileParams3 import get_all_templates
+# from fileParams3 import get_all_templates
 PORT = 5000
 PROGDIR = "."
 
@@ -56,6 +56,13 @@ class ImagexServer(tim_server.TimServer):
         preview = query.get_param("preview",False)
         targets = {"targets":query.get_param("-targets",{})}
         query2 = ""
+
+        if is_review(query):
+            usercode = "image"
+            s = ""
+            result = NOLAZY + '<div class="review" ng-non-bindable><pre>' + usercode + '</pre>' + s + '</div>'
+            print("REVIEW: ", result)
+            return result
 
         # Check if this is in preview. If it is set targets as visible. and query2 is used instead of query.
         if preview:

@@ -1218,6 +1218,9 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 			$scope.runError = $scope.error; // !$scope.runSuccess;
 
 			imgURL = data.web.image;
+            //if ( !imgURL ) imgURL = data.web["-replyImage"];
+            $scope.imgURL = data.web["-replyImage"];
+            $scope.htmlresult = data.web["-replyHTML"];
 			wavURL = data.web.wav;
 			if ( data.web.testGreen ) $scope.runTestGreen = true;
 			if ( data.web.testRed ) $scope.runTestRed = true;

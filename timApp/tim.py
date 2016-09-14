@@ -201,7 +201,7 @@ def get_image(image_id, image_filename):
 
 @app.route("/getDocuments")
 def get_docs():
-    return jsonResponse(get_documents(request.args.get('folder')))
+    return jsonResponse(get_documents(request.args.get('folder', '')))
 
 
 @app.route("/getFolders")
@@ -224,18 +224,12 @@ def get_folders():
 
 @app.route("/getTemplates")
 def get_templates():
-    current_path = request.args.get('root_path')
+    current_path = request.args.get('root_path', '')
     timdb = getTimDb()
     templates = []
 
     while True:
-        if current_path != '':
-            found_templates = get_documents(current_path + '/Templates')
-        else:
-            found_templates = get_documents('Templates')
-        for t in found_templates:
-            if timdb.users.has_manage_access(getCurrentUserId(), timdb.documents.get_document_id(t['fullname'])):
-                templates.append(t)
+        templates += get_documents(current_path + '/Templates')
         if current_path == '':
             break
         current_path, _ = timdb.folders.split_location(current_path)
@@ -243,35 +237,20 @@ def get_templates():
     return jsonResponse(templates)
 
 
-def get_documents(folder):
+def get_documents(folder: str) -> List[dict]:
     timdb = getTimDb()
-    docs = timdb.documents.get_documents()
     viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
-    allowed_docs = [doc for doc in docs if doc['id'] in viewable]
-
-    req_folder = folder
-    if req_folder is not None and len(req_folder) == 0:
-        req_folder = None
+    docs = timdb.documents.get_documents(filter_ids=viewable, filter_folder=folder, search_recursively=False)
+    allowed_docs = docs
     final_docs = []
 
     for doc in allowed_docs:
         fullname = doc['name']
-
-        if req_folder:
-            if not fullname.startswith(req_folder + '/'):
-                continue
-            docname = fullname[len(req_folder) + 1:]
-        else:
-            docname = fullname
-
-        if '/' in docname:
-            continue
-
         uid = getCurrentUserId()
-        doc['name'] = docname
+        doc['name'] = timdb.documents.get_short_name(fullname)
         doc['fullname'] = fullname
         doc['canEdit'] = timdb.users.has_edit_access(uid, doc['id'])
-        doc['isOwner'] = timdb.users.user_is_owner(getCurrentUserId(), doc['id'])
+        doc['isOwner'] = timdb.users.user_is_owner(uid, doc['id'])
         doc['owner'] = timdb.users.get_owner_group(doc['id'])
         doc['modified'] = date_to_relative(doc['modified'])
         doc['unpublished'] = is_considered_unpublished(doc['id'])
@@ -505,11 +484,9 @@ def index_page():
     timdb = getTimDb()
     current_user = getCurrentUserId()
     in_lecture = user_in_lecture()
-    possible_groups = timdb.users.get_usergroups_printable(current_user)
     return render_template('index.html',
                            userName=getCurrentUserName(),
                            userId=current_user,
-                           userGroups=possible_groups,
                            in_lecture=in_lecture,
                            doc={'id': -1, 'fullname': ''},
                            rights={})

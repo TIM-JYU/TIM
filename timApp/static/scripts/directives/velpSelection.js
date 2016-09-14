@@ -88,7 +88,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     var default_velp_group = {id: -1, name: "No access to default group", edit_access: false, show: true, default: true}; // TODO Use route to add this information
     var default_personal_velp_group = {id: -2, name: "Personal default"};
 
-    $scope.annotations = [];
     $scope.visible_options = {
                 "type": "select",
                 "value": 4,
@@ -210,7 +209,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
          }
          });
          */
-
+        /*
         p = $http.get('/{0}/get_annotations'.replace('{0}', doc_id));
         promises.push(p);
         p.success(function (data) {
@@ -219,7 +218,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
             console.log("ANNOTATIONS");
             console.log(data);
         });
-
+        */
         // Get label data
         p = $http.get('/{0}/get_velp_labels'.replace('{0}', doc_id));
         promises.push(p);

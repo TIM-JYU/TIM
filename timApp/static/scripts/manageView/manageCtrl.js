@@ -651,7 +651,6 @@ text = '\n'.join(a)
         };
 
         sc.grouprights = grouprights;
-        sc.userGroups = groups;
         sc.accessTypes = accessTypes;
         sc.accessType = sc.accessTypes[0];
         sc.doc = doc;

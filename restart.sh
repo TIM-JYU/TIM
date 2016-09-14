@@ -136,6 +136,9 @@ if param postgre ; then
   docker run --net=timnet -d --name postgresql-tempdb-${TIM_NAME} \
   -t -i postgres:9.5
   . ./wait_for_postgre.sh postgresql-tempdb-${TIM_NAME}
+
+  # Configure tempdb to accept 120 connections instead of default 100
+  ./postgre_conf.sh 2 max_connections 120
 fi
 
 if param tim ; then

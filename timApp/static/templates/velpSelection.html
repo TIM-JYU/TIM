@@ -1,7 +1,7 @@
-<div class="velpMenu" tim-draggable-fixed="" caption="Velp menu" id="velpSelection">
+<div  tim-draggable-fixed="" class="velpFixed" save="velpMenu" click="true" resize="true" caption="Velp menu" id="velpSelection">
+  <div class="velpMenu draggable-content" >
 
-
-    <uib-tabset active="active">
+    <uib-tabset active="active" class="velpFill">
         <uib-tab index="0" heading="Select">
             <br/>
             <label><input type="checkbox" ng-model="advancedOn"> Advanced view</label>
@@ -278,7 +278,7 @@
             </div>
             <!--  </td>
           </tr>-->
-</div>
+   </div>
         </uib-tab>
 
         <!-- MANAGE VELPS -->
@@ -373,4 +373,5 @@
             <div velp-summary="" annotations="annotations"></div>
         </uib-tab>
     </uib-tabset>
+    </div>
 </div>

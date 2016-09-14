@@ -29,9 +29,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.selectedArea = null;
     $scope.selectedElement = null;
     $scope.rights = $window.rights;
-
+    $scope.annotations = [];
     $scope.annotationids = {0: 0};
     $scope.zIndex = 1;
+    var doc_id = $scope.docId;
 
     /**
      * Makes a post request to the given URL.
@@ -50,6 +51,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         });
     };
 
+    $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) {
+            $scope.annotations = data;
+            $scope.loadDocumentAnnotations();
+            console.log("ANNOTATIONS");
+            console.log(data);
+        });
 
     /**
      * Loads the document annotations into the view.
@@ -366,7 +373,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             console.log(e);
             $scope.selectedElement = null;
             $scope.selectedArea = null;
-ID
             $scope.updateVelpList();
             e.stopPropagation();
         }
@@ -523,7 +529,8 @@ ID
      * @method selectText
      * @todo When annotations can break tags, check annotations from all elements in the selection.
      */
-    $scope.selectText = function () {
+    $scope.selectText = function($event) {
+        var $par = $($event.target).parents('.par')[0];
 
         var oldElement = null;
         if ($scope.selectedElement !== null)
@@ -555,11 +562,16 @@ ID
                 hasSelectionChildrenAnnotation($scope.selectedArea)) {
                 $scope.selectedArea = null;
             }
-        } else if ($scope.selectedArea === null) {
+        } else  {
+            /*
             var elements = document.getElementsByClassName("lightselect");
             console.log(elements);
             if (elements.length > 0)
                 $scope.selectedElement = elements[0];
+            */
+            if ( $par && $par.id )
+                $scope.selectedElement = $par;
+
         }
 
         var newElement = $scope.selectedElement;
@@ -668,6 +680,8 @@ ID
      * @returns {Object|null} Velp or null
      */
     $scope.getVelpById = function (id) {
+        if (typeof $scope.velps === UNDEFINED) return null;
+
         for (var i = 0; i < $scope.velps.length; i++)
             if ($scope.velps[i].id === id)
                 return $scope.velps[i];
@@ -740,7 +754,7 @@ ID
             visible_to: 4,
             content: velp.content,
             annotator_name: "me",
-            edit_access: 1,
+            edit_access: true,
             email: "",
             timesince: "just now",
             creationtime: "now",

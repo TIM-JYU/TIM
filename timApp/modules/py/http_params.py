@@ -499,4 +499,9 @@ def replace_template_params(query: QueryParams, template: str, cond_itemname: st
         result = result.replace("{{"+n+"}}", item)
         
     return result    
-    
+
+
+def is_review(query):
+    # print(query)
+    result = query.get_param("review", False)
+    return result

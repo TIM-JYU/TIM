@@ -129,13 +129,12 @@ def try_return_folder(doc_name):
     if is_in_lecture:
         is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
 
-    possible_groups = timdb.users.get_usergroups_printable(getCurrentUserId())
     settings = get_user_settings()
 
     item_name = doc_name.rstrip('/')
     block_id = timdb.folders.get_folder_id(item_name)
 
-    if block_id is None and item_name == 'users/' + user_name and timdb.folders.get_folder_id('users') is not None:
+    if block_id is None and item_name == 'users/' + user_name:
         # This is the user's personal folder and it doesn't exist yet.
         # Create it
         block_id = timdb.folders.create('users/' + user_name, getCurrentUserGroup())
@@ -156,7 +155,6 @@ def try_return_folder(doc_name):
         return render_template('create_new.html',
                            userName=getCurrentUserName(),
                            userId=user,
-                           userGroups=possible_groups,
                            rights=rights,
                            in_lecture=is_in_lecture,
                            settings=settings,
@@ -167,7 +165,6 @@ def try_return_folder(doc_name):
     doc = timdb.folders.get(block_id)
     return render_template('index.html',
                            doc=doc,
-                           userGroups=possible_groups,
                            rights=get_rights(block_id),
                            folder=True,
                            in_lecture=is_in_lecture,
@@ -220,6 +217,9 @@ def view(doc_path, template_name, usergroup=None, route="view"):
         else:
             abort(403)
 
+    # Close database here because we won't need it for a while
+    timdb.close()
+
     if get_option(request, 'login', False) and not logged_in():
         return redirect_to_login()
 
@@ -266,6 +266,26 @@ def view(doc_path, template_name, usergroup=None, route="view"):
         if info:
             total_points = info[0]['total_points']
             tasks_done = info[0]['task_count']
+
+    show_questions = False
+    no_question_auto_numbering = None
+
+    if route == 'lecture' and has_edit_access(doc_id):
+        show_questions = True
+        no_question_auto_numbering = doc_settings.auto_number_questions()
+
+    is_in_lecture = False
+    if logged_in():
+        is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user['id'])
+        if is_in_lecture:
+            is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
+
+    rights = get_rights(doc_id)
+    translations = timdb.documents.get_translations(doc_id)
+
+    # Close database here because we won't need it for a while
+    timdb.close()
+
     current_list_user = user_list[0] if user_list else None
 
     raw_css = doc_settings.css() if doc_settings else None
@@ -281,13 +301,6 @@ def view(doc_path, template_name, usergroup=None, route="view"):
         do_lazy = False
     else:
         do_lazy = get_option(request, "lazy", True)
-
-    show_questions = False
-    no_question_auto_numbering = None
-
-    if route == 'lecture' and has_edit_access(doc_id):
-        show_questions = True
-        no_question_auto_numbering = doc_settings.auto_number_questions()
 
     texts, jsPaths, cssPaths, modules = post_process_pars(doc,
                                                           xs,
@@ -314,13 +327,6 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     settings = get_user_settings()
 
-    is_in_lecture = False
-    if logged_in():
-        is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user['id'])
-        if is_in_lecture:
-            is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
-
-
     show_unpublished_bg = is_considered_unpublished(doc_id)
 
     return render_template(template_name,
@@ -339,8 +345,8 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                            start_index=start_index,
                            in_lecture=is_in_lecture,
                            group=usergroup,
-                           rights=get_rights(doc_id),
-                           translations=timdb.documents.get_translations(doc_id),
+                           rights=rights,
+                           translations=translations,
                            reqs=pluginControl.get_all_reqs(),
                            settings=settings,
                            no_browser=hide_answers,

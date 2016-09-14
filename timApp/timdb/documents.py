@@ -1,9 +1,8 @@
 """Defines the Documents class."""
 
 import os
-from sqlite3 import Connection
 
-from typing import List, Optional, Dict, Tuple
+from typing import List, Optional, Dict, Tuple, Iterable
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.docsettings import DocSettings
@@ -351,16 +350,31 @@ class Documents(TimDbBase):
         rows = self.resultAsDictionary(cursor)
         return rows[0] if len(rows) > 0 else None
 
-    def get_documents(self, include_nonpublic: bool = False) -> List[dict]:
+    def get_documents(self, include_nonpublic: bool = False,
+                      filter_ids: Optional[Iterable[int]]=None,
+                      filter_folder: str=None,
+                      search_recursively: bool=True) -> List[dict]:
         """Gets all the documents in the database.
 
-        :historylimit Maximum depth in version history.
+        :param search_recursively: Whether to search recursively.
+        :param filter_folder: Optionally restricts the search to a specific folder.
+        :param filter_ids: An optional iterable of document ids for filtering the documents.
+               Must be non-empty if supplied.
         :param include_nonpublic: Whether to include non-public document names or not.
         :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
         """
         cursor = self.db.cursor()
-        public_clause = '' if include_nonpublic else ' WHERE public = TRUE'
-        cursor.execute('SELECT id, name FROM DocEntry' + public_clause)
+        filter_clause = '' if include_nonpublic else ' AND public = TRUE'
+        if filter_ids:
+            filter_clause += ' AND id IN ({})'.format(','.join(str(x) for x in filter_ids))
+        if filter_folder:
+            filter_folder = filter_folder.strip('/') + '/'
+            if filter_folder == '/':
+                filter_folder = ''
+            filter_clause += " AND name LIKE '{}%'".format(filter_folder)
+        if not search_recursively:
+            filter_clause += " AND name NOT LIKE '{}%/%'".format(filter_folder)
+        cursor.execute('SELECT id, name FROM DocEntry WHERE TRUE' + filter_clause)
         results = self.resultAsDictionary(cursor)
 
         for result in results:
@@ -369,24 +383,21 @@ class Documents(TimDbBase):
 
         return results
 
-    def get_documents_in_folder(self, folder_pathname: str, include_nonpublic: bool = False) -> List[dict]:
+    def get_documents_in_folder(self, folder_pathname: str,
+                                      include_nonpublic: bool = False,
+                                      filter_ids: Optional[Iterable[int]]=None) -> List[dict]:
         """Gets all the documents in a folder
 
+        :param filter_ids: An optional iterable of document ids for filtering the documents.
+               Must be non-empty if supplied.
         :param folder_pathname: path to be searched for documents without ending '/'
         :param include_nonpublic: Whether to include non-public document names or not.
         :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
         """
-       # timdb = getTimDb()
-        documents = self.get_documents(include_nonpublic=include_nonpublic)
-        results = []
-
-
-        for document in documents:
-            document_path, _ = self.split_location(document['name'])
-            if document_path == folder_pathname:
-                results.append(document)
-
-        return results
+        return self.get_documents(include_nonpublic=include_nonpublic,
+                                  filter_folder=folder_pathname,
+                                  search_recursively=False,
+                                  filter_ids=filter_ids)
 
     def getDocumentPath(self, document_id: int) -> str:
         """Gets the path of the specified document.

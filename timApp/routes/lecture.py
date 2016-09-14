@@ -159,6 +159,7 @@ def get_updates():
 
     # Jos poistaa tämän while loopin, muuttuu long pollista perinteiseksi polliksi
     while step <= 10:
+        step = 11
         lecturers, students = get_lecture_users(timdb, tempdb, lecture_id)
         # Gets new messages if the wall is in use.
         if use_wall:
@@ -230,7 +231,7 @@ def get_updates():
             # Don't loop when testing
             break
         # Myös tämä sleep kannattaa poistaa.
-        time.sleep(1)
+        # time.sleep(1)
         step += 1
 
     if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
@@ -957,7 +958,7 @@ def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_tim
         # Adding extra time to limit so when people gets question a bit later than others they still get to answer
         extra_time = 3
         end_time += extra_time * 1000
-        while int(time.time() * 1000) < end_time:
+        while int(time.time() * 1000) < end_time: # TODO: check carefully if any sense
             time.sleep(1)
             stopped = True
             question = tempdb.runningquestions.get_running_question_by_id(asked_id)
@@ -1068,6 +1069,7 @@ def get_lecture_answers():
     step = 0
     user_ids = []
     while step <= 10:
+        step = 11
         question = tempdb.runningquestions.get_running_question_by_id(asked_id)
         if not question:
             return jsonResponse({"noAnswer": True})
@@ -1076,7 +1078,7 @@ def get_lecture_answers():
             break
 
         step += 1
-        time.sleep(1)
+        # time.sleep(1)
 
     timdb = getTimDb()
     lecture_answers = []

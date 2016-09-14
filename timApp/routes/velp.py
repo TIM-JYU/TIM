@@ -777,64 +777,35 @@ def get_velp_groups_from_tree(document_id: int):
     velp_group_folder = "velp groups"
 
     current_path = doc_path
-    if current_path != "":
-        velp_groups_path = current_path + "/" + velp_group_folder
-    else:  # Documents in root folder don't like / after empty path
-        velp_groups_path = velp_group_folder
+    velp_groups_path = current_path + "/" + velp_group_folder
     doc_velp_path = velp_groups_path + "/" + doc_name
     username = getCurrentUserName()
     personal_velps_path = "users/" + username + "/" + velp_group_folder
     owner_group_id = 3  # TODO: Choose owner group correctly, now uses All Korppi users
 
     velp_groups = []
+    viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
 
     # Velp groups for areas, plugins etc
     deeper_path = timdb.folders.get_folders(doc_velp_path)
     for path in deeper_path:
         full_path = path['fullname']
-        found_velp_groups = timdb.documents.get_documents_in_folder(full_path)
-        for v in found_velp_groups:
-            if timdb.users.has_view_access(getCurrentUserId(), timdb.documents.get_document_id(v['name'])):
-                v['target_type'] = 0
-                v['target_id'] = 0
-                velp_groups.append(v)
+        velp_groups += get_folder_velp_groups(timdb, full_path, viewable)
 
     # Document's own velp group
-    if current_path != "":
-        found_velp_groups = timdb.documents.get_documents_in_folder(current_path + "/" + velp_group_folder +
-                                                                    "/" + doc_name)
-    else:  # Documents in root folder don't like / after empty path
-        found_velp_groups = timdb.documents.get_documents_in_folder(velp_group_folder + "/" + doc_name)
-    for v in found_velp_groups:
-        if timdb.users.has_view_access(getCurrentUserId(), timdb.documents.get_document_id(v['name'])):
-            v['target_type'] = 0
-            v['target_id'] = 0
-            velp_groups.append(v)
+    velp_groups += get_folder_velp_groups(timdb, current_path + "/" + velp_group_folder + "/" + doc_name, viewable)
 
     # Velp group folder when going towards root in tree
     while True:
-        if current_path != '':
-            found_velp_groups = timdb.documents.get_documents_in_folder(current_path + "/" + velp_group_folder)
-        else:
-            found_velp_groups = timdb.documents.get_documents_in_folder(velp_group_folder)
-        for v in found_velp_groups:
-            if timdb.users.has_view_access(getCurrentUserId(), timdb.documents.get_document_id(v['name'])):
-                v['target_type'] = 0
-                v['target_id'] = 0
-                velp_groups.append(v)
+        velp_groups += get_folder_velp_groups(timdb, current_path + "/" + velp_group_folder, viewable)
         if current_path == '':
             break
         current_path, _ = timdb.folders.split_location(current_path)
 
     # User's own velp groups
-    found_velp_groups = timdb.documents.get_documents_in_folder(personal_velps_path)
-    for v in found_velp_groups:
-        if timdb.users.has_view_access(getCurrentUserId(), timdb.documents.get_document_id(v['name'])):
-            v['target_type'] = 0
-            v['target_id'] = 0
-            velp_groups.append(v)
+    velp_groups += get_folder_velp_groups(timdb, personal_velps_path, viewable)
 
-    results = [dict(t) for t in set(tuple(d.items()) for d in velp_groups)]  # Remove possible doubles
+    results = [dict(t) for t in set(tuple(d.items()) for d in velp_groups)]  # Remove possible duplicates
 
     # Add found documents to VelpGroup table if they weren't there yet
     for result in results:
@@ -845,3 +816,11 @@ def get_velp_groups_from_tree(document_id: int):
             timdb.velp_groups.make_document_a_velp_group(group_name, id_number)
 
     return results
+
+
+def get_folder_velp_groups(timdb, folder, viewable):
+    found_velp_groups = timdb.documents.get_documents_in_folder(folder, filter_ids=viewable)
+    for v in found_velp_groups:
+        v['target_type'] = 0
+        v['target_id'] = 0
+    return found_velp_groups

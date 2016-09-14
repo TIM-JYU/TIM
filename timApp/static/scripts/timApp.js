@@ -124,7 +124,6 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
     };
 
     sc.crumbs = crumbs;
-    sc.userGroups = groups;
     sc.folderOwner = $window.current_user.name;
 	sc.parentfolder = "";
     sc.initFolderVars();
