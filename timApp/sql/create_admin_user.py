@@ -13,3 +13,4 @@ db.users.create_user_with_group(email, realname, email, password, is_admin=True)
 
 print('UserAccount ', email, " created")
 print('Use ', email, " and password you entered to login.")
+db.close()
