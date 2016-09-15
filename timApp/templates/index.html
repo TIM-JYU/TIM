@@ -4,7 +4,8 @@
     {{ super() }}
 
     <script>
-        var folder = "{{doc.fullname if doc else ''}}";
+        var folder = {{ (doc.fullname if doc else '')|tojson }};
+        var items = {{ items | tojson }};
     </script>
     <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
 {% endblock %}
@@ -13,11 +14,9 @@
 
 {% block content %}
     <div ng-controller="IndexCtrl" class="index">
-        <span ng-show="displayIndex">Welcome! Start by choosing a document to view: </span> <img
-            src="{{ url_for('static', filename='images/loading.gif') }}" ng-show="!displayIndex">
+        <span>Welcome! Start by choosing a document to view: </span>
 
-        <div ng-show="displayIndex >= 2">
-            <table class="table" ng-show="documentList.length > 0 || folderList.length > 0 || parentfolder != null">
+            <table class="table" ng-show="itemList.length > 0 || parentfolder != null">
                 <thead>
                 <tr>
                     <th></th>
@@ -40,40 +39,27 @@
                     <td></td>
                     <td></td>
                 </tr>
-                <tr ng-repeat="doc in folderList">
+                <tr ng-repeat="item in itemList">
                     <td>
-                        <a href="/view/{{ '{{ doc.fullname | escape }}' }}">
+                        <a ng-show="item.isFolder" href="/view/{{ '{{ item.fullname | escape }}' }}">
                             <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
                         </a>
                     </td>
                     <td>
-                        <a href="/view/{{ '{{ doc.fullname | escape }}' }}">{{ '{{ doc.name }}' }}</a>
-                        <a><i ng-show="doc.unpublished" class="glyphicon glyphicon-lock" title="Unpublished folder"></i></a>
+                        <a href="/view/{{ '{{ item.fullname | escape }}' }}">{{ '{{ item.name }}' }}</a>
+                        <a><i ng-show="item.unpublished" class="glyphicon glyphicon-lock" title="Unpublished item"></i></a>
                     </td>
                     <td></td>
-                    <td>{{ '{{ doc.modified }}' }}</td>
-                    <td>{{ '{{ doc.owner.name }}' }}</td>
+                    <td>{{ '{{ item.modified }}' }}</td>
+                    <td>{{ '{{ item.owner.name }}' }}</td>
                     <td>
-                        <a title="Manage" ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}"><i class="glyphicon glyphicon-cog"></i></a>
-                    </td>
-                </tr>
-                <tr ng-repeat="doc in documentList">
-                    <td></td>
-                    <td>
-                        <a href="/view/{{ '{{ doc.fullname | escape }}' }}">{{ '{{ doc.name }}' }}</a>
-                        <a><i ng-show="doc.unpublished" class="glyphicon glyphicon-lock" title="Unpublished document"></i></a>
-                    </td>
-                    <td></td>
-                    <td>{{ '{{ doc.modified }}' }}</td>
-                    <td>{{ '{{ doc.owner.name }}' }}</td>
-                    <td>
-                        <a title="Edit" ng-show="doc.canEdit" href="/view/{{ '{{ doc.id }}' }}"><i class="glyphicon glyphicon-pencil"></i></a>
-                        <a title="Manage" ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}"><i class="glyphicon glyphicon-cog"></i></a>
-                        <a title="Teacher" ng-show="doc.isOwner" href="/teacher/{{ '{{ doc.fullname | escape }}' }}"><i class="glyphicon glyphicon-education"></i></a>
+                        <a title="Edit" ng-show="item.canEdit && !item.isFolder" href="/view/{{ '{{ item.id }}' }}"><i class="glyphicon glyphicon-pencil"></i></a>
+                        <a title="Manage" ng-show="item.isOwner" href="/manage/{{ '{{ item.id }}' }}"><i class="glyphicon glyphicon-cog"></i></a>
+                        <a title="Teacher" ng-show="item.isOwner && !item.isFolder" href="/teacher/{{ '{{ item.fullname | escape }}' }}"><i class="glyphicon glyphicon-education"></i></a>
                     </td>
                 </tr>
             </table>
-            <p ng-show="documentList.length == 0 && folderList.length == 0">There are no documents to show.</p>
+            <p ng-show="itemList.length == 0">There are no items to show.</p>
             {% if session.user_id %}
                 <uib-tabset active="-1">
                     <!--
@@ -111,6 +97,5 @@
             {% else %}
                 To create or upload new documents, log in.
             {% endif %}
-        </div>
     </div>
 {% endblock %}

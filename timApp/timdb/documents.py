@@ -366,7 +366,7 @@ class Documents(TimDbBase):
         cursor = self.db.cursor()
         filter_clause = '' if include_nonpublic else ' AND public = TRUE'
         if filter_ids:
-            filter_clause += ' AND id IN ({})'.format(','.join(str(x) for x in filter_ids))
+            filter_clause += self.get_id_filter(filter_ids)
         if filter_folder:
             filter_folder = filter_folder.strip('/') + '/'
             if filter_folder == '/':
@@ -380,6 +380,9 @@ class Documents(TimDbBase):
         for result in results:
             doc = Document(result['id'])
             result['modified'] = doc.get_last_modified()
+            fullname = result['name']
+            result['name'] = self.get_short_name(fullname)
+            result['fullname'] = fullname
 
         return results
 

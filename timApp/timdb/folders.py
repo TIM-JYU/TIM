@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Iterable
 
 from timdb.timdbbase import TimDbBase, blocktypes
 from timdb.timdbexception import TimDbException
@@ -83,12 +83,18 @@ class Folders(TimDbBase):
             return self.create(folder_name, create_with_owner_id)
         return result[0] if result is not None else None
 
-    def get_folders(self, root_path: str = '') -> List[dict]:
+    def get_folders(self, root_path: str = '', filter_ids: Optional[Iterable[int]]=None) -> List[dict]:
         """Gets all the folders under a path.
-        :returns: A list of dictionaries of the form {'id': <folder_id>, 'name': 'folder_name', 'fullname': 'folder_path'}
+        :param root_path: Optionally restricts the search to a specific folder.
+        :param filter_ids: An optional iterable of document ids for filtering the documents.
+               Must be non-empty if supplied.
+        :return: A list of dictionaries of the form {'id': <folder_id>, 'name': 'folder_name', 'fullname': 'folder_path'}
         """
         cursor = self.db.cursor()
-        cursor.execute("SELECT id, name FROM Folder WHERE location = %s", [root_path])
+        filter_clause = ''
+        if filter_ids:
+            filter_clause += self.get_id_filter(filter_ids)
+        cursor.execute("SELECT id, name FROM Folder WHERE location = %s {}".format(filter_clause), [root_path])
         folders = self.resultAsDictionary(cursor)
         for folder in folders:
            folder['fullname'] = self.join_location(root_path, folder['name'])

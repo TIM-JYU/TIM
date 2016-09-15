@@ -617,3 +617,9 @@ def is_considered_unpublished(doc_id):
     timdb = getTimDb()
     owner = timdb.users.get_owner_group(doc_id)
     return has_ownership(doc_id) and not owner.is_large() and len(timdb.users.get_rights_holders(doc_id)) == 0
+
+
+def get_viewable_blocks():
+    if not hasattr(g, 'viewable'):
+        g.viewable = getTimDb().users.get_viewable_blocks(getCurrentUserId())
+    return g.viewable

@@ -1,5 +1,6 @@
 """"""
 import collections
+from typing import Iterable
 import decimal
 import os
 from typing import Optional, Tuple
@@ -129,3 +130,6 @@ class TimDbBase(object):
     @classmethod
     def join_location(cls, location: str, name: str) -> str:
         return name if location == '' else location + '/' + name
+
+    def get_id_filter(self, filter_ids: Iterable[int]):
+        return ' AND id IN ({})'.format(','.join(str(x) for x in filter_ids))

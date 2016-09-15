@@ -138,7 +138,8 @@ class Notes(TimDbBase):
                      FROM UserNotes
                      JOIN UserGroupMember ON UserNotes.UserGroup_id = UserGroupMember.UserGroup_id
                      JOIN UserAccount ON UserGroupMember.User_id = UserAccount.id
-                     WHERE (UserNotes.UserGroup_id = %s {}) AND doc_id IN ({})""".format(include_public_sql, template),
+                     WHERE (UserNotes.UserGroup_id = %s {}) AND doc_id IN ({})
+                     ORDER BY UserNotes.id""".format(include_public_sql, template),
                   [usergroup_id] + list(ids))
         result = self.resultAsDictionary(c)
         return self.process_notes(result)
