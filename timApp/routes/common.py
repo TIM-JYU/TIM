@@ -606,3 +606,9 @@ def grant_access_to_session_users(timdb: TimDb, block_id: int):
                                  'manage',
                                  commit=False)
     timdb.commit()
+
+
+def get_viewable_blocks():
+    if not hasattr(g, 'viewable'):
+        g.viewable = getTimDb().users.get_viewable_blocks(getCurrentUserId())
+    return g.viewable

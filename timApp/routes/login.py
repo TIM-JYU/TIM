@@ -299,7 +299,7 @@ def alt_login():
 @login_page.route("/testuser/<path:anything>")
 def testuser(anything=None):
     flash("Testuser route has been removed; please sign up using email.")
-    return redirect(url_for('index_page'))
+    return redirect(url_for('view_page.index_page'))
 
 
 def save_came_from():
@@ -343,7 +343,7 @@ def quick_login(username):
     session['real_name'] = user['real_name']
     session['email'] = user['email']
     flash("Logged in as: {}".format(username))
-    return redirect(url_for('index_page'))
+    return redirect(url_for('view_page.index_page'))
 
 
 def get_yubico_client():
@@ -410,5 +410,5 @@ def yubi_login(username, otp):
     session['real_name'] = user['real_name']
     session['email'] = user['email']
     flash("Logged in as: {}".format(username))
-    return redirect(url_for('index_page'))
+    return redirect(url_for('view_page.index_page'))
 
