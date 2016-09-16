@@ -279,6 +279,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 			  '<input class="csTinyText no-popup-menu" ng-hide="noeditor && !viewCode" size="{{cols}}" ng-model="usercode" ng-trim="false" ng-attr-placeholder="{{placeholder}}" ng-keypress="runCodeIfCR($event);" />'+
 			  '<button ng-if="isRun"  ng-disabled="isRunning" title="(Ctrl-S)" ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
 			  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>&nbsp&nbsp' +
+			  '<pre  class="console ng-hide" ng-show="result" ng-cloak>{{result}}</pre>'+
 			  '<span class="csRunError"  ng-if="runError" ng-style="tinyErrorStyle">{{error}}</span>'+
 			  '</div>';
     }

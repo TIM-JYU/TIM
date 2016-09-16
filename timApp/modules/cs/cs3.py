@@ -289,8 +289,9 @@ def save_extra_files(extra_files, prgpath):
         ie += 1
         efilename = prgpath + "/extrafile" + str(ie)
         if "name" in extra_file: efilename = prgpath + "/" + extra_file["name"]
+        
+        mkdirs(os.path.dirname(efilename))
         if "text" in extra_file:
-            mkdirs(os.path.dirname(efilename))
             try:
                 codecs.open(efilename, "w", "utf-8").write(extra_file["text"])
             except:
