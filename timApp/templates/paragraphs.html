@@ -51,7 +51,8 @@
 
 {% macro start_area(t, areas, attrs) %}
     {% set area_name = areas|join('_') %}
-    <div class="area {{ t.collapsed }}area_{{areas|join(' area_')}}" data-doc-id="{{ t.doc_id }}">
+    <div class="area {{ t.collapsed }}area_{{areas|join(' area_')}}"
+         data-doc-id="{{ t.doc_id }}">
         <div class="areaContent">
             {{ caller() }}
 {% endmacro %}
@@ -88,9 +89,16 @@
         {% endif %}
 
     {% elif t.collapse_area %}
-        <div class="{{ t.collapse_class }}" title="Click to expand / collapse" data-area="{{ t.collapse_area }}">
+        <div class="{{ t.collapse_class }}" title="Click to expand / collapse"
+             id="{{ t.id }}"
+             t="{{ t.t }}"
+             attrs="{{ t.attrs_str }}"
+
+             data-area="{{ t.collapse_area }}">
             <span class="areatitle">{{ t.html|safe }}</span>
-            <!--<div class="areareadline {{ t.status }}" title="Click to mark this area as read"></div>-->
+            <div class="readline {{ t.status }}" title="Click to mark this area as read"></div>
+            <!--<div class="areareadline {{ t.status }}" title="Click to mark this area as read"></div> -->
+           {{ editline|safe }}
         </div>
 
     {% else %}

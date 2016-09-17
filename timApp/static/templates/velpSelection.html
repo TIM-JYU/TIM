@@ -1,4 +1,4 @@
-<div  tim-draggable-fixed="" class="velpFixed" save="velpMenu" click="true" resize="true" caption="Velp menu" id="velpSelection">
+<div  tim-draggable-fixed="" class="velpFixed" save="%%PAGEID%%velpMenu" click="true" resize="true" caption="Velp menu" id="velpSelection">
   <div class="velpMenu draggable-content" >
 
     <uib-tabset active="active" class="velpFill">
@@ -155,7 +155,7 @@
                         </div>
                     </div>
                     <button ng-click="releaseClicked()" class="timButton" id="releaseSelectVelpsButton" style="padding-top: 0px;padding-bottom: 0px;margin-bottom: 10px ">&#8592;</button>
-    <div id="selectVelpsDiv" tim-draggable-fixed>
+    <div id="selectVelpsDiv" save="%%PAGEID%%selectVelpsDiv" tim-draggable-fixed>
         <span title="Close" class="glyphicon glyphicon-remove clickable-icon closedraggable" ng-click="releaseClicked()" style="visibility: hidden;position: absolute; margin-left: 16.7em;margin-top: 0.2em"></span>
                     <!-- EDIT VELPS -->
                             <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn ) track by $index">
