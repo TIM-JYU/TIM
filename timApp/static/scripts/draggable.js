@@ -1,6 +1,27 @@
 var angular;
 var timApp = angular.module('timApp');
 
+function setStorage(key, value) {
+    value = JSON.stringify(value);
+    window.localStorage.setItem(key, value);
+}
+
+
+function getStorage(key) {
+    var s = window.localStorage.getItem(key);
+    if  ( !s ) return s;
+    s = JSON.parse(s);
+    return s;
+}
+
+
+function wmax(value, zero) {
+    if ( !value ) return zero;
+    if (value[0] == '-' ) return zero;
+    return value;
+}
+
+
 timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', function ($document, $window, $parse) {
 
     var resizableConfig = {};
@@ -35,14 +56,18 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                     element.height(15);
                     base.css('display', 'none');
                     element.css('min-height', '0');
+                    setStorage(scope.posKey+"min", true)
                 } else {
                     base.css('display', '');
                     element.css('min-height', '');
                     element.height(areaHeight);
+                    setStorage(scope.posKey+"min", false)
                 }
                 scope.$apply();
             };
 
+
+            scope.minimize = minimize;
 
             function resizeElement(e, up, right, down, left) {
                 upResize = up;
@@ -230,6 +255,10 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 $document.off('mousemove pointermove touchmove', move);
                 $document.off('mousemove pointermove touchmove', moveResize);
                 pos = getPageXY(e);
+                if ( scope.posKey ) {
+                    var css = element.css(['top', 'bottom', 'left', 'right']);
+                    setStorage(scope.posKey, css);
+                }
 
                 /*
                  if (!(upResize || rightResize || downResize || leftResize) && clickFn && e.which === 1) {
@@ -284,9 +313,33 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
 
                 e.preventDefault();
                 e.stopPropagation();
+
+                if ( scope.posKey ) {
+                    var size = element.css(["width", "height"]);
+                    setStorage(scope.posKey + "Size", size );
+                }
             }
 
             element.context.style.msTouchAction = 'none';
+
+            if ( attr.save ) {
+                scope.pageId = window.location.pathname.split('/')[1];  // /velp/???
+                scope.posKey = attr.save.replace('%%PAGEID%%',scope.pageId);
+                var oldPos = getStorage(scope.posKey);
+                if ( oldPos ) {
+                    if (oldPos.top) element.css('top', wmax(oldPos.top,"0px"));
+                    if (oldPos.left) element.css('left', oldPos.left);
+                }
+                var oldSize = getStorage(scope.posKey + "Size");
+                if ( oldSize ) {
+                    if (oldSize.width) element.css('width', oldSize.width);
+                    if (oldSize.height) element.css('height', oldSize.height);
+                }
+                if ( getStorage(scope.posKey+"min") ) scope.minimize();
+            }
+
+
         }
+
     }
 }]);
