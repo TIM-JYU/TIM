@@ -682,11 +682,18 @@ def name_area(doc_id, area_name):
     doc = get_newest_document(doc_id)
     area_attrs = {'area': area_name}
     area_title = ''
+    after_title = ''
     if options.get('collapsible'):
         area_attrs['collapse'] = 'true' if options.get('collapse') else 'false'
         if 'title' in options:
-            hlevel = options.get('hlevel', 3)
-            area_title = ''.join(['#' for _ in range(0, hlevel)]) + ' ' + options['title']
+            hlevel = options.get('hlevel', 0)
+            if ( hlevel ):
+                area_title = ''.join(['#' for _ in range(0, hlevel)]) + ' ' + options['title']
+            else:
+                after_title = '\n' + options['title']
+
+
+
 
     if options.get('timed'):
         if options.get('starttime'):
@@ -696,7 +703,7 @@ def name_area(doc_id, area_name):
         if options.get('alttext'):
             area_attrs['alttext'] = str(options.get('alttext'))
 
-    doc.insert_paragraph(area_title, insert_before_id=area_start, attrs=area_attrs)
+    doc.insert_paragraph(area_title + after_title, insert_before_id=area_start, attrs=area_attrs)
     doc.insert_paragraph('', insert_after_id=area_end, attrs={'area_end': area_name})
 
     return okJsonResponse()

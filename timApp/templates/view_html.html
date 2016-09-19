@@ -102,7 +102,7 @@
 
 {% block rightside %}
     {% if teacher_mode %}
-        <div  save="studentList" class="userFixed" tim-draggable-fixed resize="true"  click="true"  caption="Users with answers ({{ plugin_users|length }})">
+        <div  save="%%PAGEID%%studentList" class="userFixed" tim-draggable-fixed resize="true"  click="true"  caption="Users with answers ({{ plugin_users|length }})">
            <div ng-controller="UserListController" class="userlist draggable-content" >
             {% if plugin_users %}
                 {% raw %}

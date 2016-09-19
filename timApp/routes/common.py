@@ -458,6 +458,7 @@ def process_areas(html_pars: List[Dict]) -> List[Dict]:
                     html_par['collapse_area'] = area_start
                     collapse_classes = ['areaexpand' if collapse else 'areacollapse']
                     collapse_classes.extend(['areawidget_' + area for area in new_areas if area != area_start])
+                    collapse_classes.extend(['par'])
 
                     if len(current_collapsed) > 0:
                         collapse_classes.append('collapsed')

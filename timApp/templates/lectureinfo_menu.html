@@ -115,7 +115,7 @@
     </div>
 </div>
 
-    <div class="wall-behind" id="wall" ng-show="lectureSettings.useWall && lectureSettings.inLecture" ng-cloak
+    <div class="wall-behind" save="wall" id="wall" ng-show="lectureSettings.useWall && lectureSettings.inLecture" ng-cloak
          tim-draggable-fixed close="changeUsingWall(false)" click="hideWall()"
          caption="{% raw %}{{ wallName }}{% endraw %}"
          resize="{% raw %}{{ !lectureSettings.wallMinimized }}{% endraw %}">

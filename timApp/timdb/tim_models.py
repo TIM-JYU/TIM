@@ -14,6 +14,7 @@ NEWEST_DB_VERSION constant.
 TODO: Use Flask-Migrate <http://flask-migrate.readthedocs.io/en/latest/> instead of homebrew update mechanism.
 """
 import datetime
+from sqlalchemy.schema import CreateTable
 import inspect
 import sys
 from datetime import timezone
@@ -277,8 +278,6 @@ def print_schema(bind: str = 'tim_main'):
     models = inspect.getmembers(sys.modules[__name__], lambda x: inspect.isclass(x) and hasattr(x, '__table__'))
     eng = db.get_engine(app, bind)
 
-    # Import CreateTable after getmembers because otherwise it would be included in models.
-    from sqlalchemy.schema import CreateTable
     for _, model_class in models:
         print(CreateTable(model_class.__table__).compile(eng), end=';')
     print()
