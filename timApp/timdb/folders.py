@@ -1,38 +1,22 @@
 from typing import List, Optional, Iterable
 
-from timdb.timdbbase import TimDbBase, blocktypes
-from timdb.timdbexception import TimDbException
+from timdb.blocktypes import blocktypes
+from timdb.models.folder import Folder
+from timdb.timdbbase import TimDbBase
 
 ID_ROOT_FOLDER = -1
 
 class Folders(TimDbBase):
-    def create(self, name: str, owner_group_id: int) -> int:
+    def create(self, name: str, owner_group_id: int, apply_default_rights: bool=False) -> int:
         """Creates a new folder with the specified name.
 
+        :param apply_default_rights: Whether to apply default rights from parents.
         :param name: The name of the folder to be created.
         :param owner_group_id: The id of the owner group.
         :returns: The id of the newly created folder.
         """
 
-        if '\0' in name:
-            raise TimDbException('Folder name cannot contain null characters.')
-
-        block_id = self.get_folder_id(name)
-        if block_id is not None:
-            return block_id
-
-        cursor = self.db.cursor()
-        block_id = self.insertBlockToDb(name, owner_group_id, blocktypes.FOLDER)
-
-        rel_path, rel_name = self.split_location(name)
-        cursor.execute("INSERT INTO Folder (id, name, location) VALUES (%s, %s, %s)", [block_id, rel_name, rel_path])
-        self.db.commit()
-
-        # Make sure that the parent folder exists
-        # Note that get_folder_id calls create if it doesn't so there's implicit recursivity
-        self.get_folder_id(rel_path, owner_group_id)
-
-        return block_id
+        return Folder.create(name, owner_group_id, apply_default_rights=apply_default_rights).id
 
     def get_id(self, name: str) -> Optional[int]:
         """Gets the folders's identifier by its name or None if not found.
@@ -70,18 +54,12 @@ class Folders(TimDbBase):
         cursor.execute('SELECT EXISTS(SELECT id FROM Folder WHERE id = %s)', [folder_id])
         return bool(int(cursor.fetchone()[0]))
 
-    def get_folder_id(self, folder_name: str, create_with_owner_id: Optional[int] = None) -> Optional[int]:
+    def get_folder_id(self, folder_name: str) -> Optional[int]:
         if folder_name == '':
             return ID_ROOT_FOLDER
 
-        cursor = self.db.cursor()
-        rel_loc, rel_name = self.split_location(folder_name)
-        cursor.execute('SELECT id FROM Folder WHERE name = %s AND location = %s', [rel_name, rel_loc])
-        result = cursor.fetchone()
-        if result is None and create_with_owner_id is not None:
-            #print("I created a folder record for " + folderName)
-            return self.create(folder_name, create_with_owner_id)
-        return result[0] if result is not None else None
+        f = Folder.find_by_full_path(folder_name)
+        return f.id if f else None
 
     def get_folders(self, root_path: str = '', filter_ids: Optional[Iterable[int]]=None) -> List[dict]:
         """Gets all the folders under a path.

@@ -538,7 +538,7 @@ def validate_item_and_create(item_name, item_type, owner_group_id):
     timdb = getTimDb()
     validate_item(item_name, item_type)
     item_path, _ = timdb.folders.split_location(item_name)
-    timdb.folders.create(item_path, owner_group_id)
+    timdb.folders.create(item_path, owner_group_id, apply_default_rights=True)
 
 
 def get_user_settings():

@@ -65,7 +65,6 @@ class TimDb(object):
                 log_info('Creating directory: {}'.format(path))
                 os.makedirs(path)
         self.session = session
-        self.owns_session = session is None
         self.reset_attrs()
 
     def reset_attrs(self):
@@ -108,8 +107,7 @@ class TimDb(object):
             try:
                 self.engine = db.get_engine(app, 'tim_main')
                 self.db = self.engine.connect().connection
-                if self.owns_session:
-                    self.session = db.create_scoped_session()
+                self.session = db.session
                 break
             except Exception as err:
                 if not waiting: log_info("WaitDb " + str(self.num) + " " + str(err))
@@ -161,9 +159,6 @@ class TimDb(object):
             try:
                 bes = self.get_pg_connections()
                 self.db.close()
-                if self.owns_session:
-                    self.session.remove()
-                    self.session = None
             except Exception as err:
                 log_info('close error: ' + str(self.num) + ' ' + str(err))
 

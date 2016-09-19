@@ -2,9 +2,12 @@ import hashlib
 import re
 from typing import Optional, List, Set
 
+from timdb.blocktypes import blocktypes, BlockType
 from timdb.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
     LOGGED_IN_USERNAME, ADMIN_GROUPNAME
-from timdb.tim_models import User, UserGroup, Block
+from timdb.tim_models import User, UserGroup
+from timdb.models.folder import Folder
+from timdb.models.block import Block
 from timdb.timdbbase import TimDbBase
 from timdb.timdbexception import TimDbException
 
@@ -14,6 +17,7 @@ LOGGED_USER_ID = None
 ANON_GROUP_ID = None
 LOGGED_GROUP_ID = None
 ADMIN_GROUP_ID = None
+KORPPI_GROUP_ID = None
 
 
 class NoSuchUserException(TimDbException):
@@ -26,6 +30,9 @@ class Users(TimDbBase):
     """Handles saving and retrieving user-related information to/from the database."""
 
     access_type_map = {}
+
+    default_right_paths = {blocktypes.DOCUMENT: 'Templates/$DefaultDocumentRights',
+                           blocktypes.FOLDER: 'Templates/$DefaultFolderRights'}
 
     def create_special_usergroups(self) -> int:
         """Creates an anonymous user and a usergroup for it.
@@ -240,6 +247,32 @@ class Users(TimDbBase):
                           WHERE Block_id = %s""", [block_id])
         return self.resultAsDictionary(cursor)
 
+    def get_default_rights_holders(self, folder_id: int, object_type: BlockType):
+        doc = self.get_default_right_document(folder_id, object_type)
+        if doc is None:
+            return []
+        return self.get_rights_holders(doc.id)
+
+    def grant_default_access(self, group_id: int, folder_id: int, access_type: str, object_type: BlockType):
+        doc = self.get_default_right_document(folder_id, object_type, create_if_not_exist=True)
+        self.grant_access(group_id, doc.id, access_type)
+
+    def remove_default_access(self, group_id: int, folder_id: int, access_type: str, object_type: BlockType):
+        doc = self.get_default_right_document(folder_id, object_type, create_if_not_exist=True)
+        self.remove_access(group_id, doc.id, access_type)
+
+    def get_default_right_document(self, folder_id, object_type: BlockType, create_if_not_exist=False):
+        folder = Folder.get_by_id(folder_id)
+        if folder is None:
+            raise TimDbException('Non-existent folder')
+        right_doc_path = self.default_right_paths.get(object_type)
+        if right_doc_path is None:
+            raise TimDbException('Unsupported object type: {}'.format(object_type))
+        doc = folder.get_document(right_doc_path,
+                                  create_if_not_exist=create_if_not_exist,
+                                  creator_group_id=self.get_admin_group_id())
+        return doc
+
     def get_owner_group(self, block_id: int) -> UserGroup:
         """Returns the owner group of the specified block.
         
@@ -437,7 +470,7 @@ class Users(TimDbBase):
         cursor = self.db.cursor()
         if access_id is not None:
             cursor.execute("""INSERT INTO BlockAccess (Block_id,UserGroup_id,accessible_from,type)
-                              VALUES (%s,%s,CURRENT_TIMESTAMP, %s)""", [block_id, group_id, access_id])
+                              VALUES (%s,%s,CURRENT_TIMESTAMP, %s) ON CONFLICT DO NOTHING""", [block_id, group_id, access_id])
         if commit:
             self.db.commit()
 
@@ -728,6 +761,13 @@ WHERE User_id IN ({}))
             return ADMIN_GROUP_ID
         ADMIN_GROUP_ID = self.get_usergroup_by_name(ADMIN_GROUPNAME)
         return ADMIN_GROUP_ID
+
+    def get_korppi_group_id(self) -> int:
+        global KORPPI_GROUP_ID
+        if KORPPI_GROUP_ID is not None:
+            return KORPPI_GROUP_ID
+        KORPPI_GROUP_ID = self.get_usergroup_by_name(KORPPI_GROUPNAME)
+        return KORPPI_GROUP_ID
 
     def set_usergroup_name(self, group_id: int, user_name: str):
         c = self.db.cursor()

@@ -1,7 +1,7 @@
 import os
 import sqlite3
 from timdb.timdb2 import TimDb
-from timdb.timdbbase import blocktypes
+from timdb.blocktypes import blocktypes
 
 
 def create_tables(db):

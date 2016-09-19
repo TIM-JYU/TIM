@@ -14,8 +14,8 @@ from plugin import Plugin
 from routes.common import logged_in, getTimDb, jsonResponse, getCurrentUserGroup, okJsonResponse, validate_item_and_create, \
     verify_view_access, verify_task_access, getCurrentUserName, \
     verify_seeanswers_access, grant_access_to_session_users
-from timdb.tim_models import Block
-from timdb.timdbbase import blocktypes
+from timdb.models.block import Block
+from timdb.blocktypes import blocktypes
 
 upload = Blueprint('upload',
                    __name__,

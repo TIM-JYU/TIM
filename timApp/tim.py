@@ -3,23 +3,22 @@
 import http.client
 import imghdr
 import io
+import shutil
 import time
 
-import shutil
 from flask import Blueprint
 from flask import render_template
 from flask import stream_with_context
-from flask_assets import Environment
 from flask.helpers import send_file
+from flask_assets import Environment
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
 import containerLink
 from ReverseProxied import ReverseProxied
 from documentmodel.documentversion import DocumentVersion
 from plugin import PluginException
-from routes.answer import answers
-from routes.velp import velps
 from routes.annotation import annotations
+from routes.answer import answers
 from routes.cache import cache
 from routes.clipboard import clipboard
 from routes.common import *
@@ -35,11 +34,11 @@ from routes.readings import readings
 from routes.search import search_routes
 from routes.settings import settings_page
 from routes.upload import upload
+from routes.velp import velps
 from routes.view import view_page
 from tim_app import app
-
-# db.engine.pool.use_threadlocal = True # This may be needless
-from utils import date_to_relative
+from timdb.blocktypes import from_str
+from timdb.dbutils import copy_default_rights
 from timdb.users import NoSuchUserException
 
 cache.init_app(app)
@@ -206,9 +205,11 @@ def get_templates():
     templates = []
 
     while True:
-        templates += timdb.documents.get_documents(filter_ids=get_viewable_blocks(),
+        for t in timdb.documents.get_documents(filter_ids=get_viewable_blocks(),
                                       filter_folder=current_path + '/Templates',
-                                      search_recursively=False)
+                                      search_recursively=False):
+            if not t['name'].startswith('$'):
+                templates.append(t)
         if current_path == '':
             break
         current_path, _ = timdb.folders.split_location(current_path)
@@ -220,7 +221,9 @@ def create_item(item_name, item_type, create_function, owner_group_id):
     validate_item_and_create(item_name, item_type, owner_group_id)
 
     item_id = create_function(item_name, owner_group_id)
-    grant_access_to_session_users(getTimDb(), item_id)
+    timdb = getTimDb()
+    grant_access_to_session_users(timdb, item_id)
+    copy_default_rights(item_id, from_str(item_type))
     return jsonResponse({'id': item_id, 'name': item_name})
 
 

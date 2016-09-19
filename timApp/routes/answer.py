@@ -6,8 +6,9 @@ from flask import Blueprint
 import containerLink
 from options import get_option
 from plugin import Plugin, PluginException
-from timdb.tim_models import Block, AnswerUpload
-from timdb.timdbbase import blocktypes
+from timdb.tim_models import AnswerUpload
+from timdb.models.block import Block
+from timdb.blocktypes import blocktypes
 from .common import *
 
 

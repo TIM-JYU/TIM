@@ -1,0 +1,42 @@
+<div class="margin rights-list" ng-repeat="type in accessTypes">
+    <a ng-click="showAddRightFn(type)"
+       title="Click to add {{ type.name }} right to some usergroup">{{ type.name }} right</a>:
+    <span ng-show="filtered.length == 0">none</span>
+
+    <ul>
+        <li ng-repeat="group in filtered = (grouprights | filter: {access_type: type.id}:true)">{{group.name}}
+            <a class="btn btn-default btn-xs" ng-click="removeConfirm(group, type.name)">remove</a>
+        </li>
+    </ul>
+</div>
+
+<button class="timButton" ng-show="!showAddRight" ng-click="showAddRight = true; focusEditor = true">Add right</button>
+<div ng-show="showAddRight" class="rights-list">
+    <form ng-submit="addPermission(groupName, accessType)">
+        <div class="row">
+            <div class="form-group col-md-6 input-group-sm">
+                <label for="groupName">Name: </label>
+                <input id="groupName" class="form-control" type="text" ng-model="groupName"
+                       focus-me="focusEditor"
+                       placeholder='enter userid or group name'>
+            </div>
+            <div class="form-group col-md-6 input-group-sm">
+                <label for="accessType">Right:</label>
+                <select id="accessType" class="form-control" ng-model="accessType"
+                        ng-options="access.name for access in accessTypes track by access.id"></select>
+            </div>
+        </div>
+        <button class="timButton" type="submit" ng-disabled="!groupName">Add</button>
+        <button class="timButton" type="button" ng-click="showAddRight = false">Cancel</button>
+
+        <button class="timButton" type="button" ng-click="addPermission('Korppi users', accessType)">Add Korppi users
+        </button>
+        <button class="timButton" type="button" ng-click="addPermission('Logged-in users', accessType)">Add logged-in
+            users
+        </button>
+        <button class="timButton" type="button" ng-click="addPermission('Anonymous users', accessType)">Add anonymous
+            users
+        </button>
+
+    </form>
+</div>

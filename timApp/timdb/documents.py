@@ -8,7 +8,9 @@ from documentmodel.docparagraph import DocParagraph
 from documentmodel.docsettings import DocSettings
 from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser
-from timdb.timdbbase import TimDbBase, blocktypes
+from timdb.models.docentry import DocEntry
+from timdb.timdbbase import TimDbBase
+from timdb.blocktypes import blocktypes
 from timdb.timdbexception import TimDbException
 
 NOTIFICATION_TYPES = ['email_doc_modify', 'email_comment_add', 'email_comment_modify']
@@ -41,7 +43,7 @@ class Documents(TimDbBase):
         self.update_last_modified(doc)
         return [par], doc
 
-    def create(self, name: Optional[str], owner_group_id: int) -> Document:
+    def create(self, name: str, owner_group_id: int) -> Document:
         """Creates a new document with the specified name.
         
         :param name: The name of the document to be created (can be None).
@@ -49,17 +51,7 @@ class Documents(TimDbBase):
         :returns: The newly created document object.
         """
 
-        if name is not None and '\0' in name:
-            raise TimDbException('Document name cannot contain null characters.')
-
-        document_id = self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
-        document = Document(document_id, modifier_group_id=owner_group_id)
-        document.create()
-
-        if name is not None:
-            self.add_name(document_id, name)
-
-        return document
+        return DocEntry.create(name, owner_group_id).document
 
     def create_translation(self, original_doc: Document, name: Optional[str], owner_group_id: int,
                            ref_attribs: Optional[Dict[str, str]] = None) -> Document:
