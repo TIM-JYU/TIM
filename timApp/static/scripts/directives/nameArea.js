@@ -40,8 +40,14 @@ timApp.directive('nameArea', ['$http', '$window', '$filter', function ($http, $w
             };
             
             $scope.addArea = function () {
-                $scope.options.starttime = $('#starttime').val();
-                $scope.options.endtime = $('#endtime').val();
+                var startDate = $('#starttimepicker').data("DateTimePicker").date();
+                var endDate = $('#endtimepicker').data("DateTimePicker").date();
+
+                if (startDate != null)
+                    $scope.options.starttime = startDate.toISOString();
+                if (endDate != null)
+                    $scope.options.endtime = endDate.toISOString();
+
                 $scope.closePopup();
 
                 if ($scope.onOk)
