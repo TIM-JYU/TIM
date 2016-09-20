@@ -50,6 +50,9 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
                 });
                 gridApi.grid.modifyRows($scope.gridOptions.data);
                 gridApi.selection.selectRow($scope.gridOptions.data[0]);
+                gridApi.cellNav.on.navigate($scope, function (newRowCol, oldRowCol) {
+                    $scope.gridApi.selection.selectRow(newRowCol.row.entity);
+                });
             },
             gridMenuCustomItems: [
                 {
