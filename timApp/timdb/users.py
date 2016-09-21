@@ -283,13 +283,13 @@ class Users(TimDbBase):
         result = cursor.fetchone()
         return result[0] if result is not None else None
 
-    def get_user_by_name(self, name: str) -> User:
+    def get_user_by_name(self, name: str) -> Optional[User]:
         """Gets the user information of the specified username.
 
         :param name: The name of the user.
         :returns: The user information or None if the user does not exist.
         """
-        return self.session.query(User).filter(User.name==name).one()
+        return self.session.query(User).filter(User.name==name).first()
 
     def get_user_by_email(self, email: str) -> Optional[dict]:
         """Gets the data of the specified user email address.
