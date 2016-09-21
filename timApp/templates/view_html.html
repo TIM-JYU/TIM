@@ -166,6 +166,14 @@
                     {% include 'view_content.html' %}
                 </div>
             {% endif %}
+            {% if not text %}
+                <bootstrap-panel title="Review document permissions" show-close="true">
+                    <rights-editor
+                        item-id="docId"
+                        url-root="permissions">
+                    </rights-editor>
+                </bootstrap-panel>
+            {% endif %}
         {% endif %}
     </div>
     <p id="test"></p>

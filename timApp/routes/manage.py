@@ -12,7 +12,7 @@ manage_page = Blueprint('manage_page',
 @manage_page.route("/manage/<path:path>")
 def manage(path):
     timdb = getTimDb()
-    isFolder = False
+    is_folder = False
     doc_info = timdb.documents.resolve_doc_id_name(path)
     if doc_info is None:
         try:
@@ -23,21 +23,21 @@ def manage(path):
             folder_id = timdb.folders.get_folder_id(path.rstrip('/'))
             if folder_id is None:
                 abort(404)
-        isFolder = True
+        is_folder = True
         block_id = folder_id
     else:
         block_id = doc_info['id']
 
     if not timdb.users.has_manage_access(getCurrentUserId(), block_id):
         if verify_view_access(block_id):
-            if isFolder:
+            if is_folder:
                 return redirect('/view/' + str(block_id))
             session['message'] = "Did someone give you a wrong link? Showing normal view instead of manage view."
             return redirect('/view/' + str(block_id))
 
     access_types = timdb.users.get_access_types()
 
-    if isFolder:
+    if is_folder:
         doc_data = timdb.folders.get(block_id)
         doc_data['versions'] = []
         doc_data['fulltext'] = ''
@@ -59,16 +59,16 @@ def manage(path):
             ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
 
     doc_data['owner'] = timdb.users.get_owner_group(block_id)
-    return render_template('manage_folder.html' if isFolder else 'manage_document.html',
+    return render_template('manage_folder.html' if is_folder else 'manage_document.html',
                            route='manage',
-                           translations=timdb.documents.get_translations(block_id) if not isFolder else None,
+                           translations=timdb.documents.get_translations(block_id) if not is_folder else None,
                            doc=doc_data,
                            access_types=access_types,
                            rights=get_rights(block_id))
 
 
 @manage_page.route("/changeOwner/<int:doc_id>/<new_owner_name>", methods=["PUT"])
-def changeOwner(doc_id, new_owner_name):
+def change_owner(doc_id, new_owner_name):
     timdb = getTimDb()
     if not timdb.documents.exists(doc_id) and not timdb.folders.exists(doc_id):
         abort(404)
@@ -84,7 +84,7 @@ def changeOwner(doc_id, new_owner_name):
 
 
 @manage_page.route("/permissions/add/<item_id>/<group_name>/<perm_type>", methods=["PUT"])
-def addPermission(item_id, group_name, perm_type):
+def add_permission(item_id, group_name, perm_type):
     verify_manage_access(item_id)
     timdb = getTimDb()
     groups = timdb.users.get_usergroups_by_name(group_name)
@@ -101,7 +101,7 @@ def addPermission(item_id, group_name, perm_type):
 
 
 @manage_page.route("/permissions/remove/<item_id>/<int:group_id>/<perm_type>", methods=["PUT"])
-def removePermission(item_id, group_id, perm_type):
+def remove_permission(item_id, group_id, perm_type):
     timdb = getTimDb()
     verify_manage_access(item_id)
     try:
@@ -112,7 +112,7 @@ def removePermission(item_id, group_id, perm_type):
 
 
 @manage_page.route("/alias/<int:doc_id>/", methods=["GET"])
-def getDocNames(doc_id):
+def get_doc_names(doc_id):
     timdb = getTimDb()
     names = timdb.documents.get_names(doc_id, include_nonpublic=True)
     return jsonResponse(names)
@@ -229,11 +229,11 @@ def rename_folder(doc_id):
 
 
 @manage_page.route("/permissions/get/<int:doc_id>")
-def getPermissions(doc_id):
+def get_permissions(doc_id):
     timdb = getTimDb()
     verify_manage_access(doc_id)
     grouprights = timdb.users.get_rights_holders(doc_id)
-    return jsonResponse({'grouprights': grouprights})
+    return jsonResponse({'grouprights': grouprights, 'accesstypes': timdb.users.get_access_types()})
 
 
 @manage_page.route("/defaultPermissions/<object_type>/get/<folder_id>")
@@ -271,7 +271,7 @@ def verify_and_get_group(folder_id, group_name):
 
 
 @manage_page.route("/documents/<int:doc_id>", methods=["DELETE"])
-def deleteDocument(doc_id):
+def delete_document(doc_id):
     timdb = getTimDb()
     if not timdb.documents.exists(doc_id):
         return abort(404, 'Document does not exist.')
@@ -285,7 +285,7 @@ def deleteDocument(doc_id):
 
 
 @manage_page.route("/folders/<int:doc_id>", methods=["DELETE"])
-def deleteFolder(doc_id):
+def delete_folder(doc_id):
     timdb = getTimDb()
     if not timdb.folders.exists(doc_id):
         return abort(404, 'Folder does not exist.')

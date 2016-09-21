@@ -8,7 +8,7 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
         scope: {
             itemId: '=?',
             urlRoot: '@?',
-            accessTypes: '=',
+            accessTypes: '=?',
             control: '=?'
         },
         templateUrl: "/static/templates/rightsEditor.html",
@@ -20,7 +20,9 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
             var sc = $scope;
             sc.internalControl = sc.control || {};
             sc.grouprights = [];
-            sc.accessType = sc.accessTypes[0];
+            if (sc.accessTypes) {
+                sc.accessType = sc.accessTypes[0];
+            }
 
             sc.showAddRightFn = function (type) {
                 sc.accessType = type;
@@ -40,6 +42,12 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
                 }
                 $http.get('/' + sc.urlRoot + '/get/' + sc.itemId).success(function (data, status, headers, config) {
                     sc.grouprights = data.grouprights;
+                    if (data.accesstypes) {
+                        sc.accessTypes = data.accesstypes;
+                        if (!sc.accessType) {
+                            sc.accessType = sc.accessTypes[0];
+                        }
+                    }
                 }).error(function (data, status, headers, config) {
                     $window.alert("Could not fetch permissions.");
                 });
