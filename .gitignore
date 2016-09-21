@@ -9,6 +9,7 @@
 dist/
 bower_components/
 MIRToolbox/
+pg_backup/
 .stack-work/
 /variables.sh
 /timApp/.hypothesis/

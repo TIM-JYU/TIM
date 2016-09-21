@@ -669,6 +669,7 @@ def get_updated_pars(doc_id):
     verify_view_access(doc_id)
     return par_response([], Document(doc_id), update_cache=True)
 
+
 @edit_page.route("/name_area/<int:doc_id>/<area_name>", methods=["POST"])
 def name_area(doc_id, area_name):
     area_start, area_end = verify_json_params('area_start', 'area_end', require=True)
@@ -691,9 +692,6 @@ def name_area(doc_id, area_name):
                 area_title = ''.join(['#' for _ in range(0, hlevel)]) + ' ' + options['title']
             else:
                 after_title = '\n' + options['title']
-
-
-
 
     if options.get('timed'):
         if options.get('starttime'):
