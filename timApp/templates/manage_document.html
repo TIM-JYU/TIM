@@ -252,7 +252,7 @@
             </thead>
             <tr ng-repeat="version in doc.versions">
                 {% raw %}
-                <td><a href="/download/{{ doc.id }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{ version.time }}</a></td>
+                <td><a href="/download/{{ doc.id }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{ version.time | timdate }}</a></td>
                 <td>{{ version.group }}</td>
                 <td><a href="/view/{{ doc.fullname }}#{{ version.par_id }}">{{ version.par_id }}</a></td>
                 <td>
