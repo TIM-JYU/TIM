@@ -135,7 +135,7 @@ class Documents(TimDbBase):
                     doc_fullname = doc_name if not folder else folder + '/' + doc_name
                     cursor.execute('SELECT EXISTS(SELECT id FROM DocEntry WHERE id = %s)', [doc_id])
                     if not cursor.fetchone()[0]:
-                        cursor.execute('INSERT INTO DocEntry (id, name, public) VALUES (%s, %s, 1)',
+                        cursor.execute('INSERT INTO DocEntry (id, name, public) VALUES (%s, %s, TRUE)',
                                            [doc_id, doc_fullname])
 
             except ValueError:
