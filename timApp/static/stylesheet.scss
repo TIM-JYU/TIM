@@ -299,6 +299,7 @@ p.caption {
         &:last-child {
             margin-bottom: 0;
         }
+        background: $bg-color;
     }
     .timestamp {
         color: lightgrey;
