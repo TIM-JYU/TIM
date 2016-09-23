@@ -21,7 +21,9 @@ function wmax(value, zero) {
     return value;
 }
 
-
+// TODO: iPad move does not save
+// TODO: hide size handle when minimized
+// TODO: prevent window lost when draging away from screen
 timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', function ($document, $window, $parse) {
 
     var resizableConfig = {};
