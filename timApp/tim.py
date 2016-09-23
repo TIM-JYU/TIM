@@ -19,6 +19,7 @@ from documentmodel.documentversion import DocumentVersion
 from plugin import PluginException
 from routes.annotation import annotations
 from routes.answer import answers
+from routes.bookmarks import bookmarks
 from routes.cache import cache
 from routes.clipboard import clipboard
 from routes.common import *
@@ -62,6 +63,7 @@ app.register_blueprint(readings)
 app.register_blueprint(lecture_routes)
 app.register_blueprint(clipboard)
 app.register_blueprint(notify)
+app.register_blueprint(bookmarks)
 app.register_blueprint(Blueprint('bower',
                                  __name__,
                                  static_folder='static/scripts/bower_components',

@@ -13,7 +13,7 @@ class DocEntry(db.Model):
     id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
     public = db.Column(db.Boolean, nullable=False, default=True)
 
-    document = None  # A reference to the Document object
+    document = None  # type: Document
 
     @staticmethod
     def create(name: str, owner_group_id: int) -> 'DocEntry':

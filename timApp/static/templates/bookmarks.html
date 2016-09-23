@@ -1,0 +1,34 @@
+<div ng-repeat="group in data" class="btn-group btn-group-sm margin-4" uib-dropdown is-open="group.isOpen">
+    <button type="button" class="btn btn-default" uib-dropdown-toggle>
+        {{ group.name }} <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu"
+        uib-dropdown-menu
+        role="menu"
+        aria-labelledby="single-button">
+        <li ng-repeat="item in group.items" role="menuitem">
+            <a ng-href="/view/{{ item.path }}">{{ item.name }}
+                <i ng-click="deleteItem(group, item, $event)" ng-show="deleting"
+                   class="glyphicon glyphicon-remove"></i>
+            </a>
+        </li>
+        <li ng-show="group.editable && isSaveablePage() && group.items.length > 0"
+            class="divider"></li>
+        <li ng-show="group.editable && isSaveablePage()" role="menuitem">
+            <a ng-click="addCurrentPageToGroup(group)"
+               href="#">Add current page here</a>
+        </li>
+        <li ng-show="group.editable && (group.items.length > 0)"
+            class="divider"></li>
+        <li ng-show="group.editable && group.items.length > 0" role="menuitem">
+            <a ng-click="toggleDelete($event)"
+               href="#">{{ deleting ? 'Done deleting' : 'Delete page...' }}</a>
+        </li>
+        <li ng-show="group.editable" role="menuitem">
+            <a ng-click="deleteGroup(group)"
+               href="#">Delete this group</a>
+        </li>
+    </ul>
+</div>
+<button ng-click="newGroup()" class="btn btn-sm btn-default"><i class="glyphicon glyphicon-plus"></i> New group...
+</button>

@@ -1,4 +1,4 @@
-from timdb.tim_models import User
+from timdb.models.user import User
 from timdbtest import TimDbTest
 
 

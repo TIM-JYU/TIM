@@ -1,5 +1,6 @@
 from typing import Optional
 
+from documentmodel.document import Document
 from tim_app import db
 from timdb.blocktypes import blocktypes
 from timdb.dbutils import insert_block, copy_default_rights
@@ -50,6 +51,7 @@ class Folder(db.Model):
         DocEntry]:
         doc = DocEntry.query.filter_by(name=join_location(self.get_full_path(), relative_path)).first()
         if doc is not None:
+            doc.document = Document(doc_id=doc.id)
             return doc
         if create_if_not_exist:
             assert creator_group_id is not None
