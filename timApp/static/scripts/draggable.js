@@ -378,7 +378,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                     if (oldPos.top && setTop) element.css('top', wmax(oldPos.top,0,h-20));
                     if (oldPos.left && setLeft) element.css('left', wmax(oldPos.left,0-ew+20,w-20));
                     if (oldPos.right && setRight) element.css('right', wmax(oldPos.right,20,w));
-                    if (oldPos.bottom && setBottom) element.css('bottom', vmax(oldPos.bottom,20,h));
+                    if (oldPos.bottom && setBottom) element.css('bottom', wmax(oldPos.bottom,20,h));
                     // element.css("background", "red");
                     timLogTime("oldpos:" + oldPos.left +", " + oldPos.top, "drag")
                 }
