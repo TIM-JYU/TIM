@@ -14,15 +14,22 @@ function getStorage(key) {
     return s;
 }
 
+function getPixels(s) {
+    s2 = s.replace(/px$/, '');
+    return Number(s2) || 0;
+}
 
-function wmax(value, zero) {
-    if ( !value ) return zero;
-    if (value[0] == '-' ) return zero;
+
+function wmax(value, min, max) {
+    if ( !value ) return min+"px";
+    if ( value == "auto" ) return value;
+    var v = getPixels(value);
+
+    if ( v <=  min ) return min+"px";
+    if ( v >=  max ) return max + "px"
     return value;
 }
 
-// TODO: iPad move does not save
-// TODO: prevent window lost when draging away from screen
 timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', function ($document, $window, $parse) {
 
     var resizableConfig = {};
@@ -254,10 +261,6 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 return lastPageXYPos;
             }
 
-            function getPixels(s) {
-                s2 = s.replace(/px$/, '');
-                return Number(s2) || 0;
-            }
 
 
             handle.on('mousedown pointerdown touchstart', function (e) {
@@ -367,11 +370,15 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                     if (oldSize.height) element.css('height', oldSize.height);
                 }
                 var oldPos = getStorage(scope.posKey);
+                var w = window.innerWidth;
+                var h = window.innerHeight;
+                var ew = element.width();
+                var eh = element.height();
                 if ( oldPos ) {
-                    if (oldPos.top && setTop) element.css('top', wmax(oldPos.top,"0px"));
-                    if (oldPos.left && setLeft) element.css('left', oldPos.left);
-                    if (oldPos.right && setRight) element.css('right', oldPos.right);
-                    if (oldPos.bottom && setBottom) element.css('bottom', oldPos.bottom);
+                    if (oldPos.top && setTop) element.css('top', wmax(oldPos.top,0,h-20));
+                    if (oldPos.left && setLeft) element.css('left', wmax(oldPos.left,0-ew+20,w-20));
+                    if (oldPos.right && setRight) element.css('right', wmax(oldPos.right,20,w));
+                    if (oldPos.bottom && setBottom) element.css('bottom', vmax(oldPos.bottom,20,h));
                     // element.css("background", "red");
                     timLogTime("oldpos:" + oldPos.left +", " + oldPos.top, "drag")
                 }
