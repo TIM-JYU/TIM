@@ -172,7 +172,8 @@ def post_answer(plugintype: str, task_id_ext: str):
                     else:
                         points_given_by = getCurrentUserGroup()
                         points = custom_points_float
-            result['savedNew'], saved_answer_id = timdb.answers.saveAnswer(users,
+            if points or save_object or tags:
+                result['savedNew'], saved_answer_id = timdb.answers.saveAnswer(users,
                                                           task_id,
                                                           json.dumps(save_object),
                                                           points,

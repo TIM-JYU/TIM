@@ -22,7 +22,6 @@ function wmax(value, zero) {
 }
 
 // TODO: iPad move does not save
-// TODO: hide size handle when minimized
 // TODO: prevent window lost when draging away from screen
 timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', function ($document, $window, $parse) {
 
@@ -33,6 +32,10 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
         replace: false,
 
         link: function (scope, element, attr) {
+            if ( attr.save ) {
+                scope.pageId = window.location.pathname.split('/')[1];  // /velp/???
+                scope.posKey = attr.save.replace('%%PAGEID%%', scope.pageId);
+            }
 
             var clickFn = null;
             var areaMinimized = false;
@@ -52,20 +55,25 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
 
             function minimize() {
                 areaMinimized = !areaMinimized;
+                var handles;
                 var base = element.find('.draggable-content');
                 if (areaMinimized) {
                     areaHeight = element.height();
                     element.height(15);
                     base.css('display', 'none');
                     element.css('min-height', '0');
-                    setStorage(scope.posKey+"min", true)
+                    setStorage(scope.posKey+"min", true);
+                    handles = element.find('.resizehandle');
+                    if ( handles.length ) handles.css('display', 'none');
+
                 } else {
                     base.css('display', '');
                     element.css('min-height', '');
                     element.height(areaHeight);
                     setStorage(scope.posKey+"min", false)
+                    element.find('.resizehandle').css('display', '');
                 }
-                scope.$apply();
+                if ( handles.length ) scope.$apply();
             };
 
 
@@ -128,6 +136,11 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                     resizeElement(e, false, true, true, false)
                 });
                 element.append(handleRightDown);
+
+                if ( areaMinimized ) {
+                    var handles = element.find('.resizehandle');
+                    if ( handles.length ) handles.css('display', 'none');
+                }
             }
 
             function removeResizeHandles() {
@@ -198,15 +211,29 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
             }
 
 
-            function getPageXY(e) {
+            function getPageXYnull(e) {
                 if (!('pageX' in e) || (e.pageX == 0 && e.pageY == 0)) {
-                    return {
+                    if ( e.originalEvent.touches.length ) return {
                         X: e.originalEvent.touches[0].pageX,
                         Y: e.originalEvent.touches[0].pageY
                     };
+                    if ( e.originalEvent.changedTouches.length ) return {
+                        X: e.originalEvent.changedTouches[0].pageX,
+                        Y: e.originalEvent.changedTouches[0].pageY
+                    };
+                    return null;
                 }
 
                 return {X: e.pageX, Y: e.pageY};
+            }
+
+
+            var lastPageXYPos = {X:0, Y: 0};
+
+            function getPageXY(e) {
+                var pos = getPageXYnull(e);
+                if ( pos ) lastPageXYPos = pos;
+                return lastPageXYPos;
             }
 
             function getPixels(s) {
@@ -325,8 +352,6 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
             element.context.style.msTouchAction = 'none';
 
             if ( attr.save ) {
-                scope.pageId = window.location.pathname.split('/')[1];  // /velp/???
-                scope.posKey = attr.save.replace('%%PAGEID%%',scope.pageId);
                 var oldPos = getStorage(scope.posKey);
                 if ( oldPos ) {
                     if (oldPos.top) element.css('top', wmax(oldPos.top,"0px"));

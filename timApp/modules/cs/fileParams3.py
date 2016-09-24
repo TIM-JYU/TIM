@@ -887,7 +887,17 @@ def find_java_package(s):
     return p, c
 
 
-#Palauttaa intin joka löytyy jonon alusta    
+# Etsii C# luokan nimen tiedostosta
+def find_cs_class(s):
+    p = ""
+    c = "Peli"
+    r = re.search("public\s*class\s*([a-zA-Z0-9_]+)", s, flags=re.M)
+    if r: c = r.group(1)
+
+    return c
+
+
+#Palauttaa intin joka löytyy jonon alusta
 def getint(s):
     i = 0
     s = s.strip(" ")
