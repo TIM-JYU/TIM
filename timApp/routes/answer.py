@@ -118,13 +118,15 @@ def post_answer(plugintype: str, task_id_ext: str):
     timdb.close()
 
     answer_call_data = {'markup': plugin.values, 'state': state, 'input': answerdata, 'taskID': task_id}
-    plugin_response = containerLink.call_plugin_answer(plugintype, answer_call_data)
 
     try:
+        plugin_response = containerLink.call_plugin_answer(plugintype, answer_call_data)
         jsonresp = json.loads(plugin_response)
     except ValueError:
         return jsonResponse({'error': 'The plugin response was not a valid JSON string. The response was: ' +
                                       plugin_response}, 400)
+    except PluginException:
+        return jsonResponse({'error': 'The plugin response took too long'}, 400)
 
     if 'web' not in jsonresp:
         return jsonResponse({'error': 'The key "web" is missing in plugin response.'}, 400)
@@ -180,6 +182,8 @@ def post_answer(plugintype: str, task_id_ext: str):
                                                           tags,
                                                           is_valid,
                                                           points_given_by)
+            else:
+                result['savedNew'], saved_answer_id = False, None
             if not is_valid:
                 result['error'] = explanation
         elif save_teacher:
