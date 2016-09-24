@@ -41,6 +41,17 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
             var areaMinimized = false;
             var areaHeight = 0;
 
+            var setLeft = 1;
+            var setRight = 0;
+            var setBottom = 0;
+            var setTop = 1;
+            var prevTop;
+            var prevLeft;
+            var prevBottom;
+            var prevRight;
+
+
+
             if (attr.click) {
                 if ( attr.click === "true" )
                     clickFn = minimize;
@@ -79,19 +90,12 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
 
             scope.minimize = minimize;
 
-            function resizeElement(e, up, right, down, left) {
-                upResize = up;
-                rightResize = right;
-                downResize = down;
-                leftResize = left;
-                $document.off('mouseup pointerup touchend', release);
-                $document.off('mousemove pointermove touchmove', moveResize);
-                lastPos = getPageXY(e);
-
+            function getSetDirs() {
                 var leftSet = element.css('left') != 'auto';
                 var rightSet = element.css('right') != 'auto';
                 setLeft = (!leftSet & !rightSet) | leftSet;
                 setRight = rightSet;
+                // setLeft = true; // because for some reason in iPad it was right???
 
                 // Rules for what we should set in CSS
                 // to keep the element dimensions (Y).
@@ -108,6 +112,20 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 prevLeft = getPixels(element.css('left'));
                 prevBottom = getPixels(element.css('bottom'));
                 prevRight = getPixels(element.css('right'));
+                timLogTime("set:" + setLeft + "," + setTop, "drag")
+            }
+
+
+            function resizeElement(e, up, right, down, left) {
+                upResize = up;
+                rightResize = right;
+                downResize = down;
+                leftResize = left;
+                $document.off('mouseup pointerup touchend', release);
+                $document.off('mousemove pointermove touchmove', moveResize);
+                lastPos = getPageXY(e);
+
+                getSetDirs();
 
                 //prevTop = element.position().top;
                 //prevLeft = element.position().left;
@@ -241,6 +259,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 return Number(s2) || 0;
             }
 
+
             handle.on('mousedown pointerdown touchstart', function (e) {
                 upResize = false;
                 rightResize = false;
@@ -252,25 +271,9 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 // Rules for what we should set in CSS
                 // to keep the element dimensions (X).
                 // Prefer left over right.
+                getSetDirs();
 
-                var leftSet = element.css('left') != 'auto';
-                var rightSet = element.css('right') != 'auto';
-                setLeft = (!leftSet & !rightSet) | leftSet;
-                setRight = rightSet;
 
-                // Rules for what we should set in CSS
-                // to keep the element dimensions (Y).
-                // Prefer top over bottom.
-
-                var topSet = element.css('top') != 'auto';
-                var botSet = element.css('bottom') != 'auto';
-                setTop = (!topSet & !botSet) | topSet;
-                setBottom = botSet;
-
-                prevTop = getPixels(element.css('top'));
-                prevLeft = getPixels(element.css('left'));
-                prevBottom = getPixels(element.css('bottom'));
-                prevRight = getPixels(element.css('right'));
 
                 //prevTop = element.position().top;
                 //prevLeft = element.position().left;
@@ -283,10 +286,15 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 $document.off('mouseup pointerup touchend', release);
                 $document.off('mousemove pointermove touchmove', move);
                 $document.off('mousemove pointermove touchmove', moveResize);
+                // element.css("background", "red");
                 pos = getPageXY(e);
+                // element.css("background", "blue");
                 if ( scope.posKey ) {
+                    // element.css("background", "yellow");
                     var css = element.css(['top', 'bottom', 'left', 'right']);
                     setStorage(scope.posKey, css);
+                    // element.css("background", "green");
+                    timLogTime("pos:" + css.left + "," + css.top, "drag")
                 }
 
                 /*
@@ -352,15 +360,20 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
             element.context.style.msTouchAction = 'none';
 
             if ( attr.save ) {
-                var oldPos = getStorage(scope.posKey);
-                if ( oldPos ) {
-                    if (oldPos.top) element.css('top', wmax(oldPos.top,"0px"));
-                    if (oldPos.left) element.css('left', oldPos.left);
-                }
+                getSetDirs();
                 var oldSize = getStorage(scope.posKey + "Size");
                 if ( oldSize ) {
                     if (oldSize.width) element.css('width', oldSize.width);
                     if (oldSize.height) element.css('height', oldSize.height);
+                }
+                var oldPos = getStorage(scope.posKey);
+                if ( oldPos ) {
+                    if (oldPos.top && setTop) element.css('top', wmax(oldPos.top,"0px"));
+                    if (oldPos.left && setLeft) element.css('left', oldPos.left);
+                    if (oldPos.right && setRight) element.css('right', oldPos.right);
+                    if (oldPos.bottom && setBottom) element.css('bottom', oldPos.bottom);
+                    // element.css("background", "red");
+                    timLogTime("oldpos:" + oldPos.left +", " + oldPos.top, "drag")
                 }
                 if ( getStorage(scope.posKey+"min") ) scope.minimize();
             }

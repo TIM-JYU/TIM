@@ -297,7 +297,7 @@ timApp.controller("ViewCtrl", [
 
             } else {
                 // TODO: Use same route (postParagraph) for both cases, determine logic based on given parameters
-                if (par_id == "null" || $pars.hasClass("new")) {
+                if (!par_id  || $pars.hasClass("new")) {
                     url = '/newParagraph/';
                 } else {
                     url = '/postParagraph/';
