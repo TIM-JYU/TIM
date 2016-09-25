@@ -289,6 +289,10 @@ timApp.controller("ViewCtrl", [
             var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
             var mobile = touch && (window.screen.width < 1200);
             var url;
+            var par_id = sc.getParId($par);
+            var par_next_id = sc.getParId($par.next());
+            if (par_next_id == "null")
+                par_next_id = null;
 
             if ($pars.length > 1) {
                 area_start = sc.getParId($par);
@@ -307,10 +311,6 @@ timApp.controller("ViewCtrl", [
                 area_end = options.area ? sc.getParId(sc.selection.end) : null;
             }
 
-            var par_id = sc.getParId($par);
-            var par_next_id = sc.getParId($par.next());
-            if (par_next_id == "null")
-                par_next_id = null;
 
 
             if (options.area) {
