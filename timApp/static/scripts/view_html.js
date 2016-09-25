@@ -1291,6 +1291,14 @@ timApp.controller("ViewCtrl", [
             sc.addSavedParToDom(saveData, extraData);
         };
 
+        /*
+        sc.onClick('.paragraphs .par', function ($this, e) {
+            var $target = $(e.target);
+            var $par = $this; // .parents('.par');
+            sc.updateNoteBadge($par);
+        });
+        */
+
         sc.onClick('.paragraphs .parContent', function ($this, e) {
             if (sc.editing) {
                 return false;
@@ -1298,6 +1306,8 @@ timApp.controller("ViewCtrl", [
 
             var $target = $(e.target);
             var tag = $target.prop("tagName");
+            var $par = $this.parents('.par');
+            // sc.updateNoteBadge($par);
 
             // Don't show paragraph menu on these specific tags or classes
             var ignoredTags = ['BUTTON', 'INPUT', 'TEXTAREA', 'A', 'QUESTIONADDEDNEW'];
@@ -1309,7 +1319,6 @@ timApp.controller("ViewCtrl", [
                 return false;
             }
 
-            var $par = $this.parents('.par');
             if (sc.selection.start !== null) {
                 sc.extendSelection($par, true);
             }
@@ -1422,6 +1431,7 @@ timApp.controller("ViewCtrl", [
             if (!sc.rights.editable && !sc.rights.can_comment) {
                 return;
             }
+
             if (toggle2) {
                 // Clicked twice successively
                 var clicktime = new Date().getTime() - sc.lastclicktime;
@@ -2163,6 +2173,122 @@ timApp.controller("ViewCtrl", [
                 {func: sc.nothing, desc: 'Cancel', show: true}
             ];
         };
+
+
+        /**
+         * Gets the parent element of the given element.
+         * @method getElementParent
+         * @param element - Element whose parent is queried for
+         * @returns {Element} Element parent
+         */
+        var getElementParent = function (element) {
+            /*
+             if (typeof element.parentElement !== "undefined")
+             return element.parentElement;
+             */
+            if ( !element ) return null;
+            var parent = element.parentNode;
+            if ( !parent ) return null;
+            if (typeof parent.tagName !== "undefined") {
+                return parent;
+            }
+
+            getElementParent(parent);
+        };
+
+        /**
+         * Adds an element to the paragraph margin.
+         * @method addElementToParagraphMargin
+         * @param par - Paragraph where the element will be added
+         * @param el - Element to add
+         */
+        var addElementToParagraphMargin = function (par, el) {
+            var container = par.getElementsByClassName("notes");
+            if (container.length > 0) {
+                container[0].appendChild(el);
+            } else {
+                container = document.createElement("div");
+                container.classList.add("notes");
+                container.appendChild(el);
+                par.appendChild(container);
+            }
+        };
+
+        /**
+         * Creates the note badge button (the button with letter 'N' on it).
+         * @method createNoteBadge
+         * @param $par - Element where the badge needs to be attached
+         */
+        sc.createNoteBadge = function ($par) {
+            sc.noteBadgePar = $par;
+            if ( sc.noteBadge ) {
+                //var parent = getElementParent(sc.noteBadge);
+                //if ( !parent ) $compile(sc.noteBadge)(sc);
+                return sc.noteBadge;
+            }
+
+            var btn = document.createElement("input");
+            btn.type = "button";
+            btn.classList.add("note-badge");
+            if ( window.velpMode )
+                btn.classList.add("note-badge-with-velp");
+            btn.classList.add("timButton");
+            btn.value = "C";
+            btn.title ="Add comment/note";
+            btn.id = "noteBadge";
+            sc.noteBadge = btn;
+            // btn.setAttribute("ng-click", "addNote()");
+            btn.onclick = function ($event) {
+                $event.stopPropagation();
+                sc.toggleNoteEditor(sc.noteBadgePar,{isNew:true});
+            };
+            $compile(btn)(sc);
+            return btn;
+        };
+
+
+        sc.addNote = function() {
+            // sc.clearNoteBadge(null);
+            sc.toggleNoteEditor(sc.noteBadgePar,{isNew:true})
+        }
+
+
+        sc.setNotePadge = function($event) {
+            $event.stopPropagation();
+            var $par = $($event.target);
+            if ( !$par.hasClass("par") ) $par = $par.parents('.par');
+            sc.updateNoteBadge($par);
+        }
+
+        /**
+         * Moves the note badge to the correct element.
+         * @method updateNoteBadge
+         * @param $par - Element where the badge needs to be attached
+         */
+        sc.updateNoteBadge = function ($par) {
+            if (!$par) return null;
+            var newElement = $par[0];
+            if (!newElement) return null;
+            addElementToParagraphMargin(newElement, sc.createNoteBadge($par));
+        };
+
+        /**
+         * Removes the note badge and clears the element selection.
+         * @param e - Current click event
+         */
+        sc.clearNoteBadge = function (e) {
+            var btn = sc.noteBadge;
+            if ( btn ) {
+                var parent = getElementParent(btn);
+                if ( parent ) parent.removeChild(btn);
+            }
+
+            if (e !== null) {
+                e.stopPropagation();
+            }
+        };
+
+
 
         // call marktree.js initialization function so that TOC clicking works
         $window.addEvents();

@@ -91,7 +91,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                     setStorage(scope.posKey+"min", false)
                     element.find('.resizehandle').css('display', '');
                 }
-                if ( handles.length ) scope.$apply();
+                if ( handles && handles.length ) scope.$apply();
             };
 
 
