@@ -59,7 +59,7 @@ class TimRouteTest(TimDbTest):
         TimDbTest.setUpClass()
         cls.app = testclient
 
-    def assertResponseStatus(self, resp: Response, expect_status: int = 200, return_json: bool = False) -> object:
+    def assertResponseStatus(self, resp: Response, expect_status: int = 200, return_json: bool = False):
         """Asserts that the response has the specified status code and returns the response content either as text or JSON dict.
 
         :param resp: The response to be checked.
@@ -129,7 +129,7 @@ class TimRouteTest(TimDbTest):
         self.assertListEqual(expected, load_json(resp))
 
     def get(self, url: str, as_tree: bool = False, as_json: bool = False, as_response: bool = False, expect_status: Optional[int] = None,
-            expect_content: Union[None, None] = None, **kwargs):
+            expect_content: Union[str,Dict,None] = None, **kwargs):
         """Performs a GET request.
 
         See the 'request' method for parameter explanations.
