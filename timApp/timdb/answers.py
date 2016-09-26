@@ -3,6 +3,7 @@ import json
 from collections import defaultdict
 from typing import List, Optional
 
+from timdb.dbutils import get_sql_template
 from timdb.tim_models import Answer, UserAnswer, AnswerTag
 from timdb.timdbbase import TimDbBase
 
@@ -111,10 +112,10 @@ class Answers(TimDbBase):
         ) t JOIN Answer a ON a.id = t.aid""".format(template), task_ids + [user_id])
         return self.resultAsDictionary(c)
 
-    def get_all_answers(self, task_id: str, usergroup: int, hide_names: bool, age: str, valid: str) -> List[str]:
-        """Gets the all answers to task
+    def get_all_answers(self, task_ids: List[str], usergroup: Optional[int], hide_names: bool, age: str, valid: str) -> List[str]:
+        """Gets the all answers to tasks
 
-        :param task_id: The id of the task.
+        :param task_ids: The ids of the tasks.
         :param usergroup: Group of users to search
         :param hide_names: Hide names
         :param age: min, max or all
@@ -145,14 +146,15 @@ SELECT DISTINCT u.name, a.task_id, a.content, a.answered_on, n, a.points
 FROM
 (SELECT {} (a.id) AS id, {} as n
 FROM answer AS a, userAnswer AS ua, useraccount AS u
-WHERE a.task_id LIKE %s AND ua.answer_id = a.id AND u.id = ua.user_id AND a.answered_on > %s
+WHERE a.task_id IN ({}) AND ua.answer_id = a.id AND u.id = ua.user_id AND a.answered_on > %s
 {}
 {}
-ORDER BY u.id,a.task_id) t
+) t
 JOIN answer a ON a.id = t.id JOIN useranswer ua ON ua.answer_id = a.id JOIN useraccount u ON u.id = ua.user_id
+ORDER BY a.task_id, u.name
         """
-        sql = sql.format(minmax, counts, validstr, groups)
-        c.execute(sql, [task_id, time_limit])
+        sql = sql.format(minmax, counts, get_sql_template(task_ids), validstr, groups)
+        c.execute(sql, task_ids + [time_limit])
 
         result = []
 

@@ -7,6 +7,7 @@ from typing import Optional, Tuple
 from psycopg2._psycopg import connection
 from sqlalchemy.orm import scoped_session
 
+from timdb.dbutils import get_sql_template
 from utils import split_location, join_location
 
 
@@ -38,7 +39,7 @@ class TimDbBase(object):
         self.session = session
 
     def get_sql_template(self, value_list: list):
-        return ','.join(['%s'] * len(value_list))
+        return get_sql_template(value_list)
 
     def getBlockPath(self, block_id: int) -> str:
         """Gets the path of the specified block.

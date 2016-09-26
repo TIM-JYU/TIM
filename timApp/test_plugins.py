@@ -3,6 +3,8 @@ import json
 import dateutil.parser
 
 import io
+
+import re
 from flask import session
 from lxml import html
 
@@ -75,7 +77,7 @@ class PluginTest(TimRouteTest):
         self.check_ok_answer(resp)
 
         resp = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']))
-        answer_list = self.assertResponseStatus(resp, expect_status=200, return_json=True)  # type: list(dict)
+        answer_list = self.assertResponseStatus(resp, expect_status=200, return_json=True)
         self.maxDiff = None
 
         self.assertListEqual(
@@ -292,3 +294,50 @@ class PluginTest(TimRouteTest):
         self.assertListEqual([{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID},
                               {'real_name': 'Test user 2', 'user_id': TEST_USER_2_ID}], answer_list[0]['collaborators'])
         self.assertEqual(file_content, self.get(ur['file'], expect_status=200))
+
+    def test_all_answers(self):
+        self.login_test1()
+        doc = self.create_doc(from_file='example_docs/multiple_mmcqs.md')
+        plugin_type = 'mmcq'
+        task_id = '{}.mmcqexample'.format(doc.doc_id)
+        task_id2 = '{}.mmcqexample2'.format(doc.doc_id)
+        self.post_answer(plugin_type, task_id, [True, False, False])
+        self.post_answer(plugin_type, task_id, [True, True, False])
+        self.post_answer(plugin_type, task_id2, [True, False])
+        timdb = self.get_db()
+        timdb.users.grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id)
+        self.login_test2()
+        self.post_answer(plugin_type, task_id, [True, True, True])
+        self.post_answer(plugin_type, task_id2, [False, False])
+        self.post_answer(plugin_type, task_id2, [False, True])
+        self.post_answer(plugin_type, task_id2, [True, True])
+        self.get('/allDocumentAnswersPlain/{}'.format(doc.doc_id), expect_status=403)
+        self.get('/allAnswersPlain/{}'.format(task_id), expect_status=403)
+        self.login_test1()
+        text = self.get('/allDocumentAnswersPlain/{}'.format(doc.doc_id), expect_status=200)
+        date_re = r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\+\d{2}:\d{2}'
+        self.assertRegex(text, r"""
+testuser1: {1}; {0}; 1; 2\.0
+\[True, False, False\]
+
+----------------------------------------------------------------------------------
+testuser2: {1}; {0}; 1; 2\.0
+\[True, True, True\]
+
+----------------------------------------------------------------------------------
+testuser1: {2}; {0}; 1; 1\.0
+\[True, False\]
+
+----------------------------------------------------------------------------------
+testuser2: {2}; {0}; 1; 2\.0
+\[False, False\]
+""".format(date_re, re.escape(task_id), re.escape(task_id2)).strip())
+        text = self.get('/allAnswersPlain/{}'.format(task_id), expect_status=200)
+        self.assertRegex(text, r"""
+testuser1: {1}; {0}; 1; 2\.0
+\[True, False, False\]
+
+----------------------------------------------------------------------------------
+testuser2: {1}; {0}; 1; 2\.0
+\[True, True, True\]
+        """.format(date_re, re.escape(task_id)).strip())

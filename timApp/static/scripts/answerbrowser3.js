@@ -407,7 +407,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     if ( sPageURL.indexOf("valid=all") >= 0 ) valid = "&valid=all";
                     if ( sPageURL.indexOf("valid=0") >= 0 ) valid = "&valid=0";
                     if ( sPageURL.indexOf("valid=1") >= 0 ) valid = "&valid=1";
-                    var url = '/allAnswersHtml/' + $scope.taskId + '?rnd='+Math.random() + age + valid;
+                    var url = '/allAnswersPlain/' + $scope.taskId + '?rnd='+Math.random() + age + valid;
                     return url;
 
                 };
