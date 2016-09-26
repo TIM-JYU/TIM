@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from tim_app import db
 from timdb.models.block import Block
@@ -34,3 +34,7 @@ def copy_default_rights(item_id: int, item_type):
         folder = folder.get_parent()
     for d in default_rights:
         timdb.users.grant_access(d['gid'], item_id, d['access_name'])
+
+
+def get_sql_template(value_list: List) -> str:
+    return ','.join(['%s'] * len(value_list))

@@ -2,8 +2,8 @@ var angular;
 
 var timApp = angular.module('timApp');
 
-timApp.controller('UserListController', ['$scope', '$element', '$filter', '$timeout', 'uiGridConstants',
-    function ($scope, $element, $filter, $timeout, uiGridConstants) {
+timApp.controller('UserListController', ['$scope', '$element', '$filter', '$timeout', '$window', 'uiGridConstants',
+    function ($scope, $element, $filter, $timeout, $window, uiGridConstants) {
         "use strict";
         $scope.$watch(
             function () {
@@ -103,6 +103,12 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
                     },
                     shown: function () {
                         return $scope.instantUpdate;
+                    }
+                },
+                {
+                    title: 'All answers as plain text',
+                    action: function ($event) {
+                        $window.open('/allDocumentAnswersPlain/' + $scope.docId, '_blank');
                     }
                 }
             ],

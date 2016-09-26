@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """Functions for dealing with plugin paragraphs."""
 import json
+
+from typing import List
+
 from timtiming import taketime
 
 from collections import OrderedDict
@@ -29,12 +32,8 @@ def get_error_html_plugin(plugin_name, message, response=None):
     return get_error_html('Plugin {} error: {}'.format(plugin_name, message), response)
 
 
-def find_task_ids(blocks):
-    """
-
-    :rtype: list[str]
-    :type doc_id: int
-    :type blocks: list[DocParagraph]
+def find_task_ids(blocks: List[DocParagraph]) -> List[str]:
+    """Finds all task plugins from the given list of paragraphs and returns their ids.
     """
     task_ids = []
     for block in blocks:
