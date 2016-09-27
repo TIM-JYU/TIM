@@ -1,7 +1,7 @@
 from flask import Blueprint
 from flask import g
 
-from routes.common import verifyLoggedIn, getCurrentUserId, jsonResponse
+from routes.common import verifyLoggedIn, getCurrentUserId, jsonResponse, verify_json_params
 from timdb.bookmarks import Bookmarks
 from timdb.models.user import User
 
@@ -16,8 +16,9 @@ def verify_login():
     g.bookmarks = Bookmarks(User.query.get(getCurrentUserId()))
 
 
-@bookmarks.route('/add/<groupname>/<item_name>/<path:item_path>', methods=['POST'])
-def add_bookmark(groupname, item_name, item_path):
+@bookmarks.route('/add', methods=['POST'])
+def add_bookmark():
+    groupname, item_name, item_path = verify_json_params('group', 'name', 'link')
     g.bookmarks.add_bookmark(groupname, item_name, item_path)
     return get_bookmarks()
 
@@ -28,14 +29,16 @@ def create_bookmark_group(groupname):
     return get_bookmarks()
 
 
-@bookmarks.route('/deleteGroup/<groupname>', methods=['POST'])
-def delete_bookmark_group(groupname):
+@bookmarks.route('/deleteGroup', methods=['POST'])
+def delete_bookmark_group():
+    groupname, = verify_json_params('group')
     g.bookmarks.delete_group(groupname)
     return get_bookmarks()
 
 
-@bookmarks.route('/delete/<groupname>/<item_name>', methods=['POST'])
-def delete_bookmark(groupname, item_name):
+@bookmarks.route('/delete', methods=['POST'])
+def delete_bookmark():
+    groupname, item_name = verify_json_params('group', 'name')
     g.bookmarks.delete_bookmark(groupname, item_name)
     return get_bookmarks()
 
