@@ -152,7 +152,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
          if (typeof element.parentElement !== "undefined")
          return element.parentElement;
          */
+        if ( !element ) return null;
         var parent = element.parentNode;
+        if ( !parent ) return null;
         if (typeof parent.tagName !== "undefined") {
             return parent;
         }
@@ -329,15 +331,24 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Creates the velp badge button (the button with letter 'V' on it).
      * @method createVelpBadge
      */
-    var createVelpBadge = function () {
+    $scope.createVelpBadge = function(par) {
+        $scope.velpBadgePar = par;
+        if ( $scope.velpBadge ) {
+            //$compile($scope.velpBadge)($scope);
+            return $scope.velpBadge;
+        }
         var btn = document.createElement("input");
         btn.type = "button";
         btn.classList.add("velp-badge");
         btn.classList.add("timButton");
         btn.value = "V";
         btn.id = "velpBadge";
-        btn.setAttribute("ng-click", "clearVelpBadge($event)");
-        $compile(btn)($scope);
+        btn.onclick = function (e) {
+            $scope.clearVelpBadge(e);
+        };
+        //btn.setAttribute("ng-click", "clearVelpBadge($event)");
+        //$compile(btn)($scope);
+        $scope.velpBadge = btn;
         return btn;
     };
 
@@ -351,10 +362,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         if (newElement === null) {
             return null;
         } else if (oldElement === null) {
-            addElementToParagraphMargin(newElement, createVelpBadge(newElement.id));
+            addElementToParagraphMargin(newElement, $scope.createVelpBadge(newElement.id));
         } else if (oldElement.id !== newElement.id) {
             $scope.clearVelpBadge(null);
-            addElementToParagraphMargin(newElement, createVelpBadge(newElement.id));
+            addElementToParagraphMargin(newElement, $scope.createVelpBadge(newElement.id));
         }
     };
 
@@ -363,10 +374,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param e - Current click event
      */
     $scope.clearVelpBadge = function (e) {
-        var btn = document.getElementById("velpBadge");
-        if (btn !== null) {
+        var btn = $scope.velpBadge;
+        if ( btn ) {
             var parent = getElementParent(btn);
-            parent.removeChild(btn);
+            if ( parent ) parent.removeChild(btn);
         }
 
         if (e !== null) {

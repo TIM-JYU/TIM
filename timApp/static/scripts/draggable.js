@@ -14,13 +14,21 @@ function getStorage(key) {
     return s;
 }
 
-
-function wmax(value, zero) {
-    if ( !value ) return zero;
-    if (value[0] == '-' ) return zero;
-    return value;
+function getPixels(s) {
+    s2 = s.replace(/px$/, '');
+    return Number(s2) || 0;
 }
 
+
+function wmax(value, min, max) {
+    if ( !value ) return min+"px";
+    if ( value == "auto" ) return value;
+    var v = getPixels(value);
+
+    if ( v <=  min ) return min+"px";
+    if ( v >=  max ) return max + "px"
+    return value;
+}
 
 timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', function ($document, $window, $parse) {
 
@@ -31,10 +39,25 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
         replace: false,
 
         link: function (scope, element, attr) {
+            if ( attr.save ) {
+                scope.pageId = window.location.pathname.split('/')[1];  // /velp/???
+                scope.posKey = attr.save.replace('%%PAGEID%%', scope.pageId);
+            }
 
             var clickFn = null;
             var areaMinimized = false;
             var areaHeight = 0;
+
+            var setLeft = 1;
+            var setRight = 0;
+            var setBottom = 0;
+            var setTop = 1;
+            var prevTop;
+            var prevLeft;
+            var prevBottom;
+            var prevRight;
+
+
 
             if (attr.click) {
                 if ( attr.click === "true" )
@@ -50,38 +73,36 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
 
             function minimize() {
                 areaMinimized = !areaMinimized;
+                var handles;
                 var base = element.find('.draggable-content');
                 if (areaMinimized) {
                     areaHeight = element.height();
                     element.height(15);
                     base.css('display', 'none');
                     element.css('min-height', '0');
-                    setStorage(scope.posKey+"min", true)
+                    setStorage(scope.posKey+"min", true);
+                    handles = element.find('.resizehandle');
+                    if ( handles.length ) handles.css('display', 'none');
+
                 } else {
                     base.css('display', '');
                     element.css('min-height', '');
                     element.height(areaHeight);
                     setStorage(scope.posKey+"min", false)
+                    element.find('.resizehandle').css('display', '');
                 }
-                scope.$apply();
+                if ( handles && handles.length ) scope.$apply();
             };
 
 
             scope.minimize = minimize;
 
-            function resizeElement(e, up, right, down, left) {
-                upResize = up;
-                rightResize = right;
-                downResize = down;
-                leftResize = left;
-                $document.off('mouseup pointerup touchend', release);
-                $document.off('mousemove pointermove touchmove', moveResize);
-                lastPos = getPageXY(e);
-
+            function getSetDirs() {
                 var leftSet = element.css('left') != 'auto';
                 var rightSet = element.css('right') != 'auto';
                 setLeft = (!leftSet & !rightSet) | leftSet;
                 setRight = rightSet;
+                // setLeft = true; // because for some reason in iPad it was right???
 
                 // Rules for what we should set in CSS
                 // to keep the element dimensions (Y).
@@ -98,6 +119,20 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 prevLeft = getPixels(element.css('left'));
                 prevBottom = getPixels(element.css('bottom'));
                 prevRight = getPixels(element.css('right'));
+                timLogTime("set:" + setLeft + "," + setTop, "drag")
+            }
+
+
+            function resizeElement(e, up, right, down, left) {
+                upResize = up;
+                rightResize = right;
+                downResize = down;
+                leftResize = left;
+                $document.off('mouseup pointerup touchend', release);
+                $document.off('mousemove pointermove touchmove', moveResize);
+                lastPos = getPageXY(e);
+
+                getSetDirs();
 
                 //prevTop = element.position().top;
                 //prevLeft = element.position().left;
@@ -126,6 +161,11 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                     resizeElement(e, false, true, true, false)
                 });
                 element.append(handleRightDown);
+
+                if ( areaMinimized ) {
+                    var handles = element.find('.resizehandle');
+                    if ( handles.length ) handles.css('display', 'none');
+                }
             }
 
             function removeResizeHandles() {
@@ -196,21 +236,32 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
             }
 
 
-            function getPageXY(e) {
+            function getPageXYnull(e) {
                 if (!('pageX' in e) || (e.pageX == 0 && e.pageY == 0)) {
-                    return {
+                    if ( e.originalEvent.touches.length ) return {
                         X: e.originalEvent.touches[0].pageX,
                         Y: e.originalEvent.touches[0].pageY
                     };
+                    if ( e.originalEvent.changedTouches.length ) return {
+                        X: e.originalEvent.changedTouches[0].pageX,
+                        Y: e.originalEvent.changedTouches[0].pageY
+                    };
+                    return null;
                 }
 
                 return {X: e.pageX, Y: e.pageY};
             }
 
-            function getPixels(s) {
-                s2 = s.replace(/px$/, '');
-                return Number(s2) || 0;
+
+            var lastPageXYPos = {X:0, Y: 0};
+
+            function getPageXY(e) {
+                var pos = getPageXYnull(e);
+                if ( pos ) lastPageXYPos = pos;
+                return lastPageXYPos;
             }
+
+
 
             handle.on('mousedown pointerdown touchstart', function (e) {
                 upResize = false;
@@ -223,25 +274,9 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 // Rules for what we should set in CSS
                 // to keep the element dimensions (X).
                 // Prefer left over right.
+                getSetDirs();
 
-                var leftSet = element.css('left') != 'auto';
-                var rightSet = element.css('right') != 'auto';
-                setLeft = (!leftSet & !rightSet) | leftSet;
-                setRight = rightSet;
 
-                // Rules for what we should set in CSS
-                // to keep the element dimensions (Y).
-                // Prefer top over bottom.
-
-                var topSet = element.css('top') != 'auto';
-                var botSet = element.css('bottom') != 'auto';
-                setTop = (!topSet & !botSet) | topSet;
-                setBottom = botSet;
-
-                prevTop = getPixels(element.css('top'));
-                prevLeft = getPixels(element.css('left'));
-                prevBottom = getPixels(element.css('bottom'));
-                prevRight = getPixels(element.css('right'));
 
                 //prevTop = element.position().top;
                 //prevLeft = element.position().left;
@@ -254,10 +289,15 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 $document.off('mouseup pointerup touchend', release);
                 $document.off('mousemove pointermove touchmove', move);
                 $document.off('mousemove pointermove touchmove', moveResize);
+                // element.css("background", "red");
                 pos = getPageXY(e);
+                // element.css("background", "blue");
                 if ( scope.posKey ) {
+                    // element.css("background", "yellow");
                     var css = element.css(['top', 'bottom', 'left', 'right']);
                     setStorage(scope.posKey, css);
+                    // element.css("background", "green");
+                    timLogTime("pos:" + css.left + "," + css.top, "drag")
                 }
 
                 /*
@@ -323,17 +363,24 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
             element.context.style.msTouchAction = 'none';
 
             if ( attr.save ) {
-                scope.pageId = window.location.pathname.split('/')[1];  // /velp/???
-                scope.posKey = attr.save.replace('%%PAGEID%%',scope.pageId);
-                var oldPos = getStorage(scope.posKey);
-                if ( oldPos ) {
-                    if (oldPos.top) element.css('top', wmax(oldPos.top,"0px"));
-                    if (oldPos.left) element.css('left', oldPos.left);
-                }
+                getSetDirs();
                 var oldSize = getStorage(scope.posKey + "Size");
                 if ( oldSize ) {
                     if (oldSize.width) element.css('width', oldSize.width);
                     if (oldSize.height) element.css('height', oldSize.height);
+                }
+                var oldPos = getStorage(scope.posKey);
+                var w = window.innerWidth;
+                var h = window.innerHeight;
+                var ew = element.width();
+                var eh = element.height();
+                if ( oldPos ) {
+                    if (oldPos.top && setTop) element.css('top', wmax(oldPos.top,0,h-20));
+                    if (oldPos.left && setLeft) element.css('left', wmax(oldPos.left,0-ew+20,w-20));
+                    if (oldPos.right && setRight) element.css('right', wmax(oldPos.right,20,w));
+                    if (oldPos.bottom && setBottom) element.css('bottom', wmax(oldPos.bottom,20,h));
+                    // element.css("background", "red");
+                    timLogTime("oldpos:" + oldPos.left +", " + oldPos.top, "drag")
                 }
                 if ( getStorage(scope.posKey+"min") ) scope.minimize();
             }

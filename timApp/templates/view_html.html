@@ -20,8 +20,8 @@
     {% endfor %}
 {% endblock %}
 
-{% set velp_mode = route == "velp" %}
 {% set teacher_mode = route in ("teacher", "answers") %}
+{% set velp_mode = route in ("teacher", "answers", "velp") %}
 {% set lecture_mode = route == "lecture" %}
 {% set slide_mode = route == "slide" %}
 
@@ -72,6 +72,7 @@
         var reqs = {{reqs|tojson}};
         var startIndex = {{start_index|tojson}};
         var teacherMode = {{teacher_mode|tojson}};
+        var velpMode = {{velp_mode|tojson}};
         var group = {{group|tojson}};
         var lectureMode = {{lecture_mode|tojson}};
         var in_lecture = {{in_lecture|tojson}};
@@ -121,7 +122,7 @@
     <form name="ignore_me">
         <input type="hidden" id="page_is_dirty" name="page_is_dirty" value="0"/>
     </form>
-    <div class="paragraphs">
+    <div class="paragraphs" ng-click="setNotePadge($event)" >
         <div ng-cloak="" class="dialog" caption="Refresh the page?" tim-draggable-fixed="" ng-show="isPageDirty() && !hideRefresh">
             <p>The page has been modified since the last reload. Refresh now?</p>
             <button class="timButton" ng-click="reload()">Refresh</button>

@@ -1139,6 +1139,18 @@ body > .footer {
     max-height: 1.4em;
 }
 
+.notes .note-badge {
+position: absolute;
+    top: 0;
+    left: -1.2em;
+    font-size: 15px;
+    padding: 0px;
+    padding-left: 2px;
+    padding-right: 3px;
+}
+
+
+
 @media (max-width: $screen-xs-max) {
     .container-fluid {
         padding: 0;

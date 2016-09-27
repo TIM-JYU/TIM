@@ -1260,7 +1260,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 			$scope.errors.push(status);
             $scope.error = "Ikuinen silmukka tai jokin muu vika?";
             // $scope.error = "TIMIssä ongelmia, odota vikaa tutkitaan...";
-			// $scope.error = data;
+			if ( data && data.error ) $scope.error = data.error;
 		});
 	};
 	

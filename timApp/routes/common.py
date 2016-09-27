@@ -393,7 +393,7 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
 
 def getdatetime(s: str, default_val = None):
     try:
-        dt = dateutil.parser.parse(s)
+        dt = dateutil.parser.parse(s, dayfirst=True)
         return dt if dt.tzinfo is not None else pytz.utc.localize(dt)
 
     except (ValueError, TypeError):
