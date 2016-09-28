@@ -18,20 +18,22 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
 
         $scope.columns = [
             {field: 'real_name', name: 'Full name', cellTooltip: true, headerTooltip: true},
-            {field: 'name', name: 'Username', cellTooltip: true, headerTooltip: true},
-            {field: 'task_count', name: 'Tasks', cellTooltip: true, headerTooltip: true, maxWidth: 70},
-            {field: 'total_points', name: 'Points', cellTooltip: true, headerTooltip: true, maxWidth: 70},
-            {field: 'velp_points', name: 'Velp points', cellTooltip: true, headerTooltip: true, maxWidth: 70, visible: false},
-            {field: 'velped_task_count', name: 'Velped tasks', cellTooltip: true, headerTooltip: true, maxWidth: 70, visible: false}
+            {field: 'name', name: 'Username', cellTooltip: true, headerTooltip: true, maxWidth: 100},
+            {field: 'task_count', name: 'Tasks', cellTooltip: true, headerTooltip: true, maxWidth: 56},
+            {field: 'total_points', name: 'Points', cellTooltip: true, headerTooltip: true, maxWidth: 59},
+            // hide velp columns completely for now; they don't have any data yet
+            // {field: 'velp_points', name: 'Velp points', cellTooltip: true, headerTooltip: true, maxWidth: 60, visible: false},
+            // {field: 'velped_task_count', name: 'Velped tasks', cellTooltip: true, headerTooltip: true, maxWidth: 60, visible: false}
         ];
 
-        $scope.fireUserChange = function(row, updateAll) {
+        $scope.fireUserChange = function (row, updateAll) {
             $scope.changeUser(row.entity, updateAll);
         };
 
         $scope.instantUpdate = false;
 
         $scope.gridOptions = {
+            exporterMenuPdf: false,
             multiSelect: false,
             enableFullRowSelection: true,
             enableRowHeaderSelection: false,
@@ -85,7 +87,7 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
                             }
                         });
                     },
-                    order: 210
+                    order: 10
                 },
                 {
                     title: 'Enable instant update',
@@ -94,7 +96,9 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
                     },
                     shown: function () {
                         return !$scope.instantUpdate;
-                    }
+                    },
+                    leaveOpen: true,
+                    order: 20
                 },
                 {
                     title: 'Disable instant update',
@@ -103,13 +107,16 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
                     },
                     shown: function () {
                         return $scope.instantUpdate;
-                    }
+                    },
+                    leaveOpen: true,
+                    order: 30
                 },
                 {
                     title: 'All answers as plain text',
                     action: function ($event) {
                         $window.open('/allDocumentAnswersPlain/' + $scope.docId, '_blank');
-                    }
+                    },
+                    order: 40
                 }
             ],
             rowTemplate: "<div ng-dblclick=\"grid.appScope.fireUserChange(row, true)\" ng-repeat=\"(colRenderIndex, col) in colContainer.renderedColumns track by col.colDef.name\" class=\"ui-grid-cell\" ng-class=\"{ 'ui-grid-row-header-cell': col.isRowHeader }\" ui-grid-cell></div>"
