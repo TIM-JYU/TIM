@@ -76,6 +76,8 @@ class Folder(db.Model):
         if '\0' in path:
             raise TimDbException('Folder name cannot contain null characters.')
 
+        path = path.strip('/')
+
         # Root folder is special case
         if not path:
             return Folder.get_root()

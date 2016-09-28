@@ -1,3 +1,5 @@
+from timdb.models.docentry import DocEntry
+from timdb.models.folder import Folder
 from timroutetest import TimRouteTest
 
 
@@ -5,6 +7,10 @@ class BookmarkTest(TimRouteTest):
     def test_bookmarks(self):
         self.login_test1()
         bookmarks = self.get('/bookmarks/get', expect_status=200, as_json=True)
+        f = Folder.find_by_location('users/{}'.format(self.current_user_name()), '')
+        self.assertIsNone(f)
+        d = DocEntry.query.filter_by(name='users/{}/$Bookmarks'.format(self.current_user_name())).first()
+        self.assertIsNotNone(d)
         self.assertListEqual([], bookmarks)
         group_name = 'mygroup'
         group_name2 = 'mygroup2'
