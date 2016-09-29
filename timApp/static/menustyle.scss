@@ -32,6 +32,7 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
     .glyphicon {
         font-size: xx-large;
         margin: -6px -10px;
+        color: $basic-color;
     }
 
     .tab-content {
