@@ -90,7 +90,7 @@ run bower --allow-root install ngstorage#~0.3
 run bower --allow-root install chartjs#~1.0
 run bower --allow-root install oclazyload#~1.0
 run bower --allow-root install bootstrap-sass#~3.3
-run bower --allow-root install angular-bootstrap#~1.3
+run bower --allow-root install angular-bootstrap#~2.1
 run bower --allow-root install angular-animate#~1.4
 run bower --allow-root install angular-touch#~1.4
 run bower --allow-root install angular-ui-grid#~3.2
