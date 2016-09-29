@@ -24,6 +24,10 @@ a .glyphicon {
     color: inherit;
 }
 
+.bg-unpublished {
+    background-image: url("/static/images/unpublished.svg");
+}
+
 .siteheader {
     @include clearfix;
     border-bottom: $header-footer-border;
@@ -251,7 +255,6 @@ p.caption {
 }
 
 .material {
-    background-color: white;
     box-shadow: $material-shadow;
     border: $material-border;
     border-radius: $material-border-radius;
@@ -296,6 +299,7 @@ p.caption {
         &:last-child {
             margin-bottom: 0;
         }
+        background: $bg-color;
     }
     .timestamp {
         color: lightgrey;
@@ -935,7 +939,7 @@ input[type="file"] {
 }
 
 .mcq {
-    padding-left: 2em;
+    /* padding-left: 2em; */
 }
 
 .sagecell_editor {
@@ -1134,6 +1138,18 @@ body > .footer {
     min-width: 1.5em;
     max-height: 1.4em;
 }
+
+.notes .note-badge {
+position: absolute;
+    top: 0;
+    left: -1.2em;
+    font-size: 15px;
+    padding: 0px;
+    padding-left: 2px;
+    padding-right: 3px;
+}
+
+
 
 @media (max-width: $screen-xs-max) {
     .container-fluid {

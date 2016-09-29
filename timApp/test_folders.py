@@ -44,14 +44,16 @@ class FolderTest(TimRouteTest):
                                   'modified': None,
                                   'canEdit': True,
                                   'fullname': new_name,
-                                  'owner': {'id': 7, 'name': 'testuser1'}},
+                                  'owner': {'id': 7, 'name': 'testuser1'},
+                                  'unpublished': True},
                                  {'id': j3['id'], 'name': 'testing2',
                                   'isOwner': True,
                                   'isFolder': True,
                                   'modified': None,
                                   'canEdit': True,
                                   'fullname': fname2,
-                                  'owner': {'id': 7, 'name': 'testuser1'}}],
+                                  'owner': {'id': 7, 'name': 'testuser1'},
+                                  'unpublished': False}],
                                 self.json_req('/getItems', query_string={'folder': user_folder}))
         self.logout()
         self.assertListResponse([{'id': j3['id'], 'name': 'testing2',
@@ -60,7 +62,8 @@ class FolderTest(TimRouteTest):
                                   'modified': None,
                                   'canEdit': False,
                                   'fullname': fname2,
-                                  'owner': {'id': 7, 'name': 'testuser1'}}],
+                                  'owner': {'id': 7, 'name': 'testuser1'},
+                                  'unpublished': False}],
                                 self.json_req('/getItems', query_string={'folder': user_folder}))
         db.close()
 

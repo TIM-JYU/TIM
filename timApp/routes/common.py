@@ -6,16 +6,15 @@ from collections import defaultdict
 from urllib.parse import urlparse, urljoin
 
 from flask import current_app, session, abort, g, Response, request, redirect, url_for, flash
-from typing import List
 
-from typing import Dict
-
+import dateutil.parser
 import documentmodel.document
 import pluginControl
 from datetime import datetime, timedelta
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from documentmodel.document import Document
+import pytz
 from routes.logger import log_info
 from theme import Theme
 from tim_app import db
@@ -239,11 +238,16 @@ def can_write_to_folder(folderName):
 
 
 def jsonResponse(jsondata, status_code=200):
-    response = Response(json.dumps(jsondata,
-                                   separators=(',', ':'),
-                                   cls=DocParagraphEncoder), mimetype='application/json')
+    response = Response(to_json_str(jsondata), mimetype='application/json')
     response.status_code = status_code
     return response
+
+
+def to_json_str(jsondata):
+    return json.dumps(jsondata,
+                      separators=(',', ':'),
+                      cls=DocParagraphEncoder)
+
 
 def set_no_cache_headers(response: Response) -> Response:
     """
@@ -387,10 +391,11 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
     return process_areas(html_pars), js_paths, css_paths, modules
 
 
-
-def getdatetime(s: str, timeformat: str = "%d.%m.%Y %H:%M", default_val = None):
+def getdatetime(s: str, default_val = None):
     try:
-        return datetime.strptime(s, timeformat)
+        dt = dateutil.parser.parse(s, dayfirst=True)
+        return dt if dt.tzinfo is not None else pytz.utc.localize(dt)
+
     except (ValueError, TypeError):
         return default_val
 
@@ -401,7 +406,10 @@ def process_areas(html_pars: List[Dict]) -> List[Dict]:
             self.index = index
             self.attrs = attrs
 
-    now = datetime.now()
+    now = pytz.utc.localize(datetime.now())
+    min_time = pytz.utc.localize(datetime.min)
+    max_time = pytz.utc.localize(datetime.max)
+
     current_areas = {}
     current_collapsed = []
     new_pars = []
@@ -471,8 +479,8 @@ def process_areas(html_pars: List[Dict]) -> List[Dict]:
                     new_pars.append(html_par)
 
                 if cur_area is not None and (cur_area.attrs.get('starttime') or cur_area.attrs.get('endtime')):
-                    starttime = getdatetime(cur_area.attrs.get('starttime'), default_val=datetime.min)
-                    endtime = getdatetime(cur_area.attrs.get('endtime'), default_val=datetime.max)
+                    starttime = getdatetime(cur_area.attrs.get('starttime'), default_val=min_time)
+                    endtime = getdatetime(cur_area.attrs.get('endtime'), default_val=max_time)
                     if not starttime <= now < endtime:
                         alttext = cur_area.attrs.get('alttext')
                         if alttext is None:
@@ -487,10 +495,9 @@ def process_areas(html_pars: List[Dict]) -> List[Dict]:
 
             if any([a.attrs.get('starttime') or a.attrs.get('endtime') for a in current_areas.values()]):
                 # Timed paragraph
-                hour = timedelta(hours=1)
                 for a in current_areas.values():
-                    starttime = getdatetime(a.attrs.get('starttime'), default_val=datetime.min)
-                    endtime = getdatetime(a.attrs.get('endtime'), default_val=datetime.max)
+                    starttime = getdatetime(a.attrs.get('starttime'), default_val=min_time)
+                    endtime = getdatetime(a.attrs.get('endtime'), default_val=max_time)
                     access &= starttime <= now < endtime
                     if not access and a.attrs.get('alttext') is not None:
                         alttext = a.attrs.get('alttext')
@@ -534,7 +541,7 @@ def validate_item_and_create(item_name, item_type, owner_group_id):
     timdb = getTimDb()
     validate_item(item_name, item_type)
     item_path, _ = timdb.folders.split_location(item_name)
-    timdb.folders.create(item_path, owner_group_id)
+    timdb.folders.create(item_path, owner_group_id, apply_default_rights=True)
 
 
 def get_user_settings():
@@ -607,6 +614,12 @@ def grant_access_to_session_users(timdb: TimDb, block_id: int):
                                  'manage',
                                  commit=False)
     timdb.commit()
+
+
+def is_considered_unpublished(doc_id):
+    timdb = getTimDb()
+    owner = timdb.users.get_owner_group(doc_id)
+    return has_ownership(doc_id) and not owner.is_large() and len(timdb.users.get_rights_holders(doc_id)) == 0
 
 
 def get_viewable_blocks():

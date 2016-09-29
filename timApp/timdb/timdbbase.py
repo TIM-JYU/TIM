@@ -1,22 +1,14 @@
 """"""
-import os
-import collections
-from typing import Optional, Tuple, Iterable
-
 import decimal
-from sqlalchemy.orm import scoped_session
+import os
+from typing import Iterable
+from typing import Optional, Tuple
 
 from psycopg2._psycopg import connection
+from sqlalchemy.orm import scoped_session
 
-from timdb.tim_models import Block
-
-BLOCKTYPES = collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE', 'ANSWER', 'IMAGE', 'READING', 'FOLDER', 'FILE', 'UPLOAD', 'VELPGROUP', 'ANNOTATION'))
-blocktypes = BLOCKTYPES(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-
-
-class TimDbException(Exception):
-    """The exception that is thrown when an error occurs during a TimDb operation."""
-    pass
+from timdb.dbutils import get_sql_template
+from utils import split_location, join_location
 
 
 class TimDbBase(object):
@@ -47,25 +39,7 @@ class TimDbBase(object):
         self.session = session
 
     def get_sql_template(self, value_list: list):
-        return ','.join(['%s'] * len(value_list))
-
-    def insertBlockToDb(self, description: Optional[str], owner_group_id: int, block_type: int, commit: bool=True) -> int:
-        """Inserts a block to database.
-
-        :param commit: Whether to commit the change.
-        :param description: The name (description) of the block.
-        :param owner_group_id: The owner group of the block.
-        :param block_type: The type of the block.
-        :returns: The id of the block.
-        """
-        b = Block(description=description, type_id=block_type, usergroup_id=owner_group_id)
-        self.session.add(b)
-        self.session.flush()
-        block_id = b.id
-        assert block_id != 0
-        if commit:
-            self.session.commit()
-        return block_id
+        return get_sql_template(value_list)
 
     def getBlockPath(self, block_id: int) -> str:
         """Gets the path of the specified block.
@@ -129,12 +103,12 @@ class TimDbBase(object):
 
     @classmethod
     def split_location(cls, path: str) -> Tuple[str, str]:
-        rs = path.rfind('/')
-        return ('', path) if rs < 0 else (path[:rs], path[rs+1:])
+        """Given a path 'a/b/c/d', returns a tuple ('a/b/c', 'd')."""
+        return split_location(path)
 
     @classmethod
     def join_location(cls, location: str, name: str) -> str:
-        return name if location == '' else location + '/' + name
+        return join_location(location, name)
 
     def get_id_filter(self, filter_ids: Iterable[int]):
         return ' AND id IN ({})'.format(','.join(str(x) for x in filter_ids))

@@ -2,7 +2,7 @@
 {% block ngmodules %}
     {{ super() }}
     {% if teacher_mode %}
-    {{ (['ui.grid', 'ui.grid.selection', 'ui.grid.exporter', 'ui.grid.autoResize', 'oc.lazyLoad', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
+    {{ (['ui.grid', 'ui.grid.cellNav', 'ui.grid.selection', 'ui.grid.exporter', 'ui.grid.autoResize', 'oc.lazyLoad', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
     {% else %}
     {{ (['oc.lazyLoad', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
     {% endif %}
@@ -20,8 +20,8 @@
     {% endfor %}
 {% endblock %}
 
-{% set velp_mode = route == "velp" %}
 {% set teacher_mode = route in ("teacher", "answers") %}
+{% set velp_mode = route in ("teacher", "answers", "velp") %}
 {% set lecture_mode = route == "lecture" %}
 {% set slide_mode = route == "slide" %}
 
@@ -72,6 +72,7 @@
         var reqs = {{reqs|tojson}};
         var startIndex = {{start_index|tojson}};
         var teacherMode = {{teacher_mode|tojson}};
+        var velpMode = {{velp_mode|tojson}};
         var group = {{group|tojson}};
         var lectureMode = {{lecture_mode|tojson}};
         var in_lecture = {{in_lecture|tojson}};
@@ -106,7 +107,7 @@
            <div ng-controller="UserListController" class="userlist draggable-content" >
             {% if plugin_users %}
                 {% raw %}
-                <div ui-grid="gridOptions" ui-grid-selection ui-grid-exporter ui-grid-auto-resize class="grid"></div>
+                <div ui-grid="gridOptions" ui-grid-selection ui-grid-exporter ui-grid-auto-resize ui-grid-cellNav class="grid"></div>
                 <!-- <div ui-grid="gridOptions" ui-grid-selection ui-grid-exporter  class="grid"></div> -->
                 {% endraw %}
             {% else %}
@@ -121,7 +122,7 @@
     <form name="ignore_me">
         <input type="hidden" id="page_is_dirty" name="page_is_dirty" value="0"/>
     </form>
-    <div class="paragraphs">
+    <div class="paragraphs" ng-click="setNotePadge($event)" >
         <div ng-cloak="" class="dialog" caption="Refresh the page?" tim-draggable-fixed="" ng-show="isPageDirty() && !hideRefresh">
             <p>The page has been modified since the last reload. Refresh now?</p>
             <button class="timButton" ng-click="reload()">Refresh</button>
@@ -165,6 +166,16 @@
                 <div ng-controller="ReviewController">
                     {% include 'view_content.html' %}
                 </div>
+            {% endif %}
+            {% if not text %}
+                <bootstrap-panel title="Review document permissions" show-close="true">
+                    Here you can give suitable initial permissions for the document.
+                    You can change these later from the manage page.
+                    <rights-editor
+                        item-id="docId"
+                        url-root="permissions">
+                    </rights-editor>
+                </bootstrap-panel>
             {% endif %}
         {% endif %}
     </div>

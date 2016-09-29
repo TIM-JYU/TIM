@@ -1,24 +1,5 @@
 var PermApp = angular.module('timApp');
 
-// from https://stackoverflow.com/questions/14833326
-PermApp.directive('focusMe', function ($timeout, $parse) {
-    return {
-        link: function (scope, element, attrs) {
-            var model = $parse(attrs.focusMe);
-            scope.$watch(model, function (value) {
-                if (value === true) {
-                    $timeout(function () {
-                        element[0].focus();
-                    });
-                }
-            });
-            element.bind('blur', function () {
-                scope.$apply(model.assign(scope, false));
-            });
-        }
-    };
-});
-
 PermApp.controller("PermCtrl", [
     '$scope',
     '$http',
@@ -125,13 +106,6 @@ PermApp.controller("PermCtrl", [
             });
         };
 
-
-        sc.showAddRightFn = function (type) {
-            sc.accessType = type;
-            sc.showAddRight = true;
-            sc.focusEditor = true;
-        };
-
         sc.changeOwner = function() {
             sc.ownerUpdating = true;
             $http.put('/changeOwner/' + sc.doc.id + '/' + sc.newOwner).success(
@@ -141,40 +115,6 @@ PermApp.controller("PermCtrl", [
                     alert(data.error);
                 }).finally(function () {
                     sc.ownerUpdating = false;
-                });
-        };
-
-        sc.removeConfirm = function (group, type) {
-            if (confirm("Are you sure you want to remove this usergroup?")) {
-                sc.removePermission(group, type);
-            }
-        };
-
-        sc.getPermissions = function () {
-            $http.get('/getPermissions/' + sc.doc.id).success(function (data, status, headers, config) {
-                sc.grouprights = data.grouprights;
-            }).error(function (data, status, headers, config) {
-                alert("Could not fetch permissions.");
-            });
-        };
-
-        sc.removePermission = function (right, type) {
-            $http.put('/removePermission/' + sc.doc.id + '/' + right.gid + '/' + type).success(
-                function (data, status, headers, config) {
-                    sc.getPermissions();
-                }).error(function (data, status, headers, config) {
-                    alert(data.error);
-                });
-        };
-
-        sc.addPermission = function (groupname, type) {
-            console.log("/addPermission/" + sc.doc.id + "/" + groupname + "/" + type.name);
-            $http.put('/addPermission/' + sc.doc.id + '/' + groupname + '/' + type.name).success(
-                function (data, status, headers, config) {
-                    sc.getPermissions();
-                    sc.showAddRight = false;
-                }).error(function (data, status, headers, config) {
-                    alert(data.error);
                 });
         };
 
@@ -650,9 +590,7 @@ text = '\n'.join(a)
             });
         };
 
-        sc.grouprights = grouprights;
         sc.accessTypes = accessTypes;
-        sc.accessType = sc.accessTypes[0];
         sc.doc = doc;
         sc.isFolder = isFolder;
 

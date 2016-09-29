@@ -6,8 +6,9 @@ from flask import Blueprint
 import containerLink
 from options import get_option
 from plugin import Plugin, PluginException
-from timdb.tim_models import Block, AnswerUpload
-from timdb.timdbbase import blocktypes
+from timdb.tim_models import AnswerUpload
+from timdb.models.block import Block
+from timdb.blocktypes import blocktypes
 from .common import *
 
 
@@ -117,13 +118,15 @@ def post_answer(plugintype: str, task_id_ext: str):
     timdb.close()
 
     answer_call_data = {'markup': plugin.values, 'state': state, 'input': answerdata, 'taskID': task_id}
-    plugin_response = containerLink.call_plugin_answer(plugintype, answer_call_data)
 
     try:
+        plugin_response = containerLink.call_plugin_answer(plugintype, answer_call_data)
         jsonresp = json.loads(plugin_response)
     except ValueError:
         return jsonResponse({'error': 'The plugin response was not a valid JSON string. The response was: ' +
                                       plugin_response}, 400)
+    except PluginException:
+        return jsonResponse({'error': 'The plugin response took too long'}, 400)
 
     if 'web' not in jsonresp:
         return jsonResponse({'error': 'The key "web" is missing in plugin response.'}, 400)
@@ -171,13 +174,16 @@ def post_answer(plugintype: str, task_id_ext: str):
                     else:
                         points_given_by = getCurrentUserGroup()
                         points = custom_points_float
-            result['savedNew'], saved_answer_id = timdb.answers.saveAnswer(users,
+            if points or save_object or tags:
+                result['savedNew'], saved_answer_id = timdb.answers.saveAnswer(users,
                                                           task_id,
                                                           json.dumps(save_object),
                                                           points,
                                                           tags,
                                                           is_valid,
                                                           points_given_by)
+            else:
+                result['savedNew'], saved_answer_id = False, None
             if not is_valid:
                 result['error'] = explanation
         elif save_teacher:
@@ -256,34 +262,56 @@ def get_answers(task_id, user_id):
     return jsonResponse(user_answers)
 
 
+@answers.route("/allDocumentAnswersPlain/<int:doc_id>")
+def get_document_answers(doc_id):
+    doc = Document(doc_id)
+    pars = doc.get_dereferenced_paragraphs()
+    task_ids = pluginControl.find_task_ids(pars)
+    get_all_answers_as_list(task_ids)
+    return get_all_answers_list_plain(task_ids)
+
+
+# TODO Remove misleading route ("HTML")
 @answers.route("/allAnswersHtml/<task_id>")
-def get_all_answers_html(task_id):
-    all_answers = get_all_answers_as_list(request, task_id)
+@answers.route("/allAnswersPlain/<task_id>")
+def get_all_answers_plain(task_id):
+    return get_all_answers_list_plain([task_id])
+
+
+def get_all_answers_list_plain(task_ids: List[str]):
+    all_answers = get_all_answers_as_list(task_ids)
     text = "\n\n----------------------------------------------------------------------------------\n".join(all_answers)
     return Response(text, mimetype='text/plain')
 
-def get_all_answers_as_list(request, task_id):
+
+def get_all_answers_as_list(task_ids: List[str]):
     verifyLoggedIn()
     timdb = getTimDb()
-    doc_id, _, _ = Plugin.parse_task_id(task_id)
+    doc_ids = set()
+    for t in task_ids:
+        doc_id, _, _ = Plugin.parse_task_id(t)
+        doc_ids.add(doc_id)
     usergroup = request.args.get('group')
     age = request.args.get('age')
-    valid = request.args.get('valid',"1")
+    valid = request.args.get('valid', '1')
 
     if not usergroup:
-        usergroup = 0
-    if not timdb.documents.exists(doc_id):
-        abort(404, 'No such document')
+        usergroup = None
 
-    # Require full teacher rights for getting all answers
-    verify_teacher_access(doc_id)
-    all_answers = timdb.answers.get_all_answers(task_id, usergroup, hide_names_in_teacher(doc_id), age, valid)
+    hide_names = False
+    for doc_id in doc_ids:
+        if not timdb.documents.exists(doc_id):
+            abort(404, 'No such document: {}'.format(doc_id))
+        # Require full teacher rights for getting all answers
+        verify_teacher_access(doc_id)
+        hide_names = hide_names or hide_names_in_teacher(doc_id)
+    all_answers = timdb.answers.get_all_answers(task_ids, usergroup, hide_names, age, valid)
     return all_answers
 
 
 @answers.route("/allAnswers/<task_id>")
 def get_all_answers(task_id):
-    all_answers = get_all_answers_as_list(request, task_id)
+    all_answers = get_all_answers_as_list(task_id)
     return jsonResponse(all_answers)
 
 

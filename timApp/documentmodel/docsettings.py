@@ -1,8 +1,8 @@
-from typing import Optional
+from typing import Optional, List, Dict
 
 from utils import parse_yaml
 from documentmodel.docparagraph import DocParagraph
-from timdb.timdbbase import TimDbException
+from timdb.timdbexception import TimDbException
 import yaml
 
 
@@ -18,6 +18,7 @@ class DocSettings:
     no_question_auto_numbering_key = 'no_question_auto_numbering'
     slide_background_url_key = 'slide_background_url'
     slide_background_color_key = 'slide_background_color'
+    bookmark_key = 'bookmarks'
 
     @classmethod
     def is_valid_paragraph(cls, par):
@@ -95,11 +96,19 @@ class DocSettings:
     def get_source_document(self) -> Optional[int]:
         return self.__dict.get(self.source_document_key)
 
-    def get_slide_background_url(self, default=None) -> 'str|None':
+    def get_slide_background_url(self, default=None) -> Optional[str]:
         return self.__dict.get(self.slide_background_url_key, default)
 
-    def get_slide_background_color(self, default=None) -> 'str|None':
+    def get_slide_background_color(self, default=None) -> Optional[str]:
         return self.__dict.get(self.slide_background_color_key, default)
+
+    def get_bookmarks(self, default=None):
+        if default is None:
+            default = []
+        return self.__dict.get(self.bookmark_key, default)
+
+    def set_bookmarks(self, bookmarks: List[Dict]):
+        self.__dict[self.bookmark_key] = bookmarks
 
     def set_source_document(self, source_docid: Optional[int]):
         self.__dict[self.source_document_key] = source_docid

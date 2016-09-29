@@ -6,7 +6,7 @@ from datetime import datetime
 
 from documentmodel.document import Document
 from markdownconverter import expand_macros
-from timdb.timdbbase import TimDbException
+from timdb.timdbexception import TimDbException
 from utils import parse_yaml, merge
 
 date_format = '%Y-%m-%d %H:%M:%S'

@@ -37,11 +37,11 @@ class TimTest(TimRouteTest):
                                     }))
             doc_ids.add(doc_id + idx)
         self.assertDictResponse(self.ok_resp,
-                                self.json_put('/addPermission/{}/{}/{}'.format(3, 'Anonymous users', 'view')))
+                                self.json_put('/permissions/add/{}/{}/{}'.format(doc_id, 'Anonymous users', 'view')))
         self.assertDictResponse(self.ok_resp,
-                                self.json_put('/addPermission/{}/{}/{}'.format(4, 'Logged-in users', 'view')))
-        self.assertDictResponse(self.ok_resp, self.json_put('/addPermission/{}/{}/{}'.format(5, 'testuser2', 'view')))
-        self.assertDictResponse(self.ok_resp, self.json_put('/addPermission/{}/{}/{}'.format(6, 'testuser2', 'edit')))
+                                self.json_put('/permissions/add/{}/{}/{}'.format(doc_id + 1, 'Logged-in users', 'view')))
+        self.assertDictResponse(self.ok_resp, self.json_put('/permissions/add/{}/{}/{}'.format(doc_id + 2, 'testuser2', 'view')))
+        self.assertDictResponse(self.ok_resp, self.json_put('/permissions/add/{}/{}/{}'.format(doc_id + 3, 'testuser2', 'edit')))
         doc = Document(doc_id)
         doc.add_paragraph('Hello')
         pars = doc.get_paragraphs()
@@ -88,17 +88,17 @@ class TimTest(TimRouteTest):
         self.assertInResponse(par2_new_html, self.post_par(doc, par2_new_text, second_par_id))
         self.assertResponseStatus(a.post('/logout', follow_redirects=True))
         self.assertResponseStatus(a.get('/settings/'), 403)
-        for d in doc_ids - {3}:
+        for d in doc_ids - {doc_id}:
             self.assertResponseStatus(a.get('/view/' + str(d)), 403)
-        self.assertResponseStatus(a.get('/view/' + str(3)))
-        self.assertResponseStatus(a.get('/view/' + str(3), query_string={'login': True}), 403)
+        self.assertResponseStatus(a.get('/view/' + str(doc_id)))
+        self.assertResponseStatus(a.get('/view/' + str(doc_id), query_string={'login': True}), 403)
 
         # Login as another user
         self.login_test2()
         view_resp = a.get('/view/' + doc_name)
         self.assertInResponse('Test user 2', view_resp)
         self.assertInResponse(edited_comment_html, view_resp)
-        not_viewable_docs = {7}
+        not_viewable_docs = {doc_id + 4}
         viewable_docs = doc_ids - not_viewable_docs
         for view_id in viewable_docs:
             self.assertResponseStatus(a.get('/view/' + str(view_id)))
@@ -124,10 +124,10 @@ class TimTest(TimRouteTest):
         self.login_test1()
         self.assertInResponse(comment_of_test2,
                               a.get('/note/{}'.format(test2_note_id)))
-        teacher_right_docs = {6}
+        teacher_right_docs = {doc_id + 3}
         for i in teacher_right_docs:
             self.assertDictResponse(self.ok_resp,
-                                    self.json_put('/addPermission/{}/{}/{}'.format(i, 'testuser2', 'teacher')))
+                                    self.json_put('/permissions/add/{}/{}/{}'.format(i, 'testuser2', 'teacher')))
 
         self.assertResponseStatus(self.json_post('/deleteNote', {'id': test2_note_id,
                                                                  'docId': doc_id,
@@ -149,12 +149,12 @@ class TimTest(TimRouteTest):
         for view_id in viewable_docs - teacher_right_docs:
             self.assertResponseStatus(a.get('/view/' + str(view_id)))
             self.assertResponseStatus(a.get('/teacher/' + str(view_id)), 302)
-            self.assertResponseStatus(self.json_put('/addPermission/{}/{}/{}'.format(view_id, 'testuser2', 'teacher')),
+            self.assertResponseStatus(self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2', 'teacher')),
                                       403)
         for view_id in teacher_right_docs:
             self.assertResponseStatus(a.get('/view/' + str(view_id)))
             self.assertResponseStatus(a.get('/teacher/' + str(view_id)))
-            self.assertResponseStatus(self.json_put('/addPermission/{}/{}/{}'.format(view_id, 'testuser2', 'teacher')),
+            self.assertResponseStatus(self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2', 'teacher')),
                                       403)
         timdb.close()
 

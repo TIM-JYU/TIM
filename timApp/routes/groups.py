@@ -1,7 +1,7 @@
 from flask import Blueprint, abort
 
 from routes.common import verify_admin, getTimDb, jsonResponse, okJsonResponse
-from timdb.users import SPECIAL_GROUPS
+from timdb.special_group_names import SPECIAL_GROUPS
 
 groups = Blueprint('groups',
                    __name__,

@@ -1,6 +1,7 @@
 """Routes for manage view."""
 from flask import Blueprint, render_template
 
+from timdb.blocktypes import from_str
 from .common import *
 
 manage_page = Blueprint('manage_page',
@@ -11,7 +12,7 @@ manage_page = Blueprint('manage_page',
 @manage_page.route("/manage/<path:path>")
 def manage(path):
     timdb = getTimDb()
-    isFolder = False
+    is_folder = False
     doc_info = timdb.documents.resolve_doc_id_name(path)
     if doc_info is None:
         try:
@@ -22,22 +23,21 @@ def manage(path):
             folder_id = timdb.folders.get_folder_id(path.rstrip('/'))
             if folder_id is None:
                 abort(404)
-        isFolder = True
+        is_folder = True
         block_id = folder_id
     else:
         block_id = doc_info['id']
 
     if not timdb.users.has_manage_access(getCurrentUserId(), block_id):
         if verify_view_access(block_id):
-            if isFolder:
+            if is_folder:
                 return redirect('/view/' + str(block_id))
             session['message'] = "Did someone give you a wrong link? Showing normal view instead of manage view."
             return redirect('/view/' + str(block_id))
 
-    grouprights = timdb.users.get_rights_holders(block_id)
     access_types = timdb.users.get_access_types()
 
-    if isFolder:
+    if is_folder:
         doc_data = timdb.folders.get(block_id)
         doc_data['versions'] = []
         doc_data['fulltext'] = ''
@@ -59,17 +59,16 @@ def manage(path):
             ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
 
     doc_data['owner'] = timdb.users.get_owner_group(block_id)
-    return render_template('manage_folder.html' if isFolder else 'manage_document.html',
+    return render_template('manage_folder.html' if is_folder else 'manage_document.html',
                            route='manage',
-                           translations=timdb.documents.get_translations(block_id) if not isFolder else None,
+                           translations=timdb.documents.get_translations(block_id) if not is_folder else None,
                            doc=doc_data,
-                           grouprights=grouprights,
                            access_types=access_types,
                            rights=get_rights(block_id))
 
 
 @manage_page.route("/changeOwner/<int:doc_id>/<new_owner_name>", methods=["PUT"])
-def changeOwner(doc_id, new_owner_name):
+def change_owner(doc_id, new_owner_name):
     timdb = getTimDb()
     if not timdb.documents.exists(doc_id) and not timdb.folders.exists(doc_id):
         abort(404)
@@ -84,14 +83,10 @@ def changeOwner(doc_id, new_owner_name):
     return okJsonResponse()
 
 
-@manage_page.route("/addPermission/<int:doc_id>/<group_name>/<perm_type>", methods=["PUT"])
-def addPermission(doc_id, group_name, perm_type):
+@manage_page.route("/permissions/add/<item_id>/<group_name>/<perm_type>", methods=["PUT"])
+def add_permission(item_id, group_name, perm_type):
+    verify_manage_access(item_id)
     timdb = getTimDb()
-    if not timdb.documents.exists(doc_id) and not timdb.folders.exists(doc_id):
-        abort(404, 'This document does not exist.')
-    if not timdb.users.has_manage_access(getCurrentUserId(), doc_id):
-        abort(403, "You don't have permission to add permissions to this document.")
-
     groups = timdb.users.get_usergroups_by_name(group_name)
     if len(groups) == 0:
         abort(404, 'No user group with this name was found.')
@@ -99,28 +94,25 @@ def addPermission(doc_id, group_name, perm_type):
     group_id = groups[0]['id']
 
     try:
-        timdb.users.grant_access(group_id, doc_id, perm_type)
+        timdb.users.grant_access(group_id, item_id, perm_type)
     except KeyError:
         abort(400, 'Invalid permission type.')
     return okJsonResponse()
 
 
-@manage_page.route("/removePermission/<int:doc_id>/<int:group_id>/<perm_type>", methods=["PUT"])
-def removePermission(doc_id, group_id, perm_type):
+@manage_page.route("/permissions/remove/<item_id>/<int:group_id>/<perm_type>", methods=["PUT"])
+def remove_permission(item_id, group_id, perm_type):
     timdb = getTimDb()
-    if not timdb.documents.exists(doc_id) and not timdb.folders.exists(doc_id):
-        abort(404)
-    if not timdb.users.has_manage_access(getCurrentUserId(), doc_id):
-        abort(403)
+    verify_manage_access(item_id)
     try:
-        timdb.users.remove_access(group_id, doc_id, perm_type)
+        timdb.users.remove_access(group_id, item_id, perm_type)
     except KeyError:
         abort(400, 'Unknown permission type')
     return okJsonResponse()
 
 
 @manage_page.route("/alias/<int:doc_id>/", methods=["GET"])
-def getDocNames(doc_id):
+def get_doc_names(doc_id):
     timdb = getTimDb()
     names = timdb.documents.get_names(doc_id, include_nonpublic=True)
     return jsonResponse(names)
@@ -236,31 +228,50 @@ def rename_folder(doc_id):
     return jsonResponse({'new_name': new_name})
 
 
-@manage_page.route("/getPermissions/<int:doc_id>")
-def getPermissions(doc_id):
+@manage_page.route("/permissions/get/<int:doc_id>")
+def get_permissions(doc_id):
     timdb = getTimDb()
-    isFolder = False
-    if not timdb.documents.exists(doc_id):
-        if timdb.folders.exists(doc_id):
-            isFolder = True
-        else:
-            abort(404)
-    if not timdb.users.has_manage_access(getCurrentUserId(), doc_id):
-        abort(403)
-
-    if isFolder:
-        doc_data = timdb.folders.get(doc_id)
-        doc_data['name'] = doc_data.pop('fullname')
-        doc_data.pop('location')
-    else:
-        doc_data = timdb.documents.get_document(doc_id)
-
+    verify_manage_access(doc_id)
     grouprights = timdb.users.get_rights_holders(doc_id)
-    return jsonResponse({'doc': doc_data, 'grouprights': grouprights})
+    return jsonResponse({'grouprights': grouprights, 'accesstypes': timdb.users.get_access_types()})
+
+
+@manage_page.route("/defaultPermissions/<object_type>/get/<folder_id>")
+def get_default_document_permissions(folder_id, object_type):
+    timdb = getTimDb()
+    verify_manage_access(folder_id)
+    grouprights = timdb.users.get_default_rights_holders(folder_id, from_str(object_type))
+    return jsonResponse({'grouprights': grouprights})
+
+
+@manage_page.route("/defaultPermissions/<object_type>/add/<folder_id>/<group_name>/<perm_type>", methods=["PUT"])
+def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
+    group_id = verify_and_get_group(folder_id, group_name)
+    timdb = getTimDb()
+    timdb.users.grant_default_access(group_id, folder_id, perm_type, from_str(object_type))
+    return okJsonResponse()
+
+
+@manage_page.route("/defaultPermissions/<object_type>/remove/<folder_id>/<group_name>/<perm_type>", methods=["PUT"])
+def remove_default_doc_permission(folder_id, group_name, perm_type, object_type):
+    group_id = verify_and_get_group(folder_id, group_name)
+    timdb = getTimDb()
+    timdb.users.remove_default_access(group_id, folder_id, perm_type, from_str(object_type))
+    return okJsonResponse()
+
+
+def verify_and_get_group(folder_id, group_name):
+    verify_manage_access(folder_id)
+    timdb = getTimDb()
+    groups = timdb.users.get_usergroups_by_name(group_name)
+    if len(groups) == 0:
+        abort(404, 'No user group with this name was found.')
+    group_id = groups[0]['id']
+    return group_id
 
 
 @manage_page.route("/documents/<int:doc_id>", methods=["DELETE"])
-def deleteDocument(doc_id):
+def delete_document(doc_id):
     timdb = getTimDb()
     if not timdb.documents.exists(doc_id):
         return abort(404, 'Document does not exist.')
@@ -274,7 +285,7 @@ def deleteDocument(doc_id):
 
 
 @manage_page.route("/folders/<int:doc_id>", methods=["DELETE"])
-def deleteFolder(doc_id):
+def delete_folder(doc_id):
     timdb = getTimDb()
     if not timdb.folders.exists(doc_id):
         return abort(404, 'Folder does not exist.')

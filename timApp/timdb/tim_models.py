@@ -14,11 +14,11 @@ NEWEST_DB_VERSION constant.
 TODO: Use Flask-Migrate <http://flask-migrate.readthedocs.io/en/latest/> instead of homebrew update mechanism.
 """
 import datetime
-from datetime import timezone
-from sqlalchemy.schema import CreateTable
-
 import inspect
 import sys
+from datetime import timezone
+
+from sqlalchemy.schema import CreateTable
 
 from tim_app import db, app
 
@@ -93,27 +93,6 @@ class AskedQuestion(db.Model):
     expl = db.Column(db.Text)
 
 
-class Block(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'block'
-    id = db.Column(db.Integer, primary_key=True)
-    latest_revision_id = db.Column(db.Integer)
-    type_id = db.Column(db.Integer, nullable=False)
-    description = db.Column(db.Text)
-    created = db.Column(db.DateTime(timezone=True), nullable=False)
-    modified = db.Column(db.DateTime(timezone=True))
-    usergroup_id = db.Column(db.Integer, db.ForeignKey('usergroup.id'), nullable=False)
-
-    owner = db.relationship('UserGroup', backref=db.backref('owned_blocks', lazy='dynamic'))
-
-    def __init__(self, type_id, usergroup_id, description=None):
-        self.type_id = type_id
-        self.usergroup_id = usergroup_id
-        self.description = description
-        self.created = datetime.datetime.now(timezone.utc)
-        self.modified = self.created
-
-
 class BlockAccess(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'blockaccess'
@@ -122,22 +101,6 @@ class BlockAccess(db.Model):
     type = db.Column(db.Integer, db.ForeignKey('accesstype.id'), primary_key=True)
     accessible_from = db.Column(db.DateTime(timezone=True))
     accessible_to = db.Column(db.DateTime(timezone=True))
-
-
-class DocEntry(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'docentry'
-    name = db.Column(db.Text, primary_key=True)
-    id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
-    public = db.Column(db.Boolean, nullable=False, default=True)
-
-
-class Folder(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'folder'
-    id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
-    name = db.Column(db.Text, nullable=False)
-    location = db.Column(db.Text, nullable=False)
 
 
 class Lecture(db.Model):
@@ -236,18 +199,6 @@ class Translation(db.Model):
     doc_title = db.Column(db.Text)
 
 
-class User(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'useraccount'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Text, nullable=False)  # TODO Should be unique?
-    real_name = db.Column(db.Text)
-    email = db.Column(db.Text)
-    prefs = db.Column(db.Text)
-    pass_ = db.Column('pass', db.Text)
-    yubikey = db.Column(db.Text)
-
-
 class UserAnswer(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'useranswer'
@@ -255,13 +206,6 @@ class UserAnswer(db.Model):
     answer_id = db.Column(db.Integer, db.ForeignKey('answer.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)
     __table_args__ = (db.UniqueConstraint('answer_id', 'user_id'),)
-
-
-class UserGroup(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'usergroup'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Text, nullable=False, unique=True)
 
 
 class UserGroupMember(db.Model):

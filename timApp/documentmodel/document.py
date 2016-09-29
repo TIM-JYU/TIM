@@ -15,7 +15,7 @@ from documentmodel.docsettings import DocSettings
 from documentmodel.documentparser import DocumentParser, AttributesAtEndOfCodeBlockException, ValidationException
 from documentmodel.documentwriter import DocumentWriter
 from documentmodel.exceptions import DocExistsError
-from timdb.timdbbase import TimDbException
+from timdb.timdbexception import TimDbException
 from utils import get_error_html
 
 
@@ -797,6 +797,9 @@ class Document:
 
     def get_paragraphs(self) -> List[DocParagraph]:
         return [par for par in self]
+
+    def get_dereferenced_paragraphs(self) -> List[DocParagraph]:
+        return dereference_pars(self.get_paragraphs(), edit_window=False, source_doc=self.get_original_document())
 
     def get_closest_paragraph_title(self, par_id: Optional[str]):
         last_title = None

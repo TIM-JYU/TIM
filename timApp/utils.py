@@ -5,7 +5,7 @@ import shutil
 from datetime import datetime, timezone
 
 import yaml
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from yaml import CLoader
 
 from htmlSanitize import sanitize_html
@@ -215,3 +215,13 @@ def get_combined_css_filename(themes: List[Theme]):
     :return: The combined file name based on the themes. If the list is empty, 'default' is returned.
     """
     return '-'.join(t.filename for t in themes) or 'default'
+
+
+def split_location(path: str) -> Tuple[str, str]:
+    """Given a path 'a/b/c/d', returns a tuple ('a/b/c', 'd')."""
+    rs = path.rfind('/')
+    return ('', path) if rs < 0 else (path[:rs], path[rs + 1:])
+
+
+def join_location(location: str, name: str) -> str:
+    return name if location == '' else location + '/' + name

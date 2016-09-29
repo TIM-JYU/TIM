@@ -1,6 +1,9 @@
 from typing import List, Tuple
 
-from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
+from timdb.dbutils import insert_block
+from timdb.timdbbase import TimDbBase
+from timdb.blocktypes import blocktypes
+from timdb.timdbexception import TimDbException
 import os
 import datetime
 
@@ -79,7 +82,7 @@ class Images(TimDbBase):
         # TODO: Check that the file extension is allowed.
         # TODO: Use imghdr module to do basic validation of the file contents.
         # TODO: Should file name be unique among images?
-        img_id = self.insertBlockToDb(image_filename, owner_group_id, blocktypes.IMAGE, commit=False)
+        img_id = insert_block(image_filename, owner_group_id, blocktypes.IMAGE, commit=False)
         img_path = self.getImagePath(img_id, image_filename)
         os.makedirs(os.path.dirname(img_path))  # TODO: Set mode.
 

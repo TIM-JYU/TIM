@@ -83,7 +83,11 @@
         </script>
 
         <script src="{{ url_for('static', filename='scripts/services/userService.js') }}"></script>
+        <script src="{{ url_for('static', filename='scripts/directives/focusMe.js') }}"></script>
         <script src="{{ url_for('static', filename='scripts/directives/loginMenu.js') }}"></script>
+        <script src="{{ url_for('static', filename='scripts/directives/bootstrapPanel.js') }}"></script>
+        <script src="{{ url_for('static', filename='scripts/directives/rightsEditor.js') }}"></script>
+        <script src="{{ url_for('static', filename='scripts/directives/bookmarks.js') }}"></script>
 
         <!-- HTML5 shiv and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -97,7 +101,7 @@
         <title>{% block title %}{% endblock %} - TIM</title>
     {% endblock %}
 </head>
-<body>
+<body class="{% if show_unpublished_bg %}bg-unpublished{% endif %}">
 
 {# Set default column widths if they are not defined in a child template #}
 {% set col_1_lg = col_1_lg|default(2) %}
@@ -137,13 +141,24 @@
                             col-xs-{{ col_2_xs }}
                             col-sm-{{ col_2_sm }}">
                     <div class="siteheader">
-                        <a href="/">
-                            <img alt="TIM - The Interactive Material." class="pull-left"
-                                 src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"/>
-                        </a>
-                        <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
-                             src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
-                        <login-menu class="text-center"></login-menu>
+                        <div class="row">
+                            <div class="col-sm-1">
+                                <a href="/">
+                                <img alt="TIM - The Interactive Material."
+                                     src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"/>
+                                </a>
+                            </div>
+                            <div class="col-sm-10">
+                                <login-menu style="display: inline"></login-menu>
+                                {% if current_user.id > 0 %}
+                                    <bookmarks user-id="{{ current_user.id }}"></bookmarks>
+                                {% endif %}
+                            </div>
+                            <div class="col-sm-1">
+                                <img alt="Jyväskylän yliopisto" height="42"
+                                 src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="col-lg-{{ col_3_lg }}

@@ -47,6 +47,7 @@
                     </td>
                     <td>
                         <a href="/view/{{ '{{ item.fullname | escape }}' }}">{{ '{{ item.name }}' }}</a>
+                        <a><i ng-show="item.unpublished" class="glyphicon glyphicon-lock" title="Unpublished item"></i></a>
                     </td>
                     <td></td>
                     <td>{{ '{{ item.modified }}' }}</td>

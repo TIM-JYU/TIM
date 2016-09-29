@@ -585,13 +585,13 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.cancelClicked(); // when empty and save clicked there is no par
                         return;
                     }
-                    if ($scope.saving) {
+                    if ($scope.deleting) {
                         return;
                     }
                     if (!$window.confirm("Delete - are you sure?")) {
                         return;
                     }
-                    $scope.saving = true;
+                    $scope.deleting = true;
 
                     $http.post($scope.deleteUrl, $scope.extraData).
                         success(function (data, status, headers, config) {
@@ -602,11 +602,11 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             if ($scope.options.destroyAfterSave) {
                                 $element.remove();
                             }
-                            $scope.saving = false;
+                            $scope.deleting = false;
                         }).
                         error(function (data, status, headers, config) {
                             $window.alert("Failed to delete: " + data.error);
-                            $scope.saving = false;
+                            $scope.deleting = false;
                         });
                     if ($scope.options.touchDevice) $scope.changeMeta();
                 };
@@ -712,6 +712,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $element.find("#pluginRenameForm").get(0).remove();
                         $scope.renameFormShowing = false;
                         $scope.saving = false;
+                        $scope.deleting = false;
                     }).error(function (data, status, headers, config) {
                         $window.alert("Failed to cancel save: " + data.error);
                     });
@@ -931,6 +932,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     var text = $scope.getEditorText();
                     if ( text.trim() === "" ) {
                         $scope.deleteClicked();
+                        $scope.saving = false;
                         return;
                     }
                     $http.post($scope.saveUrl, angular.extend({

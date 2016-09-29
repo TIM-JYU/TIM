@@ -14,7 +14,7 @@ from documentmodel.documentwriter import DocumentWriter
 from documentmodel.exceptions import DocExistsError
 from documentmodel.randutils import random_paragraph
 from timdbtest import TimDbTest
-from timdb.timdbbase import TimDbException
+from timdb.timdbexception import TimDbException
 
 
 class RefTest(TimDbTest):
