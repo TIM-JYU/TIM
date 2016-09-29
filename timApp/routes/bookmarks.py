@@ -1,9 +1,8 @@
 from flask import Blueprint
 from flask import g
 
-from routes.common import verifyLoggedIn, getCurrentUserId, jsonResponse, verify_json_params
+from routes.common import verifyLoggedIn, jsonResponse, verify_json_params, get_current_user_object
 from timdb.bookmarks import Bookmarks
-from timdb.models.user import User
 
 bookmarks = Blueprint('bookmarks',
                       __name__,
@@ -13,7 +12,7 @@ bookmarks = Blueprint('bookmarks',
 @bookmarks.before_request
 def verify_login():
     verifyLoggedIn()
-    g.bookmarks = Bookmarks(User.query.get(getCurrentUserId()))
+    g.bookmarks = Bookmarks(get_current_user_object())
 
 
 @bookmarks.route('/add', methods=['POST'])

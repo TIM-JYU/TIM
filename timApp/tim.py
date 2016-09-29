@@ -239,7 +239,11 @@ def create_item(item_name, item_type_str, create_function, owner_group_id):
     if item_type == blocktypes.DOCUMENT:
         bms = Bookmarks(get_current_user_object())
         d = DocEntry.find_by_id(item_id)
-        bms.add_bookmark('Last edited', d.get_short_name(), '/view/' + d.get_path(), move_to_top=True).save_bookmarks()
+        bms.add_bookmark('Last edited',
+                         d.get_short_name(),
+                         '/view/' + d.get_path(),
+                         move_to_top=True,
+                         limit=app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
     copy_default_rights(item_id, item_type)
     return jsonResponse({'id': item_id, 'name': item_name})
 

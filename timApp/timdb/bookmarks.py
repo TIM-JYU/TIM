@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from timdb.models.user import User
 
@@ -12,14 +12,19 @@ class Bookmarks:
                                                 creator_group_id=user.get_personal_group().id).document
         self.bookmark_data = self.get_bookmarks()
 
-    def add_bookmark(self, groupname: str, name: str, path: str, move_to_top: bool = False) -> 'Bookmarks':
+    def add_bookmark(self,
+                     groupname: str,
+                     name: str, path: str,
+                     move_to_top: bool = False,
+                     limit: Optional[int] = None) -> 'Bookmarks':
         bookmark_data = self.bookmark_data
         added = False
         for g in bookmark_data:
             items = g.get(groupname)
             if items is not None:
                 added = True
-                self._add_item_to_group(items, name, path, move_to_top=move_to_top)
+                self._add_item_to_group(items, name, path, move_to_top=move_to_top, limit=limit)
+                break
         if not added:
             empty = []
             new_group = {groupname: empty}
@@ -48,7 +53,12 @@ class Bookmarks:
         self.bookmark_data = filtered
         return self
 
-    def _add_item_to_group(self, groupitems: List[Dict[str, str]], name: str, path: str, move_to_top: bool = False):
+    def _add_item_to_group(self,
+                           groupitems: List[Dict[str, str]],
+                           name: str,
+                           path: str,
+                           move_to_top: bool = False,
+                           limit: Optional[int] = None):
         item_found = False
         for i in groupitems:
             bookmark = i.get(name)
@@ -62,6 +72,8 @@ class Bookmarks:
             groupitems.insert(0, {name: path})
         else:
             groupitems.insert(0, {name: path})
+        if limit is not None:
+            groupitems[:] = groupitems[:limit]
 
     def add_group(self, groupname: str) -> 'Bookmarks':
         bookmark_data = self.bookmark_data

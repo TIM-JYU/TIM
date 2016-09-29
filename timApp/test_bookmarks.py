@@ -91,3 +91,11 @@ class BookmarkTest(TimRouteTest):
                                          {'name': d2.get_short_name(), 'path': view + d2.get_path()}],
                                'editable': False}],
                              self.get_bookmarks())
+        d4 = DocEntry.find_by_id(self.create_doc().doc_id)
+        # LAST_EDITED_BOOKMARK_LIMIT = 3 when testing
+        self.assertListEqual([{'name': 'Last edited',
+                               'items': [{'name': d4.get_short_name(), 'path': view + d4.get_path()},
+                                         {'name': d.get_short_name(), 'path': view + d.get_path()},
+                                         {'name': d3.get_short_name(), 'path': view + d3.get_path()}],
+                               'editable': False}],
+                             self.get_bookmarks())
