@@ -14,13 +14,13 @@ NEWEST_DB_VERSION constant.
 TODO: Use Flask-Migrate <http://flask-migrate.readthedocs.io/en/latest/> instead of homebrew update mechanism.
 """
 import datetime
-from sqlalchemy.schema import CreateTable
 import inspect
 import sys
 from datetime import timezone
 
+from sqlalchemy.schema import CreateTable
+
 from tim_app import db, app
-from timdb.special_group_names import LARGE_GROUPS, ANONYMOUS_GROUPNAME
 
 
 class AccessType(db.Model):
@@ -199,18 +199,6 @@ class Translation(db.Model):
     doc_title = db.Column(db.Text)
 
 
-class User(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'useraccount'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Text, nullable=False)  # TODO Should be unique?
-    real_name = db.Column(db.Text)
-    email = db.Column(db.Text)
-    prefs = db.Column(db.Text)
-    pass_ = db.Column('pass', db.Text)
-    yubikey = db.Column(db.Text)
-
-
 class UserAnswer(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'useranswer'
@@ -218,22 +206,6 @@ class UserAnswer(db.Model):
     answer_id = db.Column(db.Integer, db.ForeignKey('answer.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)
     __table_args__ = (db.UniqueConstraint('answer_id', 'user_id'),)
-
-
-class UserGroup(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'usergroup'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Text, nullable=False, unique=True)
-
-    def is_anonymous(self):
-        return self.name == ANONYMOUS_GROUPNAME
-
-    def is_large(self):
-        return self.name in LARGE_GROUPS
-
-    def __json__(self):
-        return ['id', 'name']
 
 
 class UserGroupMember(db.Model):

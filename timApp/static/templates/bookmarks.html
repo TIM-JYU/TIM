@@ -1,0 +1,89 @@
+<div ng-repeat="group in data" class="btn-group btn-group-sm margin-4" uib-dropdown is-open="group.isOpen">
+    <button type="button" class="btn btn-default" uib-dropdown-toggle>
+        {{ group.name || 'Top level' }} <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu"
+        uib-dropdown-menu
+        role="menu"
+        aria-labelledby="single-button">
+        <li ng-repeat="item in group.items" role="menuitem">
+            <a ng-href="{{ item.path }}">{{ item.name }}
+                <i ng-click="editItem(group, item, $event)" ng-show="deleting"
+                   class="glyphicon glyphicon-pencil"></i>
+                <i ng-click="deleteItem(group, item, $event)" ng-show="deleting"
+                   class="glyphicon glyphicon-remove"></i>
+            </a>
+        </li>
+        <li ng-show="group.editable && isSaveablePage() && group.items.length > 0"
+            class="divider"></li>
+        <li ng-show="group.editable && isSaveablePage()" role="menuitem">
+            <a ng-click="newBookmark(group.name, $event)"
+               href="#">New bookmark...</a>
+        </li>
+        <li ng-show="group.editable"
+            class="divider"></li>
+        <li ng-show="group.editable" role="menuitem">
+            <a ng-click="toggleDelete($event)"
+               href="#">{{ deleting ? 'Done editing' : 'Edit...' }}</a>
+        </li>
+        <li ng-show="group.editable && deleting" role="menuitem">
+            <a ng-click="deleteGroup(group, $event)"
+               href="#">Delete this group</a>
+        </li>
+    </ul>
+</div>
+<a ng-repeat="bookmark in getTopLevelBookmarks()"
+   ng-href="{{ bookmark.path }}"
+   ng-bind="bookmark.name"
+   class="btn btn-sm btn-default"></a>
+<button ng-show="data.length == 0" ng-click="newBookmark(null, $event)" class="btn btn-sm btn-default">
+    <i class="glyphicon glyphicon-plus"></i> New bookmark...
+</button>
+<script type="text/ng-template" id="createBookmark.html">
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-title">Bookmark</h4>
+    </div>
+    <div class="modal-body" id="modal-body">
+        <form name="bookmarkForm" class="form-horizontal">
+            <div class="form-group">
+                <label for="group" class="col-sm-2 control-label">Group</label>
+                <div class="col-sm-10">
+                    <input focus-me="$ctrl.focusGroup" ng-model="$ctrl.bookmark.group" name="groupField" type="text"
+                           class="form-control" id="group"
+                           placeholder="Group name or blank to make a top-level bookmark">
+                </div>
+            </div>
+            <div class="form-group"
+                 ng-class="{'has-error': !bookmarkForm.nameField.$pristine && bookmarkForm.nameField.$error.required}">
+                <label for="name" class="col-sm-2 control-label">Name</label>
+                <div class="col-sm-10">
+                    <input required focus-me="$ctrl.focusName" ng-model="$ctrl.bookmark.name" name="nameField"
+                           type="text"
+                           class="form-control" id="name" placeholder="Bookmark name">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="link" class="col-sm-2 control-label">Link</label>
+                <div class="col-sm-10">
+                    <input ng-model="$ctrl.bookmark.link" type="text" class="form-control" name="linkField" id="link"
+                           placeholder="Leave blank to add current page">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <div class="checkbox">
+                        <label>
+                            <input ng-model="$ctrl.includeParams" ng-disabled="$ctrl.bookmark.link" type="checkbox">
+                            Include URL parameters in link
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button ng-disabled="!bookmarkForm.$valid" class="timButton" type="button" ng-click="$ctrl.ok()">Save
+        </button>
+        <button class="btn btn-default" type="button" ng-click="$ctrl.cancel()">Cancel</button>
+    </div>
+</script>

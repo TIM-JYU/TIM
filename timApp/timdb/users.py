@@ -5,7 +5,8 @@ from typing import Optional, List, Set
 from timdb.blocktypes import blocktypes, BlockType
 from timdb.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
     LOGGED_IN_USERNAME, ADMIN_GROUPNAME
-from timdb.tim_models import User, UserGroup
+from timdb.models.usergroup import UserGroup
+from timdb.models.user import User
 from timdb.models.folder import Folder
 from timdb.models.block import Block
 from timdb.timdbbase import TimDbBase
