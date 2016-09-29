@@ -403,7 +403,8 @@ def get_html(ttype, query):
         if type(code) != type(''):
             print("Ei ollut string: ", code, jso)
             code = '' + str(code)
-        ebycode = html.escape(code)
+         # ebycode = html.escape(code)
+        ebycode = code.replace("</pre>","< /pre>"); # prevent pre ending too early
         if tiny:
             lazy_visible = '<div class="lazyVisible csRunDiv csTinyDiv no-popup-menu" >' + get_tiny_surrounding_headers(query,
                                                                                                      '' + ebycode + '') + '</div>'
@@ -1249,6 +1250,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
                 elif ttype == "jypeli":
                     if s.find(" Main(") >= 0: mainfile = ""
+                    else:
+                        classname = find_cs_class(s)
+                        if classname != "Peli":
+                            maincode = codecs.open(mainfile, 'r', "utf-8").read()
+                            maincode = re.sub("Peli", classname, maincode, flags=re.M)
+                            mainfile = "/tmp/%s/%s.cs" % (basename, "Ohjelma")
+                            codecs.open(mainfile, "w", "utf-8").write(maincode)
+
                     # cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs %s" % (
                     cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Numerics /r:System.Drawing %s %s" % (
                         exename, mainfile, csfname)
