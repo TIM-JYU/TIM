@@ -173,6 +173,7 @@ timApp.controller('CreateBookmarkCtrl', ['$uibModalInstance', '$window', 'bookma
     $ctrl.bookmark = bookmark;
     $ctrl.focusGroup = !bookmark.group;
     $ctrl.focusName = !$ctrl.focusGroup;
+    $ctrl.showUrlCheckbox = $window.location.search.length > 1;
 
     $ctrl.ok = function () {
         if (!$ctrl.bookmark.link) {
