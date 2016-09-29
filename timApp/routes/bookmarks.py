@@ -19,27 +19,27 @@ def verify_login():
 @bookmarks.route('/add', methods=['POST'])
 def add_bookmark():
     groupname, item_name, item_path = verify_json_params('group', 'name', 'link')
-    g.bookmarks.add_bookmark(groupname, item_name, item_path)
+    g.bookmarks.add_bookmark(groupname, item_name, item_path).save_bookmarks()
     return get_bookmarks()
 
 
 @bookmarks.route('/createGroup/<groupname>', methods=['POST'])
 def create_bookmark_group(groupname):
-    g.bookmarks.add_group(groupname)
+    g.bookmarks.add_group(groupname).save_bookmarks()
     return get_bookmarks()
 
 
 @bookmarks.route('/deleteGroup', methods=['POST'])
 def delete_bookmark_group():
     groupname, = verify_json_params('group')
-    g.bookmarks.delete_group(groupname)
+    g.bookmarks.delete_group(groupname).save_bookmarks()
     return get_bookmarks()
 
 
 @bookmarks.route('/delete', methods=['POST'])
 def delete_bookmark():
     groupname, item_name = verify_json_params('group', 'name')
-    g.bookmarks.delete_bookmark(groupname, item_name)
+    g.bookmarks.delete_bookmark(groupname, item_name).save_bookmarks()
     return get_bookmarks()
 
 

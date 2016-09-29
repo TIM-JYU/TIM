@@ -128,7 +128,7 @@ def show_clipboard():
 
     clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
     pars = [DocParagraph.from_dict(doc, par) for par in clip.read() or []]
-    return par_response(pars, doc, edit_window=True)
+    return par_response(pars, doc, preview=True)
 
 
 @clipboard.route('/clipboardstatus', methods=['GET'])

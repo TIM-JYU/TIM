@@ -18,6 +18,7 @@ import pytz
 from routes.logger import log_info
 from theme import Theme
 from tim_app import db
+from timdb.models.user import User
 from timdb.timdb2 import TimDb
 from typing import List, Dict
 from utils import generate_theme_scss, get_combined_css_filename, ThemeNotFoundException
@@ -41,6 +42,10 @@ def get_current_user():
             'name': getCurrentUserName(),
             'real_name': session.get('real_name'),
             'email': session.get('email')}
+
+
+def get_current_user_object():
+    return User.query.get(getCurrentUserId())
 
 
 def get_other_users() -> Dict[int, Dict[str, str]]:
