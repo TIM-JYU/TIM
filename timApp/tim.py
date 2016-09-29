@@ -102,6 +102,14 @@ def inject_user() -> dict:
     return dict(current_user=get_current_user(), other_users=get_other_users_as_list())
 
 
+@app.context_processor
+def inject_bookmarks() -> dict:
+    """"Injects bookmarks to all templates."""
+    if not logged_in():
+        return {}
+    return dict(bookmarks=Bookmarks(User.query.get(getCurrentUserId())).as_json())
+
+
 @app.errorhandler(400)
 def bad_request(error):
     return error_generic(error, 400)

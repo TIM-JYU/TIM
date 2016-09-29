@@ -14,9 +14,9 @@
                    class="glyphicon glyphicon-remove"></i>
             </a>
         </li>
-        <li ng-show="group.editable && isSaveablePage() && group.items.length > 0"
+        <li ng-show="group.items.length > 0"
             class="divider"></li>
-        <li ng-show="group.editable && isSaveablePage()" role="menuitem">
+        <li role="menuitem">
             <a ng-click="newBookmark(group.name, $event)"
                href="#">New bookmark...</a>
         </li>

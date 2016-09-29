@@ -82,3 +82,15 @@ class Bookmarks:
         new_settings = self.bookmark_document.get_settings()
         new_settings.set_bookmarks(bookmark_data)
         self.bookmark_document.set_settings(new_settings.get_dict())
+
+    def as_json(self):
+        result = []
+        for group in self.get_bookmarks():
+            group_name = next(group.__iter__())
+            items = group[group_name]
+            result_items = []
+            for i in items:
+                item_name = next(i.__iter__())
+                result_items.append({'name': item_name, 'path': i[item_name]})
+            result.append({'name': group_name, 'items': result_items, 'editable': group_name != 'Last edited'})
+        return result

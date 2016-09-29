@@ -23,6 +23,18 @@ def add_bookmark():
     return get_bookmarks()
 
 
+@bookmarks.route('/edit', methods=['POST'])
+def edit_bookmark():
+    old, new = verify_json_params('old', 'new')
+    old_group = old['group']
+    old_name = old['name']
+    groupname = new['group']
+    item_name = new['name']
+    item_path = new['link']
+    g.bookmarks.delete_bookmark(old_group, old_name).add_bookmark(groupname, item_name, item_path).save_bookmarks()
+    return get_bookmarks()
+
+
 @bookmarks.route('/createGroup/<groupname>', methods=['POST'])
 def create_bookmark_group(groupname):
     g.bookmarks.add_group(groupname).save_bookmarks()
@@ -46,18 +58,9 @@ def delete_bookmark():
 @bookmarks.route('/get')
 @bookmarks.route('/get/<int:user_id>')
 def get_bookmarks(user_id=None):
-    """Gets user id data for the currently logged in user.
+    """Gets user bookmark data for the currently logged in user.
 
     Parameter user_id is unused for now.
     """
-    bms = g.bookmarks.get_bookmarks()
-    result = []
-    for group in bms:
-        group_name = next(group.__iter__())
-        items = group[group_name]
-        result_items = []
-        for i in items:
-            item_name = next(i.__iter__())
-            result_items.append({'name': item_name, 'path': i[item_name]})
-        result.append({'name': group_name, 'items': result_items, 'editable': group_name != 'Last edited'})
-    return jsonResponse(result)
+
+    return jsonResponse(g.bookmarks.as_json())

@@ -53,6 +53,13 @@ class BookmarkTest(TimRouteTest):
                                    as_json=True)
         self.assertListEqual([{'items': [{'name': item, 'path': item_path}],
                                'name': group_name2, 'editable': True}], bookmarks)
+        bookmarks = self.json_post('/bookmarks/edit',
+                                   {'old': {'group': group_name2, 'name': item},
+                                    'new': {'group': group_name2, 'name': item, 'link': 'test'}},
+                                   expect_status=200,
+                                   as_json=True)
+        self.assertListEqual([{'items': [{'name': item, 'path': 'test'}],
+                               'name': group_name2, 'editable': True}], bookmarks)
         self.logout()
         self.get_bookmarks(expect_status=403)
 

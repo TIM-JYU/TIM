@@ -9,23 +9,44 @@
  * @licence MIT
  * @copyright 2015 Timppa project authors
  */
-var angular;
+var angular, $;
 var timApp = angular.module('timApp');
 
-timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
+timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$log',
 
-    function ($scope, $http, $window) {
+    function ($scope, $http, $window, Users, $log) {
+        "use strict";
         $scope.currentLecturesList = [];
         $scope.futureLecturesList = [];
         $scope.pastLecturesList = [];
         $scope.lectureQuestions = [];
         $scope.materialQuestions = [];
+        $scope.users = Users;
+        $scope.bookmarks = $window.bookmarks; // from base.html
 
         $scope.active = -1;
         if ($window.showIndex) {
             $scope.active = 0;
+        } else if (Users.isLoggedIn()) {
+            // make bookmarks tab active
+            $scope.active = 6;
         }
         $scope.lastTab = $scope.active;
+
+        $scope.bookmarkTabSelected = function (isSelected) {
+            var tabContent = $("#menuTabs").find(".tab-content");
+            if (isSelected) {
+                // The dropdown menu is clipped is it's near right side of the menu without applying this hack
+                // Also the dropdown menu causes vertical scrollbar to appear without specifying height
+                tabContent.css('height', 'calc(100vh - 51.2833px)');
+                tabContent.css('overflow-x', 'visible');
+                tabContent.css('overflow-y', 'visible');
+            } else {
+                tabContent.css('height', 'auto');
+                tabContent.css('overflow-x', 'hidden');
+                tabContent.css('overflow-y', 'auto');
+            }
+        };
 
         /**
          * FILL WITH SUITABLE TEXT
@@ -68,7 +89,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
                     $scope.pastLecturesList = lectures.pastLectures;
                 })
                 .error(function () {
-                    console.log("Couldn't fetch the lectures");
+                    $log.error("Couldn't fetch the lectures");
                 });
         };
 
@@ -92,7 +113,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
                     }
                 })
                 .error(function () {
-                    console.log("Couldn't fetch the questions");
+                    $log.error("Couldn't fetch the questions");
                 });
         };
     }

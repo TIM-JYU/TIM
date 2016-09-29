@@ -29,9 +29,15 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
 #menuTabs {
     background: white;
 
-    .glyphicon {
-        font-size: xx-large;
-        margin: -6px -10px;
+    & > .nav-tabs {
+        .glyphicon {
+            font-size: xx-large;
+            margin: -6px -10px;
+        }
+        // make sure active tab remains black
+        .active a .glyphicon {
+            color: inherit;
+        }
     }
 
     .tab-content {
@@ -40,7 +46,7 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
         max-height: calc(100vh - 51.2833px);
         padding-left: 3px;
 
-        ul {
+        .tab-pane > ul {
             padding-left: 13px;
 
             &.subexp {

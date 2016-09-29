@@ -16,7 +16,9 @@ timApp.directive("bookmarks", ['$window', '$log', '$http', '$uibModal', '$timeou
 
         controller: function ($scope, $element, $attrs) {
             var sc = $scope;
-            sc.data = [];
+            if ($window.bookmarks && !sc.data) {
+                sc.data = angular.copy($window.bookmarks);
+            }
 
             sc.getFromServer = function (response, groupToKeepOpen) {
                 sc.data = response.data;
@@ -49,9 +51,8 @@ timApp.directive("bookmarks", ['$window', '$log', '$http', '$uibModal', '$timeou
             };
 
             sc.newBookmark = function (group, e) {
-                e.stopPropagation();
                 e.preventDefault();
-                var currentPage = $window.location.pathname.replace(/\/$/, "");
+                var currentPage = decodeURIComponent($window.location.pathname.replace(/\/$/, ""));
                 var modalInstance = $uibModal.open({
                     animation: false,
                     ariaLabelledBy: 'modal-title',
@@ -109,14 +110,18 @@ timApp.directive("bookmarks", ['$window', '$log', '$http', '$uibModal', '$timeou
                     if (!bookmark.name) {
                         return;
                     }
-                    sc.deleteItem(group, item, e).then(function (response) {
-                        $http.post('/bookmarks/add', bookmark)
-                            .then(function (response) {
-                                sc.getFromServer(response, group);
-                            }, function (response) {
-                                $window.alert("Could not add bookmark.");
-                            });
-                    });
+                    $http.post('/bookmarks/edit', {
+                        old: {
+                            group: group.name,
+                            name: item.name,
+                            link: item.path
+                        }, 'new': bookmark
+                    })
+                        .then(function (response) {
+                            sc.getFromServer(response, group);
+                        }, function (response) {
+                            $window.alert("Could not edit bookmark.");
+                        });
                 }, function () {
                     $timeout(function () {
                         sc.keepGroupOpen(group);
@@ -157,7 +162,7 @@ timApp.directive("bookmarks", ['$window', '$log', '$http', '$uibModal', '$timeou
 
             sc.deleting = false;
 
-            if (sc.userId) {
+            if (sc.userId && !sc.data) {
                 $http.get('/bookmarks/get/' + sc.userId).then(sc.getFromServer, function (response) {
                     $window.alert("Could not fetch bookmarks.");
                 });
@@ -171,6 +176,9 @@ timApp.controller('CreateBookmarkCtrl', ['$uibModalInstance', '$window', 'bookma
     var $ctrl = this;
     $ctrl.bookmarkForm = {};
     $ctrl.bookmark = bookmark;
+    if (bookmark.group === 'Last edited') {
+        bookmark.group = '';
+    }
     $ctrl.focusGroup = !bookmark.group;
     $ctrl.focusName = !$ctrl.focusGroup;
     $ctrl.showUrlCheckbox = $window.location.search.length > 1;
