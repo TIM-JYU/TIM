@@ -91,8 +91,8 @@ class Users(TimDbBase):
         assert user_id != 0
         return user_id
 
-    def create_anonymous_user(self, name: str, real_name: str, commit: bool = True) -> int:
-        """Creates a new user anonymous user.
+    def create_anonymous_user(self, name: str, real_name: str, commit: bool = True) -> User:
+        """Creates a new anonymous user.
         :param name: The name of the user to be created.
         :param real_name: The real name of the user.
         :returns: The id of the newly created user.
@@ -106,7 +106,7 @@ class Users(TimDbBase):
             self.session.commit()
         user_id = u.id
         self.add_user_to_group(self.get_anon_group_id(), user_id)
-        return user_id
+        return u
 
     def get_next_anonymous_user_id(self) -> int:
         """

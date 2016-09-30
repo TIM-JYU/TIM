@@ -2,6 +2,8 @@ import datetime
 import json
 import threading
 import time
+
+from routes.login import log_in_as_anonymous
 from tim_app import app
 from time import mktime
 from datetime import timezone
@@ -738,14 +740,9 @@ def join_lecture():
         return jsonResponse({"correctPassword": False})
 
     anon_login = False
-    if current_user == 0:
-        user_name = 'Anonymous'
-        user_real_name = 'Guest'
-        user_id = timdb.users.create_anonymous_user(user_name, user_real_name)
-        session['user_id'] = user_id
-        session['user_name'] = user_name
-        session['real_name'] = user_real_name
-        current_user = user_id
+    if not logged_in():
+        anon_user = log_in_as_anonymous(session)
+        current_user = anon_user.id
         anon_login = True
 
     doc_name = timdb.documents.get_document(lecture[0].get("doc_id"))["name"]

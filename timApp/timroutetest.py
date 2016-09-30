@@ -11,6 +11,7 @@ from flask import Response
 from flask import session
 from lxml import html
 
+from routes.login import log_in_as_anonymous
 from tim_app import db
 from timdbtest import TimDbTest
 
@@ -267,6 +268,11 @@ class TimRouteTest(TimDbTest):
         :return: The name of the current user.
         """
         return session['user_name']
+
+    def login_anonymous(self):
+        with self.app.session_transaction() as s:
+            log_in_as_anonymous(s)
+        self.app.session_transaction().__enter__()
 
     def login_test1(self, force: bool = False, add: bool = False):
         """Logs testuser1 in.
