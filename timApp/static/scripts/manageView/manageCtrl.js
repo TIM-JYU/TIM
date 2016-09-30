@@ -500,7 +500,7 @@ text = '\n'.join(a)
 
         sc.markAllAsRead = function() {
             sc.readUpdating = true;
-            $http.put('/read/' + sc.doc.id + '?_=' + Date.now())
+            $http.put('/read/' + sc.doc.id, {})
                 .success(function (data, status, headers, config) {
 
                 }).error(function (data, status, headers, config) {
@@ -528,7 +528,7 @@ text = '\n'.join(a)
         };
 
         sc.createCitation = function() {
-            $http.get('/cite/' + sc.doc.id + "/" + sc.citationName + '?_=' + Date.now())
+            $http.get('/cite/' + sc.doc.id + "/" + sc.citationName)
                 .success(function (data, status, headers, config) {
                     location.assign("/view/" + data.name);
                 }).error(function (data, status, headers, config) {

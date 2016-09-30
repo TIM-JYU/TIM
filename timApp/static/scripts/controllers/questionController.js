@@ -834,8 +834,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             docId: doc_id,
             text: md,
             par: scope.par_id,
-            par_next: scope.par_id_next,
-            buster: new Date().valueOf()
+            par_next: scope.par_id_next
         })).success(function (data) {
             $window.console.log("The question was successfully added to database");
             scope.removeErrors();
@@ -871,8 +870,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 'doc_id': doc_id,
                 'points': points,
                 'expl': JSON.stringify(expl),
-                'questionjson': JSON.stringify(questionjson),
-                'buster': new Date().valueOf()
+                'questionjson': JSON.stringify(questionjson)
             }
         })
             .success(function (data) {
@@ -907,8 +905,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             url: '/updatePoints/',
             params: {
                 'asked_id': scope.asked_id,
-                'points': points,
-                'buster': new Date().valueOf()
+                'points': points
             }
         })
             .success(function () {
