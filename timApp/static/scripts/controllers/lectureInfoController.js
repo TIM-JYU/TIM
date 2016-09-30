@@ -76,7 +76,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
         $http({
             url: '/getAskedQuestionById',
             method: 'GET',
-            params: {'asked_id': asked_id, 'buster': new Date().getTime()}
+            params: {'asked_id': asked_id}
         })
             .success(function (data) {
                 var json = JSON.parse(data.json);

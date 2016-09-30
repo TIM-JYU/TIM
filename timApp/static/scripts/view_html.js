@@ -414,7 +414,7 @@ timApp.controller("ViewCtrl", [
             http({
                 url: '/getQuestionById',
                 method: 'GET',
-                params: {'question_id': sc.qId, 'buster': new Date().getTime()}
+                params: {'question_id': sc.qId}
             })
                 .success(function (data) {
                     sc.json = JSON.parse(data.questionjson);
@@ -457,7 +457,7 @@ timApp.controller("ViewCtrl", [
             http({
                 url: '/getQuestionByParId',
                 method: 'GET',
-                params: {'par_id': sc.questionParId, 'doc_id': sc.docId, 'buster': new Date().getTime()}
+                params: {'par_id': sc.questionParId, 'doc_id': sc.docId}
             })
                 .success(function (data) {
                     sc.json = data.questionjson;
@@ -1095,7 +1095,7 @@ timApp.controller("ViewCtrl", [
                 data = sc.getRefAttrs($par);
             }
             if ( !Users.isLoggedIn() ) return true;
-            http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now(), data)
+            http.put('/read/' + sc.docId + '/' + par_id, data)
                 .success(function (data, status, headers, config) {
                     sc.markPageDirty();
                 }).error(function () {
@@ -1528,9 +1528,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getQuestions = function () {
-            var rn = "?_=" + Date.now();
-
-            http.get('/questions/' + sc.docId + rn)
+            http.get('/questions/' + sc.docId)
                 .success(function (data) {
                     var pars = {};
                     var questionCount = data.length;
@@ -1560,7 +1558,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.markAllAsRead = function () {
-            http.put('/read/' + sc.docId + '?_=' + Date.now())
+            http.put('/read/' + sc.docId)
                 .success(function (data, status, headers, config) {
                     $('.readline').attr("class", "readline read");
                 }).error(function (data, status, headers, config) {

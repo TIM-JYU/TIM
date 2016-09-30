@@ -242,7 +242,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                         return;
                     }
                     $scope.loading++;
-                    $http.get('/answers/' + $scope.taskId + '/' + $scope.user.id + '?rnd='+Math.random())  
+                    $http.get('/answers/' + $scope.taskId + '/' + $scope.user.id)
                         .success(function (data, status, headers, config) {
                             if (data.length > 0 && ($scope.hasUserChanged() || data.length !== ($scope.answers || []).length)) {
                                 $scope.answers = data;

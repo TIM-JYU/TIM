@@ -1140,13 +1140,18 @@ body > .footer {
 }
 
 .notes .note-badge {
-position: absolute;
+    position: absolute;
     top: 0;
     left: -1.2em;
     font-size: 15px;
     padding: 0px;
     padding-left: 2px;
     padding-right: 3px;
+    background-color: #dae1e1;
+    border-color: #dae1e1;
+    &:hover {
+        background-color: $basic-color;
+    }
 }
 
 
