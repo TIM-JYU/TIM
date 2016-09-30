@@ -141,6 +141,19 @@ def not_found(error):
     return error_generic(error, 404)
 
 
+@app.route('/restart')
+def restart_server():
+    """Restarts the server by sending HUP signal to Gunicorn."""
+    verify_admin()
+    pid_path = '/var/run/gunicorn.pid'
+    if os.path.exists(pid_path):
+        os.system('kill -HUP $(cat {})'.format(pid_path))
+        flash('Restart signal was sent to Gunicorn.')
+    else:
+        flash('Gunicorn PID file was not found. TIM was probably not started with Gunicorn.')
+    return safe_redirect(url_for('start_page'))
+
+
 @app.route('/resetcss')
 def reset_css():
     """
