@@ -27,7 +27,7 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
 }
 
 #menuTabs {
-    background: white;
+    background: $bg-color;
 
     .glyphicon {
         font-size: xx-large;
