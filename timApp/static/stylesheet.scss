@@ -147,6 +147,11 @@ a .glyphicon {
         }
     }
 
+     .table-bordered .th {
+            border: 1px solid #ccc;
+     }
+
+
     .huomautus {
         @extend .center-block;
         width: 90%;
