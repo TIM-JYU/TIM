@@ -637,6 +637,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             usercode = get_json_param(query.jso, "state", "usercode", None)
             if usercode: query.query["usercode"] = [usercode]
             userinput = get_json_param(query.jso, "state", "userinput", None)
+            
             if userinput: query.query["userinput"] = [userinput]
             userargs = get_json_param(query.jso, "state", "userargs", None)
             if userargs: query.query["userargs"] = [userargs]
@@ -836,6 +837,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         points_rule = None
 
         try:
+            stdin_default = None
             # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
             uploadedFile = get_json_param(query.jso, "input", "uploadedFile", None)
             uploadedType = get_json_param(query.jso, "input", "uploadedType", None)
@@ -1180,6 +1182,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # print(isInput)
             if is_input:
                 # print("Write input file: " + inputfilename)
+                if not userinput: userinput = "\n"
+                if inputfilename.find('input.txt') >= 0:
+                    stdin_default = 'input.txt'
                 codecs.open(inputfilename, "w", "utf-8").write(userinput)
 
             if not os.path.isfile(csfname) or os.path.getsize(csfname) == 0:
@@ -1390,7 +1395,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             code = 0
             out = ""
 
-            stdin = get_param(query, "stdin", None)
+            stdin = get_param(query, "stdin", stdin_default)
             # if stdin: stdin = "/tmp/%s/%s" % (basename, stdin)
             # if stdin: stdin = "/tmp/%s/%s" % (basename, stdin)
             if ttype == "sql" or ttype == "psql": stdin = pure_exename

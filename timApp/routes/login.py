@@ -11,6 +11,7 @@ from yubico_client import Yubico
 from yubico_client.yubico_exceptions import YubicoError
 
 from routes.notify import send_email
+from timdb.models.user import User
 from .common import *
 from .logger import log_error
 
@@ -412,3 +413,13 @@ def yubi_login(username, otp):
     flash("Logged in as: {}".format(username))
     return redirect(url_for('view_page.index_page'))
 
+
+def log_in_as_anonymous(sess) -> User:
+    timdb = getTimDb()
+    user_name = 'Anonymous'
+    user_real_name = 'Guest'
+    user = timdb.users.create_anonymous_user(user_name, user_real_name)
+    sess['user_id'] = user.id
+    sess['user_name'] = user_name
+    sess['real_name'] = user_real_name
+    return user

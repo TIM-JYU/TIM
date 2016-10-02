@@ -129,17 +129,28 @@ class Notes(TimDbBase):
         if include_public:
             include_public_sql = "OR access = 'everyone'"
         c = self.db.cursor()
-        c.execute("""SELECT UserNotes.id, par_id, doc_id, par_hash, content,
-                            created,
-                            modified,
-                            access, tags, html,
-                            UserNotes.UserGroup_id, UserAccount.name as user_name,
-                            UserAccount.real_name, UserAccount.email as user_email
-                     FROM UserNotes
-                     JOIN UserGroupMember ON UserNotes.UserGroup_id = UserGroupMember.UserGroup_id
-                     JOIN UserAccount ON UserGroupMember.User_id = UserAccount.id
-                     WHERE (UserNotes.UserGroup_id = %s {}) AND doc_id IN ({})
-                     ORDER BY UserNotes.id""".format(include_public_sql, template),
+        # TODO: Use string_agg instead of LIMIT 1
+        c.execute("""
+ SELECT UserNotes.id, par_id, doc_id, par_hash, content,
+        created,
+        modified,
+        access, tags, html,
+        UserNotes.UserGroup_id, tmp.name as user_name,
+        tmp.real_name, tmp.email as user_email
+ FROM UserNotes
+ JOIN LATERAL (SELECT name,
+                      real_name,
+                      email,
+                      usergroup_id
+               FROM UserAccount
+               JOIN UserGroupMember ON UserGroupMember.user_id = UserAccount.id
+               WHERE UserGroupMember.usergroup_id = UserNotes.UserGroup_id
+               LIMIT 1
+               )
+  tmp ON UserNotes.UserGroup_id = tmp.UserGroup_id
+ WHERE (UserNotes.UserGroup_id = %s {}) AND doc_id IN ({})
+ ORDER BY UserNotes.id
+                     """.format(include_public_sql, template),
                   [usergroup_id] + list(ids))
         result = self.resultAsDictionary(c)
         return self.process_notes(result)

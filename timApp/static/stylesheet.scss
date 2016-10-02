@@ -6,6 +6,7 @@ html {
 body {
     min-height: calc(100vh - #{$footer-height});
     margin-bottom: $footer-height;
+    background-color: $bg-color;
 }
 
 a:visited {
@@ -256,6 +257,7 @@ p.caption {
 }
 
 .material {
+    background-color: $material-bg;
     box-shadow: $material-shadow;
     border: $material-border;
     border-radius: $material-border-radius;
@@ -292,6 +294,7 @@ p.caption {
 
 .note {
     font-size: 0.7em;
+    background: $material-bg;
     p {
         margin-left: 0;
         margin-top: 0;
@@ -300,7 +303,6 @@ p.caption {
         &:last-child {
             margin-bottom: 0;
         }
-        background: $bg-color;
     }
     .timestamp {
         color: lightgrey;

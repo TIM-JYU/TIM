@@ -78,8 +78,7 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
             method : 'GET',
             url : '/getItems',
             params: {
-                folder: sc.folder,
-                _: Date.now()
+                folder: sc.folder
             }
         }).success(function(data, status, headers, config) {
             sc.itemList = data;
@@ -94,8 +93,7 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
             method : 'GET',
             url : '/getTemplates',
             params: {
-                root_path: sc.folder,
-                _: Date.now()
+                root_path: sc.folder
             }
         }).success(function(data, status, headers, config) {
             sc.templateList = data;
