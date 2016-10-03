@@ -317,7 +317,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
         slide_background_color = doc_settings.get_slide_background_color()
         do_lazy = False
     else:
-        do_lazy = get_option(request, "lazy", True)
+        do_lazy = get_option(request, "lazy", doc_settings.lazy())
 
     texts, jsPaths, cssPaths, modules = post_process_pars(doc,
                                                           xs,

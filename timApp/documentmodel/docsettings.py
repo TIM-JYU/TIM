@@ -19,6 +19,7 @@ class DocSettings:
     slide_background_url_key = 'slide_background_url'
     slide_background_color_key = 'slide_background_color'
     bookmark_key = 'bookmarks'
+    lazy_key = 'lazy'
 
     @classmethod
     def is_valid_paragraph(cls, par):
@@ -106,6 +107,9 @@ class DocSettings:
         if default is None:
             default = []
         return self.__dict.get(self.bookmark_key, default)
+
+    def lazy(self, default=False):
+        return self.__dict.get(self.lazy_key, default)
 
     def set_bookmarks(self, bookmarks: List[Dict]):
         self.__dict[self.bookmark_key] = bookmarks
