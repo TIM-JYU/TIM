@@ -45,7 +45,7 @@
     </script>
 
     <div ng-show="isLoggedIn()" class="btn-group margin-4" uib-dropdown on-toggle="toggled(open)">
-        <button type="button" class="btn btn-primary" uib-dropdown-toggle>
+        <button type="button" title="You're logged in" class="btn btn-primary" uib-dropdown-toggle>
             {{ getCurrentUser().real_name }} <span
                 ng-show="getSessionUsers().length > 0">and {{ getSessionUsers().length }} <ng-pluralize
                 count="getSessionUsers().length"
