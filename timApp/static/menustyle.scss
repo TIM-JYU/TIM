@@ -30,8 +30,13 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
     background: white;
 
     & > .nav-tabs {
+        .nav-link, .nav-item {
+            height: 44px;
+        }
+        
+        min-width: 190px;
         .glyphicon {
-            font-size: xx-large;
+            font-size: x-large;
             margin: -6px -10px;
             color: $basic-color;
         }

@@ -26,6 +26,7 @@ a .glyphicon {
 
 .siteheader {
     @include clearfix;
+    height: 43px;
     border-bottom: $header-footer-border;
 }
 
