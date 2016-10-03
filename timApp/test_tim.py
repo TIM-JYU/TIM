@@ -19,16 +19,20 @@ class TimTest(TimRouteTest):
         login_resp = self.login_test1(force=True)
         self.assertDictEqual({'current_user': {'email': 'test1@example.com',
                                                'id': 4,
-                                               'name': 'testuser1',
+                                               'name': self.current_user_name(),
                                                'real_name': 'Test user 1'},
                               'other_users': []}, login_resp)
+
+        # Make sure user's personal folder exists
+        self.get('/view/users/' + self.current_user_name(), expect_status=200)
+
         doc_names = ['users/testuser1/testing',
                      'users/testuser1/testing2',
                      'users/testuser1/testing3',
                      'users/testuser1/testing4',
                      'users/testuser1/testing5']
         doc_name = doc_names[0]
-        doc_id_list = [3, 5, 6, 7, 8]  # Since the bookmark document is created after first modification, id 4 is skipped
+        doc_id_list = [4, 5, 6, 7, 8]
         doc_id = doc_id_list[0]
         doc_ids = set()
         for idx, n in enumerate(doc_names):
