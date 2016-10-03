@@ -57,6 +57,7 @@
             uib-dropdown-menu
             role="menu"
             aria-labelledby="single-button">
+            <li role="menuitem"><a ng-href="/view/users/{{ getCurrentUser().name }}">My documents</a></li>
             <li role="menuitem"><a
                     ng-click="addUser($event)"
                     uib-popover-template="'loginTemplate.html'"
