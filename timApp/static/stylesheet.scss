@@ -20,11 +20,6 @@ a .glyphicon {
     }
 }
 
-// make sure active tab remains black
-.active a .glyphicon {
-    color: inherit;
-}
-
 .bg-unpublished {
     background-image: url("/static/images/unpublished.svg");
 }

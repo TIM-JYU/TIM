@@ -1,6 +1,7 @@
 from tim_app import db
 from timdb.models.folder import Folder
 from timdb.models.usergroup import UserGroup
+from timdb.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME
 from timdb.timdbexception import TimDbException
 
 
@@ -16,6 +17,8 @@ class User(db.Model):
     yubikey = db.Column(db.Text)
 
     def get_personal_group(self) -> UserGroup:
+        if self.id < 0 or self.name == ANONYMOUS_USERNAME:
+            return UserGroup.query.filter_by(name=ANONYMOUS_GROUPNAME).first()
         g = UserGroup.query.filter_by(name=self.name).first()
         if g:
             return g

@@ -91,6 +91,7 @@
 
             var current_user = {{ current_user|tojson }};
             var other_users = {{ other_users|tojson }};
+            var bookmarks = {{ bookmarks|tojson }};
         </script>
 
         <script src="{{ url_for('static', filename='scripts/services/userService.js') }}"></script>
@@ -152,24 +153,13 @@
                             col-xs-{{ col_2_xs }}
                             col-sm-{{ col_2_sm }}">
                     <div class="siteheader">
-                        <div class="row">
-                            <div class="col-sm-1">
-                                <a href="/">
-                                <img alt="TIM - The Interactive Material."
-                                     src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"/>
-                                </a>
-                            </div>
-                            <div class="col-sm-10">
-                                <login-menu style="display: inline"></login-menu>
-                                {% if current_user.id > 0 %}
-                                    <bookmarks user-id="{{ current_user.id }}"></bookmarks>
-                                {% endif %}
-                            </div>
-                            <div class="col-sm-1">
-                                <img alt="Jyväskylän yliopisto" height="42"
-                                 src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
-                            </div>
-                        </div>
+                        <a href="/">
+                            <img alt="TIM - The Interactive Material." class="pull-left"
+                                 src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"/>
+                        </a>
+                        <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
+                             src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
+                        <div class="text-center"><login-menu></login-menu></div>
                     </div>
                 </div>
                 <div class="col-lg-{{ col_3_lg }}

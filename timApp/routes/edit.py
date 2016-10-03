@@ -9,6 +9,8 @@ from documentmodel.documentparseroptions import DocumentParserOptions
 from markdownconverter import md_to_html
 from routes.logger import log_info
 from routes.notify import notify_doc_owner
+from timdb.bookmarks import Bookmarks
+from timdb.models.docentry import DocEntry
 from timdb.timdbexception import TimDbException
 from typing import List
 from utils import get_error_html
@@ -313,12 +315,13 @@ See the changes here:
                         doc,
                         original_par,
                         new_par_ids,
-                        update_cache=current_app.config['IMMEDIATE_PRELOAD'])
+                        update_cache=current_app.config['IMMEDIATE_PRELOAD'],
+                        edited=True)
 
 
 @edit_page.route("/preview/<int:doc_id>", methods=['POST'])
-def preview(doc_id):
-    """Route for previewing a paragraph.
+def preview_paragraphs(doc_id):
+    """Route for previewing paragraphs.
 
     :param doc_id: The id of the document in which the preview will be rendered.
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
@@ -341,16 +344,23 @@ def preview(doc_id):
         try:
             blocks = get_pars_from_editor_text(doc, text, break_on_elements=editing_area)
             doc.insert_temporary_pars(blocks, context_par)
-            return par_response(blocks, doc, edit_window=True, context_par=context_par)
+            return par_response(blocks, doc, preview=True, context_par=context_par)
         except Exception as e:
             err_html = get_error_html(e)
             blocks = [DocParagraph.create(doc=doc, md='', html=err_html)]
-            return par_response(blocks, doc, edit_window=True)
+            return par_response(blocks, doc, preview=True)
     else:
         return jsonResponse({'texts': md_to_html(text), 'js': [], 'css': []})
 
 
-def par_response(blocks, doc, original_par=None, new_par_ids=None, edit_window=False, update_cache=False, context_par=None):
+def par_response(blocks,
+                 doc,
+                 original_par=None,
+                 new_par_ids=None,
+                 preview=False,
+                 update_cache=False,
+                 context_par=None,
+                 edited=False):
     if update_cache:
         changed_pars = DocParagraph.preload_htmls(doc.get_paragraphs(),
                                                   doc.get_settings(),
@@ -360,22 +370,26 @@ def par_response(blocks, doc, original_par=None, new_par_ids=None, edit_window=F
         DocParagraph.preload_htmls(blocks, doc.get_settings(), context_par=context_par, persist=update_cache)
 
     # Do not check for duplicates for preview because the operation is heavy
-    if not edit_window:
+    if not preview:
         duplicates = check_duplicates(blocks, doc, getTimDb())
+        if edited and logged_in():
+            bms = Bookmarks(get_current_user_object())
+            d = DocEntry.find_by_id(doc.doc_id)
+            bms.add_bookmark('Last edited', d.get_short_name(), '/view/' + d.get_path(), move_to_top=True).save_bookmarks()
     else:
         duplicates = None
 
     current_user = get_current_user()
-    pars, js_paths, css_paths, modules = post_process_pars(doc, blocks, current_user, edit_window=edit_window,
+    pars, js_paths, css_paths, modules = post_process_pars(doc, blocks, current_user, edit_window=preview,
                                                            show_questions=True)
 
-    changed_pars, _, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=edit_window,
+    changed_pars, _, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=preview,
                                               show_questions=True)
 
     return jsonResponse({'texts': render_template('paragraphs.html',
                                                   text=pars,
                                                   rights=get_rights(doc.doc_id),
-                                                  preview=edit_window),
+                                                  preview=preview),
                          'route': 'preview',
                          'js': js_paths,
                          'css': css_paths,
@@ -628,7 +642,7 @@ def add_paragraph_common(md, doc_id, par_next_id):
                      setting="doc_modify", par_id=pars[0].get_id() if len(pars) > 0 else None,
                      group_id=get_group_id(), group_subject="Your document [doc_name] has been modified")
 
-    return par_response(pars, doc, None, new_par_ids, update_cache=current_app.config['IMMEDIATE_PRELOAD'])
+    return par_response(pars, doc, None, new_par_ids, update_cache=current_app.config['IMMEDIATE_PRELOAD'], edited=True)
 
 
 @edit_page.route("/deleteParagraph/<int:doc_id>", methods=["POST"])
@@ -657,7 +671,7 @@ def delete_paragraph(doc_id):
                          text), setting="doc_modify",
                      group_id=get_group_id(), group_subject=get_group_subject())
 
-    return par_response([], doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'])
+    return par_response([], doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'], edited=True)
 
 
 @edit_page.route("/getUpdatedPars/<int:doc_id>")

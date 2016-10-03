@@ -38,8 +38,10 @@ from routes.upload import upload
 from routes.velp import velps
 from routes.view import view_page
 from tim_app import app
-from timdb.blocktypes import from_str
+from timdb.blocktypes import from_str, blocktypes
+from timdb.bookmarks import Bookmarks
 from timdb.dbutils import copy_default_rights
+from timdb.models.docentry import DocEntry
 from timdb.users import NoSuchUserException
 
 cache.init_app(app)
@@ -98,6 +100,14 @@ def inject_custom_css() -> dict:
 def inject_user() -> dict:
     """"Injects the user object to all templates."""
     return dict(current_user=get_current_user(), other_users=get_other_users_as_list())
+
+
+@app.context_processor
+def inject_bookmarks() -> dict:
+    """"Injects bookmarks to all templates."""
+    if not logged_in():
+        return {}
+    return dict(bookmarks=Bookmarks(User.query.get(getCurrentUserId())).as_json())
 
 
 @app.errorhandler(400)
@@ -232,13 +242,22 @@ def get_templates():
     return jsonResponse(templates)
 
 
-def create_item(item_name, item_type, create_function, owner_group_id):
-    validate_item_and_create(item_name, item_type, owner_group_id)
+def create_item(item_name, item_type_str, create_function, owner_group_id):
+    validate_item_and_create(item_name, item_type_str, owner_group_id)
 
     item_id = create_function(item_name, owner_group_id)
     timdb = getTimDb()
     grant_access_to_session_users(timdb, item_id)
-    copy_default_rights(item_id, from_str(item_type))
+    item_type = from_str(item_type_str)
+    if item_type == blocktypes.DOCUMENT:
+        bms = Bookmarks(get_current_user_object())
+        d = DocEntry.find_by_id(item_id)
+        bms.add_bookmark('Last edited',
+                         d.get_short_name(),
+                         '/view/' + d.get_path(),
+                         move_to_top=True,
+                         limit=app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
+    copy_default_rights(item_id, item_type)
     return jsonResponse({'id': item_id, 'name': item_name})
 
 

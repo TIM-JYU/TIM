@@ -1,3 +1,5 @@
+from typing import Optional
+
 from documentmodel.document import Document
 from tim_app import db
 from timdb.blocktypes import blocktypes
@@ -14,6 +16,13 @@ class DocEntry(db.Model):
     public = db.Column(db.Boolean, nullable=False, default=True)
 
     document = None  # type: Document
+
+    @staticmethod
+    def find_by_id(doc_id: int) -> Optional['DocEntry']:
+        d = DocEntry.query.filter_by(id=doc_id).first()
+        if d is not None:
+            d.document = Document(d.id)
+        return d
 
     @staticmethod
     def create(name: str, owner_group_id: int) -> 'DocEntry':
@@ -41,3 +50,10 @@ class DocEntry(db.Model):
         folder, name = split_location(self.name)
         from timdb.models.folder import Folder
         return Folder.find_by_full_path(folder) if folder else Folder(id=-1)
+
+    def get_short_name(self) -> str:
+        parts = self.name.rsplit('/', 1)
+        return parts[len(parts) - 1]
+
+    def get_path(self):
+        return self.name

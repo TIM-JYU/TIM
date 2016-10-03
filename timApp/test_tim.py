@@ -28,20 +28,21 @@ class TimTest(TimRouteTest):
                      'users/testuser1/testing4',
                      'users/testuser1/testing5']
         doc_name = doc_names[0]
-        doc_id = 3
+        doc_id_list = [3, 5, 6, 7, 8]  # Since the bookmark document is created after first modification, id 4 is skipped
+        doc_id = doc_id_list[0]
         doc_ids = set()
         for idx, n in enumerate(doc_names):
-            self.assertDictResponse({'id': doc_id + idx, 'name': doc_names[idx]},
+            self.assertDictResponse({'id': doc_id_list[idx], 'name': doc_names[idx]},
                                     self.json_post('/createDocument', {
                                         'doc_name': n
                                     }))
-            doc_ids.add(doc_id + idx)
+            doc_ids.add(doc_id_list[idx])
         self.assertDictResponse(self.ok_resp,
                                 self.json_put('/permissions/add/{}/{}/{}'.format(doc_id, 'Anonymous users', 'view')))
         self.assertDictResponse(self.ok_resp,
-                                self.json_put('/permissions/add/{}/{}/{}'.format(doc_id + 1, 'Logged-in users', 'view')))
-        self.assertDictResponse(self.ok_resp, self.json_put('/permissions/add/{}/{}/{}'.format(doc_id + 2, 'testuser2', 'view')))
-        self.assertDictResponse(self.ok_resp, self.json_put('/permissions/add/{}/{}/{}'.format(doc_id + 3, 'testuser2', 'edit')))
+                                self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[1], 'Logged-in users', 'view')))
+        self.assertDictResponse(self.ok_resp, self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[2], 'testuser2', 'view')))
+        self.assertDictResponse(self.ok_resp, self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[3], 'testuser2', 'edit')))
         doc = Document(doc_id)
         doc.add_paragraph('Hello')
         pars = doc.get_paragraphs()
@@ -98,7 +99,7 @@ class TimTest(TimRouteTest):
         view_resp = a.get('/view/' + doc_name)
         self.assertInResponse('Test user 2', view_resp)
         self.assertInResponse(edited_comment_html, view_resp)
-        not_viewable_docs = {doc_id + 4}
+        not_viewable_docs = {doc_id_list[4]}
         viewable_docs = doc_ids - not_viewable_docs
         for view_id in viewable_docs:
             self.assertResponseStatus(a.get('/view/' + str(view_id)))
@@ -124,7 +125,7 @@ class TimTest(TimRouteTest):
         self.login_test1()
         self.assertInResponse(comment_of_test2,
                               a.get('/note/{}'.format(test2_note_id)))
-        teacher_right_docs = {doc_id + 3}
+        teacher_right_docs = {doc_id_list[3]}
         for i in teacher_right_docs:
             self.assertDictResponse(self.ok_resp,
                                     self.json_put('/permissions/add/{}/{}/{}'.format(i, 'testuser2', 'teacher')))
