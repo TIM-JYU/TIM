@@ -74,12 +74,7 @@
                     </uib-tab>
                     -->
                     <uib-tab heading="Create a new document">
-                        <div class="form-group"><label>
-                            Document name:
-                            <input class="form-control" ng-model="docName" type="text">
-                        </label></div>
-                        <button class="timButton" ng-disabled="!docName" ng-click="createDocument(docName)" type="button">Create
-                        </button>
+                        <create-document doc-location="{{ '{{ folder }}' }}"></create-document>
                     </uib-tab>
                     <uib-tab heading="Create a new folder">
                         <div class="form-group"><label>

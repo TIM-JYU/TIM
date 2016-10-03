@@ -9,7 +9,11 @@
             $(this).tab('show');
         })
     </script>
+    <script src="{{ url_for('static', filename='scripts/controllers/startController.js') }}"></script>
 {% endblock %}
+
+{% block mainctrl %}ng-controller="StartCtrl"{% endblock %}
+
 {% block content %}
     <div class="row">
         <h1 class="text-center">TIM - The Interactive Material</h1>
@@ -26,11 +30,20 @@
 
                 <div class="col-md-4">
                     {% if session.user_id %}
-                        {{ session.real_name }}
-                        <ul>
-                            <li><a href="/view/users/{{ session.user_name }}">My documents</a></li>
-                            <li><a href="/view/">All documents</a></li>
+                        <h3>Get started</h3>
+                        <ul class="list-unstyled">
+                            <li class="h5"><a href="/view/users/{{ session.user_name }}">My documents</a></li>
+                            <li class="h5"><a href="/view/">All documents</a></li>
+                            <li class="h5"><a ng-click="creatingNew = true" href="#">Create a new document</a></li>
                         </ul>
+                        <bootstrap-panel ng-show="creatingNew"
+                                         title="Create a new document"
+                                         show-close="true"
+                                         close-fn="cancelCreate()">
+                            <create-document doc-name="My document"
+                                             doc-location="users/{{ session.user_name }}">
+                            </create-document>
+                        </bootstrap-panel>
                     {% elif session.altlogin == "signup2" %}
                         <form method="POST" action="/altsignup2">
                             <p>

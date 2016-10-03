@@ -40,16 +40,6 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
         });
     };
 
-    sc.createDocument = function(name) {
-        http.post('/createDocument', {
-            "doc_name" : sc.getAbsolutePath(name)
-        }).success(function(data, status, headers, config) {
-            $window.location.href = "/view/" + data.name;
-        }).error(function(data, status, headers, config) {
-            $window.alert(data.error);
-        });
-    };
-
     sc.createFolder = function(name, owner) {
         http.post('/createFolder', {
             "name" : sc.getAbsolutePath(name),
