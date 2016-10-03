@@ -181,15 +181,20 @@ timApp.controller('CreateBookmarkCtrl', ['$uibModalInstance', '$window', 'bookma
     }
     $ctrl.focusGroup = !bookmark.group;
     $ctrl.focusName = !$ctrl.focusGroup;
-    $ctrl.showUrlCheckbox = $window.location.search.length > 1;
+    $ctrl.showParamsCheckbox = $window.location.search.length > 1;
+    $ctrl.showHashCheckbox = $window.location.hash.length > 1;
 
     $ctrl.ok = function () {
         if (!$ctrl.bookmark.link) {
             $ctrl.bookmark.link = $window.location.pathname;
+            if ($ctrl.includeParams) {
+                $ctrl.bookmark.link += $window.location.search;
+            }
+            if ($ctrl.includeHash) {
+                $ctrl.bookmark.link += $window.location.hash;
+            }
         }
-        if ($ctrl.includeParams) {
-            $ctrl.bookmark.link += $window.location.search;
-        }
+
         $uibModalInstance.close($ctrl.bookmark);
     };
 

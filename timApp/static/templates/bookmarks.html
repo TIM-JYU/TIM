@@ -69,12 +69,22 @@
                            placeholder="Leave blank to add current page">
                 </div>
             </div>
-            <div ng-show="$ctrl.showUrlCheckbox" class="form-group">
+            <div ng-show="$ctrl.showParamsCheckbox" class="form-group">
                 <div class="col-sm-offset-2 col-sm-10">
                     <div class="checkbox">
                         <label>
                             <input ng-model="$ctrl.includeParams" ng-disabled="$ctrl.bookmark.link" type="checkbox">
                             Include URL parameters in link
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div ng-show="$ctrl.showHashCheckbox" class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <div class="checkbox">
+                        <label>
+                            <input ng-model="$ctrl.includeHash" ng-disabled="$ctrl.bookmark.link" type="checkbox">
+                            Include URL hash in link
                         </label>
                     </div>
                 </div>
