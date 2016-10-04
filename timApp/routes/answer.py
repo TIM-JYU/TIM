@@ -266,7 +266,7 @@ def get_answers(task_id, user_id):
 def get_document_answers(doc_id):
     doc = Document(doc_id)
     pars = doc.get_dereferenced_paragraphs()
-    task_ids = pluginControl.find_task_ids(pars)
+    task_ids, _ = pluginControl.find_task_ids(pars)
     get_all_answers_as_list(task_ids)
     return get_all_answers_list_plain(task_ids)
 

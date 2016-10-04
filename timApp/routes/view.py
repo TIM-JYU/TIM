@@ -264,15 +264,12 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     # We need to deference paragraphs at this point already to get the correct task ids
     xs = dereference_pars(xs, edit_window=False, source_doc=doc.get_original_document())
-    total_tasks = None
     total_points = None
     tasks_done = None
-    task_ids = None
     user_list = []
     current_user = get_current_user() if logged_in() else None
-    if teacher_or_see_answers or (doc_settings.show_task_summary() and logged_in()):
-        task_ids = pluginControl.find_task_ids(xs)
-        total_tasks = len(task_ids)
+    task_ids, plugin_count = pluginControl.find_task_ids(xs)
+    total_tasks = len(task_ids)
     if teacher_or_see_answers:
         user_list = None
         if usergroup is not None:
@@ -317,7 +314,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
         slide_background_color = doc_settings.get_slide_background_color()
         do_lazy = False
     else:
-        do_lazy = get_option(request, "lazy", doc_settings.lazy())
+        do_lazy = get_option(request, "lazy", doc_settings.lazy(default=plugin_count >= current_app.config['PLUGIN_COUNT_LAZY_LIMIT']))
 
     texts, jsPaths, cssPaths, modules = post_process_pars(doc,
                                                           xs,

@@ -2,7 +2,7 @@
 """Functions for dealing with plugin paragraphs."""
 import json
 
-from typing import List
+from typing import List, Tuple
 
 from timtiming import taketime
 
@@ -32,15 +32,18 @@ def get_error_html_plugin(plugin_name, message, response=None):
     return get_error_html('Plugin {} error: {}'.format(plugin_name, message), response)
 
 
-def find_task_ids(blocks: List[DocParagraph]) -> List[str]:
+def find_task_ids(blocks: List[DocParagraph]) -> Tuple[List[str], int]:
     """Finds all task plugins from the given list of paragraphs and returns their ids.
     """
     task_ids = []
+    plugin_count = 0
     for block in blocks:
         task_id = block.get_attr('taskId')
+        if block.get_attr('plugin'):
+            plugin_count += 1
         if task_id:
             task_ids.append("{}.{}".format(block.doc.doc_id, task_id))
-    return task_ids
+    return task_ids, plugin_count
 
 
 def try_load_json(json_str: str):
