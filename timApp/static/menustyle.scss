@@ -34,7 +34,7 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
             height: 44px;
         }
         
-        min-width: 190px;
+        min-width: 224px; // minimum required space for 5 tabs in one row
         .glyphicon {
             font-size: x-large;
             margin: -6px -10px;
