@@ -7,7 +7,8 @@ timApp.directive("createDocument", ['$window', '$log', '$http', function ($windo
         restrict: 'E',
         scope: {
             docName: '@?',
-            docLocation: '@?'
+            docLocation: '@?',
+            fullPath: '@?'
         },
         templateUrl: "/static/templates/createDocument.html",
         link: function ($scope, $element) {
@@ -16,6 +17,12 @@ timApp.directive("createDocument", ['$window', '$log', '$http', function ($windo
 
         controller: function ($scope, $element, $attrs) {
             var sc = $scope;
+
+            if (sc.fullPath) {
+                var str = sc.fullPath;
+                sc.docLocation = str.substring(0, str.lastIndexOf("/"));
+                sc.docName = str.substring(str.lastIndexOf("/") + 1, str.length);
+            }
 
             sc.alerts = [];
 
