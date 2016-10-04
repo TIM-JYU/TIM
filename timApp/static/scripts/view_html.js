@@ -1507,7 +1507,7 @@ timApp.controller("ViewCtrl", [
                 var questionParent = $(questions[i].parentNode);
                 var questionChildren = $(questionParent.children());
                 var questionNumber = $(questionChildren.find($('.questionNumber')));
-                var questionTitle = JSON.parse(questionParent.attr('attrs')).question;
+                var questionTitle = sc.getParAttributes(questionParent).question;
                 if (questionTitle == 'Untitled') {
                     questionTitle = "";
                 }
