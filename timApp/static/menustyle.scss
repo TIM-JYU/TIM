@@ -29,15 +29,19 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
 #menuTabs {
     background: white;
 
+    & > .nav > li > a {
+        padding: 5px 11px;
+    }
+
     & > .nav-tabs {
         .nav-link, .nav-item {
             height: 44px;
         }
         
-        min-width: 224px; // minimum required space for 5 tabs in one row
+        min-width: 185px; // minimum required space for 5 tabs in one row
         .glyphicon {
             font-size: x-large;
-            margin: -6px -10px;
+            margin: 0px -10px;
             color: $basic-color;
         }
         // make sure active tab remains black
