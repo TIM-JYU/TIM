@@ -219,6 +219,10 @@ timApp.controller("ViewCtrl", [
             return $par.attr("id");
         };
 
+        sc.getParAttributes = function ($par) {
+            return JSON.parse($par.attr('attrs'));
+        };
+
         sc.dereferencePar = function ($par) {
             if ($par.length === 0 || !$par.hasClass('par')) {
                 return null;
@@ -679,16 +683,19 @@ timApp.controller("ViewCtrl", [
             sc.toggleParEditor($par, {showDelete: true, area: false});
         };
 
-        sc.editSettingsPars = function () {
+        sc.editSettingsPars = function (recursiveCall) {
             var pars = [];
             $(".par").each(function () {
-                if ($(this).attr("attrs").indexOf("settings") >= 0)
+                if (sc.getParAttributes($(this)).hasOwnProperty("settings"))
                 {
                     pars.push(this);
                 }
             });
             if (pars.length == 0)
             {
+                if (recursiveCall) {
+                    throw 'Faulty recursion stopped, there should be a settings paragraph already';
+                }
                 var par_next = sc.getParId($(".par:first"));
                 if (par_next == "null")
                 {
@@ -699,7 +706,8 @@ timApp.controller("ViewCtrl", [
                     "docId" : sc.docId,
                     "par_next" : par_next
                 }).success(function(data, status, headers, config) {
-                    $window.location.reload();
+                    sc.addSavedParToDom(data, {par: par_next});
+                    sc.editSettingsPars(true);
                 }).error(function(data, status, headers, config) {
                     $window.alert(data.error);
                 });
