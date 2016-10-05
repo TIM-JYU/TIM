@@ -25,15 +25,16 @@ class DocEntry(db.Model):
         return d
 
     @staticmethod
-    def create(name: str, owner_group_id: int) -> 'DocEntry':
+    def create(name: Optional[str], owner_group_id: int) -> 'DocEntry':
         """Creates a new document with the specified name.
 
-        :param name: The name of the document to be created (can be None).
-        :param owner_group_id: The id of the owner group (can be None).
+        :param name: The name of the document to be created (can be None). If None, no DocEntry is actually added
+         to the database; only Block and Document objects are created.
+        :param owner_group_id: The id of the owner group.
         :returns: The newly created document object.
         """
 
-        if '\0' in name:
+        if name is not None and '\0' in name:
             raise TimDbException('Document name cannot contain null characters.')
 
         document_id = insert_block(name, owner_group_id, blocktypes.DOCUMENT, commit=False)
@@ -41,9 +42,10 @@ class DocEntry(db.Model):
         document.create()
 
         docentry = DocEntry(id=document_id, name=name, public=True)
-        db.session.add(docentry)
-        db.session.commit()
         docentry.document = document
+        if name is not None:
+            db.session.add(docentry)
+        db.session.commit()
         return docentry
 
     def get_parent(self):
