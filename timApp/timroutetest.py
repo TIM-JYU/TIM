@@ -140,11 +140,20 @@ class TimRouteTest(TimDbTest):
 
     def post(self, url: str, as_tree=False, as_json=False, as_response=False, expect_status=None, expect_content=None,
              **kwargs):
-        """Performs a GET request.
+        """Performs a POST request.
 
         See the 'request' method for parameter explanations.
         """
         return self.request(url, 'POST', as_tree=as_tree, as_response=as_response, as_json=as_json,
+                            expect_status=expect_status, expect_content=expect_content, **kwargs)
+
+    def delete(self, url: str, as_tree=False, as_json=False, as_response=False, expect_status=None, expect_content=None,
+             **kwargs):
+        """Performs a DELETE request.
+
+        See the 'request' method for parameter explanations.
+        """
+        return self.request(url, 'DELETE', as_tree=as_tree, as_response=as_response, as_json=as_json,
                             expect_status=expect_status, expect_content=expect_content, **kwargs)
 
     def request(self, url: str, method: str, as_tree: bool = False, as_json: bool = False, as_response: bool = False,

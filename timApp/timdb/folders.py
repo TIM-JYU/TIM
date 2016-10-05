@@ -1,7 +1,10 @@
 from typing import List, Optional, Iterable
 
+from tim_app import db
 from timdb.blocktypes import blocktypes
+from timdb.models.block import Block
 from timdb.models.folder import Folder
+from timdb.tim_models import BlockAccess
 from timdb.timdbbase import TimDbBase
 
 ID_ROOT_FOLDER = -1
@@ -134,12 +137,10 @@ class Folders(TimDbBase):
         assert self.is_empty(block_id), 'folder {} is not empty!'.format(folder_name)
 
         # Delete it
-        cursor = self.db.cursor()
-        cursor.execute('DELETE FROM Folder WHERE id = %s',
-                       [block_id])
-        cursor.execute('DELETE FROM Block WHERE type_id = %s AND id = %s',
-                       [blocktypes.FOLDER, block_id])
-        self.db.commit()
+        Folder.query.filter_by(id=block_id).delete()
+        BlockAccess.query.filter_by(block_id=block_id).delete()
+        Block.query.filter_by(type_id=blocktypes.FOLDER, id=block_id).delete()
+        db.session.commit()
 
     def check_velp_group_folder_path(self, root_path: str, owner_group_id: int, doc_name: str):
         """ Checks if velp group folder path exists and if not, creates it
