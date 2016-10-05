@@ -36,7 +36,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
         $scope.bookmarkTabSelected = function (isSelected) {
             var tabContent = $("#menuTabs").find(".tab-content");
             if (isSelected) {
-                // The dropdown menu is clipped is it's near right side of the menu without applying this hack
+                // The dropdown menu is clipped if it's near right side of the menu without applying this hack
                 // Also the dropdown menu causes vertical scrollbar to appear without specifying height
                 tabContent.css('height', 'calc(100vh - 51.2833px)');
                 tabContent.css('overflow-x', 'visible');
