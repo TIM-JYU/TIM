@@ -65,19 +65,19 @@ class BookmarkTest(TimRouteTest):
 
     def test_recently_edited(self):
         self.login_test2()
-        d = DocEntry.find_by_id(self.create_doc().doc_id)
+        d = self.create_doc()
         view = '/view/'
         self.assertListEqual([{'name': 'Last edited',
                                'items': [{'name': d.get_short_name(), 'path': view + d.get_path()}],
                                'editable': False}],
                              self.get_bookmarks())
-        d2 = DocEntry.find_by_id(self.create_doc().doc_id)
+        d2 = self.create_doc()
         self.assertListEqual([{'name': 'Last edited',
                                'items': [{'name': d2.get_short_name(), 'path': view + d2.get_path()},
                                          {'name': d.get_short_name(), 'path': view + d.get_path()}],
                                'editable': False}],
                              self.get_bookmarks())
-        d3 = DocEntry.find_by_id(self.create_doc().doc_id)
+        d3 = self.create_doc()
         self.assertListEqual([{'name': 'Last edited',
                                'items': [{'name': d3.get_short_name(), 'path': view + d3.get_path()},
                                          {'name': d2.get_short_name(), 'path': view + d2.get_path()},
@@ -91,7 +91,7 @@ class BookmarkTest(TimRouteTest):
                                          {'name': d2.get_short_name(), 'path': view + d2.get_path()}],
                                'editable': False}],
                              self.get_bookmarks())
-        d4 = DocEntry.find_by_id(self.create_doc().doc_id)
+        d4 = self.create_doc()
         # LAST_EDITED_BOOKMARK_LIMIT = 3 when testing
         self.assertListEqual([{'name': 'Last edited',
                                'items': [{'name': d4.get_short_name(), 'path': view + d4.get_path()},

@@ -10,7 +10,7 @@ from timroutetest import TimRouteTest
 class DefaultRightTest(TimRouteTest):
     def test_document_default_rights(self):
         self.login_test1()
-        doc = self.create_doc()
+        doc = self.create_doc().document
         timdb = self.get_db()
         docentry = DocEntry.query.filter_by(id=doc.doc_id).one()
         folder = docentry.get_parent()
@@ -48,7 +48,7 @@ class DefaultRightTest(TimRouteTest):
             self.assertIsNotNone(rights_doc)
 
             if obj_type == blocktypes.DOCUMENT:
-                new_doc = self.create_doc()
+                new_doc = self.create_doc().document
                 new_item_rights = timdb.users.get_rights_holders(new_doc.doc_id)
                 default_rights.append(
                     {'gid': timdb.users.get_korppi_group_id(), 'name': KORPPI_GROUPNAME, 'access_type': 1,

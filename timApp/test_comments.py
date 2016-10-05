@@ -12,7 +12,7 @@ comment_selector = CSSSelector('div.notes > div.note')
 class CommentTest(TimRouteTest):
     def test_comments(self):
         self.login_test1()
-        d = self.create_doc(initial_par='test')
+        d = self.create_doc(initial_par='test').document
         par = d.get_paragraphs()[0]
         comment1 = 'This is a comment.'
         comment2 = 'This is a comment 2.'

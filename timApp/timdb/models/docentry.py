@@ -25,6 +25,13 @@ class DocEntry(db.Model):
         return d
 
     @staticmethod
+    def find_by_path(path: str) -> Optional['DocEntry']:
+        d = DocEntry.query.get(path)
+        if d is not None:
+            d.document = Document(d.id)
+        return d
+
+    @staticmethod
     def create(name: Optional[str], owner_group_id: int) -> 'DocEntry':
         """Creates a new document with the specified name.
 

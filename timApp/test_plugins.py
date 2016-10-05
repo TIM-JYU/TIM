@@ -26,7 +26,7 @@ class PluginTest(TimRouteTest):
 
     def test_plugin(self):
         self.login_test1()
-        doc = self.create_doc(from_file='example_docs/mmcq_example.md')
+        doc = self.create_doc(from_file='example_docs/mmcq_example.md').document
         resp = self.get('/view/{}'.format(doc.doc_id), expect_status=200)
         tree = html.fromstring(resp)
         mmcq_xpath = r'.//div[@class="par mmcq"]/div[@class="parContent"]/div[@id="{}.mmcqexample.{}"]'.format(
@@ -182,7 +182,7 @@ class PluginTest(TimRouteTest):
 
     def test_idless_plugin(self):
         self.login_test1()
-        doc = self.create_doc(from_file='example_docs/idless_plugin.md')
+        doc = self.create_doc(from_file='example_docs/idless_plugin.md').document
         resp = self.get('/view/{}'.format(doc.doc_id), expect_status=200)
         tree = html.fromstring(resp)
         mmcq_xpath = r'.//div[@class="par csPlugin"]/div[@class="parContent"]/div[@id="{}..{}"]'.format(
@@ -193,7 +193,7 @@ class PluginTest(TimRouteTest):
     def test_upload(self):
         self.login_test1()
         db = self.get_db()
-        doc = self.create_doc(from_file='example_docs/upload_plugin.md')
+        doc = self.create_doc(from_file='example_docs/upload_plugin.md').document
         task_name = 'testupload'
         task_name2 = 'testupload2'
         task_id = '{}.{}'.format(doc.doc_id, task_name)
@@ -276,7 +276,7 @@ class PluginTest(TimRouteTest):
     def test_group_answering(self):
         self.login_test1()
         self.login_test2(add=True)
-        doc = self.create_doc(from_file='example_docs/upload_plugin.md')
+        doc = self.create_doc(from_file='example_docs/upload_plugin.md').document
         task_name = 'testupload'
         task_id = '{}.{}'.format(doc.doc_id, task_name)
         filename = 'test.txt'
@@ -297,7 +297,7 @@ class PluginTest(TimRouteTest):
 
     def test_all_answers(self):
         self.login_test1()
-        doc = self.create_doc(from_file='example_docs/multiple_mmcqs.md')
+        doc = self.create_doc(from_file='example_docs/multiple_mmcqs.md').document
         plugin_type = 'mmcq'
         task_id = '{}.mmcqexample'.format(doc.doc_id)
         task_id2 = '{}.mmcqexample2'.format(doc.doc_id)

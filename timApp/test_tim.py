@@ -165,7 +165,7 @@ class TimTest(TimRouteTest):
 
     def test_macro_doc(self):
         self.login_test1()
-        doc = self.create_doc(settings={'macro_delimiter': '%%', 'macros': {'rivi': 'kerros'}})
+        doc = self.create_doc(settings={'macro_delimiter': '%%', 'macros': {'rivi': 'kerros'}}).document
         table_text = """
 {% set sarakeleveys = 50 %}
 {% set sarakkeet = ['eka', 'toka', 'kolmas', 'neljäs'] %}
@@ -186,18 +186,18 @@ class TimTest(TimRouteTest):
 
     def test_macro_only_delimiter(self):
         self.login_test1()
-        doc = self.create_doc(settings={'macro_delimiter': '%%'})
+        doc = self.create_doc(settings={'macro_delimiter': '%%'}).document
         self.assertInResponse('123457', self.new_par(doc, '{% set a = 123456+1 %}%%a%%'), json_key='texts')
 
     def test_same_heading_as_par(self):
         self.login_test1()
-        doc = self.create_doc(initial_par="""# Hello\n#-\nHello""")
+        doc = self.create_doc(initial_par="""# Hello\n#-\nHello""").document
         self.get('/view/{}'.format(doc.doc_id), expect_status=200)
 
     def test_broken_comment(self):
         self.login_test1()
         doc = self.create_doc(settings={'macros': {}, 'macro_delimiter': '%%'},
-                              initial_par="""```{atom=true}\nTest {!!! }\n```""")
+                              initial_par="""```{atom=true}\nTest {!!! }\n```""").document
         tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True)
         syntax_errors = tree.findall(r'.//div[@class="par"]/div[@class="parContent"]/div[@class="error"]')
         self.assertEqual(1, len(syntax_errors))
@@ -209,7 +209,7 @@ class TimTest(TimRouteTest):
         """
         self.login_test1()
         md_table = """---\r\n|a|\r\n|-|"""
-        doc = self.create_doc(initial_par=md_table)
+        doc = self.create_doc(initial_par=md_table).document
         tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True)
         table_xpath = r'.//div[@class="par"]/div[@class="parContent"]/table'
         tables = tree.findall(table_xpath)
@@ -222,7 +222,7 @@ class TimTest(TimRouteTest):
 
     def test_clear_cache(self):
         self.login_test1()
-        doc = self.create_doc(initial_par="Test")
+        doc = self.create_doc(initial_par="Test").document
         self.get('/view/{}'.format(doc.doc_id))
         self.get('/view/{}'.format(doc.doc_id), query_string={'nocache': 'true'})
         doc.get_index()

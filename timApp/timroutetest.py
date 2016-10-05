@@ -13,6 +13,7 @@ from lxml import html
 
 from routes.login import log_in_as_anonymous
 from tim_app import db
+from timdb.models.docentry import DocEntry
 from timdbtest import TimDbTest
 
 import tim
@@ -345,7 +346,7 @@ class TimRouteTest(TimDbTest):
                          follow_redirects=True, as_json=True)
 
     def create_doc(self, docname: Optional[str] = None, from_file: Optional[str] = None, initial_par: Optional[str] = None,
-                   settings: Optional[Dict] = None, assert_status: int = 200):
+                   settings: Optional[Dict] = None, assert_status: int = 200) -> DocEntry:
         """Creates a new document.
 
         :param docname: The path of the document.
@@ -353,17 +354,18 @@ class TimRouteTest(TimDbTest):
         :param initial_par: The content of the initial paragraph.
         :param settings: The settings for the document.
         :param assert_status: The expected status code for the createDocument route.
-        :return: The document object.
+        :return: The DocEntry object.
         """
         if docname is None:
             docname = 'users/{}/doc{}'.format(flask.session['user_name'], self.doc_num)
             self.__class__.doc_num += 1
         resp = self.json_post('/createDocument', {
             'doc_name': docname
-        })
-        self.assertResponseStatus(resp, assert_status)
-        resp_data = load_json(resp)
-        doc = Document(resp_data['id'])
+        }, expect_status=assert_status, as_json=True)
+        self.assertIsInstance(resp['id'], int)
+        self.assertEqual(docname, resp['name'])
+        de = DocEntry.find_by_path(docname)
+        doc = de.document
         if from_file is not None:
             with open(from_file, encoding='utf-8') as f:
                 self.new_par(doc, f.read())
@@ -371,7 +373,7 @@ class TimRouteTest(TimDbTest):
             self.new_par(doc, initial_par)
         if settings is not None:
             doc.set_settings(settings)
-        return doc
+        return de
 
     def tearDown(self):
         """While testing, the Flask-SQLAlchemy session needs to be removed manually;

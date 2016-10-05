@@ -12,7 +12,7 @@ MODIFIED = 'modified'
 class ReadingsTest(TimRouteTest):
     def test_readings_normal(self):
         self.login_test1()
-        doc = self.create_doc(initial_par='test\n#-\ntest2')
+        doc = self.create_doc(initial_par='test\n#-\ntest2').document
         pars = doc.get_paragraphs()
 
         self.check_readlines(self.get_readings(doc), (UNREAD, UNREAD))
@@ -26,7 +26,7 @@ class ReadingsTest(TimRouteTest):
     def test_readings_group(self):
         self.login_test1()
         self.login_test2(add=True)
-        doc = self.create_doc(initial_par='test\n#-\ntest2\n#-\ntest3\n#-\ntest4')
+        doc = self.create_doc(initial_par='test\n#-\ntest2\n#-\ntest3\n#-\ntest4').document
         self.check_readlines(self.get_readings(doc), (UNREAD, UNREAD, UNREAD, UNREAD))
         pars = doc.get_paragraphs()
         self.mark_as_read(doc, pars[0].get_id())
