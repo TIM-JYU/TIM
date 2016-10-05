@@ -78,6 +78,10 @@
                             Document name:
                             <input class="form-control" ng-model="docName" type="text">
                         </label></div>
+                        <checkbox class="checkbox"><label>
+                            <input class="checkbox" ng-model="gamificationCheck" type="checkbox">Gamification Document
+                            </input>
+                        </label></checkbox>
                         <button class="timButton" ng-disabled="!docName" ng-click="createDocument(docName)" type="button">Create
                         </button>
                     </uib-tab>
