@@ -2298,6 +2298,15 @@ timApp.controller("ViewCtrl", [
 
         // call marktree.js initialization function so that TOC clicking works
         $window.addEvents();
+        $timeout(function () {
+            var indexHeadings = $('#menuTabs').find('.subexp .exp');
+            var subHeadings = indexHeadings.find('ul.sub li.basic');
+            if (indexHeadings.length === 1 || indexHeadings.length + subHeadings.length < 40) {
+                indexHeadings.attr('class', 'col');
+                indexHeadings.children('.sub').attr('class', 'subexp');
+            }
+        });
+
         sc.addParagraphFunctions = sc.getAddParagraphFunctions();
         sc.pasteFunctions = sc.getPasteFunctions();
         sc.popupMenuAttrs = {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'};
