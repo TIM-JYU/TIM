@@ -1,25 +1,28 @@
-from timdb.tim_models import db
+from tim_app import db
+from timdb.dbutils import insert_block
+from timdb.blocktypes import blocktypes
+from timdb.models import docentry
 
 
 class GamificationDocument(db.Model):
-    """
-    Created by TIMG
-    This class represents the GamificationDocument database table. If a line exists in this table, the document with
-    the indicated ID is gamified.
-    """
     __bind_key__ = 'tim_main'
     __tablename__ = 'gamificationdocument'
     id = db.Column (db.Integer, db.ForeignKey('block.id'), primary_key=True)
+
+    g_doc = None # type: GamificationDocument
+
+    docentry.create(id)
 
     @staticmethod
     def create(id) -> 'GamificationDocument':
         """Creates a new entry into GamificationDocument table"""
 
-        gamificationdocument = GamificationDocument(id=id)
+        g_doc_id = insert_block(id, blocktypes.GAMIFICATIONDOC, commit=False)
+        gamification_doc = GamificationDocument(g_doc_id)
+        gamification_doc.create()
+
+        gamificationdocument = GamificationDocument(id=g_doc_id)
         db.session.add(gamificationdocument)
         db.session.commit()
+        gamificationdocument.g_doc = gamification_doc
         return gamificationdocument
-
-    @staticmethod
-    def doc_is_gamified(doc_id):
-        return GamificationDocument.query(doc_id).filter_by(id=doc_id).scalar() is not None
