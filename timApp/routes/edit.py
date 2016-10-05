@@ -375,7 +375,10 @@ def par_response(blocks,
         if edited and logged_in():
             bms = Bookmarks(get_current_user_object())
             d = DocEntry.find_by_id(doc.doc_id)
-            bms.add_bookmark('Last edited', d.get_short_name(), '/view/' + d.get_path(), move_to_top=True).save_bookmarks()
+            # d can be None when editing a translation because they don't have a row in DocEntry.
+            # Skip this case for now; TODO: fix
+            if d is not None:
+                bms.add_bookmark('Last edited', d.get_short_name(), '/view/' + d.get_path(), move_to_top=True).save_bookmarks()
     else:
         duplicates = None
 
