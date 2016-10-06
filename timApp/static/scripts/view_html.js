@@ -1055,7 +1055,7 @@ timApp.controller("ViewCtrl", [
             var $newPars = $($compile(data.texts)(sc));
 
             if ($window.editMode === 'area')
-                newPars.find('.editline').removeClass('editline').addClass('editline-disabled');
+                $newPars.find('.editline').removeClass('editline').addClass('editline-disabled');
 
             $par.replaceWith($newPars);
             sc.processAllMathDelayed($newPars);
