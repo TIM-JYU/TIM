@@ -1,6 +1,7 @@
-var katex, $, angular, MathJax;
+var katex, $, angular, MathJax, timLogTime;
 
 var timApp = angular.module('timApp').config(['$httpProvider', function ($httpProvider) {
+    "use strict";
     timLogTime("timApp config","view");
     var interceptor = [
         '$q',
@@ -63,8 +64,9 @@ timApp.controller("ViewCtrl", [
     '$localStorage',
     '$filter',
     '$timeout',
+    '$log',
     'Users',
-    function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, Users) {
+    function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
         "use strict";
         timLogTime("ViewCtrl start","view");
 
@@ -379,7 +381,6 @@ timApp.controller("ViewCtrl", [
             }
             Object.keys(attrs).forEach(function (key, index) {
                 if (typeof attrs[key] === 'object' && attrs[key] !== null) {
-                    //console.log('converting ' + key + " to string");
                     attrs[key] = JSON.stringify(attrs[key]);
                 }
             });
@@ -433,7 +434,7 @@ timApp.controller("ViewCtrl", [
                 })
 
                 .error(function () {
-                    $window.console.log("There was some error creating question to database.");
+                    $log.error("There was some error creating question to database.");
                 });
 
 
@@ -477,7 +478,7 @@ timApp.controller("ViewCtrl", [
                 })
 
                 .error(function () {
-                    $window.console.log("Could not question.");
+                    $log.error("Could not get question.");
                 });
 
 
@@ -608,8 +609,8 @@ timApp.controller("ViewCtrl", [
                 if (lastDownEvent && lastDownEvent.type != e.type && new Date().getTime() - lastclicktime < 500) {
                     // This is to prevent chaotic behavior from both mouseDown and touchStart
                     // events happening at the same coordinates
-                    console.log("Ignoring event:");
-                    console.log(e);
+                    $log.info("Ignoring event:");
+                    $log.info(e);
                     return;
                 }
 
@@ -691,7 +692,7 @@ timApp.controller("ViewCtrl", [
                     pars.push(this);
                 }
             });
-            if (pars.length == 0)
+            if (pars.length === 0)
             {
                 if (recursiveCall) {
                     throw 'Faulty recursion stopped, there should be a settings paragraph already';
@@ -865,7 +866,7 @@ timApp.controller("ViewCtrl", [
 
         sc.moveAbove = function (e, $par_or_area) {
             http.post('/clipboard/paste/' + sc.docId, {
-                "par_before" : sc.getFirstParId($par_or_area),
+                "par_before" : sc.getFirstParId($par_or_area)
             }).success(function(data, status, headers, config) {
                 if (data == null)
                     return;
@@ -1125,7 +1126,7 @@ timApp.controller("ViewCtrl", [
 
             // Collapsible area
             var area_id = $this.parent().attr('data-area');
-            console.log($this);
+            $log.info($this);
 
             http.put('/read/' + sc.docId + '/' + area_id)
                 .success(function (data, status, headers, config) {
@@ -1157,7 +1158,7 @@ timApp.controller("ViewCtrl", [
                     continue;
 
                 if (sc.getParId($node) == par_id) {
-                    //console.log('sc.getParIndex(' + par_id + ') = ' + realIndex);
+                    //$log.info('sc.getParIndex(' + par_id + ') = ' + realIndex);
                     return realIndex;
                 }
 
@@ -1379,7 +1380,7 @@ timApp.controller("ViewCtrl", [
             var curElement = jqTarget;
             var limit = 10;
             while (curElement != null) {
-                //console.log(curElement);
+                //$log.info(curElement);
 
                 if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || curElement.attr('position') == 'absolute')
                     return false;
@@ -1391,7 +1392,7 @@ timApp.controller("ViewCtrl", [
 
                 curElement = curElement.parent();
                 if (--limit < 0) {
-                    //console.log('Limit reached');
+                    //$log.info('Limit reached');
                     break;
                 }
             }
@@ -1403,7 +1404,7 @@ timApp.controller("ViewCtrl", [
                 $(".lightselect").removeClass("lightselect");
             }
 
-            //console.log(e.target);
+            //$log.info(e.target);
             return false;
 
         }, true);
@@ -1465,7 +1466,7 @@ timApp.controller("ViewCtrl", [
                 sc.lastclicktime = new Date().getTime();
                 sc.lastclickplace = coords;
             } else {
-                $window.console.log("This line is new: " + $par);
+                $log.info("This line is new: " + $par);
                 $par.children().remove(".actionButtons");
                 $par.removeClass("selected");
                 $par.removeClass("lightselect");
@@ -1500,8 +1501,8 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getAndEditQuestions = function () {
-            console.log(sc.settings);
-            console.log($window.sessionsettings);
+            $log.info(sc.settings);
+            $log.info($window.sessionsettings);
             var questions = $('.editlineQuestion');
             for (var i = 0; i < questions.length; i++) {
                 var questionParent = $(questions[i].parentNode);
@@ -1634,7 +1635,7 @@ timApp.controller("ViewCtrl", [
                     }
                     timLogTime("getindex done","view");
                 }).error(function () {
-                    console.log("Could not get index");
+                    $log.error("Could not get index");
                 });
         };
 
@@ -1705,7 +1706,7 @@ timApp.controller("ViewCtrl", [
                 }).error(function (data) {
                     var $loading = $('#loading');
                     $loading.remove();
-                    $window.console.log("Error occurred when fetching view_content");
+                    $log.error("Error occurred when fetching view_content");
                 });
             sc.contentLoaded = true;
             return true;
@@ -1778,7 +1779,7 @@ timApp.controller("ViewCtrl", [
             var i = 1000000;
 
             while (i > 0) {
-                if ($next.length == 0) {
+                if ($next.length === 0) {
                     $par = $par.parent();
                     $next = $par.next();
                     if ($par.prop("tagName").toLowerCase() == "html") {
@@ -1916,7 +1917,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.nameArea = function (e, $pars) {
-            var $newArea = $('<div class="area" id="newarea" />')
+            var $newArea = $('<div class="area" id="newarea" />');
             $newArea.attr('data-doc-id', sc.docId);
             sc.selection.pars.wrapAll($newArea);
 
@@ -2077,7 +2078,7 @@ timApp.controller("ViewCtrl", [
             } else {
                 $scope.selectedArea = undefined;
             }
-            console.log(sel.toString());
+            $log.info(sel.toString());
         };
         */
 
@@ -2255,8 +2256,8 @@ timApp.controller("ViewCtrl", [
 
         sc.addNote = function() {
             // sc.clearNoteBadge(null);
-            sc.toggleNoteEditor(sc.noteBadgePar,{isNew:true})
-        }
+            sc.toggleNoteEditor(sc.noteBadgePar,{isNew:true});
+        };
 
 
         sc.setNotePadge = function($event) {
@@ -2264,7 +2265,7 @@ timApp.controller("ViewCtrl", [
             var $par = $($event.target);
             if ( !$par.hasClass("par") ) $par = $par.parents('.par');
             sc.updateNoteBadge($par);
-        }
+        };
 
         /**
          * Moves the note badge to the correct element.
