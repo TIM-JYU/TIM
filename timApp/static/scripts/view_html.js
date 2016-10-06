@@ -882,7 +882,7 @@ timApp.controller("ViewCtrl", [
             http.post('/clipboard/paste/' + sc.docId, {
                 "par_before" : sc.getFirstParId($par_or_area)
             }).success(function(data, status, headers, config) {
-                if (data == null)
+                if (data === null)
                     return;
 
                 var $newpar = sc.createNewPar();
@@ -904,9 +904,9 @@ timApp.controller("ViewCtrl", [
 
         sc.moveBelow = function (e, $par_or_area) {
             http.post('/clipboard/paste/' + sc.docId, {
-                "par_after" : sc.getLastParId($par_or_area),
+                "par_after" : sc.getLastParId($par_or_area)
             }).success(function(data, status, headers, config) {
-                if (data == null)
+                if (data === null)
                     return;
 
                 var $newpar = sc.createNewPar();
@@ -931,7 +931,7 @@ timApp.controller("ViewCtrl", [
                 "par_before" : sc.getFirstParId($par_or_area),
                 "as_ref": as_ref
             }).success(function(data, status, headers, config) {
-                if (data == null)
+                if (data === null)
                     return;
 
                 var $newpar = sc.createNewPar();
@@ -955,7 +955,7 @@ timApp.controller("ViewCtrl", [
                 "par_after" : sc.getLastParId($par_or_area),
                 "as_ref": as_ref
             }).success(function(data, status, headers, config) {
-                if (data == null)
+                if (data === null)
                     return;
 
                 var $newpar = sc.createNewPar();
@@ -1019,7 +1019,7 @@ timApp.controller("ViewCtrl", [
                     sc.updatePendingPars(data.changed_pars);
                 })
                 .error(function () {
-                    $window.alert('Error occurred when getting updated paragraphs.')
+                    $window.alert('Error occurred when getting updated paragraphs.');
                 });
         };
 
@@ -1453,7 +1453,7 @@ timApp.controller("ViewCtrl", [
 
             var curElement = jqTarget;
             var limit = 10;
-            while (curElement != null) {
+            while (curElement !== null) {
                 //$log.info(curElement);
 
                 if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || curElement.attr('position') == 'absolute')
@@ -2207,7 +2207,7 @@ timApp.controller("ViewCtrl", [
         sc.updateClipboardStatus = function() {
             http.get('/clipboardstatus', {
             }).success(function (data, status, headers, config) {
-                if (!'empty' in data || data.empty) {
+                if (!('empty' in data) || data.empty) {
                     sc.allowPasteContent = false;
                     sc.allowPasteRef = false;
                 } else {
