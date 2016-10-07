@@ -3,6 +3,9 @@ from timroutetest import TimRouteTest
 
 
 class FolderTest(TimRouteTest):
+    def get_folder(self, path):
+        return 'users/{}/{}'.format(session['user_name'], path)
+
     def create_folder(self, fname, expect_status=200, **kwargs):
         j = self.json_post('/createFolder',
                            {"name": fname,
@@ -14,18 +17,22 @@ class FolderTest(TimRouteTest):
 
     def test_folder_delete(self):
         self.login_test1()
-        user_folder = 'users/{}'.format(session['user_name'])
-        to_delete = "{}/delete".format(user_folder)
+        to_delete = self.get_folder('delete')
         j = self.create_folder(to_delete)
         timdb = self.get_db()
         timdb.users.grant_view_access(timdb.users.get_anon_group_id(), j['id'])
         self.delete('/folders/{}'.format(j['id']), expect_status=200, as_json=True, expect_content=self.ok_resp)
 
+    def test_intermediate_folders(self):
+        self.login_test1()
+        fname = self.get_folder('a/b/c/d')
+        self.create_folder(fname)
+
     def test_folders(self):
         self.login_test1()
         db = self.get_db()
         user_folder = 'users/{}'.format(session['user_name'])
-        fname = "{}/testing".format(user_folder)
+        fname = self.get_folder('testing')
 
         j = self.create_folder(fname)
         self.create_folder(fname,
@@ -41,7 +48,7 @@ class FolderTest(TimRouteTest):
                                 expect_status=403)
 
         # Create another folder and give access to anonymous users
-        fname2 = "{}/{}".format(user_folder, 'testing2')
+        fname2 = self.get_folder('testing2')
         j3 = self.create_folder(fname2)
         db.users.grant_access(db.users.get_anon_group_id(), j3['id'], 'view')
 
@@ -76,8 +83,7 @@ class FolderTest(TimRouteTest):
 
     def test_folders_invalid(self):
         self.login_test1()
-        user_folder = 'users/{}'.format(session['user_name'])
-        invalid = "{}//test".format(user_folder)
+        invalid = self.get_folder('/test')
         invalid2 = "test"
         invalid3 = "1234"
         self.create_folder(invalid,

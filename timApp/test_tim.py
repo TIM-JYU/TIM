@@ -227,6 +227,10 @@ class TimTest(TimRouteTest):
         self.get('/view/{}'.format(doc.doc_id), query_string={'nocache': 'true'})
         doc.get_index()
 
+    def test_document_intermediate_folders(self):
+        self.login_test1()
+        self.create_doc('users/testuser1/a/b/c')
+
 
 if __name__ == '__main__':
     unittest.main()

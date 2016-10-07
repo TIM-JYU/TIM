@@ -18,6 +18,7 @@ import inspect
 import sys
 from datetime import timezone
 
+from sqlalchemy import func
 from sqlalchemy.schema import CreateTable
 
 from tim_app import db, app
@@ -99,7 +100,7 @@ class BlockAccess(db.Model):
     block_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     usergroup_id = db.Column(db.Integer, db.ForeignKey('usergroup.id'), primary_key=True)
     type = db.Column(db.Integer, db.ForeignKey('accesstype.id'), primary_key=True)
-    accessible_from = db.Column(db.DateTime(timezone=True))
+    accessible_from = db.Column(db.DateTime(timezone=True), default=func.now())
     accessible_to = db.Column(db.DateTime(timezone=True))
 
 

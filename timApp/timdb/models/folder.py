@@ -96,7 +96,7 @@ class Folder(db.Model):
         Folder.create(rel_path, owner_group_id, commit=False)
 
         if apply_default_rights:
-            copy_default_rights(f.id, blocktypes.FOLDER)
+            copy_default_rights(f.id, blocktypes.FOLDER, commit=False)
 
         if commit:
             db.session.commit()

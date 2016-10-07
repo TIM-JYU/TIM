@@ -618,7 +618,7 @@ def grant_access_to_session_users(timdb: TimDb, block_id: int):
                                  block_id,
                                  'manage',
                                  commit=False)
-    timdb.commit()
+    db.session.commit()
 
 
 def is_considered_unpublished(doc_id):

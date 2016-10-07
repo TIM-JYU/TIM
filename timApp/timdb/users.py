@@ -2,6 +2,7 @@ import hashlib
 import re
 from typing import Optional, List, Set
 
+from tim_app import db
 from timdb.blocktypes import blocktypes, BlockType
 from timdb.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
     LOGGED_IN_USERNAME, ADMIN_GROUPNAME
@@ -9,6 +10,7 @@ from timdb.models.usergroup import UserGroup
 from timdb.models.user import User
 from timdb.models.folder import Folder
 from timdb.models.block import Block
+from timdb.tim_models import BlockAccess
 from timdb.timdbbase import TimDbBase
 from timdb.timdbexception import TimDbException
 
@@ -466,14 +468,12 @@ class Users(TimDbBase):
         :param access_type: The kind of access. Possible values are 'edit' and 'view'.
         """
 
-        # TODO: Check that the group_id and block_id exist.
         access_id = self.get_access_type_id(access_type)
-        cursor = self.db.cursor()
         if access_id is not None:
-            cursor.execute("""INSERT INTO BlockAccess (Block_id,UserGroup_id,accessible_from,type)
-                              VALUES (%s,%s,CURRENT_TIMESTAMP, %s) ON CONFLICT DO NOTHING""", [block_id, group_id, access_id])
+            ba = BlockAccess(block_id=block_id, usergroup_id=group_id, type=access_id)
+            db.session.merge(ba)
         if commit:
-            self.db.commit()
+            db.session.commit()
 
     def grant_view_access(self, group_id: int, block_id: int):
         """Grants view access to a group for a block.
