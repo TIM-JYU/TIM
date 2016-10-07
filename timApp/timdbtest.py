@@ -18,7 +18,7 @@ class TimDbTest(unittest.TestCase):
 
     @classmethod
     def get_db(cls):
-        return TimDb(db_path=cls.db_path, files_root_path=cls.test_files_path)
+        return TimDb(files_root_path=cls.test_files_path)
 
     @classmethod
     def setUpClass(cls):

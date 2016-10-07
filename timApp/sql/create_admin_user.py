@@ -3,7 +3,7 @@ from timdb.timdb2 import TimDb
 
 
 def query_admin():
-    db = TimDb(app.config['DATABASE'], app.config['FILES_PATH'])
+    db = TimDb(app.config['FILES_PATH'])
     username = input("Username: ")
     user = db.users.get_user_by_name(username)
     if user is not None:

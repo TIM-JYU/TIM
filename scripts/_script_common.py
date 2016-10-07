@@ -18,7 +18,7 @@ TIMDB = None
 def get_timdb():
     global TIMDB
     if TIMDB is None:
-        TIMDB = TimDb(DBFILE, TIM_FILES_ROOT)
+        TIMDB = TimDb(TIM_FILES_ROOT)
     return TIMDB
 
 

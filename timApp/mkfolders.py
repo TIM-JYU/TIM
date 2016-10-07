@@ -51,7 +51,7 @@ def create_tables(db):
 
 def update_tables(db):
     cursor = db.cursor()
-    timdb = TimDb(db_path='tim_files/tim.db', files_root_path='tim_files')
+    timdb = TimDb(files_root_path='tim_files')
 
     cursor.execute("SELECT id, description as name FROM Block WHERE type_id = ?", [blocktypes.FOLDER])
     for folder_id, folder_name in cursor.fetchall():

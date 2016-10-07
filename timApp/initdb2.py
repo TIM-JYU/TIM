@@ -49,7 +49,7 @@ def initialize_database(create_docs=True):
     DocParagraph.default_files_root = files_root_path
     was_created = postgre_create_database(app.config['TIM_NAME'], app.config['TIM_NAME'])
     log_info('Database {} {}.'.format(app.config['TIM_NAME'], 'was created' if was_created else 'exists'))
-    timdb = TimDb(db_path=db_path, files_root_path=files_root_path)
+    timdb = TimDb(files_root_path=files_root_path)
     db.create_all(bind='tim_main')
     sess = timdb.session
     if sess.query(AccessType).count() > 0:
@@ -105,7 +105,7 @@ def update_database():
 
     The update method should return True if the update was applied or False if it was skipped for some reason.
     """
-    timdb = TimDb(db_path=app.config['DATABASE'], files_root_path=app.config['FILES_PATH'])
+    timdb = TimDb(files_root_path=app.config['FILES_PATH'])
     ver = timdb.get_version()
     ver_old = ver
     update_dict = {0: update_datamodel,

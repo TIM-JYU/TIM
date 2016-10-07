@@ -92,9 +92,7 @@ def getTimDb():
     if not hasattr(g, 'timdb'):
         # log_info('Opening timdb in route: {}'.format(request.path))
         rpath = request.path
-        g.timdb = TimDb(db_path=current_app.config['DATABASE'],
-                        files_root_path=current_app.config['FILES_PATH'],
-                        session=db.session,
+        g.timdb = TimDb(files_root_path=current_app.config['FILES_PATH'],
                         current_user_name=getCurrentUserName(),
                         route_path=rpath)
     return g.timdb

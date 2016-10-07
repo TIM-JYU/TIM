@@ -41,17 +41,13 @@ class TimDb(object):
     """Handles saving and retrieving information from TIM database.
     """
 
-    def __init__(self, db_path: str,
-                 files_root_path: str,
-                 session: scoped_session = None,
+    def __init__(self, files_root_path: str,
                  current_user_name: str = 'Anonymous',
                  route_path: str = ''):
-        """Initializes TimDB with the specified database, files root path, SQLAlchemy session and user name.
+        """Initializes TimDB with the specified files root path, SQLAlchemy session and user name.
         
-        :param session: The scoped_session to be used for SQLAlchemy operations. If None, a scoped_session will be
         created.
         :param current_user_name: The username of the current user.
-        :param db_path: The path of the database file.
         :param files_root_path: The root path where all the files will be stored.
         :param route_path: Path for the route requesting the db
         """
@@ -64,7 +60,6 @@ class TimDb(object):
             if not os.path.exists(path):
                 log_info('Creating directory: {}'.format(path))
                 os.makedirs(path)
-        self.session = session
         self.reset_attrs()
 
     def reset_attrs(self):
@@ -149,6 +144,7 @@ class TimDb(object):
 
     def commit(self):
         """Commits any changes to the database."""
+        db.session.commit()
         self.db.commit()
 
     def close(self):

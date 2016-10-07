@@ -10,7 +10,7 @@ from timdb.models.usergroup import UserGroup
 from timdb.models.user import User
 from timdb.models.folder import Folder
 from timdb.models.block import Block
-from timdb.tim_models import BlockAccess
+from timdb.tim_models import BlockAccess, UserGroupMember
 from timdb.timdbbase import TimDbBase
 from timdb.timdbexception import TimDbException
 
@@ -173,10 +173,10 @@ class Users(TimDbBase):
         :param group_id: The id of the group.
         :param user_id: The id of the user.
         """
-        cursor = self.db.cursor()
-        cursor.execute('INSERT INTO UserGroupMember (UserGroup_id, User_id) VALUES (%s, %s)', [group_id, user_id])
+        ugm = UserGroupMember(usergroup_id=group_id, user_id=user_id)
+        db.session.add(ugm)
         if commit:
-            self.db.commit()
+            db.session.commit()
 
     def add_user_to_named_group(self, group_name: str, user_id: int, commit: bool = True):
         group_id = self.get_usergroup_by_name(group_name)
@@ -717,12 +717,16 @@ WHERE User_id IN ({}))
                                real_name: Optional[str]=None,
                                email: Optional[str]=None,
                                password: Optional[str]=None,
-                               is_admin: bool=False):
-        user_id = self.create_user(name, real_name or name, email or name + '@example.com', password=password or '')
-        user_group = self.create_usergroup(name)
-        self.add_user_to_group(user_group, user_id)
+                               is_admin: bool=False,
+                               commit: bool=True):
+        user_id = self.create_user(name, real_name or name, email or name + '@example.com', password=password or '',
+                                   commit=False)
+        user_group = self.create_usergroup(name, commit=False)
+        self.add_user_to_group(user_group, user_id, commit=False)
         if is_admin:
-            self.addUserToAdmins(user_id)
+            self.addUserToAdmins(user_id, commit=False)
+        if commit:
+            db.session.commit()
         return user_id, user_group
 
     def get_personal_usergroup_by_id(self, user_id: int) -> Optional[int]:
