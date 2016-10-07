@@ -256,9 +256,11 @@ class Users(TimDbBase):
             return []
         return self.get_rights_holders(doc.id)
 
-    def grant_default_access(self, group_id: int, folder_id: int, access_type: str, object_type: BlockType):
+    def grant_default_access(self, group_ids: List[int], folder_id: int, access_type: str, object_type: BlockType):
         doc = self.get_default_right_document(folder_id, object_type, create_if_not_exist=True)
-        self.grant_access(group_id, doc.id, access_type)
+        for group_id in group_ids:
+            self.grant_access(group_id, doc.id, access_type, commit=False)
+        db.session.commit()
 
     def remove_default_access(self, group_id: int, folder_id: int, access_type: str, object_type: BlockType):
         doc = self.get_default_right_document(folder_id, object_type, create_if_not_exist=True)

@@ -16,11 +16,11 @@ class DefaultRightTest(TimRouteTest):
         folder = docentry.get_parent()
 
         users_folder = Folder.find_by_full_path('users')
-        timdb.users.grant_default_access(timdb.users.get_korppi_group_id(), users_folder.id, 'view',
+        timdb.users.grant_default_access([timdb.users.get_korppi_group_id()], users_folder.id, 'view',
                                          blocktypes.DOCUMENT)
 
         # Make sure an exception won't be thrown if trying to add a right again
-        timdb.users.grant_default_access(timdb.users.get_korppi_group_id(), users_folder.id, 'view',
+        timdb.users.grant_default_access([timdb.users.get_korppi_group_id()], users_folder.id, 'view',
                                          blocktypes.DOCUMENT)
 
         for obj_type_str in ('document', 'folder'):
@@ -34,13 +34,19 @@ class DefaultRightTest(TimRouteTest):
             self.assertDictResponse(self.ok_resp,
                                     self.json_put(
                                         '/defaultPermissions/{}/add/{}/{}/{}'.format(obj_type_str, folder.id,
-                                                                                     'Anonymous users',
+                                                                                     'Anonymous users;testuser2',
                                                                                      'view'), expect_status=200)
                                     )
             def_rights = self.get('/defaultPermissions/{}/get/{}'.format(obj_type_str, folder.id), as_json=True,
                                   expect_status=200)
-            default_rights = [{'gid': timdb.users.get_anon_group_id(), 'name': ANONYMOUS_GROUPNAME, 'access_type': 1,
-                               'access_name': 'view'}]
+            default_rights = [{'access_name': 'view',
+                               'access_type': 1,
+                               'gid': 8,
+                               'name': 'testuser2'},
+                              {'access_name': 'view',
+                               'access_type': 1,
+                               'gid': 2,
+                               'name': 'Anonymous users'}]
             self.assertDictEqual(
                 {'grouprights': default_rights},
                 def_rights)
