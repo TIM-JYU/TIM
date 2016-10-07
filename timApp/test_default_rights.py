@@ -62,3 +62,10 @@ class DefaultRightTest(TimRouteTest):
                 raise Exception('error in test: object type should be document or folder')
             self.assertListEqual(sorted(default_rights, key=itemgetter('gid', 'access_type')),
                                  sorted(new_item_rights, key=itemgetter('gid', 'access_type')))
+            self.json_put('/defaultPermissions/{}/remove/{}/{}/{}'
+                          .format(obj_type_str, folder.id,
+                                  timdb.users.get_anon_group_id(),
+                                  'view'),
+                          expect_status=200,
+                          as_json=True,
+                          expect_content=self.ok_resp)
