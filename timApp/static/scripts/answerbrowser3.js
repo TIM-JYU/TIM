@@ -116,6 +116,10 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                 };
 
                 $scope.loading = 0;
+                $scope.setFocus = function() {
+                    $scope.element.focus();
+                }
+
                 $scope.changeAnswer = function () {
                     if ($scope.selectedAnswer === null) {
                         return;
@@ -142,7 +146,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                             $scope.element.find('.review').html(data.reviewHtml);
                         }
                         var lata = $scope.$parent.loadAnnotationsToAnswer;
-                        if ( lata ) lata($scope.selectedAnswer.id, par_id, $scope.review);
+                        if ( lata ) lata($scope.selectedAnswer.id, par_id, $scope.review, $scope.setFocus);
 
                     }).error(function (data, status, headers, config) {
                         $scope.error = 'Error getting state: ' + data.error;
@@ -173,6 +177,53 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     $scope.selectedAnswer = $scope.filteredAnswers[newIndex];
                     $scope.changeAnswer();
                 };
+
+
+                if ( $scope.$parent.teacherMode ) {
+                    $scope.findSelectedUserIndex = function() {
+                        if ($scope.users === null) {
+                            return -1;
+                        }
+                        for (var i = 0; i < $scope.users.length; i++) {
+                            if ($scope.users[i].id === $scope.user.id) {
+                                return i;
+                            }
+                        }
+                        return -1;
+                    }
+
+                    $scope.checkKeyPress = function(e) {
+                        if ( e.which === 38 && e.ctrlKey ) {
+                            e.preventDefault();
+                            $scope.changeStudent(-1);
+                            return;
+                        }
+                        if ( e.which === 40 && e.ctrlKey ) {
+                            e.preventDefault();
+                            $scope.changeStudent(1);
+                            return;
+                        }
+                    }
+                    $scope.element.attr("tabindex", 1);
+                    $scope.element.css("outline", "none");
+                    $scope.element[0].addEventListener("keydown", $scope.checkKeyPress);
+
+                    $scope.changeStudent = function (dir) {
+                        if ( $scope.users.length <= 0 ) return;
+                        var newIndex = $scope.findSelectedUserIndex() + dir;
+                        if (newIndex >= $scope.users.length) {
+                            newIndex = 0;
+                        }
+                        if (newIndex < 0 ) {
+                            newIndex = $scope.users.length-1;
+                        }
+                        if (newIndex < 0) return;
+                        $scope.user = $scope.users[newIndex];
+                        $scope.getAvailableAnswers();
+                        $scope.element.focus();
+                    };
+                }
+
 
                 $scope.setNewest = function () {
                     if ($scope.filteredAnswers.length > 0) {

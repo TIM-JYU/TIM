@@ -316,7 +316,8 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 		    };
 
            scope.$watch('newannotation', function(value) {
-                if(value) {
+                // if (value) { // muuten ottaa undefined
+                if (value === "true") { // muuten ottaa undefined
                     element.find('textarea').focus();
                     scope.newannotation = false;
                     console.log("focus on new annotation");

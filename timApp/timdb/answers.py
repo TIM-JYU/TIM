@@ -84,13 +84,13 @@ class Answers(TimDbBase):
             return
         answer_dict = defaultdict(list)
         c = self.db.cursor()
-        c.execute("""SELECT answer_id, user_id, real_name FROM UserAnswer
+        c.execute("""SELECT answer_id, user_id, real_name, email FROM UserAnswer
             JOIN Answer ON Answer.id = UserAnswer.answer_id
             JOIN UserAccount ON UserAnswer.user_id = UserAccount.id
             WHERE answer_id IN ({})""".format(','.join(['%s'] * len(answers))),
                   [answer['id'] for answer in answers])
         for row in c.fetchall():
-            answer_dict[row[0]].append({'user_id': row[1], 'real_name': row[2]})
+            answer_dict[row[0]].append({'user_id': row[1], 'real_name': row[2], 'email': row[3]})
         for answer in answers:
             answer['collaborators'] = answer_dict[answer['id']]
 
@@ -286,7 +286,7 @@ ORDER BY a.task_id, u.name
 
     def get_users_by_taskid(self, task_id: str):
         c = self.db.cursor()
-        c.execute("""SELECT DISTINCT UserAccount.id, name, real_name
+        c.execute("""SELECT DISTINCT UserAccount.id, name, real_name, email
             FROM UserAccount
             JOIN UserAnswer ON UserAnswer.user_id = UserAccount.id
             JOIN Answer on Answer.id = UserAnswer.answer_id
