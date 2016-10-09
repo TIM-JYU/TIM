@@ -9,6 +9,10 @@ body {
     background-color: $bg-color;
 }
 
+code {
+    font-size: 115%;
+}
+
 a:visited {
     color: $link-visited-color;
 }
@@ -1060,6 +1064,11 @@ p.docsettings {
     top: 35px;
     z-index: 200;
     font-size: 9px;
+}
+
+.inputSmall {
+    font-size: 8px;
+    font-weight: normal;
 }
 
 .slides {

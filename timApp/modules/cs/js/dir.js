@@ -175,6 +175,39 @@ languageTypes.isInArray = function(word,array) {
     
 }
 
+// Wrap given thex to max n cold length lines spliting from space
+function wrapText(s, n)
+{
+    var lines = s.split("\n");
+    var needJoin = false;
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        // lines[i] = "";
+        var sep = "";
+        if (line.length > n) {
+            lines[i] = "";
+            while (true) {
+                var p = -1;
+                if (line.length > n) {
+                    p = line.lastIndexOf(" ", n);
+                    if (p < 0) p = line.indexOf(" "); // long line
+                }
+                if (p < 0) {
+                    lines[i] += sep + line;
+                    break;
+                }
+                lines[i] += sep + line.substring(0, p);
+                line = line.substring(p + 1);
+                sep = "\n";
+                needJoin = true;
+            }
+        }
+    }
+    if ( needJoin ) return {modified: true, s: lines.join("\n")};
+    return {modified: false, s:s};
+}
+
+
 // =================================================================================================================
 
 var removeXML = function(s) {
@@ -357,6 +390,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>' +
 				  ' <a href="" ng-if="toggleEditor" ng-click="hideShowEditor();">{{toggleEditorText[noeditor?0:1]}}</a>' +
 				  ' <a href="" ng-if="!noeditor" ng-click="showOtherEditor();">{{editorText[editorModeIndecies[editorMode+1]]}}</a>' +
+                  ' <span ng-if="wrap.n!=-1" class="inputSmall" style="float: right;"><label title="Put 0 to no wrap">wrap: <input type="text"  ng-pattern="/[-0-9]*/" ng-model="wrap.n" size="2" /></label></span>' +
                   '</p>'+
                   '</div>'+
                   (t=="sage" ? '<div class="outputSage no-popup-menu"></div>' :"")+ 
@@ -526,9 +560,12 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"justSave",false);
             csApp.set(scope,attrs,"validityCheck","");
             csApp.set(scope,attrs,"validityCheckMessage","");
+
+            csApp.set(scope,attrs,"wrap", scope.isText ? 70 : -1);
+            scope.wrap = {n:scope.wrap}; // to avoid child scope problems
             // csApp.set(scope,attrs,"program");
 
-            
+
             scope.docLink = "Document";
             scope.editorMode = parseInt(scope.editorMode);
             scope.editorText = [scope.normal,scope.highlight,scope.parsons,scope.jsparsons];
@@ -633,6 +670,7 @@ csApp.directiveFunction = function(t,isInput) {
             */
             //scope.out = element[0].getElementsByClassName('console');
             if ( scope.attrs.autorun ) scope.runCodeLink(true);
+            scope.editorIndex = 0;
             if ( scope.editorMode != 0 || scope.editorModes !== "01" ) scope.showOtherEditor(scope.editorMode);
             scope.mode = languageTypes.getAceModeType(scope.type,"");
             
@@ -983,13 +1021,43 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         }
     }
     
-    
+
+
+
+    $scope.checkWrap = function() {
+        var r = wrapText($scope.usercode, $scope.wrap.n);
+        if ( r.modified ) {
+            if ( $scope.editorIndex === 0) {
+                var start = $scope.edit.selectionStart;
+
+                //$scope.usercode = lines.join("\n");
+                $scope.edit.value = r.s;
+                $scope.edit.selectionStart = start;
+                $scope.edit.selectionEnd = start;
+            }
+            if ( $scope.editorIndex === 1) { // ACE
+                var editor = $scope.aceEditor;
+                // var start = $scope.aceEditor.selectionStart;
+                var cursor = editor.selection.getCursor();
+                var index = editor.session.doc.positionToIndex(cursor);
+                //$scope.usercode = lines.join("\n");
+                editor.setValue(r.s);
+                cursor = editor.session.doc.indexToPosition(index);
+                editor.selection.moveCursorToPosition(cursor);
+                editor.selection.clearSelection();
+            }
+
+        }
+
+    }
+
 	$scope.$watch('usercode', function() {
 		if ( !$scope.copyingFromTauno && $scope.usercode !== $scope.byCode ) $scope.muokattu = true;
 		$scope.copyingFromTauno = false;
 		if ( $scope.minRows < $scope.maxRows ) 
 			csApp.updateEditSize($scope);
 		if ( $scope.viewCode ) $scope.pushShowCodeNow();
+        if ( $scope.wrap.n > 0 ) $scope.checkWrap();
         window.clearInterval($scope.runTimer);
         if ( $scope.runned && $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
 
@@ -1002,7 +1070,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 		else $scope.checkIndent(); // ongelmia saada kursori paikalleen
 		*/
 	}, true);
-    
+
     
 	$scope.$watch('userargs', function() {
         window.clearInterval($scope.runTimer);
@@ -1820,7 +1888,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         else $scope.editorMode++; 
         if ( $scope.editorMode >= $scope.editorModeIndecies.length-1 ) $scope.editorMode = 0; 
         var eindex = $scope.editorModeIndecies[$scope.editorMode];
-        
+        $scope.editorIndex = eindex;
         var otherEditDiv = $scope.element0.getElementsByClassName('csrunEditorDiv')[0];                    
         var editorDiv = angular.element(otherEditDiv); 
         $scope.edit = csApp.compile(html[eindex])($scope);

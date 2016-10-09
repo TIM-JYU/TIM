@@ -112,7 +112,7 @@ class Answers(TimDbBase):
         ) t JOIN Answer a ON a.id = t.aid""".format(template), task_ids + [user_id])
         return self.resultAsDictionary(c)
 
-    def get_all_answers(self, task_ids: List[str], usergroup: Optional[int], hide_names: bool, age: str, valid: str) -> List[str]:
+    def get_all_answers(self, task_ids: List[str], usergroup: Optional[int], hide_names: bool, age: str, valid: str, printname:bool) -> List[str]:
         """Gets the all answers to tasks
 
         :param task_ids: The ids of the tasks.
@@ -120,6 +120,7 @@ class Answers(TimDbBase):
         :param hide_names: Hide names
         :param age: min, max or all
         :param valid: 0, 1 or all
+        :param printname: True = put user full name as first in every task
         """
         time_limit = "1900-09-12 22:00:00"
         counts =  "count(a.answered_on)"
@@ -142,7 +143,7 @@ class Answers(TimDbBase):
 
         c = self.db.cursor()
         sql = """
-SELECT DISTINCT u.name, a.task_id, a.content, a.answered_on, n, a.points
+SELECT DISTINCT u.name, a.task_id, a.content, a.answered_on, n, a.points, u.real_name
 FROM
 (SELECT {} (a.id) AS id, {} as n
 FROM answer AS a, userAnswer AS ua, useraccount AS u
@@ -173,6 +174,7 @@ ORDER BY a.task_id, u.name
             if isinstance(line, dict) and "usercode" in line:
                 answ = line.get("usercode", "-")
 
+            if printname and not hide_names: header = str(row[6]) + ";" + header
             result.append(header + "\n" + answ)
         return result
 
