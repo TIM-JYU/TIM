@@ -19,7 +19,7 @@ from plugin import parse_plugin_values
 from options import get_option
 from routes.common import getTimDb, getCurrentUserId, jsonResponse, verify_ownership, get_rights, has_ownership, \
     get_user_settings
-from tim_app import db
+from timdb.tim_models import db
 from timdb.tempdb_models import TempDb
 
 lecture_routes = Blueprint('lecture',

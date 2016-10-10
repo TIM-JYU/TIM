@@ -9,9 +9,9 @@ from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from routes.logger import log_info
 from sql.migrate_to_postgre import perform_migration
-from tim_app import app, db
+from tim_app import app
 from timdb import tempdb_models
-from timdb.tim_models import Version, AccessType
+from timdb.tim_models import Version, AccessType, db
 from timdb.timdb2 import TimDb
 from timdb.timdbexception import TimDbException
 from timdb.users import LOGGED_IN_USERNAME
@@ -43,7 +43,6 @@ def initialize_database(create_docs=True):
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
-    db_path = app.config['DATABASE']
     files_root_path = app.config['FILES_PATH']
     Document.default_files_root = files_root_path
     DocParagraph.default_files_root = files_root_path

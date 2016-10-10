@@ -1,7 +1,7 @@
 from typing import Optional
 
 from documentmodel.document import Document
-from tim_app import db
+from timdb.tim_models import db
 from timdb.blocktypes import blocktypes
 from timdb.dbutils import insert_block
 from timdb.timdbexception import TimDbException

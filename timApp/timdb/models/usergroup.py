@@ -1,4 +1,4 @@
-from tim_app import db
+from timdb.tim_models import db
 from timdb.special_group_names import ANONYMOUS_GROUPNAME, LARGE_GROUPS
 
 

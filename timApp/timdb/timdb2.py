@@ -8,7 +8,7 @@ from time import sleep
 from sqlalchemy.orm import scoped_session
 
 from routes.logger import log_info
-from tim_app import db, app
+from tim_app import app
 from timdb.annotations import Annotations
 from timdb.answers import Answers
 from timdb.documents import Documents
@@ -21,7 +21,7 @@ from timdb.messages import Messages
 from timdb.notes import Notes
 from timdb.questions import Questions
 from timdb.readings import Readings
-from timdb.tim_models import Version
+from timdb.tim_models import Version, db
 from timdb.uploads import Uploads
 from timdb.users import Users
 from timdb.velpgroups import VelpGroups

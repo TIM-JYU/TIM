@@ -6,7 +6,8 @@ import sqlalchemy.exc
 import dumboclient
 import initdb2
 from filemodehelper import change_permission_and_retry
-from tim_app import db, app
+from tim_app import app
+from timdb.tim_models import db
 from timdb.timdb2 import TimDb
 from utils import del_content
 

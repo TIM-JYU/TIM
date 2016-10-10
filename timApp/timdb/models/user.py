@@ -1,4 +1,4 @@
-from tim_app import db
+from timdb.tim_models import db
 from timdb.models.folder import Folder
 from timdb.models.usergroup import UserGroup
 from timdb.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME

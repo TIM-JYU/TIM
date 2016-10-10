@@ -1,10 +1,9 @@
 from typing import List, Optional, Iterable
 
-from tim_app import db
 from timdb.blocktypes import blocktypes
 from timdb.models.block import Block
 from timdb.models.folder import Folder
-from timdb.tim_models import BlockAccess
+from timdb.tim_models import BlockAccess, db
 from timdb.timdbbase import TimDbBase
 
 ID_ROOT_FOLDER = -1

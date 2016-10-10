@@ -12,7 +12,7 @@ from flask import session
 from lxml import html
 
 from routes.login import log_in_as_anonymous
-from tim_app import db
+from timdb.tim_models import db
 from timdb.models.docentry import DocEntry
 from timdbtest import TimDbTest
 

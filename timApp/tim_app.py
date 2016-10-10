@@ -6,11 +6,17 @@ import mimetypes
 import sys
 
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from routes.filters import map_format, timdate
 from routes.logger import setup_logging, log_info, log_warning
+# noinspection PyUnresolvedReferences
+from timdb.tim_models import db
+# noinspection PyUnresolvedReferences
+from timdb.models import *
+# noinspection PyUnresolvedReferences
+from timdb.velp_models import *
 from utils import datestr_to_relative, date_to_relative
 
 sys.setrecursionlimit(10000)
@@ -31,7 +37,9 @@ else:
     assert default_secret != app.config['SECRET_KEY']
 
 # Compress(app)
-db = SQLAlchemy(app)
+db.init_app(app)
+db.app = app
+migrate = Migrate(app, db)
 
 app.jinja_env.filters['map_format'] = map_format
 app.jinja_env.filters['datestr_to_relative'] = datestr_to_relative

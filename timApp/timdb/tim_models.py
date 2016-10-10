@@ -18,10 +18,11 @@ import inspect
 import sys
 from datetime import timezone
 
+from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 from sqlalchemy.schema import CreateTable
 
-from tim_app import db, app
+db = SQLAlchemy()
 
 
 class AccessType(db.Model):
@@ -249,6 +250,7 @@ def print_schema(bind: str = 'tim_main'):
     :param bind: The bind to use. Default is tim_main.
     """
     models = inspect.getmembers(sys.modules[__name__], lambda x: inspect.isclass(x) and hasattr(x, '__table__'))
+    from tim_app import app
     eng = db.get_engine(app, bind)
 
     for _, model_class in models:

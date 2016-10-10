@@ -17,7 +17,7 @@ from documentmodel.document import Document
 import pytz
 from routes.logger import log_info
 from theme import Theme
-from tim_app import db
+from timdb.tim_models import db
 from timdb.models.user import User
 from timdb.timdb2 import TimDb
 from typing import List, Dict

@@ -1,5 +1,4 @@
-from tim_app import db
-from timdb.tim_models import AnswerUpload
+from timdb.tim_models import AnswerUpload, db
 from timdb.models.block import Block
 from timdb.timdbbase import TimDbBase
 from timdb.blocktypes import blocktypes

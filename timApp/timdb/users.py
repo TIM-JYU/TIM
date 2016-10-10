@@ -2,7 +2,6 @@ import hashlib
 import re
 from typing import Optional, List, Set
 
-from tim_app import db
 from timdb.blocktypes import blocktypes, BlockType
 from timdb.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
     LOGGED_IN_USERNAME, ADMIN_GROUPNAME
@@ -10,7 +9,7 @@ from timdb.models.usergroup import UserGroup
 from timdb.models.user import User
 from timdb.models.folder import Folder
 from timdb.models.block import Block
-from timdb.tim_models import BlockAccess, UserGroupMember
+from timdb.tim_models import BlockAccess, UserGroupMember, db
 from timdb.timdbbase import TimDbBase
 from timdb.timdbexception import TimDbException
 

@@ -1,6 +1,6 @@
 from typing import Optional, List
 
-from tim_app import db
+from timdb.tim_models import db
 from timdb.models.block import Block
 
 
