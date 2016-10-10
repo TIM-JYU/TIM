@@ -94,6 +94,8 @@ def initialize_database(create_docs=True):
 def update_database():
     """Updates the database structure if needed.
 
+    DEPRECATED: DO NOT USE THIS UPDATE METHOD ANYMORE, SEE tim_models.py!
+
     The dict `update_dict` is a dictionary that describes which database versions need which update.
     For example, if the current db version is 0, update_datamodel method will be called and also all other methods
     whose key in the dictionary is greater than 0.
@@ -107,6 +109,7 @@ def update_database():
     timdb = TimDb(files_root_path=app.config['FILES_PATH'])
     ver = timdb.get_version()
     ver_old = ver
+    # DEPRECATED: DO NOT USE THIS UPDATE METHOD ANYMORE, SEE tim_models.py!
     update_dict = {0: update_datamodel,
                    1: update_answers,
                    2: update_rights,
