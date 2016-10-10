@@ -81,17 +81,17 @@ class PluginTest(TimRouteTest):
         self.maxDiff = None
 
         self.assertListEqual(
-            [{'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[true, false, true]',
+            [{'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}], 'content': '[true, false, true]',
                'points': 9.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[false, false, true]',
+             {'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}], 'content': '[false, false, true]',
                'points': None, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[true, true, true]',
+             {'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}], 'content': '[true, true, true]',
                'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[true, false, false]',
+             {'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}], 'content': '[true, false, false]',
                'points': 2.0, 'task_id': task_id, 'valid': False, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[true, true, false]',
+             {'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}], 'content': '[true, true, false]',
                'points': 1.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[true, false, false]',
+             {'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}], 'content': '[true, false, false]',
                'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None}],
             [{k: v for k, v in ans.items() if k not in ('answered_on', 'id')} for ans in answer_list])
         for ans in answer_list:
@@ -155,7 +155,7 @@ class PluginTest(TimRouteTest):
         anon_id = timdb.users.get_anon_user_id()
         anon_answers = timdb.answers.get_answers(anon_id, task_id)
 
-        self.assertListEqual([{'collaborators': [{'real_name': None, 'user_id': anon_id}],
+        self.assertListEqual([{'collaborators': [{'real_name': None, 'email': None, 'user_id': anon_id}],
                                'content': '[true, false, false]',
                                'points': 6.0,
                                'task_id': task_id,
@@ -284,15 +284,15 @@ class PluginTest(TimRouteTest):
         mimetype, ur, user_input = self.do_plugin_upload(doc, file_content, filename, task_id, task_name)
         answer_list = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']), expect_status=200, as_json=True)
         self.assertEqual(1, len(answer_list))
-        self.assertListEqual([{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID},
-                              {'real_name': 'Test user 2', 'user_id': TEST_USER_2_ID}], answer_list[0]['collaborators'])
+        self.assertListEqual([{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID},
+                              {'real_name': 'Test user 2', 'email': 'test2@example.com', 'user_id': TEST_USER_2_ID}], answer_list[0]['collaborators'])
         self.assertEqual(file_content, self.get(ur['file'], expect_status=200))
         self.login_test2()
         answer_list = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']), expect_status=200,
                                     as_json=True)
         self.assertEqual(1, len(answer_list))
-        self.assertListEqual([{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID},
-                              {'real_name': 'Test user 2', 'user_id': TEST_USER_2_ID}], answer_list[0]['collaborators'])
+        self.assertListEqual([{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID},
+                              {'real_name': 'Test user 2', 'email': 'test2@example.com', 'user_id': TEST_USER_2_ID}], answer_list[0]['collaborators'])
         self.assertEqual(file_content, self.get(ur['file'], expect_status=200))
 
     def test_all_answers(self):
