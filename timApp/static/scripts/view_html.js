@@ -103,7 +103,7 @@ timApp.controller("ViewCtrl", [
         sc.readClasses = {
             1: 'screen',
             2: 'hover',
-            3: 'clickPar',
+            3: 'click',
             4: 'read'
         };
 
