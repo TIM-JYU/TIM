@@ -22,6 +22,8 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 from sqlalchemy.schema import CreateTable
 
+from timdb.readparagraphtype import ReadParagraphType
+
 db = SQLAlchemy()
 
 
@@ -188,8 +190,9 @@ class ReadParagraphs(db.Model):
     usergroup_id = db.Column(db.Integer, primary_key=True)
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)  # NOTE Added foreign key
     par_id = db.Column(db.Text, primary_key=True)
+    type = db.Column(db.Enum(ReadParagraphType), nullable=False, primary_key=True)
     par_hash = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime(timezone=True), nullable=False)
+    timestamp = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
 
 
 class Translation(db.Model):

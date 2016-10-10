@@ -93,6 +93,20 @@ timApp.controller("ViewCtrl", [
         }
 
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
+
+        sc.readingTypes = {
+            onScreen: 1,
+            hoverPar: 2,
+            clickPar: 3,
+            clickRed: 4
+        };
+        sc.readClasses = {
+            1: 'screen',
+            2: 'hover',
+            3: 'clickPar',
+            4: 'read'
+        };
+
         sc.editing = false;
 
         sc.questionShown = false;
@@ -1095,27 +1109,31 @@ timApp.controller("ViewCtrl", [
             return angular.isDefined($par.attr('ref-id'));
         };
 
-        sc.markParRead = function ($this, $par) {
-            var oldClass = $this.attr("class");
-            $this.attr("class", "readline read");
+        sc.markParRead = function ($par, readingType) {
+            var $readline = $par.find('.readline');
+            var readClassName = sc.readClasses[readingType];
+            if ($readline.hasClass(readClassName)) {
+                return;
+            }
+            $readline.addClass(readClassName);
             var par_id = sc.getParId($par);
             var data = {};
             if (sc.isReference($par)) {
                 data = sc.getRefAttrs($par);
             }
             if ( !Users.isLoggedIn() ) return true;
-            http.put('/read/' + sc.docId + '/' + par_id, data)
+            http.put('/read/' + sc.docId + '/' + par_id + '/' + readingType, data)
                 .success(function (data, status, headers, config) {
                     sc.markPageDirty();
                 }).error(function () {
-                    $window.alert('Could not save the read marking.');
-                    $this.attr("class", oldClass);
+                    $log.error('Could not save the read marking for paragraph ' + par_id);
+                    $readline.removeClass(readClassName);
                 });
             return true;
         };
 
         sc.onClick(".readline, .readlineQuestion", function ($this, e) {
-            return sc.markParRead($this, $this.parents('.par'));
+            return sc.markParRead($this.parents('.par'), sc.readingTypes.clickRed);
         });
 
         sc.onClick(".areareadline", function ($this, e) {
@@ -1316,6 +1334,7 @@ timApp.controller("ViewCtrl", [
             var $target = $(e.target);
             var tag = $target.prop("tagName");
             var $par = $this.parents('.par');
+            sc.markParRead($par, sc.readingTypes.clickPar);
             // sc.updateNoteBadge($par);
 
             // Don't show paragraph menu on these specific tags or classes
