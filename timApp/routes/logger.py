@@ -7,6 +7,9 @@ import sys
 tim_logger = logging.getLogger('tim')
 tim_logger.setLevel(logging.DEBUG)
 
+wz = logging.getLogger('werkzeug')
+wz.setLevel(logging.ERROR)
+
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
 
@@ -33,6 +36,10 @@ def setup_logging(app):
         stdout_handler.setLevel(app.config['LOG_LEVEL_STDOUT'])
         stdout_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
         tim_logger.addHandler(stdout_handler)
+
+
+def log_debug(message: str):
+    tim_logger.debug(message)
 
 
 def log_info(message: str):

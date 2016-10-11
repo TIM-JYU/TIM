@@ -3,10 +3,14 @@ import re
 import unittest
 
 from flask import session
+from lxml.cssselect import CSSSelector
 
 from documentmodel.document import Document
 from markdownconverter import md_to_html
 from timroutetest import TimRouteTest
+
+
+link_selector = CSSSelector('a')
 
 
 class TimTest(TimRouteTest):
@@ -231,6 +235,25 @@ class TimTest(TimRouteTest):
         self.login_test1()
         self.create_doc('users/testuser1/a/b/c')
 
+
+    def test_hide_links(self):
+        self.login_test1()
+        doc = self.create_doc()
+        timdb = self.get_db()
+        timdb.users.grant_view_access(timdb.users.get_anon_group_id(), doc.id)
+        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        self.assertGreater(len(links), 0)
+
+        self.logout()
+        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        self.assertGreater(len(links), 0)
+        doc.document.add_setting('hide_links', 'view')
+        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        self.assertEqual(len(links), 0)
+
+        self.login_test1()
+        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        self.assertGreater(len(links), 0)
 
 if __name__ == '__main__':
     unittest.main()

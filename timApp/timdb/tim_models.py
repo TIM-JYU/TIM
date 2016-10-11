@@ -8,10 +8,7 @@ name is class name in lowercase.
 
 Keep the model classes in alphabetical order.
 
-For now, use initdb2.update_database method for making database updates. Don't forget to also update the
-NEWEST_DB_VERSION constant.
-
-TODO: Use Flask-Migrate <http://flask-migrate.readthedocs.io/en/latest/> instead of homebrew update mechanism.
+Use Flask-Migrate for database migrations. See <http://flask-migrate.readthedocs.io/en/latest/>.
 """
 import datetime
 import inspect
