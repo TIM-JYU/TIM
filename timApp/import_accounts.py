@@ -8,7 +8,7 @@ from timdb.timdb2 import TimDb
 def import_accounts(file, password):
     timdb = TimDb(files_root_path=app.config['FILES_PATH'])
     with open(file) as csvfile:
-        reader = csv.reader(csvfile)
+        reader = csv.reader(csvfile, delimiter=';')
         for row in reader:
             timdb.users.create_user_with_group(row[0], row[1], row[0], password, is_admin=True, commit=False)
     timdb.commit()

@@ -10,7 +10,7 @@ class AccountImportTest(TimDbTest):
         accounts = [(name + '@example.com', name) for name in ['testimport{}'.format(i) for i in range(1, 100)]]
         csv_path = os.path.join(self.test_files_path, 'import.csv')
         with open(csv_path, 'w') as f:
-            w = csv.writer(f)
+            w = csv.writer(f, delimiter=';')
             for a in accounts:
                 w.writerow(a)
         import_accounts(csv_path, 'testpass')
