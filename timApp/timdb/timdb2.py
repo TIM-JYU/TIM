@@ -5,9 +5,7 @@ import os
 import time
 from time import sleep
 
-from sqlalchemy.orm import scoped_session
-
-from routes.logger import log_info
+from routes.logger import log_info, log_debug, log_error, log_warning
 from tim_app import app
 from timdb.annotations import Annotations
 from timdb.answers import Answers
@@ -95,7 +93,7 @@ class TimDb(object):
         num += 1
         self.num = num
         self.time = time.time()
-        log_info(  "GetDb      {:2d} {:6d} {:2s} {:3s} {:7s} {:s}".format(worker_pid,self.num,"","","",self.route_path))
+        log_debug(  "GetDb      {:2d} {:6d} {:2s} {:3s} {:7s} {:s}".format(worker_pid,self.num,"","","",self.route_path))
         # log_info('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid,self.num, TimDb.instances, bes, time.time() - self.time, self.route_path))
         waiting = False
         while True:
@@ -105,11 +103,11 @@ class TimDb(object):
                 self.session = db.session
                 break
             except Exception as err:
-                if not waiting: log_info("WaitDb " + str(self.num) + " " + str(err))
+                if not waiting: log_warning("WaitDb " + str(self.num) + " " + str(err))
                 waiting = True
                 sleep(0.1)
 
-        if waiting: log_info("ReadyDb " + str(self.num))
+        if waiting: log_warning("ReadyDb " + str(self.num))
 
         TimDb.instances += 1
         # num_connections = self.get_pg_connections()
@@ -150,15 +148,15 @@ class TimDb(object):
     def close(self):
         """Closes the database connection."""
         if hasattr(self, 'db') and self.db is not None:
-            bes = "???"
+            bes = -1
             TimDb.instances -= 1
             try:
-                bes = self.get_pg_connections()
+                # bes = self.get_pg_connections()
                 self.db.close()
             except Exception as err:
-                log_info('close error: ' + str(self.num) + ' ' + str(err))
+                log_error('close error: ' + str(self.num) + ' ' + str(err))
 
-            log_info('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid, self.num, TimDb.instances , bes,  time.time() - self.time, self.route_path ))
+            log_debug('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid, self.num, TimDb.instances , bes,  time.time() - self.time, self.route_path ))
             self.reset_attrs()
 
     def execute_script(self, sql_file):
