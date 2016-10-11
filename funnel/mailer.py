@@ -7,7 +7,7 @@ from funnel_thread import Updatable
 from grouping_queue import GroupingQueue
 from persistent_queue import PersistentQueue, PersistenceException
 from ratelimiter import RateLimited
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, Optional, Union
 
 MAIL_HOST = "smtp.jyu.fi"
 MAIL_DIR = "/service/mail"
