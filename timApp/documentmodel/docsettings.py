@@ -20,6 +20,7 @@ class DocSettings:
     slide_background_color_key = 'slide_background_color'
     bookmark_key = 'bookmarks'
     lazy_key = 'lazy'
+    hide_links_key = 'hide_links'
 
     @classmethod
     def is_valid_paragraph(cls, par):
@@ -139,3 +140,6 @@ class DocSettings:
 
     def show_task_summary(self, default=False) -> bool:
         return self.__dict.get(self.show_task_summary_key, default)
+
+    def hide_links(self, default=None):
+        return self.__dict.get(self.hide_links_key, default)

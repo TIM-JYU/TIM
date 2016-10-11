@@ -4,6 +4,7 @@ from typing import Tuple, Union, Optional
 
 from flask import Blueprint, render_template
 
+from documentmodel.docsettings import DocSettings
 from utils import date_to_relative
 import routes.lecture
 from documentmodel.document import get_index_from_html_list, dereference_pars
@@ -344,6 +345,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     show_unpublished_bg = is_considered_unpublished(doc_id)
 
     return render_template(template_name,
+                           hide_links=should_hide_links(doc_settings, rights),
                            show_unpublished_bg=show_unpublished_bg,
                            route=route,
                            edit_mode=edit_mode,
@@ -402,3 +404,11 @@ def get_items(folder: str):
         item['modified'] = date_to_relative(item.get('modified'))
         item['unpublished'] = is_considered_unpublished(item['id'])
     return items
+
+
+def should_hide_links(settings: DocSettings, rights: dict):
+    hide_type = settings.hide_links()
+    return {'view': not rights['editable'] and not rights['see_answers'],
+            'edit': not rights['see_answers'],
+            'see_answers': not rights['teacher'],
+            'teacher': not rights['manage']}.get(hide_type, False)
