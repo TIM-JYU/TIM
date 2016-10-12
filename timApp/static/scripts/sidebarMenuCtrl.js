@@ -33,6 +33,10 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
         }
         $scope.lastTab = $scope.active;
 
+        if ($('.device-xs').is(':visible') || $('.device-sm').is(':visible')) {
+            $('.left-fixed-side').css('min-width', '0');
+        }
+
         $scope.bookmarkTabSelected = function (isSelected) {
             var tabContent = $("#menuTabs").find(".tab-content");
             if (isSelected) {
@@ -60,12 +64,14 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
                     $scope.active = -1; // this will set the value to null and remove the "selected" state from tab
                     if ($('.device-xs').is(':visible') || $('.device-sm').is(':visible')) {
                         tabs.hide();
+                        $('.left-fixed-side').css('min-width', '0');
                     }
                 } else {
                     $scope.active = $scope.lastTab;
                 }
             } else {
                 tabs.show();
+                $('.left-fixed-side').css('min-width', '12em');
                 tabs.attr("class", "");
                 if ($scope.active === null) {
                     $scope.active = $scope.lastTab || 0;

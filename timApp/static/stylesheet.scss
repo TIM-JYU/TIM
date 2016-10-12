@@ -32,6 +32,19 @@ a .glyphicon {
     @include clearfix;
     height: 43px;
     border-bottom: $header-footer-border;
+    login-menu {
+        display: inline-block;
+        max-width: 37%;
+
+        .dropdown {
+            max-width: 100%;
+
+            .dropdown-toggle {
+                @include text-overflow;
+                max-width: 100%;
+            }
+        }
+    }
 }
 
 .nudge-left-25 {
