@@ -7,7 +7,7 @@ from funnel_thread import Updatable
 from grouping_queue import GroupingQueue
 from persistent_queue import PersistentQueue, PersistenceException
 from ratelimiter import RateLimited
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, Optional, Union
 
 MAIL_HOST = "smtp.jyu.fi"
 MAIL_DIR = "/service/mail"
@@ -156,9 +156,18 @@ class Mailer(Updatable):
             mime_msg.add_header('Reply-To', msg['Reply-To'])
 
         s = smtplib.SMTP(self.mail_host)
-        s.sendmail(msg['From'], [msg['Rcpt-To']], mime_msg.as_string())
-        s.quit()
-        logging.getLogger('mailer').info("Message sent")
+        try:
+            s.sendmail(msg['From'], [msg['Rcpt-To']], mime_msg.as_string())
+        except (smtplib.SMTPSenderRefused,
+                smtplib.SMTPRecipientsRefused,
+                smtplib.SMTPHeloError,
+                smtplib.SMTPDataError,
+                smtplib.SMTPNotSupportedError) as e:
+            logging.getLogger('mailer').error('{}: {}'.format(type(e).__name__, e))
+        else:
+            logging.getLogger('mailer').info("Message sent")
+        finally:
+            s.quit()
 
     def update(self, dt: float):
         self.dequeue.update(dt)

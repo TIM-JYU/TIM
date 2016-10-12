@@ -23,6 +23,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
         $scope.materialQuestions = [];
         $scope.users = Users;
         $scope.bookmarks = $window.bookmarks; // from base.html
+        $scope.leftSide = $('.left-fixed-side');
 
         $scope.active = -1;
         if ($window.showIndex) {
@@ -32,6 +33,17 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
             $scope.active = 6;
         }
         $scope.lastTab = $scope.active;
+
+        $scope.updateLeftSide = function () {
+            if ($("#menuTabs").is(':visible')) {
+                $scope.leftSide.css('min-width', '12em');
+            } else {
+                $scope.leftSide.css('min-width', '0');
+            }
+        };
+
+        $scope.updateLeftSide();
+        $($window).resize($scope.updateLeftSide);
 
         $scope.bookmarkTabSelected = function (isSelected) {
             var tabContent = $("#menuTabs").find(".tab-content");
@@ -60,12 +72,14 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
                     $scope.active = -1; // this will set the value to null and remove the "selected" state from tab
                     if ($('.device-xs').is(':visible') || $('.device-sm').is(':visible')) {
                         tabs.hide();
+                        $scope.leftSide.css('min-width', '0');
                     }
                 } else {
                     $scope.active = $scope.lastTab;
                 }
             } else {
                 tabs.show();
+                $scope.leftSide.css('min-width', '12em');
                 tabs.attr("class", "");
                 if ($scope.active === null) {
                     $scope.active = $scope.lastTab || 0;
