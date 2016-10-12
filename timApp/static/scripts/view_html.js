@@ -1113,27 +1113,33 @@ timApp.controller("ViewCtrl", [
             var $readline = $par.find('.readline');
             var readClassName = sc.readClasses[readingType];
             if ($readline.hasClass(readClassName)) {
-                return;
+                return q.resolve(null);
+            }
+            if ($par.parents('.previewcontent').length > 0) {
+                return q.resolve(null);
+            }
+            var par_id = sc.getParId($par);
+            if (par_id === 'NEW_PAR') {
+                return q.resolve(null);
             }
             $readline.addClass(readClassName);
-            var par_id = sc.getParId($par);
             var data = {};
             if (sc.isReference($par)) {
                 data = sc.getRefAttrs($par);
             }
             if ( !Users.isLoggedIn() ) return true;
-            http.put('/read/' + sc.docId + '/' + par_id + '/' + readingType, data)
-                .success(function (data, status, headers, config) {
+            return http.put('/read/' + sc.docId + '/' + par_id + '/' + readingType, data)
+                .then(function (data, status, headers, config) {
                     sc.markPageDirty();
-                }).error(function () {
+                }, function () {
                     $log.error('Could not save the read marking for paragraph ' + par_id);
                     $readline.removeClass(readClassName);
                 });
-            return true;
         };
 
         sc.onClick(".readline, .readlineQuestion", function ($this, e) {
-            return sc.markParRead($this.parents('.par'), sc.readingTypes.clickRed);
+            sc.markParRead($this.parents('.par'), sc.readingTypes.clickRed);
+            return true;
         });
 
         sc.onClick(".areareadline", function ($this, e) {
@@ -1161,6 +1167,40 @@ timApp.controller("ViewCtrl", [
         sc.isParWithinArea = function ($par) {
             return sc.selection.pars.filter($par).length > 0;
         };
+
+        $.expr[":"].onScreen = function(el) {
+            var rect = el.getBoundingClientRect();
+
+            return (
+                rect.top > 0 &&
+                rect.left > 0 &&
+                rect.bottom < (window.innerHeight || document.documentElement.clientHeight) &&
+                rect.right < (window.innerWidth || document.documentElement.clientWidth)
+            );
+        };
+
+        sc.readTimer = null;
+
+        sc.queueParagraphForReading = function () {
+            if (sc.readTimer !== null) {
+                $window.clearTimeout(sc.readTimer);
+            }
+
+            //noinspection CssInvalidPseudoSelector
+            var visiblePars = $('.par:onScreen').find('.readline').not('.' + sc.readClasses[sc.readingTypes.onScreen]);
+            var parToRead = visiblePars.first().parents('.par');
+            if (parToRead.length === 0) {
+                return;
+            }
+            var numWords = parToRead.find('.parContent').text().trim().split(/[\s\n]+/).length;
+            sc.readTimer = $timeout(function () {
+                sc.markParRead(parToRead, sc.readingTypes.onScreen).then(sc.queueParagraphForReading);
+            }, 300 * numWords);
+        };
+
+        $($window).scroll(sc.queueParagraphForReading);
+
+        sc.queueParagraphForReading();
 
         sc.getParIndex = function($par) {
             var par_id = sc.getParId($par);
@@ -1219,6 +1259,12 @@ timApp.controller("ViewCtrl", [
             $timeout( function() {sc.showOptionsWindow(e, $par, coords);}, 80);
             return false;
         }, true);
+
+        sc.onMouseOverOut(".par", function ($this, e, select) {
+            if (select) {
+                sc.markParRead($this, sc.readingTypes.hoverPar);
+            }
+        });
 
         sc.onMouseOverOut(".areaeditline1", function ($this, e, select) {
             var areaName = $this.attr('data-area');
@@ -1334,6 +1380,9 @@ timApp.controller("ViewCtrl", [
             var $target = $(e.target);
             var tag = $target.prop("tagName");
             var $par = $this.parents('.par');
+            if ($par.parents('.previewcontent').length > 0) {
+                return;
+            }
             sc.markParRead($par, sc.readingTypes.clickPar);
             // sc.updateNoteBadge($par);
 
@@ -2293,6 +2342,9 @@ timApp.controller("ViewCtrl", [
          */
         sc.updateNoteBadge = function ($par) {
             if (!$par) return null;
+            if ($par.parents('.previewcontent').length > 0) {
+                return;
+            }
             var newElement = $par[0];
             if (!newElement) return null;
             addElementToParagraphMargin(newElement, sc.createNoteBadge($par));

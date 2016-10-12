@@ -294,7 +294,7 @@ p.caption {
     }
 
     &.read {
-        display: none;
+        border-right-color: red;
     }
 
     &.read-modified {
@@ -302,6 +302,18 @@ p.caption {
         &:hover {
             background: yellow;
         }
+    }
+
+    &.screen {
+        border-top-color: green;
+    }
+
+    &.hover {
+        border-left-color: cyan;
+    }
+
+    &.click {
+        border-bottom-color: blue;
     }
 }
 
@@ -409,8 +421,7 @@ p.caption {
     width: 10em;
     height: 100%;
     top: 0;
-    border-right: 0.5em solid;
-    border-color: #F60;
+    border: 0.5em solid transparent;
 }
 
 .areareadline {
