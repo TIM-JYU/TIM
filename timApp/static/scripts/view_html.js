@@ -1179,21 +1179,27 @@ timApp.controller("ViewCtrl", [
             );
         };
 
-        sc.readTimer = null;
+        sc.readPromise = null;
+        sc.readingParId = null;
 
         sc.queueParagraphForReading = function () {
-            if (sc.readTimer !== null) {
-                $window.clearTimeout(sc.readTimer);
-            }
-
             //noinspection CssInvalidPseudoSelector
             var visiblePars = $('.par:onScreen').find('.readline').not('.' + sc.readClasses[sc.readingTypes.onScreen]);
             var parToRead = visiblePars.first().parents('.par');
+            var parId = sc.getParId(parToRead);
+
+            if (sc.readPromise !== null && sc.readingParId !== parId) {
+                $timeout.cancel(sc.readPromise);
+            } else if (sc.readingParId === parId) {
+                return;
+            }
+
             if (parToRead.length === 0) {
                 return;
             }
+            sc.readingParId = parId;
             var numWords = parToRead.find('.parContent').text().trim().split(/[\s\n]+/).length;
-            sc.readTimer = $timeout(function () {
+            sc.readPromise = $timeout(function () {
                 sc.markParRead(parToRead, sc.readingTypes.onScreen).then(sc.queueParagraphForReading);
             }, 300 * numWords);
         };
