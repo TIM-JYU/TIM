@@ -1,24 +1,26 @@
 <div class="answerBrowser" ng-cloak ng-keypress="checkKeypress($event)" >
     <div class="error" ng-show="error" ng-bind="error"></div>
     <div class="row" ng-show="$parent.teacherMode && users.length > 0">
-        <div sclass="col-xs-6">
-            <div sclass="row">
+        <div class="col-xs-12">
+            <div class="row">
                 <div class="col-xs-5">
                     <div class="input-group input-group-xs">
                     <span class="input-group-btn">
                        <button class="btn btn-primary" ng-click="changeStudent(-1)">↑</button>
                      </span>
-                    <select class="form-control"
-                            ng-model="user"
-                            ng-options="(user.real_name + ' (' + user.name + ')') for user in users track by user.id"
-                            ng-change="getAvailableAnswers()"></select>
-                    <span class="input-group-btn">
+                        <select class="form-control"
+                                ng-model="user"
+                                ng-options="(user.real_name + ' (' + user.name + ')') for user in users track by user.id"
+                                ng-change="getAvailableAnswers()"></select>
+                        <span class="input-group-btn">
                      <button class="btn btn-primary" ng-click="changeStudent(+1)">↓</button>
                     </span>
+                    </div>
                 </div>
-               </div>
-                <div class="col-xs-4">({{ users.length }})
-                <a  ng-href="mailto:{{user.email}}">email</a></div>
+                <div class="col-xs-7">
+                    ({{ users.length }} users)
+                    <a ng-href="mailto:{{user.email}}">email</a>
+                </div>
             </div>
         </div>
     </div>
