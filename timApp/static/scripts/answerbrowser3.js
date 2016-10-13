@@ -1,3 +1,4 @@
+var timLogTime;
 timLogTime("answerbrowser3 load","answ");
 
 var angular;
@@ -10,6 +11,7 @@ var RLAZYEND = new RegExp(LAZYEND, 'g');
 
 
 function makeNotLazy(html) {
+    "use strict";
     var s = html.replace(RLAZYSTART,"");
     var i = s.lastIndexOf(LAZYEND);
     if ( i >= 0 ) s = s.substring(0,i);
@@ -55,9 +57,9 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
                     }
                     // Next the inside of the plugin to non lazy
                     var origHtml = plugin[0].innerHTML;
-                    if ( origHtml.indexOf(LAZYSTART) >= 0 ) {
-
-                    } else plugin = null;
+                    if ( origHtml.indexOf(LAZYSTART) < 0 ) {
+                        plugin = null;
+                    }
                     if ( plugin ) {
                         var newPluginHtml = makeNotLazy(origHtml);
                         var newPluginElement = $compile(newPluginHtml);
@@ -118,7 +120,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                 $scope.loading = 0;
                 $scope.setFocus = function() {
                     $scope.element.focus();
-                }
+                };
 
                 $scope.changeAnswer = function () {
                     if ($scope.selectedAnswer === null) {
@@ -190,20 +192,18 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                             }
                         }
                         return -1;
-                    }
+                    };
 
                     $scope.checkKeyPress = function(e) {
                         if ( e.which === 38 && e.ctrlKey ) {
                             e.preventDefault();
                             $scope.changeStudent(-1);
-                            return;
                         }
                         if ( e.which === 40 && e.ctrlKey ) {
                             e.preventDefault();
                             $scope.changeStudent(1);
-                            return;
                         }
-                    }
+                    };
                     $scope.element.attr("tabindex", 1);
                     $scope.element.css("outline", "none");
                     $scope.element[0].addEventListener("keydown", $scope.checkKeyPress);
@@ -234,7 +234,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
 
                 $scope.setAnswerById = function(id) {
                     for (var i=0; i<$scope.filteredAnswers.length; i++){
-                        if ($scope.filteredAnswers[i].id == id){
+                        if ($scope.filteredAnswers[i].id === id){
                             $scope.selectedAnswer = $scope.filteredAnswers[i];
                             $scope.changeAnswer();
                             break;
@@ -304,7 +304,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                                 }
                             } else {
                                 $scope.answers = data;
-                                if ($scope.answers.length == 0 && $scope.$parent.teacherMode) {
+                                if ($scope.answers.length === 0 && $scope.$parent.teacherMode) {
                                     $scope.dimPlugin();
                                 }
                                 $scope.updateFiltered();
@@ -336,7 +336,6 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
 
                 $scope.$on('userChanged', function (event, args) {
                     $scope.user = args.user;
-                    console.log(args);
                     $scope.firstLoad = false;
                     $scope.shouldUpdateHtml = true;
                     if (args.updateAll) {
