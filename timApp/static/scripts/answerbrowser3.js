@@ -108,6 +108,15 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     $scope.getAvailableAnswers();
                 });
 
+                $scope.savePoints = function () {
+                    $http.put('/savePoints/' + $scope.user.id + '/' + $scope.selectedAnswer.id,
+                        {points: $scope.points}).then(function (response) {
+                        $scope.selectedAnswer.points = $scope.points;
+                    }, function (response) {
+                        $window.alert('Error settings points: ' + response.data.error);
+                    });
+                };
+
                 $scope.updatePoints = function () {
                     $scope.points = $scope.selectedAnswer.points;
                     if ($scope.points !== null) {

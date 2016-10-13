@@ -8,12 +8,15 @@ import re
 from flask import session
 from lxml import html
 
+from plugin import Plugin
 from timroutetest import TimRouteTest
 
 TEST_USER_1_ID = 4
 TEST_USER_2_ID = 5
 
 class PluginTest(TimRouteTest):
+    answer_error = {'error': "You don't have access to this answer."}
+
     def post_answer(self, plugin_type, task_id, user_input,
                     save_teacher=False, teacher=False, user_id=None, answer_id=None):
         return self.json_put('/{}/{}/answer/'.format(plugin_type, task_id),
@@ -282,18 +285,22 @@ class PluginTest(TimRouteTest):
         filename = 'test.txt'
         file_content = 'test file'
         mimetype, ur, user_input = self.do_plugin_upload(doc, file_content, filename, task_id, task_name)
-        answer_list = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']), expect_status=200, as_json=True)
+        answer_list = self.get_task_answers(task_id)
         self.assertEqual(1, len(answer_list))
         self.assertListEqual([{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID},
                               {'real_name': 'Test user 2', 'email': 'test2@example.com', 'user_id': TEST_USER_2_ID}], answer_list[0]['collaborators'])
         self.assertEqual(file_content, self.get(ur['file'], expect_status=200))
         self.login_test2()
-        answer_list = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']), expect_status=200,
-                                    as_json=True)
+        answer_list = self.get_task_answers(task_id)
         self.assertEqual(1, len(answer_list))
         self.assertListEqual([{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID},
                               {'real_name': 'Test user 2', 'email': 'test2@example.com', 'user_id': TEST_USER_2_ID}], answer_list[0]['collaborators'])
         self.assertEqual(file_content, self.get(ur['file'], expect_status=200))
+
+    def get_task_answers(self, task_id):
+        answer_list = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']), expect_status=200,
+                                    as_json=True)
+        return answer_list
 
     def test_all_answers(self):
         self.login_test1()
@@ -341,3 +348,59 @@ testuser1: {1}; {0}; 1; 2\.0
 testuser2: {1}; {0}; 1; 2\.0
 \[True, True, True\]
         """.format(date_re, re.escape(task_id)).strip())
+
+    def test_save_points(self):
+        cannot_give_custom = {'error': 'You cannot give yourself custom points in this task.'}
+        self.login_test1()
+        doc = self.create_doc(from_file='example_docs/mmcq_example.md').document
+        plugin_type = 'mmcq'
+        task_id = '{}.mmcqexample'.format(doc.doc_id)
+        self.post_answer(plugin_type, task_id, [True, False, False])
+        answer_list = self.get_task_answers(task_id)
+        answer_id = answer_list[0]['id']
+        self.assertEqual(2.0, answer_list[0]['points'])
+
+        # Teacher can give any points regardless of plugin settings
+        self.check_save_points(TEST_USER_1_ID, answer_id, 5, 200, self.ok_resp)
+        answer_list = self.get_task_answers(task_id)
+        self.assertEqual(5.0, answer_list[0]['points'])
+
+        # Teacher can clear points
+        self.check_save_points(TEST_USER_1_ID, answer_id, None, 200, self.ok_resp)
+        self.check_save_points(TEST_USER_1_ID, answer_id, '', 200, self.ok_resp)
+        answer_list = self.get_task_answers(task_id)
+        self.assertEqual(None, answer_list[0]['points'])
+
+        point_format_error = {'error': 'Invalid points format.'}
+        self.check_save_points(TEST_USER_1_ID, answer_id, '6,6', 400, point_format_error)
+        self.check_save_points(TEST_USER_1_ID, answer_id, '6.6', 200, self.ok_resp)
+        answer_list = self.get_task_answers(task_id)
+        self.assertEqual(6.6, answer_list[0]['points'])
+        self.check_save_points(TEST_USER_2_ID, answer_id, None, 200, self.ok_resp)
+
+        self.login_test2()
+        self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, self.permission_error)
+        self.check_save_points(TEST_USER_2_ID, answer_id, 1, 403, self.permission_error)
+        timdb = self.get_db()
+        timdb.users.grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id)
+        self.post_answer(plugin_type, task_id, [True, False, False])
+        answer_list = self.get_task_answers(task_id)
+        answer_id2 = answer_list[0]['id']
+        self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, self.permission_error)
+        self.check_save_points(TEST_USER_2_ID, answer_id, 1, 403, self.answer_error)
+        self.check_save_points(TEST_USER_1_ID, answer_id2, 1, 403, self.permission_error)
+
+        self.check_save_points(TEST_USER_2_ID, answer_id2, 1, 400, cannot_give_custom)
+        p = Plugin.from_task_id(task_id)
+        p.set_value('pointsRule', {'allowUserMin': 0, 'allowUserMax': 5}).save()
+        self.check_save_points(TEST_USER_2_ID, answer_id2, 6, 400, {'error': 'Points must be in range [0,5]'})
+        self.check_save_points(TEST_USER_2_ID, answer_id2, 1, 200, self.ok_resp)
+        self.check_save_points(TEST_USER_2_ID, answer_id2, None, 400, point_format_error)
+        self.check_save_points(TEST_USER_2_ID, answer_id2, '', 400, point_format_error)
+
+    def check_save_points(self, user_id, answer_id, points, expect_status, expect_content):
+        self.json_put('/savePoints/{}/{}'.format(user_id, answer_id),
+                      json_data={'points': points},
+                      expect_status=expect_status,
+                      as_json=True,
+                      expect_content=expect_content)
