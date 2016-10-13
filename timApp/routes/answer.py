@@ -320,40 +320,30 @@ def get_all_answers(task_id):
 @answers.route("/getState")
 def get_state():
     timdb = getTimDb()
-    doc_id, par_id, user_id, answer_id = unpack_args('doc_id',
-                                                     'par_id',
-                                                     'user_id',
-                                                     'answer_id', types=[int, str, int, int])
+    _, par_id, user_id, answer_id = unpack_args('doc_id',
+                                                'par_id',
+                                                'user_id',
+                                                'answer_id', types=[int, str, int, int])
     plugin_params = {}
     review = get_option(request, 'review', False)
     if review:
         plugin_params['review'] = True
 
-    if not timdb.documents.exists(doc_id):
-        abort(404, 'No such document')
-    user = timdb.users.get_user(user_id)
-    is_teacher = False
-    if user_id != getCurrentUserId() or not logged_in():
-        verify_seeanswers_access(doc_id)
-        is_teacher = True
-    if user is None:
-        abort(400, 'Non-existent user')
-    if not timdb.documents.exists(doc_id):
-        abort(404, 'No such document')
-    if not has_view_access(doc_id):
-        abort(403, 'Permission denied')
-
     answer = timdb.answers.get_answer(answer_id)
     if answer is None:
         abort(400, 'Non-existent answer')
-    access = False
-    if any(a['user_id'] == user_id for a in answer['collaborators']):
-        access = True
-    task_doc_id, _, _ = Plugin.parse_task_id(answer['task_id'])
-    if is_teacher and task_doc_id == doc_id:
-        access = True
-    if not access:
-        abort(403, "You don't have access to this answer.")
+    doc_id, _, _ = Plugin.parse_task_id(answer['task_id'])
+    if not timdb.documents.exists(doc_id):
+        abort(404, 'No such document')
+    user = timdb.users.get_user(user_id)
+    if user is None:
+        abort(400, 'Non-existent user')
+    if user_id != getCurrentUserId() or not logged_in():
+        verify_seeanswers_access(doc_id)
+    else:
+        verify_view_access(doc_id)
+        if not any(a['user_id'] == user_id for a in answer['collaborators']):
+            abort(403, "You don't have access to this answer.")
 
     doc = Document(doc_id)
     block = doc.get_paragraph(par_id)
