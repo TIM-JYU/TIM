@@ -5,3 +5,4 @@
 (cd timApp/modules/Haskell && ./startPlugins.sh)
 (cd timApp/modules/Uploader/ && ./startPlugins.sh)
 (cd timApp/modules/imagex && ./startPlugins.sh)
+(cd timApp/modules/pali && ./startPlugins.sh)
