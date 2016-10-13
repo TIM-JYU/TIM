@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 import json
-import os
 from functools import lru_cache
 
 import requests
-from requests.exceptions import Timeout
 
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from plugin import PluginException
-from routes.logger import log_info
+from routes.logger import log_info, log_warning
 from tim_app import app
 
 TIM_URL = ""
@@ -70,12 +68,15 @@ else:
 def call_plugin_generic(plugin, method, route, data=None, headers=None, params=None):
     plug = get_plugin(plugin)
     try:
-        request = requests.request(method, plug['host'] + route + "/", data=data, timeout=15, headers=headers, params=params)
+        request = requests.request(method, plug['host'] + route + "/", data=data, timeout=(0.5, 15), headers=headers, params=params)
         request.encoding = 'utf-8'
         return request.text
-    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-        log_info(str(e))
-        raise PluginException("Could not connect to plugin.")
+    except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError) as e:
+        log_warning('Connection failed to plugin {}: {}'.format(plugin, e))
+        raise PluginException("Could not connect to {}.".format(plugin))
+    except requests.exceptions.ReadTimeout as e:
+        log_warning('Read timeout occurred for plugin {}: {}'.format(plugin, e))
+        raise PluginException("Read timeout occurred when calling {}.".format(plugin))
 
 
 def call_plugin_html(plugin, info, state, task_id=None, params=None):
