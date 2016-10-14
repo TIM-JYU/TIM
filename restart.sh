@@ -90,18 +90,18 @@ if param plugins ; then
  ./start_plugins.sh
 fi
 
-TIM_SETTINGS=''
+TIM_SETTINGS=${CONFIG_FILE}
 END_SHELL='; /bin/bash'
 DAEMON_FLAG='-d'
 LAUNCH_COMMAND='python3 launch.py --with-gunicorn'
 if param debug ; then
-  TIM_SETTINGS='TIM_SETTINGS=debugconfig.py'
+  TIM_SETTINGS='debugconfig.py'
   LAUNCH_COMMAND='python3 launch.py'
   END_SHELL=''
   DAEMON_FLAG=''
 fi
 if param profile ; then
-  TIM_SETTINGS='TIM_SETTINGS=profileconfig.py'
+  TIM_SETTINGS='profileconfig.py'
   LAUNCH_COMMAND='python3 launch.py'
   END_SHELL=''
   DAEMON_FLAG=''

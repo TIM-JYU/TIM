@@ -1,5 +1,6 @@
 """Answer-related routes."""
 from datetime import timezone
+from typing import Union
 
 from flask import Blueprint
 
@@ -8,7 +9,7 @@ from options import get_option
 from plugin import Plugin, PluginException
 from timdb.blocktypes import blocktypes
 from timdb.models.block import Block
-from timdb.tim_models import AnswerUpload
+from timdb.tim_models import AnswerUpload, Answer
 from .common import *
 
 
@@ -36,6 +37,37 @@ def is_answer_valid(plugin, old_answers, tim_info):
         return False, 'Answer is not valid'
 
     return True, 'ok'
+
+
+@answers.route("/savePoints/<int:user_id>/<int:answer_id>", methods=['PUT'])
+def save_points(answer_id, user_id):
+    answer, _ = verify_answer_access(answer_id, user_id, require_teacher_if_not_own=True)
+    doc_id, task_id_name, _ = Plugin.parse_task_id(answer['task_id'])
+    points, = verify_json_params('points')
+    try:
+        plugin = Plugin.from_task_id(answer['task_id'])
+    except PluginException as e:
+        return abort(400, str(e))
+    a = Answer.query.get(answer_id)
+    try:
+        points = points_to_float(points)
+    except ValueError:
+        abort(400, 'Invalid points format.')
+    try:
+        a.points = plugin.validate_points(points) if not has_teacher_access(doc_id) else points
+    except PluginException as e:
+        abort(400, str(e))
+    a.last_points_modifier = getCurrentUserGroup()
+    db.session.commit()
+    return okJsonResponse()
+
+
+def points_to_float(points: Union[str, float]):
+    if points:
+        points = float(points)
+    else:
+        points = None
+    return points
 
 
 @answers.route("/<plugintype>/<task_id_ext>/answer/", methods=['PUT'])
@@ -159,21 +191,12 @@ def post_answer(plugintype: str, task_id_ext: str):
             is_valid, explanation = is_answer_valid(plugin, old_answers, tim_info)
             points_given_by = None
             if answer_browser_data.get('giveCustomPoints'):
-                custom_points = answer_browser_data.get('points')
                 try:
-                    custom_points_float = float(custom_points)
-                except ValueError:
-                    result['error'] = 'Wrong format for custom points.'
+                    points = plugin.validate_points(answer_browser_data.get('points'))
+                except PluginException as e:
+                    result['error'] = str(e)
                 else:
-                    points_min = plugin.user_min_points()
-                    points_max = plugin.user_max_points()
-                    if points_min is None or points_max is None:
-                        result['error'] = 'You cannot give yourself custom points in this task.'
-                    elif not (points_min <= custom_points_float <= points_max):
-                        result['error'] = 'Points must be in range [{},{}]'.format(points_min, points_max)
-                    else:
-                        points_given_by = getCurrentUserGroup()
-                        points = custom_points_float
+                    points_given_by = getCurrentUserGroup()
             if points or save_object or tags:
                 result['savedNew'], saved_answer_id = timdb.answers.saveAnswer(users,
                                                           task_id,
@@ -190,10 +213,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             if current_user_id not in users:
                 users.append(current_user_id)
             points = answer_browser_data.get('points', points)
-            if points == "":
-                points = None
-            else:
-                points = float(points)
+            points = points_to_float(points)
             result['savedNew'], saved_answer_id = timdb.answers.saveAnswer(users,
                                                                            task_id,
                                                                            json.dumps(save_object),
@@ -320,43 +340,22 @@ def get_all_answers(task_id):
 @answers.route("/getState")
 def get_state():
     timdb = getTimDb()
-    doc_id, par_id, user_id, answer_id = unpack_args('doc_id',
-                                                     'par_id',
-                                                     'user_id',
-                                                     'answer_id', types=[int, str, int, int])
+    _, par_id, user_id, answer_id = unpack_args('doc_id',
+                                                'par_id',
+                                                'user_id',
+                                                'answer_id', types=[int, str, int, int])
     plugin_params = {}
     review = get_option(request, 'review', False)
     if review:
         plugin_params['review'] = True
 
-    if not timdb.documents.exists(doc_id):
-        abort(404, 'No such document')
-    user = timdb.users.get_user(user_id)
-    is_teacher = False
-    if user_id != getCurrentUserId() or not logged_in():
-        verify_seeanswers_access(doc_id)
-        is_teacher = True
-    if user is None:
-        abort(400, 'Non-existent user')
-    if not timdb.documents.exists(doc_id):
-        abort(404, 'No such document')
-    if not has_view_access(doc_id):
-        abort(403, 'Permission denied')
-
-    answer = timdb.answers.get_answer(answer_id)
-    if answer is None:
-        abort(400, 'Non-existent answer')
-    access = False
-    if any(a['user_id'] == user_id for a in answer['collaborators']):
-        access = True
-    task_doc_id, _, _ = Plugin.parse_task_id(answer['task_id'])
-    if is_teacher and task_doc_id == doc_id:
-        access = True
-    if not access:
-        abort(403, "You don't have access to this answer.")
+    answer, doc_id = verify_answer_access(answer_id, user_id)
 
     doc = Document(doc_id)
     block = doc.get_paragraph(par_id)
+    user = timdb.users.get_user(user_id)
+    if user is None:
+        abort(400, 'Non-existent user')
 
     texts, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                   [block],
@@ -373,6 +372,27 @@ def get_state():
                                                     wrap_in_div=False) if review else ([None], None, None, None)
 
     return jsonResponse({'html': texts[0]['html'], 'reviewHtml': reviewhtml['html'] if review else None})
+
+
+def verify_answer_access(answer_id, user_id, require_teacher_if_not_own=False):
+    timdb = getTimDb()
+    answer = timdb.answers.get_answer(answer_id)
+    if answer is None:
+        abort(400, 'Non-existent answer')
+    doc_id, _, _ = Plugin.parse_task_id(answer['task_id'])
+    if not timdb.documents.exists(doc_id):
+        abort(404, 'No such document')
+    # TODO: Check the ref_from parameter
+    if user_id != getCurrentUserId() or not logged_in():
+        if require_teacher_if_not_own:
+            verify_teacher_access(doc_id)
+        else:
+            verify_seeanswers_access(doc_id)
+    else:
+        verify_view_access(doc_id)
+        if not any(a['user_id'] == user_id for a in answer['collaborators']):
+            abort(403, "You don't have access to this answer.")
+    return answer, doc_id
 
 
 @answers.route("/getTaskUsers/<task_id>")

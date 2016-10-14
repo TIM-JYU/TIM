@@ -1195,7 +1195,9 @@ body > .footer {
     }
 }
 
-
+.point-form {
+    display: inline;
+}
 
 @media (max-width: $screen-xs-max) {
     .container-fluid {

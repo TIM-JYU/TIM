@@ -1,13 +1,14 @@
 #!/bin/bash
 # Restart uploader plugin
-docker pull villet/uploaderplugin:latest
+dockerimage=villet/uploaderplugin:13_10_16_15
+docker pull $dockerimage
 
 dockername="uploader"
 
 docker stop $dockername > /dev/null 2>&1
 docker rm $dockername > /dev/null 2>&1
 
-dockerOptions="--name $dockername --net=timnet -p 41419:41419 villet/uploaderplugin"
+dockerOptions="--name $dockername --net=timnet -p 41419:41419 $dockerimage"
 
 if [ "$1" = "i" ]
 then
@@ -16,5 +17,3 @@ then
 else
     docker run -d $dockerOptions  './StartAll.sh'
 fi
-
-

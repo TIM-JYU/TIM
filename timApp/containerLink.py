@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 import json
-import os
 from functools import lru_cache
 
 import requests
-from requests.exceptions import Timeout
 
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from plugin import PluginException
-from routes.logger import log_info
+from routes.logger import log_info, log_warning
 from tim_app import app
 
 TIM_URL = ""
@@ -27,6 +25,7 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
     # so tim can get out of the container and to the plugins,
     # and set PLUGIN_CONNECTIONS = "nginx" in the flask config file
     log_info("Using nginx for plugins")
+    log_info('Uploader plugin URL is: {}'.format(app.config['UPLOADER_NGINX_URL']))
     PLUGINS = {
         "csPlugin":      {"host": TIM_HOST + ":56000/cs/"},
         "taunoPlugin":   {"host": TIM_HOST + ":56000/cs/tauno/"},
@@ -37,7 +36,7 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
         "showVideo":     {"host": TIM_HOST + ":55000/svn/video/", "browser": False},
         "mcq":           {"host": TIM_HOST + ":57000/"},
         "mmcq":          {"host": TIM_HOST + ":58000/"},
-        "uploader":      {"host": TIM_HOST + ":41419/"},
+        "uploader":      {"host": app.config['UPLOADER_NGINX_URL']},
         #"mcq":           {"host": "http://ciao.it.jyu.fi:41941"},
         #"mmcq":          {"host": "http://ciao.it.jyu.fi:41940"},
         "shortNote":     {"host": TIM_HOST + ":59000/"},
@@ -48,6 +47,7 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
     }
 else:
     log_info("Using container network for plugins")
+    log_info('Uploader plugin URL is: {}'.format(app.config['UPLOADER_CONTAINER_URL']))
     PLUGINS = {
         "csPlugin":      {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/"},
         "taunoPlugin":   {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/tauno/"},
@@ -58,7 +58,7 @@ else:
         "showVideo":     {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
         "mcq":           {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
         "mmcq":          {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
-        "uploader":      {"host": "http://uploader" + ":41419/"},
+        "uploader":      {"host": app.config['UPLOADER_CONTAINER_URL']},
         "shortNote":     {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
         "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
         "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
@@ -70,12 +70,15 @@ else:
 def call_plugin_generic(plugin, method, route, data=None, headers=None, params=None):
     plug = get_plugin(plugin)
     try:
-        request = requests.request(method, plug['host'] + route + "/", data=data, timeout=15, headers=headers, params=params)
+        request = requests.request(method, plug['host'] + route + "/", data=data, timeout=(0.5, 15), headers=headers, params=params)
         request.encoding = 'utf-8'
         return request.text
-    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-        log_info(str(e))
-        raise PluginException("Could not connect to plugin.")
+    except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError) as e:
+        log_warning('Connection failed to plugin {}: {}'.format(plugin, e))
+        raise PluginException("Could not connect to {}.".format(plugin))
+    except requests.exceptions.ReadTimeout as e:
+        log_warning('Read timeout occurred for plugin {}: {}'.format(plugin, e))
+        raise PluginException("Read timeout occurred when calling {}.".format(plugin))
 
 
 def call_plugin_html(plugin, info, state, task_id=None, params=None):

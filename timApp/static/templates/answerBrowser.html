@@ -1,24 +1,26 @@
 <div class="answerBrowser" ng-cloak ng-keypress="checkKeypress($event)" >
     <div class="error" ng-show="error" ng-bind="error"></div>
     <div class="row" ng-show="$parent.teacherMode && users.length > 0">
-        <div sclass="col-xs-6">
-            <div sclass="row">
+        <div class="col-xs-12">
+            <div class="row">
                 <div class="col-xs-5">
                     <div class="input-group input-group-xs">
                     <span class="input-group-btn">
-                       <button class="btn btn-primary" ng-click="changeStudent(-1)">↑</button>
+                       <button class="btn btn-primary" ng-click="changeStudent(-1)">&uarr;</button>
                      </span>
-                    <select class="form-control"
-                            ng-model="user"
-                            ng-options="(user.real_name + ' (' + user.name + ')') for user in users track by user.id"
-                            ng-change="getAvailableAnswers()"></select>
-                    <span class="input-group-btn">
-                     <button class="btn btn-primary" ng-click="changeStudent(+1)">↓</button>
+                        <select class="form-control"
+                                ng-model="user"
+                                ng-options="(user.real_name + ' (' + user.name + ')') for user in users track by user.id"
+                                ng-change="getAvailableAnswers()"></select>
+                        <span class="input-group-btn">
+                     <button class="btn btn-primary" ng-click="changeStudent(+1)">&darr;</button>
                     </span>
+                    </div>
                 </div>
-               </div>
-                <div class="col-xs-4">({{ users.length }})
-                <a  ng-href="mailto:{{user.email}}">email</a></div>
+                <div class="col-xs-7">
+                    ({{ users.length }} users)
+                    <a ng-href="mailto:{{user.email}}">email</a>
+                </div>
             </div>
         </div>
     </div>
@@ -50,18 +52,23 @@
             </div>
             <div class="row">
                 <div class="col-xs-12">
-                    <span class="form-inline"><label ng-show="showTeacher() || giveCustomPoints">
-                        Points:<input class="form-control input-xs" ng-model="points" type="text" size="1">
-                    </label></span>
-                    <span ng-show="!$parent.teacherMode && points !== null && !giveCustomPoints">Points: {{ points }}</span>
+                    <form ng-submit="savePoints()" class="point-form form-inline">
+                        <label ng-show="showTeacher() || (giveCustomPoints && allowCustomPoints())">
+                        Points:<input class="form-control input-xs" ng-model="points" name="points" type="text" size="1">
+                        </label>
+                        <button title="Save points"
+                                class="timButton btn-xs"
+                                ng-show="points != selectedAnswer.points">
+                            <i class="glyphicon glyphicon-ok"></i>
+                        </button>
+                    </form>
+                    <span ng-show="points !== null && !(showTeacher() || (giveCustomPoints && allowCustomPoints()))">Points: {{ points }}</span>
                     <span ng-show="taskInfo.maxPoints && points !== null">/ {{ taskInfo.maxPoints }}</span>
                     <span ng-show="!selectedAnswer.valid && points !== null">(invalid)</span>
                     <span ng-show="!$parent.teacherMode && allowCustomPoints()">
                         <label class="checkbox-inline">
                             <input type="checkbox"
                                    ng-model="giveCustomPoints">Set custom points</label>
-                        <span ng-show="giveCustomPoints"
-                              class="smallNote">(press Run or Save button to set points)</span>
                     </span>
                     <label class="checkbox-inline" ng-show="$parent.teacherMode && allowCustomPoints()">
                         <input type="checkbox" ng-model="giveCustomPoints">cp
