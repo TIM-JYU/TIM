@@ -41,7 +41,7 @@ def is_answer_valid(plugin, old_answers, tim_info):
 
 @answers.route("/savePoints/<int:user_id>/<int:answer_id>", methods=['PUT'])
 def save_points(answer_id, user_id):
-    answer, _ = verify_answer_access(answer_id, user_id)
+    answer, _ = verify_answer_access(answer_id, user_id, require_teacher_if_not_own=True)
     doc_id, task_id_name, _ = Plugin.parse_task_id(answer['task_id'])
     points, = verify_json_params('points')
     try:
@@ -374,7 +374,7 @@ def get_state():
     return jsonResponse({'html': texts[0]['html'], 'reviewHtml': reviewhtml['html'] if review else None})
 
 
-def verify_answer_access(answer_id, user_id):
+def verify_answer_access(answer_id, user_id, require_teacher_if_not_own=False):
     timdb = getTimDb()
     answer = timdb.answers.get_answer(answer_id)
     if answer is None:
@@ -384,7 +384,10 @@ def verify_answer_access(answer_id, user_id):
         abort(404, 'No such document')
     # TODO: Check the ref_from parameter
     if user_id != getCurrentUserId() or not logged_in():
-        verify_seeanswers_access(doc_id)
+        if require_teacher_if_not_own:
+            verify_teacher_access(doc_id)
+        else:
+            verify_seeanswers_access(doc_id)
     else:
         verify_view_access(doc_id)
         if not any(a['user_id'] == user_id for a in answer['collaborators']):

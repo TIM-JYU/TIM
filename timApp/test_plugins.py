@@ -398,6 +398,11 @@ testuser2: {1}; {0}; 1; 2\.0
         self.check_save_points(TEST_USER_2_ID, answer_id2, None, 400, point_format_error)
         self.check_save_points(TEST_USER_2_ID, answer_id2, '', 400, point_format_error)
 
+        timdb.users.grant_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id, 'see answers')
+        self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, self.permission_error)
+        timdb.users.grant_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id, 'teacher')
+        self.check_save_points(TEST_USER_1_ID, answer_id, 1, 200, self.ok_resp)
+
     def check_save_points(self, user_id, answer_id, points, expect_status, expect_content):
         self.json_put('/savePoints/{}/{}'.format(user_id, answer_id),
                       json_data={'points': points},
