@@ -311,16 +311,16 @@ def get_all_answers_as_list(task_ids: List[str]):
     for t in task_ids:
         doc_id, _, _ = Plugin.parse_task_id(t)
         doc_ids.add(doc_id)
-    usergroup = request.args.get('group')
-    age = request.args.get('age')
-    valid = request.args.get('valid', '1')
-    printname = request.args.get('name', False)
-    printname = printname == "true"
+    usergroup = get_option(request, 'group', None)
+    age = get_option(request, 'age', 'max')
+    valid = get_option(request, 'valid', '1')
+    name_opt = get_option(request, 'name', 'both')
+    printname = name_opt == 'both'
 
     if not usergroup:
         usergroup = None
 
-    hide_names = False
+    hide_names = name_opt == 'anonymous'
     for doc_id in doc_ids:
         if not timdb.documents.exists(doc_id):
             abort(404, 'No such document: {}'.format(doc_id))

@@ -78,8 +78,8 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
     }]);
 
 
-timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$window', '$filter', 'Users',
-    function (Upload, $http, $sce, $compile, $window, $filter, Users) {
+timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$window', '$filter', '$uibModal', 'Users',
+    function (Upload, $http, $sce, $compile, $window, $filter, $uibModal, Users) {
         "use strict";
         timLogTime("answerbrowser directive function","answ");
         return {
@@ -417,32 +417,23 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     }
                 };
 
-
-                $scope.getAllAnswers = function() {
-                    return;
-                    var sPageURL = decodeURIComponent(window.location.search.substring(1));
-                    var age = "";
-                    var name= "";
-                    var valid = "&valid=1";
-                    if ( sPageURL.indexOf("age=min") >= 0 ) age = "&age=min";
-                    if ( sPageURL.indexOf("age=all") >= 0 ) age = "&age=all";
-                    if ( sPageURL.indexOf("name=true") >= 0 ) name = "&name=true";
-                    if ( sPageURL.indexOf("name=false") >= 0 ) name = "";
-                    if ( sPageURL.indexOf("valid=all") >= 0 ) valid = "&valid=all";
-                    if ( sPageURL.indexOf("valid=0") >= 0 ) valid = "&valid=0";
-                    if ( sPageURL.indexOf("valid=1") >= 0 ) valid = "&valid=1";
-                    $scope.loading++;
-                    $http.get('/allAnswers/' + $scope.taskId + '?rnd='+Math.random() + age + valid + name, {params: {group: $scope.$parent.group}})
-                        .success(function (data, status, headers, config) {
-                            $scope.allAnswers = data.join("\n\n----------------------------------------------------------------------------------\n");
-                            var nw = $window;
-                            //var nd = nw.document;
-                            //nd.write(data[0]);
-                        }).error(function (data, status, headers, config) {
-                            $scope.error = 'Error getting answers: ' + data.error;
-                        }).finally(function () {
-                            $scope.loading--;
-                        });
+                $scope.getAllAnswers = function () {
+                    $uibModal.open({
+                        animation: false,
+                        ariaLabelledBy: 'modal-title',
+                        ariaDescribedBy: 'modal-body',
+                        templateUrl: '/static/templates/allAnswersOptions.html',
+                        controller: 'AllAnswersCtrl',
+                        controllerAs: '$ctrl',
+                        size: 'md',
+                        resolve: {
+                            options: function () {
+                                return {
+                                    url: '/allAnswersPlain/' + $scope.taskId
+                                };
+                            }
+                        }
+                    });
                 };
 
                 $scope.findSelectedAnswerIndex = function () {
@@ -456,28 +447,6 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     }
                     return -1;
                 };
-
-
-                $scope.getLink = function() {
-                     //return 'data:text/plain;charset=UTF-8,' + encodeURIComponent($scope.allAnswers);
-
-                                        var sPageURL = decodeURIComponent(window.location.search.substring(1));
-                    var age = "";
-                    var valid = "&valid=1";
-                    var name= "";
-                    if ( sPageURL.indexOf("age=min") >= 0 ) age = "&age=min";
-                    if ( sPageURL.indexOf("age=all") >= 0 ) age = "&age=all";
-                    if ( sPageURL.indexOf("name=true") >= 0 ) name = "&name=true";
-                    if ( sPageURL.indexOf("name=false") >= 0 ) name = "";
-                    if ( sPageURL.indexOf("valid=all") >= 0 ) valid = "&valid=all";
-                    if ( sPageURL.indexOf("valid=0") >= 0 ) valid = "&valid=0";
-                    if ( sPageURL.indexOf("valid=1") >= 0 ) valid = "&valid=1";
-                    var url = '/allAnswersPlain/' + $scope.taskId + '?rnd='+Math.random() + age + valid + name;
-                    return url;
-
-                };
-
-                $scope.allLink = $scope.getLink();
 
                 if ( $scope.$parent.selectedUser ) {
                     $scope.user = $scope.$parent.selectedUser;

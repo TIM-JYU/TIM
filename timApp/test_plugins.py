@@ -324,30 +324,30 @@ class PluginTest(TimRouteTest):
         text = self.get('/allDocumentAnswersPlain/{}'.format(doc.doc_id), expect_status=200)
         date_re = r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\+\d{2}:\d{2}'
         self.assertRegex(text, r"""
-testuser1: {1}; {0}; 1; 2\.0
+{5}; {3}; {1}; {0}; 1; 2\.0
 \[True, False, False\]
 
 ----------------------------------------------------------------------------------
-testuser2: {1}; {0}; 1; 2\.0
+{6}; {4}; {1}; {0}; 1; 2\.0
 \[True, True, True\]
 
 ----------------------------------------------------------------------------------
-testuser1: {2}; {0}; 1; 1\.0
+{5}; {3}; {2}; {0}; 1; 1\.0
 \[True, False\]
 
 ----------------------------------------------------------------------------------
-testuser2: {2}; {0}; 1; 2\.0
+{6}; {4}; {2}; {0}; 1; 2\.0
 \[False, False\]
-""".format(date_re, re.escape(task_id), re.escape(task_id2)).strip())
+""".format(date_re, re.escape(task_id), re.escape(task_id2), 'testuser1', 'testuser2', 'Test user 1', 'Test user 2').strip())
         text = self.get('/allAnswersPlain/{}'.format(task_id), expect_status=200)
         self.assertRegex(text, r"""
-testuser1: {1}; {0}; 1; 2\.0
+{4}; {2}; {1}; {0}; 1; 2\.0
 \[True, False, False\]
 
 ----------------------------------------------------------------------------------
-testuser2: {1}; {0}; 1; 2\.0
+{5}; {3}; {1}; {0}; 1; 2\.0
 \[True, True, True\]
-        """.format(date_re, re.escape(task_id)).strip())
+        """.format(date_re, re.escape(task_id), 'testuser1', 'testuser2', 'Test user 1', 'Test user 2').strip())
 
     def test_save_points(self):
         cannot_give_custom = {'error': 'You cannot give yourself custom points in this task.'}

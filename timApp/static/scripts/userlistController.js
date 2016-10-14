@@ -2,8 +2,8 @@ var angular;
 
 var timApp = angular.module('timApp');
 
-timApp.controller('UserListController', ['$scope', '$element', '$filter', '$timeout', '$window', 'uiGridConstants',
-    function ($scope, $element, $filter, $timeout, $window, uiGridConstants) {
+timApp.controller('UserListController', ['$scope', '$element', '$filter', '$timeout', '$window', '$uibModal', 'uiGridConstants',
+    function ($scope, $element, $filter, $timeout, $window, $uibModal, uiGridConstants) {
         "use strict";
         $scope.$watch(
             function () {
@@ -112,9 +112,24 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
                     order: 30
                 },
                 {
-                    title: 'All answers as plain text',
+                    title: 'Answers as plain text',
                     action: function ($event) {
-                        $window.open('/allDocumentAnswersPlain/' + $scope.docId, '_blank');
+                        $uibModal.open({
+                            animation: false,
+                            ariaLabelledBy: 'modal-title',
+                            ariaDescribedBy: 'modal-body',
+                            templateUrl: '/static/templates/allAnswersOptions.html',
+                            controller: 'AllAnswersCtrl',
+                            controllerAs: '$ctrl',
+                            size: 'md',
+                            resolve: {
+                                options: function () {
+                                    return {
+                                        url: '/allDocumentAnswersPlain/' + $scope.docId
+                                    };
+                                }
+                            }
+                        });
                     },
                     order: 40
                 }

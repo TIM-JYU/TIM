@@ -167,14 +167,14 @@ ORDER BY a.task_id, u.name
             n = str(int(row[4]))
             name = row[0]
             if hide_names: name = "user" + str(cnt)
-            header = name + ": " + row[1] + "; " + str(row[3]) + "; " + n + "; " + points
+            header = name + "; " + row[1] + "; " + str(row[3]) + "; " + n + "; " + points
             # print(separator + header)
             line = json.loads(row[2])
             answ = str(line)
             if isinstance(line, dict) and "usercode" in line:
                 answ = line.get("usercode", "-")
 
-            if printname and not hide_names: header = str(row[6]) + ";" + header
+            if printname and not hide_names: header = str(row[6]) + "; " + header
             result.append(header + "\n" + answ)
         return result
 
