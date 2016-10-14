@@ -10,3 +10,4 @@ USE_FUNNEL=false                    # Whether to use the funnel service for send
 CREATE_SYMLINKS=true                # Whether to create symlinks
 IS_PRODUCTION=false                 # Whether this is production instance
 OPEN_PG_PORT=false                  # Whether to open PostgreSQL port to outside timnet
+CONFIG_FILE=''                      # Location of config file to use; OK to be empty when running locally; use 'productionconfig.py' in production

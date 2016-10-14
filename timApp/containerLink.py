@@ -25,6 +25,7 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
     # so tim can get out of the container and to the plugins,
     # and set PLUGIN_CONNECTIONS = "nginx" in the flask config file
     log_info("Using nginx for plugins")
+    log_info('Uploader plugin URL is: {}'.format(app.config['UPLOADER_NGINX_URL']))
     PLUGINS = {
         "csPlugin":      {"host": TIM_HOST + ":56000/cs/"},
         "taunoPlugin":   {"host": TIM_HOST + ":56000/cs/tauno/"},
@@ -35,7 +36,7 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
         "showVideo":     {"host": TIM_HOST + ":55000/svn/video/", "browser": False},
         "mcq":           {"host": TIM_HOST + ":57000/"},
         "mmcq":          {"host": TIM_HOST + ":58000/"},
-        "uploader":      {"host": TIM_HOST + ":41419/"},
+        "uploader":      {"host": app.config['UPLOADER_NGINX_URL']},
         #"mcq":           {"host": "http://ciao.it.jyu.fi:41941"},
         #"mmcq":          {"host": "http://ciao.it.jyu.fi:41940"},
         "shortNote":     {"host": TIM_HOST + ":59000/"},
@@ -46,6 +47,7 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
     }
 else:
     log_info("Using container network for plugins")
+    log_info('Uploader plugin URL is: {}'.format(app.config['UPLOADER_CONTAINER_URL']))
     PLUGINS = {
         "csPlugin":      {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/"},
         "taunoPlugin":   {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/tauno/"},
@@ -56,7 +58,7 @@ else:
         "showVideo":     {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
         "mcq":           {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
         "mmcq":          {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
-        "uploader":      {"host": "http://uploader" + ":41419/"},
+        "uploader":      {"host": app.config['UPLOADER_CONTAINER_URL']},
         "shortNote":     {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
         "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
         "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
