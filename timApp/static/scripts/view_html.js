@@ -1389,8 +1389,6 @@ timApp.controller("ViewCtrl", [
             if ($par.parents('.previewcontent').length > 0) {
                 return;
             }
-            sc.markParRead($par, sc.readingTypes.clickPar);
-            // sc.updateNoteBadge($par);
 
             // Don't show paragraph menu on these specific tags or classes
             var ignoredTags = ['BUTTON', 'INPUT', 'TEXTAREA', 'A', 'QUESTIONADDEDNEW'];
@@ -2336,6 +2334,7 @@ timApp.controller("ViewCtrl", [
             if ($par.parents('.previewcontent').length > 0) {
                 return;
             }
+            sc.markParRead($par, sc.readingTypes.clickPar);
             var newElement = $par[0];
             if (!newElement) return null;
             addElementToParagraphMargin(newElement, sc.createNoteBadge($par));
