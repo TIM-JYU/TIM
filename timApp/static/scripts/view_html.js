@@ -1172,10 +1172,10 @@ timApp.controller("ViewCtrl", [
             var rect = el.getBoundingClientRect();
 
             return (
-                rect.top > 0 &&
-                rect.left > 0 &&
-                rect.bottom < (window.innerHeight || document.documentElement.clientHeight) &&
-                rect.right < (window.innerWidth || document.documentElement.clientWidth)
+                rect.top >= 0 &&
+                rect.left >= 0 &&
+                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                rect.right <= (window.innerWidth || document.documentElement.clientWidth)
             );
         };
 
@@ -1200,7 +1200,7 @@ timApp.controller("ViewCtrl", [
             sc.readingParId = parId;
             var numWords = parToRead.find('.parContent').text().trim().split(/[\s\n]+/).length;
             sc.readPromise = $timeout(function () {
-                sc.markParRead(parToRead, sc.readingTypes.onScreen).then(sc.queueParagraphForReading);
+                sc.markParRead(parToRead, sc.readingTypes.onScreen).finally(sc.queueParagraphForReading);
             }, 300 * numWords);
         };
 
