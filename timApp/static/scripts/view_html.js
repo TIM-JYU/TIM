@@ -1119,7 +1119,7 @@ timApp.controller("ViewCtrl", [
                 return q.resolve(null);
             }
             var par_id = sc.getParId($par);
-            if (par_id === 'NEW_PAR') {
+            if (par_id === 'NEW_PAR' || par_id === null) {
                 return q.resolve(null);
             }
             $readline.addClass(readClassName);
