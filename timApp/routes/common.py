@@ -357,22 +357,22 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
         pars_dict[key].append(htmlpar)
 
     for p in html_pars:
-        p['status'] = ''
+        p['status'] = set()
         p['notes'] = []
 
     group = timdb.users.get_personal_usergroup(user) if user is not None else timdb.users.get_anon_group_id()
     if user is not None:
         readings = timdb.readings.get_common_readings(get_session_usergroup_ids(), doc)
         for r in readings:
-            key = (r['par_id'], r['doc_id'])
+            key = (r.par_id, r.doc_id)
             pars = pars_dict.get(key)
             if pars:
                 for p in pars:
-                    if r['par_hash'] == p['t'] or r['par_hash'] == p.get('ref_t'):
-                        p['status'] = 'read'
-                    elif p.get('status') != 'read':
+                    if r.par_hash == p['t'] or r.par_hash == p.get('ref_t'):
+                        p['status'].add(r.type.class_str())
+                    elif r.type.class_str() not in p.get('status'):
                         # elif is here so not to overwrite an existing 'read' marking
-                        p['status'] = 'modified'
+                        p['status'].add(r.type.class_str() + '-modified')
 
     notes = timdb.notes.get_notes(group, doc)
     is_owner = timdb.users.user_is_owner(getCurrentUserId(), doc.doc_id)
