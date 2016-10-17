@@ -352,7 +352,10 @@ class DocParagraph:
             if not clear_cache and par.html is not None:
                 continue
             cached = par.__data.get('h')
-            auto_macros = par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache)
+            try:
+                auto_macros = par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache)
+            except RecursionError:
+                raise TimDbException('Infinite recursion detected in get_auto_macro_values; the document may be broken.')
             auto_macro_hash = hashfunc(m + str(auto_macros))
 
             par_headings = heading_cache.get(par.get_id())

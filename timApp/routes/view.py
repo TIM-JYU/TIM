@@ -1,10 +1,13 @@
 """Routes for document view."""
 import time
+import traceback
 from typing import Tuple, Union, Optional
 
 from flask import Blueprint, render_template
 
 from documentmodel.docsettings import DocSettings
+from routes.logger import log_error
+from timdb.timdbexception import TimDbException
 from utils import date_to_relative
 import routes.lecture
 from documentmodel.document import get_index_from_html_list, dereference_pars
@@ -256,7 +259,11 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     doc_settings = doc.get_settings()
 
     # Preload htmls here to make dereferencing faster
-    DocParagraph.preload_htmls(xs, doc_settings, clear_cache)
+    try:
+        DocParagraph.preload_htmls(xs, doc_settings, clear_cache)
+    except TimDbException as e:
+        log_error('Document {} exception:\n{}'.format(doc_id, traceback.format_exc(chain=False)))
+        abort(500, str(e))
     if doc_settings:
         src_doc_id = doc_settings.get_source_document()
         if src_doc_id is not None:
