@@ -31,6 +31,7 @@ def setup_logging(app):
     tim_logger.handlers = []
     tim_logger.propagate = False
     tim_logger.addHandler(file_handler)
+    app.logger.addHandler(file_handler)
     if app.config['LOG_LEVEL_STDOUT'] is not None:
         stdout_handler = logging.StreamHandler(stream=sys.stdout)
         stdout_handler.setLevel(app.config['LOG_LEVEL_STDOUT'])
