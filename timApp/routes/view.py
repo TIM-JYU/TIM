@@ -274,20 +274,23 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     xs = dereference_pars(xs, edit_window=False, source_doc=doc.get_original_document())
     total_points = None
     tasks_done = None
+    task_groups = None
     user_list = []
     current_user = get_current_user() if logged_in() else None
     task_ids, plugin_count = pluginControl.find_task_ids(xs)
-    total_tasks = len(task_ids)
+    points_sum_rule = doc_settings.point_sum_rule(default={})
+    total_tasks = len(points_sum_rule.get('groups', {}) or task_ids)
     if teacher_or_see_answers:
         user_list = None
         if usergroup is not None:
             user_list = [user['id'] for user in timdb.users.get_users_for_group(usergroup)]
-        user_list = timdb.answers.getUsersForTasks(task_ids, user_list)
+        user_list = timdb.answers.get_points_by_rule(points_sum_rule, task_ids, user_list, flatten=True)
     elif doc_settings.show_task_summary() and logged_in():
-        info = timdb.answers.getUsersForTasks(task_ids, [current_user['id']])
+        info = timdb.answers.get_points_by_rule(points_sum_rule, task_ids, [current_user['id']], flatten=True)
         if info:
             total_points = info[0]['total_points']
             tasks_done = info[0]['task_count']
+            task_groups = info[0].get('groups')
 
     show_questions = False
     no_question_auto_numbering = None
@@ -379,7 +382,8 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                            message=message,
                            task_info={'total_points': total_points,
                                       'tasks_done': tasks_done,
-                                      'total_tasks': total_tasks})
+                                      'total_tasks': total_tasks,
+                                      'groups': task_groups})
 
 
 def redirect_to_login():

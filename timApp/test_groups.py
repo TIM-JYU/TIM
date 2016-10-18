@@ -7,8 +7,7 @@ class GroupTest(TimRouteTest):
 
     def test_groups(self):
         db = self.get_db()
-        db.users.create_user_with_group('testuser3', 'Test user 3', 'test3@example.com', password='test3pass',
-                                        is_admin=True)
+        db.users.addUserToAdmins(db.users.get_user_by_name('testuser3').id)
         self.login_test3()
 
         names = ['t' + str(i) for i in range(1, 5)]

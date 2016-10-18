@@ -71,8 +71,11 @@ def initialize_database(create_docs=True):
         anon_group = timdb.users.get_anon_group_id()
         timdb.users.create_user_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
         timdb.users.create_user_with_group('tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi', is_admin=True)
-        timdb.users.create_user_with_group('testuser1', 'Test user 1', 'test1@example.com', password='test1pass')
-        timdb.users.create_user_with_group('testuser2', 'Test user 2', 'test2@example.com', password='test2pass')
+        for i in range(1, 4):
+            timdb.users.create_user_with_group('testuser{}'.format(i),
+                                               'Test user {}'.format(i),
+                                               'test{}@example.com'.format(i),
+                                               password='test{}pass'.format(i))
         recovered_docs = timdb.documents.recover_db(timdb.users.get_admin_group_id())
 
         if recovered_docs > 0:

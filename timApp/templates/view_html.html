@@ -154,7 +154,12 @@
             <div class="taskSummary">
                 <span> 
                 <strong>Task Summary</strong> 
-                Total points: {{ task_info.total_points }},
+                Total points: {{ task_info.total_points }}
+                    {%- if task_info.groups %}
+                        ({%- for k, v in task_info.groups.items() -%}
+                            {{ k }}: {{ v }}{% if not loop.last %}, {% endif %}
+                        {%- endfor -%})
+                    {%- endif -%},
                 total tasks: {{ task_info.tasks_done }} / {{ task_info.total_tasks }}
                 </span>
                 <span class="smallNote" ng-click="reload()">Refresh (F5) to recount</span>

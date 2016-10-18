@@ -116,16 +116,16 @@ class Plugin:
     def to_paragraph(self) -> DocParagraph:
         text = '```\n' + yaml.dump(self.values) + '\n```'
         if self.task_id:
-            return DocParagraph.create(self.par.doc, md=text, attrs={'taskId': self.task_id, 'plugin': self.type})
+            return DocParagraph.create(self.par.doc, par_id=self.par.get_id(), md=text, attrs={'taskId': self.task_id, 'plugin': self.type})
         else:
-            return DocParagraph.create(self.par.doc, md=text, attrs={'plugin': self.type})
+            return DocParagraph.create(self.par.doc, par_id=self.par.get_id(), md=text, attrs={'plugin': self.type})
 
     def set_value(self, key: str, value):
         self.values[key] = value
         return self
 
     def save(self):
-        self.par.doc.modify_paragraph_obj(self.par.get_id(), self.to_paragraph())
+        self.to_paragraph().save()
 
 
 class PluginException(Exception):

@@ -9,7 +9,7 @@ from documentmodel.documentwriter import DocumentWriter
 from htmlSanitize import sanitize_html
 from markdownconverter import par_list_to_html_list, expand_macros
 from timdb.timdbexception import TimDbException
-from typing import Generic, Optional, Dict, List, Tuple
+from typing import Generic, Optional, Dict, List, Tuple, Any
 from utils import count_chars, get_error_html
 from .randutils import *
 
@@ -474,7 +474,7 @@ class DocParagraph:
 
         return self.__data['attrs'].get(attr_name, default_value)
 
-    def set_attr(self, attr_name: str, attr_val: Generic, dereference: bool = False):
+    def set_attr(self, attr_name: str, attr_val: Any, dereference: bool = False):
         if dereference and self.original:
             self.original.set_attr(attr_name, attr_val, True)
         elif attr_val is None:
@@ -581,6 +581,24 @@ class DocParagraph:
         if os.path.islink(linkpath) or os.path.isfile(linkpath):
             os.unlink(linkpath)
         os.symlink(self.get_hash(), linkpath)
+
+    def clone(self) -> 'DocParagraph':
+        """Clones the paragraph. A new ID is generated for the cloned paragraph."""
+        return DocParagraph.create(self.doc,
+                                   md=self.get_markdown(),
+                                   attrs=self.get_attrs(),
+                                   props=self.get_properties(),
+                                   files_root=self.files_root)
+
+    def save(self, add=False):
+        """Saves the paragraph to disk.
+        :param add: Whether to add (True) or modify an existing (False).
+        """
+        # TODO: Possibly get rid of 'add' parameter altogether.
+        if add:
+            self.doc.add_paragraph_obj(self)
+        else:
+            self.doc.modify_paragraph_obj(self.get_id(), self)
 
     def add_link(self, doc_id: int):
         #self.__read()
