@@ -130,7 +130,7 @@ def rename_task_ids():
 
     # Get paragraphs with taskIds
     for paragraph in old_pars:
-        if not paragraph.get_attr('taskId'):
+        if not paragraph.is_task():
             old_pars.remove(paragraph)
     i = 0
     while len(duplicates) > i:
@@ -496,17 +496,17 @@ def get_next_available_task_id(attrs, old_pars, duplicates, par_id):
 
 
 # Automatically rename plugins with name pluginnamehere
-def check_and_rename_pluginnamehere(blocks, doc):
+def check_and_rename_pluginnamehere(blocks: List[DocParagraph], doc: Document):
     # Get the paragraphs from the document with taskids
     old_pars = doc.get_paragraphs()
     for paragraph in old_pars:
-        if not paragraph.get_attr('taskId'):
+        if not paragraph.is_task():
             old_pars.remove(paragraph)
     i = 1
     j = 0
     # For all blocks check if taskId is pluginnamehere, if it is find next available name.
     for p in blocks:
-        if p.get_attr('taskId'):
+        if p.is_task():
             task_id = p.get_attr('taskId')
             if task_id == 'PLUGINNAMEHERE':
                 task_id = 'Plugin' + str(i)
