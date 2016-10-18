@@ -39,9 +39,11 @@ def find_task_ids(blocks: List[DocParagraph]) -> Tuple[List[str], int]:
     plugin_count = 0
     for block in blocks:
         task_id = block.get_attr('taskId')
-        if block.get_attr('plugin'):
+        plugin = block.get_attr('plugin')
+        if plugin:
             plugin_count += 1
-        if task_id:
+        # Need "and plugin" to ignore e.g. manual heading ids
+        if task_id and plugin:
             task_ids.append("{}.{}".format(block.doc.doc_id, task_id))
     return task_ids, plugin_count
 
