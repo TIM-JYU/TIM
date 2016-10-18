@@ -279,7 +279,11 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     current_user = get_current_user() if logged_in() else None
     task_ids, plugin_count = pluginControl.find_task_ids(xs)
     points_sum_rule = doc_settings.point_sum_rule(default={})
-    total_tasks = len(points_sum_rule.get('groups', {}) or task_ids)
+    try:
+        total_tasks = len(points_sum_rule['groups'])
+    except:
+        total_tasks = len(task_ids)
+        points_sum_rule = None
     if teacher_or_see_answers:
         user_list = None
         if usergroup is not None:

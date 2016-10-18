@@ -504,6 +504,10 @@ class PluginTest(TimRouteTest):
         self.get('/view/{}'.format(d.doc_id))
         d.add_setting('point_sum_rule', {'groupz': 'test'})
         self.get('/view/{}'.format(d.doc_id))
+        d.add_setting('point_sum_rule', [])
+        self.get('/view/{}'.format(d.doc_id))
+        d.add_setting('point_sum_rule', None)
+        self.get('/view/{}'.format(d.doc_id))
 
     def check_save_points(self, user_id, answer_id, points, expect_status, expect_content):
         self.json_put('/savePoints/{}/{}'.format(user_id, answer_id),
