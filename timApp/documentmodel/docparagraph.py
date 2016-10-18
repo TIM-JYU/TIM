@@ -489,6 +489,9 @@ class DocParagraph:
         elif attr_name == 'rp' or attr_name == 'ra':
             self.__is_ref = self.is_par_reference() or self.is_area_reference()
 
+    def is_task(self):
+        return self.get_attr('taskId') is not None and self.get_attr('plugin') is not None
+
     @classmethod
     def __combine_md(cls, base_md: Optional[str], over_md: str) -> str:
         if base_md is None:

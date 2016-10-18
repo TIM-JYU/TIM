@@ -528,7 +528,7 @@ def check_duplicates(pars, doc, timdb):
     duplicates = []
     all_pars = doc.get_paragraphs()
     for paragraph in all_pars:
-        if not paragraph.get_attr('taskId'):
+        if not paragraph.is_task():
             all_pars.remove(paragraph)
     for par in pars:
         if par.is_plugin():
