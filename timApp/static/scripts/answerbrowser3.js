@@ -429,7 +429,8 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                         resolve: {
                             options: function () {
                                 return {
-                                    url: '/allAnswersPlain/' + $scope.taskId
+                                    url: '/allAnswersPlain/' + $scope.taskId,
+                                    allTasks: false
                                 };
                             }
                         }

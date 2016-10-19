@@ -315,6 +315,7 @@ def get_all_answers_as_list(task_ids: List[str]):
     age = get_option(request, 'age', 'max')
     valid = get_option(request, 'valid', '1')
     name_opt = get_option(request, 'name', 'both')
+    sort_opt = get_option(request, 'sort', 'task')
     printname = name_opt == 'both'
 
     if not usergroup:
@@ -327,7 +328,7 @@ def get_all_answers_as_list(task_ids: List[str]):
         # Require full teacher rights for getting all answers
         verify_teacher_access(doc_id)
         hide_names = hide_names or hide_names_in_teacher(doc_id)
-    all_answers = timdb.answers.get_all_answers(task_ids, usergroup, hide_names, age, valid, printname)
+    all_answers = timdb.answers.get_all_answers(task_ids, usergroup, hide_names, age, valid, printname, sort_opt)
     return all_answers
 
 

@@ -113,9 +113,17 @@ class Answers(TimDbBase):
         ) t JOIN Answer a ON a.id = t.aid""".format(template), task_ids + [user_id])
         return self.resultAsDictionary(c)
 
-    def get_all_answers(self, task_ids: List[str], usergroup: Optional[int], hide_names: bool, age: str, valid: str, printname:bool) -> List[str]:
+    def get_all_answers(self,
+                        task_ids: List[str],
+                        usergroup: Optional[int],
+                        hide_names: bool,
+                        age: str,
+                        valid: str,
+                        printname:bool,
+                        sort: str) -> List[str]:
         """Gets the all answers to tasks
 
+        :param sort: Sorting order for answers.
         :param task_ids: The ids of the tasks.
         :param usergroup: Group of users to search
         :param hide_names: Hide names
@@ -141,6 +149,9 @@ class Answers(TimDbBase):
         if valid == "0":
             validstr = "AND NOT a.valid"
 
+        order_by = 'a.task_id, u.name'
+        if sort == 'username':
+            order_by = 'u.name, a.task_id'
 
         c = self.db.cursor()
         sql = """
@@ -153,9 +164,9 @@ WHERE a.task_id IN ({}) AND ua.answer_id = a.id AND u.id = ua.user_id AND a.answ
 {}
 ) t
 JOIN answer a ON a.id = t.id JOIN useranswer ua ON ua.answer_id = a.id JOIN useraccount u ON u.id = ua.user_id
-ORDER BY a.task_id, u.name
+ORDER BY {}, a.answered_on
         """
-        sql = sql.format(minmax, counts, get_sql_template(task_ids), validstr, groups)
+        sql = sql.format(minmax, counts, get_sql_template(task_ids), validstr, groups, order_by)
         c.execute(sql, task_ids + [time_limit])
 
         result = []
