@@ -286,7 +286,7 @@ ORDER BY a.task_id, u.name
             groups = task_groups['groups']
             groupsums = []
             for groupname, group in groups.items():
-                group['sum'] = sum(t['total_points'] for t in group['tasks'])
+                group['sum'] = round(sum(t['total_points'] for t in group['tasks']), 2)
                 groupsums.append(group['sum'])
             count = points_rule.get('count', {}).get('best')
             if count is not None:
@@ -295,7 +295,7 @@ ORDER BY a.task_id, u.name
                 count = points_rule.get('count', {}).get('worst', len(groupsums))
                 groupsums = sorted(groupsums)
             try:
-                task_groups['sum'] = sum(groupsums[0:count])
+                task_groups['sum'] = round(sum(groupsums[0:count]), 2)
             except TypeError:
                 task_groups['sum'] = 0
         if flatten:
