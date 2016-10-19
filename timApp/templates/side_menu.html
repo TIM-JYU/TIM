@@ -3,6 +3,7 @@
         <i class="glyphicon glyphicon-menu-hamburger" title="Click to open sidebar-menu"></i>
     </div>
     <uib-tabset id="menuTabs" active="active" class="hidden-sm hidden-xs">
+        {% if not hide_links %}
         <uib-tab index="6" select="bookmarkTabSelected(true)"
                  deselect="bookmarkTabSelected(false)"
                  ng-show="users.isLoggedIn()">
@@ -47,6 +48,7 @@
                 </div>
             </div>
         </uib-tab>
+        {% endif %}
 
         {% if headers %}
             <uib-tab index="0">
@@ -58,6 +60,7 @@
             </uib-tab>
         {% endif %}
 
+        {% if not hide_links %}
         <uib-tab index="2" ng-show="lectureSettings.lectureMode" select="toggleLectures()">
             <uib-tab-heading>
                 <i class="glyphicon glyphicon-education"></i>
@@ -144,5 +147,6 @@
             <p ng-show="studentTable.length == 0">No students</p>
             {% endraw %}
         </uib-tab>
+        {% endif %}
     </uib-tabset>
 </div>

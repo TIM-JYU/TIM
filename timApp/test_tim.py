@@ -250,6 +250,11 @@ class TimTest(TimRouteTest):
         doc.document.add_setting('hide_links', 'view')
         links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
         self.assertEqual(len(links), 0)
+        doc.document.add_paragraph(text='# 1\n\n#2')
+
+        # Index is visible always
+        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        self.assertEqual(len(links), 2)
 
         self.login_test1()
         links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
