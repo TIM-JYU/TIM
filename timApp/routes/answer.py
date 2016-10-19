@@ -340,7 +340,7 @@ def get_all_answers(task_id):
 @answers.route("/getState")
 def get_state():
     timdb = getTimDb()
-    _, par_id, user_id, answer_id = unpack_args('doc_id',
+    d_id, par_id, user_id, answer_id = unpack_args('doc_id',
                                                 'par_id',
                                                 'user_id',
                                                 'answer_id', types=[int, str, int, int])
@@ -350,8 +350,10 @@ def get_state():
         plugin_params['review'] = True
 
     answer, doc_id = verify_answer_access(answer_id, user_id)
+    doc = Document(d_id)
+    if doc_id != d_id and doc_id not in doc.get_referenced_document_ids():
+        abort(400, 'Bad document id')
 
-    doc = Document(doc_id)
     block = doc.get_paragraph(par_id)
     user = timdb.users.get_user(user_id)
     if user is None:
