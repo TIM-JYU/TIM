@@ -86,7 +86,10 @@ def par_list_to_html_list(pars,
     :param pars: The list of DocParagraphs to be converted.
     """
 
-    texts = [expand_macros(p.get_markdown(), settings.get_macros(), settings.get_macro_delimiter()) for p in pars]
+    # User-specific macros (such as %%username%% and %%realname%%) cannot be replaced here because the result will go
+    # to global cache. We will replace them later (in post_process_pars).
+    # TODO: This should be decided in upper level and this method would just get some MacroInfo object.
+    texts = [expand_macros(p.get_markdown(), settings.get_macros_preserving_user(), settings.get_macro_delimiter()) for p in pars]
     raw = call_dumbo(texts)
 
     # Edit html after dumbo

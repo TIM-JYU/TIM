@@ -45,7 +45,7 @@ def save_points(answer_id, user_id):
     doc_id, task_id_name, _ = Plugin.parse_task_id(answer['task_id'])
     points, = verify_json_params('points')
     try:
-        plugin = Plugin.from_task_id(answer['task_id'])
+        plugin = Plugin.from_task_id(answer['task_id'], user=get_current_user_object())
     except PluginException as e:
         return abort(400, str(e))
     a = Answer.query.get(answer_id)
@@ -109,7 +109,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             if user_id not in users:
                 return abort(400, 'userId is not associated with answer_id')
     try:
-        plugin = Plugin.from_task_id(task_id_ext)
+        plugin = Plugin.from_task_id(task_id_ext, user=get_current_user_object())
     except PluginException as e:
         return abort(400, str(e))
 
@@ -242,7 +242,7 @@ def should_hide_name(doc_id, user_id):
 @answers.route("/taskinfo/<task_id>")
 def get_task_info(task_id):
     try:
-        plugin = Plugin.from_task_id(task_id)
+        plugin = Plugin.from_task_id(task_id, user=get_current_user_object())
     except PluginException as e:
         return abort(400, str(e))
     tim_vars = {'maxPoints': plugin.max_points(),
@@ -356,7 +356,7 @@ def get_state():
         abort(400, 'Bad document id')
 
     block = doc.get_paragraph(par_id)
-    user = timdb.users.get_user(user_id)
+    user = User.query.get(user_id)
     if user is None:
         abort(400, 'Non-existent user')
 

@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Optional, List, Dict
 
 from utils import parse_yaml
@@ -62,6 +63,7 @@ class DocSettings:
         return parse_yaml(md)
 
     def __init__(self, settings_dict: Optional[dict] = None):
+        self.user_macros = None
         self.__dict = settings_dict if settings_dict else {}
         self.sanitize_macros()
 
@@ -87,8 +89,34 @@ class DocSettings:
     def css(self):
         return self.__dict.get(self.css_key)
 
-    def get_macros(self) -> dict:
+    def get_macros(self) -> Dict:
         return self.__dict.get(self.macros_key, {})
+
+    def get_macros_preserving_user(self):
+        """
+        Gets the macros and defines user-specific variables in such a way that the macro replacement for user variables
+        does effectively nothing.
+        """
+        if self.user_macros is not None:
+            return self.user_macros
+        macros = deepcopy(self.get_macros())
+        macros.update({'username': '{0}username{0}'.format(self.get_macro_delimiter()),
+                       'realname': '{0}realname{0}'.format(self.get_macro_delimiter())})
+        self.user_macros = macros
+        return macros
+
+    def get_macros_with_user_specific(self, user):
+        if not user:
+            return self.get_macros()
+        macros = deepcopy(self.get_macros())
+        macros.update(self.get_user_specific_macros(user))
+        return macros
+
+    @staticmethod
+    def get_user_specific_macros(user):
+        if not user:
+            return {}
+        return {'username': user.name, 'realname': user.real_name}
 
     def get_macro_delimiter(self) -> str:
         return self.__dict.get(self.macro_delimiter_key, '%%')

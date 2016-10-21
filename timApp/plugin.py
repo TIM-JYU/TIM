@@ -9,6 +9,7 @@ import yaml
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from markdownconverter import expand_macros
+from timdb.models import User
 from timdb.timdbexception import TimDbException
 from utils import parse_yaml, merge
 
@@ -34,7 +35,7 @@ class Plugin:
         return d
 
     @staticmethod
-    def from_task_id(task_id: str):
+    def from_task_id(task_id: str, user: Optional[User]=None):
         doc_id, task_id_name, par_id = Plugin.parse_task_id(task_id)
         doc = Document(doc_id)
         if par_id is not None:
@@ -48,7 +49,7 @@ class Plugin:
             raise PluginException('Task not found in the document: ' + task_id_name)
         plugin_data = parse_plugin_values(par,
                                           global_attrs=doc.get_settings().global_plugin_attrs(),
-                                          macros=doc.get_settings().get_macros(),
+                                          macros=doc.get_settings().get_macros_with_user_specific(user),
                                           macro_delimiter=doc.get_settings().get_macro_delimiter())
         if 'error' in plugin_data:
             if type(plugin_data) is str:

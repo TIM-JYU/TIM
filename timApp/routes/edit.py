@@ -382,7 +382,7 @@ def par_response(blocks,
     else:
         duplicates = None
 
-    current_user = get_current_user()
+    current_user = get_current_user_object()
     pars, js_paths, css_paths, modules = post_process_pars(doc, blocks, current_user, edit_window=preview,
                                                            show_questions=True)
 

@@ -276,7 +276,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     tasks_done = None
     task_groups = None
     user_list = []
-    current_user = get_current_user() if logged_in() else None
+    current_user = get_current_user_object() if logged_in() else None
     task_ids, plugin_count = pluginControl.find_task_ids(xs)
     points_sum_rule = doc_settings.point_sum_rule(default={})
     try:
@@ -290,7 +290,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
             user_list = [user['id'] for user in timdb.users.get_users_for_group(usergroup)]
         user_list = timdb.answers.get_points_by_rule(points_sum_rule, task_ids, user_list, flatten=True)
     elif doc_settings.show_task_summary() and logged_in():
-        info = timdb.answers.get_points_by_rule(points_sum_rule, task_ids, [current_user['id']], flatten=True)
+        info = timdb.answers.get_points_by_rule(points_sum_rule, task_ids, [current_user.id], flatten=True)
         if info:
             total_points = info[0]['total_points']
             tasks_done = info[0]['task_count']
@@ -305,7 +305,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     is_in_lecture = False
     if logged_in():
-        is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user['id'])
+        is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user.id)
         if is_in_lecture:
             is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
 
@@ -315,7 +315,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     # Close database here because we won't need it for a while
     timdb.close()
 
-    current_list_user = user_list[0] if user_list else None
+    current_list_user = User.query.get(user_list[0]['id']) if user_list else None
 
     raw_css = doc_settings.css() if doc_settings else None
     doc_css = sanitize_html('<style type="text/css">' + raw_css + '</style>') if raw_css else None
@@ -342,11 +342,6 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     index = get_index_from_html_list(t['html'] for t in texts)
 
     if hide_names_in_teacher(doc_id):
-        if not timdb.users.user_is_owner(current_list_user['id'], doc_id)\
-           and current_list_user['id'] != getCurrentUserId():
-            current_list_user['name'] = '-'
-            current_list_user['real_name'] = 'Someone'
-            current_list_user['email'] = 'someone@example.com'
         for user in user_list:
             if not timdb.users.user_is_owner(user['id'], doc_id)\
                and user['id'] != getCurrentUserId():
