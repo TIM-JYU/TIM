@@ -41,10 +41,12 @@ class DefaultRightTest(TimRouteTest):
                                   expect_status=200)
             default_rights = [{'access_name': 'view',
                                'access_type': 1,
+                               'fullname': 'Test user 2',
                                'gid': 8,
                                'name': 'testuser2'},
                               {'access_name': 'view',
                                'access_type': 1,
+                               'fullname': None,
                                'gid': 2,
                                'name': 'Anonymous users'}]
             self.assertDictEqual(
@@ -58,6 +60,7 @@ class DefaultRightTest(TimRouteTest):
                 new_item_rights = timdb.users.get_rights_holders(new_doc.doc_id)
                 default_rights.append(
                     {'gid': timdb.users.get_korppi_group_id(), 'name': KORPPI_GROUPNAME, 'access_type': 1,
+                     'fullname': None,
                      'access_name': 'view'})
             elif obj_type == blocktypes.FOLDER:
                 f = self.json_post('/createFolder',
