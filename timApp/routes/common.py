@@ -16,7 +16,7 @@ from documentmodel.docparagraphencoder import DocParagraphEncoder
 from documentmodel.document import Document
 import pytz
 
-from markdownconverter import expand_macros
+from markdownconverter import expand_macros, create_environment
 from routes.logger import log_info
 from theme import Theme
 from timdb.tim_models import db
@@ -345,9 +345,11 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     settings = doc.get_settings()
     user_macros = settings.get_user_specific_macros(user)
     delimiter = settings.get_macro_delimiter()
-    # Process user-specific macros
+    # Process user-specific macros.
+    # We define the environment here because it stays the same for each paragraph. This improves performance.
+    env = create_environment(delimiter)
     for htmlpar in html_pars:
-        htmlpar['html'] = expand_macros(htmlpar['html'], user_macros, delimiter)
+        htmlpar['html'] = expand_macros(htmlpar['html'], user_macros, delimiter, env=env)
 
     if edit_window:
         # Skip readings and notes

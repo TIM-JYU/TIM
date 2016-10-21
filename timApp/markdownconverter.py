@@ -22,21 +22,26 @@ def expand_macros_regex(text, macros, macro_delimiter=None):
                   text)
 
 
-def expand_macros_jinja2(text, macros, macro_delimiter=None):
+def expand_macros_jinja2(text, macros, macro_delimiter=None, env=None):
     if not has_macros(text, macros, macro_delimiter):
         return text
-    env = Environment(variable_start_string=macro_delimiter,
-                      variable_end_string=macro_delimiter,
-                      comment_start_string='{!!!',
-                      comment_end_string='!!!}',
-                      block_start_string='{%',
-                      block_end_string='%}',
-                      lstrip_blocks=True,
-                      trim_blocks=True)
+    if env is None:
+        env = create_environment(macro_delimiter)
     try:
         return env.from_string(text).render(macros)
     except TemplateSyntaxError as e:
         return get_error_html('Syntax error in template: {}'.format(e))
+
+
+def create_environment(macro_delimiter):
+    return Environment(variable_start_string=macro_delimiter,
+                       variable_end_string=macro_delimiter,
+                       comment_start_string='{!!!',
+                       comment_end_string='!!!}',
+                       block_start_string='{%',
+                       block_end_string='%}',
+                       lstrip_blocks=True,
+                       trim_blocks=True)
 
 
 expand_macros = expand_macros_jinja2
