@@ -194,7 +194,14 @@ class TimTest(TimRouteTest):
     def test_user_macros(self):
         self.login_test1()
         timdb = self.get_db()
-        d = self.create_doc(initial_par="""Username is %%username%% and real name is %%realname%%\n\n
+        d = self.create_doc(initial_par=r"""
+Username is %%username%% and real name is %%realname%%
+
+#-
+Percents: \%\%
+#-
+Broken: %%
+
 ``` {#test plugin="csPlugin"}
 type: cs
 header: %%username%% and %%realname%%
@@ -205,6 +212,10 @@ header: %%username%% and %%realname%%
         pars = self.get('/view/{}'.format(d.id), as_tree=True).cssselect('.parContent')
         self.assertEqual('Username is testuser1 and real name is Test user 1',
                          pars[0].text_content().strip())
+        self.assertEqual('Percents: %%',
+                         pars[1].text_content().strip())
+        self.assertEqual("Syntax error in template: unexpected 'end of template'",
+                         pars[2].text_content().strip())
         p = Plugin.from_task_id('{}.test'.format(d.id), User.query.get(TEST_USER_1_ID))
         self.assertEqual('testuser1 and Test user 1', p.values['header'])
         self.login_test2()
@@ -213,6 +224,7 @@ header: %%username%% and %%realname%%
                              0].text_content().strip())
         p = Plugin.from_task_id('{}.test'.format(d.id), User.query.get(TEST_USER_2_ID))
         self.assertEqual('testuser2 and Test user 2', p.values['header'])
+        timdb.close()
 
     def test_macro_only_delimiter(self):
         self.login_test1()

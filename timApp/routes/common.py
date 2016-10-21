@@ -349,7 +349,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     # We define the environment here because it stays the same for each paragraph. This improves performance.
     env = create_environment(delimiter)
     for htmlpar in html_pars:
-        htmlpar['html'] = expand_macros(htmlpar['html'], user_macros, delimiter, env=env)
+        htmlpar['html'] = expand_macros(htmlpar['html'], user_macros, delimiter, env=env, ignore_errors=True)
 
     if edit_window:
         # Skip readings and notes

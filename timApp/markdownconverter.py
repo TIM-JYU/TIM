@@ -22,7 +22,7 @@ def expand_macros_regex(text, macros, macro_delimiter=None):
                   text)
 
 
-def expand_macros_jinja2(text, macros, macro_delimiter=None, env=None):
+def expand_macros_jinja2(text, macros, macro_delimiter=None, env=None, ignore_errors=False):
     if not has_macros(text, macros, macro_delimiter):
         return text
     if env is None:
@@ -30,7 +30,9 @@ def expand_macros_jinja2(text, macros, macro_delimiter=None, env=None):
     try:
         return env.from_string(text).render(macros)
     except TemplateSyntaxError as e:
-        return get_error_html('Syntax error in template: {}'.format(e))
+        if not ignore_errors:
+            return get_error_html('Syntax error in template: {}'.format(e))
+        return text
 
 
 def create_environment(macro_delimiter):
