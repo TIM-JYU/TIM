@@ -138,15 +138,18 @@ def verify_doc_existence(doc_id):
 
 
 def verify_view_access(block_id, require=True, message=None):
-    return verify_access(getTimDb().users.has_view_access(getCurrentUserId(), block_id), require, message)
+    timdb = getTimDb()
+    return verify_access(timdb.users.has_view_access(getCurrentUserId(), block_id), require, message)
 
 
 def verify_teacher_access(block_id, require=True, message=None):
-    return verify_access(getTimDb().users.has_teacher_access(getCurrentUserId(), block_id), require, message)
+    timdb = getTimDb()
+    return verify_access(timdb.users.has_teacher_access(getCurrentUserId(), block_id), require, message)
 
 
 def verify_seeanswers_access(block_id, require=True, message=None):
-    return verify_access(getTimDb().users.has_seeanswers_access(getCurrentUserId(), block_id), require, message)
+    timdb = getTimDb()
+    return verify_access(timdb.users.has_seeanswers_access(getCurrentUserId(), block_id), require, message)
 
 
 def verify_access(has_access, require=True, message=None):
@@ -640,5 +643,6 @@ def is_considered_unpublished(doc_id):
 
 def get_viewable_blocks():
     if not hasattr(g, 'viewable'):
-        g.viewable = getTimDb().users.get_viewable_blocks(getCurrentUserId())
+        timdb = getTimDb()
+        g.viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
     return g.viewable

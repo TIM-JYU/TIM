@@ -418,14 +418,15 @@ def get_pars_from_editor_text(doc: Document, text: str,
     blocks = [DocParagraph.create(doc=doc, md=par['md'], attrs=par.get('attrs'))
               for par in DocumentParser(text).validate_structure(
                   is_whole_document=False).get_blocks(options)]
+    timdb = getTimDb()
     for p in blocks:
         if p.is_reference():
             try:
                 refdoc = int(p.get_attr('rd'))
             except (ValueError, TypeError):
                 continue
-            if not skip_access_check and getTimDb().documents.exists(refdoc)\
-                    and not getTimDb().users.has_view_access(getCurrentUserId(), refdoc):
+            if not skip_access_check and timdb.documents.exists(refdoc)\
+                    and not timdb.users.has_view_access(getCurrentUserId(), refdoc):
                 raise ValidationException("You don't have view access to document {}".format(refdoc))
     return blocks
 

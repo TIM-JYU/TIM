@@ -236,7 +236,8 @@ def get_hidden_name(user_id):
 
 
 def should_hide_name(doc_id, user_id):
-    return not getTimDb().users.has_teacher_access(user_id, doc_id) and user_id != getCurrentUserId()
+    timdb = getTimDb()
+    return not timdb.users.has_teacher_access(user_id, doc_id) and user_id != getCurrentUserId()
 
 
 @answers.route("/taskinfo/<task_id>")
@@ -403,9 +404,9 @@ def get_task_users(task_id):
     doc_id, _, _ = Plugin.parse_task_id(task_id)
     verify_seeanswers_access(doc_id)
     usergroup = request.args.get('group')
-    users = getTimDb().answers.get_users_by_taskid(task_id)
+    timdb = getTimDb()
+    users = timdb.answers.get_users_by_taskid(task_id)
     if usergroup is not None:
-        timdb = getTimDb()
         users = [user for user in users if timdb.users.is_user_id_in_group(user['id'], usergroup)]
     if hide_names_in_teacher(doc_id):
         for user in users:
