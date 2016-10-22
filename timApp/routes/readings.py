@@ -1,4 +1,5 @@
 from flask import Blueprint, abort
+from sqlalchemy.exc import IntegrityError
 
 from documentmodel.document import Document
 from routes.common import verify_read_marking_right, getTimDb, jsonResponse, getCurrentUserGroup, \
@@ -35,7 +36,10 @@ def set_read_paragraph(doc_id, specifier, read_type):
     for group_id in get_session_usergroup_ids():
         for p in get_referenced_pars_from_req(par):
             timdb.readings.mark_read(group_id, Document(p.get_doc_id()), p, ReadParagraphType(read_type), commit=False)
-    timdb.commit()
+    try:
+        timdb.commit()
+    except IntegrityError:
+        abort(400, 'Paragraph was already marked read')
     return okJsonResponse()
 
 
