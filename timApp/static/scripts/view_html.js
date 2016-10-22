@@ -1115,7 +1115,9 @@ timApp.controller("ViewCtrl", [
             if ($readline.hasClass(readClassName)) {
                 return q.resolve(null);
             }
-            if ($par.parents('.previewcontent').length > 0) {
+            
+            // If the paragraph is only a preview, ignore it.
+            if ($par.parents('.previewcontent').length > 0 || $par.parents('.csrunPreview').length > 0) {
                 return q.resolve(null);
             }
             var par_id = sc.getParId($par);
