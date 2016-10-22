@@ -4,6 +4,7 @@ from documentmodel.document import Document
 from routes.common import verify_read_marking_right, getTimDb, jsonResponse, getCurrentUserGroup, \
     get_referenced_pars_from_req, okJsonResponse, get_session_usergroup_ids
 from timdb.readparagraphtype import ReadParagraphType
+from timdb.timdbexception import TimDbException
 
 readings = Blueprint('readings',
                      __name__,
@@ -26,9 +27,10 @@ def set_read_paragraph(doc_id, specifier, read_type):
     timdb = getTimDb()
 
     doc = Document(doc_id)
-    par = doc.get_paragraph(specifier)
-    if par is None:
-        return abort(400, 'Non-existent paragraph')
+    try:
+        par = doc.get_paragraph(specifier)
+    except TimDbException:
+        return abort(404, 'Non-existent paragraph')
 
     for group_id in get_session_usergroup_ids():
         for p in get_referenced_pars_from_req(par):
