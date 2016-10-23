@@ -7,8 +7,7 @@ from timroutetest import TimRouteTest
 class UploadTest(TimRouteTest):
     def test_upload_permissions(self):
         db = self.get_db()
-        db.users.create_user_with_group('testuser3', 'Test user 3', 'test3@example.com', password='test3pass',
-                                        is_admin=True)
+        db.users.addUserToAdmins(db.users.get_user_by_name('testuser3').id)
         self.login_test1()
         self.post('/upload/', data={'folder': 'users/{}'.format(session['user_name']),
                                     'file': (io.BytesIO(b'test file'),

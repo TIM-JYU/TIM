@@ -1,7 +1,8 @@
 """"""
 import json
-from collections import defaultdict
-from typing import List, Optional
+import re
+from collections import defaultdict, OrderedDict
+from typing import List, Optional, Dict
 
 from timdb.dbutils import get_sql_template
 from timdb.tim_models import Answer, UserAnswer, AnswerTag
@@ -112,9 +113,17 @@ class Answers(TimDbBase):
         ) t JOIN Answer a ON a.id = t.aid""".format(template), task_ids + [user_id])
         return self.resultAsDictionary(c)
 
-    def get_all_answers(self, task_ids: List[str], usergroup: Optional[int], hide_names: bool, age: str, valid: str, printname:bool) -> List[str]:
+    def get_all_answers(self,
+                        task_ids: List[str],
+                        usergroup: Optional[int],
+                        hide_names: bool,
+                        age: str,
+                        valid: str,
+                        printname:bool,
+                        sort: str) -> List[str]:
         """Gets the all answers to tasks
 
+        :param sort: Sorting order for answers.
         :param task_ids: The ids of the tasks.
         :param usergroup: Group of users to search
         :param hide_names: Hide names
@@ -140,6 +149,9 @@ class Answers(TimDbBase):
         if valid == "0":
             validstr = "AND NOT a.valid"
 
+        order_by = 'a.task_id, u.name'
+        if sort == 'username':
+            order_by = 'u.name, a.task_id'
 
         c = self.db.cursor()
         sql = """
@@ -152,9 +164,9 @@ WHERE a.task_id IN ({}) AND ua.answer_id = a.id AND u.id = ua.user_id AND a.answ
 {}
 ) t
 JOIN answer a ON a.id = t.id JOIN useranswer ua ON ua.answer_id = a.id JOIN useraccount u ON u.id = ua.user_id
-ORDER BY a.task_id, u.name
+ORDER BY {}, a.answered_on
         """
-        sql = sql.format(minmax, counts, get_sql_template(task_ids), validstr, groups)
+        sql = sql.format(minmax, counts, get_sql_template(task_ids), validstr, groups, order_by)
         c.execute(sql, task_ids + [time_limit])
 
         result = []
@@ -223,7 +235,7 @@ ORDER BY a.task_id, u.name
         common_answers = self.resultAsDictionary(c)
         return common_answers
 
-    def getUsersForTasks(self, task_ids: List[str], user_ids: Optional[List[int]]=None) -> List[dict]:
+    def get_users_for_tasks(self, task_ids: List[str], user_ids: Optional[List[int]]=None, group_by_user=True) -> List[Dict[str, str]]:
         if not task_ids:
             return []
         cursor = self.db.cursor()
@@ -233,7 +245,10 @@ ORDER BY a.task_id, u.name
             user_ids = []
         cursor.execute(
             """
-                SELECT UserAccount.id, name, real_name, email, COUNT(DISTINCT task_id) AS task_count, ROUND(SUM(cast(points as float))::numeric,2) as total_points
+                SELECT UserAccount.id, name, real_name, email,
+                       COUNT(DISTINCT task_id) AS task_count,
+                       ROUND(SUM(cast(points as float))::numeric,2) as total_points
+                       {}
                 FROM UserAccount
                 JOIN UserAnswer ON UserAccount.id = UserAnswer.user_id
                 JOIN (
@@ -247,11 +262,67 @@ ORDER BY a.task_id, u.name
 
                       ) tmp ON tmp.aid = UserAnswer.answer_id AND UserAccount.id = tmp.uid
                 {}
-                GROUP BY UserAccount.id
+                GROUP BY UserAccount.id {}
                 ORDER BY real_name ASC
-            """.format(task_id_template, user_restrict_sql), task_ids + user_ids)
-            
+            """.format(', MIN(task_id) as task_id' if not group_by_user else '',
+                       task_id_template,
+                       user_restrict_sql,
+                       '' if group_by_user else ', task_id'), task_ids + user_ids)
+
         return self.resultAsDictionary(cursor)
+
+    def get_points_by_rule(self, points_rule: Optional[Dict],
+                           task_ids: List[str],
+                           user_ids: Optional[List[int]]=None,
+                           flatten: bool=False):
+        """Computes the point sum from given tasks accoring to the given point rule.
+        :param points_rule: The points rule.
+        :param task_ids: The list of task ids to consider.
+        :param user_ids: The list of users for which to compute the sum.
+        :param flatten: Whether to return the result as a list of dicts (True) or as a deep dict (False).
+        :return: The computed result.
+        """
+        if not points_rule:
+            return self.get_users_for_tasks(task_ids, user_ids)
+        tasks_users = self.get_users_for_tasks(task_ids, user_ids, group_by_user=False)
+        result = defaultdict(lambda:defaultdict(lambda:defaultdict(lambda:defaultdict(list))))
+        for tu in tasks_users:
+            try:
+                group = next((k for k, v in points_rule['groups'].items() if re.fullmatch(v, tu['task_id'].split('.')[1])), None)
+            except (re.error, AttributeError, KeyError):
+                continue
+            if group:
+                result[tu['id']]['groups'][group]['tasks'].append(tu)
+        for user_id, task_groups in result.items():
+            groups = task_groups['groups']
+            groupsums = []
+            for groupname, group in groups.items():
+                group['sum'] = round(sum(t['total_points'] for t in group['tasks']), 2)
+                groupsums.append(group['sum'])
+            count = points_rule.get('count', {}).get('best')
+            if count is not None:
+                groupsums = sorted(groupsums, reverse=True)
+            else:
+                count = points_rule.get('count', {}).get('worst', len(groupsums))
+                groupsums = sorted(groupsums)
+            try:
+                task_groups['sum'] = round(sum(groupsums[0:count]), 2)
+            except TypeError:
+                task_groups['sum'] = 0
+        if flatten:
+            result_list = []
+            for user_id, task_groups in result.items():
+                first_group = next(v for _, v in task_groups['groups'].items())
+                row = first_group['tasks'][0]
+                row['total_points'] = task_groups['sum']
+                row['task_count'] = len(task_groups['groups'])
+                row.pop('task_id', None)
+                row['groups'] = OrderedDict()
+                for groupname, _ in sorted(points_rule['groups'].items()):
+                    row['groups'][groupname] = task_groups['groups'].get(groupname, {}).get('sum', 0)
+                result_list.append(row)
+            return result_list
+        return result
 
     def getAnswersForGroup(self, user_ids: List[int], task_id: str) -> List[dict]:
         """Gets the answers of the users in a task, ordered descending by submission time.

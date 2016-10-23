@@ -48,3 +48,8 @@ class TimDbTest(unittest.TestCase):
 
     def setUp(self):
         pass
+
+
+TEST_USER_1_ID = 4
+TEST_USER_2_ID = 5
+TEST_USER_3_ID = 6

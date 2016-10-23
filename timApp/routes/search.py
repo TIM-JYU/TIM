@@ -24,7 +24,7 @@ def search(query):
     timdb = getTimDb()
     viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
     docs = timdb.documents.get_documents(filter_ids=viewable)
-    current_user = get_current_user()
+    current_user = get_current_user_object()
     all_texts = []
     all_js = []
     all_css = []

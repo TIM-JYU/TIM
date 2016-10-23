@@ -250,12 +250,13 @@ class DocumentTest(TimDbTest):
                                        ' testmacro: testvalue\n'
                                        ' year: "2015"\n'
                                        '```', attrs={'settings': ''})
-        macro_par = d.add_paragraph('this is %%testmacro%% and year is %%year%%')
+        macro_par = d.add_paragraph('this is %%testmacro%% and year is %%year%% and user is %%username%% and %%nonexistent%%')
         macro_par = d.get_paragraph(macro_par.get_id())  # Put the paragraph in cache
         self.assertDictEqual({'macros': {'testmacro': 'testvalue', 'year': '2015'},
                               'macro_delimiter': '%%'}, d.get_settings().get_dict())
 
-        self.assertEqual('<p>this is testvalue and year is 2015</p>', macro_par.get_html())
+        # User-specific macros should be preserved
+        self.assertEqual('<p>this is testvalue and year is 2015 and user is %%username%% and</p>', macro_par.get_html())
         d = Document(d.doc_id)  # Make a new instance of the document to test cache invalidation
         d.modify_paragraph(settings_par.get_id(),
                            '```\n'
@@ -267,7 +268,7 @@ class DocumentTest(TimDbTest):
                            new_attrs={'settings': ''})
 
         macro_par = d.get_paragraph(macro_par.get_id())
-        self.assertEqual('<p>this is anothervalue and year is 2016</p>', macro_par.get_html())
+        self.assertEqual('<p>this is anothervalue and year is 2016 and user is %%username%% and</p>', macro_par.get_html())
 
     def test_import(self):
         timdb = self.get_db()

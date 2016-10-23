@@ -9,6 +9,7 @@ import yaml
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from markdownconverter import expand_macros
+from timdb.models import User
 from timdb.timdbexception import TimDbException
 from utils import parse_yaml, merge
 
@@ -34,7 +35,7 @@ class Plugin:
         return d
 
     @staticmethod
-    def from_task_id(task_id: str):
+    def from_task_id(task_id: str, user: Optional[User]=None):
         doc_id, task_id_name, par_id = Plugin.parse_task_id(task_id)
         doc = Document(doc_id)
         if par_id is not None:
@@ -48,7 +49,7 @@ class Plugin:
             raise PluginException('Task not found in the document: ' + task_id_name)
         plugin_data = parse_plugin_values(par,
                                           global_attrs=doc.get_settings().global_plugin_attrs(),
-                                          macros=doc.get_settings().get_macros(),
+                                          macros=doc.get_settings().get_macros_with_user_specific(user),
                                           macro_delimiter=doc.get_settings().get_macro_delimiter())
         if 'error' in plugin_data:
             if type(plugin_data) is str:
@@ -116,16 +117,16 @@ class Plugin:
     def to_paragraph(self) -> DocParagraph:
         text = '```\n' + yaml.dump(self.values) + '\n```'
         if self.task_id:
-            return DocParagraph.create(self.par.doc, md=text, attrs={'taskId': self.task_id, 'plugin': self.type})
+            return DocParagraph.create(self.par.doc, par_id=self.par.get_id(), md=text, attrs={'taskId': self.task_id, 'plugin': self.type})
         else:
-            return DocParagraph.create(self.par.doc, md=text, attrs={'plugin': self.type})
+            return DocParagraph.create(self.par.doc, par_id=self.par.get_id(), md=text, attrs={'plugin': self.type})
 
     def set_value(self, key: str, value):
         self.values[key] = value
         return self
 
     def save(self):
-        self.par.doc.modify_paragraph_obj(self.par.get_id(), self.to_paragraph())
+        self.to_paragraph().save()
 
 
 class PluginException(Exception):

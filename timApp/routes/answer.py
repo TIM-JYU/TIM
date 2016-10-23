@@ -45,7 +45,7 @@ def save_points(answer_id, user_id):
     doc_id, task_id_name, _ = Plugin.parse_task_id(answer['task_id'])
     points, = verify_json_params('points')
     try:
-        plugin = Plugin.from_task_id(answer['task_id'])
+        plugin = Plugin.from_task_id(answer['task_id'], user=get_current_user_object())
     except PluginException as e:
         return abort(400, str(e))
     a = Answer.query.get(answer_id)
@@ -109,7 +109,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             if user_id not in users:
                 return abort(400, 'userId is not associated with answer_id')
     try:
-        plugin = Plugin.from_task_id(task_id_ext)
+        plugin = Plugin.from_task_id(task_id_ext, user=get_current_user_object())
     except PluginException as e:
         return abort(400, str(e))
 
@@ -236,13 +236,14 @@ def get_hidden_name(user_id):
 
 
 def should_hide_name(doc_id, user_id):
-    return not getTimDb().users.has_teacher_access(user_id, doc_id) and user_id != getCurrentUserId()
+    timdb = getTimDb()
+    return not timdb.users.has_teacher_access(user_id, doc_id) and user_id != getCurrentUserId()
 
 
 @answers.route("/taskinfo/<task_id>")
 def get_task_info(task_id):
     try:
-        plugin = Plugin.from_task_id(task_id)
+        plugin = Plugin.from_task_id(task_id, user=get_current_user_object())
     except PluginException as e:
         return abort(400, str(e))
     tim_vars = {'maxPoints': plugin.max_points(),
@@ -315,6 +316,7 @@ def get_all_answers_as_list(task_ids: List[str]):
     age = get_option(request, 'age', 'max')
     valid = get_option(request, 'valid', '1')
     name_opt = get_option(request, 'name', 'both')
+    sort_opt = get_option(request, 'sort', 'task')
     printname = name_opt == 'both'
 
     if not usergroup:
@@ -327,7 +329,7 @@ def get_all_answers_as_list(task_ids: List[str]):
         # Require full teacher rights for getting all answers
         verify_teacher_access(doc_id)
         hide_names = hide_names or hide_names_in_teacher(doc_id)
-    all_answers = timdb.answers.get_all_answers(task_ids, usergroup, hide_names, age, valid, printname)
+    all_answers = timdb.answers.get_all_answers(task_ids, usergroup, hide_names, age, valid, printname, sort_opt)
     return all_answers
 
 
@@ -340,7 +342,7 @@ def get_all_answers(task_id):
 @answers.route("/getState")
 def get_state():
     timdb = getTimDb()
-    _, par_id, user_id, answer_id = unpack_args('doc_id',
+    d_id, par_id, user_id, answer_id = unpack_args('doc_id',
                                                 'par_id',
                                                 'user_id',
                                                 'answer_id', types=[int, str, int, int])
@@ -350,10 +352,12 @@ def get_state():
         plugin_params['review'] = True
 
     answer, doc_id = verify_answer_access(answer_id, user_id)
+    doc = Document(d_id)
+    if doc_id != d_id and doc_id not in doc.get_referenced_document_ids():
+        abort(400, 'Bad document id')
 
-    doc = Document(doc_id)
     block = doc.get_paragraph(par_id)
-    user = timdb.users.get_user(user_id)
+    user = User.query.get(user_id)
     if user is None:
         abort(400, 'Non-existent user')
 
@@ -400,9 +404,9 @@ def get_task_users(task_id):
     doc_id, _, _ = Plugin.parse_task_id(task_id)
     verify_seeanswers_access(doc_id)
     usergroup = request.args.get('group')
-    users = getTimDb().answers.get_users_by_taskid(task_id)
+    timdb = getTimDb()
+    users = timdb.answers.get_users_by_taskid(task_id)
     if usergroup is not None:
-        timdb = getTimDb()
         users = [user for user in users if timdb.users.is_user_id_in_group(user['id'], usergroup)]
     if hide_names_in_teacher(doc_id):
         for user in users:

@@ -2,8 +2,9 @@
 """Functions for dealing with plugin paragraphs."""
 import json
 
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
+from timdb.models import User
 from timtiming import taketime
 
 from collections import OrderedDict
@@ -13,7 +14,7 @@ from containerLink import get_plugin_needs_browser
 from containerLink import get_plugin_tim_url
 from containerLink import plugin_reqs
 from documentmodel.docparagraph import DocParagraph
-from documentmodel.document import dereference_pars
+from documentmodel.document import dereference_pars, Document
 from plugin import PluginException, parse_plugin_values
 from utils import get_error_html
 
@@ -39,9 +40,11 @@ def find_task_ids(blocks: List[DocParagraph]) -> Tuple[List[str], int]:
     plugin_count = 0
     for block in blocks:
         task_id = block.get_attr('taskId')
-        if block.get_attr('plugin'):
+        plugin = block.get_attr('plugin')
+        if plugin:
             plugin_count += 1
-        if task_id:
+        # Need "and plugin" to ignore e.g. manual heading ids
+        if task_id and plugin:
             task_ids.append("{}.{}".format(block.doc.doc_id, task_id))
     return task_ids, plugin_count
 
@@ -58,9 +61,9 @@ def try_load_json(json_str: str):
         return json_str
 
 
-def pluginify(doc,
+def pluginify(doc: Document,
               pars,
-              user,
+              user: Optional[User],
               timdb,
               custom_state=None,
               sanitize=True,
@@ -110,7 +113,7 @@ def pluginify(doc,
 
         if plugin_name:
             vals = parse_plugin_values(block, global_attrs=settings.global_plugin_attrs(),
-                                       macros=settings.get_macros(),
+                                       macros=settings.get_macros_with_user_specific(user),
                                        macro_delimiter=settings.get_macro_delimiter())
             if 'error' in vals:
                 html_pars[idx]['html'] = get_error_html_plugin(plugin_name, vals['error'])
@@ -118,7 +121,7 @@ def pluginify(doc,
 
             if plugin_name not in plugins:
                 plugins[plugin_name] = OrderedDict()
-            vals['markup']["user_id"] = user['name'] if user is not None else 'Anonymous'
+            vals['markup']["user_id"] = user.name if user is not None else 'Anonymous'
             task_id = "{}.{}".format(block.get_doc_id(), attr_taskid or '')
 
             if load_states and custom_state is not None:
@@ -141,7 +144,7 @@ def pluginify(doc,
     # taketime("answ", "markup", len(plugins))
 
     if load_states and custom_state is None and user is not None:
-        answers = timdb.answers.get_newest_answers(user['id'], list(state_map.keys()))
+        answers = timdb.answers.get_newest_answers(user.id, list(state_map.keys()))
         # Close database here because we won't need it for a while
         timdb.close()
         for answer in answers:

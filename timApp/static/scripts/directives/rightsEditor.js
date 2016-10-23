@@ -31,7 +31,7 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
             };
 
             sc.removeConfirm = function (group, type) {
-                if ($window.confirm("Are you sure you want to remove this usergroup?")) {
+                if ($window.confirm("Remove " + type + " right from " + group.name + "?")) {
                     sc.removePermission(group, type);
                 }
             };

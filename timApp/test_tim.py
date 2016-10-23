@@ -7,6 +7,9 @@ from lxml.cssselect import CSSSelector
 
 from documentmodel.document import Document
 from markdownconverter import md_to_html
+from plugin import Plugin
+from timdb.models import User
+from timdbtest import TEST_USER_2_ID, TEST_USER_1_ID
 from timroutetest import TimRouteTest
 
 
@@ -188,6 +191,41 @@ class TimTest(TimRouteTest):
         self.assertInResponse(table_html, self.new_par(doc, table_text), json_key='texts')
         self.assertInResponse(table_html, self.get('/view/{}'.format(doc.doc_id), as_response=True))
 
+    def test_user_macros(self):
+        self.login_test1()
+        timdb = self.get_db()
+        d = self.create_doc(initial_par=r"""
+Username is %%username%% and real name is %%realname%%
+
+#-
+Percents: \%\%
+#-
+Broken: %%
+
+``` {#test plugin="csPlugin"}
+type: cs
+header: %%username%% and %%realname%%
+```
+        """)
+        timdb.users.grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), d.id)
+
+        pars = self.get('/view/{}'.format(d.id), as_tree=True).cssselect('.parContent')
+        self.assertEqual('Username is testuser1 and real name is Test user 1',
+                         pars[0].text_content().strip())
+        self.assertEqual('Percents: %%',
+                         pars[1].text_content().strip())
+        self.assertEqual("Syntax error in template: unexpected 'end of template'",
+                         pars[2].text_content().strip())
+        p = Plugin.from_task_id('{}.test'.format(d.id), User.query.get(TEST_USER_1_ID))
+        self.assertEqual('testuser1 and Test user 1', p.values['header'])
+        self.login_test2()
+        self.assertEqual('Username is testuser2 and real name is Test user 2',
+                         self.get('/view/{}'.format(d.id), as_tree=True).cssselect('.parContent')[
+                             0].text_content().strip())
+        p = Plugin.from_task_id('{}.test'.format(d.id), User.query.get(TEST_USER_2_ID))
+        self.assertEqual('testuser2 and Test user 2', p.values['header'])
+        timdb.close()
+
     def test_macro_only_delimiter(self):
         self.login_test1()
         doc = self.create_doc(settings={'macro_delimiter': '%%'}).document
@@ -250,6 +288,11 @@ class TimTest(TimRouteTest):
         doc.document.add_setting('hide_links', 'view')
         links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
         self.assertEqual(len(links), 0)
+        doc.document.add_paragraph(text='# 1\n\n#2')
+
+        # Index is visible always
+        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        self.assertEqual(len(links), 2)
 
         self.login_test1()
         links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))

@@ -243,9 +243,14 @@ class Users(TimDbBase):
 
     def get_rights_holders(self, block_id: int):
         cursor = self.db.cursor()
-        cursor.execute("""SELECT b.UserGroup_id as gid, u.name as name, a.id as access_type, a.name as access_name FROM BlockAccess b
+        cursor.execute("""SELECT b.UserGroup_id as gid, u.name as name, a.id as access_type, a.name as access_name, fullname
+                          FROM BlockAccess b
                           JOIN UserGroup u ON b.UserGroup_id = u.id
                           JOIN AccessType a ON b.type = a.id
+                          LEFT JOIN (SELECT ug.id as gid, ua.real_name as fullname
+                                     FROM useraccount ua
+                                     JOIN usergroup ug on ug.name = ua.name
+                                     ) tmp ON tmp.gid = b.UserGroup_id
                           WHERE Block_id = %s""", [block_id])
         return self.resultAsDictionary(cursor)
 

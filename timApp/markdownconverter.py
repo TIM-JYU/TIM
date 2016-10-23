@@ -22,21 +22,28 @@ def expand_macros_regex(text, macros, macro_delimiter=None):
                   text)
 
 
-def expand_macros_jinja2(text, macros, macro_delimiter=None):
+def expand_macros_jinja2(text, macros, macro_delimiter=None, env=None, ignore_errors=False):
     if not has_macros(text, macros, macro_delimiter):
         return text
-    env = Environment(variable_start_string=macro_delimiter,
-                      variable_end_string=macro_delimiter,
-                      comment_start_string='{!!!',
-                      comment_end_string='!!!}',
-                      block_start_string='{%',
-                      block_end_string='%}',
-                      lstrip_blocks=True,
-                      trim_blocks=True)
+    if env is None:
+        env = create_environment(macro_delimiter)
     try:
         return env.from_string(text).render(macros)
     except TemplateSyntaxError as e:
-        return get_error_html('Syntax error in template: {}'.format(e))
+        if not ignore_errors:
+            return get_error_html('Syntax error in template: {}'.format(e))
+        return text
+
+
+def create_environment(macro_delimiter):
+    return Environment(variable_start_string=macro_delimiter,
+                       variable_end_string=macro_delimiter,
+                       comment_start_string='{!!!',
+                       comment_end_string='!!!}',
+                       block_start_string='{%',
+                       block_end_string='%}',
+                       lstrip_blocks=True,
+                       trim_blocks=True)
 
 
 expand_macros = expand_macros_jinja2
@@ -86,7 +93,10 @@ def par_list_to_html_list(pars,
     :param pars: The list of DocParagraphs to be converted.
     """
 
-    texts = [expand_macros(p.get_markdown(), settings.get_macros(), settings.get_macro_delimiter()) for p in pars]
+    # User-specific macros (such as %%username%% and %%realname%%) cannot be replaced here because the result will go
+    # to global cache. We will replace them later (in post_process_pars).
+    # TODO: This should be decided in upper level and this method would just get some MacroInfo object.
+    texts = [expand_macros(p.get_markdown(), settings.get_macros_preserving_user(), settings.get_macro_delimiter()) for p in pars]
     raw = call_dumbo(texts)
 
     # Edit html after dumbo

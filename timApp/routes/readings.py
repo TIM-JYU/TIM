@@ -1,8 +1,11 @@
 from flask import Blueprint, abort
+from sqlalchemy.exc import IntegrityError
 
 from documentmodel.document import Document
 from routes.common import verify_read_marking_right, getTimDb, jsonResponse, getCurrentUserGroup, \
     get_referenced_pars_from_req, okJsonResponse, get_session_usergroup_ids
+from timdb.readparagraphtype import ReadParagraphType
+from timdb.timdbexception import TimDbException
 
 readings = Blueprint('readings',
                      __name__,
@@ -19,20 +22,24 @@ def get_read_paragraphs(doc_id):
     return jsonResponse(readings)
 
 
-@readings.route("/read/<int:doc_id>/<specifier>", methods=['PUT'])
-def set_read_paragraph(doc_id, specifier):
+@readings.route("/read/<int:doc_id>/<specifier>/<int:read_type>", methods=['PUT'])
+def set_read_paragraph(doc_id, specifier, read_type):
     verify_read_marking_right(doc_id)
     timdb = getTimDb()
 
     doc = Document(doc_id)
-    par = doc.get_paragraph(specifier)
-    if par is None:
-        return abort(400, 'Non-existent paragraph')
+    try:
+        par = doc.get_paragraph(specifier)
+    except TimDbException:
+        return abort(404, 'Non-existent paragraph')
 
     for group_id in get_session_usergroup_ids():
         for p in get_referenced_pars_from_req(par):
-            timdb.readings.mark_read(group_id, Document(p.get_doc_id()), p, commit=False)
-    timdb.commit()
+            timdb.readings.mark_read(group_id, Document(p.get_doc_id()), p, ReadParagraphType(read_type), commit=False)
+    try:
+        timdb.commit()
+    except IntegrityError:
+        abort(400, 'Paragraph was already marked read')
     return okJsonResponse()
 
 

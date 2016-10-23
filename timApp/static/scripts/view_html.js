@@ -93,6 +93,20 @@ timApp.controller("ViewCtrl", [
         }
 
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
+
+        sc.readingTypes = {
+            onScreen: 1,
+            hoverPar: 2,
+            clickPar: 3,
+            clickRed: 4
+        };
+        sc.readClasses = {
+            1: 'screen',
+            2: 'hover',
+            3: 'click',
+            4: 'read'
+        };
+
         sc.editing = false;
 
         sc.questionShown = false;
@@ -1095,27 +1109,39 @@ timApp.controller("ViewCtrl", [
             return angular.isDefined($par.attr('ref-id'));
         };
 
-        sc.markParRead = function ($this, $par) {
-            var oldClass = $this.attr("class");
-            $this.attr("class", "readline read");
+        sc.markParRead = function ($par, readingType) {
+            var $readline = $par.find('.readline');
+            var readClassName = sc.readClasses[readingType];
+            if ($readline.hasClass(readClassName)) {
+                return q.resolve(null);
+            }
+            
+            // If the paragraph is only a preview, ignore it.
+            if ($par.parents('.previewcontent').length > 0 || $par.parents('.csrunPreview').length > 0) {
+                return q.resolve(null);
+            }
             var par_id = sc.getParId($par);
+            if (par_id === 'NEW_PAR' || par_id === null) {
+                return q.resolve(null);
+            }
+            $readline.addClass(readClassName);
             var data = {};
             if (sc.isReference($par)) {
                 data = sc.getRefAttrs($par);
             }
             if ( !Users.isLoggedIn() ) return true;
-            http.put('/read/' + sc.docId + '/' + par_id, data)
-                .success(function (data, status, headers, config) {
+            return http.put('/read/' + sc.docId + '/' + par_id + '/' + readingType, data)
+                .then(function (data, status, headers, config) {
                     sc.markPageDirty();
-                }).error(function () {
-                    $window.alert('Could not save the read marking.');
-                    $this.attr("class", oldClass);
+                }, function () {
+                    $log.error('Could not save the read marking for paragraph ' + par_id);
+                    $readline.removeClass(readClassName);
                 });
-            return true;
         };
 
         sc.onClick(".readline, .readlineQuestion", function ($this, e) {
-            return sc.markParRead($this, $this.parents('.par'));
+            sc.markParRead($this.parents('.par'), sc.readingTypes.clickRed);
+            return true;
         });
 
         sc.onClick(".areareadline", function ($this, e) {
@@ -1143,6 +1169,46 @@ timApp.controller("ViewCtrl", [
         sc.isParWithinArea = function ($par) {
             return sc.selection.pars.filter($par).length > 0;
         };
+
+        $.expr[":"].onScreen = function(el) {
+            var rect = el.getBoundingClientRect();
+
+            return (
+                rect.top >= 0 &&
+                rect.left >= 0 &&
+                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+            );
+        };
+
+        sc.readPromise = null;
+        sc.readingParId = null;
+
+        sc.queueParagraphForReading = function () {
+            //noinspection CssInvalidPseudoSelector
+            var visiblePars = $('.par:onScreen').find('.readline').not('.' + sc.readClasses[sc.readingTypes.onScreen]);
+            var parToRead = visiblePars.first().parents('.par');
+            var parId = sc.getParId(parToRead);
+
+            if (sc.readPromise !== null && sc.readingParId !== parId) {
+                $timeout.cancel(sc.readPromise);
+            } else if (sc.readingParId === parId) {
+                return;
+            }
+
+            if (parToRead.length === 0) {
+                return;
+            }
+            sc.readingParId = parId;
+            var numWords = parToRead.find('.parContent').text().trim().split(/[\s\n]+/).length;
+            sc.readPromise = $timeout(function () {
+                sc.markParRead(parToRead, sc.readingTypes.onScreen).finally(sc.queueParagraphForReading);
+            }, 300 * numWords);
+        };
+
+        $($window).scroll(sc.queueParagraphForReading);
+
+        sc.queueParagraphForReading();
 
         sc.getParIndex = function($par) {
             var par_id = sc.getParId($par);
@@ -1201,6 +1267,12 @@ timApp.controller("ViewCtrl", [
             $timeout( function() {sc.showOptionsWindow(e, $par, coords);}, 80);
             return false;
         }, true);
+
+        sc.onMouseOverOut(".par", function ($this, e, select) {
+            if (select) {
+                sc.markParRead($this, sc.readingTypes.hoverPar);
+            }
+        });
 
         sc.onMouseOverOut(".areaeditline1", function ($this, e, select) {
             var areaName = $this.attr('data-area');
@@ -1316,7 +1388,9 @@ timApp.controller("ViewCtrl", [
             var $target = $(e.target);
             var tag = $target.prop("tagName");
             var $par = $this.parents('.par');
-            // sc.updateNoteBadge($par);
+            if ($par.parents('.previewcontent').length > 0) {
+                return;
+            }
 
             // Don't show paragraph menu on these specific tags or classes
             var ignoredTags = ['BUTTON', 'INPUT', 'TEXTAREA', 'A', 'QUESTIONADDEDNEW'];
@@ -2259,6 +2333,10 @@ timApp.controller("ViewCtrl", [
          */
         sc.updateNoteBadge = function ($par) {
             if (!$par) return null;
+            if ($par.parents('.previewcontent').length > 0) {
+                return;
+            }
+            sc.markParRead($par, sc.readingTypes.clickPar);
             var newElement = $par[0];
             if (!newElement) return null;
             addElementToParagraphMargin(newElement, sc.createNoteBadge($par));

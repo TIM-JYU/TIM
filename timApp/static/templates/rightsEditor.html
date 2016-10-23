@@ -4,7 +4,8 @@
     <span ng-show="filtered.length == 0">none</span>
 
     <ul>
-        <li ng-repeat="group in filtered = (grouprights | filter: {access_type: type.id}:true)">{{group.name}}
+        <li ng-repeat="group in filtered = (grouprights | filter: {access_type: type.id}:true | orderBy: ['!fullname', 'fullname', 'name'])">
+            {{group.fullname ? group.fullname + ' (' + group.name + ')' : group.name}}
             <a class="btn btn-default btn-xs" ng-click="removeConfirm(group, type.name)">remove</a>
         </li>
     </ul>

@@ -15,6 +15,8 @@ from documentmodel.docparagraph import DocParagraph
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from documentmodel.document import Document
 import pytz
+
+from markdownconverter import expand_macros, create_environment
 from routes.logger import log_info
 from theme import Theme
 from timdb.tim_models import db
@@ -44,8 +46,10 @@ def get_current_user():
             'email': session.get('email')}
 
 
-def get_current_user_object():
-    return User.query.get(getCurrentUserId())
+def get_current_user_object() -> User:
+    if not hasattr(g, 'user'):
+        g.user = User.query.get(getCurrentUserId())
+    return g.user
 
 
 def get_other_users() -> Dict[int, Dict[str, str]]:
@@ -134,15 +138,18 @@ def verify_doc_existence(doc_id):
 
 
 def verify_view_access(block_id, require=True, message=None):
-    return verify_access(getTimDb().users.has_view_access(getCurrentUserId(), block_id), require, message)
+    timdb = getTimDb()
+    return verify_access(timdb.users.has_view_access(getCurrentUserId(), block_id), require, message)
 
 
 def verify_teacher_access(block_id, require=True, message=None):
-    return verify_access(getTimDb().users.has_teacher_access(getCurrentUserId(), block_id), require, message)
+    timdb = getTimDb()
+    return verify_access(timdb.users.has_teacher_access(getCurrentUserId(), block_id), require, message)
 
 
 def verify_seeanswers_access(block_id, require=True, message=None):
-    return verify_access(getTimDb().users.has_seeanswers_access(getCurrentUserId(), block_id), require, message)
+    timdb = getTimDb()
+    return verify_access(timdb.users.has_seeanswers_access(getCurrentUserId(), block_id), require, message)
 
 
 def verify_access(has_access, require=True, message=None):
@@ -321,7 +328,7 @@ def hide_names_in_teacher(doc_id):
     return False
 
 
-def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window=False, load_plugin_states=True, show_questions=False):
+def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=False, edit_window=False, load_plugin_states=True, show_questions=False):
     timdb = getTimDb()
     html_pars, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                       pars,
@@ -337,6 +344,15 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
     #    ref_doc_id = req_json.get('ref-doc-id')
     #    ref_id = req_json.get('ref-id')
     #    html_pars = [par for par in html_pars if par['doc_id'] == ref_doc_id and par['id'] == ref_id]
+
+    settings = doc.get_settings()
+    user_macros = settings.get_user_specific_macros(user)
+    delimiter = settings.get_macro_delimiter()
+    # Process user-specific macros.
+    # We define the environment here because it stays the same for each paragraph. This improves performance.
+    env = create_environment(delimiter)
+    for htmlpar in html_pars:
+        htmlpar['html'] = expand_macros(htmlpar['html'], user_macros, delimiter, env=env, ignore_errors=True)
 
     if edit_window:
         # Skip readings and notes
@@ -357,22 +373,22 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
         pars_dict[key].append(htmlpar)
 
     for p in html_pars:
-        p['status'] = ''
+        p['status'] = set()
         p['notes'] = []
 
-    group = timdb.users.get_personal_usergroup(user) if user is not None else timdb.users.get_anon_group_id()
+    group = user.get_personal_group().id if user is not None else timdb.users.get_anon_group_id()
     if user is not None:
         readings = timdb.readings.get_common_readings(get_session_usergroup_ids(), doc)
         for r in readings:
-            key = (r['par_id'], r['doc_id'])
+            key = (r.par_id, r.doc_id)
             pars = pars_dict.get(key)
             if pars:
                 for p in pars:
-                    if r['par_hash'] == p['t'] or r['par_hash'] == p.get('ref_t'):
-                        p['status'] = 'read'
-                    elif p.get('status') != 'read':
+                    if r.par_hash == p['t'] or r.par_hash == p.get('ref_t'):
+                        p['status'].add(r.type.class_str())
+                    elif r.type.class_str() not in p.get('status'):
                         # elif is here so not to overwrite an existing 'read' marking
-                        p['status'] = 'modified'
+                        p['status'].add(r.type.class_str() + '-modified')
 
     notes = timdb.notes.get_notes(group, doc)
     is_owner = timdb.users.user_is_owner(getCurrentUserId(), doc.doc_id)
@@ -627,5 +643,6 @@ def is_considered_unpublished(doc_id):
 
 def get_viewable_blocks():
     if not hasattr(g, 'viewable'):
-        g.viewable = getTimDb().users.get_viewable_blocks(getCurrentUserId())
+        timdb = getTimDb()
+        g.viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
     return g.viewable

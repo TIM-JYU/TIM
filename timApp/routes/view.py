@@ -1,10 +1,13 @@
 """Routes for document view."""
 import time
+import traceback
 from typing import Tuple, Union, Optional
 
 from flask import Blueprint, render_template
 
 from documentmodel.docsettings import DocSettings
+from routes.logger import log_error
+from timdb.timdbexception import TimDbException
 from utils import date_to_relative
 import routes.lecture
 from documentmodel.document import get_index_from_html_list, dereference_pars
@@ -256,7 +259,11 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     doc_settings = doc.get_settings()
 
     # Preload htmls here to make dereferencing faster
-    DocParagraph.preload_htmls(xs, doc_settings, clear_cache)
+    try:
+        DocParagraph.preload_htmls(xs, doc_settings, clear_cache)
+    except TimDbException as e:
+        log_error('Document {} exception:\n{}'.format(doc_id, traceback.format_exc(chain=False)))
+        abort(500, str(e))
     if doc_settings:
         src_doc_id = doc_settings.get_source_document()
         if src_doc_id is not None:
@@ -267,20 +274,27 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     xs = dereference_pars(xs, edit_window=False, source_doc=doc.get_original_document())
     total_points = None
     tasks_done = None
+    task_groups = None
     user_list = []
-    current_user = get_current_user() if logged_in() else None
+    current_user = get_current_user_object() if logged_in() else None
     task_ids, plugin_count = pluginControl.find_task_ids(xs)
-    total_tasks = len(task_ids)
+    points_sum_rule = doc_settings.point_sum_rule(default={})
+    try:
+        total_tasks = len(points_sum_rule['groups'])
+    except:
+        total_tasks = len(task_ids)
+        points_sum_rule = None
     if teacher_or_see_answers:
         user_list = None
         if usergroup is not None:
             user_list = [user['id'] for user in timdb.users.get_users_for_group(usergroup)]
-        user_list = timdb.answers.getUsersForTasks(task_ids, user_list)
+        user_list = timdb.answers.get_points_by_rule(points_sum_rule, task_ids, user_list, flatten=True)
     elif doc_settings.show_task_summary() and logged_in():
-        info = timdb.answers.getUsersForTasks(task_ids, [current_user['id']])
+        info = timdb.answers.get_points_by_rule(points_sum_rule, task_ids, [current_user.id], flatten=True)
         if info:
             total_points = info[0]['total_points']
             tasks_done = info[0]['task_count']
+            task_groups = info[0].get('groups')
 
     show_questions = False
     no_question_auto_numbering = None
@@ -291,7 +305,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     is_in_lecture = False
     if logged_in():
-        is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user['id'])
+        is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user.id)
         if is_in_lecture:
             is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
 
@@ -301,7 +315,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     # Close database here because we won't need it for a while
     timdb.close()
 
-    current_list_user = user_list[0] if user_list else None
+    current_list_user = User.query.get(user_list[0]['id']) if user_list else None
 
     raw_css = doc_settings.css() if doc_settings else None
     doc_css = sanitize_html('<style type="text/css">' + raw_css + '</style>') if raw_css else None
@@ -328,11 +342,6 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     index = get_index_from_html_list(t['html'] for t in texts)
 
     if hide_names_in_teacher(doc_id):
-        if not timdb.users.user_is_owner(current_list_user['id'], doc_id)\
-           and current_list_user['id'] != getCurrentUserId():
-            current_list_user['name'] = '-'
-            current_list_user['real_name'] = 'Someone'
-            current_list_user['email'] = 'someone@example.com'
         for user in user_list:
             if not timdb.users.user_is_owner(user['id'], doc_id)\
                and user['id'] != getCurrentUserId():
@@ -372,7 +381,8 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                            message=message,
                            task_info={'total_points': total_points,
                                       'tasks_done': tasks_done,
-                                      'total_tasks': total_tasks})
+                                      'total_tasks': total_tasks,
+                                      'groups': task_groups})
 
 
 def redirect_to_login():
