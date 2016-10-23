@@ -209,6 +209,12 @@ videoApp.Controller = function($scope,$http,$transclude) {
         return true;
 	};
 
+    $scope.getCurrentZoom = function() {
+        if ( localStorage[$scope.origSize+".width"] )  $scope.width = localStorage[$scope.origSize+".width"];
+        if ( localStorage[$scope.origSize+".height"] )  $scope.height = localStorage[$scope.origSize+".height"];
+    }
+
+
 	$scope.getPrevZoom = function () {
         var name = "z";
 
@@ -222,12 +228,10 @@ videoApp.Controller = function($scope,$http,$transclude) {
 
         $scope.origSize = name;
         if ( typeof(localStorage) === "undefined" )  return;
-        if ( localStorage[$scope.origSize+".width"] )  $scope.width = localStorage[$scope.origSize+".width"];
-        if ( localStorage[$scope.origSize+".height"] )  $scope.height = localStorage[$scope.origSize+".height"];
     }
 
 
-	$scope.zoom = function(mult) {
+ 	$scope.zoom = function(mult) {
         if ( mult == 0 ) {
             $scope.width = $scope.origWidth;
             $scope.height = $scope.origHeight;
@@ -248,7 +252,9 @@ videoApp.Controller = function($scope,$http,$transclude) {
     }
 
 	$scope.showVideo = function() {
-        if ( $scope.videoOn ) return $scope.hideVideo(); 
+        if ( $scope.videoOn ) return $scope.hideVideo();
+        $scope.getCurrentZoom();
+
 		videoApp.nr++;
         $scope.span = $scope.limits;
 		var vid = 'vid'+videoApp.nr;
