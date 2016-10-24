@@ -17,8 +17,7 @@ tim_logger.addHandler(ch)
 
 
 def setup_logging(app):
-    formatter = logging.Formatter(
-        '{"time":%(asctime)s, "file": %(pathname)s, "line" :%(lineno)d, "messageLevel":  %(levelname)s, "message": %(message)s}')
+    formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s ')
     if not os.path.exists(app.config['LOG_DIR']):
         try:
             os.mkdir(app.config['LOG_DIR'])

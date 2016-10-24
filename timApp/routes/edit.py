@@ -226,7 +226,6 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
     timdb = getTimDb()
     verify_edit_access(doc_id)
 
-    log_info("Editing file: {}, paragraph {}".format(doc_id, par_id))
     doc = get_newest_document(doc_id)
     if not doc.has_paragraph(par_id):
         abort(400, 'Paragraph not found: ' + par_id)

@@ -26,7 +26,7 @@ from routes.common import *
 from routes.edit import edit_page
 from routes.groups import groups
 from routes.lecture import getTempDb, user_in_lecture, lecture_routes
-from routes.logger import log_info
+from routes.logger import log_info, log_error
 from routes.login import login_page, logout
 from routes.manage import manage_page
 from routes.notes import notes
@@ -122,6 +122,7 @@ def forbidden(error):
 
 @app.errorhandler(500)
 def internal_error(error):
+    log_error(get_request_message(500))
     error.description = "Something went wrong with the server, sorry. We'll fix this as soon as possible."
     return error_generic(error, 500)
 
@@ -512,6 +513,21 @@ def setslidestatus():
 @app.before_request
 def make_session_permanent():
     session.permanent = True
+
+
+@app.after_request
+def log_request(response):
+    if not request.path.startswith('/static/') and request.path != '/favicon.ico':
+        status_code = response.status_code
+        log_info(get_request_message(status_code))
+    return response
+
+
+def get_request_message(status_code):
+    return '{} [{}]: {} {}'.format(getCurrentUserName(),
+                                   request.remote_addr,
+                                   request.full_path if request.query_string else request.path,
+                                   status_code)
 
 
 @app.after_request
