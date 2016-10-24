@@ -1,4 +1,5 @@
 from flask import Blueprint, abort
+from flask import current_app
 from sqlalchemy.exc import IntegrityError
 
 from documentmodel.document import Document
@@ -24,6 +25,10 @@ def get_read_paragraphs(doc_id):
 
 @readings.route("/read/<int:doc_id>/<specifier>/<int:read_type>", methods=['PUT'])
 def set_read_paragraph(doc_id, specifier, read_type):
+    paragraph_type = ReadParagraphType(read_type)
+    if current_app.config['DISABLE_AUTOMATIC_READINGS'] and paragraph_type in (ReadParagraphType.on_screen,
+                                                                               ReadParagraphType.hover_par):
+        return okJsonResponse()
     verify_read_marking_right(doc_id)
     timdb = getTimDb()
 
@@ -35,7 +40,7 @@ def set_read_paragraph(doc_id, specifier, read_type):
 
     for group_id in get_session_usergroup_ids():
         for p in get_referenced_pars_from_req(par):
-            timdb.readings.mark_read(group_id, Document(p.get_doc_id()), p, ReadParagraphType(read_type), commit=False)
+            timdb.readings.mark_read(group_id, Document(p.get_doc_id()), p, paragraph_type, commit=False)
     try:
         timdb.commit()
     except IntegrityError:
