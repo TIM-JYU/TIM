@@ -9,6 +9,11 @@
         Location: <input class="form-control" type="text" ng-model="docLocation">
     </label>
 </div>
+<div class="checkbox">
+    <label>
+        <input class="checkbox" ng-model="gamificationCheck" type="checkbox">Gamification Document
+    </label>
+</div>
 <div uib-alert ng-repeat="alert in alerts" ng-class="'alert-' + (alert.type || 'warning')"
      close="closeAlert($index)">{{ alert.msg }}</div>
 <button class="timButton" ng-disabled="!docName" ng-click="createDocument(docName)" type="button">Create
