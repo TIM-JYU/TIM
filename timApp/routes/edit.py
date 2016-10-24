@@ -353,7 +353,7 @@ def preview_paragraphs(doc_id):
         return jsonResponse({'texts': md_to_html(text), 'js': [], 'css': []})
 
 
-def par_response(blocks,
+def par_response(pars,
                  doc,
                  original_par=None,
                  new_par_ids=None,
@@ -367,11 +367,11 @@ def par_response(blocks,
                                                   persist=update_cache)
     else:
         changed_pars = []
-        DocParagraph.preload_htmls(blocks, doc.get_settings(), context_par=context_par, persist=update_cache)
+        DocParagraph.preload_htmls(pars, doc.get_settings(), context_par=context_par, persist=update_cache)
 
     # Do not check for duplicates for preview because the operation is heavy
     if not preview:
-        duplicates = check_duplicates(blocks, doc, getTimDb())
+        duplicates = check_duplicates(pars, doc, getTimDb())
         if edited and logged_in():
             bms = Bookmarks(get_current_user_object())
             d = DocEntry.find_by_id(doc.doc_id)
@@ -383,7 +383,7 @@ def par_response(blocks,
         duplicates = None
 
     current_user = get_current_user_object()
-    pars, js_paths, css_paths, modules = post_process_pars(doc, blocks, current_user, edit_window=preview,
+    pars, js_paths, css_paths, modules = post_process_pars(doc, pars, current_user, edit_window=preview,
                                                            show_questions=True)
 
     changed_pars, _, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=preview,
