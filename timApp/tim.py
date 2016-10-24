@@ -525,7 +525,7 @@ def log_request(response):
 
 def get_request_message(status_code):
     return '{} [{}]: {} {}'.format(getCurrentUserName(),
-                                   request.remote_addr,
+                                   request.headers.get('X-Forwarded-For') or request.remote_addr,
                                    request.full_path if request.query_string else request.path,
                                    status_code)
 
