@@ -32,7 +32,7 @@ videoApp.getHeading = function(a,key,$scope,deftype) {
 	var attributes = "";
 	if ( st.length >= 2 ) { elem = st[0]; val = st[1]; }
 	var i = elem.indexOf(' ');
-	ea = [elem];
+	var ea = [elem];
 	if ( i >= 0 ) ea = [elem.substring(0,i),elem.substring(i)];
 	// var ea = elem.split(" ",2);
 	if ( ea.length > 1 ) { elem = ea[0]; attributes = " " + ea[1] + " "; }
@@ -44,24 +44,31 @@ videoApp.getHeading = function(a,key,$scope,deftype) {
     var html = "<" + elem + attributes + ">" + val + "</" + elem + ">";
 	html = videoApp.sanitize(html);
 	return html;
-} 
+};
 
 videoApp.muunna = function(value) {
   if ( !value ) return value;
 //  var s = "0 0 0 " + value.replace(/,/g," ").replace(/\//g," ").replace(/;/g," ").replace(/\./g," ").replace(/:/g," ");
 //  var s = "0 0 0 " + value.replace(/s/g,"").value.replace(/[,\/;:\.hm]/g," ");
-  var s = "0 0 0 " + value.replace(/s/g,"").replace(/[,\/;:\.hm]/g," "); // loppu s unohdetaan muodosta 1h3m2s
+  var s = "0 0 0 " + value.replace(/s/g,"").replace(/[,\/;:.hm]/g," "); // loppu s unohdetaan muodosta 1h3m2s
   s = s.trim();
   var sc = s.split(" ");
   var n = sc.length;
   var h = sc[n-3];
   var m = sc[n-2];
-  var s = sc[n-1];
-  return  h*3600.0 + m*60.0 + s*1.0;
-}
+  var ss = sc[n-1];
+  return  h*3600.0 + m*60.0 + ss*1.0;
+};
 
 
 videoApp.directiveTemplateVideo = function(t) {
+   var zoomVideo =  '<p ng-if="videoOn" class="pluginShow" >' +
+		             '<a ng-click="zoom(0)" title="Reset to original size">[r]</a> ' +
+		             '<a ng-click="zoom(1.0/1.4)" title="Zoom out">[-]</a> ' +
+		             '<a ng-click="zoom(1.4)" title="Zoom in">[+]</a> ' +
+	                 '<a ng-click="hideVideo()">{{hidetext}}</a>' +
+	               '</p>';
+
    if ( t == "smallvideo" ) return '<div class="smallVideoRunDiv ng-cloak" ng-cloak>' +
 				  '<p>Here comes header</p>' +
 				  '<p>' +
@@ -73,7 +80,7 @@ videoApp.directiveTemplateVideo = function(t) {
                   '{{doctext}}</a>'+
                   '</p>'+
 				  '<div ><p></p></div>' + 
-				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">{{hidetext}}</a></p>'+
+				  zoomVideo +
 				  '<p class="plgfooter">Here comes footer</p>'+
 				  '</div>';
    if ( t == "listvideo" ) return '<div class="listVideoRunDiv ng-cloak" ng-cloak>' +
@@ -85,8 +92,8 @@ videoApp.directiveTemplateVideo = function(t) {
                   '<a href="{{doclink}}" ng-if="doclink" target="timdoc"><span ng-if="docicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' +
                   '{{doctext}}</a>'+
                   '</li></ul>' +
-				  '<div ><p></p></div>' + 
-				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">{{hidetext}}</a></p>'+
+				  '<div ><p></p></div>' +
+				  zoomVideo +
 				  '<p class="plgfooter">Here comes footer</p>'+
 				  '</div>';
    return '<div class="videoRunDiv ng-cloak" ng-cloak>' +
@@ -99,22 +106,22 @@ videoApp.directiveTemplateVideo = function(t) {
                   '</div>' + 
                   '<a href="{{doclink}}" ng-if="doclink" target="timdoc"><span ng-if="docoicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' +
                   '{{doctext}}</a>'+
-				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">{{hidetext}}</a></p>'+
+				  zoomVideo +
 				  '<p class="plgfooter">Here comes footer</p>'+
 				  '</div>';
-}
+};
 
 videoApp.time2String = function(t) {
   if ( !t ) return "";
-  h = Math.floor(t / 3600);
+  var h = Math.floor(t / 3600);
   t = (t - h*3600);
-  m = Math.floor(t/60);
-  s = (t - m*60);
+  var m = Math.floor(t/60);
+  var s = (t - m*60);
   if ( !h ) h = ""; else h =h+"h";
   if ( !h && !m ) m = ""; else m =m+"m";
   s = s+"s";
   return h + m + s;
-}
+};
 
 videoApp.set = function(scope,attrs,name,def) {
     scope[name] = def;
@@ -122,7 +129,7 @@ videoApp.set = function(scope,attrs,name,def) {
     if ( scope.attrs && scope.attrs[name] ) scope[name] = scope.attrs[name];
     if ( scope[name] == "None" ) scope[name] = "";
     return scope[name];
-}
+};
 
 
 videoApp.directiveFunction = function(t) {
@@ -152,11 +159,12 @@ videoApp.directiveFunction = function(t) {
 			if ( attrs.stem ) scope.stem = attrs.stem;
 			if ( attrs.iframe ) scope.iframe = true;
             if ( scope.file && scope.file.indexOf("youtube") >= 0 )  scope.iframe = true; // youtube must be in iframe
-			scope.videoHtml = element[0].childNodes[2]
-			head = videoApp.getHeading(attrs,"header",scope,"h4");
+			scope.videoHtml = element[0].childNodes[2];
+			var head = videoApp.getHeading(attrs,"header",scope,"h4");
 			element[0].childNodes[0].outerHTML = head;
 			var n = element[0].childNodes.length;
 			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = videoApp.getHeading(attrs,"footer",scope,'p class="plgfooter"');
+            scope.getPrevZoom();
             if ( scope.open ) scope.showVideo();
 		},		
 		scope: {},				
@@ -169,15 +177,15 @@ videoApp.directiveFunction = function(t) {
 		*/
 		transclude: true,
 		replace: 'true',
-        template: videoApp.directiveTemplateVideo(t),
+        template: videoApp.directiveTemplateVideo(t)
 		// templateUrl: 'csTempl.html'
 	}; 
-} 
+};
 
 videoApp.ifIs = function(value,name) {
 	if ( !value ) return "";
 	return name+'="'+value+'" ';
-}
+};
 		
 videoApp.Controller = function($scope,$http,$transclude) {
 	$scope.byCode ="";
@@ -199,10 +207,54 @@ videoApp.Controller = function($scope,$http,$transclude) {
 		$scope.videoHtml.innerHTML = "<p></p>";
         $scope.span = "";
         return true;
-	}
-	
+	};
+
+    $scope.getCurrentZoom = function() {
+        if ( localStorage[$scope.origSize+".width"] )  $scope.width = localStorage[$scope.origSize+".width"];
+        if ( localStorage[$scope.origSize+".height"] )  $scope.height = localStorage[$scope.origSize+".height"];
+    }
+
+
+	$scope.getPrevZoom = function () {
+        var name = "z";
+
+        if ( $scope.width ) name += $scope.width;
+        $scope.origWidth = $scope.width;
+
+        name += "x";
+
+        if ( $scope.height ) name += $scope.height;
+        $scope.origHeight = $scope.height;
+
+        $scope.origSize = name;
+        if ( typeof(localStorage) === "undefined" )  return;
+    }
+
+
+ 	$scope.zoom = function(mult) {
+        if ( mult == 0 ) {
+            $scope.width = $scope.origWidth;
+            $scope.height = $scope.origHeight;
+            delete localStorage[$scope.origSize + ".width"];
+            delete localStorage[$scope.origSize + ".height"];
+        } else {
+            if ($scope.width) {
+                $scope.width *= mult;
+                localStorage[$scope.origSize + ".width"] = "" + $scope.width;
+            }
+            if ($scope.height) {
+                $scope.height *= mult;
+                localStorage[$scope.origSize + ".height"] = "" + $scope.height;
+            }
+        }
+        $scope.hideVideo();
+        $scope.showVideo();
+    }
+
 	$scope.showVideo = function() {
-        if ( $scope.videoOn ) return $scope.hideVideo(); 
+        if ( $scope.videoOn ) return $scope.hideVideo();
+        $scope.getCurrentZoom();
+
 		videoApp.nr++;
         $scope.span = $scope.limits;
 		var vid = 'vid'+videoApp.nr;
@@ -220,11 +272,11 @@ videoApp.Controller = function($scope,$http,$transclude) {
                 if ( parts.length > 1 )
                     file = "//www.youtube.com/embed/" + parts[1];
             }
-			$scope.videoHtml.innerHTML = '<iframe id="'+vid+'" class="showVideo" src="' + file + t +  '" ' + w + h + 'autoplay="true"  frameborder="0" allowfullscreen></iframe>';
+			$scope.videoHtml.innerHTML = '<iframe id="'+vid+'" class="showVideo" src="' + file + t +  '" ' + w + h + '  frameborder="0" allowfullscreen></iframe>';
 			// '&rel=0'+
 			// youtube: <iframe width="480" height="385" src="//www.youtube.com/embed/RwmU0O7hXts" frameborder="0" allowfullscreen></iframe>
 		} else  { 
-            t = ""
+            t = "";
             if ( $scope.start ) {
                 t = "#t="+$scope.start; // iPad ei tottele 'loadedmetadata'
                 if ( $scope.end ) t += "," + $scope.end;

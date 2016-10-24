@@ -1,32 +1,36 @@
-from datetime import timezone, datetime, timedelta
-import json
-import dateutil.parser
-
 import io
-
+import json
 import re
+from collections import OrderedDict
+from datetime import timezone, datetime, timedelta
+from itertools import product
+
+import dateutil.parser
 from flask import session
 from lxml import html
 
+from plugin import Plugin
+from routes.common import get_current_user_object
+from timdbtest import TEST_USER_1_ID, TEST_USER_2_ID
 from timroutetest import TimRouteTest
 
-TEST_USER_1_ID = 4
-TEST_USER_2_ID = 5
 
 class PluginTest(TimRouteTest):
+    answer_error = {'error': "You don't have access to this answer."}
+
     def post_answer(self, plugin_type, task_id, user_input,
-                    save_teacher=False, teacher=False, user_id=None, answer_id=None):
+                    save_teacher=False, teacher=False, user_id=None, answer_id=None, **kwargs):
         return self.json_put('/{}/{}/answer/'.format(plugin_type, task_id),
                              {"input": user_input,
                               "abData": {"saveTeacher": save_teacher,
                                          "teacher": teacher,
                                          "userId": user_id,
                                          "answer_id": answer_id,
-                                         "saveAnswer": True}})
+                                         "saveAnswer": True}}, **kwargs)
 
     def test_plugin(self):
         self.login_test1()
-        doc = self.create_doc(from_file='example_docs/mmcq_example.md')
+        doc = self.create_doc(from_file='example_docs/mmcq_example.md').document
         resp = self.get('/view/{}'.format(doc.doc_id), expect_status=200)
         tree = html.fromstring(resp)
         mmcq_xpath = r'.//div[@class="par mmcq"]/div[@class="parContent"]/div[@id="{}.mmcqexample.{}"]'.format(
@@ -81,18 +85,24 @@ class PluginTest(TimRouteTest):
         self.maxDiff = None
 
         self.assertListEqual(
-            [{'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[true, false, true]',
-               'points': 9.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[false, false, true]',
-               'points': None, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[true, true, true]',
-               'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[true, false, false]',
-               'points': 2.0, 'task_id': task_id, 'valid': False, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[true, true, false]',
-               'points': 1.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID}], 'content': '[true, false, false]',
-               'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None}],
+            [{'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+              'content': '[true, false, true]',
+              'points': 9.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
+             {'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+              'content': '[false, false, true]',
+              'points': None, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
+             {'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+              'content': '[true, true, true]',
+              'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
+             {'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+              'content': '[true, false, false]',
+              'points': 2.0, 'task_id': task_id, 'valid': False, 'last_points_modifier': None},
+             {'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+              'content': '[true, true, false]',
+              'points': 1.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
+             {'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+              'content': '[true, false, false]',
+              'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None}],
             [{k: v for k, v in ans.items() if k not in ('answered_on', 'id')} for ans in answer_list])
         for ans in answer_list:
             d = dateutil.parser.parse(ans['answered_on'])
@@ -115,16 +125,16 @@ class PluginTest(TimRouteTest):
                                    'par_id': par_id,
                                    'doc_id': doc.doc_id})
         self.assertDictEqual({'html': "<div id='" + task_id_ext + "' data-plugin='/mmcq'><mmcq "
-                                                              "data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;onTry&quot;:null,&quot;stem&quot;:&quot;&lt;p&gt;Answer "
-                                                              'yes or no to the following '
-                                                              'questions.&lt;/p&gt;&quot;,&quot;choices&quot;:[{&quot;text&quot;:&quot;&lt;p&gt;&lt;span '
-                                                              'class=\\&quot;math '
-                                                              'inline\\&quot;&gt;\\\\(2^2=4\\\\)&lt;/span&gt;&lt;/p&gt;&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;&lt;p&gt;This '
-                                                              'is true.&lt;/p&gt;&quot;},{&quot;text&quot;:&quot;&lt;p&gt;All '
-                                                              'cats are '
-                                                              'black.&lt;/p&gt;&quot;,&quot;correct&quot;:false,&quot;reason&quot;:&quot;&lt;p&gt;No '
-                                                              'way.&lt;/p&gt;&quot;},{&quot;text&quot;:&quot;&lt;p&gt;Guess.&lt;/p&gt;&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;&lt;p&gt;No '
-                                                              "reason.&lt;/p&gt;&quot;}]}}'></mmcq></div>",
+                                                                  "data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;onTry&quot;:null,&quot;stem&quot;:&quot;&lt;p&gt;Answer "
+                                                                  'yes or no to the following '
+                                                                  'questions.&lt;/p&gt;&quot;,&quot;choices&quot;:[{&quot;text&quot;:&quot;&lt;p&gt;&lt;span '
+                                                                  'class=\\&quot;math '
+                                                                  'inline\\&quot;&gt;\\\\(2^2=4\\\\)&lt;/span&gt;&lt;/p&gt;&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;&lt;p&gt;This '
+                                                                  'is true.&lt;/p&gt;&quot;},{&quot;text&quot;:&quot;&lt;p&gt;All '
+                                                                  'cats are '
+                                                                  'black.&lt;/p&gt;&quot;,&quot;correct&quot;:false,&quot;reason&quot;:&quot;&lt;p&gt;No '
+                                                                  'way.&lt;/p&gt;&quot;},{&quot;text&quot;:&quot;&lt;p&gt;Guess.&lt;/p&gt;&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;&lt;p&gt;No '
+                                                                  "reason.&lt;/p&gt;&quot;}]}}'></mmcq></div>",
                               'reviewHtml': None}, j)
 
         timdb = self.get_db()
@@ -155,7 +165,7 @@ class PluginTest(TimRouteTest):
         anon_id = timdb.users.get_anon_user_id()
         anon_answers = timdb.answers.get_answers(anon_id, task_id)
 
-        self.assertListEqual([{'collaborators': [{'real_name': None, 'user_id': anon_id}],
+        self.assertListEqual([{'collaborators': [{'real_name': None, 'email': None, 'user_id': anon_id}],
                                'content': '[true, false, false]',
                                'points': 6.0,
                                'task_id': task_id,
@@ -182,7 +192,7 @@ class PluginTest(TimRouteTest):
 
     def test_idless_plugin(self):
         self.login_test1()
-        doc = self.create_doc(from_file='example_docs/idless_plugin.md')
+        doc = self.create_doc(from_file='example_docs/idless_plugin.md').document
         resp = self.get('/view/{}'.format(doc.doc_id), expect_status=200)
         tree = html.fromstring(resp)
         mmcq_xpath = r'.//div[@class="par csPlugin"]/div[@class="parContent"]/div[@id="{}..{}"]'.format(
@@ -193,7 +203,7 @@ class PluginTest(TimRouteTest):
     def test_upload(self):
         self.login_test1()
         db = self.get_db()
-        doc = self.create_doc(from_file='example_docs/upload_plugin.md')
+        doc = self.create_doc(from_file='example_docs/upload_plugin.md').document
         task_name = 'testupload'
         task_name2 = 'testupload2'
         task_id = '{}.{}'.format(doc.doc_id, task_name)
@@ -216,7 +226,8 @@ class PluginTest(TimRouteTest):
         self.assertDictResponse({'error': 'Non-existent upload: {}'.format(invalid_file)}, resp, expect_status=400)
         self.assertEqual(file_content, self.get(ur['file'], expect_status=200))
         self.assertEqual(file_content,
-                            self.get('/uploads/{}/{}/{}/'.format(doc.doc_id, task_name, session['user_name']), expect_status=200))
+                         self.get('/uploads/{}/{}/{}/'.format(doc.doc_id, task_name, session['user_name']),
+                                  expect_status=200))
 
         self.login_test2()
 
@@ -246,7 +257,8 @@ class PluginTest(TimRouteTest):
 
     def do_plugin_upload(self, doc, file_content, filename, task_id, task_name, expect_version=1):
         ur = self.post('/pluginUpload/{}/{}/'.format(doc.doc_id, task_name),
-                             data={'file': (io.BytesIO(bytes(file_content, encoding='utf-8')), filename)}, as_json=True, expect_status=200)
+                       data={'file': (io.BytesIO(bytes(file_content, encoding='utf-8')), filename)}, as_json=True,
+                       expect_status=200)
         mimetype = "text/plain"
         self.assertDictEqual({'file': '/uploads/{}/{}/{}/{}/{}'.format(doc.doc_id,
                                                                        task_name,
@@ -276,28 +288,34 @@ class PluginTest(TimRouteTest):
     def test_group_answering(self):
         self.login_test1()
         self.login_test2(add=True)
-        doc = self.create_doc(from_file='example_docs/upload_plugin.md')
+        doc = self.create_doc(from_file='example_docs/upload_plugin.md').document
         task_name = 'testupload'
         task_id = '{}.{}'.format(doc.doc_id, task_name)
         filename = 'test.txt'
         file_content = 'test file'
         mimetype, ur, user_input = self.do_plugin_upload(doc, file_content, filename, task_id, task_name)
-        answer_list = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']), expect_status=200, as_json=True)
+        answer_list = self.get_task_answers(task_id)
         self.assertEqual(1, len(answer_list))
-        self.assertListEqual([{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID},
-                              {'real_name': 'Test user 2', 'user_id': TEST_USER_2_ID}], answer_list[0]['collaborators'])
+        self.assertListEqual([{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID},
+                              {'real_name': 'Test user 2', 'email': 'test2@example.com', 'user_id': TEST_USER_2_ID}],
+                             answer_list[0]['collaborators'])
         self.assertEqual(file_content, self.get(ur['file'], expect_status=200))
         self.login_test2()
+        answer_list = self.get_task_answers(task_id)
+        self.assertEqual(1, len(answer_list))
+        self.assertListEqual([{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID},
+                              {'real_name': 'Test user 2', 'email': 'test2@example.com', 'user_id': TEST_USER_2_ID}],
+                             answer_list[0]['collaborators'])
+        self.assertEqual(file_content, self.get(ur['file'], expect_status=200))
+
+    def get_task_answers(self, task_id):
         answer_list = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']), expect_status=200,
                                     as_json=True)
-        self.assertEqual(1, len(answer_list))
-        self.assertListEqual([{'real_name': 'Test user 1', 'user_id': TEST_USER_1_ID},
-                              {'real_name': 'Test user 2', 'user_id': TEST_USER_2_ID}], answer_list[0]['collaborators'])
-        self.assertEqual(file_content, self.get(ur['file'], expect_status=200))
+        return answer_list
 
     def test_all_answers(self):
         self.login_test1()
-        doc = self.create_doc(from_file='example_docs/multiple_mmcqs.md')
+        doc = self.create_doc(from_file='example_docs/multiple_mmcqs.md').document
         plugin_type = 'mmcq'
         task_id = '{}.mmcqexample'.format(doc.doc_id)
         task_id2 = '{}.mmcqexample2'.format(doc.doc_id)
@@ -317,27 +335,180 @@ class PluginTest(TimRouteTest):
         text = self.get('/allDocumentAnswersPlain/{}'.format(doc.doc_id), expect_status=200)
         date_re = r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\+\d{2}:\d{2}'
         self.assertRegex(text, r"""
-testuser1: {1}; {0}; 1; 2\.0
+{5}; {3}; {1}; {0}; 1; 2\.0
 \[True, False, False\]
 
 ----------------------------------------------------------------------------------
-testuser2: {1}; {0}; 1; 2\.0
+{6}; {4}; {1}; {0}; 1; 2\.0
 \[True, True, True\]
 
 ----------------------------------------------------------------------------------
-testuser1: {2}; {0}; 1; 1\.0
+{5}; {3}; {2}; {0}; 1; 1\.0
 \[True, False\]
 
 ----------------------------------------------------------------------------------
-testuser2: {2}; {0}; 1; 2\.0
+{6}; {4}; {2}; {0}; 1; 2\.0
 \[False, False\]
-""".format(date_re, re.escape(task_id), re.escape(task_id2)).strip())
+""".format(date_re, re.escape(task_id), re.escape(task_id2), 'testuser1', 'testuser2', 'Test user 1',
+           'Test user 2').strip())
         text = self.get('/allAnswersPlain/{}'.format(task_id), expect_status=200)
         self.assertRegex(text, r"""
-testuser1: {1}; {0}; 1; 2\.0
+{4}; {2}; {1}; {0}; 1; 2\.0
 \[True, False, False\]
 
 ----------------------------------------------------------------------------------
-testuser2: {1}; {0}; 1; 2\.0
+{5}; {3}; {1}; {0}; 1; 2\.0
 \[True, True, True\]
-        """.format(date_re, re.escape(task_id)).strip())
+        """.format(date_re, re.escape(task_id), 'testuser1', 'testuser2', 'Test user 1', 'Test user 2').strip())
+
+    def test_save_points(self):
+        cannot_give_custom = {'error': 'You cannot give yourself custom points in this task.'}
+        self.login_test1()
+        doc = self.create_doc(from_file='example_docs/mmcq_example.md').document
+        plugin_type = 'mmcq'
+        task_id = '{}.mmcqexample'.format(doc.doc_id)
+        self.post_answer(plugin_type, task_id, [True, False, False])
+        answer_list = self.get_task_answers(task_id)
+        answer_id = answer_list[0]['id']
+        self.assertEqual(2.0, answer_list[0]['points'])
+
+        # Teacher can give any points regardless of plugin settings
+        self.check_save_points(TEST_USER_1_ID, answer_id, 5, 200, self.ok_resp)
+        answer_list = self.get_task_answers(task_id)
+        self.assertEqual(5.0, answer_list[0]['points'])
+
+        # Teacher can clear points
+        self.check_save_points(TEST_USER_1_ID, answer_id, None, 200, self.ok_resp)
+        self.check_save_points(TEST_USER_1_ID, answer_id, '', 200, self.ok_resp)
+        answer_list = self.get_task_answers(task_id)
+        self.assertEqual(None, answer_list[0]['points'])
+
+        point_format_error = {'error': 'Invalid points format.'}
+        self.check_save_points(TEST_USER_1_ID, answer_id, '6,6', 400, point_format_error)
+        self.check_save_points(TEST_USER_1_ID, answer_id, '6.6', 200, self.ok_resp)
+        answer_list = self.get_task_answers(task_id)
+        self.assertEqual(6.6, answer_list[0]['points'])
+        self.check_save_points(TEST_USER_2_ID, answer_id, None, 200, self.ok_resp)
+
+        self.login_test2()
+        self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, self.permission_error)
+        self.check_save_points(TEST_USER_2_ID, answer_id, 1, 403, self.permission_error)
+        timdb = self.get_db()
+        timdb.users.grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id)
+        self.post_answer(plugin_type, task_id, [True, False, False])
+        answer_list = self.get_task_answers(task_id)
+        answer_id2 = answer_list[0]['id']
+        self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, self.permission_error)
+        self.check_save_points(TEST_USER_2_ID, answer_id, 1, 403, self.answer_error)
+        self.check_save_points(TEST_USER_1_ID, answer_id2, 1, 403, self.permission_error)
+
+        self.check_save_points(TEST_USER_2_ID, answer_id2, 1, 400, cannot_give_custom)
+        p = Plugin.from_task_id(task_id, user=get_current_user_object())
+        p.set_value('pointsRule', {'allowUserMin': 0, 'allowUserMax': 5}).save()
+        self.check_save_points(TEST_USER_2_ID, answer_id2, 6, 400, {'error': 'Points must be in range [0,5]'})
+        self.check_save_points(TEST_USER_2_ID, answer_id2, 1, 200, self.ok_resp)
+        self.check_save_points(TEST_USER_2_ID, answer_id2, None, 400, point_format_error)
+        self.check_save_points(TEST_USER_2_ID, answer_id2, '', 400, point_format_error)
+
+        timdb.users.grant_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id, 'see answers')
+        self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, self.permission_error)
+        timdb.users.grant_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id, 'teacher')
+        self.check_save_points(TEST_USER_1_ID, answer_id, 1, 200, self.ok_resp)
+
+    def test_point_sum_rule(self):
+        self.login_test1()
+        d = self.create_doc(from_file='example_docs/mmcq_example.md').document
+        timdb = self.get_db()
+        timdb.users.grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), d.doc_id)
+        task_ids = ['{}.{}-{}'.format(d.doc_id, a, b) for a, b in product(('t1', 't2', 't3'), ('a', 'b', 'c'))]
+        answers = [
+            # t1
+            [True, False, True],  # 3 correct
+            [True, True, False],  # 1 correct
+            [True, False, False],  # 2 correct
+            # t2
+            [False, True, False],  # 0 correct
+            [False, True, False],  # 0 correct
+            [False, False, False],  # 1 correct
+            # t3
+            [False, False, True],  # 2 correct
+            [False, True, False],  # 0 correct
+            [False, False, False],  # 1 correct
+        ]
+        pars = d.get_paragraphs()
+        new = pars[0]
+        for t, a in zip(task_ids, answers):
+            new = new.clone()
+            new.set_attr('taskId', t.split('.')[1])
+            new.save(add=True)
+            self.post_answer('mmcq', t, a, expect_status=200)
+        self.login_test2()
+        for t, a in zip(task_ids, answers):
+            self.post_answer('mmcq', t, [not b for b in a], expect_status=200)
+        cases = [
+            ('best', 0, 0, 0),
+            ('best', 1, 6, 8),
+            ('best', 2, 9, 14),
+            ('best', 3, 10, 17),
+            ('worst', 0, 0, 0),
+            ('worst', 1, 1, 3),
+            ('worst', 2, 4, 9),
+            ('worst', 3, 10, 17),
+        ]
+        pts = OrderedDict([('1st', 6.0), ('2nd', 1.0), ('3rd', 3.0)])
+        pts2 = OrderedDict(((k, 9.0 - v) for k, v in pts.items()))
+        for count_type, count, sum1, sum2 in cases:
+            points = timdb.answers.get_points_by_rule(
+                {'groups': {'1st': 't1.*', '2nd': 't2.*', '3rd': 't3.*'},
+                 'count': {count_type: count}},
+                task_ids, [TEST_USER_1_ID, TEST_USER_2_ID])
+            self.assertEqual(sum1, points[TEST_USER_1_ID]['sum'])
+            self.assertEqual(sum2, points[TEST_USER_2_ID]['sum'])
+            for k, v in pts.items():
+                self.assertEqual(v, points[TEST_USER_1_ID]['groups'][k]['sum'])
+                self.assertEqual(9 - v, points[TEST_USER_2_ID]['groups'][k]['sum'])
+            points = timdb.answers.get_points_by_rule(
+                {'groups': {'1st': 't1.*', '2nd': 't2.*', '3rd': 't3.*'},
+                 'count': {count_type: count}},
+                task_ids, [TEST_USER_1_ID, TEST_USER_2_ID], flatten=True)
+            self.assertListEqual([{'email': 'test1@example.com',
+                                   'groups': pts,
+                                   'id': 4,
+                                   'name': 'testuser1',
+                                   'real_name': 'Test user 1',
+                                   'task_count': 3,
+                                   'total_points': sum1},
+                                  {'email': 'test2@example.com',
+                                   'groups': pts2,
+                                   'id': 5,
+                                   'name': 'testuser2',
+                                   'real_name': 'Test user 2',
+                                   'task_count': 3,
+                                   'total_points': sum2}], points)
+        d.set_settings({'show_task_summary': True,
+                        'point_sum_rule': {'groups': {'1st': 't1.*', '2nd': 't2.*', '3rd': 't3.*'},
+                                           'count': {'best': 2}}})
+        d_html = self.get('/view/{}'.format(d.doc_id), as_tree=True)
+        task_summary_text = d_html.cssselect('.taskSummary')[0].text_content()
+        self.assertIn('Total points: {}'.format(cases[2][3]), task_summary_text)
+        self.assertIn(', '.join(('{}: {}'.format(k, v) for k, v in pts2.items())), task_summary_text)
+
+        # Make sure invalid settings don't crash the document
+        d.add_setting('point_sum_rule', {'groups': {'1st': '*', '2nd': 't2.*', '3rd': 't3.*'},
+                                         'count': {'best': 'asd'}})
+        self.get('/view/{}'.format(d.doc_id))
+        d.add_setting('point_sum_rule', {'groups': 'test'})
+        self.get('/view/{}'.format(d.doc_id))
+        d.add_setting('point_sum_rule', {'groupz': 'test'})
+        self.get('/view/{}'.format(d.doc_id))
+        d.add_setting('point_sum_rule', [])
+        self.get('/view/{}'.format(d.doc_id))
+        d.add_setting('point_sum_rule', None)
+        self.get('/view/{}'.format(d.doc_id))
+
+    def check_save_points(self, user_id, answer_id, points, expect_status, expect_content):
+        self.json_put('/savePoints/{}/{}'.format(user_id, answer_id),
+                      json_data={'points': points},
+                      expect_status=expect_status,
+                      as_json=True,
+                      expect_content=expect_content)

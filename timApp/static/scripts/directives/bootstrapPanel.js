@@ -8,7 +8,7 @@ timApp.directive("bootstrapPanel", ['$window', '$log', '$http', function ($windo
         transclude: true,
         scope: {
             title: '@?',
-            closeFn: '&onClose',
+            closeFn: '&',
             showClose: '=?'
         },
         templateUrl: "/static/templates/bootstrapPanel.html",
@@ -20,7 +20,7 @@ timApp.directive("bootstrapPanel", ['$window', '$log', '$http', function ($windo
             var sc = $scope;
 
             sc.close = function () {
-                $element.hide();
+                $element.addClass('ng-hide');
                 sc.closeFn();
             };
         }

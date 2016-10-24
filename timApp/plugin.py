@@ -1,11 +1,15 @@
 from copy import deepcopy
 
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 
 from datetime import datetime
 
+import yaml
+
+from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from markdownconverter import expand_macros
+from timdb.models import User
 from timdb.timdbexception import TimDbException
 from utils import parse_yaml, merge
 
@@ -19,10 +23,11 @@ class Plugin:
     answer_limit_key = 'answerLimit'
     limit_defaults = {'mmcq': 1}
 
-    def __init__(self, task_id: str, values: dict, plugin_type: str):
+    def __init__(self, task_id: Optional[str], values: dict, plugin_type: str, par: Optional[DocParagraph]=None):
         self.task_id = task_id
         self.values = values
         self.type = plugin_type
+        self.par = par
 
     @staticmethod
     def get_date(d):
@@ -30,7 +35,7 @@ class Plugin:
         return d
 
     @staticmethod
-    def from_task_id(task_id: str):
+    def from_task_id(task_id: str, user: Optional[User]=None):
         doc_id, task_id_name, par_id = Plugin.parse_task_id(task_id)
         doc = Document(doc_id)
         if par_id is not None:
@@ -44,13 +49,13 @@ class Plugin:
             raise PluginException('Task not found in the document: ' + task_id_name)
         plugin_data = parse_plugin_values(par,
                                           global_attrs=doc.get_settings().global_plugin_attrs(),
-                                          macros=doc.get_settings().get_macros(),
+                                          macros=doc.get_settings().get_macros_with_user_specific(user),
                                           macro_delimiter=doc.get_settings().get_macro_delimiter())
         if 'error' in plugin_data:
             if type(plugin_data) is str:
                 raise PluginException(plugin_data + ' Task id: ' + task_id_name)
             raise PluginException(plugin_data['error'] + ' Task id: ' + task_id_name)
-        p = Plugin(task_id, plugin_data['markup'], par.get_attrs()['plugin'])
+        p = Plugin(task_id_name, plugin_data['markup'], par.get_attrs()['plugin'], par=par)
         return p
 
     @staticmethod
@@ -96,7 +101,32 @@ class Plugin:
     def points_multiplier(self, default=1):
         return self.points_rule({}).get('multiplier', default)
 
+    def validate_points(self, points: Union[str, float]):
+        try:
+            points = float(points)
+        except (ValueError, TypeError):
+            raise PluginException('Invalid points format.')
+        points_min = self.user_min_points()
+        points_max = self.user_max_points()
+        if points_min is None or points_max is None:
+            raise PluginException('You cannot give yourself custom points in this task.')
+        elif not (points_min <= points <= points_max):
+            raise PluginException('Points must be in range [{},{}]'.format(points_min, points_max))
+        return points
 
+    def to_paragraph(self) -> DocParagraph:
+        text = '```\n' + yaml.dump(self.values) + '\n```'
+        if self.task_id:
+            return DocParagraph.create(self.par.doc, par_id=self.par.get_id(), md=text, attrs={'taskId': self.task_id, 'plugin': self.type})
+        else:
+            return DocParagraph.create(self.par.doc, par_id=self.par.get_id(), md=text, attrs={'plugin': self.type})
+
+    def set_value(self, key: str, value):
+        self.values[key] = value
+        return self
+
+    def save(self):
+        self.to_paragraph().save()
 
 
 class PluginException(Exception):

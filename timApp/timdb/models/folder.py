@@ -1,7 +1,7 @@
 from typing import Optional
 
 from documentmodel.document import Document
-from tim_app import db
+from timdb.tim_models import db
 from timdb.blocktypes import blocktypes
 from timdb.dbutils import insert_block, copy_default_rights
 from timdb.models.docentry import DocEntry
@@ -76,6 +76,8 @@ class Folder(db.Model):
         if '\0' in path:
             raise TimDbException('Folder name cannot contain null characters.')
 
+        path = path.strip('/')
+
         # Root folder is special case
         if not path:
             return Folder.get_root()
@@ -94,7 +96,7 @@ class Folder(db.Model):
         Folder.create(rel_path, owner_group_id, commit=False)
 
         if apply_default_rights:
-            copy_default_rights(f.id, blocktypes.FOLDER)
+            copy_default_rights(f.id, blocktypes.FOLDER, commit=False)
 
         if commit:
             db.session.commit()

@@ -9,9 +9,9 @@ from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from routes.logger import log_info
 from sql.migrate_to_postgre import perform_migration
-from tim_app import app, db
+from tim_app import app
 from timdb import tempdb_models
-from timdb.tim_models import Version, AccessType
+from timdb.tim_models import Version, AccessType, db
 from timdb.timdb2 import TimDb
 from timdb.timdbexception import TimDbException
 from timdb.users import LOGGED_IN_USERNAME
@@ -43,13 +43,12 @@ def initialize_database(create_docs=True):
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
-    db_path = app.config['DATABASE']
     files_root_path = app.config['FILES_PATH']
     Document.default_files_root = files_root_path
     DocParagraph.default_files_root = files_root_path
     was_created = postgre_create_database(app.config['TIM_NAME'], app.config['TIM_NAME'])
     log_info('Database {} {}.'.format(app.config['TIM_NAME'], 'was created' if was_created else 'exists'))
-    timdb = TimDb(db_path=db_path, files_root_path=files_root_path)
+    timdb = TimDb(files_root_path=files_root_path)
     db.create_all(bind='tim_main')
     sess = timdb.session
     if sess.query(AccessType).count() > 0:
@@ -72,8 +71,11 @@ def initialize_database(create_docs=True):
         anon_group = timdb.users.get_anon_group_id()
         timdb.users.create_user_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
         timdb.users.create_user_with_group('tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi', is_admin=True)
-        timdb.users.create_user_with_group('testuser1', 'Test user 1', 'test1@example.com', password='test1pass')
-        timdb.users.create_user_with_group('testuser2', 'Test user 2', 'test2@example.com', password='test2pass')
+        for i in range(1, 4):
+            timdb.users.create_user_with_group('testuser{}'.format(i),
+                                               'Test user {}'.format(i),
+                                               'test{}@example.com'.format(i),
+                                               password='test{}pass'.format(i))
         recovered_docs = timdb.documents.recover_db(timdb.users.get_admin_group_id())
 
         if recovered_docs > 0:
@@ -95,6 +97,8 @@ def initialize_database(create_docs=True):
 def update_database():
     """Updates the database structure if needed.
 
+    DEPRECATED: DO NOT USE THIS UPDATE METHOD ANYMORE, SEE tim_models.py!
+
     The dict `update_dict` is a dictionary that describes which database versions need which update.
     For example, if the current db version is 0, update_datamodel method will be called and also all other methods
     whose key in the dictionary is greater than 0.
@@ -105,9 +109,10 @@ def update_database():
 
     The update method should return True if the update was applied or False if it was skipped for some reason.
     """
-    timdb = TimDb(db_path=app.config['DATABASE'], files_root_path=app.config['FILES_PATH'])
+    timdb = TimDb(files_root_path=app.config['FILES_PATH'])
     ver = timdb.get_version()
     ver_old = ver
+    # DEPRECATED: DO NOT USE THIS UPDATE METHOD ANYMORE, SEE tim_models.py!
     update_dict = {0: update_datamodel,
                    1: update_answers,
                    2: update_rights,

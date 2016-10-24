@@ -1,13 +1,13 @@
 #!/bin/bash 
 # Restart pali 
 
-dockerImage="pali"
+dockerImage="timimages/pali"
 extraPorts=""
 extraCmds="/bin/bash"
 
 if [ "$2" = "d" ]
 then
-    dockerImage="palisudo"
+    dockerImage="timimages/palisudo"
     extraPorts="-p 49997:22"
     extraCmds=''
 fi

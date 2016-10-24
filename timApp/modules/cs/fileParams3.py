@@ -60,6 +60,24 @@ def get_param(query, key, default):
     return value
 
 
+def get_param_table(query, key):
+    value = get_param(query, key, None)
+    if not value: return []
+    if not isinstance(value, list):
+        # or (len(number_rule) >= 1 and isinstance(number_rule[0], float)):
+        # number_rule = [number_rule]
+        return [value]
+    return value
+
+
+def get_2_items(js, key1, key2, def1=None, def2=None):
+    if not isinstance(js, dict):
+        return js, def2
+    value1 = js.get(key1,def1)
+    value2 = js.get(key2,def2)
+    return value1, value2
+
+
 def handle_by(byc):
     if not byc: return byc
     bycs = byc.split("\n")

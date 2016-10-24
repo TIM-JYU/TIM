@@ -121,7 +121,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             http({
                 url: '/checkLecture',
                 method: 'GET',
-                params: {'doc_id': $scope.docId, 'buster': new Date().getTime()}
+                params: {'doc_id': $scope.docId}
             })
                 .success(function (answer) {
                     var lectureCode = GetURLParameter('lecture');
@@ -152,8 +152,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                             method: 'GET',
                             params: {
                                 'doc_id': $scope.docId,
-                                'lecture_code': lectureCode,
-                                'buster': new Date().valueOf()
+                                'lecture_code': lectureCode
                             }
                         }).success(function (data) {
                             var changeLecture = $scope.joinLecture(lectureCode, data, answer.isInLecture, answer.lectureCode);
@@ -216,8 +215,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 params: {
                     'doc_id': $scope.docId,
                     'lecture_code': lectureName,
-                    'password_quess': $scope.passwordQuess,
-                    'buster': new Date().getTime()
+                    'password_quess': $scope.passwordQuess
                 }
             })
                 .success(function (answer) {
@@ -301,8 +299,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             $scope.json = data.json;
             var args = {
                 lecture_id: data.lecture_id,
-                doc_id: data.doc_id,
-                buster: new Date().getTime()
+                doc_id: data.doc_id
             };
             if (data.asked_id) args['asked_id'] = data.asked_id;
             else if (data.question_id) args['question_id'] = data.question_id; // Remove when moving questions to document finished
@@ -310,8 +307,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             http({
                 url: '/askQuestion',
                 method: 'POST',
-                params: args,
-                buster: new Date().getTime()
+                params: args
             })
                 .success(function (id) {
                     $scope.showStudentAnswers = true;
@@ -426,8 +422,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 params: {
                     'asked_id': answer.askedId,
                     'lecture_id': $scope.lectureId,
-                    'answers': answerString,
-                    'buster': new Date().getTime()
+                    'answers': answerString
                 }
             })
                 .success(function (answer) {
@@ -447,8 +442,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 method: 'PUT',
                 params: {
                     'asked_id': asked_id,
-                    'lecture_id': $scope.lectureId,
-                    'buster': new Date().getTime()
+                    'lecture_id': $scope.lectureId
                 }
             })
                 .error(function () {
@@ -827,7 +821,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             http({
                 url: '/deleteLecture',
                 method: 'POST',
-                params: {doc_id: $scope.docId, lecture_id: $scope.lectureId, buster: new Date().valueOf()}
+                params: {doc_id: $scope.docId, lecture_id: $scope.lectureId}
             })
                 .success(function (answer) {
                     $scope.showBasicView(answer);
@@ -854,8 +848,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 method: "POST",
                 params: {
                     'lecture_id': lecture_id || $scope.lectureId,
-                    'doc_id': $scope.docId,
-                    'buster': new Date().valueOf()
+                    'doc_id': $scope.docId
                 }
             })
                 .success(function (answer) {
@@ -909,7 +902,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             http({
                 url: '/getAllMessages',
                 type: 'GET',
-                params: {lecture_id: $scope.lectureId, buster: new Date().getTime()}
+                params: {lecture_id: $scope.lectureId}
             })
                 .success(function (answer) {
                     angular.forEach(answer.data, function (msg) {
@@ -953,8 +946,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                     'asked_id': answer.askedId,
                     'doc_id': $scope.docId,
                     'lecture_id': $scope.lectureId,
-                    'time': answer.latestAnswer,
-                    'buster': new Date().getTime()
+                    'time': answer.latestAnswer
                 }
             })
                 .success(function (answer) {
@@ -1002,8 +994,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                         'get_messages': $scope.lectureSettings.useWall,
                         'get_questions': $scope.lectureSettings.useQuestions,
                         'current_question_id': $scope.current_question_id || null,
-                        'current_points_id': $scope.current_points_id || null,
-                        'buster': new Date().getTime()
+                        'current_points_id': $scope.current_points_id || null
                     }
                 })
                     .success(function (answer) {
@@ -1150,8 +1141,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 url: '/getQuestionManually',
                 type: 'GET',
                 params: {
-                    'lecture_id': $scope.lectureId,
-                    'buster': new Date().getTime()
+                    'lecture_id': $scope.lectureId
                 }
             })
                 .success(function (answer) {

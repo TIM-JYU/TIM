@@ -8,19 +8,20 @@ name is class name in lowercase.
 
 Keep the model classes in alphabetical order.
 
-For now, use initdb2.update_database method for making database updates. Don't forget to also update the
-NEWEST_DB_VERSION constant.
-
-TODO: Use Flask-Migrate <http://flask-migrate.readthedocs.io/en/latest/> instead of homebrew update mechanism.
+Use Flask-Migrate for database migrations. See <http://flask-migrate.readthedocs.io/en/latest/>.
 """
 import datetime
 import inspect
 import sys
 from datetime import timezone
 
+from flask.ext.sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from sqlalchemy.schema import CreateTable
 
-from tim_app import db, app
+from timdb.readparagraphtype import ReadParagraphType
+
+db = SQLAlchemy()
 
 
 class AccessType(db.Model):
@@ -99,7 +100,7 @@ class BlockAccess(db.Model):
     block_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     usergroup_id = db.Column(db.Integer, db.ForeignKey('usergroup.id'), primary_key=True)
     type = db.Column(db.Integer, db.ForeignKey('accesstype.id'), primary_key=True)
-    accessible_from = db.Column(db.DateTime(timezone=True))
+    accessible_from = db.Column(db.DateTime(timezone=True), default=func.now())
     accessible_to = db.Column(db.DateTime(timezone=True))
 
 
@@ -186,8 +187,9 @@ class ReadParagraphs(db.Model):
     usergroup_id = db.Column(db.Integer, primary_key=True)
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)  # NOTE Added foreign key
     par_id = db.Column(db.Text, primary_key=True)
+    type = db.Column(db.Enum(ReadParagraphType), nullable=False, primary_key=True)
     par_hash = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime(timezone=True), nullable=False)
+    timestamp = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
 
 
 class Translation(db.Model):
@@ -248,6 +250,7 @@ def print_schema(bind: str = 'tim_main'):
     :param bind: The bind to use. Default is tim_main.
     """
     models = inspect.getmembers(sys.modules[__name__], lambda x: inspect.isclass(x) and hasattr(x, '__table__'))
+    from tim_app import app
     eng = db.get_engine(app, bind)
 
     for _, model_class in models:

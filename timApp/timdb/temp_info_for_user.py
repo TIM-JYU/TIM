@@ -5,7 +5,7 @@ Used to handle temp data that is related to lecture, question and user
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import scoped_session
 
-from tim_app import db
+from timdb.tim_models import db
 
 
 class TempInfoUserQuestion:

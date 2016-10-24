@@ -90,7 +90,7 @@ def paste_from_clipboard(doc_id):
             pass
 
     timdb.commit()
-    return par_response(pars, doc)
+    return par_response(pars, doc, edited=True)
 
 
 @clipboard.route('/clipboard/deletesrc/<int:doc_id>', methods=['POST'])
@@ -128,7 +128,7 @@ def show_clipboard():
 
     clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
     pars = [DocParagraph.from_dict(doc, par) for par in clip.read() or []]
-    return par_response(pars, doc, edit_window=True)
+    return par_response(pars, doc, preview=True)
 
 
 @clipboard.route('/clipboardstatus', methods=['GET'])

@@ -9,7 +9,7 @@ from documentmodel.documentwriter import DocumentWriter
 from htmlSanitize import sanitize_html
 from markdownconverter import par_list_to_html_list, expand_macros
 from timdb.timdbexception import TimDbException
-from typing import Generic, Optional, Dict, List, Tuple
+from typing import Generic, Optional, Dict, List, Tuple, Any
 from utils import count_chars, get_error_html
 from .randutils import *
 
@@ -352,7 +352,10 @@ class DocParagraph:
             if not clear_cache and par.html is not None:
                 continue
             cached = par.__data.get('h')
-            auto_macros = par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache)
+            try:
+                auto_macros = par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache)
+            except RecursionError:
+                raise TimDbException('Infinite recursion detected in get_auto_macro_values; the document may be broken.')
             auto_macro_hash = hashfunc(m + str(auto_macros))
 
             par_headings = heading_cache.get(par.get_id())
@@ -471,7 +474,7 @@ class DocParagraph:
 
         return self.__data['attrs'].get(attr_name, default_value)
 
-    def set_attr(self, attr_name: str, attr_val: Generic, dereference: bool = False):
+    def set_attr(self, attr_name: str, attr_val: Any, dereference: bool = False):
         if dereference and self.original:
             self.original.set_attr(attr_name, attr_val, True)
         elif attr_val is None:
@@ -485,6 +488,9 @@ class DocParagraph:
             self.__is_question = bool(attr_val)
         elif attr_name == 'rp' or attr_name == 'ra':
             self.__is_ref = self.is_par_reference() or self.is_area_reference()
+
+    def is_task(self):
+        return self.get_attr('taskId') is not None and self.get_attr('plugin') is not None
 
     @classmethod
     def __combine_md(cls, base_md: Optional[str], over_md: str) -> str:
@@ -578,6 +584,24 @@ class DocParagraph:
         if os.path.islink(linkpath) or os.path.isfile(linkpath):
             os.unlink(linkpath)
         os.symlink(self.get_hash(), linkpath)
+
+    def clone(self) -> 'DocParagraph':
+        """Clones the paragraph. A new ID is generated for the cloned paragraph."""
+        return DocParagraph.create(self.doc,
+                                   md=self.get_markdown(),
+                                   attrs=self.get_attrs(),
+                                   props=self.get_properties(),
+                                   files_root=self.files_root)
+
+    def save(self, add=False):
+        """Saves the paragraph to disk.
+        :param add: Whether to add (True) or modify an existing (False).
+        """
+        # TODO: Possibly get rid of 'add' parameter altogether.
+        if add:
+            self.doc.add_paragraph_obj(self)
+        else:
+            self.doc.modify_paragraph_obj(self.get_id(), self)
 
     def add_link(self, doc_id: int):
         #self.__read()

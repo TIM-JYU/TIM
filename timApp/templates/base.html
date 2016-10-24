@@ -63,6 +63,17 @@
                 }]);
             }]);
 
+            // disable IE ajax request caching; from https://stackoverflow.com/a/19771501
+            timApp.config(['$httpProvider', function ($httpProvider) {
+                if (!$httpProvider.defaults.headers.get) {
+                    $httpProvider.defaults.headers.get = {};
+                }
+
+                $httpProvider.defaults.headers.get['If-Modified-Since'] = 'Mon, 26 Jul 1997 05:00:00 GMT';
+                $httpProvider.defaults.headers.get['Cache-Control'] = 'no-cache';
+                $httpProvider.defaults.headers.get['Pragma'] = 'no-cache';
+            }]);
+
             // Filter to make string URL friendly
             timApp.filter('escape', function () {
                 "use strict";
@@ -80,6 +91,7 @@
 
             var current_user = {{ current_user|tojson }};
             var other_users = {{ other_users|tojson }};
+            var bookmarks = {{ bookmarks|tojson }};
         </script>
 
         <script src="{{ url_for('static', filename='scripts/services/userService.js') }}"></script>
@@ -88,6 +100,7 @@
         <script src="{{ url_for('static', filename='scripts/directives/bootstrapPanel.js') }}"></script>
         <script src="{{ url_for('static', filename='scripts/directives/rightsEditor.js') }}"></script>
         <script src="{{ url_for('static', filename='scripts/directives/bookmarks.js') }}"></script>
+        <script src="{{ url_for('static', filename='scripts/directives/createDocument.js') }}"></script>
 
         <!-- HTML5 shiv and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -141,24 +154,20 @@
                             col-xs-{{ col_2_xs }}
                             col-sm-{{ col_2_sm }}">
                     <div class="siteheader">
-                        <div class="row">
-                            <div class="col-sm-1">
-                                <a href="/">
-                                <img alt="TIM - The Interactive Material."
-                                     src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"/>
-                                </a>
-                            </div>
-                            <div class="col-sm-10">
-                                <login-menu style="display: inline"></login-menu>
-                                {% if current_user.id > 0 %}
-                                    <bookmarks user-id="{{ current_user.id }}"></bookmarks>
-                                {% endif %}
-                            </div>
-                            <div class="col-sm-1">
-                                <img alt="Jyväskylän yliopisto" height="42"
-                                 src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
-                            </div>
-                        </div>
+                        {% if not hide_links %}
+                        <a href="/">
+                            <img alt="TIM - The Interactive Material." class="pull-left"
+                                 src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"
+                                 title="Go to front page"/>
+                        </a>
+                        {% else %}
+                            <img alt="TIM - The Interactive Material." class="pull-left"
+                                 src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"
+                                 title="TIM"/>
+                        {% endif %}
+                        <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
+                             src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
+                        <div class="text-center text-nowrap"><login-menu></login-menu></div>
                     </div>
                 </div>
                 <div class="col-lg-{{ col_3_lg }}
@@ -229,7 +238,9 @@
                     {% block footer %}
                         <div class="row">
                             <div class="col-xs-12 text-right">
+                                {% if not hide_links %}
                                 <a href="/view/tim/Rekisteriseloste">Rekisteriseloste</a>
+                                {% endif %}
                             </div>
                         </div>
                     {% endblock %}

@@ -67,8 +67,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
             method: 'POST',
             params: {
                 'asked_id': $scope.askedId,
-                'lecture_id': $scope.lectureId,
-                'buster': new Date().getTime()
+                'lecture_id': $scope.lectureId
             }
         })
             .success(function () {
@@ -102,7 +101,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
         $http({
             url: '/getAskedQuestionById',
             method: 'GET',
-            params: {'asked_id': $scope.askedId, 'buster': new Date().getTime()}
+            params: {'asked_id': $scope.askedId}
         })
             .success(function (data) {
                 var json = JSON.parse(data.json);
@@ -124,8 +123,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
             method: 'POST',
             params: {
                 'asked_id': $scope.askedId,
-                'lecture_id': $scope.lectureId,
-                'buster': new Date().getTime()
+                'lecture_id': $scope.lectureId
             }
         })
             .success(function () {

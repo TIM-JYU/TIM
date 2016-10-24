@@ -9,7 +9,7 @@ from timroutetest import TimRouteTest
 class LectureTest(TimRouteTest):
     def test_lecture(self):
         self.login_test1()
-        doc = self.create_doc(initial_par='testing lecture')
+        doc = self.create_doc(initial_par='testing lecture').document
         db = self.get_db()
         name = db.documents.get_first_document_name(doc.doc_id)
         current_time = datetime.datetime.now(tz=timezone.utc)

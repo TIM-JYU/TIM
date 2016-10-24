@@ -13,7 +13,7 @@ from timdb.newanswers import NewAnswers
 from timdb.showpoints import ShowPoints
 from timdb.slidestatus import SlideStatuses
 from timdb.temp_info_for_user import TempInfoUserQuestion
-from tim_app import db
+from timdb.tim_models import db
 
 
 class Runningquestion(db.Model):

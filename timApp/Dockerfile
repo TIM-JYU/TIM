@@ -49,6 +49,7 @@ run pip3 install yubico-client
 run pip3 install pytz  # Not necessarily needed after all, as Python's stdlib supports UTC
 run pip3 install python-dateutil
 run pip3 install cssselect
+run pip3 install Flask-Migrate
 
 # requests must be the last package to be installed!
 # After this, pip3 stops working because it depends
@@ -84,13 +85,13 @@ run bower --allow-root install jquery#~2.1
 run bower --allow-root install angular-sanitize#~1.4
 run bower --allow-root install bootstrap#~3.3
 run bower --allow-root install jquery-ui#~1.11
-run bower --allow-root install katex#~0.5
+run bower --allow-root install katex#~0.6
 run bower --allow-root install rangyinputs
 run bower --allow-root install ngstorage#~0.3
 run bower --allow-root install chartjs#~1.0
 run bower --allow-root install oclazyload#~1.0
 run bower --allow-root install bootstrap-sass#~3.3
-run bower --allow-root install angular-bootstrap#~1.3
+run bower --allow-root install angular-bootstrap#~2.1
 run bower --allow-root install angular-animate#~1.4
 run bower --allow-root install angular-touch#~1.4
 run bower --allow-root install angular-ui-grid#~3.2

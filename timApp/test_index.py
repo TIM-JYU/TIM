@@ -16,7 +16,7 @@ Lorem ipsum.
 ### Heading level 3
 #-
 # Second heading level 1
-        """)
+        """).document
         self.assertEqual([({'id': 'heading-level-1', 'level': 1, 'text': 'Heading level 1'},
                            [{'id': 'heading-level-2', 'level': 2, 'text': 'Heading level 2'},
                             {'id': 'heading-level-3', 'level': 3, 'text': 'Heading level 3'}]),
@@ -42,7 +42,7 @@ Lorem ipsum.
 ### Heading level 3
 #-
 # Second heading level 1
-        """)
+        """).document
         doc.set_settings({'auto_number_headings': True, 'heading_format': {2: "{h1}.{h2}. {text}"}})
         self.assertEqual([({'id': 'heading-level-1', 'level': 1, 'text': '1. Heading level 1'}, []),
                           ({'id': 'unnumbered', 'level': 1, 'text': 'Unnumbered'},
@@ -86,7 +86,7 @@ Lorem ipsum.
 ### Heading level 3
 #-
 # Second heading level 1
-        """)
+        """).document
         self.assertEqual([({'id': 'heading-level-1', 'level': 1, 'text': 'Heading level 1'},
                            [{'id': 'heading-level-2', 'level': 2, 'text': 'Heading level 2'},
                             {'id': 'unnumbered', 'level': 2, 'text': 'Unnumbered'},
@@ -109,7 +109,7 @@ Lorem ipsum.
 ### Second heading level 3
 #-
 # Second heading level 1
-        """)
+        """).document
         self.assertEqual([({'id': 'heading-level-1', 'level': 1, 'text': 'Heading level 1'},
                            [{'id': 'heading-level-3', 'level': 3, 'text': 'Heading level 3'},
                             {'id': 'unnumbered', 'level': 2, 'text': 'Unnumbered'},
@@ -139,7 +139,7 @@ Lorem ipsum.
 # Same
 
 # Same
-        """)
+        """).document
         self.assertEqual([({'id': 'same', 'level': 1, 'text': 'Same'}, []),
                           ({'id': 'same-1', 'level': 1, 'text': 'Same'}, [])], doc.get_index())
 
@@ -151,7 +151,7 @@ Lorem ipsum.
 # Same
 #-
 # Same
-        """)
+        """).document
         self.assertEqual([({'id': 'same', 'level': 1, 'text': 'Same'}, []),
                           ({'id': 'same-1', 'level': 1, 'text': 'Same'}, []),
                           ({'id': 'same-1-1', 'level': 1, 'text': 'Same'}, []),

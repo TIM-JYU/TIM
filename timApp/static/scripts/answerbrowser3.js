@@ -1,3 +1,4 @@
+var timLogTime;
 timLogTime("answerbrowser3 load","answ");
 
 var angular;
@@ -10,6 +11,7 @@ var RLAZYEND = new RegExp(LAZYEND, 'g');
 
 
 function makeNotLazy(html) {
+    "use strict";
     var s = html.replace(RLAZYSTART,"");
     var i = s.lastIndexOf(LAZYEND);
     if ( i >= 0 ) s = s.substring(0,i);
@@ -55,9 +57,9 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
                     }
                     // Next the inside of the plugin to non lazy
                     var origHtml = plugin[0].innerHTML;
-                    if ( origHtml.indexOf(LAZYSTART) >= 0 ) {
-
-                    } else plugin = null;
+                    if ( origHtml.indexOf(LAZYSTART) < 0 ) {
+                        plugin = null;
+                    }
                     if ( plugin ) {
                         var newPluginHtml = makeNotLazy(origHtml);
                         var newPluginElement = $compile(newPluginHtml);
@@ -76,8 +78,8 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
     }]);
 
 
-timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$window', '$filter', 'Users',
-    function (Upload, $http, $sce, $compile, $window, $filter, Users) {
+timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$window', '$filter', '$uibModal', 'Users',
+    function (Upload, $http, $sce, $compile, $window, $filter, $uibModal, Users) {
         "use strict";
         timLogTime("answerbrowser directive function","answ");
         return {
@@ -106,6 +108,15 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     $scope.getAvailableAnswers();
                 });
 
+                $scope.savePoints = function () {
+                    $http.put('/savePoints/' + $scope.user.id + '/' + $scope.selectedAnswer.id,
+                        {points: $scope.points}).then(function (response) {
+                        $scope.selectedAnswer.points = $scope.points;
+                    }, function (response) {
+                        $window.alert('Error settings points: ' + response.data.error);
+                    });
+                };
+
                 $scope.updatePoints = function () {
                     $scope.points = $scope.selectedAnswer.points;
                     if ($scope.points !== null) {
@@ -116,6 +127,10 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                 };
 
                 $scope.loading = 0;
+                $scope.setFocus = function() {
+                    $scope.element.focus();
+                };
+
                 $scope.changeAnswer = function () {
                     if ($scope.selectedAnswer === null) {
                         return;
@@ -142,7 +157,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                             $scope.element.find('.review').html(data.reviewHtml);
                         }
                         var lata = $scope.$parent.loadAnnotationsToAnswer;
-                        if ( lata ) lata($scope.selectedAnswer.id, par_id, $scope.review);
+                        if ( lata ) lata($scope.selectedAnswer.id, par_id, $scope.review, $scope.setFocus);
 
                     }).error(function (data, status, headers, config) {
                         $scope.error = 'Error getting state: ' + data.error;
@@ -174,6 +189,51 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     $scope.changeAnswer();
                 };
 
+
+                if ( $scope.$parent.teacherMode ) {
+                    $scope.findSelectedUserIndex = function() {
+                        if ($scope.users === null) {
+                            return -1;
+                        }
+                        for (var i = 0; i < $scope.users.length; i++) {
+                            if ($scope.users[i].id === $scope.user.id) {
+                                return i;
+                            }
+                        }
+                        return -1;
+                    };
+
+                    $scope.checkKeyPress = function(e) {
+                        if ( e.which === 38 && e.ctrlKey ) {
+                            e.preventDefault();
+                            $scope.changeStudent(-1);
+                        }
+                        if ( e.which === 40 && e.ctrlKey ) {
+                            e.preventDefault();
+                            $scope.changeStudent(1);
+                        }
+                    };
+                    $scope.element.attr("tabindex", 1);
+                    $scope.element.css("outline", "none");
+                    $scope.element[0].addEventListener("keydown", $scope.checkKeyPress);
+
+                    $scope.changeStudent = function (dir) {
+                        if ( $scope.users.length <= 0 ) return;
+                        var newIndex = $scope.findSelectedUserIndex() + dir;
+                        if (newIndex >= $scope.users.length) {
+                            newIndex = 0;
+                        }
+                        if (newIndex < 0 ) {
+                            newIndex = $scope.users.length-1;
+                        }
+                        if (newIndex < 0) return;
+                        $scope.user = $scope.users[newIndex];
+                        $scope.getAvailableAnswers();
+                        $scope.element.focus();
+                    };
+                }
+
+
                 $scope.setNewest = function () {
                     if ($scope.filteredAnswers.length > 0) {
                         $scope.selectedAnswer = $scope.filteredAnswers[0];
@@ -183,7 +243,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
 
                 $scope.setAnswerById = function(id) {
                     for (var i=0; i<$scope.filteredAnswers.length; i++){
-                        if ($scope.filteredAnswers[i].id == id){
+                        if ($scope.filteredAnswers[i].id === id){
                             $scope.selectedAnswer = $scope.filteredAnswers[i];
                             $scope.changeAnswer();
                             break;
@@ -242,7 +302,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                         return;
                     }
                     $scope.loading++;
-                    $http.get('/answers/' + $scope.taskId + '/' + $scope.user.id + '?rnd='+Math.random())  
+                    $http.get('/answers/' + $scope.taskId + '/' + $scope.user.id)
                         .success(function (data, status, headers, config) {
                             if (data.length > 0 && ($scope.hasUserChanged() || data.length !== ($scope.answers || []).length)) {
                                 $scope.answers = data;
@@ -253,7 +313,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                                 }
                             } else {
                                 $scope.answers = data;
-                                if ($scope.answers.length == 0 && $scope.$parent.teacherMode) {
+                                if ($scope.answers.length === 0 && $scope.$parent.teacherMode) {
                                     $scope.dimPlugin();
                                 }
                                 $scope.updateFiltered();
@@ -285,7 +345,6 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
 
                 $scope.$on('userChanged', function (event, args) {
                     $scope.user = args.user;
-                    console.log(args);
                     $scope.firstLoad = false;
                     $scope.shouldUpdateHtml = true;
                     if (args.updateAll) {
@@ -358,29 +417,24 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     }
                 };
 
-
-                $scope.getAllAnswers = function() {
-                    return;
-                    var sPageURL = decodeURIComponent(window.location.search.substring(1));
-                    var age = "";
-                    var valid = "&valid=1";
-                    if ( sPageURL.indexOf("age=min") >= 0 ) age = "&age=min";
-                    if ( sPageURL.indexOf("age=all") >= 0 ) age = "&age=all";
-                    if ( sPageURL.indexOf("valid=all") >= 0 ) valid = "&valid=all";
-                    if ( sPageURL.indexOf("valid=0") >= 0 ) valid = "&valid=0";
-                    if ( sPageURL.indexOf("valid=1") >= 0 ) valid = "&valid=1";
-                    $scope.loading++;
-                    $http.get('/allAnswers/' + $scope.taskId + '?rnd='+Math.random() + age + valid, {params: {group: $scope.$parent.group}})
-                        .success(function (data, status, headers, config) {
-                            $scope.allAnswers = data.join("\n\n----------------------------------------------------------------------------------\n");
-                            var nw = $window;
-                            //var nd = nw.document;
-                            //nd.write(data[0]);
-                        }).error(function (data, status, headers, config) {
-                            $scope.error = 'Error getting answers: ' + data.error;
-                        }).finally(function () {
-                            $scope.loading--;
-                        });
+                $scope.getAllAnswers = function () {
+                    $uibModal.open({
+                        animation: false,
+                        ariaLabelledBy: 'modal-title',
+                        ariaDescribedBy: 'modal-body',
+                        templateUrl: '/static/templates/allAnswersOptions.html',
+                        controller: 'AllAnswersCtrl',
+                        controllerAs: '$ctrl',
+                        size: 'md',
+                        resolve: {
+                            options: function () {
+                                return {
+                                    url: '/allAnswersPlain/' + $scope.taskId,
+                                    allTasks: false
+                                };
+                            }
+                        }
+                    });
                 };
 
                 $scope.findSelectedAnswerIndex = function () {
@@ -394,25 +448,6 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     }
                     return -1;
                 };
-
-
-                $scope.getLink = function() {
-                     //return 'data:text/plain;charset=UTF-8,' + encodeURIComponent($scope.allAnswers);
-
-                                        var sPageURL = decodeURIComponent(window.location.search.substring(1));
-                    var age = "";
-                    var valid = "&valid=1";
-                    if ( sPageURL.indexOf("age=min") >= 0 ) age = "&age=min";
-                    if ( sPageURL.indexOf("age=all") >= 0 ) age = "&age=all";
-                    if ( sPageURL.indexOf("valid=all") >= 0 ) valid = "&valid=all";
-                    if ( sPageURL.indexOf("valid=0") >= 0 ) valid = "&valid=0";
-                    if ( sPageURL.indexOf("valid=1") >= 0 ) valid = "&valid=1";
-                    var url = '/allAnswersPlain/' + $scope.taskId + '?rnd='+Math.random() + age + valid;
-                    return url;
-
-                };
-
-                $scope.allLink = $scope.getLink();
 
                 if ( $scope.$parent.selectedUser ) {
                     $scope.user = $scope.$parent.selectedUser;

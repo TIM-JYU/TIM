@@ -5,10 +5,8 @@ import os
 import time
 from time import sleep
 
-from sqlalchemy.orm import scoped_session
-
-from routes.logger import log_info
-from tim_app import db, app
+from routes.logger import log_info, log_debug, log_error, log_warning
+from tim_app import app
 from timdb.annotations import Annotations
 from timdb.answers import Answers
 from timdb.documents import Documents
@@ -21,7 +19,7 @@ from timdb.messages import Messages
 from timdb.notes import Notes
 from timdb.questions import Questions
 from timdb.readings import Readings
-from timdb.tim_models import Version
+from timdb.tim_models import Version, db
 from timdb.uploads import Uploads
 from timdb.users import Users
 from timdb.velpgroups import VelpGroups
@@ -41,17 +39,13 @@ class TimDb(object):
     """Handles saving and retrieving information from TIM database.
     """
 
-    def __init__(self, db_path: str,
-                 files_root_path: str,
-                 session: scoped_session = None,
+    def __init__(self, files_root_path: str,
                  current_user_name: str = 'Anonymous',
                  route_path: str = ''):
-        """Initializes TimDB with the specified database, files root path, SQLAlchemy session and user name.
+        """Initializes TimDB with the specified files root path, SQLAlchemy session and user name.
         
-        :param session: The scoped_session to be used for SQLAlchemy operations. If None, a scoped_session will be
         created.
         :param current_user_name: The username of the current user.
-        :param db_path: The path of the database file.
         :param files_root_path: The root path where all the files will be stored.
         :param route_path: Path for the route requesting the db
         """
@@ -64,7 +58,6 @@ class TimDb(object):
             if not os.path.exists(path):
                 log_info('Creating directory: {}'.format(path))
                 os.makedirs(path)
-        self.session = session
         self.reset_attrs()
 
     def reset_attrs(self):
@@ -100,7 +93,7 @@ class TimDb(object):
         num += 1
         self.num = num
         self.time = time.time()
-        log_info(  "GetDb      {:2d} {:6d} {:2s} {:3s} {:7s} {:s}".format(worker_pid,self.num,"","","",self.route_path))
+        log_debug(  "GetDb      {:2d} {:6d} {:2s} {:3s} {:7s} {:s}".format(worker_pid,self.num,"","","",self.route_path))
         # log_info('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid,self.num, TimDb.instances, bes, time.time() - self.time, self.route_path))
         waiting = False
         while True:
@@ -110,11 +103,11 @@ class TimDb(object):
                 self.session = db.session
                 break
             except Exception as err:
-                if not waiting: log_info("WaitDb " + str(self.num) + " " + str(err))
+                if not waiting: log_warning("WaitDb " + str(self.num) + " " + str(err))
                 waiting = True
                 sleep(0.1)
 
-        if waiting: log_info("ReadyDb " + str(self.num))
+        if waiting: log_warning("ReadyDb " + str(self.num))
 
         TimDb.instances += 1
         # num_connections = self.get_pg_connections()
@@ -149,20 +142,21 @@ class TimDb(object):
 
     def commit(self):
         """Commits any changes to the database."""
+        db.session.commit()
         self.db.commit()
 
     def close(self):
         """Closes the database connection."""
         if hasattr(self, 'db') and self.db is not None:
-            bes = "???"
+            bes = -1
             TimDb.instances -= 1
             try:
-                bes = self.get_pg_connections()
+                # bes = self.get_pg_connections()
                 self.db.close()
             except Exception as err:
-                log_info('close error: ' + str(self.num) + ' ' + str(err))
+                log_error('close error: ' + str(self.num) + ' ' + str(err))
 
-            log_info('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid, self.num, TimDb.instances , bes,  time.time() - self.time, self.route_path ))
+            log_debug('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid, self.num, TimDb.instances , bes,  time.time() - self.time, self.route_path ))
             self.reset_attrs()
 
     def execute_script(self, sql_file):

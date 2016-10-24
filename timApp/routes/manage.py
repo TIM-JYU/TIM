@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template
 
 from timdb.blocktypes import from_str
+from timdb.models.usergroup import UserGroup
 from .common import *
 
 manage_page = Blueprint('manage_page',
@@ -85,16 +86,12 @@ def change_owner(doc_id, new_owner_name):
 
 @manage_page.route("/permissions/add/<item_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_permission(item_id, group_name, perm_type):
-    verify_manage_access(item_id)
+    group_ids = verify_and_get_group(item_id, group_name)
     timdb = getTimDb()
-    groups = timdb.users.get_usergroups_by_name(group_name)
-    if len(groups) == 0:
-        abort(404, 'No user group with this name was found.')
-
-    group_id = groups[0]['id']
-
     try:
-        timdb.users.grant_access(group_id, item_id, perm_type)
+        for group_id in group_ids:
+            timdb.users.grant_access(group_id, item_id, perm_type, commit=False)
+        timdb.commit()
     except KeyError:
         abort(400, 'Invalid permission type.')
     return okJsonResponse()
@@ -246,15 +243,14 @@ def get_default_document_permissions(folder_id, object_type):
 
 @manage_page.route("/defaultPermissions/<object_type>/add/<folder_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
-    group_id = verify_and_get_group(folder_id, group_name)
+    group_ids = verify_and_get_group(folder_id, group_name)
     timdb = getTimDb()
-    timdb.users.grant_default_access(group_id, folder_id, perm_type, from_str(object_type))
+    timdb.users.grant_default_access(group_ids, folder_id, perm_type, from_str(object_type))
     return okJsonResponse()
 
 
-@manage_page.route("/defaultPermissions/<object_type>/remove/<folder_id>/<group_name>/<perm_type>", methods=["PUT"])
-def remove_default_doc_permission(folder_id, group_name, perm_type, object_type):
-    group_id = verify_and_get_group(folder_id, group_name)
+@manage_page.route("/defaultPermissions/<object_type>/remove/<folder_id>/<int:group_id>/<perm_type>", methods=["PUT"])
+def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
     timdb = getTimDb()
     timdb.users.remove_default_access(group_id, folder_id, perm_type, from_str(object_type))
     return okJsonResponse()
@@ -262,12 +258,11 @@ def remove_default_doc_permission(folder_id, group_name, perm_type, object_type)
 
 def verify_and_get_group(folder_id, group_name):
     verify_manage_access(folder_id)
-    timdb = getTimDb()
-    groups = timdb.users.get_usergroups_by_name(group_name)
+    groups = UserGroup.query.filter(UserGroup.name.in_(group_name.split(';'))).all()
     if len(groups) == 0:
         abort(404, 'No user group with this name was found.')
-    group_id = groups[0]['id']
-    return group_id
+    group_ids = [group.id for group in groups]
+    return group_ids
 
 
 @manage_page.route("/documents/<int:doc_id>", methods=["DELETE"])

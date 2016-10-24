@@ -142,9 +142,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     if ( $scope.dataLoaded || !$scope.initialTextUrl ) return;
                     $scope.setEditorText('Loading text...');
                     $http.get($scope.initialTextUrl, {
-                        params: angular.extend({
-                            "_": Date.now()
-                        }, $scope.extraData)
+                        params: $scope.extraData
                     }).success(function (data, status, headers, config) {
                         $scope.setEditorText(data.text);
                         // $scope.editorText = data.text;

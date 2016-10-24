@@ -3,10 +3,17 @@ import re
 import unittest
 
 from flask import session
+from lxml.cssselect import CSSSelector
 
 from documentmodel.document import Document
 from markdownconverter import md_to_html
+from plugin import Plugin
+from timdb.models import User
+from timdbtest import TEST_USER_2_ID, TEST_USER_1_ID
 from timroutetest import TimRouteTest
+
+
+link_selector = CSSSelector('a')
 
 
 class TimTest(TimRouteTest):
@@ -19,29 +26,34 @@ class TimTest(TimRouteTest):
         login_resp = self.login_test1(force=True)
         self.assertDictEqual({'current_user': {'email': 'test1@example.com',
                                                'id': 4,
-                                               'name': 'testuser1',
+                                               'name': self.current_user_name(),
                                                'real_name': 'Test user 1'},
                               'other_users': []}, login_resp)
+
+        # Make sure user's personal folder exists
+        self.get('/view/users/' + self.current_user_name(), expect_status=200)
+
         doc_names = ['users/testuser1/testing',
                      'users/testuser1/testing2',
                      'users/testuser1/testing3',
                      'users/testuser1/testing4',
                      'users/testuser1/testing5']
         doc_name = doc_names[0]
-        doc_id = 3
+        doc_id_list = [4, 5, 6, 7, 8]
+        doc_id = doc_id_list[0]
         doc_ids = set()
         for idx, n in enumerate(doc_names):
-            self.assertDictResponse({'id': doc_id + idx, 'name': doc_names[idx]},
+            self.assertDictResponse({'id': doc_id_list[idx], 'name': doc_names[idx]},
                                     self.json_post('/createDocument', {
                                         'doc_name': n
                                     }))
-            doc_ids.add(doc_id + idx)
+            doc_ids.add(doc_id_list[idx])
         self.assertDictResponse(self.ok_resp,
                                 self.json_put('/permissions/add/{}/{}/{}'.format(doc_id, 'Anonymous users', 'view')))
         self.assertDictResponse(self.ok_resp,
-                                self.json_put('/permissions/add/{}/{}/{}'.format(doc_id + 1, 'Logged-in users', 'view')))
-        self.assertDictResponse(self.ok_resp, self.json_put('/permissions/add/{}/{}/{}'.format(doc_id + 2, 'testuser2', 'view')))
-        self.assertDictResponse(self.ok_resp, self.json_put('/permissions/add/{}/{}/{}'.format(doc_id + 3, 'testuser2', 'edit')))
+                                self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[1], 'Logged-in users', 'view')))
+        self.assertDictResponse(self.ok_resp, self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[2], 'testuser2', 'view')))
+        self.assertDictResponse(self.ok_resp, self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[3], 'testuser2', 'edit')))
         doc = Document(doc_id)
         doc.add_paragraph('Hello')
         pars = doc.get_paragraphs()
@@ -98,7 +110,7 @@ class TimTest(TimRouteTest):
         view_resp = a.get('/view/' + doc_name)
         self.assertInResponse('Test user 2', view_resp)
         self.assertInResponse(edited_comment_html, view_resp)
-        not_viewable_docs = {doc_id + 4}
+        not_viewable_docs = {doc_id_list[4]}
         viewable_docs = doc_ids - not_viewable_docs
         for view_id in viewable_docs:
             self.assertResponseStatus(a.get('/view/' + str(view_id)))
@@ -124,7 +136,7 @@ class TimTest(TimRouteTest):
         self.login_test1()
         self.assertInResponse(comment_of_test2,
                               a.get('/note/{}'.format(test2_note_id)))
-        teacher_right_docs = {doc_id + 3}
+        teacher_right_docs = {doc_id_list[3]}
         for i in teacher_right_docs:
             self.assertDictResponse(self.ok_resp,
                                     self.json_put('/permissions/add/{}/{}/{}'.format(i, 'testuser2', 'teacher')))
@@ -160,7 +172,7 @@ class TimTest(TimRouteTest):
 
     def test_macro_doc(self):
         self.login_test1()
-        doc = self.create_doc(settings={'macro_delimiter': '%%', 'macros': {'rivi': 'kerros'}})
+        doc = self.create_doc(settings={'macro_delimiter': '%%', 'macros': {'rivi': 'kerros'}}).document
         table_text = """
 {% set sarakeleveys = 50 %}
 {% set sarakkeet = ['eka', 'toka', 'kolmas', 'neljäs'] %}
@@ -179,20 +191,55 @@ class TimTest(TimRouteTest):
         self.assertInResponse(table_html, self.new_par(doc, table_text), json_key='texts')
         self.assertInResponse(table_html, self.get('/view/{}'.format(doc.doc_id), as_response=True))
 
+    def test_user_macros(self):
+        self.login_test1()
+        timdb = self.get_db()
+        d = self.create_doc(initial_par=r"""
+Username is %%username%% and real name is %%realname%%
+
+#-
+Percents: \%\%
+#-
+Broken: %%
+
+``` {#test plugin="csPlugin"}
+type: cs
+header: %%username%% and %%realname%%
+```
+        """)
+        timdb.users.grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), d.id)
+
+        pars = self.get('/view/{}'.format(d.id), as_tree=True).cssselect('.parContent')
+        self.assertEqual('Username is testuser1 and real name is Test user 1',
+                         pars[0].text_content().strip())
+        self.assertEqual('Percents: %%',
+                         pars[1].text_content().strip())
+        self.assertEqual("Syntax error in template: unexpected 'end of template'",
+                         pars[2].text_content().strip())
+        p = Plugin.from_task_id('{}.test'.format(d.id), User.query.get(TEST_USER_1_ID))
+        self.assertEqual('testuser1 and Test user 1', p.values['header'])
+        self.login_test2()
+        self.assertEqual('Username is testuser2 and real name is Test user 2',
+                         self.get('/view/{}'.format(d.id), as_tree=True).cssselect('.parContent')[
+                             0].text_content().strip())
+        p = Plugin.from_task_id('{}.test'.format(d.id), User.query.get(TEST_USER_2_ID))
+        self.assertEqual('testuser2 and Test user 2', p.values['header'])
+        timdb.close()
+
     def test_macro_only_delimiter(self):
         self.login_test1()
-        doc = self.create_doc(settings={'macro_delimiter': '%%'})
+        doc = self.create_doc(settings={'macro_delimiter': '%%'}).document
         self.assertInResponse('123457', self.new_par(doc, '{% set a = 123456+1 %}%%a%%'), json_key='texts')
 
     def test_same_heading_as_par(self):
         self.login_test1()
-        doc = self.create_doc(initial_par="""# Hello\n#-\nHello""")
+        doc = self.create_doc(initial_par="""# Hello\n#-\nHello""").document
         self.get('/view/{}'.format(doc.doc_id), expect_status=200)
 
     def test_broken_comment(self):
         self.login_test1()
         doc = self.create_doc(settings={'macros': {}, 'macro_delimiter': '%%'},
-                              initial_par="""```{atom=true}\nTest {!!! }\n```""")
+                              initial_par="""```{atom=true}\nTest {!!! }\n```""").document
         tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True)
         syntax_errors = tree.findall(r'.//div[@class="par"]/div[@class="parContent"]/div[@class="error"]')
         self.assertEqual(1, len(syntax_errors))
@@ -204,7 +251,7 @@ class TimTest(TimRouteTest):
         """
         self.login_test1()
         md_table = """---\r\n|a|\r\n|-|"""
-        doc = self.create_doc(initial_par=md_table)
+        doc = self.create_doc(initial_par=md_table).document
         tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True)
         table_xpath = r'.//div[@class="par"]/div[@class="parContent"]/table'
         tables = tree.findall(table_xpath)
@@ -217,11 +264,39 @@ class TimTest(TimRouteTest):
 
     def test_clear_cache(self):
         self.login_test1()
-        doc = self.create_doc(initial_par="Test")
+        doc = self.create_doc(initial_par="Test").document
         self.get('/view/{}'.format(doc.doc_id))
         self.get('/view/{}'.format(doc.doc_id), query_string={'nocache': 'true'})
         doc.get_index()
 
+    def test_document_intermediate_folders(self):
+        self.login_test1()
+        self.create_doc('users/testuser1/a/b/c')
+
+
+    def test_hide_links(self):
+        self.login_test1()
+        doc = self.create_doc()
+        timdb = self.get_db()
+        timdb.users.grant_view_access(timdb.users.get_anon_group_id(), doc.id)
+        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        self.assertGreater(len(links), 0)
+
+        self.logout()
+        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        self.assertGreater(len(links), 0)
+        doc.document.add_setting('hide_links', 'view')
+        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        self.assertEqual(len(links), 0)
+        doc.document.add_paragraph(text='# 1\n\n#2')
+
+        # Index is visible always
+        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        self.assertEqual(len(links), 2)
+
+        self.login_test1()
+        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        self.assertGreater(len(links), 0)
 
 if __name__ == '__main__':
     unittest.main()

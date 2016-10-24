@@ -403,7 +403,8 @@ def get_html(ttype, query):
         if type(code) != type(''):
             print("Ei ollut string: ", code, jso)
             code = '' + str(code)
-        ebycode = html.escape(code)
+         # ebycode = html.escape(code)
+        ebycode = code.replace("</pre>","< /pre>"); # prevent pre ending too early
         if tiny:
             lazy_visible = '<div class="lazyVisible csRunDiv csTinyDiv no-popup-menu" >' + get_tiny_surrounding_headers(query,
                                                                                                      '' + ebycode + '') + '</div>'
@@ -636,6 +637,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             usercode = get_json_param(query.jso, "state", "usercode", None)
             if usercode: query.query["usercode"] = [usercode]
             userinput = get_json_param(query.jso, "state", "userinput", None)
+            
             if userinput: query.query["userinput"] = [userinput]
             userargs = get_json_param(query.jso, "state", "userargs", None)
             if userargs: query.query["userargs"] = [userargs]
@@ -684,6 +686,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         except Exception  as e:
             print("Timed out2!", e)
             logging.exception("Timed out 2 trace")
+            self.wout(e.msg)
 
     def do_all_t(self, query):
         pwd = ""
@@ -835,6 +838,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         points_rule = None
 
         try:
+            stdin_default = None
             # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
             uploadedFile = get_json_param(query.jso, "input", "uploadedFile", None)
             uploadedType = get_json_param(query.jso, "input", "uploadedType", None)
@@ -1179,6 +1183,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # print(isInput)
             if is_input:
                 # print("Write input file: " + inputfilename)
+                if not userinput: userinput = "\n"
+                if inputfilename.find('input.txt') >= 0:
+                    stdin_default = 'input.txt'
                 codecs.open(inputfilename, "w", "utf-8").write(userinput)
 
             if not os.path.isfile(csfname) or os.path.getsize(csfname) == 0:
@@ -1365,7 +1372,19 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if not nocode: print_lines(output, lines, 0, 10000)
                 error_str += output.getvalue()
                 output.close()
-
+                cut_errors = get_param_table(query, "cutErrors")
+                for cut_error in cut_errors:
+                    cut_replace, cut_by = get_2_items(cut_error, "replace", "by", None, "")
+                    if cut_replace:
+                        try:
+                            m = re.search(cut_replace, error_str, flags=re.S)
+                            if m:
+                                error_str = error_str.replace(m.group(1), cut_by)
+                        except Exception as e:
+                            msg = ""
+                            if isinstance(e, IndexError): msg = "group () missing"
+                            else: msg = e.msg
+                            error_str = "cutErros pattern error: " + msg + "\n" + "Pattern: " + cut_replace + "\n\n" + error_str
                 if delete_tmp: removedir(prgpath)
                 give_points(points_rule, is_test + "notcompile")
                 return write_json_error(self.wfile, error_str, result, points_rule)
@@ -1389,7 +1408,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             code = 0
             out = ""
 
-            stdin = get_param(query, "stdin", None)
+            stdin = get_param(query, "stdin", stdin_default)
             # if stdin: stdin = "/tmp/%s/%s" % (basename, stdin)
             # if stdin: stdin = "/tmp/%s/%s" % (basename, stdin)
             if ttype == "sql" or ttype == "psql": stdin = pure_exename
@@ -1846,18 +1865,31 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if expect_output:
                 exout = re.compile(expect_output.rstrip('\n'), re.M)
                 if exout.match(out): give_points(points_rule, "output", 1)
+
             readpoints = get_points_rule(points_rule, "readpoints", None)
             readpointskeep = get_points_rule(points_rule, "readpointskeep", False)
             if readpoints:
-                m = re.search(readpoints, out)
-                if m and m.group(1):
-                    if not readpointskeep:
-                        out = re.sub(m.group(0), "", out)
-                    try:
-                        p = float(m.group(1))
-                        give_points(points_rule, "output", p)
-                    except:
+                try:
+                    m = re.search(readpoints, out)
+                    m2 = re.findall(readpoints, out)
+                    if m and m.group(1):
                         p = 0
+                        if not readpointskeep:
+                            out = re.sub(m.group(0), "", out)
+                        try:
+                            if len(m2) == 1: # Only one line found
+                                p = float(m.group(1))
+                            else:
+                                err += "Pattern is more than once: " + readpoints + "\n"
+                        except:
+                            p = 0
+                        give_points(points_rule, "output", p)
+                except Exception as e:
+                    msg = ""
+                    if isinstance(e, IndexError): msg = "no group ()"
+                    else: msg = e.msg
+                    err += "readpoints pattern error: " + msg + "\n"
+                    err += "Pattern: " + readpoints + "\n"
 
         return_points(points_rule, result)
 

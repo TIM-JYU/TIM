@@ -6,7 +6,8 @@ import sqlalchemy.exc
 import dumboclient
 import initdb2
 from filemodehelper import change_permission_and_retry
-from tim_app import db, app
+from tim_app import app
+from timdb.tim_models import db
 from timdb.timdb2 import TimDb
 from utils import del_content
 
@@ -18,7 +19,7 @@ class TimDbTest(unittest.TestCase):
 
     @classmethod
     def get_db(cls):
-        return TimDb(db_path=cls.db_path, files_root_path=cls.test_files_path)
+        return TimDb(files_root_path=cls.test_files_path)
 
     @classmethod
     def setUpClass(cls):
@@ -47,3 +48,8 @@ class TimDbTest(unittest.TestCase):
 
     def setUp(self):
         pass
+
+
+TEST_USER_1_ID = 4
+TEST_USER_2_ID = 5
+TEST_USER_3_ID = 6

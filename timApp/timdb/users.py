@@ -9,6 +9,7 @@ from timdb.models.usergroup import UserGroup
 from timdb.models.user import User
 from timdb.models.folder import Folder
 from timdb.models.block import Block
+from timdb.tim_models import BlockAccess, UserGroupMember, db
 from timdb.timdbbase import TimDbBase
 from timdb.timdbexception import TimDbException
 
@@ -91,8 +92,8 @@ class Users(TimDbBase):
         assert user_id != 0
         return user_id
 
-    def create_anonymous_user(self, name: str, real_name: str, commit: bool = True) -> int:
-        """Creates a new user anonymous user.
+    def create_anonymous_user(self, name: str, real_name: str, commit: bool = True) -> User:
+        """Creates a new anonymous user.
         :param name: The name of the user to be created.
         :param real_name: The real name of the user.
         :returns: The id of the newly created user.
@@ -106,7 +107,7 @@ class Users(TimDbBase):
             self.session.commit()
         user_id = u.id
         self.add_user_to_group(self.get_anon_group_id(), user_id)
-        return user_id
+        return u
 
     def get_next_anonymous_user_id(self) -> int:
         """
@@ -171,10 +172,10 @@ class Users(TimDbBase):
         :param group_id: The id of the group.
         :param user_id: The id of the user.
         """
-        cursor = self.db.cursor()
-        cursor.execute('INSERT INTO UserGroupMember (UserGroup_id, User_id) VALUES (%s, %s)', [group_id, user_id])
+        ugm = UserGroupMember(usergroup_id=group_id, user_id=user_id)
+        db.session.add(ugm)
         if commit:
-            self.db.commit()
+            db.session.commit()
 
     def add_user_to_named_group(self, group_name: str, user_id: int, commit: bool = True):
         group_id = self.get_usergroup_by_name(group_name)
@@ -242,9 +243,14 @@ class Users(TimDbBase):
 
     def get_rights_holders(self, block_id: int):
         cursor = self.db.cursor()
-        cursor.execute("""SELECT b.UserGroup_id as gid, u.name as name, a.id as access_type, a.name as access_name FROM BlockAccess b
+        cursor.execute("""SELECT b.UserGroup_id as gid, u.name as name, a.id as access_type, a.name as access_name, fullname
+                          FROM BlockAccess b
                           JOIN UserGroup u ON b.UserGroup_id = u.id
                           JOIN AccessType a ON b.type = a.id
+                          LEFT JOIN (SELECT ug.id as gid, ua.real_name as fullname
+                                     FROM useraccount ua
+                                     JOIN usergroup ug on ug.name = ua.name
+                                     ) tmp ON tmp.gid = b.UserGroup_id
                           WHERE Block_id = %s""", [block_id])
         return self.resultAsDictionary(cursor)
 
@@ -254,9 +260,11 @@ class Users(TimDbBase):
             return []
         return self.get_rights_holders(doc.id)
 
-    def grant_default_access(self, group_id: int, folder_id: int, access_type: str, object_type: BlockType):
+    def grant_default_access(self, group_ids: List[int], folder_id: int, access_type: str, object_type: BlockType):
         doc = self.get_default_right_document(folder_id, object_type, create_if_not_exist=True)
-        self.grant_access(group_id, doc.id, access_type)
+        for group_id in group_ids:
+            self.grant_access(group_id, doc.id, access_type, commit=False)
+        db.session.commit()
 
     def remove_default_access(self, group_id: int, folder_id: int, access_type: str, object_type: BlockType):
         doc = self.get_default_right_document(folder_id, object_type, create_if_not_exist=True)
@@ -466,14 +474,12 @@ class Users(TimDbBase):
         :param access_type: The kind of access. Possible values are 'edit' and 'view'.
         """
 
-        # TODO: Check that the group_id and block_id exist.
         access_id = self.get_access_type_id(access_type)
-        cursor = self.db.cursor()
         if access_id is not None:
-            cursor.execute("""INSERT INTO BlockAccess (Block_id,UserGroup_id,accessible_from,type)
-                              VALUES (%s,%s,CURRENT_TIMESTAMP, %s) ON CONFLICT DO NOTHING""", [block_id, group_id, access_id])
+            ba = BlockAccess(block_id=block_id, usergroup_id=group_id, type=access_id)
+            db.session.merge(ba)
         if commit:
-            self.db.commit()
+            db.session.commit()
 
     def grant_view_access(self, group_id: int, block_id: int):
         """Grants view access to a group for a block.
@@ -717,12 +723,16 @@ WHERE User_id IN ({}))
                                real_name: Optional[str]=None,
                                email: Optional[str]=None,
                                password: Optional[str]=None,
-                               is_admin: bool=False):
-        user_id = self.create_user(name, real_name or name, email or name + '@example.com', password=password or '')
-        user_group = self.create_usergroup(name)
-        self.add_user_to_group(user_group, user_id)
+                               is_admin: bool=False,
+                               commit: bool=True):
+        user_id = self.create_user(name, real_name or name, email or name + '@example.com', password=password or '',
+                                   commit=False)
+        user_group = self.create_usergroup(name, commit=False)
+        self.add_user_to_group(user_group, user_id, commit=False)
         if is_admin:
-            self.addUserToAdmins(user_id)
+            self.addUserToAdmins(user_id, commit=False)
+        if commit:
+            db.session.commit()
         return user_id, user_group
 
     def get_personal_usergroup_by_id(self, user_id: int) -> Optional[int]:

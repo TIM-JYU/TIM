@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Optional, List, Dict
 
 from utils import parse_yaml
@@ -19,6 +20,9 @@ class DocSettings:
     slide_background_url_key = 'slide_background_url'
     slide_background_color_key = 'slide_background_color'
     bookmark_key = 'bookmarks'
+    lazy_key = 'lazy'
+    hide_links_key = 'hide_links'
+    point_sum_rule_key = 'point_sum_rule'
 
     @classmethod
     def is_valid_paragraph(cls, par):
@@ -59,6 +63,7 @@ class DocSettings:
         return parse_yaml(md)
 
     def __init__(self, settings_dict: Optional[dict] = None):
+        self.user_macros = None
         self.__dict = settings_dict if settings_dict else {}
         self.sanitize_macros()
 
@@ -84,8 +89,34 @@ class DocSettings:
     def css(self):
         return self.__dict.get(self.css_key)
 
-    def get_macros(self) -> dict:
+    def get_macros(self) -> Dict:
         return self.__dict.get(self.macros_key, {})
+
+    def get_macros_preserving_user(self):
+        """
+        Gets the macros and defines user-specific variables in such a way that the macro replacement for user variables
+        does effectively nothing.
+        """
+        if self.user_macros is not None:
+            return self.user_macros
+        macros = deepcopy(self.get_macros())
+        macros.update({'username': '{0}username{0}'.format(self.get_macro_delimiter()),
+                       'realname': '{0}realname{0}'.format(self.get_macro_delimiter())})
+        self.user_macros = macros
+        return macros
+
+    def get_macros_with_user_specific(self, user):
+        if not user:
+            return self.get_macros()
+        macros = deepcopy(self.get_macros())
+        macros.update(self.get_user_specific_macros(user))
+        return macros
+
+    @staticmethod
+    def get_user_specific_macros(user):
+        if not user:
+            return {}
+        return {'username': user.name, 'realname': user.real_name}
 
     def get_macro_delimiter(self) -> str:
         return self.__dict.get(self.macro_delimiter_key, '%%')
@@ -106,6 +137,9 @@ class DocSettings:
         if default is None:
             default = []
         return self.__dict.get(self.bookmark_key, default)
+
+    def lazy(self, default=False):
+        return self.__dict.get(self.lazy_key, default)
 
     def set_bookmarks(self, bookmarks: List[Dict]):
         self.__dict[self.bookmark_key] = bookmarks
@@ -135,3 +169,9 @@ class DocSettings:
 
     def show_task_summary(self, default=False) -> bool:
         return self.__dict.get(self.show_task_summary_key, default)
+
+    def hide_links(self, default=None):
+        return self.__dict.get(self.hide_links_key, default)
+
+    def point_sum_rule(self, default=None):
+        return self.__dict.get(self.point_sum_rule_key, default)

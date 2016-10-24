@@ -9,6 +9,8 @@ from documentmodel.documentparseroptions import DocumentParserOptions
 from markdownconverter import md_to_html
 from routes.logger import log_info
 from routes.notify import notify_doc_owner
+from timdb.bookmarks import Bookmarks
+from timdb.models.docentry import DocEntry
 from timdb.timdbexception import TimDbException
 from typing import List
 from utils import get_error_html
@@ -128,7 +130,7 @@ def rename_task_ids():
 
     # Get paragraphs with taskIds
     for paragraph in old_pars:
-        if not paragraph.get_attr('taskId'):
+        if not paragraph.is_task():
             old_pars.remove(paragraph)
     i = 0
     while len(duplicates) > i:
@@ -313,12 +315,13 @@ See the changes here:
                         doc,
                         original_par,
                         new_par_ids,
-                        update_cache=current_app.config['IMMEDIATE_PRELOAD'])
+                        update_cache=current_app.config['IMMEDIATE_PRELOAD'],
+                        edited=True)
 
 
 @edit_page.route("/preview/<int:doc_id>", methods=['POST'])
-def preview(doc_id):
-    """Route for previewing a paragraph.
+def preview_paragraphs(doc_id):
+    """Route for previewing paragraphs.
 
     :param doc_id: The id of the document in which the preview will be rendered.
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
@@ -341,42 +344,55 @@ def preview(doc_id):
         try:
             blocks = get_pars_from_editor_text(doc, text, break_on_elements=editing_area)
             doc.insert_temporary_pars(blocks, context_par)
-            return par_response(blocks, doc, edit_window=True, context_par=context_par)
+            return par_response(blocks, doc, preview=True, context_par=context_par)
         except Exception as e:
             err_html = get_error_html(e)
             blocks = [DocParagraph.create(doc=doc, md='', html=err_html)]
-            return par_response(blocks, doc, edit_window=True)
+            return par_response(blocks, doc, preview=True)
     else:
         return jsonResponse({'texts': md_to_html(text), 'js': [], 'css': []})
 
 
-def par_response(blocks, doc, original_par=None, new_par_ids=None, edit_window=False, update_cache=False, context_par=None):
+def par_response(pars,
+                 doc,
+                 original_par=None,
+                 new_par_ids=None,
+                 preview=False,
+                 update_cache=False,
+                 context_par=None,
+                 edited=False):
     if update_cache:
         changed_pars = DocParagraph.preload_htmls(doc.get_paragraphs(),
                                                   doc.get_settings(),
                                                   persist=update_cache)
     else:
         changed_pars = []
-        DocParagraph.preload_htmls(blocks, doc.get_settings(), context_par=context_par, persist=update_cache)
+        DocParagraph.preload_htmls(pars, doc.get_settings(), context_par=context_par, persist=update_cache)
 
     # Do not check for duplicates for preview because the operation is heavy
-    if not edit_window:
-        duplicates = check_duplicates(blocks, doc, getTimDb())
+    if not preview:
+        duplicates = check_duplicates(pars, doc, getTimDb())
+        if edited and logged_in():
+            bms = Bookmarks(get_current_user_object())
+            d = DocEntry.find_by_id(doc.doc_id)
+            # d can be None when editing a translation because they don't have a row in DocEntry.
+            # Skip this case for now; TODO: fix
+            if d is not None:
+                bms.add_bookmark('Last edited', d.get_short_name(), '/view/' + d.get_path(), move_to_top=True).save_bookmarks()
     else:
         duplicates = None
 
-    current_user = get_current_user()
-    pars, js_paths, css_paths, modules = post_process_pars(doc, blocks, current_user, edit_window=edit_window,
+    current_user = get_current_user_object()
+    pars, js_paths, css_paths, modules = post_process_pars(doc, pars, current_user, edit_window=preview,
                                                            show_questions=True)
 
-    changed_pars, _, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=edit_window,
+    changed_pars, _, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=preview,
                                               show_questions=True)
 
     return jsonResponse({'texts': render_template('paragraphs.html',
                                                   text=pars,
                                                   rights=get_rights(doc.doc_id),
-                                                  preview=edit_window),
-                         'route': 'preview',
+                                                  preview=preview),
                          'js': js_paths,
                          'css': css_paths,
                          'angularModule': modules,
@@ -401,14 +417,15 @@ def get_pars_from_editor_text(doc: Document, text: str,
     blocks = [DocParagraph.create(doc=doc, md=par['md'], attrs=par.get('attrs'))
               for par in DocumentParser(text).validate_structure(
                   is_whole_document=False).get_blocks(options)]
+    timdb = getTimDb()
     for p in blocks:
         if p.is_reference():
             try:
                 refdoc = int(p.get_attr('rd'))
             except (ValueError, TypeError):
                 continue
-            if not skip_access_check and getTimDb().documents.exists(refdoc)\
-                    and not getTimDb().users.has_view_access(getCurrentUserId(), refdoc):
+            if not skip_access_check and timdb.documents.exists(refdoc)\
+                    and not timdb.users.has_view_access(getCurrentUserId(), refdoc):
                 raise ValidationException("You don't have view access to document {}".format(refdoc))
     return blocks
 
@@ -479,17 +496,17 @@ def get_next_available_task_id(attrs, old_pars, duplicates, par_id):
 
 
 # Automatically rename plugins with name pluginnamehere
-def check_and_rename_pluginnamehere(blocks, doc):
+def check_and_rename_pluginnamehere(blocks: List[DocParagraph], doc: Document):
     # Get the paragraphs from the document with taskids
     old_pars = doc.get_paragraphs()
     for paragraph in old_pars:
-        if not paragraph.get_attr('taskId'):
+        if not paragraph.is_task():
             old_pars.remove(paragraph)
     i = 1
     j = 0
     # For all blocks check if taskId is pluginnamehere, if it is find next available name.
     for p in blocks:
-        if p.get_attr('taskId'):
+        if p.is_task():
             task_id = p.get_attr('taskId')
             if task_id == 'PLUGINNAMEHERE':
                 task_id = 'Plugin' + str(i)
@@ -511,7 +528,7 @@ def check_duplicates(pars, doc, timdb):
     duplicates = []
     all_pars = doc.get_paragraphs()
     for paragraph in all_pars:
-        if not paragraph.get_attr('taskId'):
+        if not paragraph.is_task():
             all_pars.remove(paragraph)
     for par in pars:
         if par.is_plugin():
@@ -628,7 +645,7 @@ def add_paragraph_common(md, doc_id, par_next_id):
                      setting="doc_modify", par_id=pars[0].get_id() if len(pars) > 0 else None,
                      group_id=get_group_id(), group_subject="Your document [doc_name] has been modified")
 
-    return par_response(pars, doc, None, new_par_ids, update_cache=current_app.config['IMMEDIATE_PRELOAD'])
+    return par_response(pars, doc, None, new_par_ids, update_cache=current_app.config['IMMEDIATE_PRELOAD'], edited=True)
 
 
 @edit_page.route("/deleteParagraph/<int:doc_id>", methods=["POST"])
@@ -657,7 +674,7 @@ def delete_paragraph(doc_id):
                          text), setting="doc_modify",
                      group_id=get_group_id(), group_subject=get_group_subject())
 
-    return par_response([], doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'])
+    return par_response([], doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'], edited=True)
 
 
 @edit_page.route("/getUpdatedPars/<int:doc_id>")

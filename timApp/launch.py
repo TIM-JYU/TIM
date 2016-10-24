@@ -28,7 +28,7 @@ if __name__ == '__main__':
             tim.start_app()
         elif sys.argv[1] == '--with-gunicorn':
             log_info('Starting with gunicorn. CPUs available: {}'.format(multiprocessing.cpu_count()))
-            p = subprocess.Popen(["gunicorn", "--config", "gunicornconf.py", "tim:app"])
+            p = subprocess.Popen(["gunicorn", "-p", "/var/run/gunicorn.pid", "--config", "gunicornconf.py", "tim:app"])
             p.wait()
         else:
             raise Exception('Unknown command line argument: ' + sys.argv[1])

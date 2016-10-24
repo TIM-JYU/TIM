@@ -1,6 +1,7 @@
-var katex, $, angular, MathJax;
+var katex, $, angular, MathJax, timLogTime;
 
 var timApp = angular.module('timApp').config(['$httpProvider', function ($httpProvider) {
+    "use strict";
     timLogTime("timApp config","view");
     var interceptor = [
         '$q',
@@ -63,8 +64,9 @@ timApp.controller("ViewCtrl", [
     '$localStorage',
     '$filter',
     '$timeout',
+    '$log',
     'Users',
-    function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, Users) {
+    function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
         "use strict";
         timLogTime("ViewCtrl start","view");
 
@@ -91,6 +93,20 @@ timApp.controller("ViewCtrl", [
         }
 
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
+
+        sc.readingTypes = {
+            onScreen: 1,
+            hoverPar: 2,
+            clickPar: 3,
+            clickRed: 4
+        };
+        sc.readClasses = {
+            1: 'screen',
+            2: 'hover',
+            3: 'click',
+            4: 'read'
+        };
+
         sc.editing = false;
 
         sc.questionShown = false;
@@ -217,6 +233,10 @@ timApp.controller("ViewCtrl", [
                 return null;
             }
             return $par.attr("id");
+        };
+
+        sc.getParAttributes = function ($par) {
+            return JSON.parse($par.attr('attrs'));
         };
 
         sc.dereferencePar = function ($par) {
@@ -375,7 +395,6 @@ timApp.controller("ViewCtrl", [
             }
             Object.keys(attrs).forEach(function (key, index) {
                 if (typeof attrs[key] === 'object' && attrs[key] !== null) {
-                    //console.log('converting ' + key + " to string");
                     attrs[key] = JSON.stringify(attrs[key]);
                 }
             });
@@ -414,7 +433,7 @@ timApp.controller("ViewCtrl", [
             http({
                 url: '/getQuestionById',
                 method: 'GET',
-                params: {'question_id': sc.qId, 'buster': new Date().getTime()}
+                params: {'question_id': sc.qId}
             })
                 .success(function (data) {
                     sc.json = JSON.parse(data.questionjson);
@@ -429,7 +448,7 @@ timApp.controller("ViewCtrl", [
                 })
 
                 .error(function () {
-                    $window.console.log("There was some error creating question to database.");
+                    $log.error("There was some error creating question to database.");
                 });
 
 
@@ -457,7 +476,7 @@ timApp.controller("ViewCtrl", [
             http({
                 url: '/getQuestionByParId',
                 method: 'GET',
-                params: {'par_id': sc.questionParId, 'doc_id': sc.docId, 'buster': new Date().getTime()}
+                params: {'par_id': sc.questionParId, 'doc_id': sc.docId}
             })
                 .success(function (data) {
                     sc.json = data.questionjson;
@@ -473,7 +492,7 @@ timApp.controller("ViewCtrl", [
                 })
 
                 .error(function () {
-                    $window.console.log("Could not question.");
+                    $log.error("Could not get question.");
                 });
 
 
@@ -604,8 +623,8 @@ timApp.controller("ViewCtrl", [
                 if (lastDownEvent && lastDownEvent.type != e.type && new Date().getTime() - lastclicktime < 500) {
                     // This is to prevent chaotic behavior from both mouseDown and touchStart
                     // events happening at the same coordinates
-                    console.log("Ignoring event:");
-                    console.log(e);
+                    $log.info("Ignoring event:");
+                    $log.info(e);
                     return;
                 }
 
@@ -679,16 +698,19 @@ timApp.controller("ViewCtrl", [
             sc.toggleParEditor($par, {showDelete: true, area: false});
         };
 
-        sc.editSettingsPars = function () {
+        sc.editSettingsPars = function (recursiveCall) {
             var pars = [];
             $(".par").each(function () {
-                if ($(this).attr("attrs").indexOf("settings") >= 0)
+                if (sc.getParAttributes($(this)).hasOwnProperty("settings"))
                 {
                     pars.push(this);
                 }
             });
-            if (pars.length == 0)
+            if (pars.length === 0)
             {
+                if (recursiveCall) {
+                    throw 'Faulty recursion stopped, there should be a settings paragraph already';
+                }
                 var par_next = sc.getParId($(".par:first"));
                 if (par_next == "null")
                 {
@@ -699,7 +721,8 @@ timApp.controller("ViewCtrl", [
                     "docId" : sc.docId,
                     "par_next" : par_next
                 }).success(function(data, status, headers, config) {
-                    $window.location.reload();
+                    sc.addSavedParToDom(data, {par: par_next});
+                    sc.editSettingsPars(true);
                 }).error(function(data, status, headers, config) {
                     $window.alert(data.error);
                 });
@@ -857,9 +880,9 @@ timApp.controller("ViewCtrl", [
 
         sc.moveAbove = function (e, $par_or_area) {
             http.post('/clipboard/paste/' + sc.docId, {
-                "par_before" : sc.getFirstParId($par_or_area),
+                "par_before" : sc.getFirstParId($par_or_area)
             }).success(function(data, status, headers, config) {
-                if (data == null)
+                if (data === null)
                     return;
 
                 var $newpar = sc.createNewPar();
@@ -881,9 +904,9 @@ timApp.controller("ViewCtrl", [
 
         sc.moveBelow = function (e, $par_or_area) {
             http.post('/clipboard/paste/' + sc.docId, {
-                "par_after" : sc.getLastParId($par_or_area),
+                "par_after" : sc.getLastParId($par_or_area)
             }).success(function(data, status, headers, config) {
-                if (data == null)
+                if (data === null)
                     return;
 
                 var $newpar = sc.createNewPar();
@@ -908,7 +931,7 @@ timApp.controller("ViewCtrl", [
                 "par_before" : sc.getFirstParId($par_or_area),
                 "as_ref": as_ref
             }).success(function(data, status, headers, config) {
-                if (data == null)
+                if (data === null)
                     return;
 
                 var $newpar = sc.createNewPar();
@@ -932,7 +955,7 @@ timApp.controller("ViewCtrl", [
                 "par_after" : sc.getLastParId($par_or_area),
                 "as_ref": as_ref
             }).success(function(data, status, headers, config) {
-                if (data == null)
+                if (data === null)
                     return;
 
                 var $newpar = sc.createNewPar();
@@ -996,7 +1019,7 @@ timApp.controller("ViewCtrl", [
                     sc.updatePendingPars(data.changed_pars);
                 })
                 .error(function () {
-                    $window.alert('Error occurred when getting updated paragraphs.')
+                    $window.alert('Error occurred when getting updated paragraphs.');
                 });
         };
 
@@ -1032,7 +1055,7 @@ timApp.controller("ViewCtrl", [
             var $newPars = $($compile(data.texts)(sc));
 
             if ($window.editMode === 'area')
-                newPars.find('.editline').removeClass('editline').addClass('editline-disabled');
+                $newPars.find('.editline').removeClass('editline').addClass('editline-disabled');
 
             $par.replaceWith($newPars);
             sc.processAllMathDelayed($newPars);
@@ -1086,27 +1109,39 @@ timApp.controller("ViewCtrl", [
             return angular.isDefined($par.attr('ref-id'));
         };
 
-        sc.markParRead = function ($this, $par) {
-            var oldClass = $this.attr("class");
-            $this.attr("class", "readline read");
+        sc.markParRead = function ($par, readingType) {
+            var $readline = $par.find('.readline');
+            var readClassName = sc.readClasses[readingType];
+            if ($readline.hasClass(readClassName)) {
+                return q.resolve(null);
+            }
+            
+            // If the paragraph is only a preview, ignore it.
+            if ($par.parents('.previewcontent').length > 0 || $par.parents('.csrunPreview').length > 0) {
+                return q.resolve(null);
+            }
             var par_id = sc.getParId($par);
+            if (par_id === 'NEW_PAR' || par_id === null) {
+                return q.resolve(null);
+            }
+            $readline.addClass(readClassName);
             var data = {};
             if (sc.isReference($par)) {
                 data = sc.getRefAttrs($par);
             }
             if ( !Users.isLoggedIn() ) return true;
-            http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now(), data)
-                .success(function (data, status, headers, config) {
+            return http.put('/read/' + sc.docId + '/' + par_id + '/' + readingType, data)
+                .then(function (data, status, headers, config) {
                     sc.markPageDirty();
-                }).error(function () {
-                    $window.alert('Could not save the read marking.');
-                    $this.attr("class", oldClass);
+                }, function () {
+                    $log.error('Could not save the read marking for paragraph ' + par_id);
+                    $readline.removeClass(readClassName);
                 });
-            return true;
         };
 
         sc.onClick(".readline, .readlineQuestion", function ($this, e) {
-            return sc.markParRead($this, $this.parents('.par'));
+            sc.markParRead($this.parents('.par'), sc.readingTypes.clickRed);
+            return true;
         });
 
         sc.onClick(".areareadline", function ($this, e) {
@@ -1117,7 +1152,7 @@ timApp.controller("ViewCtrl", [
 
             // Collapsible area
             var area_id = $this.parent().attr('data-area');
-            console.log($this);
+            $log.info($this);
 
             http.put('/read/' + sc.docId + '/' + area_id)
                 .success(function (data, status, headers, config) {
@@ -1135,6 +1170,47 @@ timApp.controller("ViewCtrl", [
             return sc.selection.pars.filter($par).length > 0;
         };
 
+        $.expr[":"].onScreen = function (el) {
+            var rect = el.getBoundingClientRect();
+
+            return (
+                rect.top >= 0 &&
+                rect.left >= 0 &&
+                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+            );
+        };
+
+        sc.jQuery = $;
+        sc.readPromise = null;
+        sc.readingParId = null;
+
+        sc.queueParagraphForReading = function () {
+            //noinspection CssInvalidPseudoSelector
+            var visiblePars = sc.jQuery('.par:onScreen').find('.readline').not('.' + sc.readClasses[sc.readingTypes.onScreen]);
+            var parToRead = visiblePars.first().parents('.par');
+            var parId = sc.getParId(parToRead);
+
+            if (sc.readPromise !== null && sc.readingParId !== parId) {
+                $timeout.cancel(sc.readPromise);
+            } else if (sc.readingParId === parId) {
+                return;
+            }
+
+            if (parToRead.length === 0) {
+                return;
+            }
+            sc.readingParId = parId;
+            var numWords = parToRead.find('.parContent').text().trim().split(/[\s\n]+/).length;
+            sc.readPromise = $timeout(function () {
+                sc.markParRead(parToRead, sc.readingTypes.onScreen).finally(sc.queueParagraphForReading);
+            }, 300 * numWords);
+        };
+
+        $($window).scroll(sc.queueParagraphForReading);
+
+        sc.queueParagraphForReading();
+
         sc.getParIndex = function($par) {
             var par_id = sc.getParId($par);
             var $pars = $('.par');
@@ -1149,7 +1225,7 @@ timApp.controller("ViewCtrl", [
                     continue;
 
                 if (sc.getParId($node) == par_id) {
-                    //console.log('sc.getParIndex(' + par_id + ') = ' + realIndex);
+                    //$log.info('sc.getParIndex(' + par_id + ') = ' + realIndex);
                     return realIndex;
                 }
 
@@ -1192,6 +1268,12 @@ timApp.controller("ViewCtrl", [
             $timeout( function() {sc.showOptionsWindow(e, $par, coords);}, 80);
             return false;
         }, true);
+
+        sc.onMouseOverOut(".par", function ($this, e, select) {
+            if (select) {
+                sc.markParRead($this, sc.readingTypes.hoverPar);
+            }
+        });
 
         sc.onMouseOverOut(".areaeditline1", function ($this, e, select) {
             var areaName = $this.attr('data-area');
@@ -1307,7 +1389,9 @@ timApp.controller("ViewCtrl", [
             var $target = $(e.target);
             var tag = $target.prop("tagName");
             var $par = $this.parents('.par');
-            // sc.updateNoteBadge($par);
+            if ($par.parents('.previewcontent').length > 0) {
+                return;
+            }
 
             // Don't show paragraph menu on these specific tags or classes
             var ignoredTags = ['BUTTON', 'INPUT', 'TEXTAREA', 'A', 'QUESTIONADDEDNEW'];
@@ -1370,8 +1454,8 @@ timApp.controller("ViewCtrl", [
 
             var curElement = jqTarget;
             var limit = 10;
-            while (curElement != null) {
-                //console.log(curElement);
+            while (curElement !== null) {
+                //$log.info(curElement);
 
                 if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || curElement.attr('position') == 'absolute')
                     return false;
@@ -1383,7 +1467,7 @@ timApp.controller("ViewCtrl", [
 
                 curElement = curElement.parent();
                 if (--limit < 0) {
-                    //console.log('Limit reached');
+                    //$log.info('Limit reached');
                     break;
                 }
             }
@@ -1395,7 +1479,7 @@ timApp.controller("ViewCtrl", [
                 $(".lightselect").removeClass("lightselect");
             }
 
-            //console.log(e.target);
+            //$log.info(e.target);
             return false;
 
         }, true);
@@ -1457,7 +1541,7 @@ timApp.controller("ViewCtrl", [
                 sc.lastclicktime = new Date().getTime();
                 sc.lastclickplace = coords;
             } else {
-                $window.console.log("This line is new: " + $par);
+                $log.info("This line is new: " + $par);
                 $par.children().remove(".actionButtons");
                 $par.removeClass("selected");
                 $par.removeClass("lightselect");
@@ -1492,14 +1576,14 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getAndEditQuestions = function () {
-            console.log(sc.settings);
-            console.log($window.sessionsettings);
+            $log.info(sc.settings);
+            $log.info($window.sessionsettings);
             var questions = $('.editlineQuestion');
             for (var i = 0; i < questions.length; i++) {
                 var questionParent = $(questions[i].parentNode);
                 var questionChildren = $(questionParent.children());
                 var questionNumber = $(questionChildren.find($('.questionNumber')));
-                var questionTitle = JSON.parse(questionParent.attr('attrs')).question;
+                var questionTitle = sc.getParAttributes(questionParent).question;
                 if (questionTitle == 'Untitled') {
                     questionTitle = "";
                 }
@@ -1528,9 +1612,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getQuestions = function () {
-            var rn = "?_=" + Date.now();
-
-            http.get('/questions/' + sc.docId + rn)
+            http.get('/questions/' + sc.docId)
                 .success(function (data) {
                     var pars = {};
                     var questionCount = data.length;
@@ -1560,7 +1642,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.markAllAsRead = function () {
-            http.put('/read/' + sc.docId + '?_=' + Date.now())
+            http.put('/read/' + sc.docId)
                 .success(function (data, status, headers, config) {
                     $('.readline').attr("class", "readline read");
                 }).error(function (data, status, headers, config) {
@@ -1628,7 +1710,7 @@ timApp.controller("ViewCtrl", [
                     }
                     timLogTime("getindex done","view");
                 }).error(function () {
-                    console.log("Could not get index");
+                    $log.error("Could not get index");
                 });
         };
 
@@ -1699,7 +1781,7 @@ timApp.controller("ViewCtrl", [
                 }).error(function (data) {
                     var $loading = $('#loading');
                     $loading.remove();
-                    $window.console.log("Error occurred when fetching view_content");
+                    $log.error("Error occurred when fetching view_content");
                 });
             sc.contentLoaded = true;
             return true;
@@ -1772,7 +1854,7 @@ timApp.controller("ViewCtrl", [
             var i = 1000000;
 
             while (i > 0) {
-                if ($next.length == 0) {
+                if ($next.length === 0) {
                     $par = $par.parent();
                     $next = $par.next();
                     if ($par.prop("tagName").toLowerCase() == "html") {
@@ -1910,7 +1992,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.nameArea = function (e, $pars) {
-            var $newArea = $('<div class="area" id="newarea" />')
+            var $newArea = $('<div class="area" id="newarea" />');
             $newArea.attr('data-doc-id', sc.docId);
             sc.selection.pars.wrapAll($newArea);
 
@@ -2034,22 +2116,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.goToEditor = function (e, $par) {
-            /*
-            var element = $('pareditor')[0];
-            var viewport = {};
-            viewport.top = $(window).scrollTop();
-            viewport.bottom = viewport.top + $(window).height();
-            var bounds = {};
-            bounds.top = element.offset().top;
-            bounds.bottom = bounds.top + element.outerHeight();
-            if (bounds.bottom > viewport.bottom || bounds.top < viewport.top) {
-                /*$('html, body').animate({
-                    scrollTop: $element.offset().top
-                }, 2000); * /
-                $('html, body').scrollTop(element.offset().top);
-            }
             $('pareditor')[0].scrollIntoView();
-            */
         };
 
         sc.closeAndSave = function (e, $par) {
@@ -2071,7 +2138,7 @@ timApp.controller("ViewCtrl", [
             } else {
                 $scope.selectedArea = undefined;
             }
-            console.log(sel.toString());
+            $log.info(sel.toString());
         };
         */
 
@@ -2141,7 +2208,7 @@ timApp.controller("ViewCtrl", [
         sc.updateClipboardStatus = function() {
             http.get('/clipboardstatus', {
             }).success(function (data, status, headers, config) {
-                if (!'empty' in data || data.empty) {
+                if (!('empty' in data) || data.empty) {
                     sc.allowPasteContent = false;
                     sc.allowPasteRef = false;
                 } else {
@@ -2249,8 +2316,8 @@ timApp.controller("ViewCtrl", [
 
         sc.addNote = function() {
             // sc.clearNoteBadge(null);
-            sc.toggleNoteEditor(sc.noteBadgePar,{isNew:true})
-        }
+            sc.toggleNoteEditor(sc.noteBadgePar,{isNew:true});
+        };
 
 
         sc.setNotePadge = function($event) {
@@ -2258,7 +2325,7 @@ timApp.controller("ViewCtrl", [
             var $par = $($event.target);
             if ( !$par.hasClass("par") ) $par = $par.parents('.par');
             sc.updateNoteBadge($par);
-        }
+        };
 
         /**
          * Moves the note badge to the correct element.
@@ -2267,6 +2334,10 @@ timApp.controller("ViewCtrl", [
          */
         sc.updateNoteBadge = function ($par) {
             if (!$par) return null;
+            if ($par.parents('.previewcontent').length > 0) {
+                return;
+            }
+            sc.markParRead($par, sc.readingTypes.clickPar);
             var newElement = $par[0];
             if (!newElement) return null;
             addElementToParagraphMargin(newElement, sc.createNoteBadge($par));
@@ -2292,6 +2363,15 @@ timApp.controller("ViewCtrl", [
 
         // call marktree.js initialization function so that TOC clicking works
         $window.addEvents();
+        $timeout(function () {
+            var indexHeadings = $('#menuTabs').find('.subexp .exp');
+            var subHeadings = indexHeadings.find('ul.sub li.basic');
+            if (indexHeadings.length === 1 || indexHeadings.length + subHeadings.length < 40) {
+                indexHeadings.attr('class', 'col');
+                indexHeadings.children('.sub').attr('class', 'subexp');
+            }
+        });
+
         sc.addParagraphFunctions = sc.getAddParagraphFunctions();
         sc.pasteFunctions = sc.getPasteFunctions();
         sc.popupMenuAttrs = {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'};

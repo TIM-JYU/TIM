@@ -40,16 +40,6 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
         });
     };
 
-    sc.createDocument = function(name) {
-        http.post('/createDocument', {
-            "doc_name" : sc.getAbsolutePath(name)
-        }).success(function(data, status, headers, config) {
-            $window.location.href = "/view/" + data.name;
-        }).error(function(data, status, headers, config) {
-            $window.alert(data.error);
-        });
-    };
-
     sc.createFolder = function(name, owner) {
         http.post('/createFolder', {
             "name" : sc.getAbsolutePath(name),
@@ -78,8 +68,7 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
             method : 'GET',
             url : '/getItems',
             params: {
-                folder: sc.folder,
-                _: Date.now()
+                folder: sc.folder
             }
         }).success(function(data, status, headers, config) {
             sc.itemList = data;
@@ -94,8 +83,7 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
             method : 'GET',
             url : '/getTemplates',
             params: {
-                root_path: sc.folder,
-                _: Date.now()
+                root_path: sc.folder
             }
         }).success(function(data, status, headers, config) {
             sc.templateList = data;

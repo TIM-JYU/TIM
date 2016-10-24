@@ -4,7 +4,7 @@ from timroutetest import TimRouteTest
 class ManageTest(TimRouteTest):
     def test_manage(self):
         self.login_test1()
-        doc = self.create_doc(initial_par='testing manage')
+        doc = self.create_doc(initial_par='testing manage').document
         self.assertResponseStatus(self.app.get('/manage/' + str(doc.doc_id)))
         self.assertDictResponse({"email_doc_modify": False,
                                  "email_comment_add": False,

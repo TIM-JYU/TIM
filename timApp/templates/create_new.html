@@ -13,32 +13,9 @@
         <p class="errormsg">{{ message or 'The requested page does not exist.' }}</p>
         {% if session.user_id %}
             {% if rights %}
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        Create a new document here
-                    </div>
-                    <div class="panel-body">
-                        <form ng-submit="createDocument('{{ newItem }}')" class="form-horizontal">
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Pathname</label>
-                                <div class="col-sm-10">
-                                    <p class="form-control-static">{{ newItem }}</p>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Owner</label>
-                                <div class="col-sm-10">
-                                    <p class="form-control-static">{{ session.user_name }}</p>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <div class="col-sm-offset-2 col-sm-10">
-                                    <button type="submit" class="timButton">Create</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                <bootstrap-panel title="Create a new document here">
+                    <create-document full-path="{{ newItem }}"></create-document>
+                </bootstrap-panel>
 
                 <div class="panel panel-default">
                     <div class="panel-heading">

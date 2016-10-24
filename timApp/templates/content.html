@@ -1,5 +1,4 @@
 {% if headers %}
-<div id="base">
     <ul class="subexp">
         {% for h in headers %}
             <li class="{% if h[1] %}exp{% else %}basic{% endif %}">
@@ -16,5 +15,4 @@
             </li>
         {% endfor %}
     </ul>
-</div>
 {% endif %}

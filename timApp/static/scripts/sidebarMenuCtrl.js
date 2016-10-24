@@ -9,23 +9,56 @@
  * @licence MIT
  * @copyright 2015 Timppa project authors
  */
-var angular;
+var angular, $;
 var timApp = angular.module('timApp');
 
-timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
+timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$log',
 
-    function ($scope, $http, $window) {
+    function ($scope, $http, $window, Users, $log) {
+        "use strict";
         $scope.currentLecturesList = [];
         $scope.futureLecturesList = [];
         $scope.pastLecturesList = [];
         $scope.lectureQuestions = [];
         $scope.materialQuestions = [];
+        $scope.users = Users;
+        $scope.bookmarks = $window.bookmarks; // from base.html
+        $scope.leftSide = $('.left-fixed-side');
 
         $scope.active = -1;
         if ($window.showIndex) {
             $scope.active = 0;
+        } else if (Users.isLoggedIn()) {
+            // make bookmarks tab active
+            $scope.active = 6;
         }
         $scope.lastTab = $scope.active;
+
+        $scope.updateLeftSide = function () {
+            if ($("#menuTabs").is(':visible')) {
+                $scope.leftSide.css('min-width', '12em');
+            } else {
+                $scope.leftSide.css('min-width', '0');
+            }
+        };
+
+        $scope.updateLeftSide();
+        $($window).resize($scope.updateLeftSide);
+
+        $scope.bookmarkTabSelected = function (isSelected) {
+            var tabContent = $("#menuTabs").find(".tab-content");
+            if (isSelected) {
+                // The dropdown menu is clipped if it's near right side of the menu without applying this hack
+                // Also the dropdown menu causes vertical scrollbar to appear without specifying height
+                tabContent.css('height', 'calc(100vh - 51.2833px)');
+                tabContent.css('overflow-x', 'visible');
+                tabContent.css('overflow-y', 'visible');
+            } else {
+                tabContent.css('height', 'auto');
+                tabContent.css('overflow-x', 'hidden');
+                tabContent.css('overflow-y', 'auto');
+            }
+        };
 
         /**
          * FILL WITH SUITABLE TEXT
@@ -39,12 +72,14 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
                     $scope.active = -1; // this will set the value to null and remove the "selected" state from tab
                     if ($('.device-xs').is(':visible') || $('.device-sm').is(':visible')) {
                         tabs.hide();
+                        $scope.leftSide.css('min-width', '0');
                     }
                 } else {
                     $scope.active = $scope.lastTab;
                 }
             } else {
                 tabs.show();
+                $scope.leftSide.css('min-width', '12em');
                 tabs.attr("class", "");
                 if ($scope.active === null) {
                     $scope.active = $scope.lastTab || 0;
@@ -68,7 +103,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
                     $scope.pastLecturesList = lectures.pastLectures;
                 })
                 .error(function () {
-                    console.log("Couldn't fetch the lectures");
+                    $log.error("Couldn't fetch the lectures");
                 });
         };
 
@@ -92,7 +127,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
                     }
                 })
                 .error(function () {
-                    console.log("Couldn't fetch the questions");
+                    $log.error("Couldn't fetch the questions");
                 });
         };
     }
