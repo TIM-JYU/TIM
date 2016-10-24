@@ -1170,23 +1170,33 @@ timApp.controller("ViewCtrl", [
             return sc.selection.pars.filter($par).length > 0;
         };
 
-        $.expr[":"].onScreen = function(el) {
-            var rect = el.getBoundingClientRect();
+        sc.initOnScreen = function () {
+            $.expr[":"].onScreen = function (el) {
+                var rect = el.getBoundingClientRect();
 
-            return (
-                rect.top >= 0 &&
-                rect.left >= 0 &&
-                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-                rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-            );
+                return (
+                    rect.top >= 0 &&
+                    rect.left >= 0 &&
+                    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                );
+            };
         };
 
         sc.readPromise = null;
         sc.readingParId = null;
 
         sc.queueParagraphForReading = function () {
-            //noinspection CssInvalidPseudoSelector
-            var visiblePars = $('.par:onScreen').find('.readline').not('.' + sc.readClasses[sc.readingTypes.onScreen]);
+            var visiblePars;
+            try {
+                // sagecell overwrites jQuery, so we must redefine the :onScreen expression
+                //noinspection CssInvalidPseudoSelector
+                visiblePars = $('.par:onScreen').find('.readline').not('.' + sc.readClasses[sc.readingTypes.onScreen]);
+            } catch (e) {
+                sc.initOnScreen();
+                sc.queueParagraphForReading();
+                return;
+            }
             var parToRead = visiblePars.first().parents('.par');
             var parId = sc.getParId(parToRead);
 
