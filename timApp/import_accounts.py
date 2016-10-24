@@ -10,7 +10,7 @@ def import_accounts(file, password):
     with open(file) as csvfile:
         reader = csv.reader(csvfile, delimiter=';')
         for row in reader:
-            timdb.users.create_user_with_group(row[0], row[1], row[0], password, is_admin=True, commit=False)
+            timdb.users.create_user_with_group(row[0], row[1], row[0], password, commit=False)
     timdb.commit()
 
 
