@@ -1,5 +1,6 @@
-<div class="answerBrowser" ng-cloak ng-keypress="checkKeypress($event)" >
-    <div class="error" ng-show="error" ng-bind="error"></div>
+<div class="answerBrowser" ng-cloak>
+    <div uib-alert ng-repeat="alert in alerts" ng-class="'alert-' + (alert.type || 'warning')"
+     close="closeAlert($index)">{{ alert.msg }}</div>
     <div class="row" ng-show="$parent.teacherMode && users.length > 0">
         <div class="col-xs-12">
             <div class="row">
@@ -18,30 +19,32 @@
                     </div>
                 </div>
                 <div class="col-xs-7">
-                    ({{ users.length }} users)
+                    <span class="nudge-left-25">
+                        {{ findSelectedUserIndex() + 1 }}/{{ users.length }}
+                    </span>
                     <a ng-href="mailto:{{user.email}}">email</a>
                 </div>
             </div>
         </div>
     </div>
-    <div ng-show="!hasUserChanged()">
+    <div ng-show="!hasUserChanged() || loading">
         <div ng-show="answers.length > 0">
             <div class="row">
                 <div class="col-xs-5">
                     <div class="input-group input-group-xs">
                 <span class="input-group-btn">
-                    <button class="btn btn-primary" ng-click="previous()">&larr;</button>
+                    <button class="btn btn-primary" ng-click="previousAnswer()">&larr;</button>
                 </span>
                         <select class="form-control" ng-model="selectedAnswer"
                                 ng-options="((filteredAnswers.length - idx) + '. ' + (answer.answered_on | timdate )) for (idx, answer) in filteredAnswers | orderBy:'answer.id' track by answer.id"
                                 ng-change="changeAnswer()"></select>
                 <span class="input-group-btn">
-                    <button class="btn btn-primary" ng-click="next()">&rarr;</button>
+                    <button class="btn btn-primary" ng-click="nextAnswer()">&rarr;</button>
                 </span>
                     </div>
                 </div>
                 <div class="col-xs-7">
-                    <span class="nudge-left-25">{{ filteredAnswers.length - indexOfSelected() }}/<a
+                    <span class="nudge-left-25">{{ filteredAnswers.length - findSelectedAnswerIndex() }}/<a
                             ng-click="setNewest()">{{ filteredAnswers.length }}</a></span>
                     <label class="checkbox-inline" ng-show="anyInvalid">
                         <input type="checkbox" ng-model="onlyValid">Show valid only</label>
@@ -52,7 +55,15 @@
                 <div class="col-xs-12">
                     <form ng-submit="savePoints()" class="point-form form-inline">
                         <label ng-show="showTeacher() || (giveCustomPoints && allowCustomPoints())">
-                        Points:<input class="form-control input-xs" ng-model="points" name="points" type="text" size="1">
+                        Points:<input class="form-control input-xs"
+                                      focus-me="shouldFocus"
+                                      ng-focus="shouldFocus = true"
+                                      ng-blur="shouldFocus = false"
+                                      ng-model="points"
+                                      name="points"
+                                      type="text"
+                                      autocomplete="off"
+                                      size="2">
                         </label>
                         <button title="Save points"
                                 class="timButton btn-xs"
@@ -97,6 +108,6 @@
     <span ng-show="taskInfo.starttime || taskInfo.deadline">
         Answering time: {{ taskInfo.starttime | timdate }} - {{ taskInfo.deadline | timdate }}
     </span>
-    <span ng-show="$parent.teacherMode && hasUserChanged() && !firstLoad">(hover/click to update)</span>
+    <span ng-show="$parent.teacherMode && hasUserChanged() && !firstLoad && !loading">(hover/click to update)</span>
     <!-- <img style="display: inline" src="/static/images/loading.gif" ng-show="loading"> -->
 </div>
