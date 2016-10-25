@@ -45,8 +45,7 @@ timApp.controller("SmallMenuCtrl", ['$scope', '$window', '$http',
 
                     })
                     .error(function () {
-                        console.log("Couldn't fetch the lectures");
-                    })
+                    });
 			
 		};
 
@@ -68,8 +67,7 @@ timApp.controller("SmallMenuCtrl", ['$scope', '$window', '$http',
                         $scope.futureLecturesList = lectures.futureLectures;
                     })
                     .error(function () {
-                        console.log("Couldn't fetch the lectures");
-                    })
+                    });
 			
 		};
 
@@ -88,6 +86,3 @@ timApp.controller("SmallMenuCtrl", ['$scope', '$window', '$http',
 		});
     }
 ]);
-
-
-
