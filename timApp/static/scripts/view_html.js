@@ -164,10 +164,10 @@ timApp.controller("ViewCtrl", [
             return e.val() === '1';
         };
 
-        sc.processAllMathDelayed = function ($elem) {
+        sc.processAllMathDelayed = function ($elem, delay) {
             $timeout(function () {
                 sc.processAllMath($elem);
-            }, 1500);
+            }, delay || 300);
         };
 
         sc.processAllMath = function ($elem) {
@@ -1829,7 +1829,7 @@ timApp.controller("ViewCtrl", [
                 sc.pasteAbove(e, $(".addBottomContainer"), true);
             });
         }
-        sc.processAllMathDelayed($('body'));
+        sc.processAllMathDelayed($('body'), 1500);
 
         sc.getEditMode = function() { return $window.editMode; };
         sc.getAllowMove = function() { return $window.allowMove; };
