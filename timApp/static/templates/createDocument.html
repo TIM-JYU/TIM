@@ -11,10 +11,10 @@
 </div>
 <div class="checkbox">
     <label>
-        <input class="checkbox" ng-model="gamificationCheck" type="checkbox">Gamification Document
+        <input class="checkbox" ng-model="isGamified" type="checkbox">Gamification Document
     </label>
 </div>
 <div uib-alert ng-repeat="alert in alerts" ng-class="'alert-' + (alert.type || 'warning')"
      close="closeAlert($index)">{{ alert.msg }}</div>
-<button class="timButton" ng-disabled="!docName" ng-click="createDocument(docName)" type="button">Create
+<button class="timButton" ng-disabled="!docName" ng-click="createDocument(docName, isGamified)" type="button">Create
 </button>

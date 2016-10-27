@@ -26,9 +26,11 @@ timApp.directive("createDocument", ['$window', '$log', '$http', function ($windo
 
             sc.alerts = [];
 
-            sc.createDocument = function (name) {
+            sc.createDocument = function (name, isGamified) {
+                console.log.isGamified
                 $http.post('/createDocument', {
-                    "doc_name": sc.docLocation + '/' + sc.docName
+                    "doc_name": sc.docLocation + '/' + sc.docName,
+                    "gamified" : sc.isGamified
                 }).then(function (response) {
                     $window.location.href = "/view/" + response.data.name;
                 }, function (response) {
