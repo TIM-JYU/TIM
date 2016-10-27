@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 
 from documentmodel.document import Document
 from routes.common import verify_read_marking_right, getTimDb, jsonResponse, getCurrentUserGroup, \
-    get_referenced_pars_from_req, okJsonResponse, get_session_usergroup_ids
+    get_referenced_pars_from_req, okJsonResponse, get_session_usergroup_ids, verify_json_params
 from timdb.readparagraphtype import ReadParagraphType
 from timdb.timdbexception import TimDbException
 
@@ -23,8 +23,8 @@ def get_read_paragraphs(doc_id):
     return jsonResponse(readings)
 
 
-@readings.route("/read/<int:doc_id>/<specifier>/<int:read_type>", methods=['PUT'])
-def set_read_paragraph(doc_id, specifier, read_type):
+@readings.route("/read/<int:doc_id>/<par_id>/<int:read_type>", methods=['PUT'])
+def set_read_paragraph(doc_id, par_id, read_type):
     paragraph_type = ReadParagraphType(read_type)
     if current_app.config['DISABLE_AUTOMATIC_READINGS'] and paragraph_type in (ReadParagraphType.on_screen,
                                                                                ReadParagraphType.hover_par):
@@ -33,14 +33,18 @@ def set_read_paragraph(doc_id, specifier, read_type):
     timdb = getTimDb()
 
     doc = Document(doc_id)
+    par_ids, = verify_json_params('pars', require=False)
+    if not par_ids:
+        par_ids = [par_id]
     try:
-        par = doc.get_paragraph(specifier)
+        pars = [doc.get_paragraph(par_id) for par_id in par_ids]
     except TimDbException:
         return abort(404, 'Non-existent paragraph')
 
     for group_id in get_session_usergroup_ids():
-        for p in get_referenced_pars_from_req(par):
-            timdb.readings.mark_read(group_id, Document(p.get_doc_id()), p, paragraph_type, commit=False)
+        for par in pars:
+            for p in get_referenced_pars_from_req(par):
+                timdb.readings.mark_read(group_id, Document(p.get_doc_id()), p, paragraph_type, commit=False)
     try:
         timdb.commit()
     except IntegrityError:

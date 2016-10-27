@@ -1,12 +1,10 @@
 <div id="pars">
     {% include 'paragraphs.html' %}
-    {% if rights.editable %}
-        <div class="addBottomContainer hidden-print" ng-class="{'height-35': editing}">
+        <div class="addBottomContainer hidden-print" ng-show="rights.editable" ng-class="{'height-35': editing}">
             <button class="addBottom timButton">Add paragraph</button>
             <!--
             <button class="pasteRefBottom timButton">Paste as reference here</button>
             <button class="pasteBottom timButton">Paste as content here</button>
             -->
         </div>
-    {% endif %}
 </div>

@@ -410,11 +410,18 @@ p.caption {
     height: 100%;
     top: 0;
     border-right: 0.5em solid;
-    border-color: #F60;
+    border-color: $readline-color;
 }
 
 .areareadline {
     @extend .readline
+}
+
+.readsection {
+    position: absolute;
+    right: $readline-offset - 1em;
+    color: $readline-color;
+    cursor: pointer;
 }
 
 .timFixed {
