@@ -6,6 +6,7 @@ from timdb.blocktypes import blocktypes
 from timdb.dbutils import insert_block
 from timdb.timdbexception import TimDbException
 from utils import split_location
+from timdb.gamification_models import gamificationdocument
 
 
 class DocEntry(db.Model):
@@ -32,12 +33,13 @@ class DocEntry(db.Model):
         return d
 
     @staticmethod
-    def create(name: Optional[str], owner_group_id: int) -> 'DocEntry':
+    def create(name: Optional[str], owner_group_id: int, is_gamified: bool) -> 'DocEntry':
         """Creates a new document with the specified name.
 
         :param name: The name of the document to be created (can be None). If None, no DocEntry is actually added
          to the database; only Block and Document objects are created.
         :param owner_group_id: The id of the owner group.
+        :param is_gamified: --MADE BY TIMG-- Boolean value whether the document is gamified
         :returns: The newly created document object.
         """
 
@@ -52,6 +54,10 @@ class DocEntry(db.Model):
         docentry.document = document
         if name is not None:
             db.session.add(docentry)
+
+        if is_gamified:
+            gamificationdocument.create(document_id)
+
         db.session.commit()
         return docentry
 

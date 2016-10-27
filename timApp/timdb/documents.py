@@ -43,15 +43,16 @@ class Documents(TimDbBase):
         self.update_last_modified(doc)
         return [par], doc
 
-    def create(self, name: str, owner_group_id: int) -> Document:
+    def create(self, name: str, owner_group_id: int, is_gamified: bool) -> Document:
         """Creates a new document with the specified name.
         
         :param name: The name of the document to be created (can be None).
         :param owner_group_id: The id of the owner group (can be None).
+        :param is_gamified: --MADE BY TIMG-- Boolean value if the document is gamified
         :returns: The newly created document object.
         """
 
-        return DocEntry.create(name, owner_group_id).document
+        return DocEntry.create(name, owner_group_id, is_gamified).document
 
     def create_translation(self, original_doc: Document, name: Optional[str], owner_group_id: int,
                            ref_attribs: Optional[Dict[str, str]] = None) -> Document:
