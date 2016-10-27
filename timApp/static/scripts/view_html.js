@@ -1148,7 +1148,7 @@ timApp.controller("ViewCtrl", [
             return http.put('/read/' + sc.docId + '/' + par_id + '/' + readingType, data)
                 .then(function (response) {
                     sc.markPageDirty();
-                    if (readingType == sc.readingTypes.clickRed) {
+                    if (readingType === sc.readingTypes.clickRed) {
                         sc.refreshSectionReadMarks();
                     }
                 }, function (response) {
