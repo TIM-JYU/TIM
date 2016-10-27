@@ -1093,7 +1093,7 @@ timApp.controller("ViewCtrl", [
                     sc.processAllMathDelayed($newPar);
                 }
             }
-            sc.refreshSectionReadMarks();
+            sc.rebuildSections();
             sc.pendingUpdates = {};
             if (sc.lectureMode) { sc.getAndEditQuestions(); }
         };
@@ -1692,8 +1692,6 @@ timApp.controller("ViewCtrl", [
          */
         sc.refreshSectionReadMarks = function () {
             $(".readsection").remove();
-            sc.sections = {};
-            sc.buildSections(sc.sections, $(), $('#pars'));
             for (var key in sc.sections) {
                 if (sc.sections.hasOwnProperty(key)) {
                     var sectionPars = sc.sections[key];
@@ -1705,6 +1703,16 @@ timApp.controller("ViewCtrl", [
                     }
                 }
             }
+        };
+
+        /**
+         * Rebuilds the sections and refreshes the section read marks.
+         */
+        sc.rebuildSections = function () {
+            $(".readsection").remove();
+            sc.sections = {};
+            sc.buildSections(sc.sections, $(), $('#pars'));
+            sc.refreshSectionReadMarks();
         };
 
         /**
@@ -1885,7 +1893,7 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.setHeaderLinks();
-        sc.refreshSectionReadMarks();
+        sc.rebuildSections();
 
         // If you add 'mousedown' to bind, scrolling upon opening the menu doesn't work on Android
         $('body,html').bind('scroll wheel DOMMouseScroll mousewheel', function (e) {
