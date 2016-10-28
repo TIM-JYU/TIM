@@ -1150,6 +1150,7 @@ timApp.controller("ViewCtrl", [
             return http.put('/read/' + sc.docId + '/' + par_id + '/' + readingType, data)
                 .then(function (response) {
                     sc.markPageDirty();
+                    $readline.removeClass(readClassName + '-modified');
                     if (readingType === sc.readingTypes.clickRed) {
                         sc.refreshSectionReadMarks();
                     }
@@ -1697,10 +1698,15 @@ timApp.controller("ViewCtrl", [
             for (var key in sc.sections) {
                 if (sc.sections.hasOwnProperty(key)) {
                     var sectionPars = sc.sections[key];
-                    if (sectionPars.find('.readline').not('.read').length > 0) {
+                    var readlines = sectionPars.find('.readline');
+                    var modifiedCount = readlines.filter('.read-modified').length;
+                    var unreadCount = readlines.not('.read-modified').not('.read').length;
+                    if (modifiedCount + unreadCount > 0) {
                         sectionPars.last().append($('<div>', {
                             class: 'readsection',
-                            title: 'Mark preceding section as read (' + sectionPars.length + ' paragraphs)'
+                            title: 'Mark preceding section as read (' +
+                            sectionPars.length + ' paragraphs - ' + unreadCount +
+                            ' unread, ' + modifiedCount + ' modified)'
                         }).html('<i class="glyphicon glyphicon-align-left"></i><i class="glyphicon glyphicon-ok"></i>'));
                     }
                 }
