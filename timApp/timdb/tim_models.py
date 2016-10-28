@@ -181,7 +181,7 @@ class Question(db.Model):
     expl = db.Column(db.Text)
 
 
-class ReadParagraphs(db.Model):
+class ReadParagraph(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'readparagraphs'
     usergroup_id = db.Column(db.Integer, primary_key=True)

@@ -20,6 +20,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 saveUrl: '@',
                 deleteUrl: '@',
                 previewUrl: '@',
+                unreadUrl: '@',
                 extraData: '=',
                 afterSave: '&',
                 afterCancel: '&',
@@ -607,6 +608,24 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             $scope.deleting = false;
                         });
                     if ($scope.options.touchDevice) $scope.changeMeta();
+                };
+
+                $scope.showUnread = function () {
+                    return $scope.extraData.par !== 'NEW_PAR' && $element.parents('.par').find('.readline.read').length > 0;
+                };
+
+                $scope.unreadClicked = function () {
+                    if ($scope.options.touchDevice) $scope.changeMeta();
+                    $http.put($scope.unreadUrl + '/' + $scope.extraData.par, {}).then(function (response) {
+                        $element.parents('.par').find('.readline').removeClass('read read-modified');
+                        $element.remove();
+                        $scope.afterCancel({
+                            extraData: $scope.extraData
+                        });
+                        $scope.$parent.refreshSectionReadMarks();
+                    }, function (response) {
+                        $log.error('Failed to mark paragraph as unread');
+                    });
                 };
 
                 $scope.cancelClicked = function () {

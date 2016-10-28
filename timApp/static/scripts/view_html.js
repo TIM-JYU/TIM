@@ -371,7 +371,8 @@ timApp.controller("ViewCtrl", [
                 "after-cancel": 'handleCancel(extraData)',
                 "after-delete": 'handleDelete(saveData, extraData)',
                 "preview-url": '/preview/' + sc.docId,
-                "delete-url": '/deleteParagraph/' + sc.docId
+                "delete-url": '/deleteParagraph/' + sc.docId,
+                "unread-url": '/unread/' + sc.docId
             };
             if (options.showDelete) {
                 caption = 'Edit paragraph';
@@ -576,7 +577,8 @@ timApp.controller("ViewCtrl", [
                     "after-delete": 'handleNoteDelete(saveData, extraData)',
                     "preview-url": '/preview/' + sc.docId,
                     "delete-url": '/deleteNote',
-                    "initial-text-url": initUrl
+                    "initial-text-url": initUrl,
+                    "unread-url": '/unread/' + sc.docId
                 };
 
             sc.toggleEditor($par, options, attrs, caption, "pareditor");

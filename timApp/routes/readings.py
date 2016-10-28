@@ -6,6 +6,7 @@ from documentmodel.document import Document
 from routes.common import verify_read_marking_right, getTimDb, jsonResponse, getCurrentUserGroup, \
     get_referenced_pars_from_req, okJsonResponse, get_session_usergroup_ids, verify_json_params
 from timdb.readparagraphtype import ReadParagraphType
+from timdb.tim_models import ReadParagraph
 from timdb.timdbexception import TimDbException
 
 readings = Blueprint('readings',
@@ -23,9 +24,14 @@ def get_read_paragraphs(doc_id):
     return jsonResponse(readings)
 
 
+@readings.route("/unread/<int:doc_id>/<par_id>", methods=['PUT'])
+def unread_paragraph(doc_id, par_id):
+    return set_read_paragraph(doc_id, par_id, unread=True)
+
+
 @readings.route("/read/<int:doc_id>/<par_id>/<int:read_type>", methods=['PUT'])
-def set_read_paragraph(doc_id, par_id, read_type):
-    paragraph_type = ReadParagraphType(read_type)
+def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
+    paragraph_type = ReadParagraphType(read_type) if read_type is not None else ReadParagraphType.click_red
     if current_app.config['DISABLE_AUTOMATIC_READINGS'] and paragraph_type in (ReadParagraphType.on_screen,
                                                                                ReadParagraphType.hover_par):
         return okJsonResponse()
@@ -44,7 +50,14 @@ def set_read_paragraph(doc_id, par_id, read_type):
     for group_id in get_session_usergroup_ids():
         for par in pars:
             for p in get_referenced_pars_from_req(par):
-                timdb.readings.mark_read(group_id, Document(p.get_doc_id()), p, paragraph_type, commit=False)
+                if unread:
+                    rp = ReadParagraph.query.filter_by(usergroup_id=group_id,
+                                                       doc_id=p.get_doc_id(),
+                                                       par_id=p.get_id(),
+                                                       type=paragraph_type)
+                    rp.delete()
+                else:
+                    timdb.readings.mark_read(group_id, Document(p.get_doc_id()), p, paragraph_type, commit=False)
     try:
         timdb.commit()
     except IntegrityError:
