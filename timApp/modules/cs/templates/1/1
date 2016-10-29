@@ -1,6 +1,7 @@
 Monivalinta
 True/False tyyppinen monivalintakysymys
 ``` {#PLUGINNAMEHERE plugin="mmcq"}
+headerText: Kysymyksen otsikko
 stem: "Kysymyksen varsinainen kysymys"
 choices:
   -
