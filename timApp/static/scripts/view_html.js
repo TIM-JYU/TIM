@@ -113,7 +113,6 @@ timApp.controller("ViewCtrl", [
         sc.firstTimeQuestions = true;
         sc.mathJaxLoaded = false;
         sc.mathJaxLoadDefer = null;
-        sc.hideRefresh = false;
         sc.hidePending = false;
         sc.hideMessage = false;
         sc.pendingUpdates = {};
@@ -141,7 +140,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.closeRefreshDlg = function() {
-            sc.hideRefresh = true;
+            sc.showRefresh = false;
         };
 
         sc.closeMessageDlg = function() {
@@ -151,7 +150,6 @@ timApp.controller("ViewCtrl", [
         sc.markPageDirty = function() {
             var e = angular.element('#page_is_dirty');
             e.val('1');
-            sc.hideRefresh = true;
         };
 
         sc.markPageNotDirty = function() {
@@ -1149,9 +1147,9 @@ timApp.controller("ViewCtrl", [
             if ( !Users.isLoggedIn() ) return true;
             return http.put('/read/' + sc.docId + '/' + par_id + '/' + readingType, data)
                 .then(function (response) {
-                    sc.markPageDirty();
                     $readline.removeClass(readClassName + '-modified');
                     if (readingType === sc.readingTypes.clickRed) {
+                        sc.markPageDirty();
                         sc.refreshSectionReadMarks();
                     }
                 }, function (response) {
@@ -2484,6 +2482,7 @@ timApp.controller("ViewCtrl", [
         sc.allowPasteContent = true;
         sc.allowPasteRef = true;
         $window.allowMove = false;
+        sc.showRefresh = sc.isPageDirty();
 
         try {
             var found = $filter('filter')(sc.editorFunctions,
