@@ -1,4 +1,5 @@
 """Routes for editing a document."""
+import magic
 from bs4 import UnicodeDammit
 from flask import Blueprint, render_template
 
@@ -46,6 +47,10 @@ def update_document(doc_id):
     if 'file' in request.files:
         doc = request.files['file']
         raw = doc.read()
+        mime = magic.Magic(mime=True)
+        mimetype = mime.from_buffer(raw)
+        if mimetype not in current_app.config['ALLOWED_DOCUMENT_UPLOAD_MIMETYPES']:
+            abort(400, 'Only markdown files are allowed. This file appears to be {}.'.format(mimetype))
 
         # UnicodeDammit gives incorrect results if the encoding is UTF-8 without BOM,
         # so try the built-in function first.

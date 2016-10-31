@@ -1,3 +1,4 @@
+var angular, $;
 var PermApp = angular.module('timApp');
 
 PermApp.controller("PermCtrl", [
@@ -8,6 +9,7 @@ PermApp.controller("PermCtrl", [
     '$timeout',
     '$compile',
     function (sc, $http, Upload, $window, $timeout, $compile) {
+        "use strict";
         sc.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/"; // Todo: replace something remembers users last choice
 
         sc.getJustDocName = function(fullName) {
@@ -53,7 +55,7 @@ PermApp.controller("PermCtrl", [
                         sc.lang_id = tr.lang_id;
                     }
                     else {
-                        trnew = JSON.parse(JSON.stringify(tr));
+                        var trnew = JSON.parse(JSON.stringify(tr));
                         trnew.old_langid = tr.lang_id;
                         trnew.old_title = tr.title;
                         sc.translations.push(trnew);
@@ -186,8 +188,6 @@ PermApp.controller("PermCtrl", [
                 'public': Boolean(alias.public),
                 'new_name': new_alias
             }).success(function (data, status, headers, config) {
-                console.log(first);
-                console.log(new_alias);
 
                 if (!first || new_alias == alias.fullname)
                     sc.getAliases();
@@ -223,6 +223,7 @@ PermApp.controller("PermCtrl", [
 
         sc.updateDocument = function (file) {
             sc.file = file;
+            sc.fileUploadError = null;
             if (file) {
                 sc.file.progress = 0;
                 file.upload = Upload.upload({
@@ -236,26 +237,27 @@ PermApp.controller("PermCtrl", [
 
                 file.upload.then(function (response) {
                     $timeout(function () {
+                        sc.file.result = response.data;
                         sc.doc.versions = response.data.versions;
                         sc.doc.fulltext = response.data.fulltext;
                         sc.fulltext = response.data.fulltext;
                     });
                 }, function (response) {
                     if (response.status > 0)
-                        sc.file.progress = 'Error occurred: ' + response.data.error;
+                        sc.fileUploadError = 'Error: ' + response.data.error;
                 }, function (evt) {
                     sc.file.progress = Math.min(100, parseInt(100.0 *
                         evt.loaded / evt.total));
                 });
 
                 file.upload.finally(function () {
-                })
+                });
             }
         };
 
         sc.convertDocument = function (doc) {
             var text = sc.tracWikiText;
-            wikiSource = sc.wikiRoot.replace("wiki","browser");
+            var wikiSource = sc.wikiRoot.replace("wiki","browser");
             //var text = sc.fulltext;
             text = text.replace(/\[\[PageOutline\]\].*\n/g,"");  // remove contents
             text = text.replace(/ !([a-zA-Z])/g," $1");                   // remove cat !IsBig
@@ -270,7 +272,7 @@ PermApp.controller("PermCtrl", [
             text = text.replace(/\n==\s+(.*?)\s+==.*\n/g, '\n#-\n## $1\n');
             text = text.replace(/\n=\s+(.*?)\s+=.*\n/g, '\n#-\n# $1\n');
             // text = text.replace(/^ \d+. ', r'1.'); 
-            lines = text.split("\n");
+            var lines = text.split("\n");
             for (var i=0; i<lines.length; i++) {
                 var line = lines[i];
                 if ( true || line.lastIndexOf('    ',0) !== 0 ) {
@@ -405,12 +407,12 @@ text = '\n'.join(a)
                 span.append($("<label>", {
                     class: "pluginRenameObject",
                     text: data.duplicates[i][0],
-                    for: "newName" + i,
+                    for: "newName" + i
                 }));
                 input = $("<input>", {
                     class: "pluginRenameObject",
                     type: "text",
-                    id: data.duplicates[i][1],
+                    id: data.duplicates[i][1]
                 });
                 sc.inputs.push(input);
                 span.append(input);
@@ -421,25 +423,25 @@ text = '\n'.join(a)
                 class: 'timButton, pluginRenameObject',
                 text: "Save",
                 title: "Rename task names with given names",
-                'ng-click': "renameTaskNamesClicked(duplicates, true)",
+                'ng-click': "renameTaskNamesClicked(duplicates, true)"
             }));
             $buttonDiv.append($("<button>", {
                 class: 'timButton, pluginRenameObject',
                 text: "Rename Automatically",
                 title: "Rename duplicate task names automatically",
-                'ng-click': "renameTaskNamesClicked(duplicates, true)",
+                'ng-click': "renameTaskNamesClicked(duplicates, true)"
             }));
             $buttonDiv.append($("<button>", {
                 class: 'timButton, pluginRenameObject',
                 text: "Ignore",
                 title: "Proceed without renaming",
-                'ng-click': "renameTaskNamesClicked(undefined, false)",
+                'ng-click': "renameTaskNamesClicked(undefined, false)"
             }));
             $buttonDiv.append($("<button>", {
                 class: 'timButton, pluginRenameObject',
                 text: "Cancel",
                 title: "Return to editing document",
-                'ng-click': "cancelPluginRenameClicked()",
+                'ng-click': "cancelPluginRenameClicked()"
             }));
             $actionDiv.append($form);
             $actionDiv.append($buttonDiv);
@@ -466,7 +468,6 @@ text = '\n'.join(a)
                     sc.saving = false;
                 }).error(function (data, status, headers, config) {
                     sc.saving = false;
-                    console.log(data);
                     if ('is_warning' in data && data.is_warning) {
                         if ( confirm(data.error + "\n\nDo you still wish to save the document?") ) {
                             sc.saveDocumentWithWarnings();
@@ -519,7 +520,7 @@ text = '\n'.join(a)
 
         sc.createTranslation = function() {
             $http.post('/translate/' + sc.doc.id + "/" + sc.translationName, {
-                'doc_title': sc.translationTitle,
+                'doc_title': sc.translationTitle
             }).success(function (data, status, headers, config) {
                 location.href = "/view/" + data.name;
             }).error(function (data, status, headers, config) {
@@ -550,7 +551,7 @@ text = '\n'.join(a)
             $http.post('/createDocument', {
                 'doc_name': docPath
             }).success(function (data, status, headers, config) {
-                forwardName = data.name;
+                var forwardName = data.name;
                 $http.post('/update/' + data.id, {
                     'template_name': $window.doc.fullname
                 }).success(function (data, status, headers, config) {
