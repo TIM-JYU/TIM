@@ -1,6 +1,6 @@
 Upotettu sisältö
 Toisen sivun sisällön upottaminen, eli iframe
-``` {#PLUGINNAMEHERE plugin="showVideo"}
+``` {plugin="showVideo"}
 iframe: true
 open: true
 videoicon: false
