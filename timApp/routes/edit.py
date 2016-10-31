@@ -1,6 +1,5 @@
 """Routes for editing a document."""
-import magic
-from bs4 import UnicodeDammit
+import yaml
 from flask import Blueprint, render_template
 
 from documentmodel.docparagraph import DocParagraph
@@ -8,15 +7,12 @@ from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser, ValidationException, ValidationWarning
 from documentmodel.documentparseroptions import DocumentParserOptions
 from markdownconverter import md_to_html
-from routes.logger import log_info
 from routes.notify import notify_doc_owner
 from timdb.bookmarks import Bookmarks
 from timdb.models.docentry import DocEntry
 from timdb.timdbexception import TimDbException
-from typing import List
 from utils import get_error_html
 from .common import *
-import yaml
 
 
 edit_page = Blueprint('edit_page',
@@ -45,19 +41,8 @@ def update_document(doc_id):
     if not timdb.users.has_edit_access(getCurrentUserId(), doc_id):
         abort(403)
     if 'file' in request.files:
-        doc = request.files['file']
-        raw = doc.read()
-        mime = magic.Magic(mime=True)
-        mimetype = mime.from_buffer(raw)
-        if mimetype not in current_app.config['ALLOWED_DOCUMENT_UPLOAD_MIMETYPES']:
-            abort(400, 'Only markdown files are allowed. This file appears to be {}.'.format(mimetype))
-
-        # UnicodeDammit gives incorrect results if the encoding is UTF-8 without BOM,
-        # so try the built-in function first.
-        try:
-            content = raw.decode('utf-8')
-        except UnicodeDecodeError:
-            content = UnicodeDammit(raw).unicode_markup
+        file = request.files['file']
+        content = validate_uploaded_document_content(file)
         original = request.form['original']
         strict_validation = not request.form.get('ignore_warnings', False)
     elif 'template_name' in request.get_json():
