@@ -181,20 +181,24 @@
     </div>
     {% endif %}
 
-    <span ng-show="readUpdating">Loading...</span>
     <div class="panel panel-default">
         <div class="panel-heading">Upload a new version for this document</div>
         <div class="panel-body">
-            <form>
+            <div uib-alert class="alert-danger" ng-show="uploadForm.file.$error.pattern">
+                You may only upload markdown files (*.md and *.markdown).
+            </div>
+            <div uib-alert class="alert-danger" ng-show="fileUploadError" ng-bind="fileUploadError">
+            </div>
+            <form name="uploadForm">
                 <div class="input-group">
-                    <input class="form-control" type="file" ngf-select="updateDocument($file)">
+                    <input class="form-control" type="file" name="file" ng-model="file" ngf-pattern="'.md,.markdown,.txt'" ngf-select="updateDocument($file)">
                     <span class="input-group-btn">
                     <button class="timButton" id="reset" type="reset" value="Reset">Clear</button>
                     </span>
                 </div>
-                <span ng-show="file.progress >= 0"
-                  ng-bind="file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!'">
-            </span>
+                <span ng-show="file.progress >= 0 && file.progress < 100" ng-bind="'Uploading... ' + file.progress + '%'">
+                </span>
+                <span ng-show="file.result">Done!</span>
             </form>
         </div>
     </div>
@@ -235,6 +239,7 @@
             <a class="timButton" href="/download/{{ '{{ doc.id }}' }}">Download document markdown</a>
             <button class="timButton" ng-click="markAllAsRead()">Mark document as read</button>
             <button class="btn btn-danger" ng-click="deleteDocument(doc.id)">Delete document</button>
+            <span ng-show="readUpdating">Loading...</span>
         </div>
     </div>
 

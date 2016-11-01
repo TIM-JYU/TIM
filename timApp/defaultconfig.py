@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import timedelta
 
+ALLOWED_DOCUMENT_UPLOAD_MIMETYPES = ['text/plain']
 COMPRESS_DEBUG     = True
 COMPRESS_MIMETYPES = ['text/html', 'text/css', 'text/xml', 'application/json', 'application/javascript']
 COMPRESS_MIN_SIZE  = 50

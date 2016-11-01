@@ -8,7 +8,7 @@ from time import time
 
 import dateutil.parser
 from lxml import etree, html
-from typing import List, Optional, Set, Tuple, Union
+from typing import List, Optional, Set, Tuple, Union, Iterable
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.docsettings import DocSettings
@@ -159,6 +159,11 @@ class Document:
                 self.insert_paragraph_obj(new_par, insert_before_id=first_par.get_id())
             else:
                 self.modify_paragraph_obj(first_par.get_id(), new_par)
+
+    def get_tasks(self) -> Iterable[DocParagraph]:
+        for p in self.get_dereferenced_paragraphs():
+            if p.is_task():
+                yield p
 
     def get_settings(self) -> DocSettings:
         if self.par_cache is not None:

@@ -13,8 +13,19 @@ from routes.filters import map_format, timdate
 from routes.logger import setup_logging, log_info, log_warning
 # noinspection PyUnresolvedReferences
 from timdb.tim_models import db
+
+# We want to import all database models here to make sure e.g. Flask-Migrate is aware of them
+
 # noinspection PyUnresolvedReferences
-from timdb.models import *
+from timdb.models.user import User
+# noinspection PyUnresolvedReferences
+from timdb.models.block import Block
+# noinspection PyUnresolvedReferences
+from timdb.models.docentry import DocEntry
+# noinspection PyUnresolvedReferences
+from timdb.models.folder import Folder
+# noinspection PyUnresolvedReferences
+from timdb.models.usergroup import UserGroup
 # noinspection PyUnresolvedReferences
 from timdb.velp_models import *
 from utils import datestr_to_relative, date_to_relative

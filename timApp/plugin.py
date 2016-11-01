@@ -9,7 +9,7 @@ import yaml
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from markdownconverter import expand_macros
-from timdb.models import User
+from timdb.models.user import User
 from timdb.timdbexception import TimDbException
 from utils import parse_yaml, merge
 
@@ -47,6 +47,14 @@ class Plugin:
             par = doc.get_paragraph_by_task(task_id_name)
         if par is None:
             raise PluginException('Task not found in the document: ' + task_id_name)
+        return Plugin.from_paragraph(par, user)
+
+    @staticmethod
+    def from_paragraph(par: DocParagraph, user:Optional[User]=None):
+        doc = par.doc
+        if not par.is_plugin():
+            raise TimDbException('The paragraph {} is not a plugin.'.format(par.get_id()))
+        task_id_name = par.get_attr('taskId')
         plugin_data = parse_plugin_values(par,
                                           global_attrs=doc.get_settings().global_plugin_attrs(),
                                           macros=doc.get_settings().get_macros_with_user_specific(user),

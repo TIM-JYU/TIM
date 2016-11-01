@@ -1,6 +1,6 @@
 Small video
 Video with small icon
-``` {#PLUGINNAMEHERE plugin="showVideo"}
+``` {plugin="showVideo"}
 type: small
 stem: "Aliohjelmien kutsuminen"
 videoname: Luento 5

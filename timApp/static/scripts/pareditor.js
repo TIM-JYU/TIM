@@ -208,7 +208,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         minLines: 5,
                         autoScrollEditorIntoView: true,
                         hScrollBarAlwaysVisible: false,
-                        vScrollBarAlwaysVisible: true
+                        vScrollBarAlwaysVisible: false
                     });
 
                     editor.commands.addCommand({

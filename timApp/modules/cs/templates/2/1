@@ -1,6 +1,6 @@
 Suunnattu graafi
 Kuvio jossa on suunnattu nuoli alkiosta toiseen
-``` {#PLUGINNAMEHERE plugin="graphviz"}
+``` {plugin="graphviz"}
 gvType: dot
 size: Normal
 width: 100

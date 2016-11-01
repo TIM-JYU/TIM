@@ -5,6 +5,9 @@ import re
 from collections import defaultdict
 from urllib.parse import urlparse, urljoin
 
+import magic
+from bs4 import UnicodeDammit
+
 from flask import current_app, session, abort, g, Response, request, redirect, url_for, flash
 
 import dateutil.parser
@@ -273,12 +276,10 @@ def okJsonResponse():
     return jsonResponse({'status': 'ok'})
 
 
-def get_newest_document(doc_id):
+def get_document_as_current_user(doc_id: int) -> Document:
     """
-    Returns the newest Document object with the specified numeric id.
+    Returns the Document object having the current user group as the modifier group ip.
 
-    :rtype: Document
-    :type doc_id: int
     :param doc_id: The numeric id.
     :return: The Document object.
     """
@@ -646,3 +647,19 @@ def get_viewable_blocks():
         timdb = getTimDb()
         g.viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
     return g.viewable
+
+
+def validate_uploaded_document_content(file_content):
+    raw = file_content.read()
+    mime = magic.Magic(mime=True)
+    mimetype = mime.from_buffer(raw)
+    if mimetype not in current_app.config['ALLOWED_DOCUMENT_UPLOAD_MIMETYPES']:
+        abort(400, 'Only markdown files are allowed. This file appears to be {}.'.format(mimetype))
+
+    # UnicodeDammit gives incorrect results if the encoding is UTF-8 without BOM,
+    # so try the built-in function first.
+    try:
+        content = raw.decode('utf-8')
+    except UnicodeDecodeError:
+        content = UnicodeDammit(raw).unicode_markup
+    return content

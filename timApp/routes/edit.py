@@ -1,5 +1,5 @@
 """Routes for editing a document."""
-from bs4 import UnicodeDammit
+import yaml
 from flask import Blueprint, render_template
 
 from documentmodel.docparagraph import DocParagraph
@@ -7,15 +7,12 @@ from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser, ValidationException, ValidationWarning
 from documentmodel.documentparseroptions import DocumentParserOptions
 from markdownconverter import md_to_html
-from routes.logger import log_info
 from routes.notify import notify_doc_owner
 from timdb.bookmarks import Bookmarks
 from timdb.models.docentry import DocEntry
 from timdb.timdbexception import TimDbException
-from typing import List
 from utils import get_error_html
 from .common import *
-import yaml
 
 
 edit_page = Blueprint('edit_page',
@@ -44,15 +41,8 @@ def update_document(doc_id):
     if not timdb.users.has_edit_access(getCurrentUserId(), doc_id):
         abort(403)
     if 'file' in request.files:
-        doc = request.files['file']
-        raw = doc.read()
-
-        # UnicodeDammit gives incorrect results if the encoding is UTF-8 without BOM,
-        # so try the built-in function first.
-        try:
-            content = raw.decode('utf-8')
-        except UnicodeDecodeError:
-            content = UnicodeDammit(raw).unicode_markup
+        file = request.files['file']
+        content = validate_uploaded_document_content(file)
         original = request.form['original']
         strict_validation = not request.form.get('ignore_warnings', False)
     elif 'template_name' in request.get_json():
@@ -77,7 +67,7 @@ def update_document(doc_id):
         abort(400, 'Missing parameter: original')
     if content is None:
         return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
-    doc = get_newest_document(doc_id)
+    doc = get_document_as_current_user(doc_id)
     ver_before = doc.get_version()
     try:
         # To verify view rights for possible referenced paragraphs, we call this first:
@@ -95,7 +85,7 @@ def update_document(doc_id):
                                                      new_attrs=editor_pars[i].get_attrs(),
                                                      new_properties=old_pars[i].get_properties())
             i += 1
-        doc = get_newest_document(doc_id)
+        doc = get_document_as_current_user(doc_id)
         duplicates = check_duplicates(doc.get_paragraphs(), doc, timdb)
 
     except ValidationWarning as e:
@@ -124,7 +114,7 @@ def rename_task_ids():
     doc_id, duplicates = verify_json_params('docId', 'duplicates')
     manage_view = verify_json_params('manageView', require=False, default=False)
     verify_edit_access(doc_id)
-    doc = get_newest_document(doc_id)
+    doc = get_document_as_current_user(doc_id)
     pars = []
     old_pars = doc.get_paragraphs()
 
@@ -173,7 +163,7 @@ def rename_task_ids():
                             doc,
                             update_cache=current_app.config['IMMEDIATE_PRELOAD'])
     else:
-        doc = get_newest_document(doc_id)
+        doc = get_document_as_current_user(doc_id)
         duplicates = check_duplicates(pars, doc, timdb)
         chg = doc.get_changelog()
         for ver in chg:
@@ -226,7 +216,7 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
     timdb = getTimDb()
     verify_edit_access(doc_id)
 
-    doc = get_newest_document(doc_id)
+    doc = get_document_as_current_user(doc_id)
     if not doc.has_paragraph(par_id):
         abort(400, 'Paragraph not found: ' + par_id)
 
@@ -530,7 +520,7 @@ def check_duplicates(pars, doc, timdb):
         if not paragraph.is_task():
             all_pars.remove(paragraph)
     for par in pars:
-        if par.is_plugin():
+        if par.is_task():
             duplicate = []
             task_id = par.get_attr('taskId')
             count_of_same_task_ids = 0
@@ -571,7 +561,7 @@ def cancel_save_paragraphs():
     timdb = getTimDb()
     doc_id, original_par, new_pars, par_id = verify_json_params('docId', 'originalPar', 'newPars', 'parId')
     verify_edit_access(doc_id)
-    doc = get_newest_document(doc_id)
+    doc = get_document_as_current_user(doc_id)
     if len(new_pars) > 0:
         for new_par in new_pars:
             if not doc.has_paragraph(new_par):
@@ -608,7 +598,7 @@ def add_paragraph():
 def add_paragraph_common(md, doc_id, par_next_id):
     timdb = getTimDb()
     verify_edit_access(doc_id)
-    doc = get_newest_document(doc_id)
+    doc = get_document_as_current_user(doc_id)
     try:
         editor_pars = get_pars_from_editor_text(doc, md)
     except ValidationException as e:
@@ -657,7 +647,7 @@ def delete_paragraph(doc_id):
     timdb = getTimDb()
     verify_edit_access(doc_id)
     area_start, area_end = verify_json_params('area_start', 'area_end', require=False)
-    doc = get_newest_document(doc_id)
+    doc = get_document_as_current_user(doc_id)
     if area_end and area_start:
         text = doc.export_section(area_start, area_end)
         doc.delete_section(area_start, area_end)
@@ -696,7 +686,7 @@ def name_area(doc_id, area_name):
     if not area_name or ' ' in area_name or '´' in area_name:
         abort(400, 'Invalid area name')
 
-    doc = get_newest_document(doc_id)
+    doc = get_document_as_current_user(doc_id)
     area_attrs = {'area': area_name}
     area_title = ''
     after_title = ''
@@ -731,7 +721,7 @@ def unwrap_area(doc_id, area_name):
         abort(400, 'Invalid area name')
 
     try:
-        doc = get_newest_document(doc_id)
+        doc = get_document_as_current_user(doc_id)
         area_pars = doc.get_named_section(area_name)
 
         # Remove the starting and ending paragraphs of the area
