@@ -1896,7 +1896,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         delete_extra_files(extra_files, prgpath)
         if delete_tmp: removedir(prgpath)
 
-        out = out[0:20000]
+        out = out[0:get_param(query, "maxConsole", 20000)]
         web["console"] = out
         web["error"] = err
         web["pwd"] = pwd.strip()
