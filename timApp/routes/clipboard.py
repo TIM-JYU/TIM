@@ -20,7 +20,7 @@ def cut_to_clipboard(doc_id, from_par, to_par):
     (area_name,) = verify_json_params('area_name', require=False)
 
     timdb = getTimDb()
-    doc = Document(doc_id)
+    doc = get_document_as_current_user(doc_id)
     clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
     pars = clip.cut_pars(doc, from_par, to_par, area_name)
     timdb.documents.update_last_modified(doc)
@@ -54,7 +54,7 @@ def paste_from_clipboard(doc_id):
     (par_before, par_after, as_ref) = verify_json_params('par_before', 'par_after', 'as_ref', require=False, default='')
 
     timdb = getTimDb()
-    doc = Document(doc_id)
+    doc = get_document_as_current_user(doc_id)
     clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
     meta = clip.read_metadata()
     was_cut = meta.get('last_action') == 'cut'
@@ -100,7 +100,7 @@ def delete_from_source(doc_id):
     verify_edit_access(doc_id)
 
     timdb = getTimDb()
-    doc = Document(doc_id)
+    doc = get_document_as_current_user(doc_id)
     clip = Clipboard(timdb.files_root_path).get(getCurrentUserId())
     pars = clip.read(as_ref=True, force_parrefs=True)
     if not pars:

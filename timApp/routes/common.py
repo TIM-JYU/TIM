@@ -276,12 +276,10 @@ def okJsonResponse():
     return jsonResponse({'status': 'ok'})
 
 
-def get_newest_document(doc_id):
+def get_document_as_current_user(doc_id: int) -> Document:
     """
-    Returns the newest Document object with the specified numeric id.
+    Returns the Document object having the current user group as the modifier group ip.
 
-    :rtype: Document
-    :type doc_id: int
     :param doc_id: The numeric id.
     :return: The Document object.
     """
