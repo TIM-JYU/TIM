@@ -43,7 +43,7 @@ class Documents(TimDbBase):
         self.update_last_modified(doc)
         return [par], doc
 
-    def create(self, name: str, owner_group_id: int, is_gamified: bool) -> Document:
+    def create(self, name: str, owner_group_id: int, is_gamified: bool = False) -> Document:
         """Creates a new document with the specified name.
         
         :param name: The name of the document to be created (can be None).

@@ -34,7 +34,7 @@ class DocEntry(db.Model):
         return d
 
     @staticmethod
-    def create(name: Optional[str], owner_group_id: int, is_gamified: bool) -> 'DocEntry':
+    def create(name: Optional[str], owner_group_id: int, is_gamified: bool = False) -> 'DocEntry':
         """Creates a new document with the specified name.
 
         :param name: The name of the document to be created (can be None). If None, no DocEntry is actually added

@@ -266,7 +266,7 @@ def create_item(item_name, item_type_str, create_function, owner_group_id):
 def create_document():
     jsondata = request.get_json()
     doc_name = jsondata['doc_name']
-    is_gamified = jsondata['gamified']
+    is_gamified = jsondata.get('gamified', False)
 
     timdb = getTimDb()
     return create_item(doc_name, 'document', lambda name, group: timdb.documents.create(name, group, is_gamified).doc_id,
