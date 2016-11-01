@@ -9,10 +9,6 @@ body {
     background-color: $bg-color;
 }
 
-code {
-    font-size: 115%;
-}
-
 a:visited {
     color: $link-visited-color;
 }
@@ -109,6 +105,9 @@ a .glyphicon {
         }
         font-size: 16px;
 
+        code {
+            font-size: $inline-code-size;
+        }
 
         & > h1 {
             @include h1-base();
