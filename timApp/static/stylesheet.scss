@@ -105,7 +105,7 @@ a .glyphicon {
         }
         font-size: 16px;
 
-        code {
+        p > code {
             font-size: $inline-code-size;
         }
 
@@ -224,6 +224,7 @@ a .glyphicon {
 
         code {
             white-space: pre;
+            font-size: $block-code-size;
         }
     }
 
