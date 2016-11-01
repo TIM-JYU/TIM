@@ -1738,16 +1738,19 @@ timApp.controller("ViewCtrl", [
                 else if ($child.hasClass('par')) {
                     var attrs = sc.getParAttributes($child);
                     var refAttrs = sc.getRefAttrs($child)['ref-attrs'];
-                    if ($child.children('.parContent').children('h1, h2, h3').length > 0) {
-                        if ($currentSectionPars.length > 0) {
-                            var parId = sc.getParId($currentSectionPars.last());
-                            sections[parId] = $currentSectionPars;
+                    var content = $child.children('.parContent');
+                    if (content.is(':visible')) {
+                        if (content.children('h1, h2, h3').length > 0) {
+                            if ($currentSectionPars.length > 0) {
+                                var parId = sc.getParId($currentSectionPars.last());
+                                sections[parId] = $currentSectionPars;
+                            }
+                            $currentSectionPars = $child;
+                        } else if (!attrs.hasOwnProperty('settings') && !attrs.hasOwnProperty('area') &&
+                            !attrs.hasOwnProperty('area_end') && !refAttrs.hasOwnProperty('area') &&
+                            !refAttrs.hasOwnProperty('area_end')) {
+                            $currentSectionPars = $currentSectionPars.add($child);
                         }
-                        $currentSectionPars = $child;
-                    } else if (!attrs.hasOwnProperty('settings') && !attrs.hasOwnProperty('area') &&
-                        !attrs.hasOwnProperty('area_end') && !refAttrs.hasOwnProperty('area') &&
-                        !refAttrs.hasOwnProperty('area_end')) {
-                        $currentSectionPars = $currentSectionPars.add($child);
                     }
                 }
                 else if ($child.hasClass('addBottomContainer')) {
