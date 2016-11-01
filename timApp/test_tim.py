@@ -8,7 +8,7 @@ from lxml.cssselect import CSSSelector
 from documentmodel.document import Document
 from markdownconverter import md_to_html
 from plugin import Plugin
-from timdb.models import User
+from timdb.models.user import User
 from timdbtest import TEST_USER_2_ID, TEST_USER_1_ID
 from timroutetest import TimRouteTest
 
