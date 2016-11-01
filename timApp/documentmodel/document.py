@@ -160,6 +160,11 @@ class Document:
             else:
                 self.modify_paragraph_obj(first_par.get_id(), new_par)
 
+    def get_tasks(self):
+        for p in self.get_dereferenced_paragraphs():
+            if p.is_task():
+                yield p
+
     def get_settings(self) -> DocSettings:
         if self.par_cache is not None:
             return DocSettings.from_paragraph(self.par_cache[0]) if len(self.par_cache) > 0 else DocSettings()
