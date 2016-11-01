@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Functions for dealing with plugin paragraphs."""
 import json
+import yaml
 
 from typing import List, Tuple, Optional
 
@@ -17,6 +18,7 @@ from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import dereference_pars, Document
 from plugin import PluginException, parse_plugin_values
 from utils import get_error_html
+
 
 LAZYSTART= "<!--lazy "
 LAZYEND = " lazy-->"
@@ -109,7 +111,12 @@ def pluginify(doc: Document,
     for idx, block in enumerate(pars):
         attr_taskid = block.get_attr('taskId')
         plugin_name = block.get_attr('plugin')
+        is_gamified = block.get_attr('gamification')
 
+        if is_gamified:
+            rawData = DocParagraph.get_markdown(block)
+            temp1 = yaml.load(rawData[3:len(rawData) - 3])
+            rawJsonData = json.dumps(temp1)
 
         if plugin_name:
             vals = parse_plugin_values(block, global_attrs=settings.global_plugin_attrs(),

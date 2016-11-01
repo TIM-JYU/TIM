@@ -1,12 +1,13 @@
 from typing import Optional
 
 from documentmodel.document import Document
+from timdb.gamification_models.gamificationdocument import GamificationDocument
 from timdb.tim_models import db
 from timdb.blocktypes import blocktypes
 from timdb.dbutils import insert_block
 from timdb.timdbexception import TimDbException
 from utils import split_location
-from timdb.gamification_models import gamificationdocument
+
 
 
 class DocEntry(db.Model):
@@ -56,7 +57,7 @@ class DocEntry(db.Model):
             db.session.add(docentry)
 
         if is_gamified:
-            gamificationdocument.create(document_id)
+            GamificationDocument.create(document_id)
 
         db.session.commit()
         return docentry

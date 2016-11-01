@@ -1,5 +1,6 @@
 from tim_app import db
 
+
 class GamificationDocument(db.Model):
     """
     Created by TIMG
@@ -20,5 +21,5 @@ class GamificationDocument(db.Model):
         return gamificationdocument
 
     @staticmethod
-    def doc_is_gamified(id):
-        return GamificationDocument.query(id).filter_by(id=id).scalar() is not None
+    def doc_is_gamified(doc_id):
+        return GamificationDocument.query(doc_id).filter_by(id=doc_id).scalar() is not None

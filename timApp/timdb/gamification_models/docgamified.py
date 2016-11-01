@@ -1,11 +1,14 @@
 from tim_app import db
-<<<<<<< HEAD
+from timdb.gamification_models import gamificationdocument
+from timdb.gamification_models import gamificationdocumenttype
+from timdb.models import block
+from timdb.timdbexception import TimDbException
 
 
 class DocGamified(db.Model):
     """
     Created by TIMG
-    his class represents the DocGamified database table, that connects regular documents to gamified ones.
+    This class represents the DocGamified database table, that connects regular documents to gamified ones.
     """
     __bind_key__ = 'tim_main'
     __tablename__ = 'docgamified'
@@ -23,24 +26,6 @@ class DocGamified(db.Model):
         db.session.commit()
 
         return dgamified
-
-=======
-from timdb.models import block
-from timdb.gamification_models import gamificationdocumenttype
-from timdb.gamification_models import gamificationdocument
-from timdb.timdbexception import TimDbException
-from timdb.dbutils import insert_block
-from timdb.blocktypes import blocktypes
-from timdb.models import docentry
-
-
-class DocGamified(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'docgamified'
-    gamification_doc_id = db.Column (db.Integer)
-    doc_id = db.Column(db.Integer, primary_key=True)
-    doc_type_id = db.Column(db.Integer)
-
 
     #Kokeillaan etsiä block selffin avulla.
     def get_docgamified_block(self):
@@ -71,4 +56,3 @@ class DocGamified(db.Model):
         db.session.add(docgamified)
         db.session.commit()
         return docgamified
->>>>>>> origin/timg-new
