@@ -1,5 +1,5 @@
 """Routes for editing a document."""
-from bs4 import UnicodeDammit
+import yaml
 from flask import Blueprint, render_template
 
 from documentmodel.docparagraph import DocParagraph
@@ -7,15 +7,12 @@ from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser, ValidationException, ValidationWarning
 from documentmodel.documentparseroptions import DocumentParserOptions
 from markdownconverter import md_to_html
-from routes.logger import log_info
 from routes.notify import notify_doc_owner
 from timdb.bookmarks import Bookmarks
 from timdb.models.docentry import DocEntry
 from timdb.timdbexception import TimDbException
-from typing import List
 from utils import get_error_html
 from .common import *
-import yaml
 
 
 edit_page = Blueprint('edit_page',
@@ -44,15 +41,8 @@ def update_document(doc_id):
     if not timdb.users.has_edit_access(getCurrentUserId(), doc_id):
         abort(403)
     if 'file' in request.files:
-        doc = request.files['file']
-        raw = doc.read()
-
-        # UnicodeDammit gives incorrect results if the encoding is UTF-8 without BOM,
-        # so try the built-in function first.
-        try:
-            content = raw.decode('utf-8')
-        except UnicodeDecodeError:
-            content = UnicodeDammit(raw).unicode_markup
+        file = request.files['file']
+        content = validate_uploaded_document_content(file)
         original = request.form['original']
         strict_validation = not request.form.get('ignore_warnings', False)
     elif 'template_name' in request.get_json():
@@ -226,7 +216,6 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
     timdb = getTimDb()
     verify_edit_access(doc_id)
 
-    log_info("Editing file: {}, paragraph {}".format(doc_id, par_id))
     doc = get_newest_document(doc_id)
     if not doc.has_paragraph(par_id):
         abort(400, 'Paragraph not found: ' + par_id)
@@ -531,7 +520,7 @@ def check_duplicates(pars, doc, timdb):
         if not paragraph.is_task():
             all_pars.remove(paragraph)
     for par in pars:
-        if par.is_plugin():
+        if par.is_task():
             duplicate = []
             task_id = par.get_attr('taskId')
             count_of_same_task_ids = 0

@@ -570,7 +570,7 @@ byCode: |
     print("Summa = " + sum(2,3));
 ```
 
-``` {#jsbin plugin="showVideo"}
+``` {plugin="showVideo"}
 header: JavaScript bin
 iframe: true
 nopen: true

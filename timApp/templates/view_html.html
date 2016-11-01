@@ -129,10 +129,10 @@
 
 {% block content %}
     <form name="ignore_me">
-        <input type="hidden" id="page_is_dirty" name="page_is_dirty" value="0"/>
+        <input type="text" id="page_is_dirty" name="page_is_dirty" value="0" style="display: none;"/>
     </form>
     <div class="paragraphs" ng-click="setNotePadge($event)" >
-        <div ng-cloak="" class="dialog" caption="Refresh the page?" tim-draggable-fixed="" ng-show="isPageDirty() && !hideRefresh">
+        <div ng-cloak="" class="dialog" caption="Refresh the page?" tim-draggable-fixed="" ng-show="showRefresh">
             <p>The page has been modified since the last reload. Refresh now?</p>
             <button class="timButton" ng-click="reload()">Refresh</button>
             <button class="timButton" ng-click="closeRefreshDlg()">No</button>

@@ -1,6 +1,6 @@
 Big video
 Video with big icon
-``` {#PLUGINNAMEHERE plugin="showVideo"}
+``` {plugin="showVideo"}
 footer: "Video footer here"
 #iframe: true
 width: 400

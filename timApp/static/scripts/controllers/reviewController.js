@@ -54,8 +54,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) {
             $scope.annotations = data;
             $scope.loadDocumentAnnotations();
-            console.log("ANNOTATIONS");
-            console.log(data);
         });
 
     /**
@@ -113,8 +111,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
 
         for (var k = 0; k < annotationsToRemove.length; k++) {
-            console.log("Deleted annotation:");
-            console.log(annotationsToRemove[k]);
             var index = $scope.annotations.indexOf(annotationsToRemove[k]);
             $scope.annotations.splice(index, 1);
         }
@@ -171,7 +167,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @returns {Element} First element that has the given attribute
      */
     var getElementParentUntilAttribute = function (element, attribute) {
-        //console.log(element);
         element = getElementParent(element);
         while (!element.hasAttribute(attribute)) {
             element = getElementParent(element);
@@ -210,17 +205,14 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         if (oldAnnotations.length > 0) {
             var annotationParent = getElementParent(oldAnnotations[0]);
             for (var a = 0; a < oldAnnotations.length; a++) {
-                console.log(getElementParent(oldAnnotations[a]));
                 annotationParent.removeChild(oldAnnotations[a]);
             }
         }
 
-        console.log("Loading annotations");
         for (var i = 0; i < annotations.length; i++) {
             var placeInfo = annotations[i].coord;
 
             var element = par.getElementsByTagName("PRE")[0].firstChild;
-            console.log(annotations[i]);
 
             if (!showInPlace || placeInfo.start.offset === null) {
                 addAnnotationToElement(par, annotations[i], false, "Added as margin annotation");
@@ -244,14 +236,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.getAnnotationsByAnswerId = function (id) {
         var annotations = [];
         $scope.annotations.forEach(function (a) {
-            console.log(a);
             if (a.answer_id !== null && a.answer_id === id)
                 annotations.push(a);
         });
 
         annotations.sort(function (a, b) {
-            console.log(b);
-            console.log(a);
             return b.coord.start.offset - a.coord.start.offset;
         });
 
@@ -274,7 +263,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             $scope.selectedArea = null;
 
             /*
-             console.log(err);
              var new_range = document.createRange();
 
              var el = range.startContainer;
@@ -305,7 +293,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         span.appendChild(text);
         addElementToParagraphMargin(el, span);
 
-        console.log(reason);
         $compile(span)($scope); // Gives error [$compile:nonassign]
     };
 
@@ -381,7 +368,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
 
         if (e !== null) {
-            console.log(e);
             $scope.selectedElement = null;
             $scope.selectedArea = null;
             $scope.updateVelpList();
@@ -410,7 +396,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param inmargin - Whether annotation is a margin annotation or not
      */
     $scope.deleteAnnotation = function (id, inmargin) {
-        console.log(inmargin);
         var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
         var annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
 
@@ -435,7 +420,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var current_id = $scope.getRealAnnotationId(id);
 
         $scope.makePostRequest("/invalidate_annotation", {annotation_id: current_id}, function (json) {
-            console.log(json);
         });
     };
 
@@ -459,7 +443,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 }
             }
 
-            console.log("updateAnnotationMargin");
         } else {
             if (annotationParents.length > 1) {
                 var savedHTML = "";
@@ -561,8 +544,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 $scope.selectedArea = null;
             }
         } catch (err) {
-            console.log("error in method selectText");
-            console.log(err);
             //return;
         }
 
@@ -576,7 +557,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         } else  {
             /*
             var elements = document.getElementsByClassName("lightselect");
-            console.log(elements);
             if (elements.length > 0)
                 $scope.selectedElement = elements[0];
             */
@@ -598,7 +578,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @returns {boolean} Whether the HTML tags were broken or not.
      */
     var isSelectionTagParentsUnequal = function (range) {
-        console.log("check tags");
         return getElementParent(range.startContainer) !== getElementParent(range.endContainer);
     };
 
@@ -609,7 +588,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @returns {boolean} Whether the element has an annotation element as its parent or not
      */
     var hasSelectionParentAnnotation = function (range) {
-        console.log("check parents");
         var startcont = getElementParent(range.startContainer);
         while (!startcont.hasAttribute("t")) {
             startcont = getElementParent(startcont);
@@ -648,15 +626,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @returns {boolean} Whether the selection has any annotation elements as children or not
      */
     var hasSelectionChildrenAnnotation = function (range) {
-        console.log("check children");
         var div = document.createElement("div");
         var clone = range.cloneContents();
         div.appendChild(clone);
         var children = div.childNodes;
-        console.log(div);
         for (var i = 0; i < children.length; i++) {
             if (hasElementChildrenAnnotation(children[i])) {
-                console.log("Child has annotation");
                 return true;
             }
         }
@@ -831,12 +806,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             newAnnotation.coord.start.node = nodeNums[0];
             newAnnotation.coord.end.node = nodeNums[1];
 
-            console.log(newAnnotation);
 
             $scope.makePostRequest("/add_annotation", newAnnotation, function (json) {
                 $scope.annotationids[newAnnotation.id] = json.data.id;
-                console.log("Annotation to text");
-                console.log(json);
 
             });
 
@@ -867,8 +839,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             $scope.makePostRequest("/add_annotation", newAnnotation, function (json) {
                 $scope.annotationids[newAnnotation.id] = json.data.id;
-                console.log("Annotation to element");
-                console.log(json);
             });
             velp.used += 1;
         }
@@ -1069,7 +1039,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         } else {
             velp_content = annotation.content;
         }
-        console.log(annotation);
         element.setAttribute("velp", velp_content);
         element.setAttribute("points", annotation.points);
         element.setAttribute("aid", annotation.id);
@@ -1142,7 +1111,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                         angular.element(annotationElement).isolateScope().showAnnotation();
                         $scope.$apply();
                         scrollToElement(annotationElement);
-                        console.log(ab);
                     }, 500);
                 }, 300);
             }

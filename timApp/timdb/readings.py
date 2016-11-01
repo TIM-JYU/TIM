@@ -6,12 +6,12 @@ from typing import Dict
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from timdb.readparagraphtype import ReadParagraphType
-from timdb.tim_models import ReadParagraphs, db
+from timdb.tim_models import ReadParagraph, db
 from timdb.timdbbase import TimDbBase
 
 
 class Readings(TimDbBase):
-    def get_readings(self, usergroup_id: int, doc: Document) -> List[ReadParagraphs]:
+    def get_readings(self, usergroup_id: int, doc: Document) -> List[ReadParagraph]:
         """Gets the reading info for a document for a user.
 
         :param doc: The document for which to get the readings.
@@ -19,7 +19,7 @@ class Readings(TimDbBase):
         """
         ids = doc.get_referenced_document_ids()
         ids.add(doc.doc_id)
-        return ReadParagraphs.query.filter(ReadParagraphs.doc_id.in_(ids) & (ReadParagraphs.usergroup_id == usergroup_id)).all()
+        return ReadParagraph.query.filter(ReadParagraph.doc_id.in_(ids) & (ReadParagraph.usergroup_id == usergroup_id)).all()
 
     def mark_read(self,
                   usergroup_id: int,
@@ -27,11 +27,11 @@ class Readings(TimDbBase):
                   par: DocParagraph,
                   read_type=ReadParagraphType.click_red,
                   commit: bool=True):
-        rp = ReadParagraphs(usergroup_id=usergroup_id,
-                            doc_id=doc.doc_id,
-                            par_id=par.get_id(),
-                            par_hash=par.get_hash(),
-                            type=read_type)
+        rp = ReadParagraph(usergroup_id=usergroup_id,
+                           doc_id=doc.doc_id,
+                           par_id=par.get_id(),
+                           par_hash=par.get_hash(),
+                           type=read_type)
         db.session.merge(rp)
         if commit:
             db.session.commit()
@@ -70,9 +70,9 @@ WHERE doc_id = %s AND par_id = %s
             self.db.commit()
 
     def get_common_readings(self, usergroup_ids: List[int], doc: Document):
-        users = [] # type: List[Dict[str, ReadParagraphs]]
+        users = [] # type: List[Dict[str, ReadParagraph]]
         for u in usergroup_ids:
-            reading_map = defaultdict(lambda:defaultdict(lambda:ReadParagraphs(par_hash=None)))
+            reading_map = defaultdict(lambda:defaultdict(lambda:ReadParagraph(par_hash=None)))
             rs = self.get_readings(u, doc)
             for r in rs:
                 reading_map[r.par_id][r.type] = r

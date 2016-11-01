@@ -113,7 +113,6 @@ timApp.controller("ViewCtrl", [
         sc.firstTimeQuestions = true;
         sc.mathJaxLoaded = false;
         sc.mathJaxLoadDefer = null;
-        sc.hideRefresh = false;
         sc.hidePending = false;
         sc.hideMessage = false;
         sc.pendingUpdates = {};
@@ -141,7 +140,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.closeRefreshDlg = function() {
-            sc.hideRefresh = true;
+            sc.showRefresh = false;
         };
 
         sc.closeMessageDlg = function() {
@@ -151,7 +150,6 @@ timApp.controller("ViewCtrl", [
         sc.markPageDirty = function() {
             var e = angular.element('#page_is_dirty');
             e.val('1');
-            sc.hideRefresh = true;
         };
 
         sc.markPageNotDirty = function() {
@@ -164,10 +162,10 @@ timApp.controller("ViewCtrl", [
             return e.val() === '1';
         };
 
-        sc.processAllMathDelayed = function ($elem) {
+        sc.processAllMathDelayed = function ($elem, delay) {
             $timeout(function () {
                 sc.processAllMath($elem);
-            }, 1500);
+            }, delay || 300);
         };
 
         sc.processAllMath = function ($elem) {
@@ -371,7 +369,8 @@ timApp.controller("ViewCtrl", [
                 "after-cancel": 'handleCancel(extraData)',
                 "after-delete": 'handleDelete(saveData, extraData)',
                 "preview-url": '/preview/' + sc.docId,
-                "delete-url": '/deleteParagraph/' + sc.docId
+                "delete-url": '/deleteParagraph/' + sc.docId,
+                "unread-url": '/unread/' + sc.docId
             };
             if (options.showDelete) {
                 caption = 'Edit paragraph';
@@ -385,7 +384,8 @@ timApp.controller("ViewCtrl", [
             return {
                 'ref-id': $par.attr('ref-id'),
                 'ref-t': $par.attr('ref-t'),
-                'ref-doc-id': $par.attr('ref-doc-id')
+                'ref-doc-id': $par.attr('ref-doc-id'),
+                'ref-attrs': JSON.parse($par.attr('ref-attrs') || '{}')
             };
         };
 
@@ -575,7 +575,8 @@ timApp.controller("ViewCtrl", [
                     "after-delete": 'handleNoteDelete(saveData, extraData)',
                     "preview-url": '/preview/' + sc.docId,
                     "delete-url": '/deleteNote',
-                    "initial-text-url": initUrl
+                    "initial-text-url": initUrl,
+                    "unread-url": '/unread/' + sc.docId
                 };
 
             sc.toggleEditor($par, options, attrs, caption, "pareditor");
@@ -1092,6 +1093,7 @@ timApp.controller("ViewCtrl", [
                     sc.processAllMathDelayed($newPar);
                 }
             }
+            sc.rebuildSections();
             sc.pendingUpdates = {};
             if (sc.lectureMode) { sc.getAndEditQuestions(); }
         };
@@ -1107,6 +1109,19 @@ timApp.controller("ViewCtrl", [
 
         sc.isReference = function ($par) {
             return angular.isDefined($par.attr('ref-id'));
+        };
+
+        sc.markParsRead = function ($pars) {
+            var parIds = $pars.map(function (i, e) {
+                return sc.getParId($(e));
+            }).get();
+            $pars.find('.readline').addClass(sc.readClasses[sc.readingTypes.clickRed]);
+            http.put('/read/' + sc.docId + '/' + 'null' + '/' + sc.readingTypes.clickRed, {pars: parIds})
+                .then(function (response) {
+                    sc.markPageDirty();
+                }, function (response) {
+                    $log.error('Could not save the read markings');
+                });
         };
 
         sc.markParRead = function ($par, readingType) {
@@ -1131,9 +1146,13 @@ timApp.controller("ViewCtrl", [
             }
             if ( !Users.isLoggedIn() ) return true;
             return http.put('/read/' + sc.docId + '/' + par_id + '/' + readingType, data)
-                .then(function (data, status, headers, config) {
-                    sc.markPageDirty();
-                }, function () {
+                .then(function (response) {
+                    $readline.removeClass(readClassName + '-modified');
+                    if (readingType === sc.readingTypes.clickRed) {
+                        sc.markPageDirty();
+                        sc.refreshSectionReadMarks();
+                    }
+                }, function (response) {
                     $log.error('Could not save the read marking for paragraph ' + par_id);
                     $readline.removeClass(readClassName);
                 });
@@ -1651,7 +1670,8 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.setHeaderLinks = function () {
-            $(".parContent").each(function () {
+            var pars = $(".parContent");
+            pars.each(function () {
                 var $p = $(this);
                 $p.find('h1, h2, h3, h4, h5, h6').each(function () {
                     var $h = $(this);
@@ -1666,6 +1686,76 @@ timApp.controller("ViewCtrl", [
                     }
                 });
             });
+        };
+
+        /**
+         * Refreshes the section read marks.
+         */
+        sc.refreshSectionReadMarks = function () {
+            $(".readsection").remove();
+            for (var key in sc.sections) {
+                if (sc.sections.hasOwnProperty(key)) {
+                    var sectionPars = sc.sections[key];
+                    var readlines = sectionPars.find('.readline');
+                    var modifiedCount = readlines.filter('.read-modified').length;
+                    var unreadCount = readlines.not('.read-modified').not('.read').length;
+                    if (modifiedCount + unreadCount > 0) {
+                        sectionPars.last().append($('<div>', {
+                            class: 'readsection',
+                            title: 'Mark preceding section as read (' +
+                            sectionPars.length + ' paragraphs - ' + unreadCount +
+                            ' unread, ' + modifiedCount + ' modified)'
+                        }).html('<i class="glyphicon glyphicon-align-left"></i><i class="glyphicon glyphicon-ok"></i>'));
+                    }
+                }
+            }
+        };
+
+        /**
+         * Rebuilds the sections and refreshes the section read marks.
+         */
+        sc.rebuildSections = function () {
+            $(".readsection").remove();
+            sc.sections = {};
+            sc.buildSections(sc.sections, $(), $('#pars'));
+            sc.refreshSectionReadMarks();
+        };
+
+        /**
+         * Builds a dictionary of sections that maps the last paragraph id of each section to the section paragraphs.
+         *
+         * @param {object} sections The dictionary to which to build the sections.
+         * @param {jQuery} $currentSectionPars The collection of paragraphs in the current section being processed.
+         * @param {jQuery} $container The container element where the paragraphs are located.
+         * @returns {jQuery} The collection of paragraphs in the current section being processed.
+         */
+        sc.buildSections = function (sections, $currentSectionPars, $container) {
+            var $child = $container.children(".par:first");
+            while ($child.length > 0) {
+                if ($child.hasClass('area')) {
+                    $currentSectionPars = sc.buildSections(sections, $currentSectionPars, $child.find('.areaContent'));
+                }
+                else if ($child.hasClass('par')) {
+                    var attrs = sc.getParAttributes($child);
+                    var refAttrs = sc.getRefAttrs($child)['ref-attrs'];
+                    if ($child.children('.parContent').children('h1, h2, h3').length > 0) {
+                        if ($currentSectionPars.length > 0) {
+                            var parId = sc.getParId($currentSectionPars.last());
+                            sections[parId] = $currentSectionPars;
+                        }
+                        $currentSectionPars = $child;
+                    } else if (!attrs.hasOwnProperty('settings') && !attrs.hasOwnProperty('area') &&
+                        !attrs.hasOwnProperty('area_end') && !refAttrs.hasOwnProperty('area') &&
+                        !refAttrs.hasOwnProperty('area_end')) {
+                        $currentSectionPars = $currentSectionPars.add($child);
+                    }
+                }
+                else if ($child.hasClass('addBottomContainer')) {
+                    sections[sc.getParId($currentSectionPars.last())] = $currentSectionPars;
+                }
+                $child = $child.next();
+            }
+            return $currentSectionPars;
         };
 
         // Index-related functions
@@ -1746,6 +1836,16 @@ timApp.controller("ViewCtrl", [
             return newState;
         };
 
+        sc.onClick('.readsection', function ($readsection, e) {
+            var $par = $readsection.parents('.par');
+            var $pars = sc.sections[sc.getParId($par)];
+            if ($par.length === 0) {
+                $window.alert('Unable to mark this section as read');
+                return;
+            }
+            sc.markParsRead($pars);
+            $readsection.remove();
+        });
 
         sc.onClick('.showContent', function ($this, e) {
             sc.contentShown = !sc.contentShown;
@@ -1798,11 +1898,8 @@ timApp.controller("ViewCtrl", [
             sc.showQuestionPreview = false;
         });
 
-        // Load index, notes and read markings
-        timLogTime("getList start","view");
         sc.setHeaderLinks();
-        timLogTime("getList end","view");
-
+        sc.rebuildSections();
 
         // If you add 'mousedown' to bind, scrolling upon opening the menu doesn't work on Android
         $('body,html').bind('scroll wheel DOMMouseScroll mousewheel', function (e) {
@@ -1829,7 +1926,7 @@ timApp.controller("ViewCtrl", [
                 sc.pasteAbove(e, $(".addBottomContainer"), true);
             });
         }
-        sc.processAllMathDelayed($('body'));
+        sc.processAllMathDelayed($('body'), 1500);
 
         sc.getEditMode = function() { return $window.editMode; };
         sc.getAllowMove = function() { return $window.allowMove; };
@@ -2385,6 +2482,7 @@ timApp.controller("ViewCtrl", [
         sc.allowPasteContent = true;
         sc.allowPasteRef = true;
         $window.allowMove = false;
+        sc.showRefresh = sc.isPageDirty();
 
         try {
             var found = $filter('filter')(sc.editorFunctions,

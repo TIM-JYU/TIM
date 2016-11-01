@@ -108,7 +108,7 @@ def remove_permission(item_id, group_id, perm_type):
     return okJsonResponse()
 
 
-@manage_page.route("/alias/<int:doc_id>/", methods=["GET"])
+@manage_page.route("/alias/<int:doc_id>", methods=["GET"])
 def get_doc_names(doc_id):
     timdb = getTimDb()
     names = timdb.documents.get_names(doc_id, include_nonpublic=True)

@@ -512,3 +512,9 @@ class PluginTest(TimRouteTest):
                       expect_status=expect_status,
                       as_json=True,
                       expect_content=expect_content)
+
+    def test_find_tasks(self):
+        self.login_test1()
+        d = self.create_doc(from_file='example_docs/programming_examples.md').document
+        tasks = d.get_tasks()
+        self.assertEqual(27, len(list(tasks)))

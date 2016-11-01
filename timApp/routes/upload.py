@@ -13,7 +13,7 @@ from werkzeug.utils import secure_filename
 from plugin import Plugin
 from routes.common import logged_in, getTimDb, jsonResponse, getCurrentUserGroup, okJsonResponse, validate_item_and_create, \
     verify_view_access, verify_task_access, getCurrentUserName, \
-    verify_seeanswers_access, grant_access_to_session_users
+    verify_seeanswers_access, grant_access_to_session_users, validate_uploaded_document_content
 from timdb.models.block import Block
 from timdb.blocktypes import blocktypes
 
@@ -110,19 +110,11 @@ def upload_file():
         return upload_image_or_file(file)
     filename = posixpath.join(folder, secure_filename(file.filename))
 
+    content = validate_uploaded_document_content(file)
     validate_item_and_create(filename, 'document', getCurrentUserGroup())
 
-    if not allowed_file(file.filename):
-        abort(403, 'The file format is not allowed.')
-
-    if filename.endswith(tuple(DOC_EXTENSIONS)):
-        content = UnicodeDammit(file.read()).unicode_markup
-        if not content:
-            abort(400, 'Failed to convert the file to UTF-8.')
-        timdb.documents.import_document(content, filename, getCurrentUserGroup())
-        return okJsonResponse()
-    else:
-        abort(400, 'Invalid document extension')
+    doc = timdb.documents.import_document(content, filename, getCurrentUserGroup())
+    return jsonResponse({'id': doc.doc_id})
 
 
 def try_upload_image(image_file):

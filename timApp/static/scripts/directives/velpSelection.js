@@ -107,8 +107,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         p = $http.get('/{0}/get_default_velp_group'.replace('{0}', doc_id));
         promises.push(p);
         p.success(function (data) {
-            console.log("Get default velp group");
-            console.log(data);
             default_velp_group = data;
 
             // If doc_default exists already for some reason but isn't a velp group yet, remove it from fetched velp groups
@@ -177,8 +175,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
                 $scope.velpGroups.push(default_velp_group);
 
 
-            console.log("VELP GROUPS");
-            console.log($scope.velpGroups);
         });
 
         // Get velp and annotation data
@@ -215,8 +211,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         p.success(function (data) {
             $scope.annotations = data;
             $scope.loadDocumentAnnotations();
-            console.log("ANNOTATIONS");
-            console.log(data);
         });
         */
         // Get label data
@@ -228,8 +222,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
                 l.edit = false;
                 l.selected = false;
             });
-            console.log("labels!");
-            console.log($scope.labels);
         });
 
         p = $http.get('/{0}/get_velp_group_personal_selections'.replace('{0}', doc_id));
@@ -240,8 +232,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
                 $scope.groupSelections["0"] = [];
 
             var docSelections = $scope.groupSelections["0"];
-            console.log("PERSONAL: ");
-            console.log($scope.groupSelections);
 
             $scope.velpGroups.forEach(function (g) {
                 g.show = false;
@@ -263,14 +253,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
             var docDefaults = $scope.groupDefaults["0"];
 
-            console.log("DEFAULTS: ");
-            console.log($scope.groupDefaults);
-            console.log(default_personal_velp_group);
-
             $scope.velpGroups.forEach(function (g) {
 
                 for (var i = 0; i < docDefaults.length; i++) {
-                    console.log(g);
                     if (docDefaults[i].id === g.id && docDefaults[i].selected) {
                         g.default = true;
                         break;
@@ -435,13 +420,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
             velp_groups: JSON.parse(JSON.stringify($scope.newVelp.velp_groups))
 
         };
-        console.log(velpToAdd);
         $scope.velpToEdit.edit = false;
         $scope.newVelp.edit = false;
 
         $scope.makePostRequest("/add_velp", velpToAdd, function (json) {
             velpToAdd.id = parseInt(json.data);
-            console.log(velpToAdd);
 
             $scope.resetNewVelp();
             $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};
@@ -547,7 +530,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         form.$setPristine();
 
         // TODO: Make velpGroups to [{'id':1, 'selected':'True'}]
-        console.log($scope.velpToEdit);
 
         if ($scope.isGroupInVelp($scope.velpToEdit, default_velp_group) && default_velp_group.id === -1) {
 
@@ -560,14 +542,12 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
                 $scope.velpToEdit.velp_groups.push(default_velp_group.id);
 
                 $scope.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), $scope.velpToEdit, function (json) {
-                    console.log(json);
                 });
             });
 
 
         } else if ($scope.velpToEdit.velp_groups.length > 0) {
             $scope.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), $scope.velpToEdit, function (json) {
-                console.log(json);
             });
         }
 
@@ -604,7 +584,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
                 method();
             });
         }
-        else console.log("No edit access to default velp group");
+        else {
+            // No edit access to default velp group
+        }
     };
 
     /**
@@ -631,7 +613,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         }
 
         $scope.makePostRequest("/update_velp_label", updatedLabel, function (json) {
-            console.log(json);
         });
     };
 
@@ -808,7 +789,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         form.$setPristine();
 
         $scope.newVelpGroup.target_type = parseInt($scope.newVelpGroup.target_type);
-        console.log($scope.newVelpGroup);
         $scope.makePostRequest("/{0}/create_velp_group".replace('{0}', doc_id), $scope.newVelpGroup, function (json) {
             var group = json.data;
             group.selected = false;
@@ -842,7 +822,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
         if (type === "show") {
             $scope.makePostRequest("/{0}/change_selection".replace('{0}', doc_id), group, function (json) {
-                console.log(json);
             });
 
             $scope.groupSelections[group.target_id] = [];
@@ -871,7 +850,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         }
         else if (type === "default") {
             $scope.makePostRequest("/{0}/change_selection".replace('{0}', doc_id), group, function (json) {
-                console.log(json);
             });
 
             $scope.groupDefaults[group.target_id] = [];
@@ -934,21 +912,15 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
                 });
             }
 
-            console.log("SHOWS: target ID: " + targetID + " target type: " + targetType);
-
             $scope.makePostRequest("/{0}/change_all_selections".replace('{0}', doc_id), {
                 'target_id': targetID, 'target_type': targetType, 'selection': $scope.settings.selectedAllShows,
                 'selection_type': type
             }, function (json) {
-                console.log("Select all");
-                console.log($scope.settings.selectedAllShows);
-                console.log(json);
             });
 
 
         }
         else if (type === "default") {
-            console.log("DEFAULT " + $scope.settings.selectedAllDefault);
             $scope.groupDefaults[targetID] = [];
 
             if (!$scope.settings.selectedAllDefault) {
@@ -962,13 +934,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
                 });
             }
 
-            console.log("DEFAULTS: target ID: " + targetID + " target type: " + targetType);
-
             $scope.makePostRequest("/{0}/change_all_selections".replace('{0}', doc_id), {
                 'target_id': targetID, 'target_type': targetType, 'selection': $scope.settings.selectedAllDefault,
                 'selection_type': type
             }, function (json) {
-                console.log(json);
             });
 
         }
@@ -993,9 +962,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         }
 
         $scope.groupSelections[targetID] = JSON.parse(JSON.stringify($scope.groupDefaults[targetID]));
-        console.log($scope.groupDefaults[targetID] );
         $scope.makePostRequest("/{0}/reset_target_area_selections_to_defaults".replace('{0}', doc_id), {'target_id': targetID}, function (json) {
-            console.log(json);
             $scope.updateVelpList();
         });
     };
@@ -1008,7 +975,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         $scope.groupSelections = JSON.parse(JSON.stringify($scope.groupDefaults));
 
         $scope.makePostRequest("/{0}/reset_all_selections_to_defaults".replace('{0}', doc_id), null, function (json) {
-            console.log(json);
             $scope.updateVelpList();
         });
     };

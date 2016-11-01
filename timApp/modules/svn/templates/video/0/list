@@ -1,6 +1,6 @@
 List video
 Video as a list item
-``` {#PLUGINNAMEHERE plugin="showVideo"}
+``` {plugin="showVideo"}
 type: list
 stem: "Mistä aliohjelmille parametrejä"
 videoname: Luento 3
