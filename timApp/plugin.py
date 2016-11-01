@@ -9,7 +9,7 @@ import yaml
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from markdownconverter import expand_macros
-from timdb.models import User
+from timdb.models.user import User
 from timdb.timdbexception import TimDbException
 from utils import parse_yaml, merge
 

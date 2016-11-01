@@ -4,7 +4,7 @@ import json
 
 from typing import List, Tuple, Optional
 
-from timdb.models import User
+from timdb.models.user import User
 from timtiming import taketime
 
 from collections import OrderedDict
