@@ -146,7 +146,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         params: $scope.extraData
                     }).success(function (data, status, headers, config) {
                         $scope.setEditorText(data.text);
-                        // $scope.editorText = data.text;
+                        $scope.initialText = data.text;
                         angular.extend($scope.extraData, data.extraData);
                         $scope.aceChanged();
                         $scope.aceReady();
@@ -618,10 +618,12 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     if ($scope.options.touchDevice) $scope.changeMeta();
                     $http.put($scope.unreadUrl + '/' + $scope.extraData.par, {}).then(function (response) {
                         $element.parents('.par').find('.readline').removeClass('read read-modified');
-                        $element.remove();
-                        $scope.afterCancel({
-                            extraData: $scope.extraData
-                        });
+                        if ($scope.initialText === $scope.getEditorText()) {
+                            $element.remove();
+                            $scope.afterCancel({
+                                extraData: $scope.extraData
+                            });
+                        }
                         $scope.$parent.refreshSectionReadMarks();
                     }, function (response) {
                         $log.error('Failed to mark paragraph as unread');
