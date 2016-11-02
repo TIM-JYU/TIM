@@ -175,7 +175,7 @@ languageTypes.isInArray = function(word,array) {
     
 }
 
-// Wrap given thex to max n cold length lines spliting from space
+// Wrap given text to max n chars length lines spliting from space
 function wrapText(s, n)
 {
     var lines = s.split("\n");
@@ -198,6 +198,11 @@ function wrapText(s, n)
                 }
                 lines[i] += sep + line.substring(0, p);
                 line = line.substring(p + 1);
+                if ( i+1 < lines.length && (lines[i+1].length  > 0 && (" 0123456789-".indexOf(lines[i+1][0]) < 0 )  ) ) {
+                    lines[i+1] = line + " " + lines[i+1];
+                    needJoin = true;
+                    break;
+                }
                 sep = "\n";
                 needJoin = true;
             }

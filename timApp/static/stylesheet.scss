@@ -593,12 +593,6 @@ p.caption {
     margin-left: 2.0em;
 }
 
-.ace_scrollbar-v {
-    display: block !important;
-    padding-left: 10px;
-    visibility: visible;
-}
-
 .par {
     position: relative;
 
@@ -845,15 +839,6 @@ input[type="file"] {
 .questionAdded img, img.questionAddedNew {
     cursor: pointer;
     z-index: 1;
-}
-
-.ace_editor {
-    position: relative;
-    overflow: hidden;
-    font-family: 'Courier', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
-    font-size: 14px;
-    line-height: 1.1;
-    direction: ltr;
 }
 
 /* TODO: check how to prevent too narrow menu better way than min-width */
