@@ -218,9 +218,9 @@ a .glyphicon {
 
     pre {
         border: none;
-        border-left: 4px solid $basic-color;
+        border-left: $pre-left-border;
         border-radius: 0;
-        overflow: visible;
+        overflow: $pre-overflow;
 
         code {
             white-space: pre;
