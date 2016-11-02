@@ -7,6 +7,7 @@ from typing import List, Tuple, Optional
 
 from timdb.models.user import User
 from timtiming import taketime
+from timdb.gamificationdata import GamificationData
 
 from collections import OrderedDict
 
@@ -114,9 +115,10 @@ def pluginify(doc: Document,
         is_gamified = block.get_attr('gamification')
 
         if is_gamified:
-            rawData = DocParagraph.get_markdown(block)
-            temp1 = yaml.load(rawData[3:len(rawData) - 3])
-            rawJsonData = json.dumps(temp1)
+            raw_data = DocParagraph.get_markdown(block)
+            temp1 = yaml.load(raw_data[3:len(raw_data) - 3])
+            raw_json_data = json.dumps(temp1)
+            GamificationData(raw_json_data)
 
         if plugin_name:
             vals = parse_plugin_values(block, global_attrs=settings.global_plugin_attrs(),
