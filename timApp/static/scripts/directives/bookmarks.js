@@ -176,7 +176,7 @@ timApp.controller('CreateBookmarkCtrl', ['$uibModalInstance', '$window', 'bookma
     var $ctrl = this;
     $ctrl.bookmarkForm = {};
     $ctrl.bookmark = bookmark;
-    if (bookmark.group === 'Last edited') {
+    if (bookmark.group === 'Last edited' || bookmark.group === 'Last read') {
         bookmark.group = '';
     }
     $ctrl.focusGroup = !bookmark.group;

@@ -107,7 +107,7 @@ def inject_bookmarks() -> dict:
     """"Injects bookmarks to all templates."""
     if not logged_in():
         return {}
-    return dict(bookmarks=Bookmarks(User.query.get(getCurrentUserId())).as_json())
+    return dict(bookmarks=Bookmarks(User.query.get(getCurrentUserId())).as_dict())
 
 
 @app.errorhandler(400)

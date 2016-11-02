@@ -2472,6 +2472,16 @@ timApp.controller("ViewCtrl", [
             }
         });
 
+        if (Users.isLoggedIn()) {
+            $timeout(function () {
+                http.post('/bookmarks/markLastRead/' + sc.docId, {}).then(function () {
+                    // all ok
+                }, function () {
+                    $log.error('Failed to mark document as last read');
+                });
+            }, 10000);
+        }
+
         sc.addParagraphFunctions = sc.getAddParagraphFunctions();
         sc.pasteFunctions = sc.getPasteFunctions();
         sc.popupMenuAttrs = {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'};
