@@ -217,6 +217,7 @@ a .glyphicon {
     }
 
     pre {
+        background: $pre-background;
         border: none;
         border-left: $pre-left-border;
         border-radius: 0;
