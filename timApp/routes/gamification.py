@@ -1,15 +1,12 @@
 """ Routes for gamification """
-from .common import *
-from flask import Blueprint
-import json
-from .logger import log_info
 
+from flask import Blueprint, render_template
+from .logger import log_info
 
 gamification = Blueprint('gamification', __name__, url_prefix='')
 
 
 @gamification.route('/gamification')
-
-
-def gamification():
-    return log_info ("Success!")
+def is_gamified():
+    log_info("Success!")
+    return render_template('')

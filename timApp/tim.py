@@ -37,12 +37,14 @@ from routes.settings import settings_page
 from routes.upload import upload
 from routes.velp import velps
 from routes.view import view_page
+from routes.gamification import gamification
 from tim_app import app
 from timdb.blocktypes import from_str, blocktypes
 from timdb.bookmarks import Bookmarks
 from timdb.dbutils import copy_default_rights
 from timdb.models.docentry import DocEntry
 from timdb.users import NoSuchUserException
+
 
 cache.init_app(app)
 
@@ -66,6 +68,7 @@ app.register_blueprint(lecture_routes)
 app.register_blueprint(clipboard)
 app.register_blueprint(notify)
 app.register_blueprint(bookmarks)
+app.register_blueprint(gamification)
 app.register_blueprint(Blueprint('bower',
                                  __name__,
                                  static_folder='static/scripts/bower_components',

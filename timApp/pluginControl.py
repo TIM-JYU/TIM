@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 """Functions for dealing with plugin paragraphs."""
 import json
-import yaml
 
 from typing import List, Tuple, Optional
 
 from timdb.models.user import User
 from timtiming import taketime
-from timdb.gamificationdata import GamificationData
+from timdb import gamificationdata
 
 from collections import OrderedDict
 
@@ -116,9 +115,7 @@ def pluginify(doc: Document,
 
         if is_gamified:
             raw_data = DocParagraph.get_markdown(block)
-            temp1 = yaml.load(raw_data[3:len(raw_data) - 3])
-            raw_json_data = json.dumps(temp1)
-            GamificationData(raw_json_data)
+            gamificationdata.gamify(raw_data)
 
         if plugin_name:
             vals = parse_plugin_values(block, global_attrs=settings.global_plugin_attrs(),
