@@ -1,0 +1,21 @@
+Gamification
+Inserts a gamification plugin
+``` {#PLUGINNAMEHERE gamification="g"}
+---
+lectures:
+    -
+        path: "/kurssit/ohj1/Luento1"
+    -
+        path: "/kurssit/ohj1/Luento2"
+    -
+        path: "/kurssit/ohj1/Luento3"
+
+demos:
+    -
+        path: "/kurssit/ohj1/Demo1"
+    -
+        path: "/kurssit/ohj1/Demo2"
+    -
+        path: "/kurssit/ohj1/Demo3"
+
+```
