@@ -3,6 +3,9 @@ var katex, $, angular, MathJax, timLogTime;
 var timApp = angular.module('timApp').config(['$httpProvider', function ($httpProvider) {
     "use strict";
     timLogTime("timApp config","view");
+    function escapeId(id) {
+        return "#" + id.replace(/(:|\.|\[|\]|,|=)/g, "\\$1");
+    }
     var interceptor = [
         '$q',
         '$rootScope',
@@ -17,7 +20,6 @@ var timApp = angular.module('timApp').config(['$httpProvider', function ($httpPr
                         var parts = taskIdFull.split('.');
                         var docId = parseInt(parts[0], 10);
                         var taskName = parts[1];
-                        var parId = parts[2];
                         var taskId = docId + '.' + taskName;
                         if (taskName !== '') {
                             var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
@@ -26,7 +28,8 @@ var timApp = angular.module('timApp').config(['$httpProvider', function ($httpPr
                                 angular.extend(config.data, {abData: browserScope.getBrowserData()});
                             }
                         }
-                        angular.extend(config.data, {ref_from: {docId: docId, par: parId}});
+                        var par = angular.element(escapeId(taskIdFull)).parents('.par');
+                        angular.extend(config.data, {ref_from: {docId: $window.docId, par: par.attr('id')}});
                     }
                     return config;
                 },
@@ -38,10 +41,7 @@ var timApp = angular.module('timApp').config(['$httpProvider', function ($httpPr
                         var docId = parseInt(parts[0], 10);
                         var taskName = parts[1];
                         var taskId = docId + '.' + taskName;
-                        $rootScope.$broadcast('answerSaved', {taskId: taskId, savedNew: response.data.savedNew});
-                        if (response.data.error) {
-                            $window.alert(response.data.error);
-                        }
+                        $rootScope.$broadcast('answerSaved', {taskId: taskId, savedNew: response.data.savedNew, error: response.data.error});
                     }
                     return response;
                 }

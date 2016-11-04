@@ -82,7 +82,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     timdb = getTimDb()
     doc_id, task_id_name, _ = Plugin.parse_task_id(task_id_ext)
     task_id = str(doc_id) + '.' + str(task_id_name)
-    verify_task_access(doc_id, task_id_name)
+    verify_task_access(doc_id, task_id_name, AccessType.view)
     if 'input' not in request.get_json():
         return jsonResponse({'error': 'The key "input" was not found from the request.'}, 400)
     answerdata = request.get_json()['input']
@@ -383,17 +383,16 @@ def verify_answer_access(answer_id, user_id, require_teacher_if_not_own=False):
     answer = timdb.answers.get_answer(answer_id)
     if answer is None:
         abort(400, 'Non-existent answer')
-    doc_id, _, _ = Plugin.parse_task_id(answer['task_id'])
+    doc_id, task_id_name, _ = Plugin.parse_task_id(answer['task_id'])
     if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
-    # TODO: Check the ref_from parameter
     if user_id != getCurrentUserId() or not logged_in():
         if require_teacher_if_not_own:
-            verify_teacher_access(doc_id)
+            verify_task_access(doc_id, task_id_name, AccessType.teacher)
         else:
-            verify_seeanswers_access(doc_id)
+            verify_task_access(doc_id, task_id_name, AccessType.see_answers)
     else:
-        verify_view_access(doc_id)
+        verify_task_access(doc_id, task_id_name, AccessType.view)
         if not any(a['user_id'] == user_id for a in answer['collaborators']):
             abort(403, "You don't have access to this answer.")
     return answer, doc_id

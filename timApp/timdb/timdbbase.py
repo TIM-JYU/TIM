@@ -76,7 +76,7 @@ class TimDbBase(object):
         result = cursor.fetchone()
         return result[0] if result is not None else None
 
-    def setOwner(self, block_id: int, usergroup_id: int):
+    def set_owner(self, block_id: int, usergroup_id: int):
         """Changes the owner group for a block.
 
         :param block_id: The id of the block.

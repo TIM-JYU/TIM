@@ -195,10 +195,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Loads the annotations to the given answer.
      * @method loadAnnotationsToAnswer
      * @param answer_id - Answer ID
-     * @param par_id - Paragraph ID
+     * @param par - Paragraph element
      */
-    $scope.loadAnnotationsToAnswer = function (answer_id, par_id, showInPlace) {
-        var par = document.getElementById(par_id);
+    $scope.loadAnnotationsToAnswer = function (answer_id, par, showInPlace) {
         var annotations = $scope.getAnnotationsByAnswerId(answer_id);
 
         var oldAnnotations = par.querySelectorAll(".notes [aid]");

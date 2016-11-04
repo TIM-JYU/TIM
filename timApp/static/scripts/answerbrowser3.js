@@ -139,12 +139,14 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     }
                     $scope.updatePoints();
                     var $par = $scope.element;
-                    var par_id = $scope.$parent.getParId($par);
+                    var ids = $scope.$parent.dereferencePar($par);
                     $scope.loading++;
                     $http.get('/getState', {
                         params: {
-                            doc_id: $scope.$parent.docId,
-                            par_id: par_id,
+                            ref_from_doc_id: $scope.$parent.docId,
+                            ref_from_par_id: $scope.$parent.getParId($par),
+                            doc_id: ids[0],
+                            par_id: ids[1],
                             user_id: $scope.user.id,
                             answer_id: $scope.selectedAnswer.id,
                             review: $scope.review
@@ -159,7 +161,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                             $scope.element.find('.review').html(response.data.reviewHtml);
                         }
                         var lata = $scope.$parent.loadAnnotationsToAnswer;
-                        if ( lata ) lata($scope.selectedAnswer.id, par_id, $scope.review, $scope.setFocus);
+                        if ( lata ) lata($scope.selectedAnswer.id, $par[0], $scope.review, $scope.setFocus);
 
                     }, function (response) {
                         $scope.showError(response);
@@ -357,6 +359,9 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                         $scope.getAvailableAnswers(false);
                         // HACK: for some reason the math mode is lost because of the above call, so we restore it here
                         $scope.$parent.processAllMathDelayed($scope.element.find('.parContent'));
+                        if (args.error) {
+                            $scope.alerts.push({msg: args.error, type: 'warning'});
+                        }
                     }
                 });
 

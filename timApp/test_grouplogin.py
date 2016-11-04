@@ -1,3 +1,4 @@
+from timdbtest import TEST_USER_1_NAME
 from timroutetest import TimRouteTest
 
 
@@ -6,13 +7,13 @@ class GroupLoginTest(TimRouteTest):
         resp = self.login_test1(force=True)
         uid1 = resp['current_user']['id']
         one_user = {'current_user': {'email': 'test1@example.com', 'id': uid1, 'name': 'testuser1',
-                                     'real_name': 'Test user 1'}, 'other_users': []}
+                                     'real_name': TEST_USER_1_NAME}, 'other_users': []}
         self.assertDictEqual(one_user, resp)
         self.maxDiff = None
         resp = self.login_test2(add=True)
         uid2 = resp['other_users'][0]['id']
         two_users = {'current_user': {'email': 'test1@example.com', 'id': uid1, 'name': 'testuser1',
-                                      'real_name': 'Test user 1'},
+                                      'real_name': TEST_USER_1_NAME},
                      'other_users': [
                          {'email': 'test2@example.com',
                           'id': uid2,

@@ -24,3 +24,8 @@ if [[ "$(docker ps -q --filter name=postgresql-tempdb-${TIM_NAME} 2> /dev/null)"
  postgres:9.5
 . ./wait_for_postgre.sh postgresql-tempdb-${TIM_NAME}
 fi
+
+if [[ "$(docker ps -q --filter name=chrome 2> /dev/null)" == "" ]]; then
+ docker rm -f chrome > /dev/null 2>&1
+ docker run --net=timnet --name chrome -d selenium/standalone-chrome
+fi

@@ -923,10 +923,9 @@ def get_index_from_html_list(html_table) -> List[Tuple]:
     return index
 
 
-def dereference_pars(pars, edit_window: bool=False, source_doc: Optional[Document]=None):
+def dereference_pars(pars: Iterable[DocParagraph], edit_window: bool=False, source_doc: Optional[Document]=None) -> List[DocParagraph]:
     """Resolves references in the given paragraphs.
 
-    :type pars: list[DocParagraph]
     :param pars: The DocParagraphs to be processed.
     :param edit_window: Calling from edit window or not.
     :param source_doc: Default document for referencing.
