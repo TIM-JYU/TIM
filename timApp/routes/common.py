@@ -20,12 +20,14 @@ from documentmodel.document import Document
 import pytz
 
 from markdownconverter import expand_macros, create_environment
+from options import get_option
 from routes.logger import log_info
 from theme import Theme
+from timdb.accesstype import AccessType
 from timdb.tim_models import db
 from timdb.models.user import User
 from timdb.timdb2 import TimDb
-from typing import List, Dict
+from typing import List, Dict, Optional
 from utils import generate_theme_scss, get_combined_css_filename, ThemeNotFoundException
 
 
@@ -140,22 +142,43 @@ def verify_doc_existence(doc_id):
         abort(404)
 
 
+def verify_access(block_id: int, access_type: AccessType, require: bool=True, message: Optional[str]=None):
+    timdb = getTimDb()
+    if access_type == AccessType.view:
+        return abort_if_not_access_and_required(timdb.users.has_view_access(getCurrentUserId(), block_id), require,
+                                                message)
+    elif access_type == AccessType.edit:
+        return abort_if_not_access_and_required(timdb.users.has_edit_access(getCurrentUserId(), block_id), require,
+                                                message)
+    elif access_type == AccessType.see_answers:
+        return abort_if_not_access_and_required(timdb.users.has_seeanswers_access(getCurrentUserId(), block_id),
+                                                require,
+                                                message)
+    elif access_type == AccessType.teacher:
+        return abort_if_not_access_and_required(timdb.users.has_teacher_access(getCurrentUserId(), block_id), require,
+                                                message)
+    elif access_type == AccessType.manage:
+        return abort_if_not_access_and_required(timdb.users.has_manage_access(getCurrentUserId(), block_id), require,
+                                                message)
+    abort(400, 'Bad request - unknown access type')
+
+
 def verify_view_access(block_id, require=True, message=None):
     timdb = getTimDb()
-    return verify_access(timdb.users.has_view_access(getCurrentUserId(), block_id), require, message)
+    return abort_if_not_access_and_required(timdb.users.has_view_access(getCurrentUserId(), block_id), require, message)
 
 
 def verify_teacher_access(block_id, require=True, message=None):
     timdb = getTimDb()
-    return verify_access(timdb.users.has_teacher_access(getCurrentUserId(), block_id), require, message)
+    return abort_if_not_access_and_required(timdb.users.has_teacher_access(getCurrentUserId(), block_id), require, message)
 
 
 def verify_seeanswers_access(block_id, require=True, message=None):
     timdb = getTimDb()
-    return verify_access(timdb.users.has_seeanswers_access(getCurrentUserId(), block_id), require, message)
+    return abort_if_not_access_and_required(timdb.users.has_seeanswers_access(getCurrentUserId(), block_id), require, message)
 
 
-def verify_access(has_access, require=True, message=None):
+def abort_if_not_access_and_required(has_access, require=True, message=None):
     if has_access:
         return True
     if require:
@@ -608,19 +631,23 @@ def update_preferences(prefs):
     timdb.users.set_preferences(getCurrentUserId(), json.dumps(prefs))
 
 
-def verify_task_access(doc_id, task_id_name):
+def verify_task_access(doc_id, task_id_name, access_type):
     # If the user doesn't have access to the document, we need to check if the plugin was referenced
     # from another document
-    if not verify_view_access(doc_id, require=False):
-        orig_doc = request.get_json().get('ref_from', {}).get('docId', doc_id)
-        verify_view_access(orig_doc)
-        par_id = request.get_json().get('ref_from', {}).get('par', doc_id)
+    if not verify_access(doc_id, access_type, require=False):
+        orig_doc = (request.get_json() or {}).get('ref_from', {}).get('docId', get_option(request, 'ref_from_doc_id', default=doc_id))
+        verify_access(orig_doc, access_type)
+        par_id = (request.get_json() or {}).get('ref_from', {}).get('par', get_option(request, 'ref_from_par_id', default=None))
+        if par_id is None:
+            abort(403)
         par = Document(orig_doc).get_paragraph(par_id)
         if not par.is_reference():
             abort(403)
         pars = documentmodel.document.dereference_pars([par])
-        if not any(p.get_attr('taskId') == task_id_name for p in pars):
+        found_par = next((p for p in pars if p.get_attr('taskId') == task_id_name and p.doc.doc_id == doc_id), None)
+        if found_par is None:
             abort(403)
+        return found_par
 
 
 def save_last_page():

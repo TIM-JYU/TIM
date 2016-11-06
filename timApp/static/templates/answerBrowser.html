@@ -33,13 +33,13 @@
                 <div class="col-xs-5">
                     <div class="input-group input-group-xs">
                 <span class="input-group-btn">
-                    <button class="btn btn-primary" ng-click="previousAnswer()">&larr;</button>
+                    <button class="btn btn-primary prevAnswer" ng-click="previousAnswer()">&larr;</button>
                 </span>
                         <select class="form-control" ng-model="selectedAnswer"
                                 ng-options="((filteredAnswers.length - idx) + '. ' + (answer.answered_on | timdate )) for (idx, answer) in filteredAnswers | orderBy:'answer.id' track by answer.id"
                                 ng-change="changeAnswer()"></select>
                 <span class="input-group-btn">
-                    <button class="btn btn-primary" ng-click="nextAnswer()">&rarr;</button>
+                    <button class="btn btn-primary nextAnswer" ng-click="nextAnswer()">&rarr;</button>
                 </span>
                     </div>
                 </div>

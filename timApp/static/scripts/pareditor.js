@@ -1,18 +1,20 @@
 // TODO: save cursor postion when changing editor
 
-var angular;
+var angular, $, ace;
 var MENU_BUTTON_CLASS = 'menuButtons';
 var timApp = angular.module('timApp');
 
 var currentEditorScope = null;
 var editorChangeValue = function(attributes, text) {
-   if ( !currentEditorScope ) return;
-   currentEditorScope.changeValue(attributes, text);
+    "use strict";
+    if ( !currentEditorScope ) return;
+    currentEditorScope.changeValue(attributes, text);
 };
 
 timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
-    '$window', '$localStorage', '$timeout', '$ocLazyLoad',
-    function (Upload, $http, $sce, $compile, $window, $localStorage, $timeout, $ocLazyLoad) {
+    '$window', '$localStorage', '$timeout', '$ocLazyLoad', '$log',
+    function (Upload, $http, $sce, $compile, $window, $localStorage, $timeout, $ocLazyLoad, $log) {
+        "use strict";
         return {
             templateUrl: "/static/templates/parEditor.html",
             restrict: 'E',
@@ -41,11 +43,11 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     var val = storage.getItem(name+$scope.lstag);
                     if ( !val ) return ret;
                     return val === "true";
-                }
+                };
 
                 currentEditorScope = $scope;
 
-                var proeditor = $scope.getLocalBool("proeditor",  tag==="par" ? true : false);
+                var proeditor = $scope.getLocalBool("proeditor",  tag==="par");
                 if ( proeditor === "true") proeditor = true;
                 $scope.proeditor = proeditor;
                 
@@ -53,17 +55,15 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                 $scope.setLocalValue = function(name, val) {
                     $window.localStorage.setItem(name + $scope.lstag, val);
-                }
+                };
                 
                 $scope.setEditorMinSize = function() {
                     var editor = $('pareditor');
-                    // editor.css('min-height', '40vh');
                     $scope.previewReleased = false;
 
                     var editorOffset = storage.getItem('editorReleasedOffset'+tag);
                     if ( editorOffset ) {
                         editorOffset = JSON.parse(editorOffset);
-                        // editor.offset({'left': editorOffset.left, 'top': editor.offset().top});
                         editor.css('left', editorOffset.left - editor.offset().left);
                     }
 
@@ -99,38 +99,42 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 $scope.pluginButtonList = {};
 
                 function getPluginsInOrder() {
-                    for (var plugin in reqs) {
-                        var data = reqs[plugin];
-                        if (data.templates) {
-                            var tabs = data.text || [plugin];
-                            for (var j = 0; j < tabs.length; j++) {
-                                var tab = tabs[j];
-                                if (!$scope.pluginButtonList[tab]) $scope.pluginButtonList[tab] = [];
-                                for (var k = 0; k < data.templates[j].length; k++) {
-                                    var template = data.templates[j][k];
-                                    var text = (template.text || template.file);
-                                    var clickfn = 'getTemplate(\'' + plugin + '\',\'' + template.file + '\', \'' + j + '\'); wrapFn()';
-                                    $scope.pluginButtonList[tab].push($scope.createMenuButton(text, template.expl, clickfn));
+                    for (var plugin in $window.reqs) {
+                        if ($window.reqs.hasOwnProperty(plugin)) {
+                            var data = $window.reqs[plugin];
+                            if (data.templates) {
+                                var tabs = data.text || [plugin];
+                                for (var j = 0; j < tabs.length; j++) {
+                                    var tab = tabs[j];
+                                    if (!$scope.pluginButtonList[tab]) $scope.pluginButtonList[tab] = [];
+                                    for (var k = 0; k < data.templates[j].length; k++) {
+                                        var template = data.templates[j][k];
+                                        var text = (template.text || template.file);
+                                        var clickfn = 'getTemplate(\'' + plugin + '\',\'' + template.file + '\', \'' + j + '\'); wrapFn()';
+                                        $scope.pluginButtonList[tab].push($scope.createMenuButton(text, template.expl, clickfn));
+                                    }
                                 }
                             }
                         }
                     }
 
                     for (var key in $scope.pluginButtonList) {
-                        var clickfunction = 'pluginClicked($event, \'' + key + '\')';
-                        var button = $("<button>", {
-                            class: 'editorButton',
-                            text: key,
-                            title: key,
-                            'ng-click': clickfunction
-                        });
-                        $plugintab.append($compile(button)($scope));
+                        if ($scope.pluginButtonList.hasOwnProperty(key)) {
+                            var clickfunction = 'pluginClicked($event, \'' + key + '\')';
+                            var button = $("<button>", {
+                                class: 'editorButton',
+                                text: key,
+                                title: key,
+                                'ng-click': clickfunction
+                            });
+                            $plugintab.append($compile(button)($scope));
+                        }
                     }
                 }
 
                 window.setTimeout(function () {
                     $plugintab = $('#pluginButtons');
-                    getPluginsInOrder()
+                    getPluginsInOrder();
                 }, 0);
 
                 if ((navigator.userAgent.match(/Trident/i))) {
@@ -146,7 +150,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         params: $scope.extraData
                     }).success(function (data, status, headers, config) {
                         $scope.setEditorText(data.text);
-                        // $scope.editorText = data.text;
+                        $scope.initialText = data.text;
                         angular.extend($scope.extraData, data.extraData);
                         $scope.aceChanged();
                         $scope.aceReady();
@@ -201,8 +205,6 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     editor.getSession().setMode("markdown");
                     editor.getSession().setUseWrapMode(false);
                     editor.getSession().setWrapLimitRange(0, 79);
-                    //$('.ace_scrollbar-v').css('display', '');
-
                     editor.setOptions({
                         maxLines: max,
                         minLines: 5,
@@ -376,7 +378,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                                 $scope.surroundClicked('**', '**');
                                 e.preventDefault();
                             } else if (e.keyCode === 73) {
-                                $scope.surroundClicked('*', '*', surroundedByItalic);
+                                $scope.surroundClicked('*', '*', $scope.surroundedByItalic);
                                 e.preventDefault();
                             } else if (e.altKey) {
                                 if (e.keyCode === 79) {
@@ -475,8 +477,8 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             };
                             // Workaround: load SimpleDirective.js before other scripts; otherwise there
                             // will be a ReferenceError.
-                            if (angular.isUndefined($window.standardDirective)
-                                && data.js.indexOf(simpleDirectiveUrl) >= 0) {
+                            if (angular.isUndefined($window.standardDirective) &&
+                                 data.js.indexOf(simpleDirectiveUrl) >= 0) {
                                 $.ajax({
                                     dataType: "script",
                                     cache: true,
@@ -618,10 +620,12 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     if ($scope.options.touchDevice) $scope.changeMeta();
                     $http.put($scope.unreadUrl + '/' + $scope.extraData.par, {}).then(function (response) {
                         $element.parents('.par').find('.readline').removeClass('read read-modified');
-                        $element.remove();
-                        $scope.afterCancel({
-                            extraData: $scope.extraData
-                        });
+                        if ($scope.initialText === $scope.getEditorText()) {
+                            $element.remove();
+                            $scope.afterCancel({
+                                extraData: $scope.extraData
+                            });
+                        }
                         $scope.$parent.refreshSectionReadMarks();
                     }, function (response) {
                         $log.error('Failed to mark paragraph as unread');
@@ -644,7 +648,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     var tag = $scope.options.localSaveTag || "";
                     var storage = $window.localStorage;
 
-                    if (div.css("position") == "absolute") {
+                    if (div.css("position") === "absolute") {
                         // If preview has been clicked back in, save the preview position before making it static again
                         if ($scope.minSizeSet) {
                             $scope.savePreviewData(true);
@@ -652,21 +656,19 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         div.css("position", "static");
                         div.find(".draghandle").css("visibility", "hidden");
                         content.css("max-width", '');
-                        //div.css("width", editor.width() - 8);
                         div.css("display", "default");
                         editor.css('overflow', 'hidden');
                         content.css('max-height', '40vh');
-                        //content.css('max-width', editor.width() - 14);
                         content.css('overflow-x', '');
                         content.css('width', '');
                         div.css("padding", 0);
                         document.getElementById("releaseButton").innerHTML = "&#8594;";
                     }
                     else {
+                        var top = div.offset().top;
+                        var left = div.offset().left;
                         // If preview has just been released or it was released last time editor was open
                         if ($scope.minSizeSet || storage.getItem('previewIsReleased'+tag) === "true") {
-                            var top = div.offset().top;
-                            var left = div.offset().left;
                             if (storage.getItem('previewReleasedOffset'+tag)) {
                                 var savedOffset = (JSON.parse(storage.getItem('previewReleasedOffset'+tag)));
                                 left = editor.offset().left + savedOffset.left;
@@ -685,8 +687,6 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         editor.css("overflow", "visible");
                         div.find(".draghandle").css("visibility", "visible");
                         div.css("display", "table");
-                        //div.css("overflow", "visible");
-
                         div.css("width", "100%");
                         div.css("padding", 5);
                         var height = window.innerHeight - 90;
@@ -773,11 +773,11 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         }
                     } else {
                         // use given names from the input fields
-                        for (var i = 0; i < duplicates.length; i++) {
+                        for (var j = 0; j < duplicates.length; j++) {
                             duplicate = [];
-                            duplicate.push(duplicates[i][0]);
-                            duplicate.push(inputs[i][0].value);
-                            duplicate.push(duplicates[i][1]);
+                            duplicate.push(duplicates[j][0]);
+                            duplicate.push(inputs[j][0].value);
+                            duplicate.push(duplicates[j][1]);
                             duplicateData.push(duplicate);
                         }
                     }
@@ -862,7 +862,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             text: "!",
                             title: "There are answers related to this task. Those answers might be lost upon renaming this task."
                         });
-                        if (data.duplicates[i][2] != 'hasAnswers') {
+                        if (data.duplicates[i][2] !== 'hasAnswers') {
                             $warningSpan.css('visibility', 'hidden');
                         }
                         span.append($warningSpan);
@@ -870,13 +870,13 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         span.append($("<label>", {
                             class: "pluginRenameObject",
                             text: data.duplicates[i][0],
-                            for: "newName" + i,
+                            for: "newName" + i
                         }));
                         // Add input field for a new name to the duplicate
                         input = $("<input>", {
                             class: "pluginRenameObject",
                             type: "text",
-                            id: data.duplicates[i][1],
+                            id: data.duplicates[i][1]
                         });
                         // Add the span to the form
                         $scope.inputs.push(input);
@@ -890,28 +890,28 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         class: 'timButton, pluginRenameObject',
                         text: "Save",
                         title: "Rename task names with given names (Ctrl + S)",
-                        'ng-click': "renameTaskNamesClicked(inputs, duplicates, true)",
+                        'ng-click': "renameTaskNamesClicked(inputs, duplicates, true)"
                     }));
                     // Button for renaming duplicates automatically
                     $buttonDiv.append($("<button>", {
                         class: 'timButton, pluginRenameObject',
                         text: "Rename Automatically",
                         title: "Rename duplicate task names automatically",
-                        'ng-click': "renameTaskNamesClicked(undefined, duplicates, true)",
+                        'ng-click': "renameTaskNamesClicked(undefined, duplicates, true)"
                     }));
                     // Button for ignoring duplicates
                     $buttonDiv.append($("<button>", {
                         class: 'timButton, pluginRenameObject',
                         text: "Ignore",
                         title: "Proceed without renaming",
-                        'ng-click': "renameTaskNamesClicked(undefined, undefined, false)",
+                        'ng-click': "renameTaskNamesClicked(undefined, undefined, false)"
                     }));
                     // Button that allows user to return to edit and cancel save
                     $buttonDiv.append($("<button>", {
                         class: 'timButton, pluginRenameObject',
                         text: "Cancel",
                         title: "Return to editor",
-                        'ng-click': "cancelPluginRenameClicked()",
+                        'ng-click': "cancelPluginRenameClicked()"
                     }));
                     // Add the new divs to editor container
                     $actionDiv.append($form);
@@ -930,8 +930,6 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             }
                         }
                     });
-                    // Scroll the rename form to view
-                    //$('html, body').scrollTop($editorTop.offset().top);
                 };
 
 
@@ -1002,14 +1000,14 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     var tempStart = selection.start;
                     while (tempStart > 0) {
                         tempStart--;
-                        if (value.charAt(tempStart) == "\n" || tempStart < 0) {
+                        if (value.charAt(tempStart) === "\n" || tempStart < 0) {
                             tempStart += 1;
                             break;
                         }
                     }
                     var tempEnd = selection.start;
                     while (tempEnd < value.length) {
-                        if (value.charAt(tempEnd) == "\n" || tempEnd >= value.length) {
+                        if (value.charAt(tempEnd) === "\n" || tempEnd >= value.length) {
                             break;
                         }
                         tempEnd++;
@@ -1025,22 +1023,21 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     var pos = selection.start;
                     var value = $scope.editor.val();
 
-                    if (selection.text != "") {
+                    if (selection.text !== "") {
                         var tempStart = selection.start;
                         while (tempStart--) {
-                            if (value.charAt(tempStart) == "\n") {
+                            if (value.charAt(tempStart) === "\n") {
                                 selection.start = tempStart + 1;
                                 break;
                             }
                         }
 
                         var toIndent = value.substring(selection.start, selection.end),
-                            lines = toIndent.split("\n"),
-                            i;
+                            lines = toIndent.split("\n");
 
                         if (outdent) {
-                            for (i = 0; i < lines.length; i++) {
-                                if (lines[i].substring(0, tablength) == tab) {
+                            for (var i = 0; i < lines.length; i++) {
+                                if (lines[i].substring(0, tablength) === tab) {
                                     lines[i] = lines[i].substring(tablength);
                                 }
                             }
@@ -1049,8 +1046,8 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             $scope.editor.replaceSelectedText(toIndent);
                             $scope.editor.setSelection(selection.start, selection.start + toIndent.length);
                         } else {
-                            for (i in lines) {
-                                lines[i] = tab + lines[i];
+                            for (var j = 0; j < lines.length; j++) {
+                                lines[j] = tab + lines[j];
                             }
                             toIndent = lines.join("\n");
                             $scope.editor.setSelection(selection.start, selection.end);
@@ -1064,7 +1061,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             edited = left + tab + right;
 
                         if (outdent) {
-                            if (value.substring(pos - tablength, pos) == tab) {
+                            if (value.substring(pos - tablength, pos) === tab) {
                                 edited = value.substring(0, pos - tablength) + right;
                                 $scope.editor.val(edited);
                                 $scope.editor.setSelection(pos - tablength, pos - tablength);
@@ -1184,7 +1181,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     };
 
                     $scope.surroundClicked = function (before, after, func) {
-                        if ($scope.editor.getSelection().text == "") {
+                        if ($scope.editor.getSelection().text === "") {
                             $scope.selectWord();
                         }
                         var surrounded = (func) ? func() : $scope.surroundedBy(before, after);
@@ -1224,7 +1221,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         var nonASCIISingleCaseWordChar = /[\u00df\u0587\u0590-\u05f4\u0600-\u06ff\u3040-\u309f\u30a0-\u30ff\u3400-\u4db5\u4e00-\u9fcc\uac00-\ud7af]/;
                         var isWordCharBasic = function (ch) {
                             return /\w/.test(ch) || ch > "\x80" &&
-                                (ch.toUpperCase() != ch.toLowerCase() || nonASCIISingleCaseWordChar.test(ch)) && !/\s/.test(ch);
+                                (ch.toUpperCase() !== ch.toLowerCase() || nonASCIISingleCaseWordChar.test(ch)) && !/\s/.test(ch);
                         };
                         var selection = $scope.editor.getSelection();
                         var doc = $scope.editor.val(), coords = $scope.selectLine(false);
@@ -1239,7 +1236,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             while (tempEnd < lineend && isWordCharBasic(doc.charAt(tempEnd))) {
                                 tempEnd++;
                             }
-                            if (tempStart != tempEnd) {
+                            if (tempStart !== tempEnd) {
                                 $scope.editor.setSelection(tempStart, tempEnd);
                                 return true;
                             }
@@ -1290,13 +1287,13 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     
                     $scope.editorStartsWith = function(text)
                     {
-                        return  ($scope.editor.val().startsWith(text) );
-                    }
+                        return $scope.editor.val().startsWith(text);
+                    };
 
                     $scope.changeValue = function(attributes, text) {
                         var sel = $scope.editor.getSelection();
                         var t = $scope.editor.val();
-                        if ( t.length == 0 ) return;
+                        if ( t.length === 0 ) return;
                         var st = sel.start;
                         if ( t[st] === "\n" ) st--;
                         var b = t.lastIndexOf("\n", st);
@@ -1333,36 +1330,15 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     $scope.commentClicked = function () {
                         var editor = $scope.editor.get(0);
                         // If text is selected surround selected text with comment brackets
-                        if (editor.selectionEnd - editor.selectionStart == 0) {
+                        if (editor.selectionEnd - editor.selectionStart === 0) {
                             var pos = editor.selectionEnd;
                             var endOfLastLine = editor.value.lastIndexOf('\n', pos-1);
                             // If the cursor is in the beginning of a line, make the whole line a comment
-                            if (pos - endOfLastLine == 1) {
+                            if (pos - endOfLastLine === 1) {
                                 $scope.selectLine(true);
                             }
                         }
                         $scope.surroundClicked('{!!!', '!!!}');
-                        /*
-                        var editor = $scope.editor.get(0);
-                        // If text is selected surround selected text with comment brackets
-                        if (editor.selectionEnd - editor.selectionStart > 0) {
-                            $scope.editor.replaceSelectedText("{!!!" + $scope.editor.getSelection().text + "!!!}");
-                        }
-                        else {
-                            var pos = editor.selectionEnd;
-                            var endOfLastLine = editor.value.lastIndexOf('\n', pos-1);
-                            // If the cursor is in the beginning of a line, make the whole line a comment
-                            if (pos - endOfLastLine == 1) {
-                                var selection = $scope.selectLine(true);
-                                $scope.editor.replaceSelectedText("{!!!" + $scope.editor.getSelection().text + "!!!}");
-                                $scope.editor.setSelection(selection.end + 4, selection.end + 4);
-                            }
-                            else {
-                                // If the cursor is in another position place a comment block
-                                $scope.editor.replaceSelectedText("{!!!!!!}");
-                                $scope.editor.setSelection(pos+4, pos+4);
-                            }
-                        }*/
                     };
 
                     $scope.endLineClicked = function () {
@@ -1372,15 +1348,17 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         var pos = selection.start;
                         $scope.selectLine(true);
                         var lineToBreak = $scope.editor.getSelection().text;
+                        var toKeepInLine;
                         if(lineToBreak.length > 0) {
-                            var toKeepInLine = value.substring(editor.selectionStart, pos)
+                            toKeepInLine = value.substring(editor.selectionStart, pos);
                         } else {
-                            var toKeepInLine = "";
+                            toKeepInLine = "";
                         }
+                        var toNextLine;
                         if ((editor.selectionEnd - pos) > 0) {
-                            var toNextLine = value.substring(pos, editor.selectionEnd);
+                            toNextLine = value.substring(pos, editor.selectionEnd);
                         } else {
-                            var toNextLine = "";
+                            toNextLine = "";
                         }
                         toNextLine = toNextLine.trim();
                         $scope.editor.replaceSelectedText(toKeepInLine + "\\\n" + toNextLine);
@@ -1415,30 +1393,6 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     $scope.saveOldMode("ace");
 
                     $scope.snippetManager = ace.require("ace/snippets").snippetManager;
-
-                    /*
-                     var langTools = ace.require("ace/ext/language_tools");
-                     langTools.setCompleters([]);
-                     $scope.editor.setOptions({enableBasicAutocompletion: true});
-                     var pluginCompleter = {
-                     getCompletions: function (editor, session, pos, prefix, callback) {
-                     if (prefix.length === 0) {
-                     callback(null, []);
-                     return
-                     }
-                     $.getJSON(
-                     //TODO: tähän json tiedoston osoite, josta halutaan tädennyksiä
-                     "http://rhymebrain.com/talk?function=getRhymes&word=" + prefix,
-                     function (wordList) {
-                     // wordList like [{"word":"flow","freq":24,"score":300,"flags":"bc","syllables":"1"}]
-                     callback(null, wordList.map(function (ea) {
-                     return {name: ea.word, value: ea.word, score: ea.score, meta: "plugin"}
-                     }));
-                     })
-                     }
-                     };
-                     langTools.addCompleter(pluginCompleter);
-                     */
 
                     //Navigation
                     $scope.undoClicked = function () {
@@ -1595,27 +1549,24 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.editor.navigateLineEnd();
                         $scope.snippetManager.insertSnippet($scope.editor, "\n#-\n");
                     };
-                    /*
-                    $scope.slideClicked = function () {
-                        $scope.editor.navigateLineEnd();
-                        $scope.snippetManager.insertSnippet($scope.editor, "${0:$SELECTION}\n---------------\n");
-                    };
-                    */
+
                     $scope.endLineClicked = function () {
                         var pos = $scope.editor.getCursorPosition();
                         var line = $scope.editor.session.getLine(pos.row);
                         var range = $scope.editor.getSelection().getRange();
                         range.start.column = 0;
                         range.end.column = line.length;
+                        var toKeepInLine;
                         if(line.length > 0) {
-                            var toKeepInLine = line.substring(0, pos.column)
+                            toKeepInLine = line.substring(0, pos.column);
                         } else {
-                            var toKeepInLine = "";
+                            toKeepInLine = "";
                         }
+                        var toNextLine;
                         if ((line.length - pos.column) > 0) {
-                            var toNextLine = line.substring(pos.column, line.end);
+                            toNextLine = line.substring(pos.column, line.end);
                         } else {
-                            var toNextLine = "";
+                            toNextLine = "";
                         }
                         toNextLine = toNextLine.trim();
                         $scope.editor.selection.setRange(range);
@@ -1642,8 +1593,8 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                     $scope.editorStartsWith = function(text)
                     {
-                        return  ($scope.editor.session.getLine(0).startsWith(text) );
-                    }
+                        return $scope.editor.session.getLine(0).startsWith(text);
+                    };
 
                     $scope.changeValue = function(attributes, text) {
                         var pos = $scope.editor.getCursorPosition();
@@ -1676,7 +1627,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         var range = selection.getRange();
                         var pos = $scope.editor.getCursorPosition();
                         // If cursor is at the start of a line and there is no selection
-                        if (pos.column == 0 && (range.start.row == range.end.row && range.start.column == range.end.column)) {
+                        if (pos.column === 0 && (range.start.row === range.end.row && range.start.column === range.end.column)) {
                             $scope.editor.selection.selectLine(true);
                         }
                         else {
@@ -1684,7 +1635,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             range.start.column -= 4;
                             range.end.column += 4;
                             var text = $scope.editor.session.getTextRange(range);
-                            if (text == "{!!!!!!}") {
+                            if (text === "{!!!!!!}") {
                                 $scope.editor.selection.setRange(range);
                                 $scope.snippetManager.insertSnippet($scope.editor, "");
                                 return $scope.wrapFn();
@@ -1692,31 +1643,6 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         }
                         $scope.surroundClicked('{!!!', '!!!}');
                         $scope.wrapFn();
-                        /*
-
-                        if (!selection.isEmpty()) {
-                            $scope.editor.insert("{!!!" + $scope.editor.getSelectedText() + "!!!}");
-                            //$scope.snippetManager.insertSnippet($scope.editor, "{!!!${0:$SELECTION}!!!}");
-                            $scope.wrapFn();
-                            return;
-                        }
-                        else {
-                            var pos = $scope.editor.getCursorPosition();
-                            if (pos.column == 0) {
-                                var line = $scope.editor.session.getLine(pos.row);
-                                $scope.editor.selection.selectLine();
-                                $scope.editor.insert("{!!!" + line + "!!!}\n");
-                                pos.column = line.length + 4;
-                                $scope.editor.moveCursorToPosition(pos);
-                                $scope.wrapFn();
-                            }
-                            else {
-                                $scope.editor.insert("{!!!!!!}");
-                                pos.column = pos.column + 4;
-                                $scope.editor.moveCursorToPosition(pos);
-                                $scope.wrapFn();
-                            }
-                        }*/
                     };
 
                     //Insert
@@ -1755,24 +1681,14 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     $window.localStorage.setItem("oldMode"+$scope.options.localSaveTag, oldMode);
                 };
 
-                /*
-                if ( oldMode == "text") {
-                    $scope.setTextAreaFunctions();
-                } else {
-                    $scope.setAceFunctions();
-                }
-                */
-
                 $scope.surroundedByItalic = function () {
                     return (($scope.surroundedBy('*', '*') && !$scope.surroundedBy('**', '**')) || $scope.surroundedBy('***', '***'));
                 };
 
                 $scope.onFileSelect = function (file) {
                     $scope.uploadedFile = "";
-                    //if (!touchDevice)
-                        $scope.editor.focus();
+                    $scope.editor.focus();
                     $scope.file = file;
-                    console.log(file);
 
                     if (file) {
                         $scope.file.progress = 0;
@@ -1788,7 +1704,6 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             $timeout(function () { 
                                 if (response.data.image) {
                                     $scope.uploadedFile = '/images/' + response.data.image;
-                                    // if ( $scope.editor.session.getLine(0).startsWith("``` {") )
                                     if ( $scope.editorStartsWith("``` {") )
                                         $scope.insertTemplate($scope.uploadedFile);
                                     else 
@@ -1807,7 +1722,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         });
 
                         file.upload.finally(function () {
-                        })
+                        });
                     }
                 };
 
@@ -1853,9 +1768,11 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 $scope.tableClicked = function ($event) {
                     var buttons = [];
                     for (var key in $scope.tables) {
-                        var text = key.charAt(0).toUpperCase() + key.substring(1);
-                        var clickfn = 'insertTemplate(tables[\'' + key + '\']); wrapFn()';
-                        buttons.push($scope.createMenuButton(text, '', clickfn));
+                        if ($scope.tables.hasOwnProperty(key)) {
+                            var text = key.charAt(0).toUpperCase() + key.substring(1);
+                            var clickfn = 'insertTemplate(tables[\'' + key + '\']); wrapFn()';
+                            buttons.push($scope.createMenuButton(text, '', clickfn));
+                        }
                     }
                     $scope.createMenu($event, buttons);
                 };
@@ -1866,14 +1783,13 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     buttons.push($scope.createMenuButton("Slide fragment", "Content inside the fragment will be hidden and shown when next is clicked in slide view", "surroundClicked('§§', '§§'); wrapFn()"));
                     buttons.push($scope.createMenuButton("Fragment block", "Content inside will show as a fragment and may contain inner slide fragments", "surroundClicked('<§', '§>'); wrapFn()"));
                     $scope.createMenu($event, buttons);
-                }
+                };
 
                 $scope.pluginClicked = function ($event, key) {
                     $scope.createMenu($event, $scope.pluginButtonList[key]);
                 };
 
                 $scope.getTemplate = function (plugin, template, index) {
-                    // $scope.editor.setReadOnly(!$scope.editor.getReadOnly());
                     $.ajax({
                         type: 'GET',
                         url: '/' + plugin + '/template/' + template + '/' + index,
@@ -1884,7 +1800,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             $scope.insertTemplate(data);
                         },
                         error: function () {
-                            console.log("Virhe");
+                            $log.error("Error getting template");
                         }
                     });
                     if (!touchDevice) $scope.editor.focus();
@@ -1892,7 +1808,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                 $scope.tabClicked = function ($event, area) {
                     var active = $($event.target).parent();
-                    setsetting('editortab', area);
+                    $window.setsetting('editortab', area);
                     $scope.setActiveTab(active, area);
                     $scope.wrapFn();
                 };
@@ -1909,8 +1825,8 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     for (var i = 0; i < buttons.length; i++) {
                         $(buttons[i]).attr("class", 'extraButtonArea hidden');
                     }
-                    for (var i = 0; i < tabs.length; i++) {
-                        $(tabs[i]).removeClass('active');
+                    for (var j = 0; j < tabs.length; j++) {
+                        $(tabs[j]).removeClass('active');
                     }
                     $(active).attr('class', 'tab active');
                     $(naviArea).attr('class', 'extraButtonArea');
@@ -1979,18 +1895,18 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                  * Switched editor between ace and textarea
                  */
                 $scope.changeEditor = function (newMode) {
-                    //$scope.saveEditor("text")
                     var text = $scope.getEditorText();
                     $scope.editorText = text;
+                    var oldeditor;
                     if ($scope.isAce || newMode === "text") {
-                        var oldeditor = $('#ace_editor');
+                        oldeditor = $('#ace_editor');
                         $scope.setTextAreaControllerFunctions();
                         $scope.setTextAreaFunctions();
                         $scope.createTextArea(text);
                         $scope.setInitialText();
                         $scope.editor.focus();
                     } else {
-                        var oldeditor = $('#teksti');
+                        oldeditor = $('#teksti');
                         $scope.setAceControllerFunctions();
                         $scope.setAceFunctions();
                         var neweditor = $("<div>", {
@@ -1998,12 +1914,11 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             id: 'ace_editor',
                             'ng-model': 'editorText',
                             'ui-ace': "{  useWrapMode: false,  onLoad: aceLoaded,  onChange: aceChanged }",
-                             onLoad: "aceLoaded",
+                             onLoad: "aceLoaded"
                         });
                         $('.editorContainer').append($compile(neweditor)($scope));
-                        var neweditor = ace.edit("ace_editor");
+                        neweditor = ace.edit("ace_editor");
                         $scope.editor = neweditor;
-                        // $scope.createAce($scope.editor, text);
                         $scope.editor.getSession().on('change', $scope.aceChanged);
                         neweditor.setBehavioursEnabled($scope.getLocalBool("acebehaviours"),false);
                         neweditor.getSession().setUseWrapMode($scope.getLocalBool("acewrap"),false);
@@ -2031,13 +1946,6 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     $scope.options.metaset = true;
                 }
 
-                /*
-                $scope.aceLoaded = function(editor) {  // prevent data load next time
-                    $scope.editor = editor;
-                    $scope.createAce(editor);
-                    $scope.aceReady();
-                };
-                */
                 var viewport = {};
                 viewport.top = $(window).scrollTop();
                 viewport.bottom = viewport.top + $(window).height();
@@ -2045,12 +1953,8 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 bounds.top = $element.offset().top;
                 bounds.bottom = bounds.top + $element.outerHeight();
                 if (bounds.bottom > viewport.bottom || bounds.top < viewport.top) {
-                    /*$('html, body').animate({
-                        scrollTop: $element.offset().top
-                    }, 2000);*/
                     $('html, body').scrollTop($element.offset().top);
                 }
             }
         };
-
     }]);

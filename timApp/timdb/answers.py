@@ -120,7 +120,8 @@ class Answers(TimDbBase):
                         age: str,
                         valid: str,
                         printname:bool,
-                        sort: str) -> List[str]:
+                        sort: str,
+                        print_opt: str) -> List[str]:
         """Gets the all answers to tasks
 
         :param sort: Sorting order for answers.
@@ -130,10 +131,13 @@ class Answers(TimDbBase):
         :param age: min, max or all
         :param valid: 0, 1 or all
         :param printname: True = put user full name as first in every task
+        :param print_opt: all = header and answers, header=only header, answers=only answers
         """
         time_limit = "1900-09-12 22:00:00"
         counts =  "count(a.answered_on)"
         groups = "group by a.task_id, u.id"
+        print_header = print_opt == "all" or print_opt == "header"
+        print_answers = print_opt == "all" or print_opt == "answers"
 
         minmax = "max"
         if age == "min":
@@ -186,8 +190,11 @@ ORDER BY {}, a.answered_on
             if isinstance(line, dict) and "usercode" in line:
                 answ = line.get("usercode", "-")
 
+            res = ""
             if printname and not hide_names: header = str(row[6]) + "; " + header
-            result.append(header + "\n" + answ)
+            if print_header: res = header
+            if print_answers: res += "\n" + answ
+            result.append(res)
         return result
 
 

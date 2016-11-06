@@ -6,7 +6,9 @@ docker run \
  --net=timnet \
  --tmpfs /tmp/doctest_files:rw,noexec,nosuid,size=5m \
  --rm \
+ --name=timtest \
  --env TIM_SETTINGS=testconfig.py \
+ --env SELENIUM_URL=http://timtest \
  -v $PWD:/service:ro \
  -v $PWD/timApp/static/testgen:/service/timApp/static/testgen:rw \
  -v $PWD/timApp/static/.webassets-cache:/service/timApp/static/.webassets-cache:rw \

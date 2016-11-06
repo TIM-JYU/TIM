@@ -9,7 +9,7 @@ from documentmodel.document import Document
 from markdownconverter import md_to_html
 from plugin import Plugin
 from timdb.models.user import User
-from timdbtest import TEST_USER_2_ID, TEST_USER_1_ID
+from timdbtest import TEST_USER_2_ID, TEST_USER_1_ID, TEST_USER_1_NAME
 from timroutetest import TimRouteTest
 
 
@@ -21,13 +21,13 @@ class TimTest(TimRouteTest):
 
     def test_activities(self):
         timdb = self.get_db()
-        a = self.app
+        a = self.client
 
         login_resp = self.login_test1(force=True)
         self.assertDictEqual({'current_user': {'email': 'test1@example.com',
                                                'id': 4,
                                                'name': self.current_user_name(),
-                                               'real_name': 'Test user 1'},
+                                               'real_name': TEST_USER_1_NAME},
                               'other_users': []}, login_resp)
 
         # Make sure user's personal folder exists

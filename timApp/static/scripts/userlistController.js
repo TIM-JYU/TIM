@@ -68,7 +68,7 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
                                 dataKorppi += data[i].entity.name + ";" + fieldname + ";" + data[i].entity.total_points + "\n";
                             }
                             var filename = 'korppi_' + $scope.docId + '.txt';
-                            if (filename === null) {
+                            if (fieldname === null) {
                                 return;
                             }
 

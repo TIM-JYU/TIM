@@ -14,6 +14,7 @@ from plugin import Plugin
 from routes.common import logged_in, getTimDb, jsonResponse, getCurrentUserGroup, okJsonResponse, validate_item_and_create, \
     verify_view_access, verify_task_access, getCurrentUserName, \
     verify_seeanswers_access, grant_access_to_session_users, validate_uploaded_document_content
+from timdb.accesstype import AccessType
 from timdb.models.block import Block
 from timdb.blocktypes import blocktypes
 
@@ -77,7 +78,7 @@ def pluginupload_file2(doc_id: int, task_id: str, user_id):
 
 @upload.route('/pluginUpload/<int:doc_id>/<task_id>/', methods=['POST'])
 def pluginupload_file(doc_id: int, task_id: str):
-    verify_task_access(doc_id, task_id)
+    verify_task_access(doc_id, task_id, AccessType.view)
     file = request.files.get('file')
     if file is None:
         abort(400, 'Missing file')

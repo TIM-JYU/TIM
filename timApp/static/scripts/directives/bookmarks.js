@@ -38,6 +38,9 @@ timApp.directive("bookmarks", ['$window', '$log', '$http', '$uibModal', '$timeou
             };
 
             sc.getTopLevelBookmarks = function () {
+                if (!sc.data) {
+                    return [];
+                }
                 for (var i = 0; i < sc.data.length; ++i) {
                     if (sc.data[i].name === '') {
                         return sc.data[i].items;
@@ -176,7 +179,7 @@ timApp.controller('CreateBookmarkCtrl', ['$uibModalInstance', '$window', 'bookma
     var $ctrl = this;
     $ctrl.bookmarkForm = {};
     $ctrl.bookmark = bookmark;
-    if (bookmark.group === 'Last edited') {
+    if (bookmark.group === 'Last edited' || bookmark.group === 'Last read') {
         bookmark.group = '';
     }
     $ctrl.focusGroup = !bookmark.group;
