@@ -288,7 +288,7 @@ def get_document_answers(doc_id):
     doc = Document(doc_id)
     pars = doc.get_dereferenced_paragraphs()
     task_ids, _ = pluginControl.find_task_ids(pars)
-    get_all_answers_as_list(task_ids)
+    # get_all_answers_as_list(task_ids)  # why this was here?
     return get_all_answers_list_plain(task_ids)
 
 
@@ -301,7 +301,12 @@ def get_all_answers_plain(task_id):
 
 def get_all_answers_list_plain(task_ids: List[str]):
     all_answers = get_all_answers_as_list(task_ids)
-    text = "\n\n----------------------------------------------------------------------------------\n".join(all_answers)
+    jointext = "\n"
+    print_opt = get_option(request, 'print', 'all')
+    print_answers = print_opt == "all" or print_opt == "answers"
+    if print_answers:
+        jointext = "\n\n----------------------------------------------------------------------------------\n"
+    text = jointext.join(all_answers)
     return Response(text, mimetype='text/plain')
 
 
@@ -317,6 +322,7 @@ def get_all_answers_as_list(task_ids: List[str]):
     valid = get_option(request, 'valid', '1')
     name_opt = get_option(request, 'name', 'both')
     sort_opt = get_option(request, 'sort', 'task')
+    print_opt = get_option(request, 'print', 'all')
     printname = name_opt == 'both'
 
     if not usergroup:
@@ -329,7 +335,7 @@ def get_all_answers_as_list(task_ids: List[str]):
         # Require full teacher rights for getting all answers
         verify_teacher_access(doc_id)
         hide_names = hide_names or hide_names_in_teacher(doc_id)
-    all_answers = timdb.answers.get_all_answers(task_ids, usergroup, hide_names, age, valid, printname, sort_opt)
+    all_answers = timdb.answers.get_all_answers(task_ids, usergroup, hide_names, age, valid, printname, sort_opt, print_opt)
     return all_answers
 
 
