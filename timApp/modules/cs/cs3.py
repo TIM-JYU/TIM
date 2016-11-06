@@ -1772,7 +1772,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         print("err1s: ",err)
                         err = re.sub("^octave: unable to open X11 DISPLAY.*\n", "", err, flags=re.M)
                         err = re.sub("^octave: disabling GUI features.*\n", "", err, flags=re.M)
-                        err = err.encode("utf-8")
+                        err = re.sub("^octave: X11 DISPLAY environment variable not set", "", err, flags=re.M)
+                        err = err.strip().encode("utf-8")
                         print("err2: ",err)
                     if imgsource and pngname:
                         image_ok, e = copy_file(filepath + "/" + imgsource, pngname, False, is_optional_image)

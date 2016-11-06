@@ -154,6 +154,8 @@ run ln -s /usr/lib/jvm/java-8-oracle /usr/lib/jvm/default-java
 
 run apt-get install -y octave-signal
 run apt-get install -y octave-statistics
+run apt-get install -y octave-control octave-image octave-io octave-optim octave-signal octave-statistics
+
 
 run apt-get install -y lua5.2
     
