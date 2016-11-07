@@ -12,18 +12,22 @@ class AccountImportTest(TimDbTest):
                     ['testimport{}'.format(i) for i in range(0, num_accounts)]]
         self.assertEqual(num_accounts, len(accounts))
         self.write_and_test(accounts)
+        self.write_and_test(accounts, expected_existing=(name for _, _, name in accounts))
         accounts = [(name + '@example.com', name, '') for name in
                     ['testimport_2_{}'.format(i) for i in range(0, num_accounts)]]
         self.assertEqual(num_accounts, len(accounts))
         self.write_and_test(accounts, username_is_email=True)
 
-    def write_and_test(self, accounts, username_is_email=False):
+    def write_and_test(self, accounts, username_is_email=False, expected_existing=None):
+        if expected_existing is None:
+            expected_existing = []
         csv_path = os.path.join(self.test_files_path, 'import.csv')
         with open(csv_path, 'w') as f:
             w = csv.writer(f, delimiter=';')
             for a in accounts:
                 w.writerow(a)
-        import_accounts(csv_path, 'testpass')
+        existing = import_accounts(csv_path, 'testpass')
+        self.assertSetEqual(set(expected_existing), set(existing))
         db = self.get_db()
         for a in accounts:
             u = db.users.get_user_by_email(a[0])
