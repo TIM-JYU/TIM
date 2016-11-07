@@ -131,7 +131,7 @@ def index_page():
     return render_template('index.html',
                            items=get_items(''),
                            in_lecture=in_lecture,
-                           doc={'id': -1, 'fullname': ''},
+                           doc={'id': -1, 'fullname': '', 'name': 'All documents'},
                            rights={})
 
 

@@ -468,7 +468,7 @@ class DocParagraph:
     def get_links(self) -> List[str]:
         return self.__data['links']
 
-    def get_attr(self, attr_name: str, default_value: Generic = None, dereference: bool = False) -> Generic:
+    def get_attr(self, attr_name: str, default_value: Generic = None, dereference: bool = False):
         if dereference and self.original:
             return self.original.get_attr(attr_name, default_value, True)
 

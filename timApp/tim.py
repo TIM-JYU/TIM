@@ -26,7 +26,7 @@ from routes.common import *
 from routes.edit import edit_page
 from routes.groups import groups
 from routes.lecture import getTempDb, user_in_lecture, lecture_routes
-from routes.logger import log_info, log_error
+from routes.logger import log_info, log_error, log_debug
 from routes.login import login_page, logout
 from routes.manage import manage_page
 from routes.notes import notes
@@ -520,14 +520,17 @@ def log_request(response):
     if not request.path.startswith('/static/') and request.path != '/favicon.ico':
         status_code = response.status_code
         log_info(get_request_message(status_code))
+        if request.method in ('PUT', 'POST', 'DELETE'):
+            log_debug(request.get_json())
     return response
 
 
-def get_request_message(status_code):
-    return '{} [{}]: {} {}'.format(getCurrentUserName(),
+def get_request_message(status_code=None):
+    return '{} [{}]: {} {} {}'.format(getCurrentUserName(),
                                    request.headers.get('X-Forwarded-For') or request.remote_addr,
+                                   request.method,
                                    request.full_path if request.query_string else request.path,
-                                   status_code)
+                                   status_code or '').strip()
 
 
 @app.after_request

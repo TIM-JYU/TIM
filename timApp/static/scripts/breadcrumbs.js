@@ -19,7 +19,7 @@ timApp.controller('Breadcrumbs', ['$scope', function (sc) {
 
     sc.getBreadcrumbs = function (folder) {
         var crumbs = sc.splitPath(folder);
-        crumbs.unshift({name: '[root]', fullname: ''});
+        crumbs.unshift({name: 'All documents', fullname: ''});
         return crumbs;
     };
 

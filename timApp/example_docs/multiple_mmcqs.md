@@ -1,3 +1,5 @@
+#- {area=a1}
+
 ``` {#mmcqexample plugin="mmcq"}
 stem: "Answer yes or no to the following questions."
 choices:
@@ -27,3 +29,5 @@ choices:
     reason: "No way."
     text: "Test." 
 ```
+
+#- {area_end=a1}

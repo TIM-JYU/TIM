@@ -50,6 +50,8 @@ run pip3 install pytz  # Not necessarily needed after all, as Python's stdlib su
 run pip3 install python-dateutil
 run pip3 install cssselect
 run pip3 install Flask-Migrate
+run pip3 install selenium
+run pip3 install Flask-Testing
 
 # requests must be the last package to be installed!
 # After this, pip3 stops working because it depends
@@ -108,6 +110,9 @@ run sed -i 's/f instanceof katex\.ParseError/false/' /bower_components/KaTeX/dis
 run mkdir /var/run/sshd
 run echo 'root:test' | chpasswd
 run sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# Flask-Testing does not let us configure host, so we do it here.
+run sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python3.5/dist-packages/flask_testing/utils.py
 
 # Ensure that netcat is installed
 run apt-get install -y netcat-openbsd

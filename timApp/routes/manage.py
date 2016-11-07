@@ -80,7 +80,7 @@ def change_owner(doc_id, new_owner_name):
     possible_groups = timdb.users.get_user_groups(getCurrentUserId())
     if new_owner not in [group['id'] for group in possible_groups]:
         abort(403, "You must belong to the new usergroup.")
-    timdb.documents.setOwner(doc_id, new_owner)
+    timdb.documents.set_owner(doc_id, new_owner)
     return okJsonResponse()
 
 

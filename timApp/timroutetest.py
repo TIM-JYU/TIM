@@ -59,7 +59,7 @@ class TimRouteTest(TimDbTest):
     @classmethod
     def setUpClass(cls):
         TimDbTest.setUpClass()
-        cls.app = testclient
+        cls.client = testclient
 
     def assertResponseStatus(self, resp: Response, expect_status: int = 200, return_json: bool = False):
         """Asserts that the response has the specified status code and returns the response content either as text or JSON dict.
@@ -186,7 +186,7 @@ class TimRouteTest(TimDbTest):
         if headers is None:
             headers = []
         headers.append(('X-Requested-With', 'XMLHttpRequest'))
-        resp = self.app.open(url, method=method, headers=headers, **kwargs)
+        resp = self.client.open(url, method=method, headers=headers, **kwargs)
         if expect_status:
             self.assertResponseStatus(resp, expect_status)
         resp_data = resp.get_data(as_text=True)
@@ -280,36 +280,36 @@ class TimRouteTest(TimDbTest):
         return session['user_name']
 
     def login_anonymous(self):
-        with self.app.session_transaction() as s:
+        with self.client.session_transaction() as s:
             log_in_as_anonymous(s)
-        self.app.session_transaction().__enter__()
+        self.client.session_transaction().__enter__()
 
-    def login_test1(self, force: bool = False, add: bool = False):
+    def login_test1(self, force: bool = False, add: bool = False, **kwargs):
         """Logs testuser1 in.
 
         :param force: Whether to force the login route to be called even if the user is already logged in.
         :param add: Whether to add this user to the session group.
         :return: Response as a JSON dict.
         """
-        return self.login('testuser1', 'test1@example.com', 'test1pass', force=force, add=add)
+        return self.login('testuser1', 'test1@example.com', 'test1pass', force=force, add=add, **kwargs)
 
-    def login_test2(self, force: bool = False, add: bool = False):
+    def login_test2(self, force: bool = False, add: bool = False, **kwargs):
         """Logs testuser2 in.
 
         :param force: Whether to force the login route to be called even if the user is already logged in.
         :param add: Whether to add this user to the session group.
         :return: Response as a JSON dict.
         """
-        return self.login('testuser2', 'test2@example.com', 'test2pass', force=force, add=add)
+        return self.login('testuser2', 'test2@example.com', 'test2pass', force=force, add=add, **kwargs)
 
-    def login_test3(self, force: bool = False, add: bool = False):
+    def login_test3(self, force: bool = False, add: bool = False, **kwargs):
         """Logs testuser3 in.
 
         :param force: Whether to force the login route to be called even if the user is already logged in.
         :param add: Whether to add this user to the session group.
         :return: Response as a JSON dict.
         """
-        return self.login('testuser3', 'test3@example.com', 'test3pass', force=force, add=add)
+        return self.login('testuser3', 'test3@example.com', 'test3pass', force=force, add=add, **kwargs)
 
     def logout(self, user_id: Optional[int] = None):
         """Logs the specified user out.
@@ -319,7 +319,7 @@ class TimRouteTest(TimDbTest):
         """
         return self.json_post('/logout', json_data={'user_id': user_id}, expect_status=200, as_json=True)
 
-    def login(self, username: str, email: str, passw: str, force: bool = False, clear_last_doc: bool = True, add: bool = False):
+    def login(self, username: str, email: str, passw: str, force: bool = False, clear_last_doc: bool = True, add: bool = False, as_json=True, **kwargs):
         """Logs a user in.
 
         :param username: The username of the user.
@@ -331,28 +331,28 @@ class TimRouteTest(TimDbTest):
         :param add: Whether to add this user to the session group.
         :return: Response as a JSON dict.
         """
-        if self.app.application.got_first_request:
+        if self.client.application.got_first_request:
             if not force and not add:
                 database = self.get_db()
                 u = database.users.get_user_by_name(username)
                 # if not flask.has_request_context():
                 #     print('creating request context')
                 #     tim.app.test_request_context().__enter__()
-                with self.app.session_transaction() as s:
+                with self.client.session_transaction() as s:
                     s['user_name'] = username
                     s['email'] = email
                     s['user_id'] = u.id
                     s['real_name'] = u.real_name
                     s.pop('other_users', None)
-                self.app.session_transaction().__enter__()
+                self.client.session_transaction().__enter__()
                 return
             if clear_last_doc:
-                with self.app.session_transaction() as s:
+                with self.client.session_transaction() as s:
                     s.pop('last_doc', None)
                     s.pop('came_from', None)
         return self.post('/altlogin',
                          data={'email': email, 'password': passw, 'add_user': add},
-                         follow_redirects=True, as_json=True)
+                         follow_redirects=True, as_json=as_json, **kwargs)
 
     def create_doc(self, docname: Optional[str] = None, from_file: Optional[str] = None, initial_par: Optional[str] = None,
                    settings: Optional[Dict] = None, assert_status: int = 200) -> DocEntry:

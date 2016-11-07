@@ -100,7 +100,7 @@ class Users(TimDbBase):
         """
 
         next_id = self.get_next_anonymous_user_id()
-        u = User(id=next_id, name=name, real_name=real_name)
+        u = User(id=next_id, name=name + str(abs(next_id)), real_name=real_name)
         self.session.add(u)
         self.session.flush()
         if commit:
@@ -320,7 +320,7 @@ class Users(TimDbBase):
         :param name: The name of the user.
         :returns: The user information or None if the user does not exist.
         """
-        return self.session.query(User).filter(User.name==name).first()
+        return self.session.query(User).filter_by(name=name).first()
 
     def get_user_by_email(self, email: str) -> Optional[dict]:
         """Gets the data of the specified user email address.
