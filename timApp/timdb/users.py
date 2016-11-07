@@ -100,7 +100,7 @@ class Users(TimDbBase):
         """
 
         next_id = self.get_next_anonymous_user_id()
-        u = User(id=next_id, name=name, real_name=real_name)
+        u = User(id=next_id, name=name + str(abs(next_id)), real_name=real_name)
         self.session.add(u)
         self.session.flush()
         if commit:
