@@ -288,7 +288,6 @@ def get_document_answers(doc_id):
     doc = Document(doc_id)
     pars = doc.get_dereferenced_paragraphs()
     task_ids, _ = pluginControl.find_task_ids(pars)
-    # get_all_answers_as_list(task_ids)  # why this was here?
     return get_all_answers_list_plain(task_ids)
 
 
