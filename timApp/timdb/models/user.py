@@ -9,7 +9,7 @@ class User(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'useraccount'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Text, nullable=False)  # TODO Should be unique?
+    name = db.Column(db.Text, nullable=False, unique=True)
     real_name = db.Column(db.Text)
     email = db.Column(db.Text)
     prefs = db.Column(db.Text)
