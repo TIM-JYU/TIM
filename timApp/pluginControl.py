@@ -115,8 +115,8 @@ def pluginify(doc: Document,
 
         if is_gamified:
             raw_data = DocParagraph.get_markdown(block)
-            print(raw_data)
-            #gamificationdata.gamify(raw_data)
+            #print(raw_data)
+            gamificationdata.gamify(raw_data)
 
         if plugin_name:
             vals = parse_plugin_values(block, global_attrs=settings.global_plugin_attrs(),

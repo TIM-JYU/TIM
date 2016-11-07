@@ -7,10 +7,11 @@ import json
 def gamify(initial_data):
     initial_json = convert_to_json(initial_data)
     checked_json = check_for_duplicate_docs(initial_json)
+    return
     parse_json(checked_json)
     get_doc_name()
-    #get_maximum_points()
-    #get_url()
+    get_maximum_points()
+    get_url()
 
 
 def convert_to_json(md_data):
@@ -19,7 +20,7 @@ def convert_to_json(md_data):
     :returns: same data in JSON
     """
     temp = yaml.load(md_data[3:len(md_data) - 3])
-    return json.dumps(temp)
+    return json.loads(json.dumps(temp))
 
 
 def check_for_duplicate_docs(json_to_check):
@@ -28,9 +29,14 @@ def check_for_duplicate_docs(json_to_check):
     :returns: same data in JSON
     """
     is_valid = True
-
     if json_to_check is None:
         raise GamificationException('JSON is None')
+
+    paths = json_to_check['lectures']
+
+    for path in paths:
+        print(path['path'].split('/')[-1])
+
 
     return is_valid
 
