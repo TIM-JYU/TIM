@@ -317,6 +317,11 @@ def get_all_answers_as_list(task_ids: List[str]):
     for t in task_ids:
         doc_id, _, _ = Plugin.parse_task_id(t)
         doc_ids.add(doc_id)
+        if not timdb.documents.exists(doc_id):
+            abort(404, 'No such document: {}'.format(doc_id))
+        # Require full teacher rights for getting all answers
+        verify_teacher_access(doc_id)
+
     usergroup = get_option(request, 'group', None)
     age = get_option(request, 'age', 'max')
     valid = get_option(request, 'valid', '1')
@@ -363,10 +368,6 @@ def get_all_answers_as_list(task_ids: List[str]):
 
     hide_names = name_opt == 'anonymous'
     for doc_id in doc_ids:
-        if not timdb.documents.exists(doc_id):
-            abort(404, 'No such document: {}'.format(doc_id))
-        # Require full teacher rights for getting all answers
-        verify_teacher_access(doc_id)
         hide_names = hide_names or hide_names_in_teacher(doc_id)
     all_answers = timdb.answers.get_all_answers(task_ids,
                                                 usergroup,
