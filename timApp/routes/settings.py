@@ -10,9 +10,13 @@ settings_page = Blueprint('settings_page',
                           url_prefix='/settings')
 
 
+@settings_page.before_request
+def verify_login():
+    verifyLoggedIn()
+
+
 @settings_page.route('/')
 def show():
-    verifyLoggedIn()
     available_css_files = [{'name': theme.filename, 'desc': theme.description} for theme in get_available_themes()]
 
     try:
@@ -23,7 +27,11 @@ def show():
 
 @settings_page.route('/save', methods=['POST'])
 def save_settings():
-    verifyLoggedIn()
     update_preferences(request.get_json())
     show()  # Regenerate CSS
     return jsonResponse(get_preferences())
+
+
+@settings_page.route('/get/<name>')
+def get_setting(name):
+    return jsonResponse({name: get_preferences().get(name)})
