@@ -54,7 +54,7 @@ def manage(path):
         else:
             doc_data['title'] = "Untitled"
             doc_data['fullname'] = None
-        doc_data['versions'] = [entry for entry in doc.get_changelog(get_option(request, 'history', 100))]
+        doc_data['versions'] = doc.get_changelog(get_option(request, 'history', 100))
         doc_data['fulltext'] = doc.export_markdown()
         for ver in doc_data['versions']:
             ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
@@ -66,6 +66,13 @@ def manage(path):
                            doc=doc_data,
                            access_types=access_types,
                            rights=get_rights(block_id))
+
+
+@manage_page.route("/changelog/<int:doc_id>/<int:length>")
+def get_changelog(doc_id, length):
+    verify_manage_access(doc_id)
+    doc = Document(doc_id)
+    return jsonResponse({'versions': doc.get_changelog(length)})
 
 
 @manage_page.route("/changeOwner/<int:doc_id>/<new_owner_name>", methods=["PUT"])

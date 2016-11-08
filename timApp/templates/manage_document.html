@@ -246,26 +246,31 @@
     <div class="panel panel-default">
         <div class="panel-heading">Document version history</div>
         <div class="panel-body">
-            Showing {{ doc.versions.length }} latest entries.
-        <table class="table table-condensed">
-            <thead>
-            <tr>
-                <th>Time</th>
-                <th>User / group</th>
-                <th>Paragraph</th>
-                <th>Event</th>
-            </tr>
-            </thead>
-            <tr ng-repeat="version in doc.versions">
-                <td><a href="/download/{{ doc.id }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{ version.time | timdate }}</a></td>
-                <td>{{ version.group }}</td>
-                <td><a href="/view/{{ doc.fullname }}#{{ version.par_id }}">{{ version.par_id }}</a></td>
-                <td>
-                    <a ng-if="!$last" href="/diff/{{ doc.id }}/{{ doc.versions[$index+1].ver[0] }}/{{ doc.versions[$index+1].ver[1] }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{ version.op }}</a>
-                    <span ng-if="$last">{{ version.op }}</span>
-                </td>
-            </tr>
-        </table>
+            <table class="table table-condensed">
+                <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>User / group</th>
+                    <th>Paragraph</th>
+                    <th>Event</th>
+                </tr>
+                </thead>
+                <tr ng-repeat="version in doc.versions">
+                    <td><a href="/download/{{ doc.id }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{ version.time |
+                        timdate }}</a></td>
+                    <td>{{ version.group }}</td>
+                    <td><a href="/view/{{ doc.fullname }}#{{ version.par_id }}">{{ version.par_id }}</a></td>
+                    <td>
+                        <a ng-if="!$last"
+                           href="/diff/{{ doc.id }}/{{ doc.versions[$index+1].ver[0] }}/{{ doc.versions[$index+1].ver[1] }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{
+                            version.op }}</a>
+                        <span ng-if="$last">{{ version.op }}</span>
+                    </td>
+                </tr>
+            </table>
+            <p ng-show="hasMoreChangelog">Showing {{ doc.versions.length }} latest entries.</p>
+            <p ng-show="!hasMoreChangelog">Showing all {{ doc.versions.length }} entries.</p>
+            <button class="timButton" ng-show="hasMoreChangelog" ng-click="showMoreChangelog()">Show more entries</button>
         </div>
     </div>
     {% endraw %}

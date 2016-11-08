@@ -8,9 +8,21 @@ PermApp.controller("PermCtrl", [
     '$window',
     '$timeout',
     '$compile',
-    function (sc, $http, Upload, $window, $timeout, $compile) {
+    '$log',
+    function (sc, $http, Upload, $window, $timeout, $compile, $log) {
         "use strict";
         sc.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/"; // Todo: replace something remembers users last choice
+
+
+        sc.showMoreChangelog = function () {
+            var newLength = sc.doc.versions.length + 100;
+            $http.get('/changelog/' + sc.doc.id + '/' + (newLength)).then(function (response) {
+                sc.doc.versions = response.data.versions;
+                sc.hasMoreChangelog = sc.doc.versions.length === newLength;
+            }, function (response) {
+                $log.error('Failed to get more changelog.');
+            });
+        };
 
         sc.getJustDocName = function(fullName) {
             var i = fullName.lastIndexOf('/');
@@ -594,6 +606,7 @@ text = '\n'.join(a)
         sc.accessTypes = accessTypes;
         sc.doc = doc;
         sc.isFolder = isFolder;
+        sc.hasMoreChangelog = true;
 
         var docPath = $window.doc.fullname.split("/");
         docPath.pop();
