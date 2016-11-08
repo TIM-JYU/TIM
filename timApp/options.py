@@ -10,4 +10,9 @@ def get_option(request, name, default):
             return False
         if lresult == "true":
             return True
+    if isinstance(default, int):
+        try:
+            return int(lresult)
+        except ValueError:
+            return default
     return result

@@ -54,7 +54,7 @@ def manage(path):
         else:
             doc_data['title'] = "Untitled"
             doc_data['fullname'] = None
-        doc_data['versions'] = [entry for entry in doc.get_changelog()]
+        doc_data['versions'] = [entry for entry in doc.get_changelog(get_option(request, 'history', 100))]
         doc_data['fulltext'] = doc.export_markdown()
         for ver in doc_data['versions']:
             ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
