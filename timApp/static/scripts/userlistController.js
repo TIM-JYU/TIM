@@ -126,6 +126,7 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
                                 options: function () {
                                     return {
                                         url: '/allDocumentAnswersPlain/' + $scope.docId,
+                                        identifier: $scope.docId,
                                         allTasks: true
                                     };
                                 }

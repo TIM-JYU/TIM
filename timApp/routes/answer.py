@@ -5,13 +5,12 @@ from typing import Union
 from flask import Blueprint
 
 import containerLink
-from options import get_option
 from plugin import Plugin, PluginException
 from timdb.blocktypes import blocktypes
 from timdb.models.block import Block
 from timdb.tim_models import AnswerUpload, Answer
 from .common import *
-
+import dateutil.parser
 
 answers = Blueprint('answers',
                     __name__,
@@ -311,6 +310,8 @@ def get_all_answers_list_plain(task_ids: List[str]):
 
 def get_all_answers_as_list(task_ids: List[str]):
     verifyLoggedIn()
+    if not task_ids:
+        return []
     timdb = getTimDb()
     doc_ids = set()
     for t in task_ids:
@@ -324,6 +325,39 @@ def get_all_answers_as_list(task_ids: List[str]):
     print_opt = get_option(request, 'print', 'all')
     printname = name_opt == 'both'
 
+    period_from = datetime.min.replace(tzinfo=timezone.utc)
+    
+    # TODO: The key will be wrong when getting answers to a document that has only one task
+    since_last_key = task_ids[0]
+    if len(task_ids) > 1:
+        since_last_key = str(next(d for d in doc_ids))
+        if len(doc_ids) > 1:
+            since_last_key = None
+
+    period_opt = get_option(request, 'period', 'whenever')
+    period_to = datetime.now(tz=timezone.utc)
+    if period_opt == 'whenever':
+        pass
+    elif period_opt == 'sincelast' and since_last_key is not None:
+        u = get_current_user_object()
+        prefs = u.get_prefs()
+        last_answer_fetch = prefs.get('last_answer_fetch', {})
+        period_from = last_answer_fetch.get(since_last_key, datetime.min.replace(tzinfo=timezone.utc))
+        last_answer_fetch[since_last_key] = datetime.now(tz=timezone.utc)
+        prefs['last_answer_fetch'] = last_answer_fetch
+        u.set_prefs(prefs)
+        db.session.commit()
+    elif period_opt == 'day':
+        period_from = period_to - timedelta(days=1)
+    elif period_opt == 'week':
+        period_from = period_to - timedelta(weeks=1)
+    elif period_opt == 'month':
+        period_from = period_to - dateutil.relativedelta.relativedelta(months=1)
+    elif period_opt == 'other':
+        period_from_str = get_option(request, 'periodFrom', period_from.isoformat())
+        period_to_str = get_option(request, 'periodTo', period_to.isoformat())
+        period_from = dateutil.parser.parse(period_from_str)
+        period_to = dateutil.parser.parse(period_to_str)
     if not usergroup:
         usergroup = None
 
@@ -334,7 +368,16 @@ def get_all_answers_as_list(task_ids: List[str]):
         # Require full teacher rights for getting all answers
         verify_teacher_access(doc_id)
         hide_names = hide_names or hide_names_in_teacher(doc_id)
-    all_answers = timdb.answers.get_all_answers(task_ids, usergroup, hide_names, age, valid, printname, sort_opt, print_opt)
+    all_answers = timdb.answers.get_all_answers(task_ids,
+                                                usergroup,
+                                                hide_names,
+                                                age,
+                                                valid,
+                                                printname,
+                                                sort_opt,
+                                                print_opt,
+                                                period_from,
+                                                period_to)
     return all_answers
 
 

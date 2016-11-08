@@ -1,3 +1,8 @@
+import json
+
+from typing import Dict
+
+from documentmodel.docparagraphencoder import DocParagraphEncoder
 from timdb.tim_models import db
 from timdb.models.folder import Folder
 from timdb.models.usergroup import UserGroup
@@ -33,3 +38,9 @@ class User(db.Model):
         if f is None:
             return Folder.create(path, self.get_personal_group().id, apply_default_rights=True)
         return f
+
+    def get_prefs(self) -> Dict:
+        return json.loads(self.prefs)
+
+    def set_prefs(self, prefs):
+        self.prefs = json.dumps(prefs, cls=DocParagraphEncoder)
