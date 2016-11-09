@@ -9,15 +9,6 @@ timApp.controller('AllAnswersCtrl', ['$uibModalInstance', '$window', '$httpParam
         });
         var $ctrl = this;
 
-        $ctrl.datePickerOptionsFrom = {
-            format: 'D.M.YYYY HH:mm:ss',
-            showTodayButton: true
-        };
-        $ctrl.datePickerOptionsTo = {
-            format: 'D.M.YYYY HH:mm:ss',
-            defaultDate: moment().add({minutes: 10}),
-            showTodayButton: true
-        };
         $ctrl.showSort = options.allTasks;
         $ctrl.options = {};
         $ctrl.options.age = 'max';
@@ -29,6 +20,17 @@ timApp.controller('AllAnswersCtrl', ['$uibModalInstance', '$window', '$httpParam
         });
 
         $ctrl.options = $ctrl.$storage.allAnswersOptions;
+
+        $ctrl.datePickerOptionsFrom = {
+            format: 'D.M.YYYY HH:mm:ss',
+            defaultDate: moment($ctrl.options.periodFrom),
+            showTodayButton: true
+        };
+        $ctrl.datePickerOptionsTo = {
+            format: 'D.M.YYYY HH:mm:ss',
+            defaultDate: moment($ctrl.options.periodTo),
+            showTodayButton: true
+        };
 
         $ctrl.ok = function () {
             if ($ctrl.options.periodFrom) {
@@ -49,9 +51,7 @@ timApp.controller('AllAnswersCtrl', ['$uibModalInstance', '$window', '$httpParam
         $http.get('/settings/get/last_answer_fetch').then(function (response) {
             if (response.data.last_answer_fetch) {
                 $ctrl.lastFetch = response.data.last_answer_fetch[options.identifier];
-                if ($ctrl.lastFetch) {
-                    $ctrl.options.periodFrom = moment($ctrl.lastFetch);
-                } else {
+                if (!$ctrl.lastFetch) {
                     $ctrl.lastFetch = 'no fetches yet';
                 }
             }
