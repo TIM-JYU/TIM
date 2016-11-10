@@ -26,4 +26,4 @@ else
   container=postgresql-$TIM_NAME
   database=$TIM_NAME
 fi
-docker run --rm --net timnet -v /opt/tim/sql:/sql/:ro  -ti postgres:9.5 /bin/bash -c "psql -h $container -p 5432 -d $database -U postgres $fileOpt"
+docker run --rm --net timnet -v ${PWD}/pg_backup:/backup -v ${PWD}/timApp/sql:/sql/:ro  -ti postgres:9.5 /bin/bash -c "psql -h $container -p 5432 -d $database -U postgres $fileOpt"
