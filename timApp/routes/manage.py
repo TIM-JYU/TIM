@@ -33,9 +33,7 @@ def manage(path):
 
     if not timdb.users.has_manage_access(get_current_user_id(), block_id):
         if verify_view_access(block_id):
-            if is_folder:
-                return redirect('/view/' + str(block_id))
-            session['message'] = "Did someone give you a wrong link? Showing normal view instead of manage view."
+            flash("Did someone give you a wrong link? Showing normal view instead of manage view.")
             return redirect('/view/' + str(block_id))
 
     access_types = timdb.users.get_access_types()

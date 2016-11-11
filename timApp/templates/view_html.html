@@ -138,12 +138,6 @@
             <button class="timButton" ng-click="reload()">Refresh</button>
             <button class="timButton" ng-click="closeRefreshDlg()">No</button>
         </div>
-        {% if message %}
-            <div ng-cloak="" class="dialog" caption="" tim-draggable-fixed="" ng-show="!hideMessage">
-                <p>{{ message }}</p>
-                <button class="timButton" ng-click="closeMessageDlg()">Ok</button>
-            </div>
-        {% endif %}
         {% raw %}
         <div ng-cloak="" class="dialog" caption="Updates pending" tim-draggable-fixed="" ng-show="showUpdateDialog()">
             <p>There are {{ pendingUpdatesCount() }} pending paragraph updates.</p>

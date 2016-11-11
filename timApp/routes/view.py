@@ -213,25 +213,19 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     if doc_info is None:
         return try_return_folder(doc_path)
 
-    try:
-        message = session['message']
-        session['message'] = None
-    except KeyError:
-        message = None
-
     doc_id = doc_info['id']
     edit_mode = request.args.get('edit', None) if has_edit_access(doc_id) else None
 
     if route == 'teacher':
         if verify_teacher_access(doc_id, False) is False:
             if verify_view_access(doc_id):
-                session['message'] = "Did someone give you a wrong link? Showing normal view instead of teacher view."
+                flash("Did someone give you a wrong link? Showing normal view instead of manage view.")
                 return redirect('/view/' + doc_path)
 
     if route == 'answers':
         if verify_seeanswers_access(doc_id, False) is False:
             if verify_view_access(doc_id):
-                session['message'] = "Did someone give you a wrong link? Showing normal view instead of answers view."
+                flash("Did someone give you a wrong link? Showing normal view instead of manage view.")
                 return redirect('/view/' + doc_path)
 
     if not has_view_access(doc_id):
@@ -380,7 +374,6 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                            no_question_auto_numbering=no_question_auto_numbering,
                            slide_background_url=slide_background_url,
                            slide_background_color=slide_background_color,
-                           message=message,
                            task_info={'total_points': total_points,
                                       'tasks_done': tasks_done,
                                       'total_tasks': total_tasks,
