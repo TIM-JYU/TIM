@@ -4,7 +4,7 @@ from functools import lru_cache
 
 import requests
 
-from documentmodel.docparagraphencoder import DocParagraphEncoder
+from documentmodel.timjsonencoder import TimJsonEncoder
 from plugin import PluginException
 from routes.logger import log_info, log_warning
 from tim_app import app
@@ -85,7 +85,7 @@ def call_plugin_html(plugin, info, state, task_id=None, params=None):
     data_dict = {"markup": info, "state": state, "taskID": task_id}
     data_dict.update(params or {})
     plugin_data = json.dumps(data_dict,
-                             cls=DocParagraphEncoder)
+                             cls=TimJsonEncoder)
     return call_plugin_generic(plugin,
                                'post',
                                'html',
@@ -101,7 +101,7 @@ def call_plugin_multihtml(plugin, plugin_data, params=None):
     return call_plugin_generic(plugin,
                                'post',
                                'multihtml',
-                               data=json.dumps(plugin_data, cls=DocParagraphEncoder),
+                               data=json.dumps(plugin_data, cls=TimJsonEncoder),
                                headers={'Content-type': 'application/json'},
                                params=params)
 
@@ -120,7 +120,7 @@ def call_plugin_answer(plugin, answer_data):
     return call_plugin_generic(plugin,
                                'put',
                                'answer',
-                               json.dumps(answer_data, cls=DocParagraphEncoder),
+                               json.dumps(answer_data, cls=TimJsonEncoder),
                                headers={'Content-type': 'application/json'})
 
 

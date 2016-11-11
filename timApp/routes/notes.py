@@ -1,9 +1,11 @@
-from flask import Blueprint, abort, request
+from flask import Blueprint
 
-from documentmodel.document import Document
+from routes.accesshelper import verify_comment_right, verify_logged_in, verify_view_access
 from routes.common import *
+from routes.dbaccess import get_timdb
 from routes.edit import par_response
 from routes.notify import notify_doc_owner
+from routes.sessioninfo import get_current_user_id, get_current_user_group
 
 notes = Blueprint('notes',
                   __name__,
@@ -22,10 +24,10 @@ def get_group_subject() -> str:
 
 @notes.route("/note/<int:note_id>")
 def get_note(note_id):
-    timdb = getTimDb()
+    timdb = get_timdb()
     note = timdb.notes.get_note(note_id)
-    if not (timdb.notes.has_edit_access(getCurrentUserGroup(), note_id) or timdb.users.user_is_owner(getCurrentUserId(),
-                                                                                                     note['doc_id'])):
+    if not (timdb.notes.has_edit_access(get_current_user_group(), note_id) or timdb.users.user_is_owner(get_current_user_id(),
+                                                                                                        note['doc_id'])):
         abort(403)
     note.pop('usergroup_id')
     tags = note['tags']
@@ -52,8 +54,8 @@ def post_note():
     par = doc.get_paragraph(par_id)
     if par is None:
         abort(400, 'Non-existent paragraph')
-    timdb = getTimDb()
-    group_id = getCurrentUserGroup()
+    timdb = get_timdb()
+    group_id = get_current_user_group()
 
     if par.get_attr('r') != 'tr':
         par = get_referenced_pars_from_req(par)[0]
@@ -72,11 +74,11 @@ def post_note():
 
 @notes.route("/editNote", methods=['POST'])
 def edit_note():
-    verifyLoggedIn()
+    verify_logged_in()
     jsondata = request.get_json()
-    group_id = getCurrentUserGroup()
+    group_id = get_current_user_group()
     doc_id = int(jsondata['docId'])
-    verify_view_access(doc_id, getCurrentUserGroup())
+    verify_view_access(doc_id, get_current_user_group())
     note_text = jsondata['text']
     access = jsondata['access']
     par_id = jsondata['par']
@@ -86,8 +88,8 @@ def edit_note():
     for tag in KNOWN_TAGS:
         if sent_tags.get(tag):
             tags.append(tag)
-    timdb = getTimDb()
-    if not (timdb.notes.has_edit_access(group_id, note_id) or timdb.users.user_is_owner(getCurrentUserId(), doc_id)):
+    timdb = get_timdb()
+    if not (timdb.notes.has_edit_access(group_id, note_id) or timdb.users.user_is_owner(get_current_user_id(), doc_id)):
         abort(403, "Sorry, you don't have permission to edit this note.")
     prev_note_text = timdb.notes.get_note(note_id)['content']
     timdb.notes.modify_note(note_id, note_text, access, tags)
@@ -109,12 +111,12 @@ def edit_note():
 @notes.route("/deleteNote", methods=['POST'])
 def delete_note():
     jsondata = request.get_json()
-    group_id = getCurrentUserGroup()
+    group_id = get_current_user_group()
     doc_id = int(jsondata['docId'])
     note_id = int(jsondata['id'])
     paragraph_id = jsondata['par']
-    timdb = getTimDb()
-    if not (timdb.notes.has_edit_access(group_id, note_id) or timdb.users.user_is_owner(getCurrentUserId(), doc_id)):
+    timdb = get_timdb()
+    if not (timdb.notes.has_edit_access(group_id, note_id) or timdb.users.user_is_owner(get_current_user_id(), doc_id)):
         abort(403, "Sorry, you don't have permission to remove this note.")
     timdb.notes.delete_note(note_id)
     doc = Document(doc_id)

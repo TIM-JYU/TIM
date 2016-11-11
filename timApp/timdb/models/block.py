@@ -32,3 +32,7 @@ class Block(db.Model):
             from timdb.models.folder import Folder
             folder = Folder.get_by_id(self.id)
             return folder.get_parent()
+
+    def is_unpublished(self):
+        from routes.accesshelper import has_ownership
+        return has_ownership(self.id) and not self.owner.is_large() and self.accesses.count() == 0

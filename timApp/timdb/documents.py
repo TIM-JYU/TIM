@@ -345,42 +345,34 @@ class Documents(TimDbBase):
     def get_documents(self, include_nonpublic: bool = False,
                       filter_ids: Optional[Iterable[int]]=None,
                       filter_folder: str=None,
-                      search_recursively: bool=True) -> List[dict]:
-        """Gets all the documents in the database.
+                      search_recursively: bool=True) -> List[DocEntry]:
+        """Gets all the documents in the database matching the given criteria.
 
         :param search_recursively: Whether to search recursively.
         :param filter_folder: Optionally restricts the search to a specific folder.
         :param filter_ids: An optional iterable of document ids for filtering the documents.
                Must be non-empty if supplied.
         :param include_nonpublic: Whether to include non-public document names or not.
-        :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
+        :returns: A list of DocEntry objects.
         """
-        cursor = self.db.cursor()
-        filter_clause = '' if include_nonpublic else ' AND public = TRUE'
+
+        q = DocEntry.query
+        if not include_nonpublic:
+            q = q.filter_by(public=True)
         if filter_ids:
-            filter_clause += self.get_id_filter(filter_ids)
+            q = q.filter(DocEntry.id.in_(filter_ids))
         if filter_folder:
             filter_folder = filter_folder.strip('/') + '/'
             if filter_folder == '/':
                 filter_folder = ''
-            filter_clause += " AND name LIKE '{}%'".format(filter_folder)
+            q = q.filter(DocEntry.name.like(filter_folder + '%'))
         if not search_recursively:
-            filter_clause += " AND name NOT LIKE '{}%/%'".format(filter_folder)
-        cursor.execute('SELECT id, name FROM DocEntry WHERE TRUE' + filter_clause)
-        results = self.resultAsDictionary(cursor)
-
-        for result in results:
-            doc = Document(result['id'])
-            result['modified'] = doc.get_last_modified()
-            fullname = result['name']
-            result['name'] = self.get_short_name(fullname)
-            result['fullname'] = fullname
-
-        return results
+            q = q.filter(DocEntry.name.notlike(filter_folder + '%/%'))
+        return q.all()
 
     def get_documents_in_folder(self, folder_pathname: str,
                                       include_nonpublic: bool = False,
-                                      filter_ids: Optional[Iterable[int]]=None) -> List[dict]:
+                                      filter_ids: Optional[Iterable[int]]=None) -> List[DocEntry]:
         """Gets all the documents in a folder
 
         :param filter_ids: An optional iterable of document ids for filtering the documents.
@@ -393,17 +385,6 @@ class Documents(TimDbBase):
                                   filter_folder=folder_pathname,
                                   search_recursively=False,
                                   filter_ids=filter_ids)
-
-    def getDocumentPath(self, document_id: int) -> str:
-        """Gets the path of the specified document.
-        
-        :param document_id: The id of the document.
-        :returns: The path of the document.
-        """
-        return self.getBlockPath(document_id)
-
-    def getDocumentPathAsRelative(self, document_id: int):
-        return os.path.relpath(self.getDocumentPath(document_id), self.files_root_path).replace('\\', '/')
 
     def import_document_from_file(self, document_file: str, document_name: str,
                                owner_group_id: int) -> Document:

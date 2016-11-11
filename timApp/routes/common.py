@@ -3,31 +3,27 @@ import json
 import os
 import re
 from collections import defaultdict
+from datetime import datetime
+from typing import List, Dict
 from urllib.parse import urlparse, urljoin
 
-import magic
-from bs4 import UnicodeDammit
-
-from flask import current_app, session, abort, g, Response, request, redirect, url_for, flash
-
 import dateutil.parser
-import documentmodel.document
-import pluginControl
-from datetime import datetime, timedelta
-from documentmodel.docparagraph import DocParagraph
-from documentmodel.docparagraphencoder import DocParagraphEncoder
-from documentmodel.document import Document
+import magic
 import pytz
+from bs4 import UnicodeDammit
+from flask import current_app, session, abort, Response, request, redirect, url_for, flash
 
+import pluginControl
+from documentmodel.docparagraph import DocParagraph
+from documentmodel.document import Document
+from documentmodel.timjsonencoder import TimJsonEncoder
 from markdownconverter import expand_macros, create_environment
-from options import get_option
-from routes.logger import log_info
+from routes.accesshelper import has_ownership, can_write_to_folder
+from routes.dbaccess import get_timdb
+from routes.sessioninfo import get_session_usergroup_ids, get_current_user_id, get_current_user_name, \
+    get_current_user_group, logged_in
 from theme import Theme
-from timdb.accesstype import AccessType
-from timdb.tim_models import db
 from timdb.models.user import User
-from timdb.timdb2 import TimDb
-from typing import List, Dict, Optional
 from utils import generate_theme_scss, get_combined_css_filename, ThemeNotFoundException
 
 
@@ -44,233 +40,10 @@ def safe_redirect(url, **values):
     return redirect(url_for('indexPage'))
 
 
-def get_current_user():
-    return {'id': getCurrentUserId(),
-            'name': getCurrentUserName(),
-            'real_name': session.get('real_name'),
-            'email': session.get('email')}
-
-
-def get_current_user_object() -> User:
-    if not hasattr(g, 'user'):
-        g.user = User.query.get(getCurrentUserId())
-    return g.user
-
-
-def get_other_users() -> Dict[int, Dict[str, str]]:
-    return session.get('other_users', {})
-
-
-def get_other_users_as_list() -> List[Dict[str, str]]:
-    return list(session.get('other_users', {}).values())
-
-
-def get_session_users():
-    return [get_current_user()] + get_other_users_as_list()
-
-
-def get_session_users_ids():
-    return [u['id'] for u in get_session_users()]
-
-
-def get_session_usergroup_ids():
-    timdb = getTimDb()
-    return [timdb.users.get_personal_usergroup(u) for u in get_session_users()]
-
-
-def getCurrentUserId():
-    uid = session.get('user_id')
-    return uid if uid is not None else 0
-
-
-def getCurrentUserName():
-    name = session.get('user_name')
-    return name if name is not None else 'Anonymous'
-
-
-def getCurrentUserGroup():
-    timdb = getTimDb()
-    return timdb.users.get_personal_usergroup(get_current_user())
-
-
-def getTimDb():
-    """
-
-    :rtype : TimDb
-    """
-    if not hasattr(g, 'timdb'):
-        # log_info('Opening timdb in route: {}'.format(request.path))
-        rpath = request.path
-        g.timdb = TimDb(files_root_path=current_app.config['FILES_PATH'],
-                        current_user_name=getCurrentUserName(),
-                        route_path=rpath)
-    return g.timdb
-
-
-def verify_admin():
-    timdb = getTimDb()
-    if not timdb.users.has_admin_access(getCurrentUserId()):
-        abort(403, 'This action requires administrative rights.')
-
-
 def verify_doc_exists(doc_id, message="Sorry, the document does not exist."):
-    timdb = getTimDb()
+    timdb = get_timdb()
     if not timdb.documents.exists(doc_id):
         abort(404, message)
-
-
-def verify_edit_access(block_id, message="Sorry, you don't have permission to edit this resource."):
-    timdb = getTimDb()
-    if not timdb.users.has_edit_access(getCurrentUserId(), block_id):
-        abort(403, message)
-
-
-def verify_manage_access(block_id, message="Sorry, you don't have permission to manage this resource."):
-    timdb = getTimDb()
-    if not timdb.users.has_manage_access(getCurrentUserId(), block_id):
-        abort(403, message)
-
-
-def has_edit_access(block_id):
-    timdb = getTimDb()
-    return timdb.users.has_edit_access(getCurrentUserId(), block_id)
-
-
-def verify_doc_existence(doc_id):
-    timdb = getTimDb()
-    if not timdb.documents.exists(doc_id):
-        abort(404)
-
-
-def verify_access(block_id: int, access_type: AccessType, require: bool=True, message: Optional[str]=None):
-    timdb = getTimDb()
-    if access_type == AccessType.view:
-        return abort_if_not_access_and_required(timdb.users.has_view_access(getCurrentUserId(), block_id), require,
-                                                message)
-    elif access_type == AccessType.edit:
-        return abort_if_not_access_and_required(timdb.users.has_edit_access(getCurrentUserId(), block_id), require,
-                                                message)
-    elif access_type == AccessType.see_answers:
-        return abort_if_not_access_and_required(timdb.users.has_seeanswers_access(getCurrentUserId(), block_id),
-                                                require,
-                                                message)
-    elif access_type == AccessType.teacher:
-        return abort_if_not_access_and_required(timdb.users.has_teacher_access(getCurrentUserId(), block_id), require,
-                                                message)
-    elif access_type == AccessType.manage:
-        return abort_if_not_access_and_required(timdb.users.has_manage_access(getCurrentUserId(), block_id), require,
-                                                message)
-    abort(400, 'Bad request - unknown access type')
-
-
-def verify_view_access(block_id, require=True, message=None):
-    timdb = getTimDb()
-    return abort_if_not_access_and_required(timdb.users.has_view_access(getCurrentUserId(), block_id), require, message)
-
-
-def verify_teacher_access(block_id, require=True, message=None):
-    timdb = getTimDb()
-    return abort_if_not_access_and_required(timdb.users.has_teacher_access(getCurrentUserId(), block_id), require, message)
-
-
-def verify_seeanswers_access(block_id, require=True, message=None):
-    timdb = getTimDb()
-    return abort_if_not_access_and_required(timdb.users.has_seeanswers_access(getCurrentUserId(), block_id), require, message)
-
-
-def abort_if_not_access_and_required(has_access, require=True, message=None):
-    if has_access:
-        return True
-    if require:
-        abort(403, message or "Sorry, you don't have permission to view this resource.")
-    return False
-
-
-def has_view_access(block_id):
-    timdb = getTimDb()
-    return timdb.users.has_view_access(getCurrentUserId(), block_id)
-
-
-def has_comment_right(doc_id):
-    return has_view_access(doc_id) and logged_in()
-
-
-def verify_comment_right(doc_id):
-    if not has_comment_right(doc_id):
-        abort(403)
-
-
-def has_read_marking_right(doc_id):
-    return has_view_access(doc_id) and logged_in()
-
-
-def verify_read_marking_right(doc_id):
-    if not has_read_marking_right(doc_id):
-        abort(403)
-
-
-def has_teacher_access(doc_id):
-    timdb = getTimDb()
-    return timdb.users.has_teacher_access(getCurrentUserId(), doc_id)
-
-
-def has_manage_access(doc_id):
-    timdb = getTimDb()
-    return timdb.users.has_manage_access(getCurrentUserId(), doc_id)
-
-
-def has_seeanswers_access(doc_id):
-    timdb = getTimDb()
-    return timdb.users.has_seeanswers_access(getCurrentUserId(), doc_id)
-
-
-def get_rights(doc_id):
-    return {'editable': has_edit_access(doc_id),
-            'can_mark_as_read': has_read_marking_right(doc_id),
-            'can_comment': has_comment_right(doc_id),
-            'browse_own_answers': logged_in(),
-            'teacher': has_teacher_access(doc_id),
-            'see_answers': has_seeanswers_access(doc_id),
-            'manage': has_manage_access(doc_id),
-            'owner': has_ownership(doc_id)
-            }
-
-
-def verifyLoggedIn():
-    if not logged_in():
-        abort(403, "You have to be logged in to perform this action.")
-
-
-def has_ownership(block_id):
-    timdb = getTimDb()
-    return timdb.users.user_is_owner(getCurrentUserId(), block_id)
-
-
-def verify_ownership(block_id):
-    timdb = getTimDb()
-    if not timdb.users.user_is_owner(getCurrentUserId(), block_id):
-        abort(403, "Sorry, you don't have permission to view this resource.")
-
-
-def logged_in():
-    return getCurrentUserId() != 0
-
-
-def can_write_to_folder(folderName):
-    timdb = getTimDb()
-    userFolder = "users/" + getCurrentUserName()
-    folder = folderName
-    while folder != '':
-        if folder == userFolder:
-            return True
-
-        folderId = timdb.folders.get_folder_id(folder)
-        if folderId is not None:
-            return has_edit_access(folderId)
-
-        folder, _ = timdb.folders.split_location(folder)
-
-    return timdb.users.has_admin_access(getCurrentUserId())
 
 
 def jsonResponse(jsondata, status_code=200):
@@ -282,7 +55,7 @@ def jsonResponse(jsondata, status_code=200):
 def to_json_str(jsondata):
     return json.dumps(jsondata,
                       separators=(',', ':'),
-                      cls=DocParagraphEncoder)
+                      cls=TimJsonEncoder)
 
 
 def set_no_cache_headers(response: Response) -> Response:
@@ -307,10 +80,10 @@ def get_document_as_current_user(doc_id: int) -> Document:
     :return: The Document object.
     """
 
-    return Document(doc_id, modifier_group_id=getCurrentUserGroup())
+    return Document(doc_id, modifier_group_id=get_current_user_group())
 
 def verify_document_version(doc_id, version):
-    timdb = getTimDb()
+    timdb = get_timdb()
     latest = Document(doc_id).get_version()
     if version != latest:
         abort(400, 'The document version you edited is no longer the latest version. '
@@ -353,7 +126,7 @@ def hide_names_in_teacher(doc_id):
 
 
 def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=False, edit_window=False, load_plugin_states=True, show_questions=False):
-    timdb = getTimDb()
+    timdb = get_timdb()
     html_pars, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                       pars,
                                                                       user,
@@ -415,7 +188,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                         p['status'].add(r.type.class_str() + '-modified')
 
     notes = timdb.notes.get_notes(group, doc)
-    is_owner = timdb.users.user_is_owner(getCurrentUserId(), doc.doc_id)
+    is_owner = timdb.users.user_is_owner(get_current_user_id(), doc.doc_id)
     # Close database here because we won't need it for a while
     timdb.close()
 
@@ -571,8 +344,8 @@ def validate_item(item_name, item_type):
 
     if re.match('^(\d)*$', item_name) is not None:
         abort(400, 'The {} name can not be a number to avoid confusion with document id.'.format(item_type))
-    timdb = getTimDb()
-    username = getCurrentUserName()
+    timdb = get_timdb()
+    username = get_current_user_name()
     if timdb.documents.get_document_id(item_name) is not None or timdb.folders.get_folder_id(item_name) is not None:
         abort(403, 'Item with a same name already exists.')
 
@@ -581,7 +354,7 @@ def validate_item(item_name, item_type):
 
 
 def validate_item_and_create(item_name, item_type, owner_group_id):
-    timdb = getTimDb()
+    timdb = get_timdb()
     validate_item(item_name, item_type)
     item_path, _ = timdb.folders.split_location(item_name)
     timdb.folders.create(item_path, owner_group_id, apply_default_rights=True)
@@ -599,8 +372,8 @@ def get_preferences():
     """
     prefs = {}
     if logged_in():
-        timdb = getTimDb()
-        prefs = timdb.users.get_preferences(getCurrentUserId())
+        timdb = get_timdb()
+        prefs = timdb.users.get_preferences(get_current_user_id())
         prefs = json.loads(prefs) if prefs is not None else {}
     if not prefs:
         prefs['css_files'] = {}
@@ -620,7 +393,7 @@ def get_preferences():
 
 
 def update_preferences(prefs):
-    timdb = getTimDb()
+    timdb = get_timdb()
     css_files = prefs.get('css_files', {})
     existing_css_files = {}
     for k, v in css_files.items():
@@ -628,52 +401,17 @@ def update_preferences(prefs):
         if t.exists() and v:
             existing_css_files[t.filename] = True
     prefs['css_files'] = existing_css_files
-    timdb.users.set_preferences(getCurrentUserId(), json.dumps(prefs))
-
-
-def verify_task_access(doc_id, task_id_name, access_type):
-    # If the user doesn't have access to the document, we need to check if the plugin was referenced
-    # from another document
-    if not verify_access(doc_id, access_type, require=False):
-        orig_doc = (request.get_json() or {}).get('ref_from', {}).get('docId', get_option(request, 'ref_from_doc_id', default=doc_id))
-        verify_access(orig_doc, access_type)
-        par_id = (request.get_json() or {}).get('ref_from', {}).get('par', get_option(request, 'ref_from_par_id', default=None))
-        if par_id is None:
-            abort(403)
-        par = Document(orig_doc).get_paragraph(par_id)
-        if not par.is_reference():
-            abort(403)
-        pars = documentmodel.document.dereference_pars([par])
-        found_par = next((p for p in pars if p.get_attr('taskId') == task_id_name and p.doc.doc_id == doc_id), None)
-        if found_par is None:
-            abort(403)
-        return found_par
+    timdb.users.set_preferences(get_current_user_id(), json.dumps(prefs))
 
 
 def save_last_page():
     session['last_doc'] = request.path
 
 
-def grant_access_to_session_users(timdb: TimDb, block_id: int):
-    for u in get_other_users_as_list():
-        timdb.users.grant_access(timdb.users.get_personal_usergroup_by_id(u['id']),
-                                 block_id,
-                                 'manage',
-                                 commit=False)
-    db.session.commit()
-
-
 def is_considered_unpublished(doc_id):
-    timdb = getTimDb()
+    timdb = get_timdb()
     owner = timdb.users.get_owner_group(doc_id)
     return has_ownership(doc_id) and not owner.is_large() and len(timdb.users.get_rights_holders(doc_id)) == 0
-
-
-def get_viewable_blocks():
-    if not hasattr(g, 'viewable'):
-        timdb = getTimDb()
-        g.viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
-    return g.viewable
 
 
 def validate_uploaded_document_content(file_content):

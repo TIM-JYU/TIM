@@ -5,7 +5,7 @@ from timdb.tim_models import db
 from timdb.blocktypes import blocktypes
 from timdb.dbutils import insert_block
 from timdb.timdbexception import TimDbException
-from utils import split_location
+from utils import split_location, date_to_relative
 
 
 class DocEntry(db.Model):
@@ -15,20 +15,22 @@ class DocEntry(db.Model):
     id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
     public = db.Column(db.Boolean, nullable=False, default=True)
 
-    document = None  # type: Document
+    block = db.relationship('Block', backref=db.backref('docentries', lazy='dynamic'))
+
+    def __getattr__(self, item):
+        if item == 'document':
+            self.document = Document(self.id)
+            return self.document
+        raise AttributeError
 
     @staticmethod
     def find_by_id(doc_id: int) -> Optional['DocEntry']:
         d = DocEntry.query.filter_by(id=doc_id).first()
-        if d is not None:
-            d.document = Document(d.id)
         return d
 
     @staticmethod
     def find_by_path(path: str) -> Optional['DocEntry']:
         d = DocEntry.query.get(path)
-        if d is not None:
-            d.document = Document(d.id)
         return d
 
     @staticmethod
@@ -49,7 +51,6 @@ class DocEntry(db.Model):
         document.create()
 
         docentry = DocEntry(id=document_id, name=name, public=True)
-        docentry.document = document
         if name is not None:
             db.session.add(docentry)
         db.session.commit()
@@ -66,3 +67,21 @@ class DocEntry(db.Model):
 
     def get_path(self):
         return self.name
+
+    def get_title(self) -> str:
+        return self.block.description
+
+    def get_last_modified(self):
+        return self.document.get_last_modified()
+
+    def to_json(self):
+        from routes.accesshelper import get_rights
+        return {'name': self.get_short_name(),
+                'fullname': self.get_path(),
+                'id': self.id,
+                'modified': date_to_relative(self.get_last_modified()),
+                'isFolder': False,
+                'owner': self.block.owner,
+                'rights': get_rights(self.id),
+                'unpublished': self.block.is_unpublished()
+                }

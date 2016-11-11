@@ -225,3 +225,7 @@ def split_location(path: str) -> Tuple[str, str]:
 
 def join_location(location: str, name: str) -> str:
     return name if location == '' else location + '/' + name
+
+
+def get_sql_template(value_list: List) -> str:
+    return ','.join(['%s'] * len(value_list))

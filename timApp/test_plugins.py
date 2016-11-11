@@ -10,7 +10,7 @@ from flask import session
 from lxml import html
 
 from plugin import Plugin
-from routes.common import get_current_user_object
+from routes.sessioninfo import get_current_user_object
 from timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME
 from timroutetest import TimRouteTest
 

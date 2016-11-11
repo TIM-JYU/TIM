@@ -1,7 +1,9 @@
 from flask import Blueprint
 from flask import g
 
-from routes.common import verifyLoggedIn, jsonResponse, verify_json_params, get_current_user_object
+from routes.accesshelper import verify_logged_in
+from routes.common import jsonResponse, verify_json_params
+from routes.sessioninfo import get_current_user_object
 from timdb.bookmarks import Bookmarks
 from timdb.models.docentry import DocEntry
 
@@ -12,7 +14,7 @@ bookmarks = Blueprint('bookmarks',
 
 @bookmarks.before_request
 def verify_login():
-    verifyLoggedIn()
+    verify_logged_in()
     g.bookmarks = Bookmarks(get_current_user_object())
 
 

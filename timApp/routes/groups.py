@@ -1,6 +1,8 @@
 from flask import Blueprint, abort
 
-from routes.common import verify_admin, getTimDb, jsonResponse, okJsonResponse
+from routes.common import jsonResponse, okJsonResponse
+from routes.dbaccess import get_timdb
+from routes.accesshelper import verify_admin
 from timdb.special_group_names import SPECIAL_GROUPS
 
 groups = Blueprint('groups',
@@ -9,7 +11,7 @@ groups = Blueprint('groups',
 
 
 def get_uid_gid(groupname, usernames):
-    timdb = getTimDb()
+    timdb = get_timdb()
 
     uids = [timdb.users.get_user_id_by_name(u) for u in usernames]
     gid = timdb.users.get_usergroup_by_name(groupname)
@@ -21,7 +23,7 @@ def get_uid_gid(groupname, usernames):
 @groups.route('/show/<groupname>')
 def show_members(groupname):
     verify_admin()
-    timdb = getTimDb()
+    timdb = get_timdb()
     if not timdb.users.group_exists(groupname):
         abort(404, 'Usergroup does not exist.')
     members = timdb.users.get_users_for_group(groupname, order=True)
@@ -46,7 +48,7 @@ def create_group(groupname):
      2. lowercase ASCII strings (Korppi users) with length being in range [2,8].
     """
     verify_admin()
-    timdb = getTimDb()
+    timdb = get_timdb()
     if timdb.users.group_exists(groupname):
         abort(400, 'Usergroup already exists.')
     has_digits = False
@@ -67,7 +69,7 @@ def add_member(usernames, groupname):
     verify_admin()
     if groupname in SPECIAL_GROUPS:
         abort(400, 'Cannot add members to special groups.')
-    timdb = getTimDb()
+    timdb = get_timdb()
     usernames = get_usernames(usernames)
     gid, uids = get_uid_gid(groupname, usernames)
     users = timdb.users.get_users_for_group(groupname)
@@ -93,7 +95,7 @@ def remove_member(usernames, groupname):
     verify_admin()
     if groupname in SPECIAL_GROUPS:
         abort(400, 'Cannot remove members from special groups.')
-    timdb = getTimDb()
+    timdb = get_timdb()
     usernames = get_usernames(usernames)
     gid, uids = get_uid_gid(groupname, usernames)
     removed = []

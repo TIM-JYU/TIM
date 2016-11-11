@@ -5,14 +5,16 @@ from typing import Tuple, Union, Optional
 
 from flask import Blueprint, render_template
 
-from documentmodel.docsettings import DocSettings
-from routes.logger import log_error
-from timdb.timdbexception import TimDbException
-from utils import date_to_relative
 import routes.lecture
+from documentmodel.docsettings import DocSettings
 from documentmodel.document import get_index_from_html_list, dereference_pars
 from htmlSanitize import sanitize_html
-from options import *
+from options import get_option
+from routes.accesshelper import has_edit_access, verify_view_access, verify_teacher_access, verify_seeanswers_access, \
+    has_view_access, get_rights, get_viewable_blocks
+from routes.logger import log_error
+from routes.sessioninfo import get_current_user_object
+from timdb.timdbexception import TimDbException
 from .common import *
 
 Range = Tuple[int, int]
@@ -96,7 +98,7 @@ def slide_document(doc_name):
 
 @view_page.route("/par_info/<int:doc_id>/<par_id>")
 def par_info(doc_id, par_id):
-    timdb = getTimDb()
+    timdb = get_timdb()
     info = {}
 
     def just_name(fullpath):
@@ -142,9 +144,9 @@ def parse_range(start_index: Union[int, str, None], end_index: Union[int, str, N
 
 
 def try_return_folder(doc_name):
-    timdb = getTimDb()
-    user = getCurrentUserId()
-    user_name = getCurrentUserName()
+    timdb = get_timdb()
+    user = get_current_user_id()
+    user_name = get_current_user_name()
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
     if is_in_lecture:
         is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
@@ -157,7 +159,7 @@ def try_return_folder(doc_name):
     if block_id is None and item_name == 'users/' + user_name:
         # This is the user's personal folder and it doesn't exist yet.
         # Create it
-        block_id = timdb.folders.create('users/' + user_name, getCurrentUserGroup())
+        block_id = timdb.folders.create('users/' + user_name, get_current_user_group())
 
     elif block_id is None:
         while (block_id is None):
@@ -173,14 +175,14 @@ def try_return_folder(doc_name):
         rights = can_write_to_folder(item_name) and timdb.folders.get_folder_id(item_name) is not None
 
         return render_template('create_new.html',
-                           userName=getCurrentUserName(),
-                           userId=user,
-                           rights=rights,
-                           in_lecture=is_in_lecture,
-                           settings=settings,
-                           newItem=doc_name,
-                           foundItem=foundItem,
-                           doc={'id': -1, 'fullname': ''}), 404
+                               userName=get_current_user_name(),
+                               userId=user,
+                               rights=rights,
+                               in_lecture=is_in_lecture,
+                               settings=settings,
+                               newItem=doc_name,
+                               foundItem=foundItem,
+                               doc={'id': -1, 'fullname': ''}), 404
 
     doc = timdb.folders.get(block_id)
     return render_template('index.html',
@@ -205,7 +207,7 @@ def show_time(s):
 def view(doc_path, template_name, usergroup=None, route="view"):
     save_last_page()
 
-    timdb = getTimDb()
+    timdb = get_timdb()
     doc_info = timdb.documents.resolve_doc_id_name(doc_path)
 
     if doc_info is None:
@@ -344,7 +346,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     if hide_names_in_teacher(doc_id):
         for user in user_list:
             if not timdb.users.user_is_owner(user['id'], doc_id)\
-               and user['id'] != getCurrentUserId():
+               and user['id'] != get_current_user_id():
                 user['name'] = '-'
                 user['real_name'] = 'Someone {}'.format(user['id'])
                 user['email'] = 'someone_{}@example.com'.format(user['id'])
@@ -394,25 +396,15 @@ def redirect_to_login():
 
 
 def get_items(folder: str):
-    timdb = getTimDb()
+    timdb = get_timdb()
     docs = timdb.documents.get_documents(filter_ids=get_viewable_blocks(),
                                          search_recursively=False,
                                          filter_folder=folder)
-    docs.sort(key=lambda d: d['name'].lower())
+    docs.sort(key=lambda d: d.get_short_name().lower())
     folders = timdb.folders.get_folders(root_path=folder,
                                         filter_ids=get_viewable_blocks())
-    folders.sort(key=lambda d: d['name'].lower())
-    for f in folders:
-        f['isFolder'] = True
+    folders.sort(key=lambda d: d.name.lower())
     items = folders + docs
-    uid = getCurrentUserId()
-    for item in items:
-        item['isFolder'] = item.get('isFolder', False)
-        item['canEdit'] = timdb.users.has_edit_access(uid, item['id'])
-        item['isOwner'] = timdb.users.user_is_owner(uid, item['id'])
-        item['owner'] = timdb.users.get_owner_group(item['id'])
-        item['modified'] = date_to_relative(item.get('modified'))
-        item['unpublished'] = is_considered_unpublished(item['id'])
     return items
 
 

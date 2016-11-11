@@ -53,9 +53,9 @@
                     <td>{{ '{{ item.modified }}' }}</td>
                     <td>{{ '{{ item.owner.name }}' }}</td>
                     <td>
-                        <a title="Edit" ng-show="item.canEdit && !item.isFolder" href="/view/{{ '{{ item.id }}' }}"><i class="glyphicon glyphicon-pencil"></i></a>
-                        <a title="Manage" ng-show="item.isOwner" href="/manage/{{ '{{ item.id }}' }}"><i class="glyphicon glyphicon-cog"></i></a>
-                        <a title="Teacher" ng-show="item.isOwner && !item.isFolder" href="/teacher/{{ '{{ item.fullname | escape }}' }}"><i class="glyphicon glyphicon-education"></i></a>
+                        <a title="Edit" ng-show="item.rights.editable && !item.isFolder" href="/view/{{ '{{ item.id }}' }}"><i class="glyphicon glyphicon-pencil"></i></a>
+                        <a title="Manage" ng-show="item.rights.manage" href="/manage/{{ '{{ item.id }}' }}"><i class="glyphicon glyphicon-cog"></i></a>
+                        <a title="Teacher" ng-show="item.rights.teacher && !item.isFolder" href="/teacher/{{ '{{ item.fullname | escape }}' }}"><i class="glyphicon glyphicon-education"></i></a>
                     </td>
                 </tr>
             </table>
