@@ -10,8 +10,8 @@ from flask import session
 from lxml import html
 
 from plugin import Plugin
-from routes.common import get_current_user_object
-from timdbtest import TEST_USER_1_ID, TEST_USER_2_ID
+from routes.sessioninfo import get_current_user_object
+from timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME
 from timroutetest import TimRouteTest
 
 
@@ -85,22 +85,22 @@ class PluginTest(TimRouteTest):
         self.maxDiff = None
 
         self.assertListEqual(
-            [{'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+            [{'collaborators': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
               'content': '[true, false, true]',
               'points': 9.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+             {'collaborators': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
               'content': '[false, false, true]',
               'points': None, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+             {'collaborators': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
               'content': '[true, true, true]',
               'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+             {'collaborators': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
               'content': '[true, false, false]',
               'points': 2.0, 'task_id': task_id, 'valid': False, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+             {'collaborators': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
               'content': '[true, true, false]',
               'points': 1.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+             {'collaborators': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
               'content': '[true, false, false]',
               'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None}],
             [{k: v for k, v in ans.items() if k not in ('answered_on', 'id')} for ans in answer_list])
@@ -296,14 +296,14 @@ class PluginTest(TimRouteTest):
         mimetype, ur, user_input = self.do_plugin_upload(doc, file_content, filename, task_id, task_name)
         answer_list = self.get_task_answers(task_id)
         self.assertEqual(1, len(answer_list))
-        self.assertListEqual([{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID},
+        self.assertListEqual([{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID},
                               {'real_name': 'Test user 2', 'email': 'test2@example.com', 'user_id': TEST_USER_2_ID}],
                              answer_list[0]['collaborators'])
         self.assertEqual(file_content, self.get(ur['file'], expect_status=200))
         self.login_test2()
         answer_list = self.get_task_answers(task_id)
         self.assertEqual(1, len(answer_list))
-        self.assertListEqual([{'real_name': 'Test user 1', 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID},
+        self.assertListEqual([{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID},
                               {'real_name': 'Test user 2', 'email': 'test2@example.com', 'user_id': TEST_USER_2_ID}],
                              answer_list[0]['collaborators'])
         self.assertEqual(file_content, self.get(ur['file'], expect_status=200))
@@ -349,7 +349,7 @@ class PluginTest(TimRouteTest):
 ----------------------------------------------------------------------------------
 {6}; {4}; {2}; {0}; 1; 2\.0
 \[False, False\]
-""".format(date_re, re.escape(task_id), re.escape(task_id2), 'testuser1', 'testuser2', 'Test user 1',
+""".format(date_re, re.escape(task_id), re.escape(task_id2), 'testuser1', 'testuser2', TEST_USER_1_NAME,
            'Test user 2').strip())
         text = self.get('/allAnswersPlain/{}'.format(task_id), expect_status=200)
         self.assertRegex(text, r"""
@@ -359,7 +359,7 @@ class PluginTest(TimRouteTest):
 ----------------------------------------------------------------------------------
 {5}; {3}; {1}; {0}; 1; 2\.0
 \[True, True, True\]
-        """.format(date_re, re.escape(task_id), 'testuser1', 'testuser2', 'Test user 1', 'Test user 2').strip())
+        """.format(date_re, re.escape(task_id), 'testuser1', 'testuser2', TEST_USER_1_NAME, 'Test user 2').strip())
 
     def test_save_points(self):
         cannot_give_custom = {'error': 'You cannot give yourself custom points in this task.'}
@@ -475,7 +475,7 @@ class PluginTest(TimRouteTest):
                                    'groups': pts,
                                    'id': 4,
                                    'name': 'testuser1',
-                                   'real_name': 'Test user 1',
+                                   'real_name': TEST_USER_1_NAME,
                                    'task_count': 3,
                                    'total_points': sum1},
                                   {'email': 'test2@example.com',

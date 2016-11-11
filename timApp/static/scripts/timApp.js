@@ -5,6 +5,7 @@ var angular, folder, crumbs, groups;
 timApp.controller("IndexCtrl", [ '$scope', '$controller', '$http', '$q', 'Upload', '$window', '$timeout',
 
 function(sc, controller, http, q, Upload, $window, $timeout) {
+    "use strict";
     sc.endsWith = function(str, suffix) {
         return str.indexOf(suffix, str.length - suffix.length) !== -1;
     };
@@ -93,6 +94,7 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
     };
 
     sc.crumbs = crumbs;
+    sc.user = $window.current_user;
     sc.folderOwner = $window.current_user.name;
 	sc.parentfolder = "";
     sc.initFolderVars();
@@ -130,7 +132,7 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
 
             file.upload.finally(function () {
                 sc.uploadInProgress = false;
-            })
+            });
         }
     };
 

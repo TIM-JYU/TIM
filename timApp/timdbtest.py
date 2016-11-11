@@ -53,3 +53,6 @@ class TimDbTest(unittest.TestCase):
 TEST_USER_1_ID = 4
 TEST_USER_2_ID = 5
 TEST_USER_3_ID = 6
+
+TEST_USER_1_NAME = 'Test user 1'
+TEST_USER_2_NAME = 'Test user 2'

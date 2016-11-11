@@ -118,11 +118,11 @@
         <button class="timButton" title="Change editor between Ace and normal textarea" ng-click="changeEditor()">Editor</button>
         <button class="timButton" ng-show="fullscreenSupported()" ng-click="goFullScreen()">Fullscreen</button>
         </span>
-        <button class="timButton savePar" ng-disabled="saving" title="Save (Ctrl-S)" ng-click="saveClicked()">Save</button>
-        <button class="timButton cancelPar" ng-disabled="saving" ng-click="cancelClicked()">Cancel</button>
+        <button class="timButton" ng-disabled="saving" title="Save (Ctrl-S)" ng-click="saveClicked()">Save</button>
+        <button class="timButton" ng-disabled="saving" ng-click="cancelClicked()">Cancel</button>
         <button class="timButton" ng-disabled="saving" ng-show="showUnread()" ng-click="unreadClicked()">Mark as unread</button>
         <span ng-show="proeditor">
-        <button class="timButton deletePar" ng-disabled="saving" ng-show="options.showDelete" ng-click="deleteClicked()">Delete</button>
+        <button class="btn btn-danger" ng-disabled="saving" ng-show="options.showDelete" ng-click="deleteClicked()">Delete</button>
         </span>
     </div>
     <div class="editortags">
@@ -140,7 +140,7 @@
     </div>
     </div>
     <div class="editoropts">
-        <label ><input type="checkbox" ng-model="proeditor"/> Advanced view</label>
+        <label><input type="checkbox" ng-model="proeditor"/> Advanced view</label>
     </div>
     <div id="previewDiv" tim-draggable-fixed="" caption="Preview" class="preview" ng-show="proeditor"
          style='z-index:100; top: 0px; right: 0px;'>

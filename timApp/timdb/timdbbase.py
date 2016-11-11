@@ -7,8 +7,7 @@ from typing import Optional, Tuple
 from psycopg2._psycopg import connection
 from sqlalchemy.orm import scoped_session
 
-from timdb.dbutils import get_sql_template
-from utils import split_location, join_location
+from utils import split_location, join_location, get_sql_template
 
 
 class TimDbBase(object):
@@ -76,7 +75,7 @@ class TimDbBase(object):
         result = cursor.fetchone()
         return result[0] if result is not None else None
 
-    def setOwner(self, block_id: int, usergroup_id: int):
+    def set_owner(self, block_id: int, usergroup_id: int):
         """Changes the owner group for a block.
 
         :param block_id: The id of the block.

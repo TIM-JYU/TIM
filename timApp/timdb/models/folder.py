@@ -18,6 +18,8 @@ class Folder(db.Model):
     name = db.Column(db.Text, nullable=False)
     location = db.Column(db.Text, nullable=False)
 
+    block = db.relationship('Block', backref=db.backref('folder', lazy='dynamic'))
+
     @staticmethod
     def get_root() -> 'Folder':
         return Folder(id=ROOT_FOLDER_ID, name='', location='')
@@ -102,3 +104,15 @@ class Folder(db.Model):
             db.session.commit()
 
         return f
+
+    def to_json(self):
+        from routes.accesshelper import get_rights
+        return {'id': self.id,
+                'name': self.name,
+                'fullname': self.get_full_path(),
+                'isFolder': True,
+                'modified': None,  # this is not tracked yet for folders
+                'owner': self.block.owner,
+                'rights': get_rights(self.id),
+                'unpublished': self.block.is_unpublished()
+                }

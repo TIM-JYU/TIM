@@ -8,9 +8,21 @@ PermApp.controller("PermCtrl", [
     '$window',
     '$timeout',
     '$compile',
-    function (sc, $http, Upload, $window, $timeout, $compile) {
+    '$log',
+    function (sc, $http, Upload, $window, $timeout, $compile, $log) {
         "use strict";
         sc.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/"; // Todo: replace something remembers users last choice
+
+
+        sc.showMoreChangelog = function () {
+            var newLength = sc.doc.versions.length + 100;
+            $http.get('/changelog/' + sc.doc.id + '/' + (newLength)).then(function (response) {
+                sc.doc.versions = response.data.versions;
+                sc.hasMoreChangelog = sc.doc.versions.length === newLength;
+            }, function (response) {
+                $log.error('Failed to get more changelog.');
+            });
+        };
 
         sc.getJustDocName = function(fullName) {
             var i = fullName.lastIndexOf('/');
@@ -26,14 +38,14 @@ PermApp.controller("PermCtrl", [
             $http.get('/alias/' + sc.doc.id, {
             }).success(function (data, status, headers, config) {
                 if (sc.aliases.length > 0 &&
-                    (data.length == 0 || data[0].fullname != sc.aliases[0].fullname))
+                    (data.length === 0 || data[0].fullname !== sc.aliases[0].fullname))
                         // The first name has changed, reload to update the links
                         location.reload();
                 else
                     sc.aliases = data;
 
             }).error(function (data, status, headers, config) {
-                alert("Error loading aliases: " + data.error);
+                $window.alert("Error loading aliases: " + data.error);
             });
 
             return [];
@@ -51,7 +63,7 @@ PermApp.controller("PermCtrl", [
                 for (var i = 0; i < data.length; i++) {
                     var tr = data[i];
 
-                    if (tr.id == sc.doc.id) {
+                    if (tr.id === sc.doc.id) {
                         sc.lang_id = tr.lang_id;
                     }
                     else {
@@ -62,18 +74,18 @@ PermApp.controller("PermCtrl", [
                     }
                 }
 
-                sc.old_title = doc.title;
+                sc.old_title = sc.doc.title;
                 sc.old_langid = sc.lang_id;
 
             }).error(function (data, status, headers, config) {
-                alert("Error loading translations: " + data.error);
+                $window.alert("Error loading translations: " + data.error);
             });
 
             return [];
         };
 
         sc.metaChanged = function() {
-            return doc.title != sc.old_title || sc.lang_id != sc.old_langid;
+            return sc.doc.title !== sc.old_title || sc.lang_id !== sc.old_langid;
         };
 
         sc.updateMetadata = function() {
@@ -82,18 +94,18 @@ PermApp.controller("PermCtrl", [
                 'new_title': sc.doc.title,
                 'old_title': sc.old_title
             }).success(function (data, status, headers, config) {
-                if (sc.doc.title == sc.old_title)
+                if (sc.doc.title === sc.old_title)
                     sc.getTranslations();
                 else
                     location.replace('/manage/' + sc.doc.title);
 
             }).error(function (data, status, headers, config) {
-                alert(data.error);
+                $window.alert(data.error);
             });
         };
 
         sc.trChanged = function(tr) {
-            return tr.title != tr.old_title || tr.lang_id != tr.old_langid;
+            return tr.title !== tr.old_title || tr.lang_id !== tr.old_langid;
         };
 
         sc.updateTranslation = function(tr) {
@@ -104,7 +116,7 @@ PermApp.controller("PermCtrl", [
             }).success(function (data, status, headers, config) {
                 sc.getTranslations();
             }).error(function (data, status, headers, config) {
-                alert(data.error);
+                $window.alert(data.error);
             });
         };
 
@@ -114,7 +126,7 @@ PermApp.controller("PermCtrl", [
                 function (data, status, headers, config) {
                      sc.doc.owner.name = sc.newOwner;
                 }).error(function (data, status, headers, config) {
-                    alert(data.error);
+                    $window.alert(data.error);
                 }).finally(function () {
                     sc.ownerUpdating = false;
                 });
@@ -130,7 +142,7 @@ PermApp.controller("PermCtrl", [
                 //sc.doc.name = newName;
                 //sc.oldName = newName;
             }).error(function (data, status, headers, config) {
-                alert(data.error);
+                $window.alert(data.error);
             });
         };
 
@@ -144,12 +156,12 @@ PermApp.controller("PermCtrl", [
                 //sc.doc.location = newLocation;
                 //sc.oldFolderName = newLocation;
             }).error(function (data, status, headers, config) {
-                alert(data.error);
+                $window.alert(data.error);
             });
         };
 
         sc.combine = function(folder, name) {
-            return (folder + '/' + name).replace(/(^\/+)|(\/+$)/, '')
+            return (folder + '/' + name).replace(/(^\/+)|(\/+$)/, '');
         };
 
         sc.aliasPublicClicked = function(alias) {
@@ -158,7 +170,7 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.aliasChanged = function(alias) {
-            return alias.publicChanged || alias.fullname != sc.combine(alias.location, alias.name);
+            return alias.publicChanged || alias.fullname !== sc.combine(alias.location, alias.name);
         };
 
         sc.addAlias = function(newAlias) {
@@ -167,7 +179,7 @@ PermApp.controller("PermCtrl", [
             }).success(function (data, status, headers, config) {
                 sc.getAliases();
             }).error(function (data, status, headers, config) {
-                alert(data.error);
+                $window.alert(data.error);
             });
 
             sc.newAlias = {location: sc.oldFolderName};
@@ -178,7 +190,7 @@ PermApp.controller("PermCtrl", [
             }).success(function (data, status, headers, config) {
                 sc.getAliases();
             }).error(function (data, status, headers, config) {
-                alert(data.error);
+                $window.alert(data.error);
             });
         };
 
@@ -189,34 +201,34 @@ PermApp.controller("PermCtrl", [
                 'new_name': new_alias
             }).success(function (data, status, headers, config) {
 
-                if (!first || new_alias == alias.fullname)
+                if (!first || new_alias === alias.fullname)
                     sc.getAliases();
                 else
                     location.replace('/manage/' + new_alias);
 
             }).error(function (data, status, headers, config) {
-                alert(data.error);
+                $window.alert(data.error);
             });
         };
 
         sc.deleteDocument = function (docId) {
-            if (confirm('Are you sure you want to delete this document?')) {
+            if ($window.confirm('Are you sure you want to delete this document?')) {
                 $http.delete('/documents/' + docId)
                     .success(function (data, status, headers, config) {
                         location.replace('/view/');
                     }).error(function (data, status, headers, config) {
-                        alert(data.error);
+                        $window.alert(data.error);
                     });
             }
         };
 
         sc.deleteFolder = function (folderId) {
-            if (confirm('Are you sure you want to delete this folder?')) {
+            if ($window.confirm('Are you sure you want to delete this folder?')) {
                 $http.delete('/folders/' + folderId)
                     .success(function (data, status, headers, config) {
                         location.replace('/view/');
                     }).error(function (data, status, headers, config) {
-                        alert(data.error);
+                        $window.alert(data.error);
                     });
             }
         };
@@ -400,7 +412,7 @@ text = '\n'.join(a)
                     text: "!",
                     title: "There are answers related to this task. Those answers might be lost upon renaming this task."
                 });
-                if (data.duplicates[i][2] != 'hasAnswers') {
+                if (data.duplicates[i][2] !== 'hasAnswers') {
                     $warningSpan.css('visibility', 'hidden');
                 }
                 span.append($warningSpan);
@@ -469,12 +481,12 @@ text = '\n'.join(a)
                 }).error(function (data, status, headers, config) {
                     sc.saving = false;
                     if ('is_warning' in data && data.is_warning) {
-                        if ( confirm(data.error + "\n\nDo you still wish to save the document?") ) {
+                        if ( $window.confirm(data.error + "\n\nDo you still wish to save the document?") ) {
                             sc.saveDocumentWithWarnings();
                         }
                     }
                     else {
-                        alert(data.error);
+                        $window.alert(data.error);
                     }
                 });
         };
@@ -493,7 +505,7 @@ text = '\n'.join(a)
                     sc.doc.fulltext = sc.fulltext;
                     sc.doc.versions = data.versions;
                 }).error(function (data, status, headers, config) {
-                    alert(data.error);
+                    $window.alert(data.error);
                 }).finally(function () {
                     sc.saving = false;
                 });
@@ -512,7 +524,7 @@ text = '\n'.join(a)
         };
 
         sc.toggleDiv = function(divName) {
-            if (sc.showCreateDiv == divName)
+            if (sc.showCreateDiv === divName)
                 sc.showCreateDiv = "";
             else
                 sc.showCreateDiv = divName;
@@ -540,7 +552,7 @@ text = '\n'.join(a)
 
         sc.createCopy = function() {
             var docPath = "";
-            if (sc.documentPath == "")
+            if (sc.documentPath === "")
             {
                 docPath = sc.documentName;
             }
@@ -591,9 +603,10 @@ text = '\n'.join(a)
             });
         };
 
-        sc.accessTypes = accessTypes;
-        sc.doc = doc;
-        sc.isFolder = isFolder;
+        sc.accessTypes = $window.accessTypes;
+        sc.doc = $window.doc;
+        sc.isFolder = $window.isFolder;
+        sc.hasMoreChangelog = true;
 
         var docPath = $window.doc.fullname.split("/");
         docPath.pop();
@@ -601,21 +614,21 @@ text = '\n'.join(a)
         sc.documentName = $window.doc.name;
 
         //sc.newName = sc.getJustDocName(doc.name);
-        sc.newFolderName = sc.getFolderName(doc.fullname);
+        sc.newFolderName = sc.getFolderName(sc.doc.fullname);
         //sc.oldName = sc.newName;
         //sc.oldFolderName = sc.newFolderName;
         sc.newAlias = {location: sc.newFolderName};
         sc.newOwner = sc.doc.owner.name;
-        doc.fulltext = doc.fulltext.trim();
-        sc.fulltext = doc.fulltext;
+        sc.doc.fulltext = sc.doc.fulltext.trim();
+        sc.fulltext = sc.doc.fulltext;
         sc.aliases = sc.getAliases();
         sc.translations = sc.getTranslations();
         sc.showCreateDiv = "";
         sc.getNotifySettings();
 
-        if (isFolder) {
-            sc.newName = doc.name;
-            sc.newFolderName = doc.location;
+        if (sc.isFolder) {
+            sc.newName = sc.doc.name;
+            sc.newFolderName = sc.doc.location;
             sc.oldName = sc.newName;
             sc.oldFolderName = sc.newFolderName;
         }

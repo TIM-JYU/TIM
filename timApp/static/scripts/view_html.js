@@ -3,6 +3,9 @@ var katex, $, angular, MathJax, timLogTime;
 var timApp = angular.module('timApp').config(['$httpProvider', function ($httpProvider) {
     "use strict";
     timLogTime("timApp config","view");
+    function escapeId(id) {
+        return "#" + id.replace(/(:|\.|\[|\]|,|=)/g, "\\$1");
+    }
     var interceptor = [
         '$q',
         '$rootScope',
@@ -17,7 +20,6 @@ var timApp = angular.module('timApp').config(['$httpProvider', function ($httpPr
                         var parts = taskIdFull.split('.');
                         var docId = parseInt(parts[0], 10);
                         var taskName = parts[1];
-                        var parId = parts[2];
                         var taskId = docId + '.' + taskName;
                         if (taskName !== '') {
                             var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
@@ -26,7 +28,8 @@ var timApp = angular.module('timApp').config(['$httpProvider', function ($httpPr
                                 angular.extend(config.data, {abData: browserScope.getBrowserData()});
                             }
                         }
-                        angular.extend(config.data, {ref_from: {docId: docId, par: parId}});
+                        var par = angular.element(escapeId(taskIdFull)).parents('.par');
+                        angular.extend(config.data, {ref_from: {docId: $window.docId, par: par.attr('id')}});
                     }
                     return config;
                 },
@@ -38,10 +41,7 @@ var timApp = angular.module('timApp').config(['$httpProvider', function ($httpPr
                         var docId = parseInt(parts[0], 10);
                         var taskName = parts[1];
                         var taskId = docId + '.' + taskName;
-                        $rootScope.$broadcast('answerSaved', {taskId: taskId, savedNew: response.data.savedNew});
-                        if (response.data.error) {
-                            $window.alert(response.data.error);
-                        }
+                        $rootScope.$broadcast('answerSaved', {taskId: taskId, savedNew: response.data.savedNew, error: response.data.error});
                     }
                     return response;
                 }
@@ -1738,16 +1738,19 @@ timApp.controller("ViewCtrl", [
                 else if ($child.hasClass('par')) {
                     var attrs = sc.getParAttributes($child);
                     var refAttrs = sc.getRefAttrs($child)['ref-attrs'];
-                    if ($child.children('.parContent').children('h1, h2, h3').length > 0) {
-                        if ($currentSectionPars.length > 0) {
-                            var parId = sc.getParId($currentSectionPars.last());
-                            sections[parId] = $currentSectionPars;
+                    var content = $child.children('.parContent');
+                    if (content.is(':visible')) {
+                        if (content.children('h1, h2, h3').length > 0) {
+                            if ($currentSectionPars.length > 0) {
+                                var parId = sc.getParId($currentSectionPars.last());
+                                sections[parId] = $currentSectionPars;
+                            }
+                            $currentSectionPars = $child;
+                        } else if (!attrs.hasOwnProperty('settings') && !attrs.hasOwnProperty('area') &&
+                            !attrs.hasOwnProperty('area_end') && !refAttrs.hasOwnProperty('area') &&
+                            !refAttrs.hasOwnProperty('area_end')) {
+                            $currentSectionPars = $currentSectionPars.add($child);
                         }
-                        $currentSectionPars = $child;
-                    } else if (!attrs.hasOwnProperty('settings') && !attrs.hasOwnProperty('area') &&
-                        !attrs.hasOwnProperty('area_end') && !refAttrs.hasOwnProperty('area') &&
-                        !refAttrs.hasOwnProperty('area_end')) {
-                        $currentSectionPars = $currentSectionPars.add($child);
                     }
                 }
                 else if ($child.hasClass('addBottomContainer')) {
@@ -2468,6 +2471,16 @@ timApp.controller("ViewCtrl", [
                 indexHeadings.children('.sub').attr('class', 'subexp');
             }
         });
+
+        if (Users.isLoggedIn()) {
+            $timeout(function () {
+                http.post('/bookmarks/markLastRead/' + sc.docId, {}).then(function () {
+                    // all ok
+                }, function () {
+                    $log.error('Failed to mark document as last read');
+                });
+            }, 10000);
+        }
 
         sc.addParagraphFunctions = sc.getAddParagraphFunctions();
         sc.pasteFunctions = sc.getPasteFunctions();

@@ -2,9 +2,10 @@
 import json
 import re
 from collections import defaultdict, OrderedDict
+from datetime import datetime
 from typing import List, Optional, Dict
 
-from timdb.dbutils import get_sql_template
+from utils import get_sql_template
 from timdb.tim_models import Answer, UserAnswer, AnswerTag
 from timdb.timdbbase import TimDbBase
 
@@ -120,9 +121,14 @@ class Answers(TimDbBase):
                         age: str,
                         valid: str,
                         printname:bool,
-                        sort: str) -> List[str]:
-        """Gets the all answers to tasks
+                        sort: str,
+                        print_opt: str,
+                        period_from: datetime,
+                        period_to: datetime) -> List[str]:
+        """Gets all answers to the specified tasks.
 
+        :param period_from: The minimum answering time for answers.
+        :param period_to: The maximum answering time for answers.
         :param sort: Sorting order for answers.
         :param task_ids: The ids of the tasks.
         :param usergroup: Group of users to search
@@ -130,10 +136,12 @@ class Answers(TimDbBase):
         :param age: min, max or all
         :param valid: 0, 1 or all
         :param printname: True = put user full name as first in every task
+        :param print_opt: all = header and answers, header=only header, answers=only answers
         """
-        time_limit = "1900-09-12 22:00:00"
         counts =  "count(a.answered_on)"
         groups = "group by a.task_id, u.id"
+        print_header = print_opt == "all" or print_opt == "header"
+        print_answers = print_opt == "all" or print_opt == "answers"
 
         minmax = "max"
         if age == "min":
@@ -159,7 +167,7 @@ SELECT DISTINCT u.name, a.task_id, a.content, a.answered_on, n, a.points, u.real
 FROM
 (SELECT {} (a.id) AS id, {} as n
 FROM answer AS a, userAnswer AS ua, useraccount AS u
-WHERE a.task_id IN ({}) AND ua.answer_id = a.id AND u.id = ua.user_id AND a.answered_on > %s
+WHERE a.task_id IN ({}) AND ua.answer_id = a.id AND u.id = ua.user_id AND a.answered_on >= %s AND a.answered_on < %s
 {}
 {}
 ) t
@@ -167,7 +175,7 @@ JOIN answer a ON a.id = t.id JOIN useranswer ua ON ua.answer_id = a.id JOIN user
 ORDER BY {}, a.answered_on
         """
         sql = sql.format(minmax, counts, get_sql_template(task_ids), validstr, groups, order_by)
-        c.execute(sql, task_ids + [time_limit])
+        c.execute(sql, task_ids + [period_from, period_to])
 
         result = []
 
@@ -186,8 +194,11 @@ ORDER BY {}, a.answered_on
             if isinstance(line, dict) and "usercode" in line:
                 answ = line.get("usercode", "-")
 
+            res = ""
             if printname and not hide_names: header = str(row[6]) + "; " + header
-            result.append(header + "\n" + answ)
+            if print_header: res = header
+            if print_answers: res += "\n" + answ
+            result.append(res)
         return result
 
 

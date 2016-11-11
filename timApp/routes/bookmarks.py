@@ -1,8 +1,11 @@
 from flask import Blueprint
 from flask import g
 
-from routes.common import verifyLoggedIn, jsonResponse, verify_json_params, get_current_user_object
+from routes.accesshelper import verify_logged_in
+from routes.common import jsonResponse, verify_json_params
+from routes.sessioninfo import get_current_user_object
 from timdb.bookmarks import Bookmarks
+from timdb.models.docentry import DocEntry
 
 bookmarks = Blueprint('bookmarks',
                       __name__,
@@ -11,7 +14,7 @@ bookmarks = Blueprint('bookmarks',
 
 @bookmarks.before_request
 def verify_login():
-    verifyLoggedIn()
+    verify_logged_in()
     g.bookmarks = Bookmarks(get_current_user_object())
 
 
@@ -54,6 +57,13 @@ def delete_bookmark():
     return get_bookmarks()
 
 
+@bookmarks.route('/markLastRead/<int:doc_id>', methods=['POST'])
+def mark_last_read(doc_id):
+    d = DocEntry.find_by_id(doc_id)
+    g.bookmarks.add_bookmark('Last read', d.get_short_name(), '/view/' + d.get_path(), move_to_top=True).save_bookmarks()
+    return get_bookmarks()
+
+
 @bookmarks.route('/get')
 @bookmarks.route('/get/<int:user_id>')
 def get_bookmarks(user_id=None):
@@ -62,4 +72,4 @@ def get_bookmarks(user_id=None):
     Parameter user_id is unused for now.
     """
 
-    return jsonResponse(g.bookmarks.as_json())
+    return jsonResponse(g.bookmarks.as_dict())
