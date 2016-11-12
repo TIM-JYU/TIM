@@ -123,6 +123,7 @@ def get_updates():
     session['use_wall'] = use_wall
     use_questions = get_option(request, 'get_questions', False)
     session['use_questions'] = use_questions
+    is_lecturer =  get_option(request, 'is_lecturer', False) # TODO: check from session
 
     helper = request.args.get("lecture_id")
     if len(helper) > 0:
@@ -147,19 +148,20 @@ def get_updates():
 
     lecturers = []
     students = []
+    current_user = get_current_user_id()
 
     time_now = str(datetime.now(timezone.utc).strftime("%H:%M:%S"))
-    tempdb.useractivity.update_or_add_activity(lecture_id, get_current_user_id(), time_now)
+    tempdb.useractivity.update_or_add_activity(lecture_id, current_user, time_now)
 
     lecture = timdb.lectures.get_lecture(lecture_id)
 
-    current_user = get_current_user_id()
     lecture_ending = 100
 
     # Jos poistaa tämän while loopin, muuttuu long pollista perinteiseksi polliksi
     while step <= 10:
         step = 11
-        lecturers, students = get_lecture_users(timdb, tempdb, lecture_id)
+        if is_lecturer:
+            lecturers, students = get_lecture_users(timdb, tempdb, lecture_id)
         # Gets new messages if the wall is in use.
         if use_wall:
             last_message = timdb.messages.get_last_message(lecture_id)
