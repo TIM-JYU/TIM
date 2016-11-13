@@ -980,7 +980,9 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
          * @memberof module:lectureController
          */
         $scope.startLongPolling = function (lastID) {
+            // $scope.newMsg = "Alku";
             function message_longPolling(lastID) {
+                // $scope.newMsg = "Lähti";
                 var timeout;
 
                 if (lastID === null) {
@@ -1007,53 +1009,59 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                     }
                 })
                     .success(function (answer) {
+                        // $scope.newMsg = "Täällä";
                         $scope.requestOnTheWay = false;
                         if (!answer.isLecture) {
                             $scope.showBasicView(answer);
                             return;
                         }
-                        $scope.pollingLectures.splice($scope.pollingLectures.indexOf(answer.lectureId), 1);
-                        if (answer.lectureId !== $scope.lectureId) {
-                            return;
-                        }
-
-                        if (answer.lectureEnding !== 100) {
-                            if (answer.lectureEnding === 1 && !$scope.lectureEnded) {
-                                $scope.showLectureEnding = true;
-                                $scope.lectureEnded = true;
+                        if (answer.isLecture != -1) {
+                            $scope.pollingLectures.splice($scope.pollingLectures.indexOf(answer.lectureId), 1);
+                            if (answer.lectureId !== $scope.lectureId) {
+                                return;
                             }
-                            if (!$scope.answeredToLectureEnding) {
-                                $scope.showLectureEnding = true;
-                            }
-                        }
 
-                        $scope.addPeopleToList(answer.students, $scope.studentTable);
-                        $scope.addPeopleToList(answer.lecturers, $scope.lecturerTable);
-
-                        // If 'new_end_time' is not undefined, extend or end question according to new_end_time
-                        if (typeof answer.new_end_time !== "undefined" && !$scope.isLecturer) {
-                            $rootScope.$broadcast('update_end_time', answer.new_end_time);
-                            // If 'question' or 'result' is in answer, show question/explanation accordingly
-                        } else if (typeof answer.points_closed !== "undefined") {
-                            $scope.current_points_id = false;
-                            $rootScope.$broadcast('update_end_time', null);
-                        } else if ((answer.question || answer.result)) {
-                            if ($scope.isLecturer) {
-                                if (answer.result) {
-                                    $scope.current_question_id = false;
-                                    $scope.current_points_id = answer.askedId;
-                                } else {
-                                    $scope.current_question_id = answer.askedId;
+                            if (answer.lectureEnding !== 100) {
+                                if (answer.lectureEnding === 1 && !$scope.lectureEnded) {
+                                    $scope.showLectureEnding = true;
+                                    $scope.lectureEnded = true;
                                 }
-                            } else {
-                                $scope.showQuestion(answer);
+                                if (!$scope.answeredToLectureEnding) {
+                                    $scope.showLectureEnding = true;
+                                }
                             }
+
+                            $scope.addPeopleToList(answer.students, $scope.studentTable);
+                            $scope.addPeopleToList(answer.lecturers, $scope.lecturerTable);
+
+                            // If 'new_end_time' is not undefined, extend or end question according to new_end_time
+                            if (typeof answer.new_end_time !== "undefined" && !$scope.isLecturer) {
+                                $rootScope.$broadcast('update_end_time', answer.new_end_time);
+                                // If 'question' or 'result' is in answer, show question/explanation accordingly
+                            } else if (typeof answer.points_closed !== "undefined") {
+                                $scope.current_points_id = false;
+                                $rootScope.$broadcast('update_end_time', null);
+                            } else if ((answer.question || answer.result)) {
+                                if ($scope.isLecturer) {
+                                    if (answer.result) {
+                                        $scope.current_question_id = false;
+                                        $scope.current_points_id = answer.askedId;
+                                    } else {
+                                        $scope.current_question_id = answer.askedId;
+                                    }
+                                } else {
+                                    $scope.showQuestion(answer);
+                                }
+                            }
+                        }
+                        else { // now new updates
+                            answer.lastid = lastID;
                         }
 
                         $window.clearTimeout(timeout);
                         if ($scope.polling) {
 
-                            $scope.pollingLectures.push(answer.lectureId);
+                            $scope.pollingLectures.push($scope.lectureId);
                             // Odottaa sekunnin ennen kuin pollaa uudestaan.
                             timeout = setTimeout(function () {
                                 message_longPolling(answer.lastid);
@@ -1106,6 +1114,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                         }
                     })
                     .error(function () {
+                        // $scope.newMsg = "Virhe";
                         $scope.requestOnTheWay = false;
                         $window.clearTimeout(timeout);
                         //Odottaa 30s ennen kuin yrittää uudelleen errorin jälkeen.

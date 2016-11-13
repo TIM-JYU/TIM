@@ -238,9 +238,13 @@ def get_updates():
     if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
         lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
 
-    return jsonResponse(
-        {"status": "no-results", "data": ["No new messages"], "lastid": client_last_id, "lectureId": lecture_id,
-         "isLecture": True, "lecturers": lecturers, "students": students, "lectureEnding": lecture_ending})
+
+    if lecture_ending != 100 or len(lecturers) or len(students):
+        return jsonResponse(
+            {"status": "no-results", "data": ["No new messages"], "lastid": client_last_id, "lectureId": lecture_id,
+             "isLecture": True, "lecturers": lecturers, "students": students, "lectureEnding": lecture_ending})
+
+    return jsonResponse({ "isLecture": -1 }); # no new updates
 
 
 @lecture_routes.route('/getQuestionManually')
