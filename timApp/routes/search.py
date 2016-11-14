@@ -1,8 +1,8 @@
 """Routes for searching."""
 from flask import Blueprint, render_template
 
-from documentmodel.docparagraph import DocParagraph
 from options import get_option
+from routes.sessioninfo import get_current_user_object
 from .cache import cache
 from .common import *
 
@@ -13,7 +13,7 @@ search_routes = Blueprint('search',
 
 def make_cache_key(*args, **kwargs):
     path = request.path
-    return (str(getCurrentUserId()) + path).encode('utf-8')
+    return (str(get_current_user_id()) + path).encode('utf-8')
 
 
 @search_routes.route('/<query>')
@@ -21,16 +21,16 @@ def make_cache_key(*args, **kwargs):
 def search(query):
     if len(query.strip()) < 3:
         abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
-    timdb = getTimDb()
-    viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
+    timdb = get_timdb()
+    viewable = timdb.users.get_viewable_blocks(get_current_user_id())
     docs = timdb.documents.get_documents(filter_ids=viewable)
     current_user = get_current_user_object()
     all_texts = []
     all_js = []
     all_css = []
     all_modules = []
-    for doc in docs:
-        doc = Document(doc['id'])
+    for d in docs:
+        doc = d.document
         pars = doc.get_paragraphs()
         found_pars = []
         for t in pars:
@@ -66,7 +66,7 @@ def search(query):
                            js=all_js,
                            cssFiles=all_css,
                            jsMods=all_modules,
-                           group=getCurrentUserGroup(),
+                           group=get_current_user_group(),
                            rights={'editable': False,
                                    'can_mark_as_read': False,
                                    'can_comment': False,

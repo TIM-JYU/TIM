@@ -1,3 +1,7 @@
+.ace_scrollbar {
+    z-index: 0 !important;
+}
+
 .pop-up-overlay {
     position: fixed;
     z-index: 5;
@@ -11,7 +15,7 @@
 }
 
 .pop-up-dialog {
-    max-height: 120%;
+    max-height: 100%;
     max-width: 100%;
     z-index: 6;
     position: fixed;
@@ -25,7 +29,9 @@
 .pop-up-dialog-content {
     padding: 0 10px 10px 10px;
     text-align: center;
-    max-height: calc(100vh - 40px);  /* TODO: Check good value here.  40 px  was not enough for iPad to show 20 questions and Send button */
+    /* max-height: calc(100vh - 40px);   TODO: Check good value here.  40 px  was not enough for iPad to show 20 questions and Send button */
+    max-height: calc(100vh - 2em);  /* TODO: Check good value here.  40 px  was not enough for iPad to show 20 questions and Send button */
+    /* max-height:  90%; */
     /* without previous does not show the Answer button if there is more than 19 questions */
     overflow: auto;
 }

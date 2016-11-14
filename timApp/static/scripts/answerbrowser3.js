@@ -456,6 +456,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                             options: function () {
                                 return {
                                     url: '/allAnswersPlain/' + $scope.taskId,
+                                    identifier: $scope.taskId,
                                     allTasks: false
                                 };
                             }

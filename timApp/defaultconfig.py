@@ -23,6 +23,7 @@ IMMEDIATE_PRELOAD  = False
 LIBSASS_STYLE      = "compressed"
 LIBSASS_INCLUDES   = ["static/scripts/bower_components/bootstrap-sass/assets/stylesheets",
                       "static/scripts/bower_components/jquery-ui/themes/base",
+                      "static/scripts/bower_components/eonasdan-bootstrap-datetimepicker/src/sass",
                       "static"]
 TIM_NAME = os.environ.get('TIM_NAME', 'timlocal')
 TIM_HOST = os.environ.get('TIM_HOST', 'http://localhost')

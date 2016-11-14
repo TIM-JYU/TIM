@@ -1,7 +1,7 @@
-from typing import Optional, List
+from typing import Optional
 
-from timdb.tim_models import db
 from timdb.models.block import Block
+from timdb.tim_models import db
 
 
 def insert_block(description: Optional[str], owner_group_id: int, block_type: int, commit: bool = True) -> int:
@@ -25,8 +25,8 @@ def insert_block(description: Optional[str], owner_group_id: int, block_type: in
 
 def copy_default_rights(item_id: int, item_type, commit=True):
     # TODO: Should not need to import anything from routes
-    from routes.common import getTimDb
-    timdb = getTimDb()
+    from routes.dbaccess import get_timdb
+    timdb = get_timdb()
     default_rights = []
     folder = Block.query.get(item_id).get_parent()
     while folder is not None:
@@ -34,7 +34,3 @@ def copy_default_rights(item_id: int, item_type, commit=True):
         folder = folder.get_parent()
     for d in default_rights:
         timdb.users.grant_access(d['gid'], item_id, d['access_name'], commit=commit)
-
-
-def get_sql_template(value_list: List) -> str:
-    return ','.join(['%s'] * len(value_list))

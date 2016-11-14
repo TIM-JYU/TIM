@@ -8,10 +8,10 @@ as well as adding comments to the annotations. The module also retrieves the ann
 
 """
 
-from typing import Dict
 from flask import Blueprint
-from .common import *
+
 from timdb.annotations import Annotations
+from .common import *
 
 annotations = Blueprint('annotations',
                         __name__,
@@ -33,7 +33,7 @@ def add_annotation() -> Dict:
     """
     json_data = request.get_json()
     print(json_data)
-    timdb = getTimDb()
+    timdb = get_timdb()
 
     # first get the non-optional arguments and abort if there is missing data.
     try:
@@ -84,7 +84,7 @@ def add_annotation() -> Dict:
     except KeyError as e:
         return abort(400, "Missing data: " + e.args[0])
     verifyLoggedIn()
-    annotator_id = getCurrentUserId()
+    annotator_id = get_current_user_id()
     velp_version_id = timdb.velps.get_latest_velp_version(velp_id)["id"]
 
     new_id = timdb.annotations.create_annotation(velp_version_id, visible_to, points, annotator_id, document_id,
@@ -110,7 +110,7 @@ def update_annotation():
     :return: okJsonResponse()
     """
     verifyLoggedIn()
-    user_id = getCurrentUserId()
+    user_id = get_current_user_id()
     json_data = request.get_json()
     try:
         annotation_id = json_data['annotation_id']
@@ -119,7 +119,7 @@ def update_annotation():
     visible_to = json_data.get('visible_to')
     points = json_data.get('points')
     doc_id = json_data.get('doc_id')
-    timdb = getTimDb()
+    timdb = get_timdb()
     # Get values from the database to fill in unchanged new values.
     new_values = timdb.annotations.get_annotation(annotation_id)
     if not new_values:
@@ -160,13 +160,13 @@ def invalidate_annotation():
         annotation_id = json_data['annotation_id']
     except KeyError as e:
         return abort(400, "Missing data: " + e.args[0])
-    timdb = getTimDb()
+    timdb = get_timdb()
     annotation = timdb.annotations.get_annotation(annotation_id)
     if not annotation:
         return abort(404, "No such annotation.")
     annotation = annotation[0]
     verifyLoggedIn()
-    user_id = getCurrentUserId()
+    user_id = get_current_user_id()
     if not annotation['annotator_id'] == user_id:
         return abort(403, "You are not the annotator.")
     # TODO: Add option to choose when annotation gets invalidated
@@ -192,9 +192,9 @@ def add_comment() -> Dict:
     except KeyError as e:
         return abort(400, "Missing data: " + e.args[0])
     # Todo maybe check that content isn't an empty string
-    timdb = getTimDb()
+    timdb = get_timdb()
     verifyLoggedIn()
-    commenter_id = getCurrentUserId()
+    commenter_id = get_current_user_id()
     timdb.annotations.add_comment(annotation_id, commenter_id, content)
     # TODO notice with email to annotator if commenter is not itself
     return jsonResponse(timdb.users.get_user(commenter_id))
@@ -207,8 +207,8 @@ def get_annotations(doc_id: int):
     :param doc_id: ID of the document
     :return: List of dictionaries containing annotations with comments
     """
-    timdb = getTimDb()
-    user_id = getCurrentUserId()
+    timdb = get_timdb()
+    user_id = get_current_user_id()
     if not timdb.documents.exists(doc_id):
         return abort(404, "No such document.")
     if not timdb.users.has_view_access(user_id, doc_id):
@@ -217,7 +217,7 @@ def get_annotations(doc_id: int):
     user_has_teacher = timdb.users.has_teacher_access(user_id, doc_id)
     user_has_owner = timdb.users.user_is_owner(user_id, doc_id)
 
-    results = timdb.annotations.get_annotations_with_comments_in_document(getCurrentUserId(), user_has_see_answers,
+    results = timdb.annotations.get_annotations_with_comments_in_document(get_current_user_id(), user_has_see_answers,
                                                                           user_has_teacher, user_has_owner, doc_id)
     response = jsonResponse(results)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'

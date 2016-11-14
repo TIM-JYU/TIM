@@ -100,7 +100,7 @@ class Users(TimDbBase):
         """
 
         next_id = self.get_next_anonymous_user_id()
-        u = User(id=next_id, name=name, real_name=real_name)
+        u = User(id=next_id, name=name + str(abs(next_id)), real_name=real_name)
         self.session.add(u)
         self.session.flush()
         if commit:
@@ -320,7 +320,7 @@ class Users(TimDbBase):
         :param name: The name of the user.
         :returns: The user information or None if the user does not exist.
         """
-        return self.session.query(User).filter(User.name==name).first()
+        return self.session.query(User).filter_by(name=name).first()
 
     def get_user_by_email(self, email: str) -> Optional[dict]:
         """Gets the data of the specified user email address.
@@ -615,6 +615,25 @@ WHERE User_id IN ({}))
                    self.get_sql_template(access_types),
                    self.get_sql_template(user_ids)), user_ids + access_types + user_ids)
         return set(row[0] for row in c.fetchall())
+
+    def get_owned_blocks(self, user_id: int) -> Set[int]:
+        return self.get_accessible_blocks(user_id, [-1])  # slight hack: the non-existent id -1 avoids syntax error in
+
+    def get_manageable_blocks(self, user_id: int) -> Set[int]:
+        return self.get_accessible_blocks(user_id, [self.get_manage_access_id()])
+
+    def get_teachable_blocks(self, user_id: int) -> Set[int]:
+        return self.get_accessible_blocks(user_id, [self.get_teacher_access_id(),
+                                                    self.get_manage_access_id()])
+
+    def get_see_answers_blocks(self, user_id: int) -> Set[int]:
+        return self.get_accessible_blocks(user_id, [self.get_seeanswers_access_id(),
+                                                    self.get_teacher_access_id(),
+                                                    self.get_manage_access_id()])
+
+    def get_editable_blocks(self, user_id: int) -> Set[int]:
+        return self.get_accessible_blocks(user_id, [self.get_edit_access_id(),
+                                                    self.get_manage_access_id()])
 
     def get_viewable_blocks(self, user_id: int) -> Set[int]:
         return self.get_accessible_blocks(user_id, [self.get_view_access_id(),

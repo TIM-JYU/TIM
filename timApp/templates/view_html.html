@@ -2,7 +2,7 @@
 {% block ngmodules %}
     {{ super() }}
     {% if teacher_mode %}
-    {{ (['ui.grid', 'ui.grid.cellNav', 'ui.grid.selection', 'ui.grid.exporter', 'ui.grid.autoResize', 'oc.lazyLoad', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
+    {{ (['ae-datetimepicker', 'ui.grid', 'ui.grid.cellNav', 'ui.grid.selection', 'ui.grid.exporter', 'ui.grid.autoResize', 'oc.lazyLoad', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
     {% else %}
     {{ (['oc.lazyLoad', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
     {% endif %}
@@ -13,6 +13,7 @@
     <script src="{{ url_for('bower.static', filename='oclazyload/dist/ocLazyLoad.min.js') }}"></script>
     {% if teacher_mode %}
         <script src="{{ url_for('bower.static', filename='angular-ui-grid/ui-grid.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular-eonasdan-datetimepicker/dist/angular-eonasdan-datetimepicker.min.js') }}"></script>
     {% endif %}
 
     {% for script in js %}
@@ -137,12 +138,6 @@
             <button class="timButton" ng-click="reload()">Refresh</button>
             <button class="timButton" ng-click="closeRefreshDlg()">No</button>
         </div>
-        {% if message %}
-            <div ng-cloak="" class="dialog" caption="" tim-draggable-fixed="" ng-show="!hideMessage">
-                <p>{{ message }}</p>
-                <button class="timButton" ng-click="closeMessageDlg()">Ok</button>
-            </div>
-        {% endif %}
         {% raw %}
         <div ng-cloak="" class="dialog" caption="Updates pending" tim-draggable-fixed="" ng-show="showUpdateDialog()">
             <p>There are {{ pendingUpdatesCount() }} pending paragraph updates.</p>

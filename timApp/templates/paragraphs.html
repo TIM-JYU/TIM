@@ -178,7 +178,7 @@
         {% else %}
             {{ editlineQuestion|safe }}
             {% if not disable_read_markings %}
-                <div class="{{ ['readline readlineQuestion', t.status]|join(' ')|trim }}"
+                <div class="{{ ['readline', 'readlineQuestion', t.status|join(' ')]|join(' ')|trim }}"
                          title="Click to mark this paragraph as read"></div>
             {% endif %}
         {% endif %}

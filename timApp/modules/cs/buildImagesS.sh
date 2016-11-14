@@ -1,1 +1,1 @@
-docker build --tag="cs3sudo" -f DockerfileS .
+docker build --tag="timimages/cs3sudo" -f DockerfileS .

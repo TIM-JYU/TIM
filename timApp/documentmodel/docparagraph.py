@@ -263,7 +263,7 @@ class DocParagraph:
         :return: A list of paragraphs whose HTML changed as the result of preloading.
         """
         if not pars:
-            return
+            return []
 
         doc_id_str = str(pars[0].doc.doc_id)
         macro_cache_file = '/tmp/tim_auto_macros_' + doc_id_str

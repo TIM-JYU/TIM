@@ -1,17 +1,21 @@
 """Answer-related routes."""
-from datetime import timezone
+from datetime import timezone, timedelta
 from typing import Union
 
+import dateutil.parser
 from flask import Blueprint
 
 import containerLink
 from options import get_option
 from plugin import Plugin, PluginException
+from routes.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, has_teacher_access, \
+    verify_view_access, verify_logged_in
+from routes.sessioninfo import get_current_user_object, get_session_users
+from timdb.accesstype import AccessType
 from timdb.blocktypes import blocktypes
 from timdb.models.block import Block
-from timdb.tim_models import AnswerUpload, Answer
+from timdb.tim_models import AnswerUpload, Answer, db
 from .common import *
-
 
 answers = Blueprint('answers',
                     __name__,
@@ -57,7 +61,7 @@ def save_points(answer_id, user_id):
         a.points = plugin.validate_points(points) if not has_teacher_access(doc_id) else points
     except PluginException as e:
         abort(400, str(e))
-    a.last_points_modifier = getCurrentUserGroup()
+    a.last_points_modifier = get_current_user_group()
     db.session.commit()
     return okJsonResponse()
 
@@ -79,7 +83,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     :param task_id_ext: The extended task id of the form "22.palidrome.par_id".
     :return: JSON
     """
-    timdb = getTimDb()
+    timdb = get_timdb()
     doc_id, task_id_name, _ = Plugin.parse_task_id(task_id_ext)
     task_id = str(doc_id) + '.' + str(task_id_name)
     verify_task_access(doc_id, task_id_name, AccessType.view)
@@ -133,7 +137,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                 abort(400, 'File was already uploaded: {}'.format(file))
 
     # Load old answers
-    current_user_id = getCurrentUserId()
+    current_user_id = get_current_user_id()
 
     if users is None:
         users = [u['id'] for u in get_session_users()]
@@ -143,7 +147,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     # Get the newest answer (state). Only for logged in users.
     state = pluginControl.try_load_json(old_answers[0]['content']) if logged_in() and len(old_answers) > 0 else None
 
-    plugin.values['current_user_id'] = getCurrentUserName()
+    plugin.values['current_user_id'] = get_current_user_name()
     plugin.values['user_id'] = ';'.join([timdb.users.get_user(uid)['name'] for uid in users])
     plugin.values['look_answer'] = is_teacher and not save_teacher
 
@@ -196,7 +200,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                 except PluginException as e:
                     result['error'] = str(e)
                 else:
-                    points_given_by = getCurrentUserGroup()
+                    points_given_by = get_current_user_group()
             if points or save_object or tags:
                 result['savedNew'], saved_answer_id = timdb.answers.saveAnswer(users,
                                                           task_id,
@@ -220,7 +224,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                                                                            points,
                                                                            tags,
                                                                            valid=True,
-                                                                           points_given_by=getCurrentUserGroup())
+                                                                           points_given_by=get_current_user_group())
         else:
             result['savedNew'], saved_answer_id = False, None
         if result['savedNew'] and upload is not None:
@@ -236,8 +240,8 @@ def get_hidden_name(user_id):
 
 
 def should_hide_name(doc_id, user_id):
-    timdb = getTimDb()
-    return not timdb.users.has_teacher_access(user_id, doc_id) and user_id != getCurrentUserId()
+    timdb = get_timdb()
+    return not timdb.users.has_teacher_access(user_id, doc_id) and user_id != get_current_user_id()
 
 
 @answers.route("/taskinfo/<task_id>")
@@ -261,8 +265,8 @@ def get_answers(task_id, user_id):
         user_id = int(user_id)
     except ValueError:
         abort(404, 'Not a valid user id')
-    verifyLoggedIn()
-    timdb = getTimDb()
+    verify_logged_in()
+    timdb = get_timdb()
     try:
         doc_id, _, _ = Plugin.parse_task_id(task_id)
     except PluginException as e:
@@ -270,7 +274,7 @@ def get_answers(task_id, user_id):
     if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
     user = timdb.users.get_user(user_id)
-    if user_id != getCurrentUserId():
+    if user_id != get_current_user_id():
         verify_seeanswers_access(doc_id)
     if user is None:
         abort(400, 'Non-existent user')
@@ -288,7 +292,6 @@ def get_document_answers(doc_id):
     doc = Document(doc_id)
     pars = doc.get_dereferenced_paragraphs()
     task_ids, _ = pluginControl.find_task_ids(pars)
-    # get_all_answers_as_list(task_ids)  # why this was here?
     return get_all_answers_list_plain(task_ids)
 
 
@@ -311,12 +314,19 @@ def get_all_answers_list_plain(task_ids: List[str]):
 
 
 def get_all_answers_as_list(task_ids: List[str]):
-    verifyLoggedIn()
-    timdb = getTimDb()
+    verify_logged_in()
+    if not task_ids:
+        return []
+    timdb = get_timdb()
     doc_ids = set()
     for t in task_ids:
         doc_id, _, _ = Plugin.parse_task_id(t)
         doc_ids.add(doc_id)
+        if not timdb.documents.exists(doc_id):
+            abort(404, 'No such document: {}'.format(doc_id))
+        # Require full teacher rights for getting all answers
+        verify_teacher_access(doc_id)
+
     usergroup = get_option(request, 'group', None)
     age = get_option(request, 'age', 'max')
     valid = get_option(request, 'valid', '1')
@@ -325,17 +335,55 @@ def get_all_answers_as_list(task_ids: List[str]):
     print_opt = get_option(request, 'print', 'all')
     printname = name_opt == 'both'
 
+    period_from = datetime.min.replace(tzinfo=timezone.utc)
+    
+    # TODO: The key will be wrong when getting answers to a document that has only one task
+    since_last_key = task_ids[0]
+    if len(task_ids) > 1:
+        since_last_key = str(next(d for d in doc_ids))
+        if len(doc_ids) > 1:
+            since_last_key = None
+
+    period_opt = get_option(request, 'period', 'whenever')
+    period_to = datetime.now(tz=timezone.utc)
+    if period_opt == 'whenever':
+        pass
+    elif period_opt == 'sincelast' and since_last_key is not None:
+        u = get_current_user_object()
+        prefs = u.get_prefs()
+        last_answer_fetch = prefs.get('last_answer_fetch', {})
+        period_from = last_answer_fetch.get(since_last_key, datetime.min.replace(tzinfo=timezone.utc))
+        last_answer_fetch[since_last_key] = datetime.now(tz=timezone.utc)
+        prefs['last_answer_fetch'] = last_answer_fetch
+        u.set_prefs(prefs)
+        db.session.commit()
+    elif period_opt == 'day':
+        period_from = period_to - timedelta(days=1)
+    elif period_opt == 'week':
+        period_from = period_to - timedelta(weeks=1)
+    elif period_opt == 'month':
+        period_from = period_to - dateutil.relativedelta.relativedelta(months=1)
+    elif period_opt == 'other':
+        period_from_str = get_option(request, 'periodFrom', period_from.isoformat())
+        period_to_str = get_option(request, 'periodTo', period_to.isoformat())
+        period_from = dateutil.parser.parse(period_from_str)
+        period_to = dateutil.parser.parse(period_to_str)
     if not usergroup:
         usergroup = None
 
     hide_names = name_opt == 'anonymous'
     for doc_id in doc_ids:
-        if not timdb.documents.exists(doc_id):
-            abort(404, 'No such document: {}'.format(doc_id))
-        # Require full teacher rights for getting all answers
-        verify_teacher_access(doc_id)
         hide_names = hide_names or hide_names_in_teacher(doc_id)
-    all_answers = timdb.answers.get_all_answers(task_ids, usergroup, hide_names, age, valid, printname, sort_opt, print_opt)
+    all_answers = timdb.answers.get_all_answers(task_ids,
+                                                usergroup,
+                                                hide_names,
+                                                age,
+                                                valid,
+                                                printname,
+                                                sort_opt,
+                                                print_opt,
+                                                period_from,
+                                                period_to)
     return all_answers
 
 
@@ -347,7 +395,7 @@ def get_all_answers(task_id):
 
 @answers.route("/getState")
 def get_state():
-    timdb = getTimDb()
+    timdb = get_timdb()
     d_id, par_id, user_id, answer_id = unpack_args('doc_id',
                                                 'par_id',
                                                 'user_id',
@@ -385,14 +433,14 @@ def get_state():
 
 
 def verify_answer_access(answer_id, user_id, require_teacher_if_not_own=False):
-    timdb = getTimDb()
+    timdb = get_timdb()
     answer = timdb.answers.get_answer(answer_id)
     if answer is None:
         abort(400, 'Non-existent answer')
     doc_id, task_id_name, _ = Plugin.parse_task_id(answer['task_id'])
     if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
-    if user_id != getCurrentUserId() or not logged_in():
+    if user_id != get_current_user_id() or not logged_in():
         if require_teacher_if_not_own:
             verify_task_access(doc_id, task_id_name, AccessType.teacher)
         else:
@@ -409,7 +457,7 @@ def get_task_users(task_id):
     doc_id, _, _ = Plugin.parse_task_id(task_id)
     verify_seeanswers_access(doc_id)
     usergroup = request.args.get('group')
-    timdb = getTimDb()
+    timdb = get_timdb()
     users = timdb.answers.get_users_by_taskid(task_id)
     if usergroup is not None:
         users = [user for user in users if timdb.users.is_user_id_in_group(user['id'], usergroup)]

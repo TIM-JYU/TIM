@@ -1,2 +1,2 @@
 #!/bin/bash
-docker build --tag="svn" $@ . 
+docker build --tag="timimages/svn" $@ .
