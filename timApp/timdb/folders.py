@@ -63,22 +63,17 @@ class Folders(TimDbBase):
         f = Folder.find_by_full_path(folder_name)
         return f.id if f else None
 
-    def get_folders(self, root_path: str = '', filter_ids: Optional[Iterable[int]]=None) -> List[dict]:
+    def get_folders(self, root_path: str = '', filter_ids: Optional[Iterable[int]]=None) -> List[Folder]:
         """Gets all the folders under a path.
-        :param root_path: Optionally restricts the search to a specific folder.
+        :param root_path: Restricts the search to a specific folder.
         :param filter_ids: An optional iterable of document ids for filtering the documents.
                Must be non-empty if supplied.
         :return: A list of dictionaries of the form {'id': <folder_id>, 'name': 'folder_name', 'fullname': 'folder_path'}
         """
-        cursor = self.db.cursor()
-        filter_clause = ''
+        q = Folder.query.filter_by(location=root_path)
         if filter_ids:
-            filter_clause += self.get_id_filter(filter_ids)
-        cursor.execute("SELECT id, name FROM Folder WHERE location = %s {}".format(filter_clause), [root_path])
-        folders = self.resultAsDictionary(cursor)
-        for folder in folders:
-           folder['fullname'] = self.join_location(root_path, folder['name'])
-        return folders
+            q = q.filter(Folder.id.in_(filter_ids))
+        return q.all()
 
     def rename(self, block_id: int, new_name: str) -> None:
         """Renames a folder, updating all the documents within.
@@ -161,14 +156,14 @@ class Folders(TimDbBase):
 
         # Check if velps folder exist
         for folder in folders:
-            if folder['name'] == group_folder_name:
+            if folder.name == group_folder_name:
                 velps_folder = True
 
         # If velps folder exists, check if folder for document exists
         if velps_folder is True:
             doc_folders = self.get_folders(velps_folder_path)
             for folder in doc_folders:
-                if folder['name'] == doc_name:
+                if folder.name == doc_name:
                     doc_velp_folder = True
 
         # If velps folder doesn't exists, create one
@@ -198,7 +193,7 @@ class Folders(TimDbBase):
         velps_folder = False
 
         for folder in folders:
-            if folder['name'] == group_folder_name:
+            if folder.name == group_folder_name:
                 velps_folder = True
 
         if velps_folder is False:

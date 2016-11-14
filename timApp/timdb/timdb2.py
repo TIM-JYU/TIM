@@ -6,7 +6,6 @@ import time
 from time import sleep
 
 from routes.logger import log_info, log_debug, log_error, log_warning
-from tim_app import app
 from timdb.annotations import Annotations
 from timdb.answers import Answers
 from timdb.documents import Documents
@@ -96,6 +95,7 @@ class TimDb(object):
         log_debug(  "GetDb      {:2d} {:6d} {:2s} {:3s} {:7s} {:s}".format(worker_pid,self.num,"","","",self.route_path))
         # log_info('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid,self.num, TimDb.instances, bes, time.time() - self.time, self.route_path))
         waiting = False
+        from tim_app import app
         while True:
             try:
                 self.engine = db.get_engine(app, 'tim_main')

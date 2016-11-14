@@ -7,8 +7,7 @@ from typing import Optional, Tuple
 from psycopg2._psycopg import connection
 from sqlalchemy.orm import scoped_session
 
-from timdb.dbutils import get_sql_template
-from utils import split_location, join_location
+from utils import split_location, join_location, get_sql_template
 
 
 class TimDbBase(object):

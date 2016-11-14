@@ -5,15 +5,17 @@ import os
 import posixpath
 
 import magic
-from bs4 import UnicodeDammit
 from flask import Blueprint, request, send_file
 from flask import abort
 from werkzeug.utils import secure_filename
 
 from plugin import Plugin
-from routes.common import logged_in, getTimDb, jsonResponse, getCurrentUserGroup, okJsonResponse, validate_item_and_create, \
-    verify_view_access, verify_task_access, getCurrentUserName, \
-    verify_seeanswers_access, grant_access_to_session_users, validate_uploaded_document_content
+from routes.accesshelper import verify_view_access, verify_seeanswers_access, verify_task_access, \
+    grant_access_to_session_users
+from routes.common import jsonResponse, validate_item_and_create, \
+    validate_uploaded_document_content
+from routes.dbaccess import get_timdb
+from routes.sessioninfo import get_current_user_name, get_current_user_group, logged_in
 from timdb.accesstype import AccessType
 from timdb.models.block import Block
 from timdb.blocktypes import blocktypes
@@ -49,7 +51,7 @@ def get_upload(relfilename: str):
         abort(400)
     if slashes == 3 and not relfilename.endswith('/'):
         abort(400, 'Incorrect filename specification.')
-    timdb = getTimDb()
+    timdb = get_timdb()
     block = Block.query.filter((Block.description.startswith(relfilename)) & (Block.type_id == blocktypes.UPLOAD)).order_by(Block.description.desc()).first()
     if not block or (block.description != relfilename and not relfilename.endswith('/')):
         abort(404, 'The requested upload was not found.')
@@ -83,11 +85,11 @@ def pluginupload_file(doc_id: int, task_id: str):
     if file is None:
         abort(400, 'Missing file')
     content = file.read()
-    timdb = getTimDb()
-    p = os.path.join(str(doc_id), secure_filename(task_id), str(getCurrentUserName()))
+    timdb = get_timdb()
+    p = os.path.join(str(doc_id), secure_filename(task_id), str(get_current_user_name()))
     answerupload = timdb.uploads.save_file(content, p,
                                            secure_filename(file.filename),
-                                           getCurrentUserGroup())
+                                           get_current_user_group())
     block_id = answerupload.block.id
     grant_access_to_session_users(timdb, block_id)
     relfilename = answerupload.block.description
@@ -101,7 +103,7 @@ def pluginupload_file(doc_id: int, task_id: str):
 def upload_file():
     if not logged_in():
         abort(403, 'You have to be logged in to upload a file.')
-    timdb = getTimDb()
+    timdb = get_timdb()
 
     file = request.files.get('file')
     if file is None:
@@ -112,9 +114,9 @@ def upload_file():
     filename = posixpath.join(folder, secure_filename(file.filename))
 
     content = validate_uploaded_document_content(file)
-    validate_item_and_create(filename, 'document', getCurrentUserGroup())
+    validate_item_and_create(filename, 'document', get_current_user_group())
 
-    doc = timdb.documents.import_document(content, filename, getCurrentUserGroup())
+    doc = timdb.documents.import_document(content, filename, get_current_user_group())
     return jsonResponse({'id': doc.doc_id})
 
 
@@ -122,10 +124,10 @@ def try_upload_image(image_file):
     content = image_file.read()
     imgtype = imghdr.what(None, h=content)
     if imgtype is not None:
-        timdb = getTimDb()
+        timdb = get_timdb()
         img_id, img_filename = timdb.images.saveImage(content,
                                                       secure_filename(image_file.filename),
-                                                      getCurrentUserGroup())
+                                                      get_current_user_group())
         timdb.users.grant_view_access(0, img_id)  # So far everyone can see all images
         return jsonResponse({"file": str(img_id) + '/' + img_filename})
     else:
@@ -135,24 +137,24 @@ def try_upload_image(image_file):
 def upload_image_or_file(image_file):
     content = image_file.read()
     imgtype = imghdr.what(None, h=content)
-    timdb = getTimDb()
+    timdb = get_timdb()
     if imgtype is not None:
         img_id, img_filename = timdb.images.saveImage(content,
                                                       secure_filename(image_file.filename),
-                                                      getCurrentUserGroup())
+                                                      get_current_user_group())
         timdb.users.grant_view_access(timdb.users.get_anon_group_id(), img_id)  # So far everyone can see all images
         return jsonResponse({"image": str(img_id) + '/' + img_filename})
     else:
         file_id, file_filename = timdb.files.saveFile(content,
-                                                       secure_filename(image_file.filename),
-                                                       getCurrentUserGroup())
+                                                      secure_filename(image_file.filename),
+                                                      get_current_user_group())
         timdb.users.grant_view_access(timdb.users.get_anon_group_id(), file_id)  # So far everyone can see all files
         return jsonResponse({"file": str(file_id) + '/' + file_filename})
 
 
 @upload.route('/files/<int:file_id>/<file_filename>')
 def get_file(file_id, file_filename):
-    timdb = getTimDb()
+    timdb = get_timdb()
     file_filename = secure_filename(file_filename)
     if not timdb.files.fileExists(file_id, file_filename):
         abort(404)

@@ -114,7 +114,6 @@ timApp.controller("ViewCtrl", [
         sc.mathJaxLoaded = false;
         sc.mathJaxLoadDefer = null;
         sc.hidePending = false;
-        sc.hideMessage = false;
         sc.pendingUpdates = {};
         var EDITOR_CLASS = "editorArea";
         var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
@@ -141,10 +140,6 @@ timApp.controller("ViewCtrl", [
 
         sc.closeRefreshDlg = function() {
             sc.showRefresh = false;
-        };
-
-        sc.closeMessageDlg = function() {
-            sc.hideMessage = true;
         };
 
         sc.markPageDirty = function() {

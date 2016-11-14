@@ -257,7 +257,7 @@ class VelpGroups(Documents):
         results = self.resultAsDictionary(cursor)
         return results
 
-    def add_groups_to_document(self, velp_groups: dict, doc_id: int, user_id: int):
+    def add_groups_to_document(self, velp_groups: Iterable[Dict], doc_id: int, user_id: int):
         """Adds velp groups to VelpGroupsInDocument table
 
         :param velp_groups: Velp groups as dictionaries

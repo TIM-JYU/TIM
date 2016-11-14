@@ -61,10 +61,11 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
 
                 var htmlSheet = $('<div>', {class: 'answerSheet'});
                 if ($scope.json.timeLimit !== "" && !$scope.preview && !$scope.result) {
-                    htmlSheet.append($('<progress>', {
+                    var progress = $('<progress>', {
                         max: ($scope.endTime - $scope.askedTime),
                         id: 'progressBar'
-                    }));
+                    });
+                    htmlSheet.append(progress);
                     htmlSheet.append($('<span>', {
                         class: 'progresslabel',
                         id: 'progressLabel',
@@ -176,7 +177,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     var now = new Date().valueOf();
                     timeLeft = $scope.endTime - now;
                     barFilled = 0;
-                    var timeBetween = 100;
+                    var timeBetween = 500;
                     var maxCount = timeLeft / timeBetween + 5 * timeBetween;
                     $scope.progressElem = $("#progressBar");
                     $scope.progressText = $("#progressLabel");
@@ -217,6 +218,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 barFilled = ($scope.endTime - $scope.askedTime) - ($scope.endTime - now);
                 $scope.progressElem.attr("value", (barFilled));
                 $scope.progressText.text(Math.max((timeLeft / 1000), 0).toFixed(0) + " s");
+                $scope.progressElem.attr("content", (Math.max((timeLeft / 1000), 0).toFixed(0) + " s"));
                 if (barFilled >= $scope.progressElem.attr("max")) {
                     $interval.cancel(promise);
                     if (!$scope.$parent.isLecturer && !$scope.$parent.questionEnded) {

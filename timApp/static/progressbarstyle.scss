@@ -81,7 +81,8 @@ progress[aria-valuenow]:before  {
     display: block;
     text-align: center;
     position: relative;
-	top: -25px;
+	/*top: -25px;*/
+	top: -2em;
     margin-left: auto;
 	margin-right: auto;
     font-size: small;

@@ -1,2 +1,2 @@
 #!/bin/bash
-docker run --rm -v $PWD:/build/ -w /build/ stackage_builder
+docker run --rm -v $PWD:/build/ -w /build/ timimages/stackage_builder

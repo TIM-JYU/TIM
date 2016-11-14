@@ -5,7 +5,7 @@ from collections import defaultdict, OrderedDict
 from datetime import datetime
 from typing import List, Optional, Dict
 
-from timdb.dbutils import get_sql_template
+from utils import get_sql_template
 from timdb.tim_models import Answer, UserAnswer, AnswerTag
 from timdb.timdbbase import TimDbBase
 

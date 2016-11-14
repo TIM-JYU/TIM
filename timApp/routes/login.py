@@ -1,5 +1,4 @@
 """Routes for login view."""
-from options import get_option
 import codecs
 import random
 import string
@@ -10,8 +9,10 @@ from flask import Blueprint, render_template
 from yubico_client import Yubico
 from yubico_client.yubico_exceptions import YubicoError
 
+from options import get_option
+from routes.accesshelper import verify_logged_in
 from routes.notify import send_email
-from timdb.models.user import User
+from routes.sessioninfo import get_current_user, get_other_users, get_session_users_ids, get_other_users_as_list
 from .common import *
 from .logger import log_error
 
@@ -36,7 +37,7 @@ def is_valid_email(email):
 @login_page.route("/logout", methods=['POST'])
 def logout():
     user_id, = verify_json_params('user_id', require=False)
-    if user_id is not None and user_id != getCurrentUserId():
+    if user_id is not None and user_id != get_current_user_id():
         group = get_other_users()
         group.pop(str(user_id), None)
         session['other_users'] = group
@@ -104,7 +105,7 @@ def login_with_korppi():
     real_name = pieces[1]
     email = pieces[2]
 
-    timdb = getTimDb()
+    timdb = get_timdb()
     user_id = timdb.users.get_user_id_by_name(user_name)
     
     if user_id is None:
@@ -183,7 +184,7 @@ def alt_signup():
         
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     
-    timdb = getTimDb()
+    timdb = get_timdb()
     timdb.users.create_potential_user(email, password)
 
     session.pop('altlogin', None)
@@ -213,7 +214,7 @@ def alt_signup_after():
     password = request.form['password']
     confirm = request.form['passconfirm']
     save_came_from()
-    timdb = getTimDb()
+    timdb = get_timdb()
 
     if not timdb.users.test_potential_user(email, oldpass):
         return jsonResponse({'message': 'Authentication failure'}, 403)
@@ -265,7 +266,7 @@ def alt_login():
     email = request.form['email']
     password = request.form['password']
     session['adding_user'] = request.form.get('add_user', 'false').lower() == 'true'
-    timdb = getTimDb()
+    timdb = get_timdb()
 
     if timdb.users.test_user(email, password):
         # Registered user
@@ -332,8 +333,8 @@ def quick_login(username):
     """A debug helping method for logging in as another user.
        For developer use only.
     """
-    timdb = getTimDb()
-    if not timdb.users.has_admin_access(getCurrentUserId()):
+    timdb = get_timdb()
+    if not timdb.users.has_admin_access(get_current_user_id()):
         abort(403)
     user = timdb.users.get_user_id_by_name(username)
     if user is None:
@@ -364,8 +365,8 @@ def get_yubico_client():
 @login_page.route("/yubi_reg/<otp>")
 def yubi_register(otp):
     # For registering a new YubiKey for a user
-    verifyLoggedIn()
-    timdb = getTimDb()
+    verify_logged_in()
+    timdb = get_timdb()
 
     client = get_yubico_client()
     if not client:
@@ -377,14 +378,14 @@ def yubi_register(otp):
     except YubicoError:
         abort(403, 'Authentication failed')
 
-    timdb.users.update_user_field(getCurrentUserId(), 'yubikey', otp[:12])
+    timdb.users.update_user_field(get_current_user_id(), 'yubikey', otp[:12])
     return okJsonResponse()
 
 
 @login_page.route("/yubi_login/<username>/<otp>")
 def yubi_login(username, otp):
     # Log in using an YubiKey (see http://www.yubico.com)
-    timdb = getTimDb()
+    timdb = get_timdb()
     user = timdb.users.get_user_id_by_name(username)
     if user is None:
         abort(404, 'User not found.')
@@ -415,7 +416,7 @@ def yubi_login(username, otp):
 
 
 def log_in_as_anonymous(sess) -> User:
-    timdb = getTimDb()
+    timdb = get_timdb()
     user_name = 'Anonymous'
     user_real_name = 'Guest'
     user = timdb.users.create_anonymous_user(user_name, user_real_name)
