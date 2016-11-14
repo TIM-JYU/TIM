@@ -1,4 +1,4 @@
-from fpco/stack-build:lts-6.12
+from fpco/stack-build:lts-7
 maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 
 run apt-get update
