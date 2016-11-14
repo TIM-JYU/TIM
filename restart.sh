@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# This script is supposed to be run on tim-beta machine.
-
 # Stop the script if any error occurs
 set -e
 #trap 'echo ABORTED on line \"$BASH_COMMAND\"' 0
@@ -117,7 +115,7 @@ if [ "$USE_FUNNEL" = true ] && param funnel ; then
 docker run --net=timnet -dti --name funnel \
     -v /opt/funnel:/service \
     -v /opt/tim/tim_logs:/var/log/funnel \
-    funnel /service/run.sh
+    timimages/funnel /service/run.sh
 fi
 
 PG_PORT=''

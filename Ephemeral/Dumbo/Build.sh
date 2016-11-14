@@ -1,4 +1,4 @@
 #!/bin/bash
 set -exu
-docker build -t stackage_builder -f Builder.docker $@ . 
+docker build -t timimages/stackage_builder -f Builder.docker $@ .
 ./build_dumbo.sh

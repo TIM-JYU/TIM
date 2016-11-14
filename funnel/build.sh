@@ -1,2 +1,2 @@
 #!/bin/bash
-docker build --tag=funnel $@ .
+docker build --tag=timimages/funnel $@ .

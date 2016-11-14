@@ -14,11 +14,6 @@ docker pull timimages/pali
 docker pull timimages/local_nginx
 docker pull timimages/funnel
 
-docker tag timimages/cs3 cs3
-docker tag timimages/svn svn
-docker tag timimages/stackage_builder stackage_builder
-docker tag timimages/funnel funnel
-
 # Remove leftover untagged images
 docker rmi $(docker images | grep "^<none>" | awk '{print $3}')
 
