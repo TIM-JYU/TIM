@@ -171,7 +171,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
              "/tmp/uhome/" + udir + "/:/home/agent/",
              # dargs = ["/cs/docker-run-timeout.sh", "10s", "-v", "/opt/cs:/cs/:ro", "-v", "/tmp/uhome/" + udir + ":/home/agent/",
              # "-w", "/home/agent", "ubuntu", "/cs/rcmd.sh", urndname + ".sh"]
-             "-w", "/home/agent", "cs3", "/cs/rcmd.sh", urndname + ".sh", str(noX11)]
+             "-w", "/home/agent", "timimages/cs3", "/cs/rcmd.sh", urndname + ".sh", str(noX11)]
     print(dargs)
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
     try:
