@@ -244,7 +244,7 @@ def get_updates():
             {"status": "no-results", "data": ["No new messages"], "lastid": client_last_id, "lectureId": lecture_id,
              "isLecture": True, "lecturers": lecturers, "students": students, "lectureEnding": lecture_ending})
 
-    return jsonResponse({ "isLecture": -1 }); # no new updates
+    return jsonResponse({ "isLecture": -1 })  # no new updates
 
 
 @lecture_routes.route('/getQuestionManually')
