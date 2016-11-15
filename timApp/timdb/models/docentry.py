@@ -9,7 +9,6 @@ from timdb.timdbexception import TimDbException
 from utils import split_location, date_to_relative
 
 
-
 class DocEntry(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'docentry'

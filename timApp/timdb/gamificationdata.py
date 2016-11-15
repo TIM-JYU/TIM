@@ -1,8 +1,11 @@
-"Collection of gamification functions"
+# Collection of gamification functions
 from timdb.models.docentry import DocEntry
 import yaml
 import json
 from flask import request
+import pluginControl
+from timdb.answers import Answers
+from routes import common
 
 
 def gamify(initial_data):
@@ -15,7 +18,6 @@ def gamify(initial_data):
 
     # Insert document, IDs, paths, and points in a dictionary
     place_in_dict(lecture_table, demo_table)
-    # get_demo_maxpoints(demo_name)
 
 
 def convert_to_json(md_data):
@@ -42,20 +44,21 @@ def get_doc_ids(json_to_check):
     for path in lecture_paths:
         lecture = DocEntry.find_by_path(path['path'])
         if lecture is not None:
-            temp_dict1 = {}
-            temp_dict1['id']   = lecture.id
-            temp_dict1['path'] = lecture.get_short_name()
-            temp_dict1['url']  = request.url_root+'/view/'+ lecture.get_path()
+            temp_dict1 = dict()
+            temp_dict1['id'] = lecture.id
+            temp_dict1['name'] = lecture.get_short_name()
+            temp_dict1['url'] = request.url_root+'/view/' + lecture.get_path()
             lectures.append(temp_dict1)
 
     demos = []
     for path in demo_paths:
         demo = DocEntry.find_by_path(path['path'])
         if demo is not None:
-            temp_dict2 = {}
-            temp_dict2['id']   = demo.id
-            temp_dict2['path'] = demo.get_short_name()
-            temp_dict2['url']  = request.url_root+'/view/'+ demo.get_path()
+            temp_dict2 = dict()
+            temp_dict2['id'] = demo.id
+            temp_dict2['name'] = demo.get_short_name()
+            temp_dict2['url'] = request.url_root+'/view/' + demo.get_path()
+            temp_dict2['points'] = get_points_for_doc(demo)
             demos.append(temp_dict2)
 
     return lectures, demos
@@ -77,11 +80,16 @@ def place_in_dict(l_table, d_table):
     for j in range(len(d_table)):
         temp2.append(d_table[j])
 
-    print(document_dict)
+    return
+
+
+def get_points_for_doc(d):
+    document = d.document
+    task_id_list = (pluginControl.find_task_ids(document.get_paragraphs()))
+    print(Answers.get_users_for_tasks(task_id_list[0], common.get_current_user()['id']))
     return
 
 
 class GamificationException(Exception):
     """The exception that is thrown when an error occurs during a gamification check."""
     pass
-
