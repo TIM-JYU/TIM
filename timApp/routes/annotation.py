@@ -10,6 +10,7 @@ as well as adding comments to the annotations. The module also retrieves the ann
 
 from flask import Blueprint
 
+from routes.accesshelper import verify_logged_in
 from timdb.annotations import Annotations
 from .common import *
 
@@ -83,7 +84,7 @@ def add_annotation() -> Dict:
         hash_end = end['t']
     except KeyError as e:
         return abort(400, "Missing data: " + e.args[0])
-    verifyLoggedIn()
+    verify_logged_in()
     annotator_id = get_current_user_id()
     velp_version_id = timdb.velps.get_latest_velp_version(velp_id)["id"]
 
@@ -109,7 +110,7 @@ def update_annotation():
 
     :return: okJsonResponse()
     """
-    verifyLoggedIn()
+    verify_logged_in()
     user_id = get_current_user_id()
     json_data = request.get_json()
     try:
@@ -165,7 +166,7 @@ def invalidate_annotation():
     if not annotation:
         return abort(404, "No such annotation.")
     annotation = annotation[0]
-    verifyLoggedIn()
+    verify_logged_in()
     user_id = get_current_user_id()
     if not annotation['annotator_id'] == user_id:
         return abort(403, "You are not the annotator.")
@@ -193,7 +194,7 @@ def add_comment() -> Dict:
         return abort(400, "Missing data: " + e.args[0])
     # Todo maybe check that content isn't an empty string
     timdb = get_timdb()
-    verifyLoggedIn()
+    verify_logged_in()
     commenter_id = get_current_user_id()
     timdb.annotations.add_comment(annotation_id, commenter_id, content)
     # TODO notice with email to annotator if commenter is not itself
