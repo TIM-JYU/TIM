@@ -68,7 +68,7 @@ def place_in_dict(l_table, d_table):
     """
     :param l_table Array of lecture IDs
     :param d_table Array of demo IDs
-    :returns: maxPoints of the demo document
+    :returns:
     """
     document_dict = {'lectures': [], 'demos': []}
 
@@ -80,16 +80,22 @@ def place_in_dict(l_table, d_table):
     for j in range(len(d_table)):
         temp2.append(d_table[j])
 
+    print(temp1, temp2)
     return
 
 
 def get_points_for_doc(d):
     document = d.document
-    task_id_list = (pluginControl.find_task_ids(document.get_paragraphs()))
     timdb = get_timdb()
+    user_points = 0
+    task_id_list = (pluginControl.find_task_ids(document.get_paragraphs()))
     users_task_info = timdb.answers.get_users_for_tasks(task_id_list[0], [common.get_current_user_id()])
-    print(users_task_info)
-    return
+
+    for entrys in users_task_info:
+        if users_task_info is not None:
+            user_points += (users_task_info[0]['total_points'])
+
+    return user_points
 
 
 class GamificationException(Exception):
