@@ -1,4 +1,5 @@
 from flask import Blueprint
+from flask import current_app
 from flask import g
 
 from routes.accesshelper import verify_logged_in
@@ -60,7 +61,11 @@ def delete_bookmark():
 @bookmarks.route('/markLastRead/<int:doc_id>', methods=['POST'])
 def mark_last_read(doc_id):
     d = DocEntry.find_by_id(doc_id, try_translation=True)
-    g.bookmarks.add_bookmark('Last read', d.short_name, '/view/' + d.path, move_to_top=True).save_bookmarks()
+    g.bookmarks.add_bookmark('Last read',
+                             d.short_name,
+                             '/view/' + d.path,
+                             move_to_top=True,
+                             limit=current_app.config['LAST_READ_BOOKMARK_LIMIT']).save_bookmarks()
     return get_bookmarks()
 
 
