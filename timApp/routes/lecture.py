@@ -16,6 +16,7 @@ from routes.dbaccess import get_timdb
 from routes.login import log_in_as_anonymous
 from routes.sessioninfo import get_current_user_id, logged_in
 from tim_app import app
+from timdb.models.docentry import DocEntry
 from timdb.tempdb_models import TempDb
 from timdb.tim_models import db
 
@@ -514,19 +515,18 @@ def show_lecture_info(lecture_id):
         abort(400)
 
     lecture = lecture[0]
-    doc = timdb.documents.resolve_doc_id_name(str(lecture.get('doc_id')))
+    doc = DocEntry.find_by_id(lecture.get('doc_id'))
     in_lecture, lecture_ids = timdb.lectures.check_if_in_any_lecture(get_current_user_id())
     settings = get_user_settings()
     return render_template("lectureInfo.html",
-                           doc=doc,
+                           item=doc,
                            lectureId=lecture_id,
                            lectureCode=lecture.get("lecture_code"),
                            lectureStartTime=lecture.get("start_time"),
                            lectureEndTime=lecture.get("end_time"),
                            in_lecture=in_lecture,
                            settings=settings,
-                           rights=get_rights(doc['id']),
-                           translations=timdb.documents.get_translations(doc['id']))
+                           translations=timdb.documents.get_translations(doc.id))
 
 
 @lecture_routes.route('/showLectureInfoGivenName/', methods=['GET'])

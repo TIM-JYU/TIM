@@ -28,9 +28,9 @@ def copy_default_rights(item_id: int, item_type, commit=True):
     from routes.dbaccess import get_timdb
     timdb = get_timdb()
     default_rights = []
-    folder = Block.query.get(item_id).get_parent()
+    folder = Block.query.get(item_id).parent
     while folder is not None:
         default_rights += timdb.users.get_default_rights_holders(folder.id, item_type)
-        folder = folder.get_parent()
+        folder = folder.parent
     for d in default_rights:
         timdb.users.grant_access(d['gid'], item_id, d['access_name'], commit=commit)

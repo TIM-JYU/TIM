@@ -12,13 +12,13 @@
  * @copyright 2015 Timppa project authors
  */
 
-var angular, docId, lectureId, lectureCode, lectureStartTime, lectureEndTime, docName, inLecture;
+var angular, item, lectureId, lectureCode, lectureStartTime, lectureEndTime, inLecture, $;
 
 var timApp = angular.module('timApp');
-timApp.controller('LectureInfoController', ['$scope', '$http', '$window', function ($scope, $http, $window) {
+timApp.controller('LectureInfoController', ['$scope', '$http', '$window', '$log', function ($scope, $http, $window, $log) {
     "use strict";
-    $scope.docId = docId;
-    $scope.docName = docName;
+    $scope.docId = item.id;
+    $scope.docName = item.path;
     $scope.inLecture = inLecture;
     $scope.lectureId = lectureId;
     $scope.code = lectureCode;
@@ -88,7 +88,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
                 });
             })
             .error(function () {
-                console.log("There was some error creating question to database.");
+                $log.error("There was some error creating question to database.");
             });
     };
 
@@ -103,22 +103,22 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
      */
     $scope.updateHeaderLinks = function () {
         if (document.getElementById("headerView")) {
-            document.getElementById("headerView").setAttribute("href", "https://" + location.host + "/view/" + window.docName);
+            document.getElementById("headerView").setAttribute("href", "https://" + location.host + "/view/" + item.path);
         }
         if (document.getElementById("headerManage")) {
-            document.getElementById("headerManage").setAttribute("href", "https://" + location.host + "/manage/" + window.docName);
+            document.getElementById("headerManage").setAttribute("href", "https://" + location.host + "/manage/" + item.path);
         }
         if (document.getElementById("headerTeacher")) {
-            document.getElementById("headerTeacher").setAttribute("href", "https://" + location.host + "/teacher/" + window.docName);
+            document.getElementById("headerTeacher").setAttribute("href", "https://" + location.host + "/teacher/" + item.path);
         }
         if (document.getElementById("headerAnswers")) {
-            document.getElementById("headerAnswers").setAttribute("href", "https://" + location.host + "/answers/" + window.docName);
+            document.getElementById("headerAnswers").setAttribute("href", "https://" + location.host + "/answers/" + item.path);
         }
         if (document.getElementById("headerLecture")) {
-            document.getElementById("headerLecture").setAttribute("href", "https://" + location.host + "/lecture/" + window.docName)
+            document.getElementById("headerLecture").setAttribute("href", "https://" + location.host + "/lecture/" + item.path);
         }
         if (document.getElementById("headerSlide")) {
-            document.getElementById("headerSlide").setAttribute("href", "https://" + location.host + "/slide/" + window.docName);
+            document.getElementById("headerSlide").setAttribute("href", "https://" + location.host + "/slide/" + item.path);
         }
     };
 
@@ -129,7 +129,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
     $scope.addReturnLinkToHeader = function () {
         var menu = document.getElementById("inLectureIconSection");
         var linkToLecture = document.createElement("a");
-        linkToLecture.setAttribute("href", "https://" + location.host + "/lecture/" + window.docName + "?Lecture=" + lectureCode);
+        linkToLecture.setAttribute("href", "https://" + location.host + "/lecture/" + item.path + "?Lecture=" + lectureCode);
         linkToLecture.setAttribute("title", "Return to lecture");
         var returnImg = document.createElement("img");
         returnImg.setAttribute("src", "/static/images/join-icon3.png");
@@ -191,7 +191,6 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
             params: {'lecture_id': $scope.lectureId}
         })
             .success(function (lecture) {
-                console.log(lecture);
                 $scope.code = lecture['lectureCode'];
                 $scope.lectureCode = "Lecture info: " + lecture['lectureCode'];
                 $scope.lectureEndTime = lecture['lectureEndTime'];

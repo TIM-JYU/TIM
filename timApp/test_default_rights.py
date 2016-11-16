@@ -13,9 +13,9 @@ class DefaultRightTest(TimRouteTest):
         doc = self.create_doc().document
         timdb = self.get_db()
         docentry = DocEntry.query.filter_by(id=doc.doc_id).one()
-        folder = docentry.get_parent()
+        folder = docentry.parent
 
-        users_folder = Folder.find_by_full_path('users')
+        users_folder = Folder.find_by_path('users')
         timdb.users.grant_default_access([timdb.users.get_korppi_group_id()], users_folder.id, 'view',
                                          blocktypes.DOCUMENT)
 
@@ -63,9 +63,9 @@ class DefaultRightTest(TimRouteTest):
                      'fullname': None,
                      'access_name': 'view'})
             elif obj_type == blocktypes.FOLDER:
-                f = self.json_post('/createFolder',
-                                   {"name": 'users/testuser1/asd',
-                                    "owner": self.current_user_name()}, as_json=True)
+                f = self.json_post('/createItem',
+                                   {"item_path": 'users/testuser1/asd',
+                                    'item_type': 'folder'}, as_json=True)
                 new_item_rights = timdb.users.get_rights_holders(f['id'])
             else:
                 raise Exception('error in test: object type should be document or folder')

@@ -44,9 +44,9 @@ class UploadTest(TimRouteTest):
         test1_group = db.users.get_personal_usergroup_by_id(session['user_id'])
         self.login_test3()
 
-        j = self.json_post('/createFolder',
-                           {'name': fname,
-                            'owner': session['user_name']}, as_json=True)
+        j = self.json_post('/createItem',
+                           {'item_path': fname,
+                            'item_type': 'folder'}, as_json=True)
         db.users.grant_access(test1_group, j['id'], 'edit')
 
         self.login_test1()

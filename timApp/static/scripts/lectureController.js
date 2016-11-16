@@ -675,7 +675,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
          */
         $scope.showBasicView = function (answer) {
             if ($scope.$parent) {
-                $scope.docNamePath = encodeURI($scope.$parent.docName);
+                $scope.docNamePath = encodeURI($scope.$parent.item.path);
             }
             $scope.isLecturer = answer.isLecturer;
             if ($scope.isLecturer) {

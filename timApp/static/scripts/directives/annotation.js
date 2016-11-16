@@ -12,10 +12,8 @@
  * @copyright 2016 Timber project members
  */
 
-/*
  var angular;
  var timApp = angular.module('timApp');
- */
 
 /** Directive for a single annotation.
  * @lends module:reviewController
@@ -246,7 +244,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
              */
 
             scope.notAnnotationRights = function (points) {
-                if (scope.$parent.rights.teacher) {
+                if (scope.$parent.item.rights.teacher) {
                     return false;
                 } else {
                     if (points === null) {
@@ -262,7 +260,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
              * @returns {boolean} Whether the user has teacher rights or not
              */
             scope.allowChangePoints = function () {
-                return scope.$parent.rights.teacher;
+                return scope.$parent.item.rights.teacher;
             };
 
 

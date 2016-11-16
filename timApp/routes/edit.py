@@ -368,7 +368,7 @@ def par_response(pars,
             # d can be None when editing a translation because they don't have a row in DocEntry.
             # Skip this case for now; TODO: fix
             if d is not None:
-                bms.add_bookmark('Last edited', d.get_short_name(), '/view/' + d.get_path(), move_to_top=True).save_bookmarks()
+                bms.add_bookmark('Last edited', d.short_name, '/view/' + d.path, move_to_top=True).save_bookmarks()
     else:
         duplicates = None
 
@@ -381,14 +381,14 @@ def par_response(pars,
 
     return jsonResponse({'texts': render_template('paragraphs.html',
                                                   text=pars,
-                                                  rights=get_rights(doc.doc_id),
+                                                  item={'rights': get_rights(doc.doc_id)},
                                                   preview=preview),
                          'js': js_paths,
                          'css': css_paths,
                          'angularModule': modules,
                          'changed_pars': {p['id']: render_template('paragraphs.html',
                                                                    text=[p],
-                                                                   rights=get_rights(doc.doc_id)) for p in
+                                                                   item={'rights': get_rights(doc.doc_id)}) for p in
                                           changed_pars},
                          'version': doc.get_version(),
                          'duplicates': duplicates,

@@ -15,9 +15,7 @@
 {% block head %}
     {{ super() }}
     <script>
-        var docId = {{doc.id|tojson}};
-        var docName = {{doc.fullname|tojson}};
-        var rights = {{rights|tojson}};
+        var item = {{item|tojson}};
     </script>
     <script src="{{ url_for('static', filename='scripts/breadcrumbs.js') }}"></script>
 {% endblock %}
@@ -25,9 +23,9 @@
     {{ super() }}
     {% if not hide_links %}
     <div class="nav nav-tabs">    {% block itemlinks %}
-        <li role="presentation" {{ active('view_page.view_document') }}><a id="headerView" href="/view/{{ doc.fullname }}">View</a></li>
-        {% if rights.manage %}
-             <li role="presentation" {{ active('manage_page.manage') }}><a id="headerManage" href="/manage/{{ doc.fullname }}">Manage</a></li>
+        <li role="presentation" {{ active('view_page.view_document') }}><a id="headerView" href="/view/{{ item.path }}">View</a></li>
+        {% if item.rights.manage %}
+             <li role="presentation" {{ active('manage_page.manage') }}><a id="headerManage" href="/manage/{{ item.path }}">Manage</a></li>
         {% endif %}
     {% endblock %}</div>
     {% include 'breadcrumbs.html' %}

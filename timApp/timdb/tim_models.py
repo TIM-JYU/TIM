@@ -11,13 +11,10 @@ Keep the model classes in alphabetical order.
 Use Flask-Migrate for database migrations. See <http://flask-migrate.readthedocs.io/en/latest/>.
 """
 import datetime
-import inspect
-import sys
 from datetime import timezone
 
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import func
-from sqlalchemy.schema import CreateTable
 
 from timdb.readparagraphtype import ReadParagraphType
 
@@ -192,15 +189,6 @@ class ReadParagraph(db.Model):
     type = db.Column(db.Enum(ReadParagraphType), nullable=False, primary_key=True)
     par_hash = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
-
-
-class Translation(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'translation'
-    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
-    src_docid = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
-    lang_id = db.Column(db.Text, nullable=False)
-    doc_title = db.Column(db.Text)
 
 
 class UserAnswer(db.Model):

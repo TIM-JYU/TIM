@@ -44,8 +44,9 @@ class TimTest(TimRouteTest):
         doc_ids = set()
         for idx, n in enumerate(doc_names):
             self.assertDictResponse({'id': doc_id_list[idx], 'name': doc_names[idx]},
-                                    self.json_post('/createDocument', {
-                                        'doc_name': n
+                                    self.json_post('/createItem', {
+                                        'item_path': n,
+                                        'item_type': 'document'
                                     }))
             doc_ids.add(doc_id_list[idx])
         self.assertDictResponse(self.ok_resp,

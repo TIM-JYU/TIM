@@ -29,7 +29,7 @@
 {% set par_edit_mode = edit_mode == "par" %}
 {% set area_edit_mode = edit_mode == "area" %}
 
-{% block title %}{{ doc.title }}{% endblock %}
+{% block title %}{{ item.title }}{% endblock %}
 
 {# The custom style should be the last style element, so don't render it in base.html #}
 {% block customcss %}{% endblock %}
@@ -163,8 +163,8 @@
         {% endif %}
         {% if slide_mode %}
             <div class="paragraphs">
-                <iframe id="slideFrame" src="/show_slide/{{ doc.fullname }}" allowfullscreen></iframe>
-                <a id="showSlidesLink" href="/show_slide/{{ doc.fullname }}">Show slides only</a>
+                <iframe id="slideFrame" src="/show_slide/{{ item.path }}" allowfullscreen></iframe>
+                <a id="showSlidesLink" href="/show_slide/{{ item.path }}">Show slides only</a>
             </div>
         {% else %}
             {% if velp_mode or teacher_mode %}
