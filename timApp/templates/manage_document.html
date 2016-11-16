@@ -39,7 +39,7 @@
                     <div class="input-group input-group-sm">
                         <input class="form-control" type="text" ng-model="alias.name" placeholder="Document name"/>
                         <span class="input-group-btn">
-                    <a class="timButton" href="{{ '/view/{{alias.fullname | escape}}' }}">View</a>
+                    <a class="timButton" href="{{ '/view/{{alias.path | escape}}' }}">View</a>
                             </span>
                     </div>
                 </td>
@@ -91,9 +91,9 @@
             </tr>
             <tr>
                 <td><input type="text" class="form-control" ng-model="lang_id" placeholder="Language"/></td>
-                <td><input type="text" class="form-control" ng-model="doc.title" placeholder="Title"/></td>
-                <td>{{ '{{doc.owner.name}}' }}</td>
-                <td>{{ '{{doc.id}}' }}</td>
+                <td><input type="text" class="form-control" ng-model="item.title" placeholder="Title"/></td>
+                <td>{{ '{{item.owner.name}}' }}</td>
+                <td>{{ '{{item.id}}' }}</td>
                 <td>
                     <button class="timButton" ng-click="updateMetadata()" ng-disabled="!metaChanged()">Update</button>
                 </td>
@@ -158,7 +158,7 @@
     </div>
     </div>
 
-    {% if rights['owner'] %}
+    {% if item.rights['owner'] %}
     <div class="panel panel-default">
         <div class="panel-heading">Notifications</div>
         <div class="panel-body">
@@ -209,7 +209,7 @@
     <form id="fullDocumentEditor">
         <div id="documentEditorDiv">
             <textarea id="doctext" class="form-control" ng-model="fulltext" rows="50" ng-hide="renameFormShowing"></textarea>
-            <button id="documentEditorSaveButton" class="timButton" ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument()" ng-hide="renameFormShowing">Save</button>
+            <button id="documentEditorSaveButton" class="timButton" ng-disabled="(item.fulltext === fulltext) || saving" ng-click="saveDocument()" ng-hide="renameFormShowing">Save</button>
             <span ng-show="saving">Saving...</span>
         </div>
         <div id="tracWikiDiv" ng-hide="renameFormShowing">
@@ -226,7 +226,7 @@
                     TracWiki content:</label>
                     <textarea rows="50" id="tracWikiText" class="form-control" ng-model="tracWikiText"></textarea></div>
 
-                <button class="timButton" ng-click="convertDocument(doc)">Convert TracWiki</button>
+                <button class="timButton" ng-click="convertDocument(item)">Convert TracWiki</button>
             </div>
         </div>
     </form>
@@ -236,9 +236,9 @@
     <div class="panel panel-default">
         <div class="panel-heading">Other actions</div>
         <div class="panel-body">
-            <a class="timButton" href="/download/{{ '{{ doc.id }}' }}">Download document markdown</a>
+            <a class="timButton" href="/download/{{ '{{ item.id }}' }}">Download document markdown</a>
             <button class="timButton" ng-click="markAllAsRead()">Mark document as read</button>
-            <button class="btn btn-danger" ng-click="deleteDocument(doc.id)">Delete document</button>
+            <button class="btn btn-danger" ng-click="deleteDocument(item.id)">Delete document</button>
             <span ng-show="readUpdating">Loading...</span>
         </div>
     </div>
@@ -255,21 +255,21 @@
                     <th>Event</th>
                 </tr>
                 </thead>
-                <tr ng-repeat="version in doc.versions">
-                    <td><a href="/download/{{ doc.id }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{ version.time |
+                <tr ng-repeat="version in item.versions">
+                    <td><a href="/download/{{ item.id }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{ version.time |
                         timdate }}</a></td>
                     <td>{{ version.group }}</td>
-                    <td><a href="/view/{{ doc.fullname }}#{{ version.par_id }}">{{ version.par_id }}</a></td>
+                    <td><a href="/view/{{ item.path }}#{{ version.par_id }}">{{ version.par_id }}</a></td>
                     <td>
                         <a ng-if="!$last"
-                           href="/diff/{{ doc.id }}/{{ doc.versions[$index+1].ver[0] }}/{{ doc.versions[$index+1].ver[1] }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{
+                           href="/diff/{{ item.id }}/{{ item.versions[$index+1].ver[0] }}/{{ item.versions[$index+1].ver[1] }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{
                             version.op }}</a>
                         <span ng-if="$last">{{ version.op }}</span>
                     </td>
                 </tr>
             </table>
-            <p ng-show="hasMoreChangelog">Showing {{ doc.versions.length }} latest entries.</p>
-            <p ng-show="!hasMoreChangelog">Showing all {{ doc.versions.length }} entries.</p>
+            <p ng-show="hasMoreChangelog">Showing {{ item.versions.length }} latest entries.</p>
+            <p ng-show="!hasMoreChangelog">Showing all {{ item.versions.length }} entries.</p>
             <button class="timButton" ng-show="hasMoreChangelog" ng-click="showMoreChangelog()">Show more entries</button>
         </div>
     </div>

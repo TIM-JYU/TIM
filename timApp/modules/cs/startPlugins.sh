@@ -3,13 +3,13 @@
 # run with option i to get interactive mode
 # option p for pure start (no wget for files)
 dockername="csplugin"
-dockerImage="cs3"
+dockerImage="timimages/cs3"
 extraPorts=""
 extraCmds="/bin/bash"
 
 if [ "$3" = "d" ]
 then 
-    dockerImage="cs3sudo"
+    dockerImage="timimages/cs3sudo"
     extraPorts="-p 49998:22"
     extraCmds=''
 fi

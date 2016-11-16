@@ -29,7 +29,7 @@ var timApp = angular.module('timApp').config(['$httpProvider', function ($httpPr
                             }
                         }
                         var par = angular.element(escapeId(taskIdFull)).parents('.par');
-                        angular.extend(config.data, {ref_from: {docId: $window.docId, par: par.attr('id')}});
+                        angular.extend(config.data, {ref_from: {docId: $window.item.id, par: par.attr('id')}});
                     }
                     return config;
                 },
@@ -71,11 +71,11 @@ timApp.controller("ViewCtrl", [
         timLogTime("ViewCtrl start","view");
 
         sc.noBrowser = $window.noBrowser;
-        sc.docId = $window.docId;
-        sc.docName = $window.docName;
+        sc.docId = $window.item.id;
+        sc.docName = $window.item.path;
         sc.showIndex = $window.showIndex;
         sc.crumbs = $window.crumbs;
-        sc.rights = $window.rights;
+        sc.item = $window.item;
         sc.startIndex = $window.startIndex;
         sc.users = $window.users;
         sc.group = $window.group;
@@ -114,7 +114,6 @@ timApp.controller("ViewCtrl", [
         sc.mathJaxLoaded = false;
         sc.mathJaxLoadDefer = null;
         sc.hidePending = false;
-        sc.hideMessage = false;
         sc.pendingUpdates = {};
         var EDITOR_CLASS = "editorArea";
         var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
@@ -141,10 +140,6 @@ timApp.controller("ViewCtrl", [
 
         sc.closeRefreshDlg = function() {
             sc.showRefresh = false;
-        };
-
-        sc.closeMessageDlg = function() {
-            sc.hideMessage = true;
         };
 
         sc.markPageDirty = function() {
@@ -516,7 +511,7 @@ timApp.controller("ViewCtrl", [
             var caption = 'Edit comment';
             var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
             var mobile = touch && (window.screen.width < 1200);
-            if (!sc.rights.can_comment) {
+            if (!sc.item.rights.can_comment) {
                 return;
             }
             var url,
@@ -1531,7 +1526,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.toggleActionButtons = function (e, $par, toggle1, toggle2, coords) {
-            if (!sc.rights.editable && !sc.rights.can_comment) {
+            if (!sc.item.rights.editable && !sc.item.rights.can_comment) {
                 return;
             }
 
@@ -1874,7 +1869,7 @@ timApp.controller("ViewCtrl", [
                     sc.getIndex();
                     sc.processAllMath($('body'));
                     /*
-                     if (sc.rights.editable) {
+                     if (sc.item.rights.editable) {
                      sc.getEditPars();
                      }*/
                     if (sc.lectureMode) {
@@ -1911,7 +1906,7 @@ timApp.controller("ViewCtrl", [
             }
         });
 
-        if (sc.rights.editable) {
+        if (sc.item.rights.editable) {
             sc.onClick(".addBottom", function ($this, e) {
                 $(".actionButtons").remove();
                 //var $par = $('.par').last();
@@ -2265,8 +2260,8 @@ timApp.controller("ViewCtrl", [
                 ];
             } else {
                 return [
-                    {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
-                    {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
+                    {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.item.rights.can_comment},
+                    {func: sc.showEditWindow, desc: 'Edit', show: sc.item.rights.editable},
                     {func: sc.cutPar, desc: 'Cut paragraph', show: $window.editMode === 'par'},
                     {func: sc.copyPar, desc: 'Copy paragraph', show: $window.editMode !== 'area'},
                     //{func: sc.cutArea, desc: 'Cut area', show: $window.editMode === 'area'},
@@ -2274,8 +2269,8 @@ timApp.controller("ViewCtrl", [
                     {func: sc.showPasteMenu, desc: 'Paste...', show: $window.editMode && (sc.allowPasteRef || sc.allowPasteContent)},
                     {func: sc.showMoveMenu, desc: 'Move here...', show: $window.allowMove},
                     {func: sc.removeAreaMarking, desc: 'Remove area marking', show: $window.editMode === 'area'},
-                    {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
-                    {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
+                    {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.item.rights.editable},
+                    {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.item.rights.editable},
                     {
                         func: sc.startArea,
                         desc: 'Start selecting area',

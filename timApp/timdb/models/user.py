@@ -34,7 +34,7 @@ class User(db.Model):
 
     def get_personal_folder(self):
         path = 'users/' + self.name
-        f = Folder.find_by_full_path(path)
+        f = Folder.find_by_path(path)
         if f is None:
             return Folder.create(path, self.get_personal_group().id, apply_default_rights=True)
         return f

@@ -1,15 +1,17 @@
-from typing import Optional
+from typing import Optional, Union
 
 from documentmodel.document import Document
 from timdb.gamification_models.gamificationdocument import GamificationDocument
+from timdb.docinfo import DocInfo
 from timdb.tim_models import db
+from timdb.models.translation import Translation
 from timdb.blocktypes import blocktypes
 from timdb.dbutils import insert_block
 from timdb.timdbexception import TimDbException
-from utils import split_location, date_to_relative
+from utils import split_location
 
 
-class DocEntry(db.Model):
+class DocEntry(db.Model, DocInfo):
     __bind_key__ = 'tim_main'
     __tablename__ = 'docentry'
     name = db.Column(db.Text, primary_key=True)
@@ -18,21 +20,47 @@ class DocEntry(db.Model):
 
     block = db.relationship('Block', backref=db.backref('docentries', lazy='dynamic'))
 
-    def __getattr__(self, item):
-        if item == 'document':
-            self.document = Document(self.id)
-            return self.document
-        raise AttributeError
+    @property
+    def path(self):
+        return self.name
+
+    @property
+    def path_without_lang(self):
+        return self.name
 
     @staticmethod
-    def find_by_id(doc_id: int) -> Optional['DocEntry']:
+    def find_by_id(doc_id: int, try_translation=False) -> Union['DocEntry', 'Translation']:
         d = DocEntry.query.filter_by(id=doc_id).first()
+        if d:
+            return d
+        if try_translation:
+            d = Translation.query.get(doc_id)
         return d
 
     @staticmethod
-    def find_by_path(path: str) -> Optional['DocEntry']:
+    def find_by_path(path: str, fallback_to_id=False, try_translation=False) -> Union['DocEntry', 'Translation']:
         d = DocEntry.query.get(path)
+        if d:
+            return d
+        # try translation
+        if try_translation:
+            base_doc_path, lang = split_location(path)
+            entry = DocEntry.find_by_path(base_doc_path)
+            if entry is not None:
+                tr = Translation.query.filter_by(src_docid=entry.id, lang_id=lang).first()
+                if tr is not None:
+                    tr.docentry = entry
+                    return tr
+        if fallback_to_id:
+            try:
+                return DocEntry.find_by_id(int(path))
+            except ValueError:
+                return None
         return d
+
+    @staticmethod
+    def get_dummy(title):
+        return DocEntry(id=-1, name=title)
 
     @staticmethod
     def create(name: Optional[str], owner_group_id: int, is_gamified: bool = False) -> 'DocEntry':
@@ -61,33 +89,3 @@ class DocEntry(db.Model):
 
         db.session.commit()
         return docentry
-
-    def get_parent(self):
-        folder, name = split_location(self.name)
-        from timdb.models.folder import Folder
-        return Folder.find_by_full_path(folder) if folder else Folder(id=-1)
-
-    def get_short_name(self) -> str:
-        parts = self.name.rsplit('/', 1)
-        return parts[len(parts) - 1]
-
-    def get_path(self):
-        return self.name
-
-    def get_title(self) -> str:
-        return self.block.description
-
-    def get_last_modified(self):
-        return self.document.get_last_modified()
-
-    def to_json(self):
-        from routes.accesshelper import get_rights
-        return {'name': self.get_short_name(),
-                'fullname': self.get_path(),
-                'id': self.id,
-                'modified': date_to_relative(self.get_last_modified()),
-                'isFolder': False,
-                'owner': self.block.owner,
-                'rights': get_rights(self.id),
-                'unpublished': self.block.is_unpublished()
-                }

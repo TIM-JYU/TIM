@@ -24,6 +24,7 @@ pg_backup/
 /docs/YPJ-palkat_1.8.2014_ja_1.8.2015.xlsx
 /converters/demopisteet/*.csv
 tim_secret.py
+yubi.key
 /timApp/modules/pali/log/log.txt
 /timApp/doctest_files/
 /timApp/modules/Haskell/Choices/

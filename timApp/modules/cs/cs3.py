@@ -171,7 +171,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
              "/tmp/uhome/" + udir + "/:/home/agent/",
              # dargs = ["/cs/docker-run-timeout.sh", "10s", "-v", "/opt/cs:/cs/:ro", "-v", "/tmp/uhome/" + udir + ":/home/agent/",
              # "-w", "/home/agent", "ubuntu", "/cs/rcmd.sh", urndname + ".sh"]
-             "-w", "/home/agent", "cs3", "/cs/rcmd.sh", urndname + ".sh", str(noX11)]
+             "-w", "/home/agent", "timimages/cs3", "/cs/rcmd.sh", urndname + ".sh", str(noX11)]
     print(dargs)
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
     try:
@@ -1763,7 +1763,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
                 elif ttype == "octave":
                     print("octave: ", exename)
-                    code, out, err, pwd = run2(["octave", "--no-window-system", "--no-gui", "-qf", pure_exename], cwd=prgpath, timeout=10, env=env,
+                    code, out, err, pwd = run2(["octave", "--no-window-system", "--no-gui", "-qf", pure_exename], cwd=prgpath, timeout=20, env=env,
                                                stdin=stdin,
                                                uargs=userargs, ulimit="ulimit -f 80000", noX11=True)
                     if err:

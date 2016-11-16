@@ -65,7 +65,7 @@
                 </label>
                 <button class="timButton" ng-click="drawCharts(selectedUser)">Show answers</button>
                 <button class="timButton" ng-show="isLecturer" ng-click="drawCharts()">Show all</button>
-
+                <a class="timButton" href="/getLectureAnswerTotals/{{ "{{lectureId}}" }}?sum_field_name=sum&count_field_name=cnt">Download as plain text</a>
                 <div ng-repeat="question in questions" style="margin-bottom: 2em">
                     <p class="bold" ng-show="showPoints"
                        ng-bind-html="question.json.title">{{ "{{question.json.title}}" }}</p>

@@ -22,8 +22,9 @@ gitGet () {
          fi
     fi
 }
-gitGet PluginConstructionKit git://yousource.it.jyu.fi/ties343-funktio-ohjelmointi/PluginConstructionKit.git
-gitGet Choices git://yousource.it.jyu.fi/ties343-funktio-ohjelmointi/MultipleChoicePlugin.git
+gitGet Choices3 git://yousource.it.jyu.fi/ties343-funktio-ohjelmointi/MultipleChoicePlugin.git
 
-(cd PluginConstructionKit/ && stack init --force --solver --omit-packages --allow-different-user && stack solver --update-config --allow-different-user)
-(cd Choices/ && stack solver --update-config --allow-different-user && stack build --allow-different-user --copy-bins)
+(cd Choices3/ \
+&& sed -i 's/git@yousource.it.jyu.fi:/git:\/\/yousource.it.jyu.fi\//' stack.yaml \
+&& stack solver --update-config --allow-different-user \
+&& stack build --allow-different-user --copy-bins)

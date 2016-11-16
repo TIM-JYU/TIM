@@ -20,14 +20,12 @@ def verify_admin():
 
 
 def verify_edit_access(block_id, message="Sorry, you don't have permission to edit this resource."):
-    timdb = get_timdb()
-    if not timdb.users.has_edit_access(get_current_user_id(), block_id):
+    if not has_edit_access(block_id):
         abort(403, message)
 
 
 def verify_manage_access(block_id, message="Sorry, you don't have permission to manage this resource."):
-    timdb = get_timdb()
-    if not timdb.users.has_manage_access(get_current_user_id(), block_id):
+    if not has_manage_access(block_id):
         abort(403, message)
 
 
@@ -35,40 +33,30 @@ def has_edit_access(block_id):
     return block_id in get_editable_blocks()
 
 
-def verify_access(block_id: int, access_type: AccessType, require: bool=True, message: Optional[str]=None):
-    timdb = get_timdb()
+def verify_access(block_id: int, access_type: AccessType, require: bool = True, message: Optional[str] = None):
     if access_type == AccessType.view:
-        return abort_if_not_access_and_required(timdb.users.has_view_access(get_current_user_id(), block_id), require,
-                                                message)
+        return abort_if_not_access_and_required(has_view_access(block_id), require, message)
     elif access_type == AccessType.edit:
-        return abort_if_not_access_and_required(timdb.users.has_edit_access(get_current_user_id(), block_id), require,
-                                                message)
+        return abort_if_not_access_and_required(has_edit_access(block_id), require, message)
     elif access_type == AccessType.see_answers:
-        return abort_if_not_access_and_required(timdb.users.has_seeanswers_access(get_current_user_id(), block_id),
-                                                require,
-                                                message)
+        return abort_if_not_access_and_required(has_seeanswers_access(block_id), require, message)
     elif access_type == AccessType.teacher:
-        return abort_if_not_access_and_required(timdb.users.has_teacher_access(get_current_user_id(), block_id), require,
-                                                message)
+        return abort_if_not_access_and_required(has_teacher_access(block_id), require, message)
     elif access_type == AccessType.manage:
-        return abort_if_not_access_and_required(timdb.users.has_manage_access(get_current_user_id(), block_id), require,
-                                                message)
+        return abort_if_not_access_and_required(has_manage_access(block_id), require, message)
     abort(400, 'Bad request - unknown access type')
 
 
 def verify_view_access(block_id, require=True, message=None):
-    timdb = get_timdb()
-    return abort_if_not_access_and_required(timdb.users.has_view_access(get_current_user_id(), block_id), require, message)
+    return abort_if_not_access_and_required(has_view_access(block_id), require, message)
 
 
 def verify_teacher_access(block_id, require=True, message=None):
-    timdb = get_timdb()
-    return abort_if_not_access_and_required(timdb.users.has_teacher_access(get_current_user_id(), block_id), require, message)
+    return abort_if_not_access_and_required(has_teacher_access(block_id), require, message)
 
 
 def verify_seeanswers_access(block_id, require=True, message=None):
-    timdb = get_timdb()
-    return abort_if_not_access_and_required(timdb.users.has_seeanswers_access(get_current_user_id(), block_id), require, message)
+    return abort_if_not_access_and_required(has_seeanswers_access(block_id), require, message)
 
 
 def abort_if_not_access_and_required(has_access, require=True, message=None):
@@ -135,8 +123,7 @@ def has_ownership(block_id):
 
 
 def verify_ownership(block_id):
-    timdb = get_timdb()
-    if not timdb.users.user_is_owner(get_current_user_id(), block_id):
+    if not has_ownership(block_id):
         abort(403, "Sorry, you don't have permission to view this resource.")
 
 
@@ -161,9 +148,11 @@ def verify_task_access(doc_id, task_id_name, access_type):
     # If the user doesn't have access to the document, we need to check if the plugin was referenced
     # from another document
     if not verify_access(doc_id, access_type, require=False):
-        orig_doc = (request.get_json() or {}).get('ref_from', {}).get('docId', get_option(request, 'ref_from_doc_id', default=doc_id))
+        orig_doc = (request.get_json() or {}).get('ref_from', {}).get('docId', get_option(request, 'ref_from_doc_id',
+                                                                                          default=doc_id))
         verify_access(orig_doc, access_type)
-        par_id = (request.get_json() or {}).get('ref_from', {}).get('par', get_option(request, 'ref_from_par_id', default=None))
+        par_id = (request.get_json() or {}).get('ref_from', {}).get('par', get_option(request, 'ref_from_par_id',
+                                                                                      default=None))
         if par_id is None:
             abort(403)
         par = Document(orig_doc).get_paragraph(par_id)

@@ -235,20 +235,22 @@ def get_image(image_id, image_filename):
 
 @app.route("/getTemplates")
 def get_templates():
-    current_path = request.args.get('root_path', '')
+    current_path = request.args.get('item_path', '')
     timdb = get_timdb()
     templates = []
+    d = DocEntry.find_by_path(current_path, try_translation=True)
+    current_path = d.parent.path
 
     while True:
         for t in timdb.documents.get_documents(filter_ids=get_viewable_blocks(),
                                       filter_folder=current_path + '/Templates',
                                       search_recursively=False):
-            if not t.get_short_name().startswith('$'):
+            if not t.short_name.startswith('$'):
                 templates.append(t)
         if current_path == '':
             break
         current_path, _ = timdb.folders.split_location(current_path)
-    templates.sort(key=lambda d: d.get_short_name().lower())
+    templates.sort(key=lambda d: d.short_name.lower())
     return jsonResponse(templates)
 
 
@@ -263,22 +265,25 @@ def create_item(item_name, item_type_str, create_function, owner_group_id):
         bms = Bookmarks(get_current_user_object())
         d = DocEntry.find_by_id(item_id)
         bms.add_bookmark('Last edited',
-                         d.get_short_name(),
-                         '/view/' + d.get_path(),
+                         d.short_name,
+                         '/view/' + d.path,
                          move_to_top=True,
                          limit=app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
     copy_default_rights(item_id, item_type)
     return jsonResponse({'id': item_id, 'name': item_name})
 
 
-@app.route("/createDocument", methods=["POST"])
+@app.route("/createItem", methods=["POST"])
 def create_document():
     jsondata = request.get_json()
-    doc_name = jsondata['doc_name']
+    item_path = jsondata['item_path']
     is_gamified = jsondata.get('gamified', False)
 
     timdb = get_timdb()
-    return create_item(doc_name, 'document', lambda name, group: timdb.documents.create(name, group, is_gamified).doc_id,
+    item_type = jsondata['item_type']
+    return create_item(item_path,
+                       item_type,
+                       (lambda name, group: timdb.documents.create(name, group, is_gamified).doc_id) if item_type == 'document' else timdb.folders.create,
                        get_current_user_group())
 
 
@@ -392,18 +397,6 @@ def create_citation_doc(docid, newname):
     def factory(name, group):
         return timdb.documents.create_translation(src_doc, name, group, params).doc_id
     return create_item(newname, 'document', factory, get_current_user_group())
-
-
-@app.route("/createFolder", methods=["POST"])
-def create_folder():
-    jsondata = request.get_json()
-    folder_name = jsondata['name']
-    owner_group_name = jsondata['owner']
-    timdb = get_timdb()
-    owner_group_id = timdb.users.get_usergroup_by_name(owner_group_name)
-    if owner_group_id is None:
-        abort(404, 'Non-existent usergroup.')
-    return create_item(folder_name, 'folder', timdb.folders.create, owner_group_id)
 
 
 @app.route("/getBlock/<int:doc_id>/<par_id>")
@@ -531,7 +524,7 @@ def log_request(response):
         status_code = response.status_code
         log_info(get_request_message(status_code))
         if request.method in ('PUT', 'POST', 'DELETE'):
-            log_debug(request.get_json())
+            log_debug(request.get_json(silent=True))
     return response
 
 
@@ -558,6 +551,8 @@ def del_g(response):
             del g.user
         if hasattr(g, 'viewable'):
             del g.viewable
+        if hasattr(g, 'editable'):
+            del g.editable
         if hasattr(g, 'teachable'):
             del g.teachable
         if hasattr(g, 'manageable'):

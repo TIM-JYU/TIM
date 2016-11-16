@@ -1,16 +1,17 @@
 var angular;
 var timApp = angular.module('timApp');
 
-timApp.directive("createDocument", ['$window', '$log', '$http', function ($window, $log, $http) {
+timApp.directive("createItem", ['$window', '$log', '$http', function ($window, $log, $http) {
     "use strict";
     return {
         restrict: 'E',
         scope: {
-            docName: '@?',
-            docLocation: '@?',
+            itemType: '@', // folder or document
+            itemName: '@?',
+            itemLocation: '@?',
             fullPath: '@?'
         },
-        templateUrl: "/static/templates/createDocument.html",
+        templateUrl: "/static/templates/createItem.html",
         link: function ($scope, $element) {
 
         },
@@ -20,17 +21,17 @@ timApp.directive("createDocument", ['$window', '$log', '$http', function ($windo
 
             if (sc.fullPath) {
                 var str = sc.fullPath;
-                sc.docLocation = str.substring(0, str.lastIndexOf("/"));
-                sc.docName = str.substring(str.lastIndexOf("/") + 1, str.length);
+                sc.itemLocation = str.substring(0, str.lastIndexOf("/"));
+                sc.itemName = str.substring(str.lastIndexOf("/") + 1, str.length);
             }
 
             sc.alerts = [];
 
-            sc.createDocument = function (name, isGamified) {
-                console.log.isGamified
-                $http.post('/createDocument', {
-                    "doc_name": sc.docLocation + '/' + sc.docName,
-                    "gamified" : sc.isGamified
+            sc.createItem = function (name) {
+                $http.post('/createItem', {
+                    "item_path": sc.itemLocation + '/' + sc.itemName,
+                    "item_type": sc.itemType,
+                    "gamified": sc.isGamified
                 }).then(function (response) {
                     $window.location.href = "/view/" + response.data.name;
                 }, function (response) {
