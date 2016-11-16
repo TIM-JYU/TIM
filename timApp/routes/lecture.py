@@ -47,7 +47,6 @@ def get_lecture_info():
 
     added_users = []
     for singleDict in answer_dicts:
-        singleDict['user_name'] = timdb.users.get_user(singleDict['user_id']).get("name")
         if singleDict['question_id'] not in question_ids:
             question_ids.append(singleDict['question_id'])
         if singleDict['user_id'] not in added_users:
@@ -60,6 +59,25 @@ def get_lecture_info():
         {"messages": messages, "answerers": answerers, "answers": answer_dicts, "questions": lecture_questions,
          "isLecturer": is_lecturer, "user": {'user_name': timdb.users.get_user(current_user)['name'],
                                              'user_id': current_user}})
+
+
+@lecture_routes.route('/getLectureAnswerTotals/<int:lecture_id>')
+def get_lecture_answer_totals(lecture_id):
+    is_lecturer = False
+    current_user = get_current_user_id()
+    timdb = get_timdb()
+    if timdb.lectures.get_lecture(lecture_id)[0].get("lecturer") == current_user:
+        is_lecturer = True
+    results = timdb.lecture_answers.get_totals(lecture_id, None if is_lecturer else get_current_user_id())
+    sum_field_name = get_option(request, 'sum_field_name', 'sum')
+    count_field_name = get_option(request, 'count_field_name', 'count')
+    def generate_text():
+        for a in results:
+            yield '{};{};{}\n'.format(a['name'], sum_field_name, a['sum'])
+        yield '\n'
+        for a in results:
+            yield '{};{};{}\n'.format(a['name'], count_field_name, a['count'])
+    return Response(generate_text(), mimetype='text/plain')
 
 
 @lecture_routes.route('/getAllMessages')

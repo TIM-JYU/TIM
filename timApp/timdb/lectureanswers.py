@@ -120,31 +120,45 @@ class LectureAnswers(TimDbBase):
 
     def get_answers_to_questions_from_lecture(self, lecture_id: int) -> List[dict]:
         """
-        Gets all the naswers to questions from specific lecture
+        Gets all the answers to questions from specific lecture
         :param lecture_id: lecture ID
         :return:
         """
         cursor = self.db.cursor()
 
         cursor.execute("""
-                        SELECT *
+                        SELECT answer_id, user_id, question_id, lecture_id, answer, answered_on, points, name as user_name
                         FROM LectureAnswer
+                        JOIN UserAccount ON LectureAnswer.user_id = UserAccount.id
                         WHERE lecture_id = %s
         """, [lecture_id])
 
         return self.resultAsDictionary(cursor)
 
+    def get_totals(self, lecture_id: int, user_id: Optional[int]=None):
+        cursor = self.db.cursor()
+        condition = 'AND u.id = %s' if user_id is not None else ''
+        cursor.execute("""SELECT u.name, SUM(a.points) as sum, COUNT(*) as count
+        FROM LectureAnswer a
+        JOIN UserAccount u ON a.user_id = u.id
+        WHERE a.lecture_id = %s
+        {}
+        GROUP BY u.name
+        ORDER BY u.name""".format(condition), [lecture_id] if user_id is None else [lecture_id, user_id])
+        return self.resultAsDictionary(cursor)
+
     def get_user_answers_to_questions_from_lecture(self, lecture_id: int, user_id: int) -> List[dict]:
         """
-        Gets all the naswers to questions from specific lecture
+        Gets all the answers to questions from specific lecture
         :param lecture_id: lecture ID
         :return:
         """
         cursor = self.db.cursor()
 
         cursor.execute("""
-                        SELECT *
+                        SELECT answer_id, user_id, question_id, lecture_id, answer, answered_on, points, name as user_name
                         FROM LectureAnswer
+                        JOIN UserAccount ON LectureAnswer.user_id = UserAccount.id
                         WHERE lecture_id = %s AND user_id = %s
         """, [lecture_id, user_id])
 
