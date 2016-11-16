@@ -1,3 +1,4 @@
+var angular, $;
 var timApp = angular.module('timApp');
 
 /**
@@ -6,6 +7,7 @@ var timApp = angular.module('timApp');
  * an area (element with a class "area") as its ancestor.
  */
 timApp.directive('popupMenu', ['$http', '$window', '$filter', function ($http, $window, $filter) {
+    "use strict";
     return {
         restrict: 'E',
         scope: true, // we need functions from parent scope

@@ -1,3 +1,5 @@
+import os
+
 from flask_testing import LiveServerTestCase
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -42,7 +44,9 @@ class BrowserTest(LiveServerTestCase, TimRouteTest):
         self.drv.get("{}:{}{}".format(self.app.config['SELENIUM_URL'], self.app.config['LIVESERVER_PORT'], url))
 
     def save_screenshot(self, filename):
-        if not self.drv.save_screenshot('/service/screenshots/' + filename):
+        screenshot_dir = '/service/screenshots/'
+        os.makedirs(screenshot_dir, exist_ok=True)
+        if not self.drv.save_screenshot(screenshot_dir + filename + '.png'):
             raise Exception('Screenshot failed')
 
     def should_not_exist(self, css_selector):

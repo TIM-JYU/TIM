@@ -316,7 +316,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
 
                 $scope.getAvailableAnswers = function (updateHtml) {
                     updateHtml = (typeof updateHtml === "undefined") ? true : updateHtml;
-                    if ( !$scope.$parent.rights || !$scope.$parent.rights.browse_own_answers) {
+                    if ( !$scope.$parent.item.rights || !$scope.$parent.item.rights.browse_own_answers) {
                         return;
                     }
                     if ($scope.user === null) {
@@ -404,7 +404,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                 };
 
                 $scope.showTeacher = function () {
-                    return $scope.$parent.teacherMode && $scope.$parent.rights.teacher;
+                    return $scope.$parent.teacherMode && $scope.$parent.item.rights.teacher;
                 };
 
                 $scope.getTriesLeft = function () {

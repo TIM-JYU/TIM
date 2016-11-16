@@ -16,7 +16,7 @@
             link.href = 'reveal.js/css/print/pdf.css';
             document.getElementsByTagName('head')[0].appendChild(link);
         }
-        var is_owner = rights.manage;
+        var is_owner = item.rights.manage;
         var pollInterval = 500;
     </script>
 {% endblock %}
@@ -118,7 +118,7 @@
             $.ajax({
                 cache: false,
                 url: '/getslidestatus/',
-                data: {'doc_id': docId},
+                data: {'doc_id': item.id},
                 dataType: 'json',
                 error: function (xhr, status, err) {
                     console.log('error');
@@ -155,7 +155,7 @@
             $.ajax({
                 dataType: 'json',
                 url: '/setslidestatus',
-                data: {'doc_id': docId, 'status': JSON.stringify({indexh: h, indexv: v, indexf: f})},
+                data: {'doc_id': item.id, 'status': JSON.stringify({indexh: h, indexv: v, indexf: f})},
                 success: function (data) {
                     pollTimeout = setTimeout(refresh, pollInterval);
                     receiving = true;

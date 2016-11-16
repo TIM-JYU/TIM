@@ -24,14 +24,15 @@ class Block(db.Model):
         self.created = datetime.datetime.now(timezone.utc)
         self.modified = self.created
 
-    def get_parent(self) -> 'Folder':
+    @property
+    def parent(self) -> 'Folder':
         if self.type_id == 0:
             from timdb.models.docentry import DocEntry
-            return DocEntry.query.filter_by(id=self.id, public=True).first().get_parent()
+            return DocEntry.query.filter_by(id=self.id, public=True).first().parent
         elif self.type_id == 6:
             from timdb.models.folder import Folder
             folder = Folder.get_by_id(self.id)
-            return folder.get_parent()
+            return folder.parent
 
     def is_unpublished(self):
         from routes.accesshelper import has_ownership

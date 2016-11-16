@@ -16,6 +16,7 @@ from routes.dbaccess import get_timdb
 from routes.login import log_in_as_anonymous
 from routes.sessioninfo import get_current_user_id, logged_in
 from tim_app import app
+from timdb.models.docentry import DocEntry
 from timdb.tempdb_models import TempDb
 from timdb.tim_models import db
 
@@ -47,7 +48,6 @@ def get_lecture_info():
 
     added_users = []
     for singleDict in answer_dicts:
-        singleDict['user_name'] = timdb.users.get_user(singleDict['user_id']).get("name")
         if singleDict['question_id'] not in question_ids:
             question_ids.append(singleDict['question_id'])
         if singleDict['user_id'] not in added_users:
@@ -60,6 +60,25 @@ def get_lecture_info():
         {"messages": messages, "answerers": answerers, "answers": answer_dicts, "questions": lecture_questions,
          "isLecturer": is_lecturer, "user": {'user_name': timdb.users.get_user(current_user)['name'],
                                              'user_id': current_user}})
+
+
+@lecture_routes.route('/getLectureAnswerTotals/<int:lecture_id>')
+def get_lecture_answer_totals(lecture_id):
+    is_lecturer = False
+    current_user = get_current_user_id()
+    timdb = get_timdb()
+    if timdb.lectures.get_lecture(lecture_id)[0].get("lecturer") == current_user:
+        is_lecturer = True
+    results = timdb.lecture_answers.get_totals(lecture_id, None if is_lecturer else get_current_user_id())
+    sum_field_name = get_option(request, 'sum_field_name', 'sum')
+    count_field_name = get_option(request, 'count_field_name', 'count')
+    def generate_text():
+        for a in results:
+            yield '{};{};{}\n'.format(a['name'], sum_field_name, a['sum'])
+        yield '\n'
+        for a in results:
+            yield '{};{};{}\n'.format(a['name'], count_field_name, a['count'])
+    return Response(generate_text(), mimetype='text/plain')
 
 
 @lecture_routes.route('/getAllMessages')
@@ -244,7 +263,7 @@ def get_updates():
             {"status": "no-results", "data": ["No new messages"], "lastid": client_last_id, "lectureId": lecture_id,
              "isLecture": True, "lecturers": lecturers, "students": students, "lectureEnding": lecture_ending})
 
-    return jsonResponse({ "isLecture": -1 }); # no new updates
+    return jsonResponse({ "isLecture": -1 })  # no new updates
 
 
 @lecture_routes.route('/getQuestionManually')
@@ -496,19 +515,18 @@ def show_lecture_info(lecture_id):
         abort(400)
 
     lecture = lecture[0]
-    doc = timdb.documents.resolve_doc_id_name(str(lecture.get('doc_id')))
+    doc = DocEntry.find_by_id(lecture.get('doc_id'))
     in_lecture, lecture_ids = timdb.lectures.check_if_in_any_lecture(get_current_user_id())
     settings = get_user_settings()
     return render_template("lectureInfo.html",
-                           doc=doc,
+                           item=doc,
                            lectureId=lecture_id,
                            lectureCode=lecture.get("lecture_code"),
                            lectureStartTime=lecture.get("start_time"),
                            lectureEndTime=lecture.get("end_time"),
                            in_lecture=in_lecture,
                            settings=settings,
-                           rights=get_rights(doc['id']),
-                           translations=timdb.documents.get_translations(doc['id']))
+                           translations=timdb.documents.get_translations(doc.id))
 
 
 @lecture_routes.route('/showLectureInfoGivenName/', methods=['GET'])

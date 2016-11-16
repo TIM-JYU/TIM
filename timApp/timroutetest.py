@@ -362,14 +362,15 @@ class TimRouteTest(TimDbTest):
         :param from_file: If specified, loads the document content from the specified file.
         :param initial_par: The content of the initial paragraph.
         :param settings: The settings for the document.
-        :param assert_status: The expected status code for the createDocument route.
+        :param assert_status: The expected status code for the createItem route.
         :return: The DocEntry object.
         """
         if docname is None:
             docname = 'users/{}/doc{}'.format(flask.session['user_name'], self.doc_num)
             self.__class__.doc_num += 1
-        resp = self.json_post('/createDocument', {
-            'doc_name': docname
+        resp = self.json_post('/createItem', {
+            'item_path': docname,
+            'item_type': 'document'
         }, expect_status=assert_status, as_json=True)
         self.assertIsInstance(resp['id'], int)
         self.assertEqual(docname, resp['name'])

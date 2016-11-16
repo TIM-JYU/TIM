@@ -1,63 +1,30 @@
-{% extends "folder.html" %}
+{% extends "base.html" %}
 {% block title %}The requested page does not exist.{% endblock %}
-{% block head %}
-    {{ super() }}
-
-    <script>
-        var folder = "{{''}}";
-    </script>
-    <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
-{% endblock %}
 {% block content %}
-    <div ng-controller="IndexCtrl" class="index">
-        <p class="errormsg">{{ message or 'The requested page does not exist.' }}</p>
-        {% if session.user_id %}
-            {% if rights %}
-                <bootstrap-panel title="Create a new document here">
-                    <create-document full-path="{{ newItem }}"></create-document>
-                </bootstrap-panel>
+    <p class="errormsg">{{ message or 'The requested page does not exist.' }}</p>
+    {% if session.user_id %}
+        {% if can_create_new %}
+            <bootstrap-panel title="Create a new document here">
+                <create-item item-type="document" full-path="{{ newItem }}"></create-item>
+            </bootstrap-panel>
 {#
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        Create a new folder here
-                    </div>
-                    <div class="panel-body">
-                        <form ng-submit="createFolder('{{ newItem }}', folderOwner)" class="form-horizontal">
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Pathname</label>
-                                <div class="col-sm-10">
-                                    <p class="form-control-static">{{ newItem }}</p>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Owner</label>
-                                <div class="col-sm-10">
-                                    <input id="folderOwnerInput" class="form-control" type="text" ng-model="folderOwner">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <div class="col-sm-offset-2 col-sm-10">
-                                    <button ng-disabled="!folderOwner" type="submit" class="timButton">Create</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+            <bootstrap-panel title="Create a new folder here">
+                <create-item item-type="folder" full-path="{{ newItem }}"></create-item>
+            </bootstrap-panel>
 #}
-            {% else %}
-                You cannot create documents or folders here.
-            {% endif %}
         {% else %}
-            To create a new document or a folder, log in.
+            You cannot create documents or folders here.
         {% endif %}
-        {% if foundItem %}
-            <br>
-            <br>
-            <a href="/view/{{ foundItem }}">To the first existing item ({{ foundItem }}) in your search.</a>
-        {% else %}
-            <br>
-            <br>
-            <a href="{{ url_for('view_page.index_page') }}">To the index.</a>
-        {% endif %}
-    </div>
+    {% else %}
+        To create a new document or a folder, log in.
+    {% endif %}
+    {% if foundItem %}
+        <br>
+        <br>
+        <a href="/view/{{ foundItem }}">To the first existing item ({{ foundItem }}) in your search.</a>
+    {% else %}
+        <br>
+        <br>
+        <a href="{{ url_for('view_page.index_page') }}">To the index.</a>
+    {% endif %}
 {% endblock %}

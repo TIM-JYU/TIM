@@ -53,7 +53,7 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
     };
 
     sc.initFolderVars = function() {
-       sc.folder = folder;
+       sc.folder = sc.item.path;
 
        if (sc.getParameterByName('folder') !== '')
            sc.folder = sc.getParameterByName('folder');
@@ -84,7 +84,7 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
             method : 'GET',
             url : '/getTemplates',
             params: {
-                root_path: sc.folder
+                item_path: sc.item.path
             }
         }).success(function(data, status, headers, config) {
             sc.templateList = data;
@@ -97,8 +97,9 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
     sc.user = $window.current_user;
     sc.folderOwner = $window.current_user.name;
 	sc.parentfolder = "";
-    sc.initFolderVars();
     sc.itemList = $window.items;
+    sc.item = $window.item;
+    sc.initFolderVars();
     sc.templateList = [];
     sc.templates = $window.templates;
     if (sc.templates)

@@ -100,7 +100,7 @@ def get_default_personal_velp_group() -> Dict:
     else:
         group_name = "Personal default"
         new_group_path = personal_velp_group_path + "/" + group_name
-        group_exists = timdb.documents.resolve_doc_id_name(new_group_path)
+        group_exists = DocEntry.find_by_path(new_group_path)
         if group_exists:
             default_id = timdb.documents.get_document_id(new_group_path)
             timdb.velp_groups.update_velp_group_to_default_velp_group(default_id)
@@ -634,7 +634,7 @@ def create_velp_group(doc_id: int) -> Dict:
         user_name = get_current_user_name()
         user_velp_path = timdb.folders.check_personal_velp_folder(user_name, user_group_id)
         new_group_path = user_velp_path + "/" + velp_group_name
-        group_exists = timdb.documents.resolve_doc_id_name(new_group_path)
+        group_exists = DocEntry.find_by_path(new_group_path)
         if group_exists is None:
             velp_group_id = timdb.velp_groups.create_velp_group(velp_group_name, user_group_id, new_group_path)
         else:
@@ -657,7 +657,7 @@ def create_velp_group(doc_id: int) -> Dict:
         velps_folder_path = timdb.folders.check_velp_group_folder_path(doc_path, user_group_id, doc_name)
 
         new_group_path = velps_folder_path + "/" + velp_group_name
-        group_exists = timdb.documents.resolve_doc_id_name(new_group_path)  # Check name so no duplicates are made
+        group_exists = DocEntry.find_by_path(new_group_path)  # Check name so no duplicates are made
         if group_exists is None:
             original_owner = timdb.folders.get_owner(target_id)
             velp_group_id = timdb.velp_groups.create_velp_group(velp_group_name, original_owner, new_group_path)
@@ -720,8 +720,7 @@ def create_default_velp_group(doc_id: int):
     velp_group_name = doc_name + "_default"
 
     new_group_path = velps_folder_path + "/" + velp_group_name
-    group_exists = timdb.documents.resolve_doc_id_name(new_group_path)  # Check name so no duplicates are made
-
+    group_exists = DocEntry.find_by_path(new_group_path)  # Check name so no duplicates are made
     if group_exists is None:
         velp_group_id = timdb.velp_groups.create_default_velp_group(velp_group_name, user_group_id, new_group_path)
         created_new_group = True

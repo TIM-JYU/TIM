@@ -281,7 +281,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      */
 
     $scope.allowChangePoints = function () {
-        return $scope.$parent.rights.teacher;
+        return $scope.$parent.item.rights.teacher;
     };
 
     /**

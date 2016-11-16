@@ -7,9 +7,9 @@ class FolderTest(TimRouteTest):
         return 'users/{}/{}'.format(session['user_name'], path)
 
     def create_folder(self, fname, expect_status=200, **kwargs):
-        j = self.json_post('/createFolder',
-                           {"name": fname,
-                            "owner": session['user_name']}, expect_status=expect_status, as_json=True, **kwargs)
+        j = self.json_post('/createItem',
+                           {'item_path': fname,
+                            'item_type': 'folder'}, expect_status=expect_status, as_json=True, **kwargs)
         if expect_status == 200:
             self.assertEqual(fname, j['name'])
             self.assertIsInstance(j['id'], int)
@@ -52,11 +52,14 @@ class FolderTest(TimRouteTest):
         j3 = self.create_folder(fname2)
         db.users.grant_access(db.users.get_anon_group_id(), j3['id'], 'view')
 
+        folder_loc = 'users/testuser1'
         self.assertListResponse([{'name': 'testing1',
+                                  'title': 'testing1',
                                   'id': j['id'],
                                   'isFolder': True,
                                   'modified': None,
-                                  'fullname': new_name,
+                                  'path': new_name,
+                                  'location': folder_loc,
                                   'owner': {'id': 7, 'name': 'testuser1'},
                                   'rights': {'browse_own_answers': True,
                                              'can_comment': True,
@@ -68,10 +71,12 @@ class FolderTest(TimRouteTest):
                                              'teacher': True},
                                   'unpublished': True},
                                  {'name': 'testing2',
+                                  'title': 'testing2',
                                   'id': j3['id'],
                                   'isFolder': True,
                                   'modified': None,
-                                  'fullname': fname2,
+                                  'path': fname2,
+                                  'location': folder_loc,
                                   'owner': {'id': 7, 'name': 'testuser1'},
                                   'rights': {'browse_own_answers': True,
                                              'can_comment': True,
@@ -86,10 +91,12 @@ class FolderTest(TimRouteTest):
                                 self.json_req('/getItems', query_string={'folder': user_folder}))
         self.logout()
         self.assertListResponse([{'name': 'testing2',
+                                  'title': 'testing2',
                                   'id': j3['id'],
                                   'isFolder': True,
                                   'modified': None,
-                                  'fullname': fname2,
+                                  'path': fname2,
+                                  'location': folder_loc,
                                   'owner': {'id': 7, 'name': 'testuser1'},
                                   'rights': {'browse_own_answers': False,
                                              'can_comment': False,

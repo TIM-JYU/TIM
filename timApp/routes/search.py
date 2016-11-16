@@ -3,6 +3,7 @@ from flask import Blueprint, render_template
 
 from options import get_option
 from routes.sessioninfo import get_current_user_object
+from timdb.models.docentry import DocEntry
 from .cache import cache
 from .common import *
 
@@ -60,21 +61,12 @@ def search(query):
         t['ref_id'] = t['id']
     return render_template('view_html.html',
                            route='search',
-                           doc={'id': -1, 'name': 'Search results', 'fullname': 'Search results',
-                                'title': 'Search results'},
+                           item=DocEntry.get_dummy('Search results'),
                            text=all_texts,
                            js=all_js,
                            cssFiles=all_css,
                            jsMods=all_modules,
                            group=get_current_user_group(),
-                           rights={'editable': False,
-                                   'can_mark_as_read': False,
-                                   'can_comment': False,
-                                   'browse_own_answers': False,
-                                   'teacher': False,
-                                   'see_answers': False,
-                                   'manage': False
-                                   },
                            reqs=pluginControl.get_all_reqs(),
                            settings=get_user_settings(),
                            version={'hash': None},

@@ -132,11 +132,11 @@ class Documents(TimDbBase):
                                       VALUES (%s, %s, %s, CURRENT_TIMESTAMP, %s)""",
                                            [doc_id, blocktypes.DOCUMENT, doc_name, usergroup_id])
                     recovered += 1
-                    doc_fullname = doc_name if not folder else folder + '/' + doc_name
+                    doc_path = doc_name if not folder else folder + '/' + doc_name
                     cursor.execute('SELECT EXISTS(SELECT id FROM DocEntry WHERE id = %s)', [doc_id])
                     if not cursor.fetchone()[0]:
                         cursor.execute('INSERT INTO DocEntry (id, name, public) VALUES (%s, %s, TRUE)',
-                                           [doc_id, doc_fullname])
+                                           [doc_id, doc_path])
 
             except ValueError:
                 pass
@@ -151,7 +151,7 @@ class Documents(TimDbBase):
 
         :param document_id: The id of the document to be retrieved.
         :param include_nonpublic: Whether to include non-public document names or not.
-        :returns: A list of dictionaries with items {name, location, fullname, public}
+        :returns: A list of dictionaries with items {name, location, path, public}
         """
         cursor = self.db.cursor()
         public_clause = '' if include_nonpublic else ' AND public = TRUE'
@@ -160,7 +160,7 @@ class Documents(TimDbBase):
 
         for item in names:
             name = item['name']
-            item['fullname'] = name
+            item['path'] = name
             item['location'], item['name'] = self.split_location(name)
 
         return names
@@ -456,29 +456,6 @@ class Documents(TimDbBase):
                        [blocktypes.DOCUMENT, doc.doc_id])
         if commit:
             self.db.commit()
-
-    def resolve_doc_id_name(self, doc_path: str) -> Optional[dict]:
-        """Returns document id and name based on its path.
-        :param doc_path: The document path.
-        """
-        doc_id = self.get_document_id(doc_path)
-        if doc_id is None or not self.exists(doc_id):
-            # Backwards compatibility: try to use as document id
-            try:
-                doc_id = int(doc_path)
-                if not self.exists(doc_id):
-                    return None
-                doc_name = self.get_first_document_name(doc_id)
-                return {'id': doc_id,
-                        'fullname': doc_name,
-                        'name': self.get_short_name(doc_name),
-                        'title': self.get_doc_title(doc_id, doc_name)}
-            except ValueError:
-                return None
-        return {'id': doc_id,
-                'fullname': doc_path,
-                'name': self.get_short_name(doc_path),
-                'title': self.get_doc_title(doc_id, doc_path)}
 
     def get_doc_title(self, doc_id: int, full_name: Optional[str]) -> Optional[str]:
         title = self.get_translation_title(doc_id)

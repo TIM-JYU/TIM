@@ -59,8 +59,8 @@ def delete_bookmark():
 
 @bookmarks.route('/markLastRead/<int:doc_id>', methods=['POST'])
 def mark_last_read(doc_id):
-    d = DocEntry.find_by_id(doc_id)
-    g.bookmarks.add_bookmark('Last read', d.get_short_name(), '/view/' + d.get_path(), move_to_top=True).save_bookmarks()
+    d = DocEntry.find_by_id(doc_id, try_translation=True)
+    g.bookmarks.add_bookmark('Last read', d.short_name, '/view/' + d.path, move_to_top=True).save_bookmarks()
     return get_bookmarks()
 
 

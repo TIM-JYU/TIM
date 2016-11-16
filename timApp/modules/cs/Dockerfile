@@ -159,6 +159,10 @@ run apt-get install -y octave-control octave-image octave-io octave-optim octave
 
 run apt-get install -y lua5.2
     
+run apt-get install -y r-cran-mvtnorm
+    
+    
+    
 # Lisätään käyttäjä `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.
 # run useradd -M agent 
