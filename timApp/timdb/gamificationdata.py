@@ -44,22 +44,23 @@ def get_doc_ids(json_to_check):
     for path in lecture_paths:
         lecture = DocEntry.find_by_path(path['path'])
         if lecture is not None:
-            temp_dict1 = dict()
-            temp_dict1['id'] = lecture.id
-            temp_dict1['name'] = lecture.get_short_name()
-            temp_dict1['url'] = request.url_root+'view/' + lecture.get_path()
-            lectures.append(temp_dict1)
+            temp_dict = dict()
+            temp_dict['id'] = lecture.id
+            temp_dict['name'] = lecture.get_short_name()
+            temp_dict['url'] = request.url_root+'view/' + lecture.get_path()
+            lectures.append(temp_dict)
 
     demos = []
     for path in demo_paths:
         demo = DocEntry.find_by_path(path['path'])
         if demo is not None:
-            temp_dict2 = dict()
-            temp_dict2['id'] = demo.id
-            temp_dict2['name'] = demo.get_short_name()
-            temp_dict2['url'] = request.url_root+'view/' + demo.get_path()
-            temp_dict2['points'] = get_points_for_doc(demo)
-            demos.append(temp_dict2)
+            temp_dict = dict()
+            temp_dict['id'] = demo.id
+            temp_dict['name'] = demo.get_short_name()
+            temp_dict['url'] = request.url_root+'view/' + demo.get_path()
+            # TODO Etsi dokumentin maksimipisteet ja syötä ne tähän
+            temp_dict['points'] = get_points_for_doc(demo)
+            demos.append(temp_dict)
 
     return lectures, demos
 
@@ -80,8 +81,10 @@ def place_in_dict(l_table, d_table):
     for j in range(len(d_table)):
         temp2.append(d_table[j])
 
-    print(temp1, temp2)
-    return
+    document_dict['lectures']=temp1
+    document_dict['demos'] = temp2
+
+    return document_dict
 
 
 def get_points_for_doc(d):
