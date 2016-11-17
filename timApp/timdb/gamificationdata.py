@@ -46,8 +46,8 @@ def get_doc_ids(json_to_check):
         if lecture is not None:
             temp_dict = dict()
             temp_dict['id'] = lecture.id
-            temp_dict['name'] = lecture.get_short_name()
-            temp_dict['url'] = request.url_root+'view/' + lecture.get_path()
+            temp_dict['name'] = lecture.short_name
+            temp_dict['url'] = request.url_root+'view/' + lecture.path
             lectures.append(temp_dict)
 
     demos = []
@@ -56,8 +56,8 @@ def get_doc_ids(json_to_check):
         if demo is not None:
             temp_dict = dict()
             temp_dict['id'] = demo.id
-            temp_dict['name'] = demo.get_short_name()
-            temp_dict['url'] = request.url_root+'view/' + demo.get_path()
+            temp_dict['name'] = demo.short_name
+            temp_dict['url'] = request.url_root+'view/' + demo.path
             # TODO Etsi dokumentin maksimipisteet ja syötä ne tähän
             temp_dict['points'] = get_points_for_doc(demo)
             demos.append(temp_dict)
