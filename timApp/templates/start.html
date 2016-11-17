@@ -40,9 +40,10 @@
                                          title="Create a new document"
                                          show-close="true"
                                          close-fn="cancelCreate()">
-                            <create-document doc-name="My document"
-                                             doc-location="users/{{ session.user_name }}">
-                            </create-document>
+                            <create-item item-name="My document"
+                                         item-location="users/{{ session.user_name }}"
+                                         item-type="document">
+                            </create-item>
                         </bootstrap-panel>
                     {% elif session.altlogin == "signup2" %}
                         <form method="POST" action="/altsignup2">
