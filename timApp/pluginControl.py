@@ -137,8 +137,6 @@ def pluginify(doc: Document,
             <input type="range" class="alphaRange">Goal Transparency
             <div class="mapContainer"></div>
             """
-        print(html_pars)
-
 
         if plugin_name:
             vals = parse_plugin_values(block, global_attrs=settings.global_plugin_attrs(),

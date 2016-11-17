@@ -6,6 +6,7 @@ from flask import request
 import pluginControl
 from routes.dbaccess import get_timdb
 from routes import common
+from documentmodel.docsettings import DocSettings
 
 
 def gamify(initial_data):
@@ -53,12 +54,17 @@ def get_doc_ids(json_to_check):
     demos = []
     for path in demo_paths:
         demo = DocEntry.find_by_path(path['path'])
+        doc_set = demo.document.get_settings()
         if demo is not None:
             temp_dict = dict()
             temp_dict['id'] = demo.id
             temp_dict['name'] = demo.short_name
             temp_dict['url'] = request.url_root+'view/' + demo.path
-            # TODO Etsi dokumentin maksimipisteet ja syötä ne tähän
+            doc_max_points = doc_set.max_points()
+            if doc_max_points is None:
+                temp_dict['max_points'] = 0
+            else:
+                temp_dict['max_points'] = doc_max_points
             temp_dict['points'] = get_points_for_doc(demo)
             demos.append(temp_dict)
 
@@ -84,6 +90,7 @@ def place_in_dict(l_table, d_table):
     document_dict['lectures']=temp1
     document_dict['demos'] = temp2
 
+    print(document_dict)
     return document_dict
 
 
