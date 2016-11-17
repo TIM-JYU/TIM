@@ -1,0 +1,14 @@
+{ "columns":1,
+ "image":"..\/images\/gamification_assets\/treesMidHigh.png",
+ "imageheight":642,
+ "imagewidth":27,
+ "margin":0,
+ "name":"treesMidHigh",
+ "spacing":0,
+ "tilecount":6,
+ "tileheight":107,
+"properties":
+{
+},
+ "tilewidth":27
+}

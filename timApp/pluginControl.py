@@ -115,8 +115,30 @@ def pluginify(doc: Document,
 
         if is_gamified:
             raw_data = DocParagraph.get_markdown(block)
-            #print(raw_data)
             gamificationdata.gamify(raw_data)
+            html_pars[idx]['html'] = """
+            <script src="/static/scripts/loadMap.js"></script>
+            <button class="showMap" onclick="showMap(this)" data-toggle="false">Show map</button>
+            <script>
+            function showMap(button) {
+                var map = $(".mapContainer")[0];
+                if (button.getAttribute("data-toggle") === "false")
+                {
+                    button.setAttribute("data-toggle", "true");
+                    map.setAttribute("style", "z-index: 0; position: relative;");
+                } else {
+                    button.setAttribute("data-toggle", "false");
+                    map.setAttribute("style", "z-index: 0; display: none; position: relative;");
+                }
+            }
+            </script>
+            <button class="showFrames">Goals</button>
+            <input type="range" class="mapZoom">Zoom
+            <input type="range" class="alphaRange">Goal Transparency
+            <div class="mapContainer"></div>
+            """
+        print(html_pars)
+
 
         if plugin_name:
             vals = parse_plugin_values(block, global_attrs=settings.global_plugin_attrs(),

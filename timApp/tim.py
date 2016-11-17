@@ -32,6 +32,7 @@ from routes.groups import groups
 from routes.lecture import getTempDb, user_in_lecture, lecture_routes
 from routes.logger import log_info, log_error, log_debug
 from routes.login import login_page, logout
+from routes.generateMap import generateMap
 from routes.manage import manage_page
 from routes.notes import notes
 from routes.notify import notify
@@ -57,6 +58,7 @@ cache.init_app(app)
 with app.app_context():
     cache.clear()
 
+app.register_blueprint(generateMap)
 app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
 app.register_blueprint(edit_page)

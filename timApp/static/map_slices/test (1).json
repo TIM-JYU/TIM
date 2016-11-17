@@ -1,0 +1,15 @@
+{ "columns":28,
+ "image":"..\/images\/gamification_assets\/test (1).png",
+ "imageheight":178,
+ "imagewidth":1820,
+ "margin":0,
+ "name":"test (1)",
+ "spacing":0,
+ "tilecount":56,
+ "tileheight":89,
+"properties":
+{
+"buildingProperty":1
+},
+ "tilewidth":65
+}

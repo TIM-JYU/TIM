@@ -1,0 +1,14 @@
+{ "columns":4,
+ "image":"..\/images\/gamification_assets\/fullTiles.png",
+ "imageheight":449,
+ "imagewidth":263,
+ "margin":0,
+ "name":"fullTiles",
+ "spacing":0,
+ "tilecount":20,
+ "tileheight":89,
+"properties":
+{
+},
+ "tilewidth":65
+}

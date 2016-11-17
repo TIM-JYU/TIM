@@ -1,0 +1,15 @@
+{ "columns":4,
+ "image":"..\/images\/gamification_assets\/shortRoofs.png",
+ "imageheight":68,
+ "imagewidth":260,
+ "margin":0,
+ "name":"shortRoofs",
+ "spacing":0,
+ "tilecount":4,
+ "tileheight":67,
+"properties":
+{
+"buildingProperty":2
+},
+ "tilewidth":65
+}

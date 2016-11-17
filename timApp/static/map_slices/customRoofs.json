@@ -1,0 +1,16 @@
+{ "columns":3,
+ "image":"..\/images\/gamification_assets\/customRoofs.png",
+ "imageheight":92,
+ "imagewidth":130,
+ "margin":0,
+ "name":"customRoofs",
+ "spacing":0,
+ "tilecount":2,
+ "tileheight":92,
+"properties":
+{
+"frameProperty":3,
+"buildingProperty":2
+},
+ "tilewidth":64
+}
