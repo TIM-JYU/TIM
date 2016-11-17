@@ -25,6 +25,7 @@ timApp.directive('loginMenu', ['Users', '$http', '$httpParamSerializer', functio
                 $scope.korppiLoading = true;
                 Users.korppiLogin(addingToSession);
             };
+            $scope.isKorppi = Users.isKorppi;
             $scope.stopClick = function ($event) {
                 $event.stopPropagation();
             };
