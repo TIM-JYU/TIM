@@ -181,7 +181,7 @@ def try_return_folder(doc_name):
                                settings=settings,
                                newItem=doc_name,
                                foundItem=foundItem), 404
-
+    verify_view_access(block_id)
     folder = Folder.get_by_id(block_id)
     return render_template('index.html',
                            item=folder,
