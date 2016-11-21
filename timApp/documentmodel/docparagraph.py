@@ -26,6 +26,19 @@ class DocParagraph:
         self.__htmldata = None
         self.ref_pars = None
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.is_same_as(other)
+        return NotImplemented
+
+    def __ne__(self, other):
+        if isinstance(other, self.__class__):
+            return not (self == other)
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(tuple(sorted(self.__dict__.items())))
+
     @classmethod
     def create(cls,
                doc,
@@ -185,7 +198,13 @@ class DocParagraph:
         return None
 
     def is_different_from(self, par: 'DocParagraph') -> bool:
-        return self.get_hash() != par.get_hash() or self.get_attrs() != par.get_attrs()
+        return not self.is_same_as(par)
+
+    def is_same_as(self, par: 'DocParagraph') -> bool:
+        return self.get_hash() == par.get_hash() and self.get_attrs() == par.get_attrs()
+
+    def is_same_as_html(self, par: 'DocParagraph'):
+        return self.is_same_as(par) and self.get_html(from_preview=True) == par.get_html(from_preview=True)
 
     def get_hash(self) -> str:
         return self.__data['t']
