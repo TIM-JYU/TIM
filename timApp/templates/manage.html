@@ -29,7 +29,7 @@
                         </div>
                     </form>
                 {% else %}
-                    {{ obj_name|capitalize }} owner: {{ doc.owner.name }}
+                    {{ obj_name|capitalize }} owner: {{ item.owner.name }}
                 {% endif %}
                 <uib-tabset>
                     <uib-tab heading="Rights for this {{ obj_name }}">
