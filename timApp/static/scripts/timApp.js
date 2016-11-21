@@ -5,6 +5,7 @@ var angular, folder, crumbs, groups;
 timApp.controller("IndexCtrl", [ '$scope', '$controller', '$http', '$q', 'Upload', '$window', '$timeout',
 
 function(sc, controller, http, q, Upload, $window, $timeout) {
+    "use strict";
     sc.endsWith = function(str, suffix) {
         return str.indexOf(suffix, str.length - suffix.length) !== -1;
     };
@@ -52,7 +53,7 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
     };
 
     sc.initFolderVars = function() {
-       sc.folder = folder;
+       sc.folder = sc.item.path;
 
        if (sc.getParameterByName('folder') !== '')
            sc.folder = sc.getParameterByName('folder');
@@ -83,7 +84,7 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
             method : 'GET',
             url : '/getTemplates',
             params: {
-                root_path: sc.folder
+                item_path: sc.item.path
             }
         }).success(function(data, status, headers, config) {
             sc.templateList = data;
@@ -93,10 +94,12 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
     };
 
     sc.crumbs = crumbs;
+    sc.user = $window.current_user;
     sc.folderOwner = $window.current_user.name;
 	sc.parentfolder = "";
-    sc.initFolderVars();
     sc.itemList = $window.items;
+    sc.item = $window.item;
+    sc.initFolderVars();
     sc.templateList = [];
     sc.templates = $window.templates;
     if (sc.templates)
@@ -130,7 +133,7 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
 
             file.upload.finally(function () {
                 sc.uploadInProgress = false;
-            })
+            });
         }
     };
 

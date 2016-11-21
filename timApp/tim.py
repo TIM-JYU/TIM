@@ -7,6 +7,7 @@ import shutil
 import time
 
 from flask import Blueprint
+from flask import g
 from flask import render_template
 from flask import stream_with_context
 from flask.helpers import send_file
@@ -17,12 +18,15 @@ import containerLink
 from ReverseProxied import ReverseProxied
 from documentmodel.documentversion import DocumentVersion
 from plugin import PluginException
+from routes.accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
+    has_view_access, has_manage_access, grant_access_to_session_users, get_viewable_blocks
 from routes.annotation import annotations
 from routes.answer import answers
 from routes.bookmarks import bookmarks
 from routes.cache import cache
 from routes.clipboard import clipboard
 from routes.common import *
+from routes.dbaccess import get_timdb
 from routes.edit import edit_page
 from routes.groups import groups
 from routes.lecture import getTempDb, user_in_lecture, lecture_routes
@@ -33,6 +37,8 @@ from routes.notes import notes
 from routes.notify import notify
 from routes.readings import readings
 from routes.search import search_routes
+from routes.sessioninfo import get_current_user, get_current_user_object, get_other_users_as_list, get_current_user_id, \
+    get_current_user_name, get_current_user_group, logged_in
 from routes.settings import settings_page
 from routes.upload import upload
 from routes.velp import velps
@@ -99,7 +105,7 @@ def inject_custom_css() -> dict:
 @app.context_processor
 def inject_user() -> dict:
     """"Injects the user object to all templates."""
-    return dict(current_user=get_current_user(), other_users=get_other_users_as_list())
+    return dict(current_user=get_current_user_object(), other_users=get_other_users_as_list())
 
 
 @app.context_processor
@@ -107,7 +113,7 @@ def inject_bookmarks() -> dict:
     """"Injects bookmarks to all templates."""
     if not logged_in():
         return {}
-    return dict(bookmarks=Bookmarks(User.query.get(getCurrentUserId())).as_dict())
+    return dict(bookmarks=Bookmarks(User.query.get(get_current_user_id())).as_dict())
 
 
 @app.errorhandler(400)
@@ -186,7 +192,7 @@ def reset_css():
 
 @app.route('/download/<int:doc_id>')
 def download_document(doc_id):
-    verify_doc_existence(doc_id)
+    verify_doc_exists(doc_id)
     verify_edit_access(doc_id, "Sorry, you don't have permission to download this document.")
     return Response(Document(doc_id).export_markdown(), mimetype="text/plain")
 
@@ -214,7 +220,7 @@ def diff_document(doc_id, major1, minor1, major2, minor2):
 
 @app.route('/images/<int:image_id>/<image_filename>')
 def get_image(image_id, image_filename):
-    timdb = getTimDb()
+    timdb = get_timdb()
     if not timdb.images.imageExists(image_id, image_filename):
         abort(404)
     verify_view_access(image_id)
@@ -226,20 +232,22 @@ def get_image(image_id, image_filename):
 
 @app.route("/getTemplates")
 def get_templates():
-    current_path = request.args.get('root_path', '')
-    timdb = getTimDb()
+    current_path = request.args.get('item_path', '')
+    timdb = get_timdb()
     templates = []
+    d = DocEntry.find_by_path(current_path, try_translation=True)
+    current_path = d.parent.path
 
     while True:
         for t in timdb.documents.get_documents(filter_ids=get_viewable_blocks(),
                                       filter_folder=current_path + '/Templates',
                                       search_recursively=False):
-            if not t['name'].startswith('$'):
+            if not t.short_name.startswith('$'):
                 templates.append(t)
         if current_path == '':
             break
         current_path, _ = timdb.folders.split_location(current_path)
-    templates.sort(key=lambda d: d['name'].lower())
+    templates.sort(key=lambda d: d.short_name.lower())
     return jsonResponse(templates)
 
 
@@ -247,34 +255,37 @@ def create_item(item_name, item_type_str, create_function, owner_group_id):
     validate_item_and_create(item_name, item_type_str, owner_group_id)
 
     item_id = create_function(item_name, owner_group_id)
-    timdb = getTimDb()
+    timdb = get_timdb()
     grant_access_to_session_users(timdb, item_id)
     item_type = from_str(item_type_str)
     if item_type == blocktypes.DOCUMENT:
         bms = Bookmarks(get_current_user_object())
         d = DocEntry.find_by_id(item_id)
         bms.add_bookmark('Last edited',
-                         d.get_short_name(),
-                         '/view/' + d.get_path(),
+                         d.short_name,
+                         '/view/' + d.path,
                          move_to_top=True,
                          limit=app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
     copy_default_rights(item_id, item_type)
     return jsonResponse({'id': item_id, 'name': item_name})
 
 
-@app.route("/createDocument", methods=["POST"])
+@app.route("/createItem", methods=["POST"])
 def create_document():
     jsondata = request.get_json()
-    doc_name = jsondata['doc_name']
+    item_path = jsondata['item_path']
 
-    timdb = getTimDb()
-    return create_item(doc_name, 'document', lambda name, group: timdb.documents.create(name, group).doc_id,
-                       getCurrentUserGroup())
+    timdb = get_timdb()
+    item_type = jsondata['item_type']
+    return create_item(item_path,
+                       item_type,
+                       (lambda name, group: timdb.documents.create(name, group).doc_id) if item_type == 'document' else timdb.folders.create,
+                       get_current_user_group())
 
 
 @app.route("/translations/<int:doc_id>", methods=["GET"])
 def get_translations(doc_id):
-    timdb = getTimDb()
+    timdb = get_timdb()
 
     if not timdb.documents.exists(doc_id):
         abort(404, 'Document not found')
@@ -295,7 +306,7 @@ def valid_language_id(lang_id):
 @app.route("/translate/<int:tr_doc_id>/<language>", methods=["POST"])
 def create_translation(tr_doc_id, language):
     title = request.get_json().get('doc_title', None)
-    timdb = getTimDb()
+    timdb = get_timdb()
 
     doc_id = timdb.documents.get_translation_source(tr_doc_id)
 
@@ -313,7 +324,7 @@ def create_translation(tr_doc_id, language):
         abort(403, 'You have to be logged in to create a translation')
 
     src_doc = Document(doc_id)
-    doc = timdb.documents.create_translation(src_doc, None, getCurrentUserGroup())
+    doc = timdb.documents.create_translation(src_doc, None, get_current_user_group())
     timdb.documents.add_translation(doc.doc_id, src_doc.doc_id, language, title)
 
     src_doc_name = timdb.documents.get_first_document_name(src_doc.doc_id)
@@ -325,7 +336,7 @@ def create_translation(tr_doc_id, language):
 @app.route("/translation/<int:doc_id>", methods=["POST"])
 def update_translation(doc_id):
     (lang_id, doc_title) = verify_json_params('new_langid', 'new_title', require=True)
-    timdb = getTimDb()
+    timdb = get_timdb()
 
     src_doc_id = doc_id
     translations = timdb.documents.get_translations(doc_id)
@@ -373,7 +384,7 @@ def create_citation_doc(docid, newname):
     else:
         params = {'r': 'c'}
 
-    timdb = getTimDb()
+    timdb = get_timdb()
     if not has_view_access(docid):
         abort(403)
 
@@ -381,19 +392,7 @@ def create_citation_doc(docid, newname):
 
     def factory(name, group):
         return timdb.documents.create_translation(src_doc, name, group, params).doc_id
-    return create_item(newname, 'document', factory, getCurrentUserGroup())
-
-
-@app.route("/createFolder", methods=["POST"])
-def create_folder():
-    jsondata = request.get_json()
-    folder_name = jsondata['name']
-    owner_group_name = jsondata['owner']
-    timdb = getTimDb()
-    owner_group_id = timdb.users.get_usergroup_by_name(owner_group_name)
-    if owner_group_id is None:
-        abort(404, 'Non-existent usergroup.')
-    return create_item(folder_name, 'folder', timdb.folders.create, owner_group_id)
+    return create_item(newname, 'document', factory, get_current_user_group())
 
 
 @app.route("/getBlock/<int:doc_id>/<par_id>")
@@ -521,22 +520,43 @@ def log_request(response):
         status_code = response.status_code
         log_info(get_request_message(status_code))
         if request.method in ('PUT', 'POST', 'DELETE'):
-            log_debug(request.get_json())
+            log_debug(request.get_json(silent=True))
     return response
 
 
 def get_request_message(status_code=None):
-    return '{} [{}]: {} {} {}'.format(getCurrentUserName(),
-                                   request.headers.get('X-Forwarded-For') or request.remote_addr,
-                                   request.method,
-                                   request.full_path if request.query_string else request.path,
-                                   status_code or '').strip()
+    return '{} [{}]: {} {} {}'.format(get_current_user_name(),
+                                      request.headers.get('X-Forwarded-For') or request.remote_addr,
+                                      request.method,
+                                      request.full_path if request.query_string else request.path,
+                                      status_code or '').strip()
 
 
 @app.after_request
 def close_db(response):
     if hasattr(g, 'timdb'):
         g.timdb.close()
+    return response
+
+
+@app.after_request
+def del_g(response):
+    """For some reason, the g object is not cleared when running browser test, so we do it here."""
+    if app.config['TESTING']:
+        if hasattr(g, 'user'):
+            del g.user
+        if hasattr(g, 'viewable'):
+            del g.viewable
+        if hasattr(g, 'editable'):
+            del g.editable
+        if hasattr(g, 'teachable'):
+            del g.teachable
+        if hasattr(g, 'manageable'):
+            del g.manageable
+        if hasattr(g, 'see_answers'):
+            del g.see_answers
+        if hasattr(g, 'owned'):
+            del g.owned
     return response
 
 

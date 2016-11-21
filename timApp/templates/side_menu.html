@@ -20,7 +20,7 @@
             </uib-tab-heading>
             <h5>Customize</h5>
             <a href="/settings">Customize TIM</a>
-            {% if route and rights.manage %}
+            {% if route and item.rights.manage %}
                 <h5>Document settings</h5>
                 <button class="timButton" ng-click="editSettingsPars()">Edit settings</button>
             {% endif %}

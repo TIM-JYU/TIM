@@ -16,7 +16,7 @@
         </div>
     </div>
 
-    <div class="row" style="padding-top: 6px" ng-if="editButton && rights.editable">
+    <div class="row" style="padding-top: 6px" ng-if="editButton && item.rights.editable">
         <div ng-class="halfColClass" style="padding-right: 0">
             <button class="wideButton parEditButton" ng-model="model.editState" uib-btn-radio="'par'" uncheckable="true" title="Toggle paragraph edit mode">
                 <i class="glyphicon glyphicon-minus"></i>

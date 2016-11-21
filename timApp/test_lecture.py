@@ -45,18 +45,11 @@ class LectureTest(TimRouteTest):
                                           doc_id=doc.doc_id,
                                           get_messages=True,
                                           lecture_id=lecture_id))
-        self.check_time(current_time, resp, time_format)
-        self.assertDictEqual({'data': ['No new messages'],
-                              'isLecture': True,
-                              'lastid': -1,
-                              'lectureEnding': 100,
-                              'lectureId': lecture_id,
-                              'lecturers': [{'active': resp['lecturers'][0]['active'], 'name': self.current_user_name()}],
-                              'status': 'no-results',
-                              'students': []}, resp)
+        self.assertDictEqual({"isLecture": -1}, resp)
 
         msg_text = 'hi'
-        j = self.post('/sendMessage', query_string=dict(lecture_id=lecture_id, message=msg_text), expect_status=200, as_json=True)
+        j = self.post('/sendMessage', query_string=dict(lecture_id=lecture_id, message=msg_text), expect_status=200,
+                      as_json=True)
 
         msg_id = j['id']
         self.assertIsInstance(msg_id, int)
@@ -88,18 +81,9 @@ class LectureTest(TimRouteTest):
                                           get_messages=True,
                                           lecture_id=lecture_id))
 
-        self.check_time(current_time, resp, time_format)
-        self.assertDictEqual({'data': ['No new messages'],
-                              'isLecture': True,
-                              'lastid': msg_id,
-                              'lectureEnding': 100,
-                              'lectureId': 1,
-                              'lecturers': [
-                                  {'active': resp['lecturers'][0]['active'],
-                                   'name': self.current_user_name()}],
-                              'status': 'no-results',
-                              'students': []}, resp)
+        self.assertDictEqual({"isLecture": -1}, resp)
 
     def check_time(self, current_time, resp, time_format):
-        returned_time = datetime.datetime.strptime(resp['lecturers'][0]['active'], time_format).replace(tzinfo=timezone.utc)
+        returned_time = datetime.datetime.strptime(resp['lecturers'][0]['active'], time_format).replace(
+            tzinfo=timezone.utc)
         self.assertLess(returned_time - current_time, datetime.timedelta(seconds=2))

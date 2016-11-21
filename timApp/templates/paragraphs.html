@@ -1,13 +1,12 @@
 {% set editline = '' %}
-{% if rights.editable or rights.can_comment %}
+{% if item.rights.editable or item.rights.can_comment %}
     {% set editline = '<div class="editline" title="Click to edit this paragraph"></div>' %}
     {% set editlineQuestion = '<div class="editline editlineQuestion" title="Click to edit this paragraph"></div>' %}
 {% endif %}
 
 {# TODO This template list should not be here! #}
-{% if route == "view" and text|length == 0 and rights.editable %}
+{% if route == "view" and text|length == 0 and item.rights.editable %}
     <script>
-        var folder = "{{doc.fullname if doc else ''}}";
         var templates = true;
     </script>
     <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
@@ -39,7 +38,7 @@
                             {{ '{{ template.name }}' }}
                         </td>
                         <td>
-                            <button class="timButton" ng-click="copyDocument({{ doc.id }}, template.fullname)">Load</button>
+                            <button class="timButton" ng-click="copyDocument({{ item.id }}, template.path)">Load</button>
                         </td>
                     </tr>
                 </table>
@@ -59,7 +58,7 @@
 
 {% macro end_area(open_areas) %}
     </div>
-    {% if rights.editable or rights.can_comment %}
+    {% if item.rights.editable or item.rights.can_comment %}
         {% for area in open_areas %}
             {% if open_areas[area] <= 3 %}
                 <div class="areaeditline areaeditline{{ open_areas[area] }}"
@@ -191,7 +190,7 @@
                          note-id="{{ note.id }}">
                         {{ note.html|safe }}
                         &mdash;
-                        {% if rights.teacher %}
+                        {% if item.rights.teacher %}
                             <a class="username" title="{{ note.real_name }}" href="mailto:{{ note.user_email }}">
                                 {{ note.user_name }}</a>
                         {% endif %}

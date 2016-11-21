@@ -18,6 +18,15 @@ class Folder(db.Model):
     name = db.Column(db.Text, nullable=False)
     location = db.Column(db.Text, nullable=False)
 
+    block = db.relationship('Block', backref=db.backref('folder', lazy='dynamic'))
+
+    def __getattr__(self, item):
+        from routes.accesshelper import get_rights
+        if item == 'rights':
+            self.rights = get_rights(self.id)
+            return self.rights
+        raise AttributeError
+
     @staticmethod
     def get_root() -> 'Folder':
         return Folder(id=ROOT_FOLDER_ID, name='', location='')
@@ -31,18 +40,33 @@ class Folder(db.Model):
         return Folder.query.filter_by(name=name, location=location).first()
 
     @staticmethod
-    def find_by_full_path(path) -> Optional['Folder']:
+    def find_by_path(path, fallback_to_id=False) -> Optional['Folder']:
         parent_loc, name = split_location(path)
-        return Folder.find_by_location(parent_loc, name)
+        f = Folder.find_by_location(parent_loc, name)
+        if f is None and fallback_to_id:
+            try:
+                return Folder.get_by_id(int(path))
+            except ValueError:
+                return None
+        return f
 
     def is_root(self) -> bool:
         return self.id == -1
 
-    def get_parent(self) -> Optional['Folder']:
+    @property
+    def parent(self) -> Optional['Folder']:
         if self.is_root():
             return None
         parent_loc, name = split_location(self.location)
         return Folder.find_by_location(parent_loc, name) if name else Folder.get_root()
+
+    @property
+    def path(self):
+        return self.get_full_path()
+
+    @property
+    def title(self):
+        return self.name or 'All documents'
 
     def get_full_path(self) -> str:
         return join_location(self.location, self.name)
@@ -51,7 +75,6 @@ class Folder(db.Model):
         DocEntry]:
         doc = DocEntry.query.filter_by(name=join_location(self.get_full_path(), relative_path)).first()
         if doc is not None:
-            doc.document = Document(doc_id=doc.id)
             return doc
         if create_if_not_exist:
             assert creator_group_id is not None
@@ -102,3 +125,16 @@ class Folder(db.Model):
             db.session.commit()
 
         return f
+
+    def to_json(self):
+        return {'id': self.id,
+                'name': self.name,
+                'title': self.title,
+                'location': self.location,
+                'path': self.path,
+                'isFolder': True,
+                'modified': None,  # this is not tracked yet for folders
+                'owner': self.block.owner if self.block else None,  # root has no owner
+                'rights': self.rights,
+                'unpublished': self.block.is_unpublished() if self.block else False
+                }

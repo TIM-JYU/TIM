@@ -1,7 +1,10 @@
 from flask import Blueprint
+from flask import current_app
 from flask import g
 
-from routes.common import verifyLoggedIn, jsonResponse, verify_json_params, get_current_user_object
+from routes.accesshelper import verify_logged_in
+from routes.common import jsonResponse, verify_json_params
+from routes.sessioninfo import get_current_user_object
 from timdb.bookmarks import Bookmarks
 from timdb.models.docentry import DocEntry
 
@@ -12,7 +15,7 @@ bookmarks = Blueprint('bookmarks',
 
 @bookmarks.before_request
 def verify_login():
-    verifyLoggedIn()
+    verify_logged_in()
     g.bookmarks = Bookmarks(get_current_user_object())
 
 
@@ -57,8 +60,12 @@ def delete_bookmark():
 
 @bookmarks.route('/markLastRead/<int:doc_id>', methods=['POST'])
 def mark_last_read(doc_id):
-    d = DocEntry.find_by_id(doc_id)
-    g.bookmarks.add_bookmark('Last read', d.get_short_name(), '/view/' + d.get_path(), move_to_top=True).save_bookmarks()
+    d = DocEntry.find_by_id(doc_id, try_translation=True)
+    g.bookmarks.add_bookmark('Last read',
+                             d.short_name,
+                             '/view/' + d.path,
+                             move_to_top=True,
+                             limit=current_app.config['LAST_READ_BOOKMARK_LIMIT']).save_bookmarks()
     return get_bookmarks()
 
 

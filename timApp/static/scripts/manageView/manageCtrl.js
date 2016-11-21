@@ -15,30 +15,30 @@ PermApp.controller("PermCtrl", [
 
 
         sc.showMoreChangelog = function () {
-            var newLength = sc.doc.versions.length + 100;
-            $http.get('/changelog/' + sc.doc.id + '/' + (newLength)).then(function (response) {
-                sc.doc.versions = response.data.versions;
-                sc.hasMoreChangelog = sc.doc.versions.length === newLength;
+            var newLength = sc.item.versions.length + 100;
+            $http.get('/changelog/' + sc.item.id + '/' + (newLength)).then(function (response) {
+                sc.item.versions = response.data.versions;
+                sc.hasMoreChangelog = sc.item.versions.length === newLength;
             }, function (response) {
                 $log.error('Failed to get more changelog.');
             });
         };
 
-        sc.getJustDocName = function(fullName) {
-            var i = fullName.lastIndexOf('/');
-            return i < 0 ? fullName : fullName.substr(i + 1);
+        sc.getJustDocName = function(path) {
+            var i = path.lastIndexOf('/');
+            return i < 0 ? path : path.substr(i + 1);
         };
 
-        sc.getFolderName = function(fullName) {
-            var i = fullName.lastIndexOf('/');
-            return i < 0 ? '' : fullName.substring(0, fullName.lastIndexOf('/'));
+        sc.getFolderName = function(path) {
+            var i = path.lastIndexOf('/');
+            return i < 0 ? '' : path.substring(0, path.lastIndexOf('/'));
         };
 
         sc.getAliases = function() {
-            $http.get('/alias/' + sc.doc.id, {
+            $http.get('/alias/' + sc.item.id, {
             }).success(function (data, status, headers, config) {
                 if (sc.aliases.length > 0 &&
-                    (data.length === 0 || data[0].fullname !== sc.aliases[0].fullname))
+                    (data.length === 0 || data[0].path !== sc.aliases[0].path))
                         // The first name has changed, reload to update the links
                         location.reload();
                 else
@@ -55,7 +55,7 @@ PermApp.controller("PermCtrl", [
             if (sc.isFolder)
                 return [];
 
-            $http.get('/translations/' + sc.doc.id, {
+            $http.get('/translations/' + sc.item.id, {
             }).success(function (data, status, headers, config) {
                 sc.lang_id = "";
                 sc.translations = [];
@@ -63,7 +63,7 @@ PermApp.controller("PermCtrl", [
                 for (var i = 0; i < data.length; i++) {
                     var tr = data[i];
 
-                    if (tr.id === sc.doc.id) {
+                    if (tr.id === sc.item.id) {
                         sc.lang_id = tr.lang_id;
                     }
                     else {
@@ -74,7 +74,7 @@ PermApp.controller("PermCtrl", [
                     }
                 }
 
-                sc.old_title = sc.doc.title;
+                sc.old_title = sc.item.title;
                 sc.old_langid = sc.lang_id;
 
             }).error(function (data, status, headers, config) {
@@ -85,19 +85,19 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.metaChanged = function() {
-            return sc.doc.title !== sc.old_title || sc.lang_id !== sc.old_langid;
+            return sc.item.title !== sc.old_title || sc.lang_id !== sc.old_langid;
         };
 
         sc.updateMetadata = function() {
-            $http.post('/translation/' + sc.doc.id, {
+            $http.post('/translation/' + sc.item.id, {
                 'new_langid': sc.lang_id,
-                'new_title': sc.doc.title,
+                'new_title': sc.item.title,
                 'old_title': sc.old_title
             }).success(function (data, status, headers, config) {
-                if (sc.doc.title === sc.old_title)
+                if (sc.item.title === sc.old_title)
                     sc.getTranslations();
                 else
-                    location.replace('/manage/' + sc.doc.title);
+                    location.replace('/manage/' + sc.item.title);
 
             }).error(function (data, status, headers, config) {
                 $window.alert(data.error);
@@ -122,9 +122,9 @@ PermApp.controller("PermCtrl", [
 
         sc.changeOwner = function() {
             sc.ownerUpdating = true;
-            $http.put('/changeOwner/' + sc.doc.id + '/' + sc.newOwner).success(
+            $http.put('/changeOwner/' + sc.item.id + '/' + sc.newOwner).success(
                 function (data, status, headers, config) {
-                     sc.doc.owner.name = sc.newOwner;
+                     sc.item.owner.name = sc.newOwner;
                 }).error(function (data, status, headers, config) {
                     $window.alert(data.error);
                 }).finally(function () {
@@ -133,13 +133,13 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.renameFolder = function (newName) {
-            $http.put('/rename/' + sc.doc.id, {
+            $http.put('/rename/' + sc.item.id, {
                 'new_name': sc.oldFolderName + '/' + newName
             }).success(function (data, status, headers, config) {
                 // This is needed to update the breadcrumbs
                 location.reload();
-                //sc.doc.fullname = sc.oldFolderName + '/' + newName;
-                //sc.doc.name = newName;
+                //sc.item.path = sc.oldFolderName + '/' + newName;
+                //sc.item.name = newName;
                 //sc.oldName = newName;
             }).error(function (data, status, headers, config) {
                 $window.alert(data.error);
@@ -147,13 +147,13 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.moveFolder = function (newLocation) {
-            $http.put('/rename/' + sc.doc.id, {
+            $http.put('/rename/' + sc.item.id, {
                 'new_name': newLocation + '/' + sc.oldName
             }).success(function (data, status, headers, config) {
                 // This is needed to update the breadcrumbs
                 location.reload();
-                //sc.doc.fullname = newLocation + '/' + sc.oldName;
-                //sc.doc.location = newLocation;
+                //sc.item.path = newLocation + '/' + sc.oldName;
+                //sc.item.location = newLocation;
                 //sc.oldFolderName = newLocation;
             }).error(function (data, status, headers, config) {
                 $window.alert(data.error);
@@ -170,11 +170,11 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.aliasChanged = function(alias) {
-            return alias.publicChanged || alias.fullname !== sc.combine(alias.location, alias.name);
+            return alias.publicChanged || alias.path !== sc.combine(alias.location, alias.name);
         };
 
         sc.addAlias = function(newAlias) {
-            $http.put('/alias/' + sc.doc.id + '/' + $window.encodeURIComponent(sc.combine(newAlias.location, newAlias.name)), {
+            $http.put('/alias/' + sc.item.id + '/' + $window.encodeURIComponent(sc.combine(newAlias.location, newAlias.name)), {
                 'public': Boolean(newAlias.public)
             }).success(function (data, status, headers, config) {
                 sc.getAliases();
@@ -186,7 +186,7 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.removeAlias = function(alias) {
-            $http.delete('/alias/' + sc.doc.id + '/' + $window.encodeURIComponent(alias.fullname), {
+            $http.delete('/alias/' + sc.item.id + '/' + $window.encodeURIComponent(alias.path), {
             }).success(function (data, status, headers, config) {
                 sc.getAliases();
             }).error(function (data, status, headers, config) {
@@ -196,12 +196,12 @@ PermApp.controller("PermCtrl", [
 
         sc.updateAlias = function(alias, first) {
             var new_alias = sc.combine(alias.location, alias.name);
-            $http.post('/alias/' + sc.doc.id + '/' + $window.encodeURIComponent(alias.fullname), {
+            $http.post('/alias/' + sc.item.id + '/' + $window.encodeURIComponent(alias.path), {
                 'public': Boolean(alias.public),
                 'new_name': new_alias
             }).success(function (data, status, headers, config) {
 
-                if (!first || new_alias === alias.fullname)
+                if (!first || new_alias === alias.path)
                     sc.getAliases();
                 else
                     location.replace('/manage/' + new_alias);
@@ -239,19 +239,19 @@ PermApp.controller("PermCtrl", [
             if (file) {
                 sc.file.progress = 0;
                 file.upload = Upload.upload({
-                    url: '/update/' + sc.doc.id,
+                    url: '/update/' + sc.item.id,
                     data: {
                         file: file,
-                        original: sc.doc.fulltext,
-                        version: sc.doc.versions[0]
+                        original: sc.item.fulltext,
+                        version: sc.item.versions[0]
                     }
                 });
 
                 file.upload.then(function (response) {
                     $timeout(function () {
                         sc.file.result = response.data;
-                        sc.doc.versions = response.data.versions;
-                        sc.doc.fulltext = response.data.fulltext;
+                        sc.item.versions = response.data.versions;
+                        sc.item.fulltext = response.data.fulltext;
                         sc.fulltext = response.data.fulltext;
                     });
                 }, function (response) {
@@ -356,12 +356,12 @@ text = '\n'.join(a)
                 duplicates: duplicateData,
                 renameDuplicates: renameDuplicates,
                 manageView: true,
-                docId: sc.doc.id
+                docId: sc.item.id
             })).success(function (data, status, headers, config) {
                 sc.renameFormShowing = false;
                 sc.fulltext = data.fulltext;
-                sc.doc.fulltext = sc.fulltext;
-                sc.doc.versions = data.versions;
+                sc.item.fulltext = sc.fulltext;
+                sc.item.versions = data.versions;
                 $("#pluginRenameForm").remove();
                 if(data.duplicates.length > 0) {
                     sc.createPluginRenameForm(data);
@@ -464,19 +464,19 @@ text = '\n'.join(a)
         
         sc.saveDocument = function () {
             sc.saving = true;
-            $http.post('/update/' + sc.doc.id,
+            $http.post('/update/' + sc.item.id,
                 {
                     'fulltext': sc.fulltext,
-                    'original': sc.doc.fulltext,
-                    'version': sc.doc.versions[0]
+                    'original': sc.item.fulltext,
+                    'version': sc.item.versions[0]
                 }).success(
                 function (data, status, headers, config) {
                     if(data.duplicates.length > 0) {
                         sc.createPluginRenameForm(data);
                     }
                     sc.fulltext = data.fulltext;
-                    sc.doc.fulltext = sc.fulltext;
-                    sc.doc.versions = data.versions;
+                    sc.item.fulltext = sc.fulltext;
+                    sc.item.versions = data.versions;
                     sc.saving = false;
                 }).error(function (data, status, headers, config) {
                     sc.saving = false;
@@ -493,17 +493,17 @@ text = '\n'.join(a)
 
         sc.saveDocumentWithWarnings = function () {
             sc.saving = true;
-            $http.post('/update/' + sc.doc.id,
+            $http.post('/update/' + sc.item.id,
                 {
                     'fulltext': sc.fulltext,
-                    'original': sc.doc.fulltext,
+                    'original': sc.item.fulltext,
                     'ignore_warnings': true,
-                    'version': sc.doc.versions[0]
+                    'version': sc.item.versions[0]
                 }).success(
                 function (data, status, headers, config) {
                     sc.fulltext = data.fulltext;
-                    sc.doc.fulltext = sc.fulltext;
-                    sc.doc.versions = data.versions;
+                    sc.item.fulltext = sc.fulltext;
+                    sc.item.versions = data.versions;
                 }).error(function (data, status, headers, config) {
                     $window.alert(data.error);
                 }).finally(function () {
@@ -513,7 +513,7 @@ text = '\n'.join(a)
 
         sc.markAllAsRead = function() {
             sc.readUpdating = true;
-            $http.put('/read/' + sc.doc.id, {})
+            $http.put('/read/' + sc.item.id, {})
                 .success(function (data, status, headers, config) {
 
                 }).error(function (data, status, headers, config) {
@@ -531,7 +531,7 @@ text = '\n'.join(a)
         };
 
         sc.createTranslation = function() {
-            $http.post('/translate/' + sc.doc.id + "/" + sc.translationName, {
+            $http.post('/translate/' + sc.item.id + "/" + sc.translationName, {
                 'doc_title': sc.translationTitle
             }).success(function (data, status, headers, config) {
                 location.href = "/view/" + data.name;
@@ -541,7 +541,7 @@ text = '\n'.join(a)
         };
 
         sc.createCitation = function() {
-            $http.get('/cite/' + sc.doc.id + "/" + sc.citationName)
+            $http.get('/cite/' + sc.item.id + "/" + sc.citationName)
                 .success(function (data, status, headers, config) {
                     location.assign("/view/" + data.name);
                 }).error(function (data, status, headers, config) {
@@ -560,12 +560,13 @@ text = '\n'.join(a)
             {
                 docPath = sc.documentPath + "/" + sc.documentName;
             }
-            $http.post('/createDocument', {
-                'doc_name': docPath
+            $http.post('/createItem', {
+                'item_path': docPath,
+                'item_type': 'document'
             }).success(function (data, status, headers, config) {
                 var forwardName = data.name;
                 $http.post('/update/' + data.id, {
-                    'template_name': $window.doc.fullname
+                    'template_name': $window.item.path
                 }).success(function (data, status, headers, config) {
                     location.href = "/view/" + forwardName;
                 }).error(function (data, status, headers, config) {
@@ -581,7 +582,7 @@ text = '\n'.join(a)
             sc.emailCommentAdd = false;
             sc.emailCommentModify = false;
 
-            $http.get('/notify/' + sc.doc.id)
+            $http.get('/notify/' + sc.item.id)
                 .success(function (data, status, headers, config) {
                     sc.emailDocModify = data.email_doc_modify;
                     sc.emailCommentAdd = data.email_comment_add;
@@ -593,7 +594,7 @@ text = '\n'.join(a)
         };
 
         sc.notifyChanged = function() {
-            $http.post('/notify/' + sc.doc.id, {
+            $http.post('/notify/' + sc.item.id, {
                 'email_doc_modify': sc.emailDocModify,
                 'email_comment_add': sc.emailCommentAdd,
                 'email_comment_modify': sc.emailCommentModify
@@ -604,32 +605,32 @@ text = '\n'.join(a)
         };
 
         sc.accessTypes = $window.accessTypes;
-        sc.doc = $window.doc;
-        sc.isFolder = $window.isFolder;
+        sc.item = $window.item;
         sc.hasMoreChangelog = true;
 
-        var docPath = $window.doc.fullname.split("/");
+        var docPath = sc.item.path.split("/");
         docPath.pop();
         sc.documentPath = docPath.join("/");
-        sc.documentName = $window.doc.name;
+        sc.documentName = sc.item.name;
 
         //sc.newName = sc.getJustDocName(doc.name);
-        sc.newFolderName = sc.getFolderName(sc.doc.fullname);
+        sc.newFolderName = sc.getFolderName(sc.item.path);
         //sc.oldName = sc.newName;
         //sc.oldFolderName = sc.newFolderName;
         sc.newAlias = {location: sc.newFolderName};
-        sc.newOwner = sc.doc.owner.name;
-        sc.doc.fulltext = sc.doc.fulltext.trim();
-        sc.fulltext = sc.doc.fulltext;
-        sc.aliases = sc.getAliases();
-        sc.translations = sc.getTranslations();
+        sc.newOwner = sc.item.owner.name;
         sc.showCreateDiv = "";
         sc.getNotifySettings();
 
-        if (sc.isFolder) {
-            sc.newName = sc.doc.name;
-            sc.newFolderName = sc.doc.location;
+        if (sc.item.isFolder) {
+            sc.newName = sc.item.name;
+            sc.newFolderName = sc.item.location;
             sc.oldName = sc.newName;
             sc.oldFolderName = sc.newFolderName;
+        } else {
+            sc.item.fulltext = sc.item.fulltext.trim();
+            sc.fulltext = sc.item.fulltext;
+            sc.aliases = sc.getAliases();
+            sc.translations = sc.getTranslations();
         }
     }]);

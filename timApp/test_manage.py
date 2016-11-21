@@ -1,3 +1,4 @@
+from timdbtest import TEST_USER_2_ID
 from timroutetest import TimRouteTest
 
 
@@ -21,3 +22,9 @@ class ManageTest(TimRouteTest):
                                  }:
             self.json_post('/notify/' + str(doc.doc_id), new_settings, expect_status=200)
             self.get('/notify/' + str(doc.doc_id), expect_status=200, as_json=True, expect_content=new_settings)
+        self.login_test2()
+        self.get('/manage/' + str(doc.doc_id), expect_status=403)
+        timdb = self.get_db()
+        timdb.users.grant_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id, 'manage')
+        self.get('/manage/' + str(doc.doc_id), expect_status=200)
+        timdb.close()

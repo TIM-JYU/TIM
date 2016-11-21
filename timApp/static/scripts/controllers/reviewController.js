@@ -28,7 +28,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.annotationsAdded = false;
     $scope.selectedArea = null;
     $scope.selectedElement = null;
-    $scope.rights = $window.rights;
+    $scope.item = $window.item;
     $scope.annotations = [];
     $scope.annotationids = {0: 0};
     $scope.zIndex = 1;
@@ -696,7 +696,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
 
     $scope.notAnnotationRights = function (points) {
-        if ($scope.$parent.rights.teacher) {
+        if ($scope.item.rights.teacher) {
             return false;
         } else {
             if (points === null) {

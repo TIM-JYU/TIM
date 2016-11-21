@@ -41,7 +41,7 @@ class Folders(TimDbBase):
         cursor.execute('SELECT id, name, location FROM Folder WHERE id = %s', [block_id])
 
         for folder in self.resultAsDictionary(cursor):
-            folder['fullname'] = self.join_location(folder['location'], folder['name'])
+            folder['path'] = self.join_location(folder['location'], folder['name'])
             return folder
 
         return None
@@ -60,25 +60,20 @@ class Folders(TimDbBase):
         if folder_name == '':
             return ID_ROOT_FOLDER
 
-        f = Folder.find_by_full_path(folder_name)
+        f = Folder.find_by_path(folder_name)
         return f.id if f else None
 
-    def get_folders(self, root_path: str = '', filter_ids: Optional[Iterable[int]]=None) -> List[dict]:
+    def get_folders(self, root_path: str = '', filter_ids: Optional[Iterable[int]]=None) -> List[Folder]:
         """Gets all the folders under a path.
-        :param root_path: Optionally restricts the search to a specific folder.
+        :param root_path: Restricts the search to a specific folder.
         :param filter_ids: An optional iterable of document ids for filtering the documents.
                Must be non-empty if supplied.
-        :return: A list of dictionaries of the form {'id': <folder_id>, 'name': 'folder_name', 'fullname': 'folder_path'}
+        :return: A list of dictionaries of the form {'id': <folder_id>, 'name': 'folder_name', 'path': 'folder_path'}
         """
-        cursor = self.db.cursor()
-        filter_clause = ''
+        q = Folder.query.filter_by(location=root_path)
         if filter_ids:
-            filter_clause += self.get_id_filter(filter_ids)
-        cursor.execute("SELECT id, name FROM Folder WHERE location = %s {}".format(filter_clause), [root_path])
-        folders = self.resultAsDictionary(cursor)
-        for folder in folders:
-           folder['fullname'] = self.join_location(root_path, folder['name'])
-        return folders
+            q = q.filter(Folder.id.in_(filter_ids))
+        return q.all()
 
     def rename(self, block_id: int, new_name: str) -> None:
         """Renames a folder, updating all the documents within.
@@ -89,7 +84,7 @@ class Folders(TimDbBase):
 
         folder_info = self.get(block_id)
         assert folder_info is not None, 'folder does not exist: ' + str(block_id)
-        old_name = folder_info['fullname']
+        old_name = folder_info['path']
         new_rel_path, new_rel_name = self.split_location(new_name)
 
         # Rename folder itself
@@ -119,7 +114,7 @@ class Folders(TimDbBase):
     def is_empty(self, block_id: int) -> bool:
         folder_info = self.get(block_id)
         assert folder_info is not None, 'folder does not exist: ' + str(block_id)
-        folder_name = folder_info['fullname']
+        folder_name = folder_info['path']
 
         cursor = self.db.cursor()
         cursor.execute('SELECT exists(SELECT name FROM DocEntry WHERE name LIKE %s)', [folder_name + '/%'])
@@ -130,7 +125,7 @@ class Folders(TimDbBase):
         """
         folder_info = self.get(block_id)
         assert folder_info is not None, 'folder does not exist: ' + str(block_id)
-        folder_name = folder_info['fullname']
+        folder_name = folder_info['path']
 
         # Check that our folder is empty
         assert self.is_empty(block_id), 'folder {} is not empty!'.format(folder_name)
@@ -161,14 +156,14 @@ class Folders(TimDbBase):
 
         # Check if velps folder exist
         for folder in folders:
-            if folder['name'] == group_folder_name:
+            if folder.name == group_folder_name:
                 velps_folder = True
 
         # If velps folder exists, check if folder for document exists
         if velps_folder is True:
             doc_folders = self.get_folders(velps_folder_path)
             for folder in doc_folders:
-                if folder['name'] == doc_name:
+                if folder.name == doc_name:
                     doc_velp_folder = True
 
         # If velps folder doesn't exists, create one
@@ -198,7 +193,7 @@ class Folders(TimDbBase):
         velps_folder = False
 
         for folder in folders:
-            if folder['name'] == group_folder_name:
+            if folder.name == group_folder_name:
                 velps_folder = True
 
         if velps_folder is False:

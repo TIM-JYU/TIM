@@ -5,8 +5,11 @@ from typing import Optional
 from flask import Blueprint
 
 from decorators import async
+from routes.accesshelper import verify_logged_in
 from routes.common import *
+from routes.dbaccess import get_timdb
 from routes.logger import log_info, log_error
+from routes.sessioninfo import get_current_user, get_current_user_id, get_current_user_name
 from tim_app import app
 
 FUNNEL_HOST = "funnel"
@@ -19,18 +22,18 @@ notify = Blueprint('notify',
 
 @notify.route('/notify/<int:doc_id>', methods=['GET'])
 def get_notify_settings(doc_id):
-    verifyLoggedIn()
-    timdb = getTimDb()
-    settings = timdb.documents.get_notify_settings(getCurrentUserId(), doc_id)
+    verify_logged_in()
+    timdb = get_timdb()
+    settings = timdb.documents.get_notify_settings(get_current_user_id(), doc_id)
     return jsonResponse(settings)
 
 
 @notify.route('/notify/<int:doc_id>', methods=['POST'])
 def set_notify_settings(doc_id):
-    verifyLoggedIn()
+    verify_logged_in()
     jsondata = request.get_json()
-    timdb = getTimDb()
-    timdb.documents.set_notify_settings(getCurrentUserId(), doc_id, jsondata)
+    timdb = get_timdb()
+    timdb.documents.set_notify_settings(get_current_user_id(), doc_id, jsondata)
     return okJsonResponse()
 
 
@@ -73,10 +76,10 @@ def send_email(rcpt: str, subject: str, msg: str, mail_from: Optional[str] = Non
 
 
 def replace_macros(msg: str, doc_id: int, par_id: Optional[str]) -> str:
-    timdb = getTimDb()
+    timdb = get_timdb()
     new_msg = msg
     if '[user_name]' in msg:
-        new_msg = new_msg.replace('[user_name]', getCurrentUserName())
+        new_msg = new_msg.replace('[user_name]', get_current_user_name())
     if '[doc_name]' in msg or '[doc_url]' in msg:
         doc_name = timdb.documents.get_first_document_name(doc_id)
         par_part = '' if par_id is None else '#' + par_id
@@ -92,7 +95,7 @@ def replace_macros(msg: str, doc_id: int, par_id: Optional[str]) -> str:
 
 
 def notify_doc_owner(doc_id, subject, msg, setting=None, par_id=None, group_id=None, group_subject=None):
-    timdb = getTimDb()
+    timdb = get_timdb()
     me = get_current_user()
     owner_group = timdb.documents.get_owner(doc_id)
     macro_subject = replace_macros(subject, doc_id, par_id)

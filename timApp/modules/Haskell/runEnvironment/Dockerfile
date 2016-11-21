@@ -1,5 +1,5 @@
 # Start from Ubuntu image
-from fpco/stack-run:lts-6
+from fpco/stack-run:lts-7
 maintainer Ville Tirronen "ville.tirronen@jyu.fi"
   
 run apt-get update

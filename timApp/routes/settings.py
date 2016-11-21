@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template
 from jinja2 import TemplateNotFound
 
+from routes.accesshelper import verify_logged_in
 from theme import get_available_themes
 from .common import *
 
@@ -12,7 +13,7 @@ settings_page = Blueprint('settings_page',
 
 @settings_page.before_request
 def verify_login():
-    verifyLoggedIn()
+    verify_logged_in()
 
 
 @settings_page.route('/')

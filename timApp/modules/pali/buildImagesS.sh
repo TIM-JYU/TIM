@@ -1,1 +1,1 @@
-docker build --tag="palisudo" -f DockerfileS .
+docker build --tag="timimages/palisudo" -f DockerfileS .

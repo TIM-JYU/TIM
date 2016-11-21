@@ -1,12 +1,10 @@
 {% extends obj_name + ".html" %}
 {% set is_folder = obj_name == 'folder' %}
-{% block title %}{{ doc.name }} - Manage{% endblock %}
+{% block title %}{{ item.name }} - Manage{% endblock %}
 {% block head %}
     {{ super() }}
     <script src="{{ url_for('static', filename='scripts/manageView/manageCtrl.js') }}"></script>
     <script>
-        var isFolder = {{is_folder|tojson}};
-        var doc = {{doc|tojson}};
         var accessTypes = {{access_types|tojson}};
     </script>
 {% endblock %}
@@ -15,14 +13,14 @@
         <div class="panel panel-default">
             <div class="panel-heading">{{ obj_name|capitalize }} permissions</div>
             <div class="panel-body">
-                {% if rights['owner'] %}
+                {% if item.rights.owner %}
                     <form ng-submit="changeOwner()">
                         <div class="form-group">
                             <label for="newOwnerInput">{{ obj_name|capitalize }} owner:</label>
                             <div class="input-group">
                                 <input id="newOwnerInput" class="form-control" type="text" ng-model="newOwner">
                                 <span class="input-group-btn">
-                        <button ng-disabled="doc.owner.name === newOwner" class="timButton">
+                        <button ng-disabled="item.owner.name === newOwner" class="timButton">
                             Update
                         </button>
                     </span>
@@ -31,26 +29,26 @@
                         </div>
                     </form>
                 {% else %}
-                    {{ obj_name|capitalize }} owner: {{ doc.owner.name }}
+                    {{ obj_name|capitalize }} owner: {{ item.owner.name }}
                 {% endif %}
                 <uib-tabset>
                     <uib-tab heading="Rights for this {{ obj_name }}">
                         <rights-editor
-                                item-id="doc.id"
+                                item-id="item.id"
                                 url-root="permissions"
                                 access-types="accessTypes">
                         </rights-editor>
                     </uib-tab>
-                    <uib-tab ng-if="isFolder" heading="Default rights for new documents">
+                    <uib-tab ng-if="item.isFolder" heading="Default rights for new documents">
                         <rights-editor
-                                item-id="doc.id"
+                                item-id="item.id"
                                 url-root="defaultPermissions/document"
                                 access-types="accessTypes">
                         </rights-editor>
                     </uib-tab>
-                    <uib-tab ng-if="isFolder" heading="Default rights for new folders">
+                    <uib-tab ng-if="item.isFolder" heading="Default rights for new folders">
                         <rights-editor
-                                item-id="doc.id"
+                                item-id="item.id"
                                 url-root="defaultPermissions/folder"
                                 access-types="accessTypes">
                         </rights-editor>

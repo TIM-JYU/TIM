@@ -12,17 +12,18 @@ run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive t
 # Install Python, pip and other necessary packages
 
 run apt-get update
-run apt-get install -y openssh-server
-run apt-get install -y python3
-run apt-get install -y python3-pip
-run apt-get install -y git-core
+run apt-get install --no-install-recommends -y openssh-server
+run apt-get install --no-install-recommends -y python3 python3-setuptools python3-pip
+run apt-get install --no-install-recommends -y git-core
 
-run apt-get install -y zlib1g-dev # lxml dependency
-run apt-get install -y libxml2-dev libxslt-dev python3-dev # lxml dependency
-run apt-get install -y libyaml-dev # C-parser for PyYAML
+run apt-get install --no-install-recommends -y zlib1g-dev libxml2-dev libxslt-dev python3-dev # lxml dependencies
+run apt-get install --no-install-recommends -y libyaml-dev # C-parser for PyYAML
+run apt-get install --no-install-recommends -y libmagic1 # python-magic dependency
+run apt-get install --no-install-recommends -y gcc g++
 
-run apt-get install -y python3-psycopg2
+run apt-get install --no-install-recommends -y python3-psycopg2
 
+run pip3 install wheel
 run pip3 install SQLAlchemy
 run pip3 install flask
 run pip3 install flask-compress
@@ -36,11 +37,11 @@ run pip3 install ansi2html
 run pip3 install cssutils
 run pip3 install mmh3
 
-run apt-get install -y libffi-dev
+run apt-get install --no-install-recommends -y libffi-dev
 env LD_LIBRARY_PATH /usr/local/lib
 run pip3 install cffi
 
-run pip3 install git+https://github.com/benoitc/gunicorn.git gevent eventlet tornado aiohttp
+run pip3 install gunicorn gevent eventlet tornado aiohttp
 run pip3 install python-magic
 run pip3 install git+git://github.com/miracle2k/webassets.git
 run pip3 install libsass
@@ -73,33 +74,31 @@ run mkdir /service
 run useradd -M agent
 run chown -R agent /service
 
-expose 5000
-expose 22
-
-run apt-get install -y npm
-run npm install -g bower
-run npm install uglify-js -g
-run ln -s /usr/bin/nodejs /usr/bin/node
-run bower --allow-root install angular#~1.4
-run bower --allow-root install angular-ui-ace#36844ff7c0e0d9445bc8e31514d7f0f59cb8b048
-run bower --allow-root install ng-file-upload#~11.0
-run bower --allow-root install jquery#~2.1
-run bower --allow-root install angular-sanitize#~1.4
-run bower --allow-root install bootstrap#~3.3
-run bower --allow-root install jquery-ui#~1.11
-run bower --allow-root install katex#~0.6
-run bower --allow-root install rangyinputs
-run bower --allow-root install ngstorage#~0.3
-run bower --allow-root install chartjs#~1.0
-run bower --allow-root install oclazyload#~1.0
-run bower --allow-root install bootstrap-sass#~3.3
-run bower --allow-root install angular-bootstrap#~2.1
-run bower --allow-root install angular-animate#~1.4
-run bower --allow-root install angular-touch#~1.4
-run bower --allow-root install angular-ui-grid#~3.2
-run bower --allow-root install angular-bootstrap-colorpicker#~3.0
-run bower --allow-root install eonasdan-bootstrap-datetimepicker#latest
-run bower --allow-root install angular-eonasdan-datetimepicker#~0.3
+run apt-get install --no-install-recommends -y npm \
+ && npm install -g bower \
+ && npm install uglify-js -g \
+ && ln -s /usr/bin/nodejs /usr/bin/node \
+ && bower --allow-root install angular#~1.4 \
+ && bower --allow-root install angular-ui-ace#36844ff7c0e0d9445bc8e31514d7f0f59cb8b048 \
+ && bower --allow-root install ng-file-upload#~11.0 \
+ && bower --allow-root install jquery#~2.1 \
+ && bower --allow-root install angular-sanitize#~1.4 \
+ && bower --allow-root install bootstrap#~3.3 \
+ && bower --allow-root install jquery-ui#~1.11 \
+ && bower --allow-root install katex#~0.6 \
+ && bower --allow-root install rangyinputs \
+ && bower --allow-root install ngstorage#~0.3 \
+ && bower --allow-root install chartjs#~1.0 \
+ && bower --allow-root install oclazyload#~1.0 \
+ && bower --allow-root install bootstrap-sass#~3.3 \
+ && bower --allow-root install angular-bootstrap#~2.1 \
+ && bower --allow-root install angular-animate#~1.4 \
+ && bower --allow-root install angular-touch#~1.4 \
+ && bower --allow-root install angular-ui-grid#~3.2 \
+ && bower --allow-root install angular-bootstrap-colorpicker#~3.0 \
+ && bower --allow-root install eonasdan-bootstrap-datetimepicker#latest \
+ && bower --allow-root install angular-eonasdan-datetimepicker#~0.3 \
+ && apt-get purge -y --auto-remove npm
 
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
 run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js
@@ -115,7 +114,11 @@ run sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/s
 run sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python3.5/dist-packages/flask_testing/utils.py
 
 # Ensure that netcat is installed
-run apt-get install -y netcat-openbsd
+run apt-get install --no-install-recommends -y netcat-openbsd
 
 # Default startup command
 cmd cd /service/timApp && source /service/scripts/_initenv.sh && python3 launch.py
+
+expose 22
+expose 5000
+expose 5001

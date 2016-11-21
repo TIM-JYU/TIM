@@ -9,7 +9,7 @@ dockerOptions="--name $dockername\
            -v /opt/tim/timApp/modules/py:/py/:ro\
            -v /var/log/imagex:/var/log/\
            -w /imagex
-           cs3 \
+           timimages/cs3 \
            /bin/bash"
 
 docker stop $dockername

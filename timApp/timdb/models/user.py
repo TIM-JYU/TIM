@@ -2,7 +2,7 @@ import json
 
 from typing import Dict
 
-from documentmodel.docparagraphencoder import DocParagraphEncoder
+from documentmodel.timjsonencoder import TimJsonEncoder
 from timdb.tim_models import db
 from timdb.models.folder import Folder
 from timdb.models.usergroup import UserGroup
@@ -34,7 +34,7 @@ class User(db.Model):
 
     def get_personal_folder(self):
         path = 'users/' + self.name
-        f = Folder.find_by_full_path(path)
+        f = Folder.find_by_path(path)
         if f is None:
             return Folder.create(path, self.get_personal_group().id, apply_default_rights=True)
         return f
@@ -43,4 +43,12 @@ class User(db.Model):
         return json.loads(self.prefs)
 
     def set_prefs(self, prefs):
-        self.prefs = json.dumps(prefs, cls=DocParagraphEncoder)
+        self.prefs = json.dumps(prefs, cls=TimJsonEncoder)
+
+    def to_json(self):
+        return {'id': self.id,
+                'name': self.name,
+                'real_name': self.real_name,
+                'email': self.email,
+                'group': self.get_personal_group()
+                }

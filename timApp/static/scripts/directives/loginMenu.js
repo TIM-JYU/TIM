@@ -11,6 +11,7 @@ timApp.directive('loginMenu', ['Users', '$http', '$httpParamSerializer', functio
             $scope.getCurrentUser = Users.getCurrent;
             $scope.getSessionUsers = Users.getSessionUsers;
             $scope.form = {};
+            $scope.loggingout = false;
             $scope.form.email = "";
             $scope.form.password = "";
             $scope.addingToSession = false;
@@ -20,10 +21,11 @@ timApp.directive('loginMenu', ['Users', '$http', '$httpParamSerializer', functio
             };
             $scope.logout = Users.logout;
             $scope.isLoggedIn = Users.isLoggedIn;
-            $scope.korppiLogin = function(addingToSession){
+            $scope.korppiLogin = function (addingToSession) {
                 $scope.korppiLoading = true;
                 Users.korppiLogin(addingToSession);
             };
+            $scope.isKorppi = Users.isKorppi;
             $scope.stopClick = function ($event) {
                 $event.stopPropagation();
             };
@@ -40,6 +42,14 @@ timApp.directive('loginMenu', ['Users', '$http', '$httpParamSerializer', functio
                     function () {
                         $scope.addingToSession = false;
                     });
+            };
+            $scope.beginLogout = function ($event) {
+                if (Users.isKorppi()) {
+                    $scope.loggingout = true;
+                    $event.stopPropagation();
+                } else {
+                    $scope.logout($scope.getCurrentUser());
+                }
             };
         }
     };

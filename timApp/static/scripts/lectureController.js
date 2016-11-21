@@ -121,7 +121,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             http({
                 url: '/checkLecture',
                 method: 'GET',
-                params: {'doc_id': $scope.docId}
+                params: {'doc_id': $scope.docId, 'buster': new Date().getTime()}
             })
                 .success(function (answer) {
                     var lectureCode = GetURLParameter('lecture');
@@ -152,7 +152,8 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                             method: 'GET',
                             params: {
                                 'doc_id': $scope.docId,
-                                'lecture_code': lectureCode
+                                'lecture_code': lectureCode,
+                                'buster': new Date().getTime()
                             }
                         }).success(function (data) {
                             var changeLecture = $scope.joinLecture(lectureCode, data, answer.isInLecture, answer.lectureCode);
@@ -215,7 +216,8 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 params: {
                     'doc_id': $scope.docId,
                     'lecture_code': lectureName,
-                    'password_quess': $scope.passwordQuess
+                    'password_quess': $scope.passwordQuess,
+                    'buster': new Date().getTime()
                 }
             })
                 .success(function (answer) {
@@ -299,7 +301,8 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             $scope.json = data.json;
             var args = {
                 lecture_id: data.lecture_id,
-                doc_id: data.doc_id
+                doc_id: data.doc_id,
+                'buster': new Date().getTime()
             };
             if (data.asked_id) args['asked_id'] = data.asked_id;
             else if (data.question_id) args['question_id'] = data.question_id; // Remove when moving questions to document finished
@@ -307,7 +310,8 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             http({
                 url: '/askQuestion',
                 method: 'POST',
-                params: args
+                params: args,
+                'buster': new Date().getTime()
             })
                 .success(function (id) {
                     $scope.showStudentAnswers = true;
@@ -422,7 +426,8 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 params: {
                     'asked_id': answer.askedId,
                     'lecture_id': $scope.lectureId,
-                    'answers': answerString
+                    'answers': answerString,
+                    'buster': new Date().getTime()
                 }
             })
                 .success(function (answer) {
@@ -442,7 +447,8 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 method: 'PUT',
                 params: {
                     'asked_id': asked_id,
-                    'lecture_id': $scope.lectureId
+                    'lecture_id': $scope.lectureId,
+                    'buster': new Date().getTime()
                 }
             })
                 .error(function () {
@@ -669,7 +675,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
          */
         $scope.showBasicView = function (answer) {
             if ($scope.$parent) {
-                $scope.docNamePath = encodeURI($scope.$parent.docName);
+                $scope.docNamePath = encodeURI($scope.$parent.item.path);
             }
             $scope.isLecturer = answer.isLecturer;
             if ($scope.isLecturer) {
@@ -821,7 +827,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             http({
                 url: '/deleteLecture',
                 method: 'POST',
-                params: {doc_id: $scope.docId, lecture_id: $scope.lectureId}
+                params: {doc_id: $scope.docId, lecture_id: $scope.lectureId, 'buster': new Date().getTime()}
             })
                 .success(function (answer) {
                     $scope.showBasicView(answer);
@@ -848,7 +854,8 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 method: "POST",
                 params: {
                     'lecture_id': lecture_id || $scope.lectureId,
-                    'doc_id': $scope.docId
+                    'doc_id': $scope.docId,
+                    'buster': new Date().getTime()
                 }
             })
                 .success(function (answer) {
@@ -902,7 +909,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             http({
                 url: '/getAllMessages',
                 type: 'GET',
-                params: {lecture_id: $scope.lectureId}
+                params: {lecture_id: $scope.lectureId, 'buster': new Date().getTime()}
             })
                 .success(function (answer) {
                     angular.forEach(answer.data, function (msg) {
@@ -946,7 +953,8 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                     'asked_id': answer.askedId,
                     'doc_id': $scope.docId,
                     'lecture_id': $scope.lectureId,
-                    'time': answer.latestAnswer
+                    'time': answer.latestAnswer,
+                    'buster': new Date().getTime()
                 }
             })
                 .success(function (answer) {
@@ -972,7 +980,9 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
          * @memberof module:lectureController
          */
         $scope.startLongPolling = function (lastID) {
+            // $scope.newMsg = "Alku";
             function message_longPolling(lastID) {
+                // $scope.newMsg = "Lähti";
                 var timeout;
 
                 if (lastID === null) {
@@ -994,57 +1004,64 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                         'get_messages': $scope.lectureSettings.useWall,
                         'get_questions': $scope.lectureSettings.useQuestions,
                         'current_question_id': $scope.current_question_id || null,
-                        'current_points_id': $scope.current_points_id || null
+                        'current_points_id': $scope.current_points_id || null,
+                        'buster': new Date().getTime()
                     }
                 })
                     .success(function (answer) {
+                        // $scope.newMsg = "Täällä";
                         $scope.requestOnTheWay = false;
                         if (!answer.isLecture) {
                             $scope.showBasicView(answer);
                             return;
                         }
-                        $scope.pollingLectures.splice($scope.pollingLectures.indexOf(answer.lectureId), 1);
-                        if (answer.lectureId !== $scope.lectureId) {
-                            return;
-                        }
-
-                        if (answer.lectureEnding !== 100) {
-                            if (answer.lectureEnding === 1 && !$scope.lectureEnded) {
-                                $scope.showLectureEnding = true;
-                                $scope.lectureEnded = true;
+                        if (answer.isLecture != -1) {
+                            $scope.pollingLectures.splice($scope.pollingLectures.indexOf(answer.lectureId), 1);
+                            if (answer.lectureId !== $scope.lectureId) {
+                                return;
                             }
-                            if (!$scope.answeredToLectureEnding) {
-                                $scope.showLectureEnding = true;
-                            }
-                        }
 
-                        $scope.addPeopleToList(answer.students, $scope.studentTable);
-                        $scope.addPeopleToList(answer.lecturers, $scope.lecturerTable);
-
-                        // If 'new_end_time' is not undefined, extend or end question according to new_end_time
-                        if (typeof answer.new_end_time !== "undefined" && !$scope.isLecturer) {
-                            $rootScope.$broadcast('update_end_time', answer.new_end_time);
-                            // If 'question' or 'result' is in answer, show question/explanation accordingly
-                        } else if (typeof answer.points_closed !== "undefined") {
-                            $scope.current_points_id = false;
-                            $rootScope.$broadcast('update_end_time', null);
-                        } else if ((answer.question || answer.result)) {
-                            if ($scope.isLecturer) {
-                                if (answer.result) {
-                                    $scope.current_question_id = false;
-                                    $scope.current_points_id = answer.askedId;
-                                } else {
-                                    $scope.current_question_id = answer.askedId;
+                            if (answer.lectureEnding !== 100) {
+                                if (answer.lectureEnding === 1 && !$scope.lectureEnded) {
+                                    $scope.showLectureEnding = true;
+                                    $scope.lectureEnded = true;
                                 }
-                            } else {
-                                $scope.showQuestion(answer);
+                                if (!$scope.answeredToLectureEnding) {
+                                    $scope.showLectureEnding = true;
+                                }
                             }
+
+                            $scope.addPeopleToList(answer.students, $scope.studentTable);
+                            $scope.addPeopleToList(answer.lecturers, $scope.lecturerTable);
+
+                            // If 'new_end_time' is not undefined, extend or end question according to new_end_time
+                            if (typeof answer.new_end_time !== "undefined" && !$scope.isLecturer) {
+                                $rootScope.$broadcast('update_end_time', answer.new_end_time);
+                                // If 'question' or 'result' is in answer, show question/explanation accordingly
+                            } else if (typeof answer.points_closed !== "undefined") {
+                                $scope.current_points_id = false;
+                                $rootScope.$broadcast('update_end_time', null);
+                            } else if ((answer.question || answer.result)) {
+                                if ($scope.isLecturer) {
+                                    if (answer.result) {
+                                        $scope.current_question_id = false;
+                                        $scope.current_points_id = answer.askedId;
+                                    } else {
+                                        $scope.current_question_id = answer.askedId;
+                                    }
+                                } else {
+                                    $scope.showQuestion(answer);
+                                }
+                            }
+                        }
+                        else { // now new updates
+                            answer.lastid = lastID;
                         }
 
                         $window.clearTimeout(timeout);
                         if ($scope.polling) {
 
-                            $scope.pollingLectures.push(answer.lectureId);
+                            $scope.pollingLectures.push($scope.lectureId);
                             // Odottaa sekunnin ennen kuin pollaa uudestaan.
                             timeout = setTimeout(function () {
                                 message_longPolling(answer.lastid);
@@ -1097,6 +1114,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                         }
                     })
                     .error(function () {
+                        // $scope.newMsg = "Virhe";
                         $scope.requestOnTheWay = false;
                         $window.clearTimeout(timeout);
                         //Odottaa 30s ennen kuin yrittää uudelleen errorin jälkeen.
@@ -1141,7 +1159,8 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 url: '/getQuestionManually',
                 type: 'GET',
                 params: {
-                    'lecture_id': $scope.lectureId
+                    'lecture_id': $scope.lectureId,
+                    'buster': new Date().getTime()
                 }
             })
                 .success(function (answer) {
