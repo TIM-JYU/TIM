@@ -51,18 +51,18 @@ class DocParagraph:
 
     The special attributes are the following:
 
-    * rd : The paragraph is a reference to another paragraph or section, usually in a different document. The value
-      of this attribute is the id of the referenced document. The HTML content for the paragraph is retrieved from the
-      referenced paragraph (unless this is a non-empty translated paragraph; see the 'tr' attribute).
-      When specified, this attribute must be accompanied with 'ra' or 'rp' attribute, but not both.
+    * rd : The paragraph is a reference to another paragraph or section, usually in a different document. The HTML
+      content for the paragraph is retrieved from the referenced paragraph (unless this is a non-empty translated
+      paragraph; see the 'tr' attribute). When specified, this attribute must be accompanied with 'ra' or 'rp'
+      attribute, but not both. Value = id of the referenced document.
     * ra : The paragraph is a reference to a named section. Value = the name of the area in the referenced document.
     * rp : The paragraph is a reference to a paragraph. Value = the id of the paragraph.
       in the referenced document.
     * rt : The hash of the referenced paragraph. This is valid only when rd and rp are defined.
-    * rl : If defined, either 'force' or 'no'. If 'force', the reference to the source paragraph is rendered in the
+    * rl : If defined, either 'force' or 'no'. If 'force', a link to the source paragraph is rendered in the
       document view.
-    * r  : If defined, either 'c' or 'tr'. The value 'tr' denotes this is a translated paragraph, and the rp and rd attributes
-      identify the source paragraph.
+    * r  : If defined, either 'c' or 'tr'. The value 'tr' denotes this is a translated paragraph, and the rp and rd
+      attributes identify the source paragraph.
     * settings : The paragraph contains the settings of a document. Currently this must be the first paragraph of the
       document. The value of this attribute is not used.
     * plugin : The paragraph contains a plugin. Value = the type of the plugin.
