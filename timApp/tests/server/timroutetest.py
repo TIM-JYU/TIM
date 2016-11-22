@@ -342,6 +342,14 @@ class TimRouteTest(TimDbTest):
         """
         return session['user_name']
 
+    @staticmethod
+    def current_user_id() -> int:
+        """Returns the name of the current user.
+
+        :return: The name of the current user.
+        """
+        return session['user_id']
+
     def login_anonymous(self):
         with self.client.session_transaction() as s:
             log_in_as_anonymous(s)
@@ -431,7 +439,7 @@ class TimRouteTest(TimDbTest):
         :return: The DocEntry object.
         """
         if docname is None:
-            docname = 'users/{}/doc{}'.format(flask.session['user_name'], self.doc_num)
+            docname = 'users/{}/doc{}'.format(self.current_user_name(), self.doc_num)
             self.__class__.doc_num += 1
         resp = self.json_post('/createItem', {
             'item_path': docname,

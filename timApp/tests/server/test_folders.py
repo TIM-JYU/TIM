@@ -5,7 +5,7 @@ from tests.server.timroutetest import TimRouteTest
 
 class FolderTest(TimRouteTest):
     def get_folder(self, path):
-        return 'users/{}/{}'.format(session['user_name'], path)
+        return 'users/{}/{}'.format(self.current_user_name(), path)
 
     def create_folder(self, fname, expect_status=200, **kwargs):
         j = self.json_post('/createItem',
@@ -42,7 +42,7 @@ class FolderTest(TimRouteTest):
     def test_folders(self):
         self.login_test1()
         db = self.get_db()
-        user_folder = 'users/{}'.format(session['user_name'])
+        user_folder = 'users/{}'.format(self.current_user_name())
         fname = self.get_folder('testing')
 
         j = self.create_folder(fname)
@@ -127,7 +127,7 @@ class FolderTest(TimRouteTest):
                            expect_status=400)
         self.create_folder(invalid2,
                            expect_content={'error': 'You cannot create folders in this folder. Try users/{} '
-                                                    'instead.'.format(session['user_name'])},
+                                                    'instead.'.format(self.current_user_name())},
                            expect_status=403)
         self.create_folder(invalid3,
                            expect_content={

@@ -83,7 +83,7 @@ class PluginTest(TimRouteTest):
         resp = self.post_answer(plugin_type, task_id, [True, False, True])
         self.check_ok_answer(resp)
 
-        answer_list = self.get('/answers/{}/{}'.format(task_id, session['user_id']))
+        answer_list = self.get('/answers/{}/{}'.format(task_id, self.current_user_id()))
         self.maxDiff = None
 
         self.assertListEqual(
@@ -112,17 +112,17 @@ class PluginTest(TimRouteTest):
 
         self.post_answer(plugin_type, task_id, [True, True, False],
                          save_teacher=False, teacher=True, answer_id=answer_list[0]['id'],
-                         user_id=session['user_id'] - 1, expect_status=400,
+                         user_id=self.current_user_id() - 1, expect_status=400,
                          expect_content={'error': 'userId is not associated with answer_id'})
 
         resp = self.post_answer(plugin_type, task_id, [False, False, False],
                                 save_teacher=False, teacher=True, answer_id=answer_list[0]['id'],
-                                user_id=session['user_id'])
+                                user_id=self.current_user_id())
         self.check_ok_answer(resp, is_new=False)
 
         par_id = doc.get_paragraph_by_task(task_name).get_id()
         j = self.get('/getState',
-                     query_string={'user_id': session['user_id'],
+                     query_string={'user_id': self.current_user_id(),
                                    'answer_id': answer_list[0]['id'],
                                    'par_id': par_id,
                                    'doc_id': doc.doc_id})
@@ -229,7 +229,7 @@ class PluginTest(TimRouteTest):
                                 )
         self.assertEqual(file_content, self.get(ur['file']))
         self.assertEqual(file_content,
-                         self.get('/uploads/{}/{}/{}/'.format(doc.doc_id, task_name, session['user_name']),
+                         self.get('/uploads/{}/{}/{}/'.format(doc.doc_id, task_name, self.current_user_name()),
                                   expect_status=200))
 
         self.login_test2()
@@ -241,7 +241,7 @@ class PluginTest(TimRouteTest):
         resp = self.post_answer('csPlugin', task_id, user_input, expect_status=403, expect_content=self.permission_error)
 
         # until he is granted a permission
-        ug = db.users.get_personal_usergroup_by_id(session['user_id'])
+        ug = db.users.get_personal_usergroup_by_id(self.current_user_id())
         db.users.grant_view_access(ug, doc.doc_id)
 
         # but he still cannot see the file
@@ -260,7 +260,7 @@ class PluginTest(TimRouteTest):
         mimetype = "text/plain"
         self.assertDictEqual({'file': '/uploads/{}/{}/{}/{}/{}'.format(doc.doc_id,
                                                                        task_name,
-                                                                       session['user_name'],
+                                                                       self.current_user_name(),
                                                                        expect_version,
                                                                        filename),
                               'type': mimetype,
@@ -305,7 +305,7 @@ class PluginTest(TimRouteTest):
         self.assertEqual(file_content, self.get(ur['file']))
 
     def get_task_answers(self, task_id):
-        answer_list = self.get('/answers/{}/{}'.format(task_id, session['user_id']))
+        answer_list = self.get('/answers/{}/{}'.format(task_id, self.current_user_id()))
         return answer_list
 
     def test_all_answers(self):
