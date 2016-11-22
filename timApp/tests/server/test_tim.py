@@ -134,8 +134,8 @@ class TimTest(TimRouteTest):
         notes = timdb.notes.get_notes(ug, Document(doc_id), include_public=True)
         self.assertEqual(1, len(notes))
 
-        self.json_req('/getBlock/{}/{}'.format(doc_id, first_id),
-                      {'docId': doc_id, 'par': first_id}, expect_content={'text': edit_text})
+        self.get('/getBlock/{}/{}'.format(doc_id, first_id),
+                 expect_content={'text': edit_text})
 
         self.get('/getBlock/{}/{}'.format(doc_id, first_id),
                  query_string={'docId': doc_id,

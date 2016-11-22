@@ -148,7 +148,7 @@ class TimRouteTest(TimDbTest):
                 **kwargs) -> Union[Response, str, Dict]:
         """Performs a request.
 
-        For JSON requests, use the shortcut json_* methods.
+        For JSON POST/PUT requests, use the shortcut json_* methods.
 
         :param url: The request URL.
         :param method: The request method (e.g. GET, POST, PUT, DELETE).

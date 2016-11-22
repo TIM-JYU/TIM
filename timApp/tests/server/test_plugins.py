@@ -83,7 +83,7 @@ class PluginTest(TimRouteTest):
         resp = self.post_answer(plugin_type, task_id, [True, False, True])
         self.check_ok_answer(resp)
 
-        answer_list = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']))
+        answer_list = self.get('/answers/{}/{}'.format(task_id, session['user_id']))
         self.maxDiff = None
 
         self.assertListEqual(
@@ -305,7 +305,7 @@ class PluginTest(TimRouteTest):
         self.assertEqual(file_content, self.get(ur['file']))
 
     def get_task_answers(self, task_id):
-        answer_list = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']))
+        answer_list = self.get('/answers/{}/{}'.format(task_id, session['user_id']))
         return answer_list
 
     def test_all_answers(self):
