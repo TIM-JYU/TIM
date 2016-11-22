@@ -16,8 +16,6 @@ link_selector = CSSSelector('a')
 
 
 class TimTest(TimRouteTest):
-    doc_num = 1
-
     def test_activities(self):
         timdb = self.get_db()
 
