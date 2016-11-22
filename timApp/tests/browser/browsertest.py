@@ -8,8 +8,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
-from timdbtest import TEST_USER_1_NAME
-from timroutetest import TimRouteTest
+from tests.db.timdbtest import TEST_USER_1_NAME
+from tests.server.timroutetest import TimRouteTest
 
 
 class RemoteControls:
@@ -62,7 +62,6 @@ class BrowserTest(LiveServerTestCase, TimRouteTest):
 
     def create_app(self):
         from tim_app import app
-        app.config['LIVESERVER_PORT'] = 5000
         return app
 
     def tearDown(self):

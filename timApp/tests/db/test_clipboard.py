@@ -6,7 +6,7 @@ python3 -m unittest dumboclient filemodehelper documentmodel/test_clipboard.py
 
 from documentmodel.clipboard import Clipboard
 from documentmodel.randutils import random_id, hashfunc
-from timdbtest import TimDbTest
+from tests.db.timdbtest import TimDbTest
 
 
 class ClipboardTest(TimDbTest):

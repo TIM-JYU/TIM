@@ -1,24 +1,23 @@
 """Defines the TimRouteTest class."""
 
 import json
-import unittest
 import socket
+import unittest
 from functools import lru_cache
 from typing import Union, Optional, List, Dict, Tuple
 
 import flask
 from flask import Response
 from flask import session
+from flask.testing import FlaskClient
 from lxml import html
-
-from routes.login import log_in_as_anonymous
-from timdb.tim_models import db
-from timdb.models.docentry import DocEntry
-from timdbtest import TimDbTest
 
 import tim
 from documentmodel.document import Document
-from flask.testing import FlaskClient
+from routes.login import log_in_as_anonymous
+from tests.db.timdbtest import TimDbTest
+from timdb.models.docentry import DocEntry
+from timdb.tim_models import db
 
 
 def load_json(resp: Response):

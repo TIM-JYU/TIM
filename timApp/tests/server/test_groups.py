@@ -1,4 +1,4 @@
-from timroutetest import TimRouteTest
+from tests.server.timroutetest import TimRouteTest
 
 
 class GroupTest(TimRouteTest):

@@ -1,5 +1,5 @@
 from routes.common import *
-from timroutetest import TimRouteTest
+from tests.server.timroutetest import TimRouteTest
 
 # Tested routes from velp.py
 #   /<int:doc_id>/get_default_velp_group

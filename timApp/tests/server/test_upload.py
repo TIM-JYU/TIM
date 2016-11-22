@@ -1,8 +1,9 @@
 import io
+
 from flask import session
 
 from documentmodel.document import Document
-from timroutetest import TimRouteTest
+from tests.server.timroutetest import TimRouteTest
 
 
 class UploadTest(TimRouteTest):

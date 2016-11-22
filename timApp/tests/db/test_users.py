@@ -1,7 +1,7 @@
 import unittest
 
+from tests.db.timdbtest import TimDbTest
 from timdb.dbutils import insert_block
-from timdbtest import TimDbTest
 
 
 class UserTest(TimDbTest):

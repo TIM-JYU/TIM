@@ -1,5 +1,5 @@
+from tests.db.timdbtest import TimDbTest
 from timdb.models.user import User
-from timdbtest import TimDbTest
 
 
 class AnswerTest(TimDbTest):

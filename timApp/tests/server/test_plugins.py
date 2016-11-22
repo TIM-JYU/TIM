@@ -11,8 +11,8 @@ from lxml import html
 
 from plugin import Plugin
 from routes.sessioninfo import get_current_user_object
-from timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME
-from timroutetest import TimRouteTest
+from tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME
+from tests.server.timroutetest import TimRouteTest
 
 
 class PluginTest(TimRouteTest):

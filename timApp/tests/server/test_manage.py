@@ -1,5 +1,5 @@
-from timdbtest import TEST_USER_2_ID
-from timroutetest import TimRouteTest
+from tests.db.timdbtest import TEST_USER_2_ID
+from tests.server.timroutetest import TimRouteTest
 
 
 class ManageTest(TimRouteTest):

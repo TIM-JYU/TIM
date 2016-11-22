@@ -1,10 +1,11 @@
+from typing import List
+
 from lxml import html
 from lxml.cssselect import CSSSelector
 from lxml.html import HtmlElement
-from typing import List
 
 from documentmodel.docparagraph import DocParagraph
-from timroutetest import TimRouteTest
+from tests.server.timroutetest import TimRouteTest
 
 comment_selector = CSSSelector('div.notes > div.note')
 

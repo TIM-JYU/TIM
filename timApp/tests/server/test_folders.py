@@ -1,5 +1,5 @@
 from routes.common import *
-from timroutetest import TimRouteTest
+from tests.server.timroutetest import TimRouteTest
 
 
 class FolderTest(TimRouteTest):

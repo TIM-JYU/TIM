@@ -1,10 +1,10 @@
 from operator import itemgetter
 
+from tests.server.timroutetest import TimRouteTest
 from timdb.blocktypes import from_str, blocktypes
 from timdb.models.docentry import DocEntry
 from timdb.models.folder import Folder
-from timdb.special_group_names import ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME
-from timroutetest import TimRouteTest
+from timdb.special_group_names import KORPPI_GROUPNAME
 
 
 class DefaultRightTest(TimRouteTest):

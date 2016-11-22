@@ -1,5 +1,5 @@
 from tests.browser.browsertest import BrowserTest
-from timdbtest import TEST_USER_1_NAME
+from tests.db.timdbtest import TEST_USER_1_NAME
 
 
 class LoginTest(BrowserTest):

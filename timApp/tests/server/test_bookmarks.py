@@ -1,6 +1,6 @@
+from tests.server.timroutetest import TimRouteTest
 from timdb.models.docentry import DocEntry
 from timdb.models.folder import Folder
-from timroutetest import TimRouteTest
 
 
 class BookmarkTest(TimRouteTest):

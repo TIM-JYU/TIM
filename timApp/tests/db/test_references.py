@@ -4,16 +4,11 @@ Run from parent directory with command:
 python3 -m unittest dumboclient filemodehelper documentmodel/test_references.py
 """
 
-import random
 import unittest
 
-from documentmodel.document import Document
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.documentparser import DocumentParser
-from documentmodel.documentwriter import DocumentWriter
-from documentmodel.exceptions import DocExistsError
-from documentmodel.randutils import random_paragraph
-from timdbtest import TimDbTest
+from tests.db.timdbtest import TimDbTest
 from timdb.timdbexception import TimDbException
 
 

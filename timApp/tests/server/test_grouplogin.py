@@ -1,5 +1,5 @@
-from timdbtest import TEST_USER_1_NAME
-from timroutetest import TimRouteTest
+from tests.db.timdbtest import TEST_USER_1_NAME
+from tests.server.timroutetest import TimRouteTest
 
 
 class GroupLoginTest(TimRouteTest):

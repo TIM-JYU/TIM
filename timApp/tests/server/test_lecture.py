@@ -3,7 +3,7 @@ from datetime import timezone
 
 import dateutil.parser
 
-from timroutetest import TimRouteTest
+from tests.server.timroutetest import TimRouteTest
 
 
 class LectureTest(TimRouteTest):

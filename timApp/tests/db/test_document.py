@@ -12,7 +12,7 @@ from documentmodel.documentparser import DocumentParser
 from documentmodel.documentwriter import DocumentWriter
 from documentmodel.exceptions import DocExistsError
 from documentmodel.randutils import random_paragraph
-from timdbtest import TimDbTest
+from tests.db.timdbtest import TimDbTest
 
 
 class DocumentTest(TimDbTest):

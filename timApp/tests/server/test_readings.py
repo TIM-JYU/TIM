@@ -1,7 +1,7 @@
 from lxml.cssselect import CSSSelector
 
+from tests.server.timroutetest import TimRouteTest
 from timdb.readparagraphtype import ReadParagraphType
-from timroutetest import TimRouteTest
 
 readline_selector = CSSSelector('div.readline')
 
