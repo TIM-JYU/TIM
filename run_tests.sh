@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# ./run_tests.sh          # Runs all tests
+# ./run_tests.sh unit     # Runs unit tests
+# ./run_tests.sh db       # Runs db tests
+# ./run_tests.sh server   # Runs server tests
+# ./run_tests.sh browser  # Runs browser tests
+
 ./start_pg_test_containers.sh
 
 docker run \
@@ -17,4 +23,4 @@ docker run \
  timimages/tim:$(./get_latest_date.sh) /bin/bash -c \
  "cd /service/timApp &&
  python3 bower_helper.py &&
- python3 -m unittest"
+ python3 -m unittest discover tests/$1 'test_*.py' ."
