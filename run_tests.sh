@@ -1,12 +1,21 @@
 #!/usr/bin/env bash
 
+# Usage:
 # ./run_tests.sh          # Runs all tests
 # ./run_tests.sh unit     # Runs unit tests
 # ./run_tests.sh db       # Runs db tests
 # ./run_tests.sh server   # Runs server tests
 # ./run_tests.sh browser  # Runs browser tests
+# ./run_tests.sh 1 unit.test_attributeparser.AttributeParserTest.test_random  # Runs a single test method
+# ./run_tests.sh 1 unit.test_attributeparser.AttributeParserTest              # Runs all tests in a class
+# ./run_tests.sh 1 unit.test_attributeparser                                  # Runs all tests in a module
 
 ./start_pg_test_containers.sh
+
+params="discover tests/$1 'test_*.py' ."
+if [ "$1" = "1" ] ; then
+    params="tests.$2"
+fi
 
 docker run \
  --net=timnet \
@@ -23,4 +32,4 @@ docker run \
  timimages/tim:$(./get_latest_date.sh) /bin/bash -c \
  "cd /service/timApp &&
  python3 bower_helper.py &&
- python3 -m unittest discover tests/$1 'test_*.py' ."
+ python3 -m unittest ${params}"
