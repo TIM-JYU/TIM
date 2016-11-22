@@ -9,7 +9,7 @@ class FolderTest(TimRouteTest):
     def create_folder(self, fname, expect_status=200, **kwargs):
         j = self.json_post('/createItem',
                            {'item_path': fname,
-                            'item_type': 'folder'}, expect_status=expect_status, as_json=True, **kwargs)
+                            'item_type': 'folder'}, expect_status=expect_status, **kwargs)
         if expect_status == 200:
             self.assertEqual(fname, j['name'])
             self.assertIsInstance(j['id'], int)
@@ -21,7 +21,7 @@ class FolderTest(TimRouteTest):
         j = self.create_folder(to_delete)
         timdb = self.get_db()
         timdb.users.grant_view_access(timdb.users.get_anon_group_id(), j['id'])
-        self.delete('/folders/{}'.format(j['id']), expect_status=200, as_json=True, expect_content=self.ok_resp)
+        self.delete('/folders/{}'.format(j['id']), expect_content=self.ok_resp)
 
     def test_intermediate_folders(self):
         self.login_test1()
@@ -39,13 +39,11 @@ class FolderTest(TimRouteTest):
                            expect_content={'error': 'Item with a same name already exists.'},
                            expect_status=403)
         new_name = fname + '1'
-        resp = self.json_put('/rename/{}'.format(j['id']), {"new_name": new_name})
-        j2 = self.assertResponseStatus(resp, return_json=True)
+        j2 = self.json_put('/rename/{}'.format(j['id']), {"new_name": new_name})
         self.assertEqual(new_name, j2['new_name'])
-        self.assertDictResponse({'error': 'A folder cannot contain itself.'},
-                                self.json_put('/rename/{}'.format(j['id']),
-                                              {"new_name": new_name + '/testing1'}),
-                                expect_status=403)
+        self.json_put('/rename/{}'.format(j['id']),
+                      {"new_name": new_name + '/testing1'}, expect_status=403,
+                      expect_content={'error': 'A folder cannot contain itself.'}),
 
         # Create another folder and give access to anonymous users
         fname2 = self.get_folder('testing2')
@@ -53,61 +51,60 @@ class FolderTest(TimRouteTest):
         db.users.grant_access(db.users.get_anon_group_id(), j3['id'], 'view')
 
         folder_loc = 'users/testuser1'
-        self.assertListResponse([{'name': 'testing1',
-                                  'title': 'testing1',
-                                  'id': j['id'],
-                                  'isFolder': True,
-                                  'modified': None,
-                                  'path': new_name,
-                                  'location': folder_loc,
-                                  'owner': {'id': 7, 'name': 'testuser1'},
-                                  'rights': {'browse_own_answers': True,
-                                             'can_comment': True,
-                                             'can_mark_as_read': True,
-                                             'editable': True,
-                                             'manage': True,
-                                             'owner': True,
-                                             'see_answers': True,
-                                             'teacher': True},
-                                  'unpublished': True},
-                                 {'name': 'testing2',
-                                  'title': 'testing2',
-                                  'id': j3['id'],
-                                  'isFolder': True,
-                                  'modified': None,
-                                  'path': fname2,
-                                  'location': folder_loc,
-                                  'owner': {'id': 7, 'name': 'testuser1'},
-                                  'rights': {'browse_own_answers': True,
-                                             'can_comment': True,
-                                             'can_mark_as_read': True,
-                                             'editable': True,
-                                             'manage': True,
-                                             'owner': True,
-                                             'see_answers': True,
-                                             'teacher': True},
-                                  'unpublished': False}]
-                                ,
-                                self.json_req('/getItems', query_string={'folder': user_folder}))
+        self.json_req('/getItems', query_string={'folder': user_folder},
+                      expect_content=[{'name': 'testing1',
+                                       'title': 'testing1',
+                                       'id': j['id'],
+                                       'isFolder': True,
+                                       'modified': None,
+                                       'path': new_name,
+                                       'location': folder_loc,
+                                       'owner': {'id': 7, 'name': 'testuser1'},
+                                       'rights': {'browse_own_answers': True,
+                                                  'can_comment': True,
+                                                  'can_mark_as_read': True,
+                                                  'editable': True,
+                                                  'manage': True,
+                                                  'owner': True,
+                                                  'see_answers': True,
+                                                  'teacher': True},
+                                       'unpublished': True},
+                                      {'name': 'testing2',
+                                       'title': 'testing2',
+                                       'id': j3['id'],
+                                       'isFolder': True,
+                                       'modified': None,
+                                       'path': fname2,
+                                       'location': folder_loc,
+                                       'owner': {'id': 7, 'name': 'testuser1'},
+                                       'rights': {'browse_own_answers': True,
+                                                  'can_comment': True,
+                                                  'can_mark_as_read': True,
+                                                  'editable': True,
+                                                  'manage': True,
+                                                  'owner': True,
+                                                  'see_answers': True,
+                                                  'teacher': True},
+                                       'unpublished': False}])
         self.logout()
-        self.assertListResponse([{'name': 'testing2',
-                                  'title': 'testing2',
-                                  'id': j3['id'],
-                                  'isFolder': True,
-                                  'modified': None,
-                                  'path': fname2,
-                                  'location': folder_loc,
-                                  'owner': {'id': 7, 'name': 'testuser1'},
-                                  'rights': {'browse_own_answers': False,
-                                             'can_comment': False,
-                                             'can_mark_as_read': False,
-                                             'editable': False,
-                                             'manage': False,
-                                             'owner': False,
-                                             'see_answers': False,
-                                             'teacher': False},
-                                  'unpublished': False}],
-                                self.json_req('/getItems', query_string={'folder': user_folder}))
+        self.json_req('/getItems', query_string={'folder': user_folder},
+                      expect_content=[{'name': 'testing2',
+                                       'title': 'testing2',
+                                       'id': j3['id'],
+                                       'isFolder': True,
+                                       'modified': None,
+                                       'path': fname2,
+                                       'location': folder_loc,
+                                       'owner': {'id': 7, 'name': 'testuser1'},
+                                       'rights': {'browse_own_answers': False,
+                                                  'can_comment': False,
+                                                  'can_mark_as_read': False,
+                                                  'editable': False,
+                                                  'manage': False,
+                                                  'owner': False,
+                                                  'see_answers': False,
+                                                  'teacher': False},
+                                       'unpublished': False}])
         db.close()
 
     def test_folders_invalid(self):

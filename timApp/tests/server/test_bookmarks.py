@@ -5,7 +5,7 @@ from timdb.models.folder import Folder
 
 class BookmarkTest(TimRouteTest):
     def get_bookmarks(self, expect_status=200):
-        bms = self.get('/bookmarks/get', expect_status=expect_status, as_json=True)
+        bms = self.get('/bookmarks/get', expect_status=expect_status)
         return bms
 
     def test_bookmarks(self):
@@ -23,41 +23,31 @@ class BookmarkTest(TimRouteTest):
         group_name2 = 'mygroup2'
         item = 'test item'
         item_path = 'some/path/to/item'
-        bookmarks = self.post('/bookmarks/createGroup/{}'.format(group_name), expect_status=200, as_json=True)
+        bookmarks = self.post('/bookmarks/createGroup/{}'.format(group_name))
         self.assertListEqual([{'name': 'mygroup', 'items': [], 'editable': True}], bookmarks)
-        bookmarks = self.json_post('/bookmarks/add', {'group': group_name2, 'name': item, 'link': item_path},
-                                   expect_status=200,
-                                   as_json=True)
+        bookmarks = self.json_post('/bookmarks/add', {'group': group_name2, 'name': item, 'link': item_path})
         self.assertListEqual([{'items': [], 'name': group_name, 'editable': True},
                               {'items': [{'name': item, 'path': item_path}],
                                'name': group_name2, 'editable': True}], bookmarks)
 
-        bookmarks = self.json_post('/bookmarks/deleteGroup', {'group': group_name}, expect_status=200,
-                                   as_json=True)
+        bookmarks = self.json_post('/bookmarks/deleteGroup', {'group': group_name})
         self.assertListEqual([{'items': [{'name': item, 'path': item_path}],
                                'name': group_name2, 'editable': True}], bookmarks)
-        bookmarks = self.json_post('/bookmarks/deleteGroup', {'group': group_name}, expect_status=200,
-                                   as_json=True)
+        bookmarks = self.json_post('/bookmarks/deleteGroup', {'group': group_name})
         self.assertListEqual([{'items': [{'name': item, 'path': item_path}],
                                'name': group_name2, 'editable': True}], bookmarks)
 
-        bookmarks = self.json_post('/bookmarks/delete', {'group': group_name2, 'name': item}, expect_status=200,
-                                   as_json=True)
+        bookmarks = self.json_post('/bookmarks/delete', {'group': group_name2, 'name': item})
         self.assertListEqual([{'items': [], 'name': group_name2, 'editable': True}], bookmarks)
-        bookmarks = self.json_post('/bookmarks/delete', {'group': group_name2, 'name': item}, expect_status=200,
-                                   as_json=True)
+        bookmarks = self.json_post('/bookmarks/delete', {'group': group_name2, 'name': item})
         self.assertListEqual([{'items': [], 'name': group_name2, 'editable': True}], bookmarks)
 
-        bookmarks = self.json_post('/bookmarks/add', {'group': group_name2, 'name': item, 'link': item_path},
-                                   expect_status=200,
-                                   as_json=True)
+        bookmarks = self.json_post('/bookmarks/add', {'group': group_name2, 'name': item, 'link': item_path})
         self.assertListEqual([{'items': [{'name': item, 'path': item_path}],
                                'name': group_name2, 'editable': True}], bookmarks)
         bookmarks = self.json_post('/bookmarks/edit',
                                    {'old': {'group': group_name2, 'name': item},
-                                    'new': {'group': group_name2, 'name': item, 'link': 'test'}},
-                                   expect_status=200,
-                                   as_json=True)
+                                    'new': {'group': group_name2, 'name': item, 'link': 'test'}})
         self.assertListEqual([{'items': [{'name': item, 'path': 'test'}],
                                'name': group_name2, 'editable': True}], bookmarks)
         self.logout()

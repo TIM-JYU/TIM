@@ -60,105 +60,91 @@ class TimRouteTest(TimDbTest):
         TimDbTest.setUpClass()
         cls.client = testclient
 
-    def assertResponseStatus(self, resp: Response, expect_status: int = 200, return_json: bool = False):
-        """Asserts that the response has the specified status code and returns the response content either as text or JSON dict.
-
-        :param resp: The response to be checked.
-        :param expect_status: The expected status code.
-        :param return_json: Whether to return JSON dict (True) or plain text (False).
-        :return: The response as JSON dict or plain text.
-        """
-        resp_data = resp.get_data(as_text=True)
-        self.assertEqual(expect_status, resp.status_code, msg=resp_data)
-        if return_json:
-            return json.loads(resp_data)
-        else:
-            return resp_data
-
-    def assertInResponse(self, expected: str, resp: Response, expect_status: int = 200, json_key: Optional[str] = None, as_tree: bool = False) -> object:
-        """Asserts that the response has the specified status code and contains the specified content.
-
-        :param expected: The expected content.
-        :param resp: The response object.
-        :param expect_status: The expected status code.
-        :param json_key: If specified, the response is interpreted as JSON and only the content of this key's value is
-        taken into consideration.
-        :param as_tree: Whether to interpret the response content as HTML tree. In this case, the value of parameter
-        'expected' is interpreted as an XPATH selector that must be found in the tree.
-        """
-        resp_text = resp.get_data(as_text=True)
-        self.assertResponseStatus(resp, expect_status)
-        if json_key is not None:
-            resp_text = json.loads(resp_text)[json_key]
-        assert_msg = """\n--------THIS TEXT:--------\n{}\n--------WAS NOT FOUND IN:---------\n{}""".format(
-            expected, resp_text)
-        if as_tree:
-            self.assertLessEqual(1, len(html.fragment_fromstring(resp_text, create_parent=True).findall(expected)),
-                                 msg=assert_msg)
-        else:
-            self.assertIn(expected, resp_text,
-                          msg=assert_msg)
-
-    def assertManyInResponse(self, expecteds: List[str], resp: Response, expect_status: int = 200) -> None:
-        """Asserts that the response has the specified status code and contains each of the specified strings.
-
-        :param expecteds: The list of expected values.
-        :param resp: The response object.
-        :param expect_status: The expected status code.
-        """
-        for e in expecteds:
-            self.assertInResponse(e, resp, expect_status)
-
-    def assertDictResponse(self, expected: Dict, resp: Response, expect_status: int = 200) -> None:
-        """Asserts that the JSON response has the specified status code and is equal to the specified dict.
-
-        :param expected: The expected dictionary.
-        :param resp: The response object.
-        :param expect_status: The expected status code.
-        """
-        self.assertEqual(expect_status, resp.status_code)
-        self.assertDictEqual(expected, load_json(resp))
-
-    def assertListResponse(self, expected, resp, expect_status=200):
-        """Asserts that the JSON response has the specified status code and is equal to the specified list of dicts.
-
-        :param expected: The expected list.
-        :param resp: The response object.
-        :param expect_status: The expected status code.
-        """
-        self.assertEqual(expect_status, resp.status_code)
-        self.assertListEqual(expected, load_json(resp))
-
-    def get(self, url: str, as_tree: bool = False, as_json: bool = False, as_response: bool = False, expect_status: Optional[int] = None,
-            expect_content: Union[str,Dict,None] = None, **kwargs):
+    def get(self,
+            url: str,
+            as_tree: bool = False,
+            expect_status: int = 200,
+            expect_content: Union[None, str, Dict, List] = None,
+            expect_contains: Union[None, str, List[str]] = None,
+            expect_xpath: Optional[str] = None,
+            json_key: Optional[str] = None,
+            headers: Optional[List[Tuple[str, str]]] = None,
+            **kwargs):
         """Performs a GET request.
 
         See the 'request' method for parameter explanations.
         """
-        return self.request(url, 'GET', as_tree=as_tree, as_response=as_response, as_json=as_json, expect_status=expect_status, expect_content=expect_content, **kwargs)
+        return self.request(url,
+                            'GET',
+                            as_tree=as_tree,
+                            expect_status=expect_status,
+                            expect_content=expect_content,
+                            expect_contains=expect_contains,
+                            expect_xpath=expect_xpath,
+                            json_key=json_key,
+                            headers=headers,
+                            **kwargs)
 
-    def post(self, url: str, as_tree=False, as_json=False, as_response=False, expect_status=None, expect_content=None,
+    def post(self,
+             url: str,
+             as_tree: bool = False,
+             expect_status: int = 200,
+             expect_content: Union[None, str, Dict, List] = None,
+             expect_contains: Union[None, str, List[str]] = None,
+             expect_xpath: Optional[str] = None,
+             json_key: Optional[str] = None,
+             headers: Optional[List[Tuple[str, str]]] = None,
              **kwargs):
         """Performs a POST request.
 
         See the 'request' method for parameter explanations.
         """
-        return self.request(url, 'POST', as_tree=as_tree, as_response=as_response, as_json=as_json,
-                            expect_status=expect_status, expect_content=expect_content, **kwargs)
+        return self.request(url,
+                            'POST',
+                            as_tree=as_tree,
+                            expect_status=expect_status,
+                            expect_content=expect_content,
+                            expect_contains=expect_contains,
+                            expect_xpath=expect_xpath,
+                            json_key=json_key,
+                            headers=headers,
+                            **kwargs)
 
-    def delete(self, url: str, as_tree=False, as_json=False, as_response=False, expect_status=None, expect_content=None,
-             **kwargs):
+    def delete(self,
+               url: str,
+               as_tree: bool = False,
+               expect_status: int = 200,
+               expect_content: Union[None, str, Dict, List] = None,
+               expect_contains: Union[None, str, List[str]] = None,
+               expect_xpath: Optional[str] = None,
+               json_key: Optional[str] = None,
+               headers: Optional[List[Tuple[str, str]]] = None,
+               **kwargs):
         """Performs a DELETE request.
 
         See the 'request' method for parameter explanations.
         """
-        return self.request(url, 'DELETE', as_tree=as_tree, as_response=as_response, as_json=as_json,
-                            expect_status=expect_status, expect_content=expect_content, **kwargs)
+        return self.request(url,
+                            'DELETE',
+                            as_tree=as_tree,
+                            expect_status=expect_status,
+                            expect_content=expect_content,
+                            expect_contains=expect_contains,
+                            expect_xpath=expect_xpath,
+                            json_key=json_key,
+                            headers=headers,
+                            **kwargs)
 
-    def request(self, url: str, method: str, as_tree: bool = False, as_json: bool = False, as_response: bool = False,
-                expect_status: Optional[int] = None,
-                expect_content: Union[None, str, Dict] = None,
-                headers: Optional[List[Tuple[str,str]]] = None,
+    def request(self,
+                url: str,
+                method: str,
+                as_tree: bool = False,
+                expect_status: int = 200,
+                expect_content: Union[None, str, Dict, List] = None,
+                expect_contains: Union[None, str, List[str]] = None,
+                expect_xpath: Optional[str] = None,
+                json_key: Optional[str] = None,
+                headers: Optional[List[Tuple[str, str]]] = None,
                 **kwargs) -> Union[Response, str, Dict]:
         """Performs a request.
 
@@ -167,43 +153,74 @@ class TimRouteTest(TimDbTest):
         :param url: The request URL.
         :param method: The request method (e.g. GET, POST, PUT, DELETE).
         :param as_tree: Whether to return the response as an HTML tree.
-        :param as_json: Whether to return the response as a JSON dict.
-        :param as_response: Whether to return the raw response object.
         :param expect_status: The expected status code.
         :param expect_content: The expected response content.
-         * If as_json is True, this parameter is interpreted as a dictionary that must match the response content.
-         * If all of as_tree, as_json and as_response are False, this parameter is interpreted as a string
+         * If as_tree is True, this parameter is not used.
+         * Otherwise, if the response mimetype is application/json, this parameter is interpreted as a dictionary or list
            that must match the response content.
+         * Otherwise, this parameter is interpreted as a string that must match the response content.
+        :param expect_contains: The expected subset(s) of the response content. This can be a string or a list of strings.
+        :param expect_xpath: The expected XPath expression that must match at least one element in the response tree.
+           This parameter can also be used for JSON responses as long as json_key is provided and the data in that key
+           is HTML.
+        :param json_key: The expected key that is found in the returned JSON data. Any other data is discarded.
         :param headers: Custom headers for the request.
-        :param kwargs: Custom parameters to be passed to app.open method. Can be, for example, query_string={'a': 'b'}
-           for passing URL arguments.
+        :param kwargs: Custom parameters to be passed to test client's 'open' method. Can be, for example,
+           query_string={'a': '1', 'b': '2'} for passing URL arguments.
         :return: If as_tree is True: Returns the response as an HTML tree.
-                 If as_json is True: Returns the response as a JSON dict.
-                 If as_response is True: Returns the raw response object.
-                 Otherwise: Returns the response as a string.
+                 Otherwise, if the response mimetype is application/json, returns the response as a JSON dict or list.
+                 Otherwise, returns the response as a string.
         """
         if headers is None:
             headers = []
         headers.append(('X-Requested-With', 'XMLHttpRequest'))
         resp = self.client.open(url, method=method, headers=headers, **kwargs)
-        if expect_status:
-            self.assertResponseStatus(resp, expect_status)
+        self.assertEqual(expect_status, resp.status_code)
         resp_data = resp.get_data(as_text=True)
         if as_tree:
-            return html.fromstring(resp_data)
-        elif as_json:
+            tree = html.fromstring(resp_data)
+            if expect_xpath is not None:
+                self.assertLessEqual(1, len(tree.findall(expect_xpath)))
+            return tree
+        elif resp.mimetype == 'application/json':
             loaded = json.loads(resp_data)
+            if json_key is not None:
+                loaded = loaded[json_key]
             if expect_content is not None:
-                self.assertDictEqual(expect_content, loaded)
+                self.assertEqual(expect_content, loaded)
+            elif expect_contains is not None:
+                self.check_contains(expect_contains, loaded)
+            elif expect_xpath is not None:
+                self.assertIsNotNone(json_key)
+                self.assertLessEqual(1, len(html.fragment_fromstring(loaded, create_parent=True).findall(expect_xpath)))
             return loaded
-        elif as_response:
-            return resp
         else:
             if expect_content is not None:
                 self.assertEqual(expect_content, resp_data)
+            elif expect_contains is not None:
+                self.check_contains(expect_contains, resp_data)
             return resp_data
 
-    def json_put(self, url: str, json_data: Optional[Dict] = None, **kwargs):
+    def check_contains(self, expect_contains, data):
+        if isinstance(expect_contains, str):
+            self.assertIn(expect_contains, data)
+        elif isinstance(expect_contains, list):
+            for s in expect_contains:
+                self.assertIn(s, data)
+        else:
+            self.assertTrue(False, 'Unknown type for expect_contains parameter')
+
+    def json_put(self,
+                 url: str,
+                 json_data: Optional[Dict] = None,
+                 as_tree: bool = False,
+                 expect_status: int = 200,
+                 expect_content: Union[None, str, Dict, List] = None,
+                 expect_contains: Union[None, str, List[str]] = None,
+                 expect_xpath: Optional[str] = None,
+                 json_key: Optional[str] = None,
+                 headers: Optional[List[Tuple[str, str]]] = None,
+                 **kwargs):
         """Performs a JSON PUT request.
 
         :param url: The request URL.
@@ -211,9 +228,29 @@ class TimRouteTest(TimDbTest):
         :param kwargs: Any custom parameters that are accepted by the 'request' method.
         :return: See the 'request' method.
         """
-        return self.json_req(url, json_data, 'PUT', **kwargs)
+        return self.json_req(url,
+                             json_data,
+                             'PUT',
+                             as_tree=as_tree,
+                             expect_status=expect_status,
+                             expect_content=expect_content,
+                             expect_contains=expect_contains,
+                             expect_xpath=expect_xpath,
+                             json_key=json_key,
+                             headers=headers,
+                             **kwargs)
 
-    def json_post(self, url: str, json_data: Optional[Dict]=None, **kwargs):
+    def json_post(self,
+                  url: str,
+                  json_data: Optional[Dict] = None,
+                  as_tree: bool = False,
+                  expect_status: int = 200,
+                  expect_content: Union[None, str, Dict, List] = None,
+                  expect_contains: Union[None, str, List[str]] = None,
+                  expect_xpath: Optional[str] = None,
+                  json_key: Optional[str] = None,
+                  headers: Optional[List[Tuple[str, str]]] = None,
+                  **kwargs):
         """Performs a JSON POST request.
 
         :param url: The request URL.
@@ -221,9 +258,30 @@ class TimRouteTest(TimDbTest):
         :param kwargs: Any custom parameters that are accepted by the 'request' method.
         :return: See the 'request' method.
         """
-        return self.json_req(url, json_data, 'POST', **kwargs)
+        return self.json_req(url,
+                             json_data,
+                             'POST',
+                             as_tree=as_tree,
+                             expect_status=expect_status,
+                             expect_content=expect_content,
+                             expect_contains=expect_contains,
+                             expect_xpath=expect_xpath,
+                             json_key=json_key,
+                             headers=headers,
+                             **kwargs)
 
-    def json_req(self, url: str, json_data: Optional[Dict]=None, method: str='GET', **kwargs):
+    def json_req(self,
+                 url: str,
+                 json_data: Optional[Dict] = None,
+                 method: str = 'GET',
+                 as_tree: bool = False,
+                 expect_status: int = 200,
+                 expect_content: Union[None, str, Dict, List] = None,
+                 expect_contains: Union[None, str, List[str]] = None,
+                 expect_xpath: Optional[str] = None,
+                 json_key: Optional[str] = None,
+                 headers: Optional[List[Tuple[str, str]]] = None,
+                 **kwargs):
         """Performs a JSON request.
 
         :param url: The request URL.
@@ -236,10 +294,16 @@ class TimRouteTest(TimDbTest):
                             method=method,
                             data=json.dumps(json_data),
                             content_type='application/json',
-                            as_response=True,
+                            as_tree=as_tree,
+                            expect_status=expect_status,
+                            expect_content=expect_content,
+                            expect_contains=expect_contains,
+                            expect_xpath=expect_xpath,
+                            json_key=json_key,
+                            headers=headers,
                             **kwargs)
 
-    def post_par(self, doc: Document, text: str, par_id: str):
+    def post_par(self, doc: Document, text: str, par_id: str, **kwargs):
         """Edits a paragraph in a document.
 
         :param doc: The document to be edited.
@@ -253,9 +317,9 @@ class TimRouteTest(TimDbTest):
             "docId": doc.doc_id,
             "par": par_id,
             "par_next": None
-        })
+        }, **kwargs)
 
-    def new_par(self, doc: Document, text: str, next_id: Optional[str]=None):
+    def new_par(self, doc: Document, text: str, next_id: Optional[str] = None, **kwargs):
         """Posts a new paragraph in a document.
 
         :param doc: The document to be edited.
@@ -268,7 +332,7 @@ class TimRouteTest(TimDbTest):
             "text": text,
             "docId": doc.doc_id,
             "par_next": next_id
-        })
+        }, **kwargs)
 
     @staticmethod
     def current_user_name() -> str:
@@ -316,9 +380,10 @@ class TimRouteTest(TimDbTest):
         :param user_id: The id of the user to log out. If None, everyone in the session gets logged out.
         :return: Response as a JSON dict.
         """
-        return self.json_post('/logout', json_data={'user_id': user_id}, expect_status=200, as_json=True)
+        return self.json_post('/logout', json_data={'user_id': user_id})
 
-    def login(self, username: str, email: str, passw: str, force: bool = False, clear_last_doc: bool = True, add: bool = False, as_json=True, **kwargs):
+    def login(self, username: str, email: str, passw: str, force: bool = False, clear_last_doc: bool = True,
+              add: bool = False, **kwargs):
         """Logs a user in.
 
         :param username: The username of the user.
@@ -351,9 +416,10 @@ class TimRouteTest(TimDbTest):
                     s.pop('came_from', None)
         return self.post('/altlogin',
                          data={'email': email, 'password': passw, 'add_user': add},
-                         follow_redirects=True, as_json=as_json, **kwargs)
+                         follow_redirects=True, **kwargs)
 
-    def create_doc(self, docname: Optional[str] = None, from_file: Optional[str] = None, initial_par: Optional[str] = None,
+    def create_doc(self, docname: Optional[str] = None, from_file: Optional[str] = None,
+                   initial_par: Optional[str] = None,
                    settings: Optional[Dict] = None, assert_status: int = 200) -> DocEntry:
         """Creates a new document.
 
@@ -370,7 +436,7 @@ class TimRouteTest(TimDbTest):
         resp = self.json_post('/createItem', {
             'item_path': docname,
             'item_type': 'document'
-        }, expect_status=assert_status, as_json=True)
+        }, expect_status=assert_status)
         self.assertIsInstance(resp['id'], int)
         self.assertEqual(docname, resp['name'])
         de = DocEntry.find_by_path(docname)

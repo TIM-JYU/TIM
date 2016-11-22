@@ -22,10 +22,10 @@ class LectureTest(TimRouteTest):
                                                           lecture_code=lecture_code,
                                                           max_students=50,
                                                           password='1234',
-                                                          start_date=start_time), expect_status=200, as_json=True)
+                                                          start_date=start_time))
         lecture_id = j['lectureId']
         self.assertIsInstance(lecture_id, int)
-        j = self.get('/checkLecture', as_json=True, expect_status=200, query_string=dict(doc_id=doc.doc_id))
+        j = self.get('/checkLecture', query_string=dict(doc_id=doc.doc_id))
 
         self.assertDictEqual({'doc_name': name,
                               'endTime': end_time.isoformat(),
@@ -40,7 +40,6 @@ class LectureTest(TimRouteTest):
                               'useWall': True}, j)
 
         resp = self.get('/getUpdates',
-                        as_json=True,
                         query_string=dict(client_message_id=-1,
                                           doc_id=doc.doc_id,
                                           get_messages=True,
@@ -48,15 +47,13 @@ class LectureTest(TimRouteTest):
         self.assertDictEqual({"isLecture": -1}, resp)
 
         msg_text = 'hi'
-        j = self.post('/sendMessage', query_string=dict(lecture_id=lecture_id, message=msg_text), expect_status=200,
-                      as_json=True)
+        j = self.post('/sendMessage', query_string=dict(lecture_id=lecture_id, message=msg_text))
 
         msg_id = j['id']
         self.assertIsInstance(msg_id, int)
         msg_datetime = dateutil.parser.parse(j['time'])
         msg_time = msg_datetime.strftime(time_format)
         resp = self.get('/getUpdates',
-                        as_json=True,
                         query_string=dict(client_message_id=-1,
                                           doc_id=doc.doc_id,
                                           get_messages=True,
@@ -75,7 +72,6 @@ class LectureTest(TimRouteTest):
                               'students': []}, resp)
 
         resp = self.get('/getUpdates',
-                        as_json=True,
                         query_string=dict(client_message_id=msg_id,
                                           doc_id=doc.doc_id,
                                           get_messages=True,

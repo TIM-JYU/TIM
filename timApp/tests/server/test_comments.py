@@ -41,7 +41,7 @@ class CommentTest(TimRouteTest):
         resp = self.json_post('/postNote', {'text': comment_of_test1,
                                             'access': 'everyone' if public else 'justme',
                                             'docId': par.doc.doc_id,
-                                            'par': par.get_id()}, as_json=True, expect_status=200)
+                                            'par': par.get_id()})
         h = html.fromstring(resp['texts'])  # type: HtmlElement
         comments = comment_selector(h)
         return comments
