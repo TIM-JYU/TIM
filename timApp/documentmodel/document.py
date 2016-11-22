@@ -240,6 +240,13 @@ class Document:
         major, minor = self.get_version()
         return self.doc_id, major, minor
 
+    def get_doc_version(self, version=None) -> 'Document':
+        from documentmodel.documentversion import DocumentVersion
+        return DocumentVersion(doc_id=self.doc_id,
+                               doc_ver=version if version else self.get_version(),
+                               files_root=self.files_root,
+                               modifier_group_id=self.modifier_group_id)
+
     def get_document_path(self) -> str:
         return os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id))
 
@@ -569,6 +576,30 @@ class Document:
                     else:
                         f.write(line)
         return p
+
+    def parwise_diff(self, other_doc: 'Document', check_html:bool=False):
+        old_pars = [par for par in self]
+        old_ids = [par.get_id() for par in old_pars]
+        new_pars = [par for par in other_doc]
+        new_ids = [par.get_id() for par in new_pars]
+        s = SequenceMatcher(None, old_ids, new_ids)
+        opcodes = s.get_opcodes()
+        if check_html:
+            DocParagraph.preload_htmls(old_pars, self.get_settings(), persist=False)
+            DocParagraph.preload_htmls(new_pars, other_doc.get_settings(), persist=False)
+        for tag, i1, i2, j1, j2 in opcodes:
+            if tag == 'insert':
+                yield {'type': tag, 'after_id': old_ids[i2 - 1] if i2 > 0 else None, 'content': new_pars[j1:j2]}
+            if tag == 'replace':
+                yield {'type': tag, 'start_id': old_ids[i1], 'end_id': old_ids[i2] , 'content': new_pars[j1:j2]}
+            if tag == 'delete':
+                yield {'type': tag, 'start_id': old_ids[i1], 'end_id': old_ids[i2]}
+            if tag == 'equal':
+                for old, new in zip(old_pars[i1:i2], new_pars[j1:j2]):
+                    if old != new:
+                        yield {'type': 'change', 'id': old.get_id(), 'content': new}
+                    elif check_html and not old.is_same_as_html(new):
+                        yield {'type': 'change', 'id': old.get_id(), 'content': new}
 
     def update_section(self, text: str, par_id_first: str, par_id_last: str) -> Tuple[str, str]:
         """Updates a section of the document.
