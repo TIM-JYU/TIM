@@ -8,7 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
-from tests.db.timdbtest import TEST_USER_1_NAME
+from tests.db.timdbtest import TEST_USER_1_NAME, TEST_USER_2_NAME, TEST_USER_3_NAME
 from tests.server.timroutetest import TimRouteTest
 
 
@@ -30,16 +30,25 @@ class BrowserTest(LiveServerTestCase, TimRouteTest):
         self.client.__enter__()
         self.wait = WebDriverWait(self.drv, 10)
 
-    def login_browser_test1(self):
+    def login_browser_as(self, email, password, name):
         self.client.__exit__(None, None, None)
         self.goto('')
         elem = self.drv.find_element_by_xpath('//login-menu/button')
         elem.click()
-        elem.find_element_by_xpath("//input[@type='email']").send_keys("test1@example.com")
-        elem.find_element_by_xpath("//input[@type='password']").send_keys("test1pass")
+        elem.find_element_by_xpath("//input[@type='email']").send_keys(email)
+        elem.find_element_by_xpath("//input[@type='password']").send_keys(password)
         elem.find_element_by_xpath("//button[@type='submit']").click()
-        self.wait.until(ec.text_to_be_present_in_element((By.XPATH, self.login_dropdown_path), TEST_USER_1_NAME))
+        self.wait.until(ec.text_to_be_present_in_element((By.XPATH, self.login_dropdown_path), name))
         self.client.__enter__()
+
+    def login_browser_test1(self):
+        self.login_browser_as('test1@example.com', 'test1pass', TEST_USER_1_NAME)
+
+    def login_browser_test2(self):
+        self.login_browser_as('test2@example.com', 'test2pass', TEST_USER_2_NAME)
+
+    def login_browser_test3(self):
+        self.login_browser_as('test3@example.com', 'test3pass', TEST_USER_3_NAME)
 
     def goto(self, url):
         self.drv.get("{}:{}{}".format(self.app.config['SELENIUM_URL'], self.app.config['LIVESERVER_PORT'], url))

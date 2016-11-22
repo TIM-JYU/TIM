@@ -58,3 +58,4 @@ TEST_USER_3_ID = 6
 
 TEST_USER_1_NAME = 'Test user 1'
 TEST_USER_2_NAME = 'Test user 2'
+TEST_USER_3_NAME = 'Test user 3'
