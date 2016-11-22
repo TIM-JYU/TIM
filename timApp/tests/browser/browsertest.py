@@ -30,7 +30,7 @@ class BrowserTest(LiveServerTestCase, TimRouteTest):
         self.client.__enter__()
         self.wait = WebDriverWait(self.drv, 10)
 
-    def login_browser_as(self, email, password, name):
+    def login_browser_as(self, email: str, password: str, name: str):
         self.client.__exit__(None, None, None)
         self.goto('')
         elem = self.drv.find_element_by_xpath('//login-menu/button')
@@ -42,24 +42,38 @@ class BrowserTest(LiveServerTestCase, TimRouteTest):
         self.client.__enter__()
 
     def login_browser_test1(self):
+        """Logs in as Test user 1."""
         self.login_browser_as('test1@example.com', 'test1pass', TEST_USER_1_NAME)
 
     def login_browser_test2(self):
+        """Logs in as Test user 2."""
         self.login_browser_as('test2@example.com', 'test2pass', TEST_USER_2_NAME)
 
     def login_browser_test3(self):
+        """Logs in as Test user 3."""
         self.login_browser_as('test3@example.com', 'test3pass', TEST_USER_3_NAME)
 
-    def goto(self, url):
+    def goto(self, url: str):
+        """Navigates to a new URL using the browser.
+        :param url: The URL to which to navigate. This must be relative.
+        """
         self.drv.get("{}:{}{}".format(self.app.config['SELENIUM_URL'], self.app.config['LIVESERVER_PORT'], url))
 
-    def save_screenshot(self, filename):
+    def save_screenshot(self, filename: str):
+        """Saves the current browser screen to a PNG file in screenshots directory.
+
+        :param filename: The file name of the PNG file.
+        """
         screenshot_dir = '/service/screenshots/'
         os.makedirs(screenshot_dir, exist_ok=True)
         if not self.drv.save_screenshot(screenshot_dir + filename + '.png'):
             raise Exception('Screenshot failed')
 
-    def should_not_exist(self, css_selector):
+    def should_not_exist(self, css_selector: str):
+        """Asserts that the current document should not contain any elements that match the specified CSS selector.
+
+        :param css_selector: The CSS selector to test.
+        """
         self.drv.implicitly_wait(0.5)
         try:
             self.drv.find_element_by_css_selector(css_selector)
