@@ -17,5 +17,4 @@ docker run \
  timimages/tim:$(./get_latest_date.sh) /bin/bash -c \
  "cd /service/timApp &&
  python3 bower_helper.py &&
- python3 -c 'import dumboclient; dumboclient.launch_dumbo()' &&
  python3 -m unittest"
