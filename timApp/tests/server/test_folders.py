@@ -1,4 +1,5 @@
 from routes.common import *
+from tests.db.timdbtest import TEST_USER_2_ID
 from tests.server.timroutetest import TimRouteTest
 
 
@@ -14,6 +15,16 @@ class FolderTest(TimRouteTest):
             self.assertEqual(fname, j['name'])
             self.assertIsInstance(j['id'], int)
         return j
+
+    def test_folder_manage(self):
+        self.login_test3()
+        f = self.create_folder(self.get_folder('test_manage'))
+        self.get('/manage/{}'.format(f['name']))
+        self.login_test2()
+        self.get('/manage/{}'.format(f['name']), expect_status=403)
+        db = self.get_db()
+        db.users.grant_access(db.users.get_personal_usergroup_by_id(TEST_USER_2_ID), f['id'], 'manage')
+        self.get('/manage/{}'.format(f['name']))
 
     def test_folder_delete(self):
         self.login_test1()
