@@ -11,6 +11,7 @@ from tests.db.timdbtest import TimDbTest
 
 class ClipboardTest(TimDbTest):
     def setUp(self):
+        super(ClipboardTest, self).setUp()
         db = self.get_db()
         self.clipboard = Clipboard(db.files_root_path)
         self.clipboard.clear_all()

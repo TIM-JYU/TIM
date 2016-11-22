@@ -17,9 +17,8 @@ class TimDbTest(unittest.TestCase):
     db_path = app.config['DATABASE']
     dumbo = None
 
-    @classmethod
-    def get_db(cls):
-        return TimDb(files_root_path=cls.test_files_path)
+    def get_db(self):
+        return self.db
 
     @classmethod
     def setUpClass(cls):
@@ -47,7 +46,10 @@ class TimDbTest(unittest.TestCase):
         cls.dumbo.kill()
 
     def setUp(self):
-        pass
+        self.db = TimDb(files_root_path=self.test_files_path)
+
+    def tearDown(self):
+        self.db.close()
 
 
 TEST_USER_1_ID = 4

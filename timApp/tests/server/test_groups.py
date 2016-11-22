@@ -41,7 +41,6 @@ class GroupTest(TimRouteTest):
         self.json_req('/groups/removemember/testgroup1/{},{},{},{},{}'.format(t1, t2, t3, t4, t5),
                       expect_content={'removed': [t2, t4], 'does_not_belong': [t1, t3], 'not_exist': [t5]})
         self.json_req('/groups/show/testgroup1', expect_content=[])
-        db.close()
 
     def test_invalid_groups(self):
         self.json_req('/groups/create/testgroup', expect_status=400, expect_content=self.error_resp)

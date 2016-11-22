@@ -27,4 +27,3 @@ class ManageTest(TimRouteTest):
         timdb = self.get_db()
         timdb.users.grant_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id, 'manage')
         self.get('/manage/' + str(doc.doc_id))
-        timdb.close()

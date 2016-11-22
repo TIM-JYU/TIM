@@ -105,7 +105,6 @@ class FolderTest(TimRouteTest):
                                                   'see_answers': False,
                                                   'teacher': False},
                                        'unpublished': False}])
-        db.close()
 
     def test_folders_invalid(self):
         self.login_test1()

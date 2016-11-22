@@ -23,7 +23,6 @@ class AnswerTest(TimDbTest):
         db.answers.saveAnswer([user1.id, user2.id], '1.test', 'content0', 0.5, [], True)
         self.check_totals(db, user1, [task_id1, task_id2], 2, 1000.5)
         self.check_totals(db, user2, [task_id1, task_id2], 2, 1000.5)
-        db.close()
 
     def check_user(self, db, u: User, task_id1, task_id2):
         uid = u.id

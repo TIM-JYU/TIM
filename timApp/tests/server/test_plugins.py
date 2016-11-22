@@ -190,7 +190,6 @@ class PluginTest(TimRouteTest):
         self.assertEqual(0, len(summary))
         # Anonymous users can't see their answers
         self.assertIsNone(json.loads(plugs[0].find('mmcq').get('data-content'))['state'])
-        timdb.close()
 
     def test_idless_plugin(self):
         self.login_test1()

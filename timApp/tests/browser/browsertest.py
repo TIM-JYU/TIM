@@ -22,6 +22,7 @@ class BrowserTest(LiveServerTestCase, TimRouteTest):
     login_dropdown_path = '//login-menu/div/button'
 
     def setUp(self):
+        super(BrowserTest, self).setUp()
         self.drv = webdriver.Remote(command_executor=RemoteControls.CHROME,
                                     desired_capabilities=DesiredCapabilities.CHROME.copy())
         self.drv.implicitly_wait(10)

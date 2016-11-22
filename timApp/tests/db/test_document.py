@@ -23,7 +23,6 @@ class DocumentTest(TimDbTest):
             DocumentTest.init_testdoc.counter = 12345
         db = self.get_db()
         d = db.documents.create(str(DocumentTest.init_testdoc.counter), db.users.get_anon_group_id())
-        db.close()
         return d
 
     def add_pars(self, d, num_docs):
@@ -201,7 +200,6 @@ class DocumentTest(TimDbTest):
         for d in docs:
             db.documents.delete(d.doc_id)
             self.assertFalse(Document.doc_exists(doc_id=d.doc_id))
-        db.close()
 
     def test_update(self):
         self.maxDiff = None
@@ -275,7 +273,6 @@ class DocumentTest(TimDbTest):
         timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
                                                   'Multiple choice plugin example',
                                                   timdb.users.get_anon_group_id())
-        timdb.close()
 
     def test_parwise_diff(self):
         d = self.init_testdoc()

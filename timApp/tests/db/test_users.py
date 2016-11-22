@@ -154,7 +154,6 @@ class UserTest(TimDbTest):
             self.assertTrue(db.users.has_teacher_access(user_id, bid))
             self.assertTrue(db.users.has_seeanswers_access(user_id, bid))
 
-        db.close()
 
 if __name__ == '__main__':
     unittest.main()

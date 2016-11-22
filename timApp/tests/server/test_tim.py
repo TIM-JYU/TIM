@@ -154,7 +154,6 @@ class TimTest(TimRouteTest):
             self.get('/view/' + str(view_id))
             self.get('/teacher/' + str(view_id))
             self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2', 'teacher'), expect_status=403)
-        timdb.close()
 
     def test_macro_doc(self):
         self.login_test1()
@@ -210,7 +209,6 @@ header: %%username%% and %%realname%%
                              0].text_content().strip())
         p = Plugin.from_task_id('{}.test'.format(d.id), User.query.get(TEST_USER_2_ID))
         self.assertEqual('testuser2 and Test user 2', p.values['header'])
-        timdb.close()
 
     def test_macro_only_delimiter(self):
         self.login_test1()

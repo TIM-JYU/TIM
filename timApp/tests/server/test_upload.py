@@ -50,4 +50,3 @@ class UploadTest(TimRouteTest):
                         'file': (io.BytesIO(b'test file'), 'test.md')},
                   expect_status=200)
 
-        db.close()
