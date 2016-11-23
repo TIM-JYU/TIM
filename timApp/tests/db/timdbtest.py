@@ -30,7 +30,7 @@ class TimDbTest(unittest.TestCase):
             os.mkdir(cls.test_files_path)
         initdb2.initialize_temp_database()
         # Safety mechanism to make sure we are not wiping some production database
-        assert app.config['SQLALCHEMY_BINDS']['tim_main'] == "postgresql://postgres@postgresql-timtest:5432/timtest"
+        assert app.config['SQLALCHEMY_BINDS']['tim_main'].endswith('-test')
         db.session.commit()
         db.get_engine(app, 'tim_main').dispose()
         # The following throws if the testing database has not been created yet; we can safely ignore it

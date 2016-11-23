@@ -23,7 +23,7 @@ class BrowserTest(LiveServerTestCase, TimRouteTest):
 
     def setUp(self):
         super(BrowserTest, self).setUp()
-        self.drv = webdriver.Remote(command_executor=RemoteControls.CHROME,
+        self.drv = webdriver.Remote(command_executor=self.app.config['SELENIUM_REMOTE_URL'] + ':4444/wd/hub',
                                     desired_capabilities=DesiredCapabilities.CHROME.copy())
         self.drv.implicitly_wait(10)
         self.client = self.app.test_client()
@@ -57,7 +57,7 @@ class BrowserTest(LiveServerTestCase, TimRouteTest):
         """Navigates to a new URL using the browser.
         :param url: The URL to which to navigate. This must be relative.
         """
-        self.drv.get("{}:{}{}".format(self.app.config['SELENIUM_URL'], self.app.config['LIVESERVER_PORT'], url))
+        self.drv.get("{}:{}{}".format(self.app.config['SELENIUM_BROWSER_URL'], self.app.config['LIVESERVER_PORT'], url))
 
     def save_screenshot(self, filename: str):
         """Saves the current browser screen to a PNG file in screenshots directory.

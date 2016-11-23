@@ -12,6 +12,8 @@
 
 ./start_pg_test_containers.sh
 
+. ./variables.sh
+
 params="discover tests/$1 'test_*.py' ."
 if [ "$1" = "1" ] ; then
     params="tests.$2"
@@ -21,9 +23,9 @@ docker run \
  --net=timnet \
  --tmpfs /tmp/doctest_files:rw,noexec,nosuid,size=5m \
  --rm \
- --name=timtest \
+ --name=${TIM_NAME}-test \
+ --env TIM_NAME=${TIM_NAME} \
  --env TIM_SETTINGS=testconfig.py \
- --env SELENIUM_URL=http://timtest \
  -v $PWD:/service:ro \
  -v $PWD/timApp/static/testgen:/service/timApp/static/testgen:rw \
  -v $PWD/timApp/static/.webassets-cache:/service/timApp/static/.webassets-cache:rw \

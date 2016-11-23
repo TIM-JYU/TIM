@@ -4,7 +4,7 @@ import os
 DEBUG = True
 PROFILE = False
 PLUGIN_CONNECTIONS = "nginx"
-TIM_NAME = 'timtest'
+TIM_NAME = os.environ.get('TIM_NAME', 'timlocal') + '-test'
 DATABASE = "postgresql://postgres@postgresql-{0}:5432/{0}".format(TIM_NAME)
 FILES_PATH = '/tmp/doctest_files'
 LOG_DIR = "/tmp/tim_logs"
@@ -29,5 +29,6 @@ SQLALCHEMY_POOL_SIZE = 50
 LAST_EDITED_BOOKMARK_LIMIT = 3
 TRAP_HTTP_EXCEPTIONS = True
 PROPAGATE_EXCEPTIONS = True
-SELENIUM_URL = os.environ.get('SELENIUM_URL', 'http://timlocal')
+SELENIUM_REMOTE_URL = os.environ.get('SELENIUM_REMOTE_URL', 'http://' + TIM_NAME + '-chrome')
+SELENIUM_BROWSER_URL = os.environ.get('SELENIUM_BROWSER_URL', 'http://' + (TIM_NAME.rstrip('-test') if os.environ.get('PYCHARM_HOSTED') == '1' else TIM_NAME))
 LIVESERVER_PORT = 5001
