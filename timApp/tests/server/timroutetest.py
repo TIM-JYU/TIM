@@ -6,7 +6,6 @@ import unittest
 from functools import lru_cache
 from typing import Union, Optional, List, Dict, Tuple
 
-import flask
 from flask import Response
 from flask import session
 from flask.testing import FlaskClient
@@ -428,14 +427,13 @@ class TimRouteTest(TimDbTest):
 
     def create_doc(self, docname: Optional[str] = None, from_file: Optional[str] = None,
                    initial_par: Optional[str] = None,
-                   settings: Optional[Dict] = None, assert_status: int = 200) -> DocEntry:
+                   settings: Optional[Dict] = None) -> DocEntry:
         """Creates a new document.
 
         :param docname: The path of the document.
         :param from_file: If specified, loads the document content from the specified file.
         :param initial_par: The content of the initial paragraph.
         :param settings: The settings for the document.
-        :param assert_status: The expected status code for the createItem route.
         :return: The DocEntry object.
         """
         if docname is None:
@@ -444,7 +442,7 @@ class TimRouteTest(TimDbTest):
         resp = self.json_post('/createItem', {
             'item_path': docname,
             'item_type': 'document'
-        }, expect_status=assert_status)
+        })
         self.assertIsInstance(resp['id'], int)
         self.assertEqual(docname, resp['name'])
         de = DocEntry.find_by_path(docname)
