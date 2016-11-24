@@ -2,6 +2,7 @@ from flask import Blueprint
 import json
 from copy import deepcopy
 from .common import *
+from timdb import gamificationdata
 
 
 ## Sitten kun painetaan show_mappia
@@ -22,13 +23,15 @@ def generate_Map():
 
     map = ""
     #TODO: Change this to the actual json.
-    with open("static/map_slices/course.json", "r") as f:
-        coursedata = json.loads(f.read())
+    coursedata = json.loads(request.query_string.decode("utf-8","strict").replace('%22','"'))
+
+    print(coursedata)
+
 
     #Get lectures from json
-    lecturejson = coursedata[0]['lectures']
+    lecturejson = coursedata['lectures']
     #Get demos from json
-    demojson = coursedata[1]['demos']
+    demojson = coursedata['demos']
 
 
     #Get map
@@ -74,8 +77,8 @@ def generate_Map():
         if layer['name'][0:1] == 'l':
             # Attach properties and create buildings if there are still lectures to be added.
             if(len(lecturejson) -1 >= lectureindex and lectureindex >= 0):
-                points = int(lecturejson[len(lecturejson)-lectureindex -1]['gotPoints'])
-                maxpoints = int(lecturejson[len(lecturejson) -lectureindex -1]['maxPoints'])
+                points = 1
+                maxpoints = 1
                 title = lecturejson[len(lecturejson) - lectureindex - 1]['name']
                 lectureproperties = {
                     'studentpoints': 0,  # Points student got from this demo/lecture
@@ -125,6 +128,7 @@ def generate_Map():
     map = str.replace(str(map), "\'", "\"")
     map = str.replace(str(map), "True", "true")
    # layers = createLectureLayers(map['layers'],2,mapwidth)
+    print(map)
     return str(map)
 
 # Creates zero to three layers on top of a demo layer
@@ -166,6 +170,11 @@ def createLectureLayers(layers,layerid,points,maxpoints,mapwidth,properties):
 # percentage is the percentage of points gotten from the demo.
 def createDemoLayers(layers,layerid,points,maxpoints,mapwidth,properties):
     #TODO: specify number of tiles to be added to floor
+    if maxpoints == 0 and points == 0:
+        maxpoints = 1
+        points = 1
+    if maxpoints <= 0:
+        maxpoints = 1
     percentage = float(points/maxpoints)
     floors = 0
     #set number of floors

@@ -115,7 +115,7 @@ def pluginify(doc: Document,
 
         if is_gamified:
             raw_data = DocParagraph.get_markdown(block)
-            gamificationdata.gamify(raw_data)
+            gamified_data = gamificationdata.gamify(raw_data)
             html_pars[idx]['html'] = """
             <script src="/static/scripts/loadMap.js"></script>
             <button class="showMap" onclick="showMap(this)" data-toggle="false">Show map</button>
@@ -135,6 +135,8 @@ def pluginify(doc: Document,
             <button class="showFrames">Goals</button>
             <input type="range" class="mapZoom">Zoom
             <input type="range" class="alphaRange">Goal Transparency
+            <div class="json_to_mapgenerator" style="display: none;">
+                """+str(gamified_data)+"""</div>
             <div class="mapContainer"></div>
             """
 

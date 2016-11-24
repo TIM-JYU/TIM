@@ -6,7 +6,6 @@ from flask import request
 import pluginControl
 from routes.dbaccess import get_timdb
 from routes import common
-from documentmodel.docsettings import DocSettings
 
 
 def gamify(initial_data):
@@ -18,7 +17,9 @@ def gamify(initial_data):
     lecture_table, demo_table = get_doc_ids(initial_json)
 
     # Insert document, IDs, paths, and points in a dictionary
-    place_in_dict(lecture_table, demo_table)
+    gamification_data = place_in_dict(lecture_table, demo_table)
+
+    return gamification_data
 
 
 def convert_to_json(md_data):
@@ -48,7 +49,7 @@ def get_doc_ids(json_to_check):
             temp_dict = dict()
             temp_dict['id'] = lecture.id
             temp_dict['name'] = lecture.short_name
-            temp_dict['url'] = request.url_root+'view/' + lecture.path
+            temp_dict['link'] = request.url_root+'view/' + lecture.path
             lectures.append(temp_dict)
 
     demos = []
@@ -59,13 +60,13 @@ def get_doc_ids(json_to_check):
             temp_dict = dict()
             temp_dict['id'] = demo.id
             temp_dict['name'] = demo.short_name
-            temp_dict['url'] = request.url_root+'view/' + demo.path
+            temp_dict['link'] = request.url_root+'view/' + demo.path
             doc_max_points = doc_set.max_points()
             if doc_max_points is None:
-                temp_dict['max_points'] = 0
+                temp_dict['maxPoints'] = 0
             else:
-                temp_dict['max_points'] = doc_max_points
-            temp_dict['points'] = get_points_for_doc(demo)
+                temp_dict['maxPoints'] = doc_max_points
+            temp_dict['gotPoints'] = get_points_for_doc(demo)
             demos.append(temp_dict)
 
     return lectures, demos
@@ -90,8 +91,7 @@ def place_in_dict(l_table, d_table):
     document_dict['lectures']=temp1
     document_dict['demos'] = temp2
 
-    print(document_dict)
-    return document_dict
+    return json.dumps(document_dict)
 
 
 def get_points_for_doc(d):
