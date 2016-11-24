@@ -73,7 +73,6 @@ $(document).ready(function () {
         success: function (newJson) {
 
             json = JSON.parse(newJson);
-            console.log(json)
 
             /**
              * Create canvases for drawing the map, frames and event listeners

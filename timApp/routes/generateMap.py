@@ -25,9 +25,6 @@ def generate_Map():
     #TODO: Change this to the actual json.
     coursedata = json.loads(request.query_string.decode("utf-8","strict").replace('%22','"'))
 
-    print(coursedata)
-
-
     #Get lectures from json
     lecturejson = coursedata['lectures']
     #Get demos from json
