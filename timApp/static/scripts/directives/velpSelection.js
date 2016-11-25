@@ -346,7 +346,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         };
 
         $scope.makePostRequest("/add_velp_label", labelToAdd, function (json) {
-            labelToAdd.id = parseInt(json.data);
+            labelToAdd.id = parseInt(json.data.id);
             $scope.resetNewLabel();
             $scope.labels.push(labelToAdd);
             $scope.labelAdded = false;

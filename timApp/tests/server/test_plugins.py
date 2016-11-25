@@ -11,8 +11,8 @@ from lxml import html
 
 from plugin import Plugin
 from routes.sessioninfo import get_current_user_object
-from timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME
-from timroutetest import TimRouteTest
+from tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME
+from tests.server.timroutetest import TimRouteTest
 
 
 class PluginTest(TimRouteTest):
@@ -31,7 +31,7 @@ class PluginTest(TimRouteTest):
     def test_plugin(self):
         self.login_test1()
         doc = self.create_doc(from_file='example_docs/mmcq_example.md').document
-        resp = self.get('/view/{}'.format(doc.doc_id), expect_status=200)
+        resp = self.get('/view/{}'.format(doc.doc_id))
         tree = html.fromstring(resp)
         mmcq_xpath = r'.//div[@class="par mmcq"]/div[@class="parContent"]/div[@id="{}.mmcqexample.{}"]'.format(
             doc.doc_id, doc.get_paragraphs()[0].get_id())
@@ -51,13 +51,16 @@ class PluginTest(TimRouteTest):
         self.check_failed_answer(resp)
         resp = self.post_answer(plugin_type, task_id_ext, [True, False, False])
         self.check_failed_answer(resp)
-        resp = self.post_answer(plugin_type, task_id_ext_wrong, [True, False, False])
-        self.assertDictResponse({'error': 'Document {}: Paragraph not found: {}'
-                                .format(doc.doc_id, par_id + 'x')}, resp, expect_status=400)
+        self.post_answer(plugin_type, task_id_ext_wrong, [True, False, False],
+                                expect_status=400,
+                                expect_content={'error': 'Document {}: Paragraph not found: {}'
+                                .format(doc.doc_id, par_id + 'x')})
 
         wrongname = 'mmcqexamplez'
-        resp = self.post_answer(plugin_type, str(doc.doc_id) + '.' + wrongname, [True, False, False])
-        self.assertInResponse('Task not found in the document: {}'.format(wrongname), resp, 400, json_key='error')
+        self.post_answer(plugin_type, str(doc.doc_id) + '.' + wrongname, [True, False, False],
+                         expect_status=400,
+                         expect_content='Task not found in the document: {}'.format(wrongname),
+                         json_key='error')
 
         doc.set_settings({'global_plugin_attrs': {'all': {'answerLimit': 2}}})
         resp = self.post_answer(plugin_type, task_id, [True, True, False])
@@ -80,8 +83,7 @@ class PluginTest(TimRouteTest):
         resp = self.post_answer(plugin_type, task_id, [True, False, True])
         self.check_ok_answer(resp)
 
-        resp = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']))
-        answer_list = self.assertResponseStatus(resp, expect_status=200, return_json=True)
+        answer_list = self.get('/answers/{}/{}'.format(task_id, self.current_user_id()))
         self.maxDiff = None
 
         self.assertListEqual(
@@ -108,19 +110,19 @@ class PluginTest(TimRouteTest):
             d = dateutil.parser.parse(ans['answered_on'])
             self.assertLess(d - datetime.now(tz=timezone.utc), timedelta(seconds=5))
 
-        resp = self.post_answer(plugin_type, task_id, [True, True, False],
-                                save_teacher=False, teacher=True, answer_id=answer_list[0]['id'],
-                                user_id=session['user_id'] - 1)
-        self.assertDictResponse({'error': 'userId is not associated with answer_id'}, resp, expect_status=400)
+        self.post_answer(plugin_type, task_id, [True, True, False],
+                         save_teacher=False, teacher=True, answer_id=answer_list[0]['id'],
+                         user_id=self.current_user_id() - 1, expect_status=400,
+                         expect_content={'error': 'userId is not associated with answer_id'})
 
         resp = self.post_answer(plugin_type, task_id, [False, False, False],
                                 save_teacher=False, teacher=True, answer_id=answer_list[0]['id'],
-                                user_id=session['user_id'])
+                                user_id=self.current_user_id())
         self.check_ok_answer(resp, is_new=False)
 
         par_id = doc.get_paragraph_by_task(task_name).get_id()
-        j = self.get('/getState', as_json=True,
-                     query_string={'user_id': session['user_id'],
+        j = self.get('/getState',
+                     query_string={'user_id': self.current_user_id(),
                                    'answer_id': answer_list[0]['id'],
                                    'par_id': par_id,
                                    'doc_id': doc.doc_id})
@@ -188,12 +190,11 @@ class PluginTest(TimRouteTest):
         self.assertEqual(0, len(summary))
         # Anonymous users can't see their answers
         self.assertIsNone(json.loads(plugs[0].find('mmcq').get('data-content'))['state'])
-        timdb.close()
 
     def test_idless_plugin(self):
         self.login_test1()
         doc = self.create_doc(from_file='example_docs/idless_plugin.md').document
-        resp = self.get('/view/{}'.format(doc.doc_id), expect_status=200)
+        resp = self.get('/view/{}'.format(doc.doc_id))
         tree = html.fromstring(resp)
         mmcq_xpath = r'.//div[@class="par csPlugin"]/div[@class="parContent"]/div[@id="{}..{}"]'.format(
             doc.doc_id, doc.get_paragraphs()[0].get_id())
@@ -214,55 +215,52 @@ class PluginTest(TimRouteTest):
         self.do_plugin_upload(doc, file_content, filename, task_id, task_name2)
         self.do_plugin_upload(doc, file_content, filename, task_id, task_name, expect_version=3)
         self.do_plugin_upload(doc, file_content, filename, task_id, task_name2, expect_version=2)
-        resp = self.post_answer('csPlugin', task_id, user_input)
-        self.assertDictResponse({'error': 'File was already uploaded: {}'.format(ur['file'])}, resp, expect_status=400)
+        self.post_answer('csPlugin', task_id, user_input,
+                         expect_status=400,
+                         expect_content={'error': 'File was already uploaded: {}'.format(ur['file'])})
         invalid_file = '/test/test'
         resp = self.post_answer('csPlugin',
                                 task_id,
                                 {"uploadedFile": invalid_file,
                                  "uploadedType": mimetype,
                                  "markup": {"type": "upload"}},
+                                expect_status=400,
+                                expect_content={'error': 'Non-existent upload: {}'.format(invalid_file)}
                                 )
-        self.assertDictResponse({'error': 'Non-existent upload: {}'.format(invalid_file)}, resp, expect_status=400)
-        self.assertEqual(file_content, self.get(ur['file'], expect_status=200))
+        self.assertEqual(file_content, self.get(ur['file']))
         self.assertEqual(file_content,
-                         self.get('/uploads/{}/{}/{}/'.format(doc.doc_id, task_name, session['user_name']),
+                         self.get('/uploads/{}/{}/{}/'.format(doc.doc_id, task_name, self.current_user_name()),
                                   expect_status=200))
 
         self.login_test2()
 
         # Another user cannot see the file
-        self.get(ur['file'], expect_status=403, expect_content=self.permission_error, as_json=True)
+        self.get(ur['file'], expect_status=403, expect_content=self.permission_error)
 
         # and cannot post answers
-        resp = self.post_answer('csPlugin', task_id, user_input)
-        self.assertDictResponse(self.permission_error,
-                                resp,
-                                expect_status=403)
+        resp = self.post_answer('csPlugin', task_id, user_input, expect_status=403, expect_content=self.permission_error)
 
         # until he is granted a permission
-        ug = db.users.get_personal_usergroup_by_id(session['user_id'])
+        ug = db.users.get_personal_usergroup_by_id(self.current_user_id())
         db.users.grant_view_access(ug, doc.doc_id)
 
         # but he still cannot see the file
-        resp = self.post_answer('csPlugin', task_id, user_input)
-        self.assertDictResponse({'error': "You don't have permission to touch this file."},
-                                resp,
-                                expect_status=403)
-        self.get(ur['file'], expect_status=403, expect_content=self.permission_error, as_json=True)
+        resp = self.post_answer('csPlugin', task_id, user_input, expect_status=403,
+                                expect_content={'error': "You don't have permission to touch this file."})
+        self.get(ur['file'], expect_status=403, expect_content=self.permission_error)
 
         # until the 'see answers' right is granted for the document
         db.users.grant_access(ug, doc.doc_id, 'see answers')
-        self.get(ur['file'], expect_status=200, expect_content=file_content)
+        self.get(ur['file'], expect_content=file_content)
 
     def do_plugin_upload(self, doc, file_content, filename, task_id, task_name, expect_version=1):
         ur = self.post('/pluginUpload/{}/{}/'.format(doc.doc_id, task_name),
-                       data={'file': (io.BytesIO(bytes(file_content, encoding='utf-8')), filename)}, as_json=True,
+                       data={'file': (io.BytesIO(bytes(file_content, encoding='utf-8')), filename)},
                        expect_status=200)
         mimetype = "text/plain"
         self.assertDictEqual({'file': '/uploads/{}/{}/{}/{}/{}'.format(doc.doc_id,
                                                                        task_name,
-                                                                       session['user_name'],
+                                                                       self.current_user_name(),
                                                                        expect_version,
                                                                        filename),
                               'type': mimetype,
@@ -274,16 +272,14 @@ class PluginTest(TimRouteTest):
         return mimetype, ur, user_input
 
     def check_failed_answer(self, resp, is_new=False):
-        j = self.assertResponseStatus(resp, return_json=True)
-        self.assertIn('web', j)
-        self.assertIn('You have exceeded the answering limit.', j['error'])
-        self.assertEqual(is_new, j['savedNew'])
+        self.assertIn('web', resp)
+        self.assertIn('You have exceeded the answering limit.', resp['error'])
+        self.assertEqual(is_new, resp['savedNew'])
 
     def check_ok_answer(self, resp, is_new=True):
-        j = self.assertResponseStatus(resp, return_json=True)
-        self.assertIn('web', j)
-        self.assertNotIn('error', j)
-        self.assertEqual(is_new, j['savedNew'])
+        self.assertIn('web', resp)
+        self.assertNotIn('error', resp)
+        self.assertEqual(is_new, resp['savedNew'])
 
     def test_group_answering(self):
         self.login_test1()
@@ -299,18 +295,17 @@ class PluginTest(TimRouteTest):
         self.assertListEqual([{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID},
                               {'real_name': 'Test user 2', 'email': 'test2@example.com', 'user_id': TEST_USER_2_ID}],
                              answer_list[0]['collaborators'])
-        self.assertEqual(file_content, self.get(ur['file'], expect_status=200))
+        self.assertEqual(file_content, self.get(ur['file']))
         self.login_test2()
         answer_list = self.get_task_answers(task_id)
         self.assertEqual(1, len(answer_list))
         self.assertListEqual([{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID},
                               {'real_name': 'Test user 2', 'email': 'test2@example.com', 'user_id': TEST_USER_2_ID}],
                              answer_list[0]['collaborators'])
-        self.assertEqual(file_content, self.get(ur['file'], expect_status=200))
+        self.assertEqual(file_content, self.get(ur['file']))
 
     def get_task_answers(self, task_id):
-        answer_list = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']), expect_status=200,
-                                    as_json=True)
+        answer_list = self.get('/answers/{}/{}'.format(task_id, self.current_user_id()))
         return answer_list
 
     def test_all_answers(self):
@@ -332,7 +327,7 @@ class PluginTest(TimRouteTest):
         self.get('/allDocumentAnswersPlain/{}'.format(doc.doc_id), expect_status=403)
         self.get('/allAnswersPlain/{}'.format(task_id), expect_status=403)
         self.login_test1()
-        text = self.get('/allDocumentAnswersPlain/{}'.format(doc.doc_id), expect_status=200)
+        text = self.get('/allDocumentAnswersPlain/{}'.format(doc.doc_id))
         date_re = r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\+\d{2}:\d{2}'
         self.assertRegex(text, r"""
 {5}; {3}; {1}; {0}; 1; 2\.0
@@ -351,7 +346,7 @@ class PluginTest(TimRouteTest):
 \[False, False\]
 """.format(date_re, re.escape(task_id), re.escape(task_id2), 'testuser1', 'testuser2', TEST_USER_1_NAME,
            'Test user 2').strip())
-        text = self.get('/allAnswersPlain/{}'.format(task_id), expect_status=200)
+        text = self.get('/allAnswersPlain/{}'.format(task_id))
         self.assertRegex(text, r"""
 {4}; {2}; {1}; {0}; 1; 2\.0
 \[True, False, False\]
@@ -441,10 +436,10 @@ class PluginTest(TimRouteTest):
             new = new.clone()
             new.set_attr('taskId', t.split('.')[1])
             new.save(add=True)
-            self.post_answer('mmcq', t, a, expect_status=200)
+            self.post_answer('mmcq', t, a)
         self.login_test2()
         for t, a in zip(task_ids, answers):
-            self.post_answer('mmcq', t, [not b for b in a], expect_status=200)
+            self.post_answer('mmcq', t, [not b for b in a])
         cases = [
             ('best', 0, 0, 0),
             ('best', 1, 6, 8),
@@ -510,7 +505,6 @@ class PluginTest(TimRouteTest):
         self.json_put('/savePoints/{}/{}'.format(user_id, answer_id),
                       json_data={'points': points},
                       expect_status=expect_status,
-                      as_json=True,
                       expect_content=expect_content)
 
     def test_find_tasks(self):

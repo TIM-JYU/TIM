@@ -12,7 +12,7 @@ from documentmodel.documentparser import DocumentParser
 from documentmodel.documentwriter import DocumentWriter
 from documentmodel.exceptions import DocExistsError
 from documentmodel.randutils import random_paragraph
-from timdbtest import TimDbTest
+from tests.db.timdbtest import TimDbTest
 
 
 class DocumentTest(TimDbTest):
@@ -23,7 +23,6 @@ class DocumentTest(TimDbTest):
             DocumentTest.init_testdoc.counter = 12345
         db = self.get_db()
         d = db.documents.create(str(DocumentTest.init_testdoc.counter), db.users.get_anon_group_id())
-        db.close()
         return d
 
     def add_pars(self, d, num_docs):
@@ -201,7 +200,6 @@ class DocumentTest(TimDbTest):
         for d in docs:
             db.documents.delete(d.doc_id)
             self.assertFalse(Document.doc_exists(doc_id=d.doc_id))
-        db.close()
 
     def test_update(self):
         self.maxDiff = None
@@ -275,7 +273,58 @@ class DocumentTest(TimDbTest):
         timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
                                                   'Multiple choice plugin example',
                                                   timdb.users.get_anon_group_id())
-        timdb.close()
+
+    def test_parwise_diff(self):
+        d = self.init_testdoc()
+        num_pars = 10
+        for i in range(0, num_pars):
+            d.add_paragraph('Par {}'.format(i))
+        pars = d.get_paragraphs()
+        v = (num_pars, 0)
+        self.assertEqual(v, d.get_version())
+        for i in range(0, num_pars):
+            d2 = d.get_doc_version((i, 0))
+            self.assertListEqual(
+                [{'type': 'insert', 'after_id': pars[i - 1].get_id() if i > 0 else None, 'content': pars[i:]}],
+                list(d2.parwise_diff(d)), msg='Diff test failed for i={}'.format(i))
+        ver_orig = d.get_doc_version()
+        self.assertListEqual([], list(ver_orig.parwise_diff(d)))
+
+        to_delete = num_pars // 2
+        for i in range(0, 2):
+            d.delete_paragraph(pars[to_delete + i].get_id())
+            self.assertListEqual(
+                [{'type': 'delete', 'start_id': pars[to_delete].get_id(), 'end_id': pars[to_delete + i + 1].get_id()}],
+                list(ver_orig.parwise_diff(d)))
+        n1 = d.insert_paragraph('New 1', insert_before_id=pars[to_delete + 2].get_id())
+        n2 = d.insert_paragraph('New 2', insert_before_id=pars[to_delete + 2].get_id())
+        self.assertListEqual(
+            [{'type': 'replace', 'start_id': pars[to_delete].get_id(), 'end_id': pars[to_delete + 2].get_id(),
+              'content': [n1, n2]}],
+            list(ver_orig.parwise_diff(d)))
+        new_ver = d.get_doc_version()
+        n1 = d.modify_paragraph(n1.get_id(), 'New edited 1')
+        self.assertListEqual(
+            [{'type': 'change', 'id': n1.get_id(), 'content': n1}],
+            list(new_ver.parwise_diff(d)))
+
+    def test_parwise_diff_html(self):
+        d = self.init_testdoc()
+        num_pars = 10
+        d.set_settings({'auto_number_headings': True})
+        for i in range(0, num_pars):
+            d.add_paragraph('# Header {}'.format(i))
+        ver_orig = d.get_doc_version()
+        pars = d.get_paragraphs()
+        self.assertListEqual([], list(ver_orig.parwise_diff(d, check_html=True)))
+        new = d.insert_paragraph('# Header new', insert_before_id=pars[1].get_id())
+        self.assertListEqual([{'type': 'insert', 'after_id': pars[0].get_id(), 'content': [new]}],
+                             list(ver_orig.parwise_diff(d)))
+
+        # heading numbering changes should be detected
+        self.assertListEqual([{'type': 'insert', 'after_id': pars[0].get_id(), 'content': [new]}]
+                             + [{'type': 'change', 'id': par.get_id(), 'content': par} for par in pars[1:]],
+                             list(ver_orig.parwise_diff(d, check_html=True)))
 
 
 if __name__ == '__main__':

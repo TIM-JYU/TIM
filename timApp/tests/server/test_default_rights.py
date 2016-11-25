@@ -1,10 +1,10 @@
 from operator import itemgetter
 
+from tests.server.timroutetest import TimRouteTest
 from timdb.blocktypes import from_str, blocktypes
 from timdb.models.docentry import DocEntry
 from timdb.models.folder import Folder
-from timdb.special_group_names import ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME
-from timroutetest import TimRouteTest
+from timdb.special_group_names import KORPPI_GROUPNAME
 
 
 class DefaultRightTest(TimRouteTest):
@@ -31,13 +31,13 @@ class DefaultRightTest(TimRouteTest):
             rights_doc = folder.get_document(timdb.users.default_right_paths[obj_type])
             self.assertIsNone(rights_doc)
 
-            self.assertDictResponse(self.ok_resp,
-                                    self.json_put(
-                                        '/defaultPermissions/{}/add/{}/{}/{}'.format(obj_type_str, folder.id,
-                                                                                     'Anonymous users;testuser2',
-                                                                                     'view'), expect_status=200)
-                                    )
-            def_rights = self.get('/defaultPermissions/{}/get/{}'.format(obj_type_str, folder.id), as_json=True,
+            self.json_put(
+                '/defaultPermissions/{}/add/{}/{}/{}'.format(obj_type_str, folder.id,
+                                                             'Anonymous users;testuser2',
+                                                             'view'),
+                expect_content=self.ok_resp)
+
+            def_rights = self.get('/defaultPermissions/{}/get/{}'.format(obj_type_str, folder.id),
                                   expect_status=200)
             default_rights = [{'access_name': 'view',
                                'access_type': 1,
@@ -65,7 +65,7 @@ class DefaultRightTest(TimRouteTest):
             elif obj_type == blocktypes.FOLDER:
                 f = self.json_post('/createItem',
                                    {"item_path": 'users/testuser1/asd',
-                                    'item_type': 'folder'}, as_json=True)
+                                    'item_type': 'folder'})
                 new_item_rights = timdb.users.get_rights_holders(f['id'])
             else:
                 raise Exception('error in test: object type should be document or folder')
@@ -75,6 +75,4 @@ class DefaultRightTest(TimRouteTest):
                           .format(obj_type_str, folder.id,
                                   timdb.users.get_anon_group_id(),
                                   'view'),
-                          expect_status=200,
-                          as_json=True,
                           expect_content=self.ok_resp)

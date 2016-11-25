@@ -8,20 +8,16 @@ from lxml.cssselect import CSSSelector
 from documentmodel.document import Document
 from markdownconverter import md_to_html
 from plugin import Plugin
+from tests.db.timdbtest import TEST_USER_2_ID, TEST_USER_1_ID, TEST_USER_1_NAME
+from tests.server.timroutetest import TimRouteTest
 from timdb.models.user import User
-from timdbtest import TEST_USER_2_ID, TEST_USER_1_ID, TEST_USER_1_NAME
-from timroutetest import TimRouteTest
-
 
 link_selector = CSSSelector('a')
 
 
 class TimTest(TimRouteTest):
-    doc_num = 1
-
     def test_activities(self):
         timdb = self.get_db()
-        a = self.client
 
         login_resp = self.login_test1(force=True)
         self.assertDictEqual({'current_user': {'email': 'test1@example.com',
@@ -31,7 +27,7 @@ class TimTest(TimRouteTest):
                               'other_users': []}, login_resp)
 
         # Make sure user's personal folder exists
-        self.get('/view/users/' + self.current_user_name(), expect_status=200)
+        self.get('/view/users/' + self.current_user_name())
 
         doc_names = ['users/testuser1/testing',
                      'users/testuser1/testing2',
@@ -43,18 +39,15 @@ class TimTest(TimRouteTest):
         doc_id = doc_id_list[0]
         doc_ids = set()
         for idx, n in enumerate(doc_names):
-            self.assertDictResponse({'id': doc_id_list[idx], 'name': doc_names[idx]},
-                                    self.json_post('/createItem', {
-                                        'item_path': n,
-                                        'item_type': 'document'
-                                    }))
+            self.json_post('/createItem', {
+                'item_path': n,
+                'item_type': 'document'
+            }, expect_content={'id': doc_id_list[idx], 'name': doc_names[idx]})
             doc_ids.add(doc_id_list[idx])
-        self.assertDictResponse(self.ok_resp,
-                                self.json_put('/permissions/add/{}/{}/{}'.format(doc_id, 'Anonymous users', 'view')))
-        self.assertDictResponse(self.ok_resp,
-                                self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[1], 'Logged-in users', 'view')))
-        self.assertDictResponse(self.ok_resp, self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[2], 'testuser2', 'view')))
-        self.assertDictResponse(self.ok_resp, self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[3], 'testuser2', 'edit')))
+        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id, 'Anonymous users', 'view'), expect_content=self.ok_resp)
+        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[1], 'Logged-in users', 'view'), expect_content=self.ok_resp)
+        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[2], 'testuser2', 'view'), expect_content=self.ok_resp)
+        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[3], 'testuser2', 'edit'), expect_content=self.ok_resp)
         doc = Document(doc_id)
         doc.add_paragraph('Hello')
         pars = doc.get_paragraphs()
@@ -62,114 +55,103 @@ class TimTest(TimRouteTest):
         first_id = pars[0].get_id()
         comment_of_test1 = 'This is a comment.'
         comment_of_test1_html = md_to_html(comment_of_test1)
-        resp = self.json_post('/postNote', {'text': comment_of_test1,
+        json = self.json_post('/postNote', {'text': comment_of_test1,
                                             'access': 'everyone',
                                             'docId': doc_id,
                                             'par': first_id})
-        json = self.assertResponseStatus(resp, expect_status=200, return_json=True)
         note_id = int(re.search(r'note-id="(\d+)"', json['texts']).groups()[0])
 
         self.assertTrue(comment_of_test1_html in json['texts'])
-        self.assertInResponse(comment_of_test1_html, a.get('/view/' + doc_name))
+        self.get('/view/' + doc_name, expect_contains=comment_of_test1_html)
         edited_comment = 'was edited!'
         edited_comment_html = md_to_html(edited_comment)
-        resp = self.json_post('/editNote', {'id': note_id,
+        json = self.json_post('/editNote', {'id': note_id,
                                             'text': edited_comment,
                                             'access': 'everyone',
                                             'docId': doc_id,
                                             'par': first_id})
-        json = self.assertResponseStatus(resp, expect_status=200, return_json=True)
         self.assertTrue(edited_comment_html in json['texts'])
         self.assertFalse(comment_of_test1_html in json['texts'])
 
-        self.assertResponseStatus(a.get('/teacher/' + doc_name))
-        self.assertResponseStatus(a.get('/answers/' + doc_name))
+        self.get('/teacher/' + doc_name)
+        self.get('/answers/' + doc_name)
         edit_text = 'testing editing now...\nnew line\n'
         par_html = md_to_html(edit_text)
-        self.assertInResponse(par_html, self.post_par(doc, edit_text, first_id))
-        self.assertDictResponse({'text': edit_text}, a.get('/getBlock/{}/{}'.format(doc_id, first_id)))
-        self.assertInResponse(par_html, self.post_par(doc, edit_text, first_id))
+        self.post_par(doc, edit_text, first_id, expect_contains=par_html, json_key='texts')
+        self.get('/getBlock/{}/{}'.format(doc_id, first_id), expect_content={'text': edit_text})
+        self.post_par(doc, edit_text, first_id, expect_contains=par_html, json_key='texts')
         par2_text = 'new par'
         par2_html = md_to_html(par2_text)
-        self.assertManyInResponse([par_html, par2_html],
-                                  self.post_par(doc, edit_text + '#-\n' + par2_text, first_id))
+        self.post_par(doc, edit_text + '#-\n' + par2_text, first_id, expect_contains=[par_html, par2_html], json_key='texts')
         pars = Document(doc_id).get_paragraphs()
         self.assertEqual(2, len(pars))
         second_par_id = pars[1].get_id()
         par2_new_text = '    ' + par2_text
         par2_new_html = md_to_html(par2_new_text)
-        self.assertInResponse(par2_new_html, self.post_par(doc, par2_new_text, second_par_id))
-        self.assertResponseStatus(a.post('/logout', follow_redirects=True))
-        self.assertResponseStatus(a.get('/settings/'), 403)
+        self.post_par(doc, par2_new_text, second_par_id, expect_contains=par2_new_html, json_key='texts')
+        self.post('/logout', follow_redirects=True)
+        self.get('/settings/', expect_status=403)
         for d in doc_ids - {doc_id}:
-            self.assertResponseStatus(a.get('/view/' + str(d)), 403)
-        self.assertResponseStatus(a.get('/view/' + str(doc_id)))
-        self.assertResponseStatus(a.get('/view/' + str(doc_id), query_string={'login': True}), 403)
+            self.get('/view/' + str(d), expect_status=403)
+        self.get('/view/' + str(doc_id))
+        self.get('/view/' + str(doc_id), query_string={'login': True}, expect_status=403)
 
         # Login as another user
         self.login_test2()
-        view_resp = a.get('/view/' + doc_name)
-        self.assertInResponse('Test user 2', view_resp)
-        self.assertInResponse(edited_comment_html, view_resp)
+        self.get('/view/' + doc_name, expect_contains=['Test user 2', edited_comment_html])
         not_viewable_docs = {doc_id_list[4]}
         viewable_docs = doc_ids - not_viewable_docs
         for view_id in viewable_docs:
-            self.assertResponseStatus(a.get('/view/' + str(view_id)))
-            self.assertResponseStatus(a.get('/teacher/' + str(view_id)), 302)
+            self.get('/view/' + str(view_id))
+            self.get('/teacher/' + str(view_id), expect_status=302)
 
         for view_id in not_viewable_docs:
-            self.assertResponseStatus(a.get('/view/' + str(view_id)), 403)
-            self.assertResponseStatus(a.get('/teacher/' + str(view_id)), 403)
-        self.assertResponseStatus(a.get('/view/not_exist'), 404)
+            self.get('/view/' + str(view_id), expect_status=403)
+            self.get('/teacher/' + str(view_id), expect_status=403)
+        self.get('/view/not_exist', expect_status=404)
 
         comment_of_test2 = 'g8t54h954hy95hg54h'
-        self.assertInResponse(comment_of_test2,
-                              self.json_post('/postNote', {'text': comment_of_test2,
-                                                           'access': 'everyone',
-                                                           'docId': doc_id,
-                                                           'par': first_id}))
+        self.json_post('/postNote', {'text': comment_of_test2,
+                                     'access': 'everyone',
+                                     'docId': doc_id,
+                                     'par': first_id}, expect_contains=comment_of_test2, json_key='texts')
 
-        ug = timdb.users.get_personal_usergroup_by_id(session['user_id'])
+        ug = timdb.users.get_personal_usergroup_by_id(self.current_user_id())
         notes = timdb.notes.get_notes(ug, Document(doc_id), include_public=False)
         self.assertEqual(1, len(notes))
         test2_note_id = notes[0]['id']
 
         self.login_test1()
-        self.assertInResponse(comment_of_test2,
-                              a.get('/note/{}'.format(test2_note_id)))
+        self.get('/note/{}'.format(test2_note_id), expect_contains=comment_of_test2, json_key='text')
         teacher_right_docs = {doc_id_list[3]}
         for i in teacher_right_docs:
-            self.assertDictResponse(self.ok_resp,
-                                    self.json_put('/permissions/add/{}/{}/{}'.format(i, 'testuser2', 'teacher')))
+            self.json_put('/permissions/add/{}/{}/{}'.format(i, 'testuser2', 'teacher', expect_content=self.ok_resp))
 
-        self.assertResponseStatus(self.json_post('/deleteNote', {'id': test2_note_id,
+        self.json_post('/deleteNote', {'id': test2_note_id,
                                                                  'docId': doc_id,
-                                                                 'par': first_id}))
-        ug = timdb.users.get_personal_usergroup_by_id(session['user_id'])
+                                                                 'par': first_id})
+        ug = timdb.users.get_personal_usergroup_by_id(self.current_user_id())
         notes = timdb.notes.get_notes(ug, Document(doc_id), include_public=True)
         self.assertEqual(1, len(notes))
 
-        self.assertDictResponse({'text': edit_text}, self.json_req('/getBlock/{}/{}'.format(doc_id, first_id),
-                                                                   {'docId': doc_id, 'par': first_id}))
+        self.get('/getBlock/{}/{}'.format(doc_id, first_id),
+                 expect_content={'text': edit_text})
 
-        self.assertDictResponse({'text': Document(doc_id).export_section(first_id, second_par_id)},
-                                a.get('/getBlock/{}/{}'.format(doc_id, first_id),
-                                      query_string={'docId': doc_id,
-                                                    'area_start': first_id,
-                                                    'area_end': second_par_id}))
+        self.get('/getBlock/{}/{}'.format(doc_id, first_id),
+                 query_string={'docId': doc_id,
+                               'area_start': first_id,
+                               'area_end': second_par_id},
+                 expect_content={'text': Document(doc_id).export_section(first_id, second_par_id)})
 
         self.login_test2()
         for view_id in viewable_docs - teacher_right_docs:
-            self.assertResponseStatus(a.get('/view/' + str(view_id)))
-            self.assertResponseStatus(a.get('/teacher/' + str(view_id)), 302)
-            self.assertResponseStatus(self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2', 'teacher')),
-                                      403)
+            self.get('/view/' + str(view_id))
+            self.get('/teacher/' + str(view_id), expect_status=302)
+            self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2', 'teacher'), expect_status=403)
         for view_id in teacher_right_docs:
-            self.assertResponseStatus(a.get('/view/' + str(view_id)))
-            self.assertResponseStatus(a.get('/teacher/' + str(view_id)))
-            self.assertResponseStatus(self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2', 'teacher')),
-                                      403)
-        timdb.close()
+            self.get('/view/' + str(view_id))
+            self.get('/teacher/' + str(view_id))
+            self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2', 'teacher'), expect_status=403)
 
     def test_macro_doc(self):
         self.login_test1()
@@ -189,8 +171,8 @@ class TimTest(TimRouteTest):
         """
         table_html = md_to_html(table_text, sanitize=True, macros={'rivi': 'kerros'}, macro_delimiter='%%')
 
-        self.assertInResponse(table_html, self.new_par(doc, table_text), json_key='texts')
-        self.assertInResponse(table_html, self.get('/view/{}'.format(doc.doc_id), as_response=True))
+        self.new_par(doc, table_text, json_key='texts', expect_contains=table_html)
+        self.get('/view/{}'.format(doc.doc_id), expect_contains=table_html)
 
     def test_user_macros(self):
         self.login_test1()
@@ -225,17 +207,16 @@ header: %%username%% and %%realname%%
                              0].text_content().strip())
         p = Plugin.from_task_id('{}.test'.format(d.id), User.query.get(TEST_USER_2_ID))
         self.assertEqual('testuser2 and Test user 2', p.values['header'])
-        timdb.close()
 
     def test_macro_only_delimiter(self):
         self.login_test1()
         doc = self.create_doc(settings={'macro_delimiter': '%%'}).document
-        self.assertInResponse('123457', self.new_par(doc, '{% set a = 123456+1 %}%%a%%'), json_key='texts')
+        self.new_par(doc, '{% set a = 123456+1 %}%%a%%', json_key='texts', expect_contains='123457')
 
     def test_same_heading_as_par(self):
         self.login_test1()
         doc = self.create_doc(initial_par="""# Hello\n#-\nHello""").document
-        self.get('/view/{}'.format(doc.doc_id), expect_status=200)
+        self.get('/view/{}'.format(doc.doc_id))
 
     def test_broken_comment(self):
         self.login_test1()
@@ -258,10 +239,7 @@ header: %%username%% and %%realname%%
         tables = tree.findall(table_xpath)
         self.assertEqual(1, len(tables))
 
-        self.assertInResponse(table_xpath,
-                              self.json_post('/preview/{}'.format(doc.doc_id), {'text': md_table}),
-                              json_key='texts',
-                              as_tree=True)
+        self.json_post('/preview/{}'.format(doc.doc_id), {'text': md_table}, json_key='texts', expect_xpath=table_xpath)
 
     def test_clear_cache(self):
         self.login_test1()

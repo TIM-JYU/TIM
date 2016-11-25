@@ -17,9 +17,8 @@ class TimDbTest(unittest.TestCase):
     db_path = app.config['DATABASE']
     dumbo = None
 
-    @classmethod
-    def get_db(cls):
-        return TimDb(files_root_path=cls.test_files_path)
+    def get_db(self):
+        return self.db
 
     @classmethod
     def setUpClass(cls):
@@ -31,9 +30,9 @@ class TimDbTest(unittest.TestCase):
             os.mkdir(cls.test_files_path)
         initdb2.initialize_temp_database()
         # Safety mechanism to make sure we are not wiping some production database
-        assert app.config['SQLALCHEMY_BINDS']['tim_main'] == "postgresql://postgres@postgresql-timtest:5432/timtest"
+        assert app.config['SQLALCHEMY_BINDS']['tim_main'].endswith('-test')
         db.session.commit()
-
+        db.get_engine(app, 'tim_main').dispose()
         # The following throws if the testing database has not been created yet; we can safely ignore it
         try:
             db.drop_all(bind='tim_main')
@@ -47,7 +46,10 @@ class TimDbTest(unittest.TestCase):
         cls.dumbo.kill()
 
     def setUp(self):
-        pass
+        self.db = TimDb(files_root_path=self.test_files_path)
+
+    def tearDown(self):
+        self.db.close()
 
 
 TEST_USER_1_ID = 4
@@ -56,3 +58,4 @@ TEST_USER_3_ID = 6
 
 TEST_USER_1_NAME = 'Test user 1'
 TEST_USER_2_NAME = 'Test user 2'
+TEST_USER_3_NAME = 'Test user 3'

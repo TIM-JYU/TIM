@@ -68,6 +68,10 @@ class Folder(db.Model):
     def title(self):
         return self.name or 'All documents'
 
+    @property
+    def owner(self):
+        return self.block.owner if self.block else None  # root has no owner
+
     def get_full_path(self) -> str:
         return join_location(self.location, self.name)
 
@@ -134,7 +138,7 @@ class Folder(db.Model):
                 'path': self.path,
                 'isFolder': True,
                 'modified': None,  # this is not tracked yet for folders
-                'owner': self.block.owner if self.block else None,  # root has no owner
+                'owner': self.owner,
                 'rights': self.rights,
                 'unpublished': self.block.is_unpublished() if self.block else False
                 }

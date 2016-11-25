@@ -817,6 +817,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                       "/cs/simcir/simcir.js",
                                       "/cs/simcir/simcir-basicset.js",
                                       "/cs/simcir/simcir-library.js",
+                                      "https://yousource.it.jyu.fi/tiep114/tiep114/blobs/raw/master/simcir-oma-kirjasto.js"
                                       ],
                                "angularModule": ["csApp"],
                                "css": ["/cs/css/cs.css", "/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"],

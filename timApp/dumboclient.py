@@ -20,10 +20,6 @@ def launch_dumbo():
     :rtype: subprocess.Popen
     """
     path = DUMBO_PATH
-    log_path = os.path.join(path, "log")
-    if not os.path.exists(log_path):
-        os.mkdir(log_path)
-
     old = os.getcwd()
     os.chdir(path)
     p = subprocess.Popen([os.path.join(".", "Dumbo"), "-p", "8000"], stdout=DEVNULL, stderr=STDOUT)

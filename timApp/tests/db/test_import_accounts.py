@@ -2,7 +2,7 @@ import csv
 import os
 
 from import_accounts import import_accounts
-from timdbtest import TimDbTest
+from tests.db.timdbtest import TimDbTest
 
 
 class AccountImportTest(TimDbTest):

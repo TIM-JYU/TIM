@@ -4,16 +4,11 @@ Run from parent directory with command:
 python3 -m unittest dumboclient filemodehelper documentmodel/test_references.py
 """
 
-import random
 import unittest
 
-from documentmodel.document import Document
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.documentparser import DocumentParser
-from documentmodel.documentwriter import DocumentWriter
-from documentmodel.exceptions import DocExistsError
-from documentmodel.randutils import random_paragraph
-from timdbtest import TimDbTest
+from tests.db.timdbtest import TimDbTest
 from timdb.timdbexception import TimDbException
 
 
@@ -63,7 +58,6 @@ class RefTest(TimDbTest):
         self.assertEqual(self.src_par.get_attrs(), rendered_pars[0].get_attrs())
         self.assertEqual(self.src_par.get_properties(), rendered_pars[0].get_properties())
 
-        db.close()
 
     def test_translation(self):
         db = self.init_testdb()
@@ -83,7 +77,6 @@ class RefTest(TimDbTest):
         self.assertEqual(self.dict_merge(self.src_par.get_properties(), ref_par.get_properties()),
                          rendered_pars[0].get_properties())
 
-        db.close()
 
     def test_circular(self):
         db = self.init_testdb()
@@ -100,7 +93,6 @@ class RefTest(TimDbTest):
         self.assertRaises(TimDbException, ref_par.get_referenced_pars)
         self.assertRaises(TimDbException, self.src_par.get_referenced_pars)
 
-        db.close()
 
     def test_transitive(self):
         db = self.init_testdb()
@@ -140,7 +132,6 @@ class RefTest(TimDbTest):
         rendered_pars = ref_par2.get_referenced_pars()
         self.assert_dict_issubset(expected_attrs, rendered_pars[0].get_attrs())
 
-        db.close()
 
     def test_editparagraph_cite(self):
         db = self.init_testdb()
@@ -164,7 +155,6 @@ class RefTest(TimDbTest):
         self.assertEqual(self.src_par.get_id(), ref_blocks[0].get_attr('rp'))
         self.assertEqual(self.src_par.get_hash(), ref_blocks[0].get_attr('rt'))
 
-        db.close()
 
     def test_editparagraph_citearea(self):
         db = self.init_testdb()
@@ -191,7 +181,6 @@ class RefTest(TimDbTest):
 
         # todo: test the contents of the rendered area
 
-        db.close()
 
     def test_editparagraph_translate(self):
         db = self.init_testdb()
@@ -235,7 +224,6 @@ class RefTest(TimDbTest):
         self.assertEqual(self.src_par.get_hash(), ref_blocks[0].get_attr('rt'))
         self.assertEqual("tr", ref_blocks[0].get_attr('r'))
 
-        db.close()
 
     def test_editparagraph_translatearea(self):
         db = self.init_testdb()
@@ -266,7 +254,6 @@ class RefTest(TimDbTest):
 
         # todo: test the contents of the rendered area
 
-        db.close()
 
 if __name__ == '__main__':
     unittest.main()
