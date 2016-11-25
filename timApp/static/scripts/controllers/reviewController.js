@@ -174,6 +174,26 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         return element;
     };
 
+
+    var getFirstChildUntilNull = function (element) {
+        if (typeof element.firstChild === UNDEFINED || element.firstChild === null){
+            return element;
+        }
+        return getFirstChildUntilNull(element.firstChild);
+    };
+
+    /**
+     * Get last inner last child of the element.
+     * @param element
+     * @returns Element
+     */
+    var getLastChildUntilNull = function(element) {
+        if (typeof element.lastChild === UNDEFINED || element.lastChild === null){
+            return element;
+        }
+        return getFirstChildUntilNull(element.lastChild);
+    };
+
     /**
      * Checks if the given element is an annotation or not.
      * @method checkIfAnnotation
@@ -921,6 +941,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     /**
      * Get start offset according to the "original state" of DOM.
      * Ignores `annotation` elements, but not the elements inside the annotation.
+     *
      * @method getRealStartOffset
      * @param el - Start container
      * @param startoffset - Original start offset
@@ -931,12 +952,18 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         var startType = el.nodeName;
         var storedOffset = startoffset;
 
+
         while (el.previousSibling !== null) {
             el = el.previousSibling;
             if (checkIfAnnotation(el)) {
 
                 var innerElements = el.getElementsByClassName("highlighted")[0];
-                storedOffset += innerElements.lastChild.innerHTML.length;
+                var lastInnerLastChild = getLastChildUntilNull(innerElements);
+                storedOffset += lastInnerLastChild.length;
+
+                // if (typeof innerElements.lastChild.innerHTML !== UNDEFINED)
+                //     storedOffset += innerElements.lastChild.innerHTML.length;
+                // else storedOffset += innerElements.lastChild.length;
 
                 if (innerElements.childNodes.length > 1) {
                     return storedOffset;
@@ -955,6 +982,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     /**
      * Gets the start and end node numbers of created annotation element.
      * Ignores annoations elements, but not elements inside it.
+     *
      * @method getNodeNumbers
      * @param el - Start container
      * @param aid - Annotation ID
@@ -963,9 +991,13 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     var getNodeNumbers = function (el, aid, innerElement) {
         var parent = el;
+        var lastInnerFirstChild = getFirstChildUntilNull(innerElement);
+        var lastInnerLastChild = getLastChildUntilNull(innerElement);
+
         while (parent.nodeName === "#text") {
             parent = parent.parentNode;
         }
+
         var num = 0;
 
         var prevNodeName = parent.childNodes[0].nodeName;
@@ -979,8 +1011,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                     var startnum = num - 1;
                     num += innerElement.childNodes.length;
 
-                    if (innerElement.firstChild.nodeName === prevNodeName) num--;
-                    if (i < parent.childNodes.length - 1 && innerElement.lastChild.nodeName === parent.childNodes[i + 1].nodeName) num--;
+                    if (lastInnerFirstChild.nodeName === prevNodeName) num--;
+                    if (i < parent.childNodes.length - 1 && lastInnerLastChild.nodeName === parent.childNodes[i + 1].nodeName) num--;
 
                     if (startnum < 0) startnum = 0;
                     return [startnum, num];
@@ -989,8 +1021,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                     var innerEl = parent.childNodes[i].getElementsByClassName("highlighted")[0];
                     num += innerEl.childNodes.length;
 
-                    if (innerEl.firstChild.firstChild.nodeName === prevNodeName) num--;
-                    if (i < parent.childNodes.length - 1 && innerEl.lastChild.lastChild.nodeName === parent.childNodes[i + 1].nodeName) num--;
+                    if (lastInnerFirstChild.nodeName === prevNodeName) num--;
+
+                    if (i < parent.childNodes.length - 1 && lastInnerLastChild.nodeName === parent.childNodes[i + 1].nodeName) num--;
 
                     continue;
                 }
