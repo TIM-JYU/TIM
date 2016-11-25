@@ -68,11 +68,17 @@
                     popover-animation="false"
                     href="#">Add a user to this session...</a></li>
             <li class="divider"></li>
-            <li
-                    role="menuitem"
-            ><a ng-click="logout(getCurrentUser())" href="#">Log <span
+            <li ng-show="!loggingout" role="menuitem">
+                <a ng-click="beginLogout($event)" href="#">Log <span
                     ng-show="getSessionUsers().length > 0">everyone</span>
-                out</a></li>
+                out<span ng-show="isKorppi()">...</span></a>
+            </li>
+            <li ng-show="loggingout" role="menuitem">
+                <a ng-click="logout(getCurrentUser(), true)" href="#">Log out (TIM + Korppi)</a>
+            </li>
+            <li ng-show="loggingout" role="menuitem">
+                <a ng-click="logout(getCurrentUser(), false)" href="#">Log out (TIM only)</a>
+            </li>
             <li role="menuitem" ng-repeat="u in getSessionUsers()"><a ng-click="logout(u)"
                                                                       href="#">Log {{ u.real_name }} out</a></li>
         </ul>

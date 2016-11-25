@@ -13,7 +13,7 @@ Use Flask-Migrate for database migrations. See <http://flask-migrate.readthedocs
 import datetime
 from datetime import timezone
 
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 
 from timdb.readparagraphtype import ReadParagraphType

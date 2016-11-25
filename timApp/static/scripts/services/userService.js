@@ -15,12 +15,22 @@ timApp.factory('Users', ['$http', '$window', '$q', '$httpParamSerializer', funct
         return userService.group;
     };
 
-    userService.logout = function (user) {
+    userService.isKorppi = function () {
+        return userService.current.name.indexOf('@') < 0;
+    };
+
+    userService.logout = function (user, logoutFromKorppi) {
         $http.post('/logout', {user_id: user.id}).then(function (response) {
             userService.group = response.data.other_users;
             userService.current = response.data.current_user;
             if (!userService.isLoggedIn()) {
-                $window.location.reload();
+                if (logoutFromKorppi) {
+                    userService.korppiLogout(function () {
+                        $window.location.reload();
+                    });
+                } else {
+                    $window.location.reload();
+                }
             }
         });
     };
@@ -48,21 +58,34 @@ timApp.factory('Users', ['$http', '$window', '$q', '$httpParamSerializer', funct
                 }));
         };
         if (addUser) {
-            $http.get('https://korppi.jyu.fi/kotka/portal/showLogout.jsp', {withCredentials: true}).finally(function () {
-                $http(
-                    {
-                        withCredentials: true,
-                        method: 'POST',
-                        url: 'https://openid.korppi.jyu.fi/openid/manage/manage',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        data: $httpParamSerializer({logout: 'Logout'})
-                    }).finally(redirectFn);
-            });
+            userService.korppiLogout(redirectFn);
         } else {
             redirectFn();
         }
+    };
+
+    userService.korppiLogout = function (redirectFn) {
+        $http.get('https://korppi.jyu.fi/kotka/portal/showLogout.jsp',
+            {
+                withCredentials: true,
+                // the request is disallowed with the default custom headers (see base.html), so we disable them
+                headers: {
+                    'If-Modified-Since': undefined,
+                    'Cache-Control': undefined,
+                    'Pragma': undefined
+                }
+            }).finally(function () {
+            $http(
+                {
+                    withCredentials: true,
+                    method: 'POST',
+                    url: 'https://openid.korppi.jyu.fi/openid/manage/manage',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    data: $httpParamSerializer({logout: 'Logout'})
+                }).finally(redirectFn);
+        });
     };
 
     userService.loginWithEmail = function (email, password, addUser, successFn) {

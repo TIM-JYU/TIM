@@ -368,7 +368,11 @@ def par_response(pars,
             # d can be None when editing a translation because they don't have a row in DocEntry.
             # Skip this case for now; TODO: fix
             if d is not None:
-                bms.add_bookmark('Last edited', d.short_name, '/view/' + d.path, move_to_top=True).save_bookmarks()
+                bms.add_bookmark('Last edited',
+                                 d.short_name,
+                                 '/view/' + d.path,
+                                 move_to_top=True,
+                                 limit=current_app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
     else:
         duplicates = None
 
