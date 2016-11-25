@@ -24,7 +24,7 @@ def postgre_create_database(host, db_name):
     conn = engine.connect()
     conn.execute("commit")
     try:
-        conn.execute("create database " + db_name)
+        conn.execute('create database "{}"'.format(db_name))
         return True
     except sqlalchemy.exc.ProgrammingError as e:
         if 'already exists' not in str(e):

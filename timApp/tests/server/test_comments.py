@@ -1,10 +1,11 @@
+from typing import List
+
 from lxml import html
 from lxml.cssselect import CSSSelector
 from lxml.html import HtmlElement
-from typing import List
 
 from documentmodel.docparagraph import DocParagraph
-from timroutetest import TimRouteTest
+from tests.server.timroutetest import TimRouteTest
 
 comment_selector = CSSSelector('div.notes > div.note')
 
@@ -40,7 +41,7 @@ class CommentTest(TimRouteTest):
         resp = self.json_post('/postNote', {'text': comment_of_test1,
                                             'access': 'everyone' if public else 'justme',
                                             'docId': par.doc.doc_id,
-                                            'par': par.get_id()}, as_json=True, expect_status=200)
+                                            'par': par.get_id()})
         h = html.fromstring(resp['texts'])  # type: HtmlElement
         comments = comment_selector(h)
         return comments

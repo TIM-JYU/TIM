@@ -45,6 +45,10 @@ class DocInfo:
         return self.short_name or 'All documents'
 
     @property
+    def owner(self):
+        return self.block.owner if self.block else None
+
+    @property
     def short_name(self):
         parts = self.path_without_lang.rsplit('/', 1)
         return parts[len(parts) - 1]
@@ -67,7 +71,7 @@ class DocInfo:
                 'id': self.id,
                 'modified': date_to_relative(self.last_modified),
                 'isFolder': False,
-                'owner': self.block.owner if self.block else None,
+                'owner': self.owner,
                 'rights': self.rights,
                 'unpublished': self.block.is_unpublished() if self.block else False
                 }

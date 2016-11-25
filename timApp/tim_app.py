@@ -5,8 +5,10 @@ Do NOT define routes here.
 import inspect
 import mimetypes
 import sys
+import warnings
 
 from flask import Flask
+from flask.exthook import ExtDeprecationWarning
 from flask_migrate import Migrate
 from sqlalchemy.sql.ddl import CreateTable
 
@@ -36,6 +38,9 @@ from utils import datestr_to_relative, date_to_relative
 
 sys.setrecursionlimit(10000)
 app = Flask(__name__)
+
+# disable the warning message that is caused by Flask cache extension
+warnings.simplefilter('ignore', ExtDeprecationWarning)
 
 app.jinja_env.auto_reload = True  # uncomment this to autoreload templates
 

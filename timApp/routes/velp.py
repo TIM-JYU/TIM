@@ -412,7 +412,7 @@ def add_label() -> int:
     timdb = get_timdb()
     label_id = timdb.velps.create_velp_label(language_id, content)
 
-    return str(label_id)
+    return jsonResponse({'id': label_id})
 
 
 @velps.route("/update_velp_label", methods=["POST"])

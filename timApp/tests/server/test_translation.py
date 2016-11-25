@@ -1,4 +1,4 @@
-from timroutetest import TimRouteTest
+from tests.server.timroutetest import TimRouteTest
 
 
 class TranslationTest(TimRouteTest):
@@ -9,10 +9,8 @@ class TranslationTest(TimRouteTest):
         doc_title = 'test'
         j = self.json_post('/translate/{}/{}'.format(doc.id, lang),
                            {'doc_title': doc_title},
-                           expect_status=200,
-                           as_json=True,
                            expect_content={'title': doc_title, 'name': doc.name + '/' + lang, 'id': doc.id + 2})
-        self.get('/view/{}'.format(j['name']), expect_status=200)
+        self.get('/view/{}'.format(j['name']))
         self.logout()
         self.json_post('/translate/{}/{}'.format(doc.id, lang),
                        {'doc_title': doc_title},
