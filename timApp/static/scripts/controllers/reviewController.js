@@ -42,6 +42,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param successMethod - Method to run if the request was successful.
      */
     $scope.makePostRequest = function (url, params, successMethod) {
+        if (params === null){
+            throw "'params' can not be null";
+        }
+
         $http({
             method: 'POST',
             url: url,

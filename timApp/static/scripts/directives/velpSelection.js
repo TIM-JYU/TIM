@@ -569,7 +569,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      */
     $scope.generateDefaultVelpGroup = function (method) {
         if (default_velp_group.edit_access) {
-            $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), null, function (json) {
+            $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), "{}", function (json) {
                 var new_default_velp_group = json.data;
                 new_default_velp_group.default = true;
 
@@ -580,7 +580,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
                     $scope.velpGroups.push(new_default_velp_group);
 
                 default_velp_group = new_default_velp_group;
-
+                console.log(new_default_velp_group);
                 method();
             });
         }
