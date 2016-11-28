@@ -545,7 +545,7 @@ def give_points(points_rule, rule, default=0):
 def check_number_rule(s, number_rule):
     val = 0
     try:
-        val = float(s)
+        val = float(s.replace(",","."))
     except ValueError:
         return 0
     points = 0
