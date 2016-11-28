@@ -6,7 +6,6 @@ from datetime import timezone, datetime, timedelta
 from itertools import product
 
 import dateutil.parser
-from flask import session
 from lxml import html
 
 from plugin import Plugin
@@ -17,16 +16,6 @@ from tests.server.timroutetest import TimRouteTest
 
 class PluginTest(TimRouteTest):
     answer_error = {'error': "You don't have access to this answer."}
-
-    def post_answer(self, plugin_type, task_id, user_input,
-                    save_teacher=False, teacher=False, user_id=None, answer_id=None, **kwargs):
-        return self.json_put('/{}/{}/answer/'.format(plugin_type, task_id),
-                             {"input": user_input,
-                              "abData": {"saveTeacher": save_teacher,
-                                         "teacher": teacher,
-                                         "userId": user_id,
-                                         "answer_id": answer_id,
-                                         "saveAnswer": True}}, **kwargs)
 
     def test_plugin(self):
         self.login_test1()
@@ -303,10 +292,6 @@ class PluginTest(TimRouteTest):
                               {'real_name': 'Test user 2', 'email': 'test2@example.com', 'user_id': TEST_USER_2_ID}],
                              answer_list[0]['collaborators'])
         self.assertEqual(file_content, self.get(ur['file']))
-
-    def get_task_answers(self, task_id):
-        answer_list = self.get('/answers/{}/{}'.format(task_id, self.current_user_id()))
-        return answer_list
 
     def test_all_answers(self):
         self.login_test1()

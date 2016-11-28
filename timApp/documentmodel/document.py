@@ -695,7 +695,7 @@ class Document:
     def get_index(self) -> List[Tuple]:
         pars = [par for par in DocParagraphIter(self)]
         DocParagraph.preload_htmls(pars, self.get_settings())
-        pars = dereference_pars(pars, edit_window=False, source_doc=self.get_original_document())
+        pars = dereference_pars(pars, source_doc=self.get_original_document())
 
         # Skip plugins
         html_list = [par.get_html(from_preview=False) for par in pars if not par.is_dynamic()]
@@ -735,7 +735,7 @@ class Document:
 
         return log
 
-    def get_paragraph_by_task(self, task_id_name):
+    def get_paragraph_by_task(self, task_id_name) -> DocParagraph:
         with self.__iter__() as it:
             for p in it:
                 if p.get_attr('taskId') == task_id_name:
@@ -749,7 +749,7 @@ class Document:
                         for rp in ref_pars:
                             if rp.get_attr('taskId') == task_id_name:
                                 return rp
-        return None
+        raise TimDbException('Task not found in the document: {}'.format(task_id_name))
 
     def get_last_modified(self) -> Optional[datetime]:
         log = self.get_changelog(max_entries=1)
@@ -835,7 +835,7 @@ class Document:
         return [par for par in self]
 
     def get_dereferenced_paragraphs(self) -> List[DocParagraph]:
-        return dereference_pars(self.get_paragraphs(), edit_window=False, source_doc=self.get_original_document())
+        return dereference_pars(self.get_paragraphs(), source_doc=self.get_original_document())
 
     def get_closest_paragraph_title(self, par_id: Optional[str]):
         last_title = None
@@ -954,18 +954,17 @@ def get_index_from_html_list(html_table) -> List[Tuple]:
     return index
 
 
-def dereference_pars(pars: Iterable[DocParagraph], edit_window: bool=False, source_doc: Optional[Document]=None) -> List[DocParagraph]:
+def dereference_pars(pars: Iterable[DocParagraph], source_doc: Optional[Document]=None) -> List[DocParagraph]:
     """Resolves references in the given paragraphs.
 
     :param pars: The DocParagraphs to be processed.
-    :param edit_window: Calling from edit window or not.
     :param source_doc: Default document for referencing.
     """
     new_pars = []
     for par in pars:
         if par.is_reference():
             try:
-                new_pars += par.get_referenced_pars(edit_window=edit_window, source_doc=source_doc)
+                new_pars += par.get_referenced_pars(source_doc=source_doc)
             except TimDbException as e:
                 err_par = DocParagraph.create(
                     par.doc,

@@ -261,7 +261,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
             DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), clear_cache)
 
     # We need to deference paragraphs at this point already to get the correct task ids
-    xs = dereference_pars(xs, edit_window=False, source_doc=doc.get_original_document())
+    xs = dereference_pars(xs, source_doc=doc.get_original_document())
     total_points = None
     tasks_done = None
     task_groups = None

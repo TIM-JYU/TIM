@@ -964,13 +964,13 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             }
                         }
                         if (data.duplicates.length <= 0) {
+                            if ($scope.options.destroyAfterSave) {
+                                $element.remove();
+                            }
                             $scope.afterSave({
                                 extraData: $scope.extraData,
                                 saveData: data
                             });
-                            if ($scope.options.destroyAfterSave) {
-                                $element.remove();
-                            }
                         }
                         if (angular.isDefined($scope.extraData.access)) {
                             $scope.$storage.noteAccess = $scope.extraData.access;
