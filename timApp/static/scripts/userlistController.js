@@ -1,4 +1,4 @@
-var angular;
+/* globals angular */
 
 var timApp = angular.module('timApp');
 
@@ -16,14 +16,22 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
             }
         );
 
+        var anyAnnotations = false;
+
+        for (var i = 0; i < $scope.users.length; ++i) {
+            if ($scope.users[i].velp_points !== null) {
+                anyAnnotations = true;
+                break;
+            }
+        }
+
         $scope.columns = [
             {field: 'real_name', name: 'Full name', cellTooltip: true, headerTooltip: true},
             {field: 'name', name: 'Username', cellTooltip: true, headerTooltip: true, maxWidth: 100},
             {field: 'task_count', name: 'Tasks', cellTooltip: true, headerTooltip: true, maxWidth: 56},
             {field: 'total_points', name: 'Points', cellTooltip: true, headerTooltip: true, maxWidth: 59},
-            // hide velp columns completely for now; they don't have any data yet
-            // {field: 'velp_points', name: 'Velp points', cellTooltip: true, headerTooltip: true, maxWidth: 60, visible: false},
-            // {field: 'velped_task_count', name: 'Velped tasks', cellTooltip: true, headerTooltip: true, maxWidth: 60, visible: false}
+            {field: 'velp_points', name: 'Velp points', cellTooltip: true, headerTooltip: true, maxWidth: 60, visible: anyAnnotations},
+            {field: 'velped_task_count', name: 'Velped tasks', cellTooltip: true, headerTooltip: true, maxWidth: 60, visible: anyAnnotations}
         ];
 
         $scope.fireUserChange = function (row, updateAll) {

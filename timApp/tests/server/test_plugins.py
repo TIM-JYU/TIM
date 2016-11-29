@@ -457,14 +457,18 @@ class PluginTest(TimRouteTest):
                                    'name': 'testuser1',
                                    'real_name': TEST_USER_1_NAME,
                                    'task_count': 3,
-                                   'total_points': sum1},
+                                   'total_points': sum1,
+                                   'velp_points': None,
+                                   'velped_task_count': 0},
                                   {'email': 'test2@example.com',
                                    'groups': pts2,
                                    'id': 5,
                                    'name': 'testuser2',
                                    'real_name': 'Test user 2',
                                    'task_count': 3,
-                                   'total_points': sum2}], points)
+                                   'total_points': sum2,
+                                   'velp_points': None,
+                                   'velped_task_count': 0}], points)
         d.set_settings({'show_task_summary': True,
                         'point_sum_rule': {'groups': {'1st': 't1.*', '2nd': 't2.*', '3rd': 't3.*'},
                                            'count': {'best': 2}}})

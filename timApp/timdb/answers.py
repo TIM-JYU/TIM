@@ -258,7 +258,9 @@ ORDER BY {}, a.answered_on
             """
                 SELECT UserAccount.id, name, real_name, email,
                        COUNT(DISTINCT task_id) AS task_count,
-                       ROUND(SUM(cast(points as float))::numeric,2) as total_points
+                       ROUND(SUM(cast(points as float))::numeric,2) as total_points,
+                       ROUND(SUM(velp_points)::numeric,2) as velp_points,
+                       COUNT(DISTINCT annotation_answer_id) AS velped_task_count
                        {}
                 FROM UserAccount
                 JOIN UserAnswer ON UserAccount.id = UserAnswer.user_id
@@ -270,6 +272,9 @@ ORDER BY {}, a.answered_on
                       WHERE task_id IN ({}) AND Answer.valid = TRUE
                       GROUP BY UserAnswer.user_id, Answer.task_id) a1
                       JOIN (SELECT id, points FROM Answer) a2 ON a2.id = a1.aid
+                      LEFT JOIN (SELECT id as annotation_id, answer_id as annotation_answer_id, points as velp_points
+                                 FROM annotation
+                                 WHERE points IS NOT NULL) a3 ON a3.annotation_answer_id = a1.aid
 
                       ) tmp ON tmp.aid = UserAnswer.answer_id AND UserAccount.id = tmp.uid
                 {}
