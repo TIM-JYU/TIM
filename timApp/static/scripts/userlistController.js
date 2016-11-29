@@ -30,8 +30,22 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
             {field: 'name', name: 'Username', cellTooltip: true, headerTooltip: true, maxWidth: 100},
             {field: 'task_count', name: 'Tasks', cellTooltip: true, headerTooltip: true, maxWidth: 56},
             {field: 'total_points', name: 'Points', cellTooltip: true, headerTooltip: true, maxWidth: 59},
-            {field: 'velp_points', name: 'Velp points', cellTooltip: true, headerTooltip: true, maxWidth: 60, visible: anyAnnotations},
-            {field: 'velped_task_count', name: 'Velped tasks', cellTooltip: true, headerTooltip: true, maxWidth: 60, visible: anyAnnotations}
+            {
+                field: 'velp_points',
+                name: 'Velp points',
+                cellTooltip: true,
+                headerTooltip: true,
+                maxWidth: 60,
+                visible: anyAnnotations
+            },
+            {
+                field: 'velped_task_count',
+                name: 'Velped tasks',
+                cellTooltip: true,
+                headerTooltip: true,
+                maxWidth: 60,
+                visible: anyAnnotations
+            }
         ];
 
         $scope.fireUserChange = function (row, updateAll) {
@@ -39,6 +53,42 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
         };
 
         $scope.instantUpdate = false;
+
+        $scope.exportKorppi = function (options) {
+            if (!options.pointField && !options.velpPointField) {
+                return;
+            }
+            var data = $scope.gridApi.grid.getVisibleRows();
+            var dataKorppi = "";
+
+            if (options.pointField) {
+                for (var i = 0; i < data.length; i++) {
+                    dataKorppi += data[i].entity.name + ";" + options.pointField + ";" + data[i].entity.total_points + "\n";
+                }
+            }
+            if (options.velpPointField) {
+                if (dataKorppi !== "") {
+                    dataKorppi += "\n";
+                }
+                for (var j = 0; j < data.length; j++) {
+                    dataKorppi += data[j].entity.name + ";" + options.velpPointField + ";" + data[j].entity.velp_points + "\n";
+                }
+            }
+            var filename = 'korppi_' + $scope.docId + '.txt';
+            // from https://stackoverflow.com/a/33542499
+            var blob = new Blob([dataKorppi], {type: 'text/plain'});
+            if (window.navigator.msSaveOrOpenBlob) {
+                window.navigator.msSaveBlob(blob, filename);
+            }
+            else {
+                var elem = window.document.createElement('a');
+                elem.href = window.URL.createObjectURL(blob);
+                elem.download = filename;
+                document.body.appendChild(elem);
+                elem.click();
+                document.body.removeChild(elem);
+            }
+        };
 
         $scope.gridOptions = {
             exporterMenuPdf: false,
@@ -69,30 +119,18 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
                     title: 'Export to Korppi',
                     action: function ($event) {
                         $timeout(function () {
-                            var data = $scope.gridApi.grid.getVisibleRows();
-                            var dataKorppi = "";
-                            var fieldname = window.prompt('Korppi field name for points:', 'demo');
-                            for (var i = 0; i < data.length; i++) {
-                                dataKorppi += data[i].entity.name + ";" + fieldname + ";" + data[i].entity.total_points + "\n";
-                            }
-                            var filename = 'korppi_' + $scope.docId + '.txt';
-                            if (fieldname === null) {
-                                return;
-                            }
+                            var instance = $uibModal.open({
+                                animation: false,
+                                ariaLabelledBy: 'modal-title',
+                                ariaDescribedBy: 'modal-body',
+                                templateUrl: '/static/templates/korppiExport.html',
+                                controller: 'KorppiExportCtrl',
+                                controllerAs: '$ctrl',
+                                size: 'md'
+                            });
+                            instance.result.then($scope.exportKorppi, function () {
 
-                            // from https://stackoverflow.com/a/33542499
-                            var blob = new Blob([dataKorppi], {type: 'text/plain'});
-                            if (window.navigator.msSaveOrOpenBlob) {
-                                window.navigator.msSaveBlob(blob, filename);
-                            }
-                            else {
-                                var elem = window.document.createElement('a');
-                                elem.href = window.URL.createObjectURL(blob);
-                                elem.download = filename;
-                                document.body.appendChild(elem);
-                                elem.click();
-                                document.body.removeChild(elem);
-                            }
+                            });
                         });
                     },
                     order: 10
@@ -147,3 +185,17 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
             rowTemplate: "<div ng-dblclick=\"grid.appScope.fireUserChange(row, true)\" ng-repeat=\"(colRenderIndex, col) in colContainer.renderedColumns track by col.colDef.name\" class=\"ui-grid-cell\" ng-class=\"{ 'ui-grid-row-header-cell': col.isRowHeader }\" ui-grid-cell></div>"
         };
     }]);
+
+timApp.controller('KorppiExportCtrl', ['$uibModalInstance', function ($uibModalInstance) {
+    "use strict";
+    var $ctrl = this;
+    $ctrl.options = {};
+
+    $ctrl.ok = function () {
+        $uibModalInstance.close($ctrl.options);
+    };
+
+    $ctrl.cancel = function () {
+        $uibModalInstance.dismiss('cancel');
+    };
+}]);
