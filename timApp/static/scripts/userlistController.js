@@ -31,16 +31,16 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
             {field: 'task_count', name: 'Tasks', cellTooltip: true, headerTooltip: true, maxWidth: 56},
             {field: 'total_points', name: 'Points', cellTooltip: true, headerTooltip: true, maxWidth: 59},
             {
-                field: 'velp_points',
-                name: 'Velp points',
+                field: 'velped_task_count',
+                name: 'Velped tasks',
                 cellTooltip: true,
                 headerTooltip: true,
                 maxWidth: 60,
                 visible: anyAnnotations
             },
             {
-                field: 'velped_task_count',
-                name: 'Velped tasks',
+                field: 'velp_points',
+                name: 'Velp points',
                 cellTooltip: true,
                 headerTooltip: true,
                 maxWidth: 60,
