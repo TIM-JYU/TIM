@@ -19,7 +19,7 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
         var anyAnnotations = false;
 
         for (var i = 0; i < $scope.users.length; ++i) {
-            if ($scope.users[i].velp_points !== null) {
+            if ($scope.users[i].velped_task_count > 0) {
                 anyAnnotations = true;
                 break;
             }

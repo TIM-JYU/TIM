@@ -273,8 +273,7 @@ ORDER BY {}, a.answered_on
                       GROUP BY UserAnswer.user_id, Answer.task_id) a1
                       JOIN (SELECT id, points FROM Answer) a2 ON a2.id = a1.aid
                       LEFT JOIN (SELECT id as annotation_id, answer_id as annotation_answer_id, points as velp_points
-                                 FROM annotation
-                                 WHERE points IS NOT NULL) a3 ON a3.annotation_answer_id = a1.aid
+                                 FROM annotation) a3 ON a3.annotation_answer_id = a1.aid
 
                       ) tmp ON tmp.aid = UserAnswer.answer_id AND UserAccount.id = tmp.uid
                 {}
