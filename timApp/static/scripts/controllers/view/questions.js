@@ -154,36 +154,19 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
     };
 
     sc.getAndEditQuestions = function () {
-        $log.info(sc.settings);
-        $log.info($window.sessionsettings);
+        if (sc.noQuestionAutoNumbering) {
+            return;
+        }
         var questions = $('.questionPar');
         for (var i = 0; i < questions.length; i++) {
-            var questionParent = $(questions[i]);
-            var questionChildren = $(questionParent.children());
+            var $par = $(questions[i]);
+            var questionChildren = $($par.children());
             var questionNumber = $(questionChildren.find($('.questionNumber')));
-            var questionTitle = sc.getParAttributes(questionParent).question;
-            if (questionTitle === 'Untitled') {
-                questionTitle = "";
-            }
+            var questionTitle = sc.getParAttributes($par).question;
             if (questionTitle.length > 10) {
                 questionTitle = questionTitle.substr(0, 10) + "\r\n...";
             }
-            if (questionNumber.length > 0) {
-                questionNumber[0].innerHTML = (i + 1) + ")\r\n" + questionTitle;
-            }
-            else {
-                var parContent = $(questionChildren[0]);
-                var questionTitleText;
-                if (sc.noQuestionAutoNumbering) {
-                    questionTitleText = questionTitle;
-                } else {
-                    questionTitleText = (i + 1) + ")\r\n" + questionTitle;
-                }
-                var p = $("<p>", {class: "questionNumber", text: questionTitleText});
-                parContent.append(p);
-                var editLine = $(questionChildren[1]);
-                parContent.before(editLine);
-            }
+            questionNumber[0].innerHTML = (i + 1) + ")\r\n" + questionTitle;
         }
     };
 
