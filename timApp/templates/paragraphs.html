@@ -1,7 +1,6 @@
 {% set editline = '' %}
 {% if item.rights.editable or item.rights.can_comment %}
     {% set editline = '<div class="editline" title="Click to edit this paragraph"></div>' %}
-    {% set editlineQuestion = '<div class="editline editlineQuestion" title="Click to edit this paragraph"></div>' %}
 {% endif %}
 
 {# TODO This template list should not be here! #}
@@ -168,19 +167,11 @@
             <div class="areapartline"></div>
         {% endif %}
 
-        {% if not t.attrs.question %}
         {{ editline|safe }}
-            {% if not disable_read_markings %}
-                <div class="{{ ['readline', t.status|join(' ')]|join(' ')|trim }}"
-                         title="Click to mark this paragraph as read"></div>
-            {% endif %}
-        {% else %}
-            {{ editlineQuestion|safe }}
-            {% if not disable_read_markings %}
-                <div class="{{ ['readline', 'readlineQuestion', t.status|join(' ')]|join(' ')|trim }}"
-                         title="Click to mark this paragraph as read"></div>
-            {% endif %}
-        {% endif %}
+        {%- if not disable_read_markings -%}
+            <div class="{{ ['readline', t.status|join(' ')]|join(' ')|trim }}"
+                 title="Click to mark this paragraph as read"></div>
+        {%- endif -%}
 
 
         {% if t.notes %}

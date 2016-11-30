@@ -25,25 +25,42 @@
     margin-bottom: 10px;
 }
 
-.questionAddedNew {
-    display: inline-block !important;
-    width: 1.8em;
-    height: 1.8em;
-    vertical-align: top;
-    padding-top: 0.4em;
-}
-
 .questionPar {
     display: inline-block;
     text-align: center;
     margin-top: 0.5em;
     min-height: 4em;
     min-width: 4.8em;
-}
 
-.questionParContent {
-    vertical-align: top;
-    display: inline-block;
+    .parContent {
+        display: inline-block;
+        vertical-align: top;
+    }
+
+    .readline {
+        border-width: 0.4em;
+        width: 1.1em;
+        height: 2.8em;
+        display: inline-block;
+        margin-left: -3px;
+        border-radius: 3px 6px 6px 3px;
+        z-index: 3;
+        right: 0;
+        position: relative;
+        top: 0.3em;
+    }
+
+    .editline {
+        display: inline-block;
+        width: 1.5em;
+        height: 2.8em;
+        margin-left: 0.4em;
+        margin-right: 1px;
+        border-radius: 6px 3px 3px 6px;
+        left: 0;
+        position: relative;
+        top: 0.3em;
+    }
 }
 
 .questionNumber {
@@ -54,31 +71,6 @@
     font-size: x-small;
     position: absolute;
     text-align: center;
-}
-
-.readlineQuestion {
-    border-right: 0.4em solid #f60;
-    width: 1.1em;
-    height: 2.8em;
-    display: inline-block;
-    margin-left: -3px;
-    border-radius: 3px 6px 6px 3px;
-    z-index: 3;
-    right: 0;
-    position: relative;
-    top: 0.3em;
-}
-
-.editlineQuestion {
-    display: inline-block;
-    width: 1.5em;
-    height: 2.8em;
-    margin-left: 0.4em;
-    margin-right: 1px;
-    border-radius: 6px 3px 3px 6px;
-    left: 0;
-    position: relative;
-    top: 0.3em;
 }
 
 input:disabled::-webkit-input-placeholder {

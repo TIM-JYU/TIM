@@ -65,7 +65,7 @@ timApp.defineReadings = function (sc, http, q, $injector, $compile, $window, $do
             });
     };
 
-    sc.onClick(".readline, .readlineQuestion", function ($this, e) {
+    sc.onClick(".readline", function ($this, e) {
         sc.markParRead($this.parents('.par'), sc.readingTypes.clickRed);
         return true;
     });

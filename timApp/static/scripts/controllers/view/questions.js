@@ -156,9 +156,9 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
     sc.getAndEditQuestions = function () {
         $log.info(sc.settings);
         $log.info($window.sessionsettings);
-        var questions = $('.editlineQuestion');
+        var questions = $('.questionPar');
         for (var i = 0; i < questions.length; i++) {
-            var questionParent = $(questions[i].parentNode);
+            var questionParent = $(questions[i]);
             var questionChildren = $(questionParent.children());
             var questionNumber = $(questionChildren.find($('.questionNumber')));
             var questionTitle = sc.getParAttributes(questionParent).question;
@@ -173,8 +173,6 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
             }
             else {
                 var parContent = $(questionChildren[0]);
-                questionParent.addClass('questionPar');
-                parContent.addClass('questionParContent');
                 var questionTitleText;
                 if (sc.noQuestionAutoNumbering) {
                     questionTitleText = questionTitle;
