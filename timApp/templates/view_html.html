@@ -105,10 +105,7 @@
         {% if teacher_mode %}
             users = {{plugin_users|tojson}};
         {% endif %}
-        {% if lecture_mode or in_lecture %}
-            var noQuestionAutoNumbering = {{ no_question_auto_numbering|tojson}};
-        {% endif %}
-
+        var noQuestionAutoNumbering = {{ no_question_auto_numbering|tojson}};
     </script>
 {% endblock %}
 

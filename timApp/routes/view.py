@@ -286,11 +286,9 @@ def view(doc_path, template_name, usergroup=None, route="view"):
             tasks_done = info[0]['task_count']
             task_groups = info[0].get('groups')
 
-    show_questions = False
     no_question_auto_numbering = None
 
     if route == 'lecture' and has_edit_access(doc_id):
-        show_questions = True
         no_question_auto_numbering = doc_settings.auto_number_questions()
 
     is_in_lecture = False
@@ -325,8 +323,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                                                           current_list_user or current_user,
                                                           sanitize=False,
                                                           do_lazy=do_lazy,
-                                                          load_plugin_states=not hide_answers,
-                                                          show_questions=show_questions)
+                                                          load_plugin_states=not hide_answers)
 
     index = get_index_from_html_list(t['html'] for t in texts)
 
