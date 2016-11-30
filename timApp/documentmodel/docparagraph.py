@@ -324,8 +324,8 @@ class DocParagraph:
         """
         question_title = self.is_question()
         if question_title:
-            return self.__set_html('<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="{0}"></span></a>'
-                                   '<p class="questionNumber">{0}</p>'.format(question_title))
+            return self.__set_html(sanitize_html('<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="{0}"></span></a>'
+                                   '<p class="questionNumber">{0}</p>'.format(question_title)))
         if self.html is not None:
             return self.html
         if self.is_plugin():
