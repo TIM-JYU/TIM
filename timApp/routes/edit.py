@@ -387,7 +387,7 @@ def par_response(pars,
                                                   preview=preview),
                          'js': js_paths,
                          'css': css_paths,
-                         'angularModule': modules,
+                         'angularModule': modules,  # not used in JS at all, maybe not needed at all
                          'changed_pars': {p['id']: render_template('paragraphs.html',
                                                                    text=[p],
                                                                    item={'rights': get_rights(doc.doc_id)}) for p in
