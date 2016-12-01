@@ -12,8 +12,8 @@ var editorChangeValue = function(attributes, text) {
 };
 
 timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
-    '$window', '$localStorage', '$timeout', '$ocLazyLoad', '$log',
-    function (Upload, $http, $sce, $compile, $window, $localStorage, $timeout, $ocLazyLoad, $log) {
+    '$window', '$localStorage', '$timeout', '$ocLazyLoad', '$log', 'ParCompiler',
+    function (Upload, $http, $sce, $compile, $window, $localStorage, $timeout, $ocLazyLoad, $log, ParCompiler) {
         "use strict";
         return {
             templateUrl: "/static/templates/parEditor.html",
@@ -463,30 +463,13 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $http.post($scope.previewUrl, angular.extend({
                             text: text
                         }, $scope.extraData)).success(function (data, status, headers, config) {
-                            var $previewDiv = angular.element(".previewcontent");
-                            var simpleDirectiveUrl = '/mmcq/SimpleDirective.js';
-                            var loadingFn = function () {
-                                $ocLazyLoad.load(data.js.concat(data.css)).then(function () {
-                                    $previewDiv.html($compile(data.texts)($scope));
-                                    var len = $previewDiv.children().length;
-                                    $scope.$parent.processAllMathDelayed($previewDiv);
-                                    $scope.outofdate = false;
-                                    $scope.parCount = len;
-                                    $('.editorContainer').resize();
-                                });
-                            };
-                            // Workaround: load SimpleDirective.js before other scripts; otherwise there
-                            // will be a ReferenceError.
-                            if (angular.isUndefined($window.standardDirective) &&
-                                 data.js.indexOf(simpleDirectiveUrl) >= 0) {
-                                $.ajax({
-                                    dataType: "script",
-                                    cache: true,
-                                    url: simpleDirectiveUrl
-                                }).done(loadingFn);
-                            } else {
-                                loadingFn();
-                            }
+                            ParCompiler.compile(data, $scope, function (compiled) {
+                                var $previewDiv = angular.element(".previewcontent");
+                                $previewDiv.html(compiled);
+                                $scope.outofdate = false;
+                                $scope.parCount = $previewDiv.children().length;
+                                $('.editorContainer').resize();
+                            });
                         }).error(function (data, status, headers, config) {
                             $window.alert("Failed to show preview: " + data.error);
                         });
