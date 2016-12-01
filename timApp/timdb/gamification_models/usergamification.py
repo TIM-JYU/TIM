@@ -22,4 +22,3 @@ class UserGamification(db.Model):
         db.session.commit()
 
         return uGamification
-

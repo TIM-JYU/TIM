@@ -1,5 +1,6 @@
 from tim_app import db
 
+
 class GamificationPointType(db.model):
     """
     Created by TIMG
@@ -10,5 +11,4 @@ class GamificationPointType(db.model):
     __tablename__ = 'gamificationpointtype'
     point_type_id = db.Column (db.Integer, primary_key = True)
     point_type_name = db.Column (db.Text)
-
 

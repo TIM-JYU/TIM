@@ -1,6 +1,5 @@
 from tim_app import db
 
-
 class DocumentGamificationPoint(db.Model):
     """
     Created by TIMG
@@ -25,4 +24,3 @@ class DocumentGamificationPoint(db.Model):
         db.session.commit()
 
         return DocGamiPoint
-

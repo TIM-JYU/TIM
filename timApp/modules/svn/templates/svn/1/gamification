@@ -1,0 +1,12 @@
+Create a gamification template for gamification document
+``` {#plugin="gamification"}
+Lectures:
+-
+    - path:/kurssit/tie/ohj1/Luento1
+    - path:/kurssit/tie/ohj1/Luento2
+
+Demos:
+-
+    - path:/kurssit/tie/ohj1/Demo1
+    - path:/kurssit/tie/ohj1/Demo2
+```
