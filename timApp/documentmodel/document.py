@@ -578,6 +578,8 @@ class Document:
         return p
 
     def parwise_diff(self, other_doc: 'Document', check_html:bool=False):
+        if self.get_version() == other_doc.get_version():
+            raise StopIteration
         old_pars = [par for par in self]
         old_ids = [par.get_id() for par in old_pars]
         new_pars = [par for par in other_doc]
@@ -591,15 +593,15 @@ class Document:
             if tag == 'insert':
                 yield {'type': tag, 'after_id': old_ids[i2 - 1] if i2 > 0 else None, 'content': new_pars[j1:j2]}
             if tag == 'replace':
-                yield {'type': tag, 'start_id': old_ids[i1], 'end_id': old_ids[i2] , 'content': new_pars[j1:j2]}
+                yield {'type': tag, 'start_id': old_ids[i1], 'end_id': old_ids[i2] if i2 < len(old_ids) else None, 'content': new_pars[j1:j2]}
             if tag == 'delete':
-                yield {'type': tag, 'start_id': old_ids[i1], 'end_id': old_ids[i2]}
+                yield {'type': tag, 'start_id': old_ids[i1], 'end_id': old_ids[i2] if i2 < len(old_ids) else None}
             if tag == 'equal':
                 for old, new in zip(old_pars[i1:i2], new_pars[j1:j2]):
                     if old != new:
-                        yield {'type': 'change', 'id': old.get_id(), 'content': new}
+                        yield {'type': 'change', 'id': old.get_id(), 'content': [new]}
                     elif check_html and not old.is_same_as_html(new):
-                        yield {'type': 'change', 'id': old.get_id(), 'content': new}
+                        yield {'type': 'change', 'id': old.get_id(), 'content': [new]}
 
     def update_section(self, text: str, par_id_first: str, par_id_last: str) -> Tuple[str, str]:
         """Updates a section of the document.
