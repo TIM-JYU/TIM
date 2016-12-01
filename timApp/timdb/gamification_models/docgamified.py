@@ -1,4 +1,4 @@
-from tim_app import db
+from timdb.tim_models import db
 from timdb.gamification_models import gamificationdocument
 from timdb.gamification_models import gamificationdocumenttype
 from timdb.models import block

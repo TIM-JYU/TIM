@@ -1,4 +1,4 @@
-from tim_app import db
+from timdb.tim_models import db
 
 
 class UserGamification(db.Model):
