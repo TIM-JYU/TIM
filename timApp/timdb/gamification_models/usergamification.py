@@ -1,4 +1,4 @@
-from timdb.tim_models import db
+from tim_app import db
 
 
 class UserGamification(db.Model):
@@ -22,3 +22,4 @@ class UserGamification(db.Model):
         db.session.commit()
 
         return uGamification
+

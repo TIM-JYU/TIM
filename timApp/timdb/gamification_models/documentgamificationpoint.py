@@ -1,4 +1,5 @@
-from timdb.tim_models import db
+from tim_app import db
+
 
 class DocumentGamificationPoint(db.Model):
     """
@@ -24,3 +25,4 @@ class DocumentGamificationPoint(db.Model):
         db.session.commit()
 
         return DocGamiPoint
+
