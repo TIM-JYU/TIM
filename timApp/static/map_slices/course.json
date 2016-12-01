@@ -1,0 +1,24 @@
+[{"lectures": 
+
+    [{"gotPoints": "2", "link": "www.luento1.com", "name": "Luento1", "maxPoints": "1"}, 
+
+     {"gotPoints": "1", "link": "www.luento2.com", "name": "Luento2", "maxPoints": "2"}, 
+ {"gotPoints": "2", "link": "www.luento3.com", "name": "Luento3", "maxPoints": "0"},
+ {"gotPoints": "0", "link": "www.luento4.com", "name": "Luento4", "maxPoints": "0"},
+
+     {"gotPoints": "0", "link": "www.luento5.com", "name": "Luento5", "maxPoints": "0"},
+{"gotPoints": "0", "link": "www.luento6.com", "name": "Luento6", "maxPoints": "0"},
+{"gotPoints": "0", "link": "www.luento7.com", "name": "Luento7", "maxPoints": "0"},
+{"gotPoints": "0", "link": "www.luento8.com", "name": "Luento8", "maxPoints": "0"},
+{"gotPoints": "0", "link": "www.luento9.com", "name": "Luento9", "maxPoints": "0"},
+{"gotPoints": "0", "link": "www.luento10.com", "name": "Luento10", "maxPoints": "0"},
+{"gotPoints": "0", "link": "www.luento11.com", "name": "Luento11", "maxPoints": "0"},
+{"gotPoints": "0", "link": "www.luento12.com", "name": "Luento12", "maxPoints": "0"},
+{"gotPoints": "0", "link": "www.luento13.com", "name": "Luento13", "maxPoints": "0"},
+{"gotPoints": "0", "link": "www.luento13.com", "name": "Luento13", "maxPoints": "0"}]}, 
+
+{"demos": [{"gotPoints": "7", "link": "www.demo1.com", "name": "demo1", "maxPoints": "8"},
+{"gotPoints": "4", "link": "www.demo2.com", "name": "demo2", "maxPoints": "8"},
+
+      {"gotPoints": "8", "link": "www.demo3.com", "name": "demo3", "maxPoints": "9"}, 
+      {"gotPoints": "6", "link": "www.demo4.com","name": "demo4", "maxPoints": "7"}]}]
