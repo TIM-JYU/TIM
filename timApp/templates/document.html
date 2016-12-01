@@ -1,9 +1,9 @@
 {% extends 'item.html' %}
-{% block header %}
+{% block head %}
     {{ super() }}
     <script>
         {% if edit_mode %}
-        var editMode = {{edit_mode|tojson|safe}};
+        var editMode = {{ edit_mode|tojson }};
         {% else %}
         var editMode = null;
         {% endif %}

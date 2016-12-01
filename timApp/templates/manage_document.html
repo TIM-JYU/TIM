@@ -270,7 +270,7 @@
             </table>
             <p ng-show="hasMoreChangelog">Showing {{ item.versions.length }} latest entries.</p>
             <p ng-show="!hasMoreChangelog">Showing all {{ item.versions.length }} entries.</p>
-            <button class="timButton" ng-show="hasMoreChangelog" ng-click="showMoreChangelog()">Show more entries</button>
+            <button ng-disabled="changelogLoading" class="timButton" ng-show="hasMoreChangelog" ng-click="showMoreChangelog()">Show more entries</button>
         </div>
     </div>
     {% endraw %}

@@ -159,7 +159,7 @@ timApp.defineParMenu = function (sc, http, q, $injector, $compile, $window, $doc
         }
     };
 
-    sc.onClick(".editline, .editlineQuestion", function ($this, e) {
+    sc.onClick(".editline", function ($this, e) {
         sc.closeOptionsWindow();
         var $par = $this.parent().filter('.par');
         if (sc.selection.start !== null) {

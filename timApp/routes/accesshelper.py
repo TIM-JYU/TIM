@@ -11,6 +11,7 @@ from routes.sessioninfo import get_current_user_id, logged_in, get_current_user_
 from timdb.accesstype import AccessType
 from timdb.tim_models import db
 from timdb.timdb2 import TimDb
+from timdb.timdbexception import TimDbException
 
 
 def verify_admin():
@@ -144,17 +145,44 @@ def can_write_to_folder(folder_name):
     return timdb.users.has_admin_access(get_current_user_id())
 
 
+def get_par_from_request(doc: Document, par_id=None, task_id_name=None):
+    orig_doc_id, orig_par_id = get_orig_doc_and_par_id_from_request()
+    if par_id is None:
+        try:
+            par_id = doc.get_paragraph_by_task(task_id_name).get_id()
+        except TimDbException as e:
+            abort(400, str(e))
+    if orig_doc_id is None or orig_par_id is None:
+        try:
+            return doc.get_paragraph(par_id)
+        except TimDbException as e:
+            abort(400, str(e))
+    orig_doc = Document(orig_doc_id)
+    orig_par = orig_doc.get_paragraph(orig_par_id)
+    pars = documentmodel.document.dereference_pars([orig_par], source_doc=doc)
+    for p in pars:
+        if p.get_id() == par_id:
+            return p
+    abort(404)
+
+
+def get_orig_doc_and_par_id_from_request():
+    ref_from = ((request.get_json() or {}).get('ref_from') or {})
+    doc_id = ref_from.get('docId', get_option(request, 'ref_from_doc_id',
+                                         default=None, cast=int))
+    par_id = ref_from.get('par', get_option(request, 'ref_from_par_id',
+                                       default=None))
+    return doc_id, par_id
+
+
 def verify_task_access(doc_id, task_id_name, access_type):
     # If the user doesn't have access to the document, we need to check if the plugin was referenced
     # from another document
     if not verify_access(doc_id, access_type, require=False):
-        orig_doc = (request.get_json() or {}).get('ref_from', {}).get('docId', get_option(request, 'ref_from_doc_id',
-                                                                                          default=doc_id))
-        verify_access(orig_doc, access_type)
-        par_id = (request.get_json() or {}).get('ref_from', {}).get('par', get_option(request, 'ref_from_par_id',
-                                                                                      default=None))
-        if par_id is None:
+        orig_doc, par_id = get_orig_doc_and_par_id_from_request()
+        if orig_doc is None or par_id is None:
             abort(403)
+        verify_access(orig_doc, access_type)
         par = Document(orig_doc).get_paragraph(par_id)
         if not par.is_reference():
             abort(403)

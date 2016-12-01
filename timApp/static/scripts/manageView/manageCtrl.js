@@ -16,11 +16,14 @@ PermApp.controller("PermCtrl", [
 
         sc.showMoreChangelog = function () {
             var newLength = sc.item.versions.length + 100;
+            sc.changelogLoading = true;
             $http.get('/changelog/' + sc.item.id + '/' + (newLength)).then(function (response) {
                 sc.item.versions = response.data.versions;
                 sc.hasMoreChangelog = sc.item.versions.length === newLength;
             }, function (response) {
                 $log.error('Failed to get more changelog.');
+            }).finally(function () {
+                sc.changelogLoading = false;
             });
         };
 

@@ -65,7 +65,7 @@ timApp.defineReadings = function (sc, http, q, $injector, $compile, $window, $do
             });
     };
 
-    sc.onClick(".readline, .readlineQuestion", function ($this, e) {
+    sc.onClick(".readline", function ($this, e) {
         sc.markParRead($this.parents('.par'), sc.readingTypes.clickRed);
         return true;
     });
@@ -150,8 +150,8 @@ timApp.defineReadings = function (sc, http, q, $injector, $compile, $window, $do
         for (var key in sc.sections) {
             if (sc.sections.hasOwnProperty(key)) {
                 var sectionPars = sc.sections[key];
-                var readlines = sectionPars.find('.readline');
-                var modifiedCount = readlines.filter('.read-modified').length;
+                var readlines = sectionPars.children('.readline');
+                var modifiedCount = readlines.filter('.read-modified').not('.read').length;
                 var unreadCount = readlines.not('.read-modified').not('.read').length;
                 if (modifiedCount + unreadCount > 0) {
                     sectionPars.last().append($('<div>', {

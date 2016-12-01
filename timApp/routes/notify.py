@@ -68,7 +68,7 @@ def send_email(rcpt: str, subject: str, msg: str, mail_from: Optional[str] = Non
                 log_error('Response from funnel: {} {}'.format(response.status, response.reason))
 
         except (ConnectionError, socket.error, http.client.error) as e:
-            log_error("Couldn't connect to funnel: " + str(e))
+            log_error("Couldn't connect to funnel: {} - {}".format(e, msg))
 
         finally:
             if conn is not None:

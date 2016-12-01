@@ -1,4 +1,5 @@
-var timLogTime;
+/* globals timLogTime, $ */
+
 timLogTime("answerbrowser3 load","answ");
 
 var angular;
@@ -21,8 +22,27 @@ function makeNotLazy(html) {
     return s;
 }
 
-timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$window',
-    function (Upload, $http, $sce, $compile, $window) {
+function loadPlugin(html, $par, $compile, $scope, $timeout) {
+    "use strict";
+    var newhtml = makeNotLazy(html);
+    var plugin = $par.find('.parContent');
+
+    // Set explicit height for the plugin temporarily.
+    // Without this fix, if the plugin is at the bottom of the screen,
+    // the browser's scroll position would jump inconveniently because
+    // the plugin's height goes to zero until Angular has finished compiling it.
+    var height = plugin.height();
+    plugin.height(height);
+    plugin.html($compile(newhtml)($scope));
+    plugin.css('opacity', '1.0');
+    $scope.$parent.processAllMathDelayed(plugin);
+    $timeout(function () {
+        plugin.css('height', '');
+    }, 500);
+}
+
+timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$window', '$timeout',
+    function (Upload, $http, $sce, $compile, $window, $timeout) {
         "use strict";
         timLogTime("answerbrowserlazy directive function","answ");
         return {
@@ -46,7 +66,8 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
                 };
 
                 $scope.loadAnswerBrowser = function () {
-                    var plugin = $scope.$element.parents('.par').find('.parContent');
+                    var $par = $scope.$element.parents('.par');
+                    var plugin = $par.find('.parContent');
                     if ( $scope.compiled ) return;
                     $scope.compiled = true;
                     if (!$scope.$parent.noBrowser && $scope.isValidTaskId($scope.taskId)) {
@@ -61,10 +82,7 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
                         plugin = null;
                     }
                     if ( plugin ) {
-                        var newPluginHtml = makeNotLazy(origHtml);
-                        var newPluginElement = $compile(newPluginHtml);
-                        plugin.html(newPluginElement($scope));
-                        $scope.$parent.processAllMathDelayed(plugin);
+                        loadPlugin(origHtml, $par, $compile, $scope, $timeout);
                     }
                 };
             },
@@ -152,11 +170,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                             review: $scope.review
                         }
                     }).then(function (response) {
-                        var newhtml = makeNotLazy(response.data.html);
-                        var plugin = $par.find('.parContent');
-                        plugin.html($compile(newhtml)($scope));
-                        plugin.css('opacity', '1.0');
-                        $scope.$parent.processAllMathDelayed(plugin);
+                        loadPlugin(response.data.html, $par, $compile, $scope, $timeout);
                         if ($scope.review) {
                             $scope.element.find('.review').html(response.data.reviewHtml);
                         }

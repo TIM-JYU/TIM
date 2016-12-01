@@ -13,6 +13,8 @@ from flask import stream_with_context
 from flask.helpers import send_file
 from flask_assets import Environment
 from werkzeug.contrib.profiler import ProfilerMiddleware
+from werkzeug.exceptions import default_exceptions
+import werkzeug.exceptions as ex
 
 import containerLink
 from ReverseProxied import ReverseProxied
@@ -126,7 +128,15 @@ def bad_request(error):
     return error_generic(error, 400)
 
 
-@app.errorhandler(403)
+class Forbidden(ex.HTTPException):
+    code = 403
+    description = "Sorry, you don't have permission to view this resource."
+
+
+abort.mapping[403] = Forbidden
+
+
+@app.errorhandler(Forbidden)
 def forbidden(error):
     return error_generic(error, 403)
 

@@ -286,26 +286,6 @@ p.caption {
     background-color: #B0B0B0;
 }
 
-.readline, .readlineQuestion {
-    border-color: #F60; /* rgb(236,103,27); */
-
-    &:hover {
-        opacity: 0.5;
-        background: #F60; /* rgb(236,103,27); */
-    }
-
-    &.read {
-        display: none;
-    }
-
-    &.read-modified {
-        border-color: yellow;
-        &:hover {
-            background: yellow;
-        }
-    }
-}
-
 .pluginError, .error {
     border: 1px solid red;
     background-color: pink;
@@ -450,7 +430,7 @@ p.caption {
     }
 }
 
-.editlineQuestion:hover, .editline.menuopen {
+.editline.menuopen {
      opacity: 0.5;
      background: $editline-bg-color;
 }
@@ -640,6 +620,26 @@ p.caption {
 
     &.deleted.marked {
         background-color: #92D1CE;
+    }
+
+    .readline {
+        border-color: #F60; /* rgb(236,103,27); */
+
+        &:hover {
+            opacity: 0.5;
+            background: #F60; /* rgb(236,103,27); */
+        }
+
+        &.read {
+            display: none;
+        }
+
+        &.read-modified {
+            border-color: yellow;
+            &:hover {
+                background: yellow;
+            }
+        }
     }
 }
 
@@ -835,11 +835,6 @@ input[type="file"] {
 .close {
     float: right;
     position: relative;
-}
-
-.questionAdded img, img.questionAddedNew {
-    cursor: pointer;
-    z-index: 1;
 }
 
 /* TODO: check how to prevent too narrow menu better way than min-width */
