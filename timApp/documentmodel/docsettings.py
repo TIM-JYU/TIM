@@ -23,6 +23,7 @@ class DocSettings:
     lazy_key = 'lazy'
     hide_links_key = 'hide_links'
     point_sum_rule_key = 'point_sum_rule'
+    live_updates_key = 'live_updates'
 
     @classmethod
     def is_valid_paragraph(cls, par):
@@ -175,3 +176,6 @@ class DocSettings:
 
     def point_sum_rule(self, default=None):
         return self.__dict.get(self.point_sum_rule_key, default)
+
+    def live_updates(self, default=None):
+        return self.__dict.get(self.live_updates_key, default)

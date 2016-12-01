@@ -106,6 +106,8 @@
             users = {{plugin_users|tojson}};
         {% endif %}
         var noQuestionAutoNumbering = {{ no_question_auto_numbering|tojson}};
+        var liveUpdates = {{ live_updates|tojson}};
+        var docVersion = {{ version|tojson }};
     </script>
 {% endblock %}
 

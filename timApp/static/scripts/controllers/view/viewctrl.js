@@ -15,9 +15,10 @@ timApp.controller("ViewCtrl", [
     '$filter',
     '$timeout',
     '$log',
+    '$interval',
     'Users',
     'ParCompiler',
-    function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users, ParCompiler) {
+    function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, $interval, Users, ParCompiler) {
         "use strict";
         timLogTime("ViewCtrl start", "view");
         sc.noBrowser = $window.noBrowser;
@@ -374,6 +375,70 @@ timApp.controller("ViewCtrl", [
         $window.allowMove = false;
         sc.oldWidth = $($window).width();
         sc.showRefresh = sc.isPageDirty();
+        sc.liveUpdates = $window.liveUpdates;
+
+        if (Users.isLoggedIn() && sc.liveUpdates) {
+            $interval(function () {
+                http.get('/getParDiff/' + sc.docId + '/' + sc.docVersion[0] + '/' + sc.docVersion[1]).then(function (response) {
+                    sc.docVersion = response.data.version;
+                    var replaceFn = function (d, parId) {
+                        ParCompiler.compile(d.content, sc, function (compiled) {
+                            var e = sc.getElementByParId(parId);
+                            e.replaceWith(compiled);
+                        });
+                    };
+                    var afterFn = function (d, parId) {
+                        ParCompiler.compile(d.content, sc, function (compiled) {
+                            var e = sc.getElementByParId(parId);
+                            e.after(compiled);
+                        });
+                    };
+                    var beforeFn = function (d, e) {
+                        ParCompiler.compile(d.content, sc, function (compiled) {
+                            e.before(compiled);
+                        });
+                    };
+                    for (var i = 0; i < response.data.diff.length; ++i) {
+                        var d = response.data.diff[i];
+                        if (d.type === 'delete') {
+                            if (d.end_id !== null) {
+                                sc.getElementByParId(d.start_id).nextUntil(sc.getElementByParId(d.end_id)).addBack().remove();
+                            }
+                            else {
+                                sc.getElementByParId(d.start_id).nextAll('.par').addBack().remove();
+                            }
+                        }
+                        else if (d.type === 'replace') {
+                            var first = sc.getElementByParId(d.start_id);
+                            if (d.start_id !== d.end_id) {
+                                if (d.end_id !== null) {
+                                    first.nextUntil(sc.getElementByParId(d.end_id)).remove();
+                                }
+                                else {
+                                    first.nextAll('.par').remove();
+                                }
+                            }
+                            replaceFn(d, d.start_id);
+                        }
+                        else if (d.type === 'insert') {
+                            if (d.after_id === null) {
+                                beforeFn(d, $('.par:first'));
+                            } else {
+                                afterFn(d, d.after_id);
+                            }
+                        }
+                        else if (d.type === 'change') {
+                            replaceFn(d, d.id);
+                        }
+                    }
+                    $timeout(function () {
+                        sc.rebuildSections();
+                    }, 1000);
+                }, function () {
+                    $log.error('Failed to fetch difference to latest version');
+                });
+            }, 1000 * sc.liveUpdates);
+        }
 
         try {
             var found = $filter('filter')(sc.editorFunctions,

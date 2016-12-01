@@ -242,6 +242,7 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
 
         $par.replaceWith($newPars);
         sc.processAllMathDelayed($newPars);
+        sc.docVersion = data.version;
         sc.editing = false;
         sc.cancelArea();
         sc.removeDefaultPars();
