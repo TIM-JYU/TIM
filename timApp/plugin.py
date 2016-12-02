@@ -44,7 +44,10 @@ class Plugin:
             except TimDbException as e:
                 raise PluginException(e)
         else:
-            par = doc.get_paragraph_by_task(task_id_name)
+            try:
+                par = doc.get_paragraph_by_task(task_id_name)
+            except TimDbException as e:
+                raise PluginException(e)
         if par is None:
             raise PluginException('Task not found in the document: ' + task_id_name)
         return Plugin.from_paragraph(par, user)

@@ -377,11 +377,9 @@ def par_response(pars,
         duplicates = None
 
     current_user = get_current_user_object()
-    pars, js_paths, css_paths, modules = post_process_pars(doc, pars, current_user, edit_window=preview,
-                                                           show_questions=True)
+    pars, js_paths, css_paths, modules = post_process_pars(doc, pars, current_user, edit_window=preview)
 
-    changed_pars, _, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=preview,
-                                              show_questions=True)
+    changed_pars, _, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=preview)
 
     return jsonResponse({'texts': render_template('paragraphs.html',
                                                   text=pars,
@@ -389,7 +387,7 @@ def par_response(pars,
                                                   preview=preview),
                          'js': js_paths,
                          'css': css_paths,
-                         'angularModule': modules,
+                         'angularModule': modules,  # not used in JS at all, maybe not needed at all
                          'changed_pars': {p['id']: render_template('paragraphs.html',
                                                                    text=[p],
                                                                    item={'rights': get_rights(doc.doc_id)}) for p in

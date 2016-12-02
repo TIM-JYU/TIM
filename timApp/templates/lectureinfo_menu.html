@@ -5,7 +5,7 @@
         <span class="glyphicon glyphicon-{{ icon }}" aria-hidden="true"></span>
     </button>
 {%- endmacro %}
-<div class="menuSection" ng-show="lectureSettings.inLecture || lectureSettings.lectureMode">
+<div ng-cloak class="menuSection" ng-show="lectureSettings.inLecture || lectureSettings.lectureMode">
     <div id="largeMenu">
         <div class="lectureSection" ng-show="!lectureSettings.inLecture">
             <h1>Now:</h1>

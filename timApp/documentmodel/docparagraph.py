@@ -232,7 +232,7 @@ class DocParagraph:
         except Exception as e:
             self.__htmldata['html'] = get_error_html(e)
 
-        self.__htmldata['cls'] = 'par ' + self.get_class_str()
+        self.__htmldata['cls'] = 'par ' + self.get_class_str() + (' questionPar' if self.is_question() else '')
         self.__htmldata['is_plugin'] = self.is_plugin()
         self.__htmldata['is_question'] = self.is_question()
         self.__htmldata['needs_browser'] = True #self.is_plugin() and containerLink.get_plugin_needs_browser(self.get_attr('plugin'))
@@ -293,7 +293,13 @@ class DocParagraph:
         if self.is_par_reference() and self.is_translation():
             # This gives a default translation based on the source paragraph
             # todo: same for area reference
-            data = [par.__data for par in self.get_referenced_pars(edit_window=True)]
+            data = []
+            for par in self.get_referenced_pars():
+                d = self.__data.copy()  # todo: needs copy or not?
+                md = par.get_markdown()
+                if md:
+                    d['md'] = md
+                data.append(d)
             return DocumentWriter(data, export_hashes=False, export_ids=False).get_text()
 
         return DocumentWriter([self.__data],
@@ -318,12 +324,8 @@ class DocParagraph:
         """
         question_title = self.is_question()
         if question_title:
-            # class="glyphicon glyphicon-
-            # return self.__set_html('<span class="questionAddedNew glyphicon-question-sign" title="%s" width="30" height="30" ></span>' % question_title)
-            #return self.__set_html(('<button class="questionAdded timButton btn-lg" width="30" height="30" title = "%s"' +
-            #                       '<span class="glyphicon glyphicon-question-sign" aria-hidden="true" > </span>' +
-            #                       '</button>') % question_title) # TODO: tarkista miksi ei näy glyphtinä
-            return self.__set_html('<img class="questionAddedNew" title="%s" width="30" height="30" src=/static/images/show-question-icon.png/>' % question_title)
+            return self.__set_html(sanitize_html('<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="{0}"></span></a>'
+                                   '<p class="questionNumber">{0}</p>'.format(question_title)))
         if self.html is not None:
             return self.html
         if self.is_plugin():
@@ -734,8 +736,8 @@ class DocParagraph:
         rindex = s.rfind(old)
         return s[:rindex] + new + s[rindex + len(old):] if rindex >= 0 else s
 
-    def get_referenced_pars(self, edit_window: bool = False, set_html: bool = True, source_doc: bool = None,
-                            tr_get_one: bool = True, cycle: Optional[List[Tuple[int, str]]] = None):
+    def get_referenced_pars(self, set_html: bool = True, source_doc: bool = None,
+                            tr_get_one: bool = True, cycle: Optional[List[Tuple[int, str]]] = None) -> List['DocParagraph']:
         if self.ref_pars is not None:
             return self.ref_pars
         if cycle is None:
@@ -751,18 +753,13 @@ class DocParagraph:
             tr = self.get_attr('r') == 'tr'
             doc = ref_par.doc
 
-            if edit_window:
-                md = DocParagraph.__combine_md(ref_par.get_markdown(), self.get_markdown()) if tr else self.get_markdown()
-                attrs = self.get_attrs()
-                props = self.get_properties()
-            else:
-                md = DocParagraph.__combine_md(ref_par.get_markdown(), self.get_markdown()) if tr else ref_par.get_markdown()
-                attrs = self.get_attrs(ref_par.get_attrs()) #if tr else ref_par.get_attrs()
-                props = self.get_properties(ref_par.get_properties()) #if tr else ref_par.get_properties()
+            md = DocParagraph.__combine_md(ref_par.get_markdown(), self.get_markdown()) if tr else ref_par.get_markdown()
+            attrs = self.get_attrs(ref_par.get_attrs()) #if tr else ref_par.get_attrs()
+            props = self.get_properties(ref_par.get_properties()) #if tr else ref_par.get_properties()
 
-                # Remove reference attributes
-                for ref_attr in ['r', 'rd', 'rp', 'ra', 'rt']:
-                    attrs.pop(ref_attr, None)
+            # Remove reference attributes
+            for ref_attr in ['r', 'rd', 'rp', 'ra', 'rt']:
+                attrs.pop(ref_attr, None)
 
             par = DocParagraph.create(doc, par_id=ref_par.get_id(), md=md, t=ref_par.get_hash(),
                                            attrs=attrs, props=props)
@@ -812,9 +809,10 @@ class DocParagraph:
                 raise TimDbException('The referenced paragraph does not exist.')
 
             if ref_par.is_reference():
-                ref_pars = ref_par.get_referenced_pars(edit_window=edit_window,
-                                                       set_html=set_html,
-                                                       cycle=cycle)
+                ref_pars = ref_par.get_referenced_pars(set_html=set_html,
+                                                       source_doc=source_doc,
+                                                       cycle=cycle,
+                                                       tr_get_one=tr_get_one)
             else:
                 ref_pars = [ref_par]
         elif self.is_area_reference():
@@ -822,10 +820,10 @@ class DocParagraph:
             ref_pars = []
             for p in section_pars:
                 if p.is_reference():
-                    ref_pars.extend(p.get_referenced_pars(edit_window=edit_window,
-                                                          set_html=set_html,
+                    ref_pars.extend(p.get_referenced_pars(set_html=set_html,
                                                           source_doc=source_doc,
-                                                          cycle=cycle))
+                                                          cycle=cycle,
+                                                          tr_get_one=tr_get_one))
                 else:
                     ref_pars.append(p)
             if tr_get_one and attrs.get('r', None) == 'tr' and len(ref_pars) > 0:
