@@ -43,7 +43,7 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
     };
 
     $scope.useVelp = function () {
-        $parent.useVelp($scope.velp);
+        $scope.$parent.useVelp($scope.velp);
     };
 
     /**
@@ -53,8 +53,4 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
     $scope.allowChangePoints = function () {
         return $scope.$parent.$parent.item.rights.teacher;
     };
-
-
-    // get data from parent?
-
 }]);
