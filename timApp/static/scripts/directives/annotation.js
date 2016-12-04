@@ -54,7 +54,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             };
             scope.newannotation = false;
             scope.marginonly = false;
-
+            
             scope.isvalid = {
                 points: {value: true, msg: ""}
             };
@@ -350,5 +350,4 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
         }
     };
 }]);
-
 
