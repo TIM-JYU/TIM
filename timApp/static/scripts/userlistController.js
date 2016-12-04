@@ -71,7 +71,8 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
                     dataKorppi += "\n";
                 }
                 for (var j = 0; j < data.length; j++) {
-                    dataKorppi += data[j].entity.name + ";" + options.velpPointField + ";" + data[j].entity.velp_points + "\n";
+                    if ( data[j].entity.velp_points )
+                        dataKorppi += data[j].entity.name + ";" + options.velpPointField + ";" + data[j].entity.velp_points + "\n";
                 }
             }
             var filename = 'korppi_' + $scope.docId + '.txt';

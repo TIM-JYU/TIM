@@ -254,8 +254,7 @@ ORDER BY {}, a.answered_on
         user_restrict_sql = '' if user_ids is None else 'AND UserAccount.id IN ({})'.format(','.join(['%s']*len(user_ids)))
         if user_ids is None:
             user_ids = []
-        cursor.execute(
-            """
+        sql = """
                 SELECT UserAccount.id, name, real_name, email,
                        COUNT(DISTINCT task_id) AS task_count,
                        ROUND(SUM(cast(points as float))::numeric,2) as total_points,
@@ -272,8 +271,13 @@ ORDER BY {}, a.answered_on
                       WHERE task_id IN ({}) AND Answer.valid = TRUE
                       GROUP BY UserAnswer.user_id, Answer.task_id) a1
                       JOIN (SELECT id, points FROM Answer) a2 ON a2.id = a1.aid
-                      LEFT JOIN (SELECT id as annotation_id, answer_id as annotation_answer_id, points as velp_points
-                                 FROM annotation) a3 ON a3.annotation_answer_id = a1.aid
+                      LEFT JOIN (SELECT
+                                 answer_id as annotation_answer_id,
+                                 SUM(points) as velp_points
+                                 FROM annotation
+                                 WHERE valid_until IS NULL
+                                 GROUP BY answer_id
+                                 ) a3 ON a3.annotation_answer_id = a1.aid
 
                       ) tmp ON tmp.aid = UserAnswer.answer_id AND UserAccount.id = tmp.uid
                 {}
@@ -282,8 +286,8 @@ ORDER BY {}, a.answered_on
             """.format(', MIN(task_id) as task_id' if not group_by_user else '',
                        task_id_template,
                        user_restrict_sql,
-                       '' if group_by_user else ', task_id'), task_ids + user_ids)
-
+                       '' if group_by_user else ', task_id')
+        cursor.execute(sql, task_ids + user_ids)
         return self.resultAsDictionary(cursor)
 
     def get_points_by_rule(self, points_rule: Optional[Dict],
