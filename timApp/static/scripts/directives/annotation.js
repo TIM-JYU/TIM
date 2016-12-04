@@ -55,6 +55,9 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             scope.newannotation = false;
             scope.marginonly = false;
 
+            scope.isvalid = {
+                points: {value: true, msg: ""}
+            };
 
             // Original visibility, or visibility in session
             // TODO: origin visibility
@@ -103,7 +106,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     if (scope.show) {
                         scope.updateVelpZIndex();
                     } else {
-                     console.log(scope.$parent.annotations);
+                        //console.log(scope.$parent.annotations);
                     }
                 }
             };
@@ -179,8 +182,14 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
              * @method changePoints
              */
             scope.changePoints = function () {
-                console.log(scope.points);
-                scope.$parent.changeAnnotationPoints(scope.aid, scope.points);
+                if (typeof scope.points !== UNDEFINED){
+                    scope.isvalid.points.value = true;
+                    scope.$parent.changeAnnotationPoints(scope.aid, scope.points);
+                } else {
+                    scope.isvalid.points.value = false;
+                    scope.isvalid.points.msg = "Insert a number or leave empty"
+                }
+                console.log(scope.isvalid.points.value);
             };
 
             /**
@@ -227,6 +236,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     console.log(json);
                 });
             };
+
 
             /**
              * Checks if the user has rights to edit the annotation.
@@ -313,13 +323,25 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                  }
 		    };
 
-           scope.$watch('newannotation', function(value) {
-                // if (value) { // muuten ottaa undefined
-                if (value === "true") { // muuten ottaa undefined
-                    element.find('textarea').focus();
-                    scope.newannotation = false;
-                    console.log("focus on new annotation");
-                }
+            /**
+             * Watches changes on newannotation attribute.
+             * TODO: Check scroll positions according to textarea element
+             */
+           scope.$watch('newannotation', function(newValue) {
+               if (newValue === "true" && scope.show) { // muuten ottaa undefined
+
+                   var x = window.scrollX, y = window.scrollY;
+
+                   var pos = element[0].getBoundingClientRect().top;
+                   element.find('textarea').focus();
+
+                   if (0 < pos && pos < window.innerHeight){
+                        window.scrollTo(x, y);
+                   }
+
+                   scope.newannotation = false;
+               }
+
             });
 
             setTimeout(function(){

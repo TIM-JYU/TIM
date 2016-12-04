@@ -9,7 +9,10 @@ class AnswerTest(TimDbTest):
                                'email': user.email,
                                'real_name': user.real_name,
                                'task_count': task_count,
-                               'total_points': total_points}], db.answers.get_users_for_tasks(task_ids, [user.id]))
+                               'total_points': total_points,
+                               'velp_points': None,
+                               'velped_task_count': 0
+                               }], db.answers.get_users_for_tasks(task_ids, [user.id]))
 
     def test_summary(self):
         self.maxDiff = None

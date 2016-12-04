@@ -41,10 +41,8 @@ def manage(path):
         item = folder
     else:
         item = doc.to_json()
-        item['versions'] = doc.document.get_changelog(get_option(request, 'history', 100))
+        item['versions'] = get_changelog_with_names(doc.document, get_option(request, 'history', 100))
         item['fulltext'] = doc.document.export_markdown()
-        for ver in item['versions']:
-            ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
 
     return render_template('manage_folder.html' if is_folder else 'manage_document.html',
                            route='manage',
@@ -53,11 +51,18 @@ def manage(path):
                            access_types=access_types)
 
 
+def get_changelog_with_names(doc, length):
+    changelog = doc.get_changelog(length)
+    for ver in changelog:
+        ver['group'] = UserGroup.query.get(ver.pop('group_id')).name
+    return changelog
+
+
 @manage_page.route("/changelog/<int:doc_id>/<int:length>")
 def get_changelog(doc_id, length):
     verify_manage_access(doc_id)
     doc = Document(doc_id)
-    return jsonResponse({'versions': doc.get_changelog(length)})
+    return jsonResponse({'versions': get_changelog_with_names(doc, length)})
 
 
 @manage_page.route("/changeOwner/<int:doc_id>/<new_owner_name>", methods=["PUT"])

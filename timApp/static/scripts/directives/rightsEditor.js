@@ -63,7 +63,7 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
             };
 
             sc.addPermission = function (groupname, type) {
-                $http.put('/' + sc.urlRoot + '/add/' + sc.itemId + '/' + groupname + '/' + type.name, {}).success(
+                $http.put('/' + sc.urlRoot + '/add/' + sc.itemId + '/' + groupname.replace('\n', ';') + '/' + type.name, {}).success(
                     function (data, status, headers, config) {
                         sc.getPermissions();
                         sc.showAddRight = false;
@@ -71,6 +71,11 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
                     $window.alert(data.error);
                 });
             };
+
+            sc.getPlaceholder = function () {
+                return 'enter username(s)/group name(s) separated by semicolons' + (sc.listMode ? ' or newlines' : '');
+            };
+
             sc.getPermissions();
         }
     };

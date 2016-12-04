@@ -305,7 +305,7 @@ class DocumentTest(TimDbTest):
         new_ver = d.get_doc_version()
         n1 = d.modify_paragraph(n1.get_id(), 'New edited 1')
         self.assertListEqual(
-            [{'type': 'change', 'id': n1.get_id(), 'content': n1}],
+            [{'type': 'change', 'id': n1.get_id(), 'content': [n1]}],
             list(new_ver.parwise_diff(d)))
 
     def test_parwise_diff_html(self):
@@ -323,7 +323,7 @@ class DocumentTest(TimDbTest):
 
         # heading numbering changes should be detected
         self.assertListEqual([{'type': 'insert', 'after_id': pars[0].get_id(), 'content': [new]}]
-                             + [{'type': 'change', 'id': par.get_id(), 'content': par} for par in pars[1:]],
+                             + [{'type': 'change', 'id': par.get_id(), 'content': [par]} for par in pars[1:]],
                              list(ver_orig.parwise_diff(d, check_html=True)))
 
 

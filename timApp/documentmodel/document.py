@@ -578,6 +578,8 @@ class Document:
         return p
 
     def parwise_diff(self, other_doc: 'Document', check_html:bool=False):
+        if self.get_version() == other_doc.get_version():
+            raise StopIteration
         old_pars = [par for par in self]
         old_ids = [par.get_id() for par in old_pars]
         new_pars = [par for par in other_doc]
@@ -591,15 +593,15 @@ class Document:
             if tag == 'insert':
                 yield {'type': tag, 'after_id': old_ids[i2 - 1] if i2 > 0 else None, 'content': new_pars[j1:j2]}
             if tag == 'replace':
-                yield {'type': tag, 'start_id': old_ids[i1], 'end_id': old_ids[i2] , 'content': new_pars[j1:j2]}
+                yield {'type': tag, 'start_id': old_ids[i1], 'end_id': old_ids[i2] if i2 < len(old_ids) else None, 'content': new_pars[j1:j2]}
             if tag == 'delete':
-                yield {'type': tag, 'start_id': old_ids[i1], 'end_id': old_ids[i2]}
+                yield {'type': tag, 'start_id': old_ids[i1], 'end_id': old_ids[i2] if i2 < len(old_ids) else None}
             if tag == 'equal':
                 for old, new in zip(old_pars[i1:i2], new_pars[j1:j2]):
                     if old != new:
-                        yield {'type': 'change', 'id': old.get_id(), 'content': new}
+                        yield {'type': 'change', 'id': old.get_id(), 'content': [new]}
                     elif check_html and not old.is_same_as_html(new):
-                        yield {'type': 'change', 'id': old.get_id(), 'content': new}
+                        yield {'type': 'change', 'id': old.get_id(), 'content': [new]}
 
     def update_section(self, text: str, par_id_first: str, par_id_last: str) -> Tuple[str, str]:
         """Updates a section of the document.
@@ -695,7 +697,7 @@ class Document:
     def get_index(self) -> List[Tuple]:
         pars = [par for par in DocParagraphIter(self)]
         DocParagraph.preload_htmls(pars, self.get_settings())
-        pars = dereference_pars(pars, edit_window=False, source_doc=self.get_original_document())
+        pars = dereference_pars(pars, source_doc=self.get_original_document())
 
         # Skip plugins
         html_list = [par.get_html(from_preview=False) for par in pars if not par.is_dynamic()]
@@ -735,7 +737,7 @@ class Document:
 
         return log
 
-    def get_paragraph_by_task(self, task_id_name):
+    def get_paragraph_by_task(self, task_id_name) -> DocParagraph:
         with self.__iter__() as it:
             for p in it:
                 if p.get_attr('taskId') == task_id_name:
@@ -749,7 +751,7 @@ class Document:
                         for rp in ref_pars:
                             if rp.get_attr('taskId') == task_id_name:
                                 return rp
-        return None
+        raise TimDbException('Task not found in the document: {}'.format(task_id_name))
 
     def get_last_modified(self) -> Optional[datetime]:
         log = self.get_changelog(max_entries=1)
@@ -835,7 +837,7 @@ class Document:
         return [par for par in self]
 
     def get_dereferenced_paragraphs(self) -> List[DocParagraph]:
-        return dereference_pars(self.get_paragraphs(), edit_window=False, source_doc=self.get_original_document())
+        return dereference_pars(self.get_paragraphs(), source_doc=self.get_original_document())
 
     def get_closest_paragraph_title(self, par_id: Optional[str]):
         last_title = None
@@ -954,18 +956,17 @@ def get_index_from_html_list(html_table) -> List[Tuple]:
     return index
 
 
-def dereference_pars(pars: Iterable[DocParagraph], edit_window: bool=False, source_doc: Optional[Document]=None) -> List[DocParagraph]:
+def dereference_pars(pars: Iterable[DocParagraph], source_doc: Optional[Document]=None) -> List[DocParagraph]:
     """Resolves references in the given paragraphs.
 
     :param pars: The DocParagraphs to be processed.
-    :param edit_window: Calling from edit window or not.
     :param source_doc: Default document for referencing.
     """
     new_pars = []
     for par in pars:
         if par.is_reference():
             try:
-                new_pars += par.get_referenced_pars(edit_window=edit_window, source_doc=source_doc)
+                new_pars += par.get_referenced_pars(source_doc=source_doc)
             except TimDbException as e:
                 err_par = DocParagraph.create(
                     par.doc,

@@ -18,7 +18,7 @@ from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from documentmodel.timjsonencoder import TimJsonEncoder
 from markdownconverter import expand_macros, create_environment
-from routes.accesshelper import has_ownership, can_write_to_folder
+from routes.accesshelper import has_ownership, can_write_to_folder, has_edit_access
 from routes.dbaccess import get_timdb
 from routes.sessioninfo import get_session_usergroup_ids, get_current_user_id, get_current_user_name, \
     get_current_user_group, logged_in
@@ -125,7 +125,7 @@ def hide_names_in_teacher(doc_id):
     return False
 
 
-def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=False, edit_window=False, load_plugin_states=True, show_questions=False):
+def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=False, edit_window=False, load_plugin_states=True):
     timdb = get_timdb()
     html_pars, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                       pars,
@@ -158,8 +158,11 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
     pars_dict = defaultdict(list)
 
-    if not show_questions:
-        html_pars[:] = [htmlpar for htmlpar in html_pars if not htmlpar.get('is_question')]
+    if not has_edit_access(doc.doc_id):
+        for htmlpar in html_pars:
+            if htmlpar.get('is_question'):
+                htmlpar['html'] = ' '
+                htmlpar['cls'] += ' hidden'
 
     for htmlpar in html_pars:
         if htmlpar.get('ref_id') and htmlpar.get('ref_doc_id'):

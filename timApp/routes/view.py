@@ -261,7 +261,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
             DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), clear_cache)
 
     # We need to deference paragraphs at this point already to get the correct task ids
-    xs = dereference_pars(xs, edit_window=False, source_doc=doc.get_original_document())
+    xs = dereference_pars(xs, source_doc=doc.get_original_document())
     total_points = None
     tasks_done = None
     task_groups = None
@@ -286,11 +286,9 @@ def view(doc_path, template_name, usergroup=None, route="view"):
             tasks_done = info[0]['task_count']
             task_groups = info[0].get('groups')
 
-    show_questions = False
     no_question_auto_numbering = None
 
     if route == 'lecture' and has_edit_access(doc_id):
-        show_questions = True
         no_question_auto_numbering = doc_settings.auto_number_questions()
 
     is_in_lecture = False
@@ -325,8 +323,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                                                           current_list_user or current_user,
                                                           sanitize=False,
                                                           do_lazy=do_lazy,
-                                                          load_plugin_states=not hide_answers,
-                                                          show_questions=show_questions)
+                                                          load_plugin_states=not hide_answers)
 
     index = get_index_from_html_list(t['html'] for t in texts)
 
@@ -364,6 +361,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                            settings=settings,
                            no_browser=hide_answers,
                            no_question_auto_numbering=no_question_auto_numbering,
+                           live_updates=doc_settings.live_updates(),
                            slide_background_url=slide_background_url,
                            slide_background_color=slide_background_color,
                            task_info={'total_points': total_points,
@@ -399,3 +397,26 @@ def should_hide_links(settings: DocSettings, rights: dict):
             'edit': not rights['see_answers'],
             'see_answers': not rights['teacher'],
             'teacher': not rights['manage']}.get(hide_type, False)
+
+
+@view_page.route('/getParDiff/<int:doc_id>/<int:major>/<int:minor>')
+def check_updated_pars(doc_id, major, minor):
+    verify_view_access(doc_id)
+    d = Document(doc_id)
+    diffs = list(d.get_doc_version((major, minor)).parwise_diff(d, check_html=True))  # TODO cache this
+    rights = get_rights(d.doc_id)
+    for diff in diffs:
+        if diff.get('content'):
+            pars, js_paths, css_paths, modules = post_process_pars(d,
+                                                                   diff['content'],
+                                                                   get_current_user_object(),
+                                                                   edit_window=False)
+            diff['content'] = {'texts': render_template('paragraphs.html',
+                                                        text=pars,
+                                                        item={'rights': rights},
+                                                        preview=False),
+                               'js': js_paths,
+                               'css': css_paths,
+                               'angularModule': modules}
+    return jsonResponse({'diff': diffs,
+                         'version': d.get_version()})

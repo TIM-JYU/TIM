@@ -9,7 +9,7 @@ import containerLink
 from options import get_option
 from plugin import Plugin, PluginException
 from routes.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, has_teacher_access, \
-    verify_view_access, verify_logged_in
+    verify_view_access, verify_logged_in, get_par_from_request
 from routes.sessioninfo import get_current_user_object, get_session_users
 from timdb.accesstype import AccessType
 from timdb.blocktypes import blocktypes
@@ -84,9 +84,16 @@ def post_answer(plugintype: str, task_id_ext: str):
     :return: JSON
     """
     timdb = get_timdb()
-    doc_id, task_id_name, _ = Plugin.parse_task_id(task_id_ext)
+    doc_id, task_id_name, par_id = Plugin.parse_task_id(task_id_ext)
     task_id = str(doc_id) + '.' + str(task_id_name)
     verify_task_access(doc_id, task_id_name, AccessType.view)
+    doc = Document(doc_id)
+    if par_id is None:
+        par = get_par_from_request(doc, task_id_name=task_id_name)
+    else:
+        par = get_par_from_request(doc, par_id)
+        if par.get_attr('taskId') != task_id_name:
+            abort(400)
     if 'input' not in request.get_json():
         return jsonResponse({'error': 'The key "input" was not found from the request.'}, 400)
     answerdata = request.get_json()['input']
@@ -113,7 +120,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             if user_id not in users:
                 return abort(400, 'userId is not associated with answer_id')
     try:
-        plugin = Plugin.from_task_id(task_id_ext, user=get_current_user_object())
+        plugin = Plugin.from_paragraph(par, user=get_current_user_object())
     except PluginException as e:
         return abort(400, str(e))
 
@@ -410,7 +417,7 @@ def get_state():
     if doc_id != d_id and doc_id not in doc.get_referenced_document_ids():
         abort(400, 'Bad document id')
 
-    block = doc.get_paragraph(par_id)
+    block = get_par_from_request(doc, par_id)
     user = User.query.get(user_id)
     if user is None:
         abort(400, 'Non-existent user')

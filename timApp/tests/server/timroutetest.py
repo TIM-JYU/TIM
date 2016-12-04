@@ -187,9 +187,9 @@ class TimRouteTest(TimDbTest):
                 loaded = loaded[json_key]
             if expect_content is not None:
                 self.assertEqual(expect_content, loaded)
-            elif expect_contains is not None:
+            if expect_contains is not None:
                 self.check_contains(expect_contains, loaded)
-            elif expect_xpath is not None:
+            if expect_xpath is not None:
                 self.assertIsNotNone(json_key)
                 self.assertLessEqual(1, len(html.fragment_fromstring(loaded, create_parent=True).findall(expect_xpath)))
             return loaded
@@ -206,6 +206,8 @@ class TimRouteTest(TimDbTest):
         elif isinstance(expect_contains, list):
             for s in expect_contains:
                 self.assertIn(s, data)
+        elif isinstance(expect_contains, dict):
+            self.assertTrue(set(expect_contains.items()).issubset(data.items()))
         else:
             self.assertTrue(False, 'Unknown type for expect_contains parameter')
 
@@ -245,7 +247,7 @@ class TimRouteTest(TimDbTest):
                   as_tree: bool = False,
                   expect_status: int = 200,
                   expect_content: Union[None, str, Dict, List] = None,
-                  expect_contains: Union[None, str, List[str]] = None,
+                  expect_contains: Union[None, str, List[str], Dict] = None,
                   expect_xpath: Optional[str] = None,
                   json_key: Optional[str] = None,
                   headers: Optional[List[Tuple[str, str]]] = None,
@@ -332,6 +334,21 @@ class TimRouteTest(TimDbTest):
             "docId": doc.doc_id,
             "par_next": next_id
         }, **kwargs)
+
+    def post_answer(self, plugin_type, task_id, user_input,
+                    save_teacher=False, teacher=False, user_id=None, answer_id=None, ref_from=None, **kwargs):
+        return self.json_put('/{}/{}/answer/'.format(plugin_type, task_id),
+                             {"input": user_input,
+                              "ref_from": {'docId': ref_from[0], 'par': ref_from[1]} if ref_from else None,
+                              "abData": {"saveTeacher": save_teacher,
+                                         "teacher": teacher,
+                                         "userId": user_id,
+                                         "answer_id": answer_id,
+                                         "saveAnswer": True}}, **kwargs)
+
+    def get_task_answers(self, task_id):
+        answer_list = self.get('/answers/{}/{}'.format(task_id, self.current_user_id()))
+        return answer_list
 
     @staticmethod
     def current_user_name() -> str:

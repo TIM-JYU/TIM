@@ -77,62 +77,11 @@
                             <button class="wideButton" type="submit">Create account</button>
                         </form>
                     {% else %}
-                        <ul>
-                            <li><a href="/view/">Browse material</a></li>
+                        <h3>Get started</h3>
+                        <p>To log in or sign up, use the "Log in" button at the top.</p>
+                        <ul class="list-unstyled">
+                            <li><a href="/view/">Browse all documents</a></li>
                         </ul>
-                        <!-- Nav tabs -->
-                        <ul id="loginTab" class="nav nav-tabs" role="tablist">
-                            <li role="presentation" class="active"><a href="#login" aria-controls="login" role="tab"
-                                                                      data-toggle="tab">Log in</a></li>
-                            <li role="presentation"><a href="#signup" aria-controls="signup" role="tab"
-                                                       data-toggle="tab">Sign
-                                up</a></li>
-                        </ul>
-
-                        <!-- Tab panes -->
-                        <div class="tab-content">
-                            <div role="tabpanel" class="tab-pane tab-padding active" id="login">
-                                <small>
-                                    Log in with:
-                                </small>
-
-                                <div class="text-center img-thumbnail">
-                                    <a href="/korppiLogin"
-                                       data-confirm="null" id="">
-                                        <img src="{{ url_for('static', filename='images/korppi.png') }}"/>
-                                    </a>
-                                </div>
-
-                                <div class='grid-row'>
-                                    <div class="grid-col-12 grid-col--align-center grid-col--center grid-col--no-padding js-oauth-title">
-                                        <small>
-                                            or email:
-                                        </small>
-                                    </div>
-                                </div>
-
-                                <form accept-charset="UTF-8" action="/altlogin" class="new_user"
-                                      id="new-session" method="post">
-                                    <div class="form-group"><input class="form-control" id="user_login" name="email"
-                                                                   placeholder="Email or username" required="required"
-                                                                   tabindex="1" type="text"
-                                                                   value="{{ session.email }}"/></div>
-                                    <div class="form-group"><input class="form-control" id="user_password"
-                                                                   name="password"
-                                                                   placeholder="Password" required="required" size="30"
-                                                                   tabindex="2" type="password"/></div>
-                                    <button class="wideButton" type="submit">Login</button>
-                                </form>
-                            </div>
-                            <div role="tabpanel" class="tab-pane tab-padding" id="signup">
-                                <form accept-charset="UTF-8" action="/altsignup" autocomplete="off"
-                                      class="new_user" id="new-user" method="post">
-                                    <input class="form-control" id="user_email" name="email" placeholder="Email"
-                                           required="required" size="30" tabindex="1" type="text"/>
-                                    <button class="wideButton" type="submit">Get started</button>
-                                </form>
-                            </div>
-                        </div>
                     {% endif %}
                 </div>
             </div>
