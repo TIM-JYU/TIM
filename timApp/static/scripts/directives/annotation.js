@@ -55,6 +55,10 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             scope.newannotation = false;
             scope.marginonly = false;
 
+            scope.isvalid = {
+                points: {value: true, msg: ""}
+            };
+
             // Original visibility, or visibility in session
             // TODO: origin visibility
             scope.original = {
@@ -178,8 +182,14 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
              * @method changePoints
              */
             scope.changePoints = function () {
-                console.log(scope.points);
-                scope.$parent.changeAnnotationPoints(scope.aid, scope.points);
+                if (typeof scope.points !== UNDEFINED){
+                    scope.isvalid.points.value = true;
+                    scope.$parent.changeAnnotationPoints(scope.aid, scope.points);
+                } else {
+                    scope.isvalid.points.value = false;
+                    scope.isvalid.points.msg = "Insert a number or leave empty"
+                }
+                console.log(scope.isvalid.points.value);
             };
 
             /**
@@ -226,6 +236,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     console.log(json);
                 });
             };
+
 
             /**
              * Checks if the user has rights to edit the annotation.
