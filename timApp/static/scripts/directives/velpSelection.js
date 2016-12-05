@@ -67,7 +67,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     $scope.labels = [];
     $scope.velpGroups = [];
 
-    $scope.orderVelp = 'label';
     $scope.advancedOn = false;
     $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2, velp_groups: []};
     $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: []};
@@ -94,6 +93,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
                 "values": [1, 2, 3, 4],
                 "names": ["Just me", "Document owner", "Teachers", "Everyone"]
     };
+
+    // Get velp ordering and selected labels in this document
+    $scope.velpSettings = {
+        orderKey: "velpOrdering_" + doc_id,
+    };
+    $scope.velpSettings.order = getVelpSettings();
+
+
     // Get velpgroup data
     var promises = [];
     promises.push();
@@ -274,6 +281,20 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
     // Methods
 
+
+    function getVelpSettings() {
+
+        if (typeof $window.localStorage.getItem($scope.velpSettings.orderKey) === UNDEFINED){
+            return "labels";
+        }
+        console.log($window.localStorage.getItem($scope.velpSettings.orderKey));
+        return $window.localStorage.getItem($scope.velpSettings.orderKey);
+    };
+
+    $scope.changeOrdering = function (order) {
+        console.log(order);
+        $window.localStorage.setItem($scope.velpSettings.orderKey, order);
+    };
 
     /**
      * Return true if user has teacher rights.
