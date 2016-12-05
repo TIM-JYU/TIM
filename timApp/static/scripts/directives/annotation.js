@@ -351,4 +351,3 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
     };
 }]);
 
-
