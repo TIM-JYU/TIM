@@ -73,7 +73,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     $scope.newLabel = {content: "", selected: false, edit: false, valid: true};
     $scope.labelToEdit = {content: "", selected: false, edit: false, id: -3};
     $scope.newVelpGroup = {name: "", target_type: 0};
-    $scope.selectedLabels = [];
+
     $scope.settings = {selectedAllShows: false, selectedAllDefault: false};
     $scope.submitted = {velp: false, velpGroup: false};
 
@@ -94,12 +94,13 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
                 "names": ["Just me", "Document owner", "Teachers", "Everyone"]
     };
 
-    // Get velp ordering and selected labels in this document
-    $scope.velpSettings = {
-        orderKey: "velpOrdering_" + doc_id,
-    };
-    $scope.velpSettings.order = getVelpSettings();
+    //
+    var velpOrderingKey = "velpOrdering_" + doc_id;
+    var velpLabelsKey = "velpLabels_" + doc_id;
 
+    // Values to store in localstorage:
+    $scope.order = getValuesFromLocalStorage(velpOrderingKey, "content");
+    $scope.selectedLabels = JSON.parse(getValuesFromLocalStorage(velpLabelsKey, "[]"));
 
     // Get velpgroup data
     var promises = [];
@@ -228,6 +229,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
             $scope.labels.forEach(function (l) {
                 l.edit = false;
                 l.selected = false;
+                for (var i=0; i<$scope.selectedLabels.length; i++){
+                    if (l.id === $scope.selectedLabels[i]){
+                        l.selected = true;
+                    }
+                }
             });
         });
 
@@ -281,19 +287,27 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
     // Methods
 
-
-    function getVelpSettings() {
-
-        if (typeof $window.localStorage.getItem($scope.velpSettings.orderKey) === UNDEFINED){
-            return "labels";
+    /**
+     * Gets values from local storage.
+     * If values are not found, returns given default value.
+     * @param key - Key in localstorage
+     * @param defaultValue - default value to return if key is not found
+     * @returns {*}
+     */
+    function getValuesFromLocalStorage(key, defaultValue) {
+        if ($window.localStorage.getItem(key) === null){
+            return defaultValue;
         }
-        console.log($window.localStorage.getItem($scope.velpSettings.orderKey));
-        return $window.localStorage.getItem($scope.velpSettings.orderKey);
-    };
+        return $window.localStorage.getItem(key);
+    }
 
     $scope.changeOrdering = function (order) {
-        console.log(order);
-        $window.localStorage.setItem($scope.velpSettings.orderKey, order);
+        $window.localStorage.setItem(velpOrderingKey, order);
+    };
+
+    $scope.changeSelectedLabels = function () {
+        console.log($scope.selectedLabels);
+        $window.localStorage.setItem(velpLabelsKey, JSON.stringify($scope.selectedLabels));
     };
 
     /**
@@ -328,6 +342,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         } else {
             $scope.selectedLabels.splice(labelIndex, 1);
         }
+        $scope.changeSelectedLabels(); // Update localstorage
 
     };
 
