@@ -136,7 +136,7 @@ class Answers(TimDbBase):
         :param age: min, max or all
         :param valid: 0, 1 or all
         :param printname: True = put user full name as first in every task
-        :param print_opt: all = header and answers, header=only header, answers=only answers
+        :param print_opt: all = header and answers, header=only header, answers=only answers, korppi=korppi form
         """
         counts =  "count(a.answered_on)"
         groups = "group by a.task_id, u.id"
@@ -191,13 +191,25 @@ ORDER BY {}, a.answered_on
             # print(separator + header)
             line = json.loads(row[2])
             answ = str(line)
-            if isinstance(line, dict) and "usercode" in line:
-                answ = line.get("usercode", "-")
+            if isinstance(line, dict):  # maybe csPlugin?
+                if "usercode" in line:  # is csPlugin
+                    answ = line.get("usercode", "-")
+                else:
+                    if "points" in line:    # empty csPlugin answer
+                        answ = ""
 
             res = ""
             if printname and not hide_names: header = str(row[6]) + "; " + header
             if print_header: res = header
             if print_answers: res += "\n" + answ
+            if print_opt == "korppi":
+                res = name + ";"
+                taskid = row[1]
+                i = taskid.find(".")
+                if i >= 0:
+                    taskid = taskid[i+1:]
+                res += taskid + ";" + answ.replace("\n", "\\n")
+
             result.append(res)
         return result
 
@@ -254,8 +266,7 @@ ORDER BY {}, a.answered_on
         user_restrict_sql = '' if user_ids is None else 'AND UserAccount.id IN ({})'.format(','.join(['%s']*len(user_ids)))
         if user_ids is None:
             user_ids = []
-        cursor.execute(
-            """
+        sql = """
                 SELECT UserAccount.id, name, real_name, email,
                        COUNT(DISTINCT task_id) AS task_count,
                        ROUND(SUM(cast(points as float))::numeric,2) as total_points,
@@ -272,8 +283,13 @@ ORDER BY {}, a.answered_on
                       WHERE task_id IN ({}) AND Answer.valid = TRUE
                       GROUP BY UserAnswer.user_id, Answer.task_id) a1
                       JOIN (SELECT id, points FROM Answer) a2 ON a2.id = a1.aid
-                      LEFT JOIN (SELECT id as annotation_id, answer_id as annotation_answer_id, points as velp_points
-                                 FROM annotation) a3 ON a3.annotation_answer_id = a1.aid
+                      LEFT JOIN (SELECT
+                                 answer_id as annotation_answer_id,
+                                 SUM(points) as velp_points
+                                 FROM annotation
+                                 WHERE valid_until IS NULL
+                                 GROUP BY answer_id
+                                 ) a3 ON a3.annotation_answer_id = a1.aid
 
                       ) tmp ON tmp.aid = UserAnswer.answer_id AND UserAccount.id = tmp.uid
                 {}
@@ -282,8 +298,8 @@ ORDER BY {}, a.answered_on
             """.format(', MIN(task_id) as task_id' if not group_by_user else '',
                        task_id_template,
                        user_restrict_sql,
-                       '' if group_by_user else ', task_id'), task_ids + user_ids)
-
+                       '' if group_by_user else ', task_id')
+        cursor.execute(sql, task_ids + user_ids)
         return self.resultAsDictionary(cursor)
 
     def get_points_by_rule(self, points_rule: Optional[Dict],
