@@ -191,8 +191,12 @@ ORDER BY {}, a.answered_on
             # print(separator + header)
             line = json.loads(row[2])
             answ = str(line)
-            if isinstance(line, dict) and "usercode" in line:
-                answ = line.get("usercode", "-")
+            if isinstance(line, dict):  # maybe csPlugin?
+                if "usercode" in line:  # is csPlugin
+                    answ = line.get("usercode", "-")
+                else:
+                    if "points" in line:    # empty csPlugin answer
+                        answ = ""
 
             res = ""
             if printname and not hide_names: header = str(row[6]) + "; " + header
