@@ -136,7 +136,7 @@ class Answers(TimDbBase):
         :param age: min, max or all
         :param valid: 0, 1 or all
         :param printname: True = put user full name as first in every task
-        :param print_opt: all = header and answers, header=only header, answers=only answers
+        :param print_opt: all = header and answers, header=only header, answers=only answers, korppi=korppi form
         """
         counts =  "count(a.answered_on)"
         groups = "group by a.task_id, u.id"
@@ -198,6 +198,14 @@ ORDER BY {}, a.answered_on
             if printname and not hide_names: header = str(row[6]) + "; " + header
             if print_header: res = header
             if print_answers: res += "\n" + answ
+            if print_opt == "korppi":
+                res = name + ";"
+                taskid = row[1]
+                i = taskid.find(".")
+                if i >= 0:
+                    taskid = taskid[i+1:]
+                res += taskid + ";" + answ.replace("\n", "\\n")
+
             result.append(res)
         return result
 
