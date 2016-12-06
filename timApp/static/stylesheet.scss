@@ -98,6 +98,9 @@ a .glyphicon {
     .smalltext > .parContent {
         font-size: small;
     }
+    .linkit {
+        font-size: small;
+    }
     .parContent {
         text-align: $body-text-align;
         @media (max-width: $screen-xs-max) {
