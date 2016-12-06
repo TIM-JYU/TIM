@@ -86,13 +86,13 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                             scope.$$prevSibling.show = !scope.$$prevSibling.show;
                             scope.$$prevSibling.updateVelpZIndex();
                         } else {
-                             scope.show = !scope.show;
+                            scope.show = !scope.show;
                             if (scope.show) {
                                 scope.updateVelpZIndex();
                             }
                         }
                     } else {
-                        scope.$$nextSibling.show = !scope.$$nextSibling.show;
+                        scope.$$nextSibling.show = !scope.$$nextSibling.show; // TODO: causes console error!!!
                         scope.$$nextSibling.updateVelpZIndex();
                         //scope.show = !scope.show;
                         //scope.velpElement.parentNode. = !scope.velpElement.parentNode.$$prevSibling.show;

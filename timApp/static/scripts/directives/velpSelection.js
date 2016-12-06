@@ -67,7 +67,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     $scope.labels = [];
     $scope.velpGroups = [];
 
-    $scope.advancedOn = false;
+
     $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2, velp_groups: []};
     $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: []};
     $scope.newLabel = {content: "", selected: false, edit: false, valid: true};
@@ -97,10 +97,12 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     //
     var velpOrderingKey = "velpOrdering_" + doc_id;
     var velpLabelsKey = "velpLabels_" + doc_id;
+    var advancedOnKey = "advancedOn"; // TODO: should this be document specific?
 
     // Values to store in localstorage:
     $scope.order = getValuesFromLocalStorage(velpOrderingKey, "content");
     $scope.selectedLabels = JSON.parse(getValuesFromLocalStorage(velpLabelsKey, "[]"));
+    $scope.advancedOn = JSON.parse(getValuesFromLocalStorage(advancedOnKey, "false"));
 
     // Get velpgroup data
     var promises = [];
@@ -355,12 +357,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         label.edit = !label.edit;
     };
 
-    /*
-     * Toggles advanced view on and off
-     * @method toggleAdvancedShow
-     */
-    $scope.toggleAdvancedShow = function () {
-        $scope.advancedOn = !$scope.advancedOn;
+    $scope.setAdvancedOnlocalStorage = function (value) {
+        $window.localStorage.setItem(advancedOnKey, value.toString());
     };
 
     /**

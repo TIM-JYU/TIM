@@ -4,7 +4,7 @@
     <uib-tabset active="active" class="velpFill">
         <uib-tab index="0" heading="Select">
             <br/>
-            <label><input type="checkbox" ng-model="advancedOn"> Advanced view</label>
+            <label><input type="checkbox" ng-model="advancedOn" ng-change="setAdvancedOnlocalStorage(advancedOn)"> Advanced view</label>
             <div class="velpArea">
 
                 <!-- LABELS -->
