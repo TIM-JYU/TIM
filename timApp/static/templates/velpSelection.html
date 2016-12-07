@@ -160,7 +160,10 @@
         <span title="Close" class="glyphicon glyphicon-remove clickable-icon closedraggable" ng-click="releaseClicked()" style="visibility: hidden;position: absolute; margin-left: 16.7em;margin-top: 0.2em"></span>
                     <!-- EDIT VELPS -->
         <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn ) track by $index">
-                <velp-window velpdata="{{ velp }}" index="{{ $index }}"></velp-window>
+                <velp-window velp="velp"
+                             index="{{ $index }}"
+                             velp-groups="velpGroups"
+                             advanced-on="advancedOn"></velp-window>
         </span>
                 </div>
                 <!--p ng-hide="filteredVelps.length">No velps :'(</p -->

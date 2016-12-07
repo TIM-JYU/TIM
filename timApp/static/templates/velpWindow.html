@@ -23,7 +23,7 @@
                             <span ng-click="toggleVelpToEdit(); $event.stopPropagation();"
                             ng-class="['float-right', 'glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
 
-        <form name="editVelpForm">
+        <form name="editVelpForm" ng-submit="saveVelp(editVelpForm)">
 
             <p><input name="velpName" type="text" ng-model="velp.content"
                        required placeholder="Edit velp!">
@@ -32,6 +32,28 @@
                                                           ng-model="velp.points"
                                                           placeholder="Points" value="0"></p>
 
+
+            <!-- Velp groups -->
+            <fieldset ng-show="advancedOn">
+                <legend>Velp groups</legend>
+                <span ng-repeat="g in velpGroups">
+                    {{ g.name }}
+                    <!--label ng-class="{disabled: !g.edit_access}"><input type="checkbox"
+                                                                        ng-click="updateVelpGroups(velpToEdit, g)"
+                                                                        ng-checked="isGroupInVelp(velpToEdit, g)"
+                                                                        ng-disabled="!g.edit_access"> {{ g.name }}
+                    </label -->
+                    <br>
+                </span>
+            </fieldset>
+
+            <!--p class="error" ng-show="!isSomeVelpGroupSelected(velpToEdit)">
+                You need to select at least one velpgroup.
+            </p -->
+
+            <input type="submit" class="timButton" value="Save changes" ng-disabled="!isVelpValid(velpToEdit)"/>
+            <input type="button" class="timButton" value="Cancel" ng-click="toggleVelpToEdit(); $event.stopPropagation();">
+            </p>
         </form>
         </div>
     </div>

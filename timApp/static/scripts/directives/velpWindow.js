@@ -14,10 +14,13 @@
  */
 timApp.directive('velpWindow', function () {
     "use strict";
+
     return {
         templateUrl: "/static/templates/velpWindow.html",
         scope: {
-            velpdata: "@",
+            velp: "=",
+            velpGroups: "=", // all velpgroups, not just selected ones
+            advancedOn: "=",
             index: "@"
         },
         controller: 'VelpWindowController'
@@ -31,19 +34,38 @@ timApp.directive('velpWindow', function () {
  */
 timApp.controller('VelpWindowController', ['$scope', function ($scope) {
     "use strict";
-    var original = JSON.parse($scope.velpdata);
-    $scope.velp = Object.create(original);
+    console.log($scope.velp);
+    var original = JSON.parse(JSON.stringify($scope.velp)); // clone object
+
+    $scope.submitted = false;
+    var doc_id = $scope.$parent.docId;
 
     $scope.toggleVelpToEdit = function () {
         $scope.velp.edit = !$scope.velp.edit;
+        console.log($scope.velpGroups);
+        console.log($scope.advancedOn);
     };
 
-    $scope.saveVelp = function () {
-        original = Object.create($scope.velp);
+    $scope.saveVelp = function (form) {
+        $scope.submitted = true;
+        if (!form.$valid) return;
+
+        form.$setPristine();
+
+        $scope.$parent.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), $scope.velp, function (json) {
+            original = JSON.parse(JSON.stringify($scope.velp)); // clone object
+        });
     };
 
     $scope.useVelp = function () {
         $scope.$parent.useVelp($scope.velp);
+    };
+
+    $scope.isVelpValid = function () {
+        if (typeof $scope.velp.content === UNDEFINED)
+            return false;
+        // TODO: check rights for velp groups
+        return true;
     };
 
     /**
