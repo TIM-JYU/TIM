@@ -22,7 +22,7 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
         for (var i = 0; i < $scope.users.length; ++i) {
             if ($scope.users[i].velped_task_count > 0) {
                 anyAnnotations = true;
-                smallFieldWidth = 30;
+                smallFieldWidth = 35;
                 break;
             }
         }
