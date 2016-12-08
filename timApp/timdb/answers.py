@@ -330,15 +330,15 @@ ORDER BY {}, a.answered_on
             groups = task_groups['groups']
             groupsums = []
             for groupname, group in groups.items():
-                group['task_sum'] = round(sum(t['task_points'] for t in group['tasks'] if t['task_points'] is not None), 2)
-                group['velp_sum'] = round(sum(t['velp_points'] for t in group['tasks'] if t['velp_points'] is not None), 2)
-                group['velped_task_count'] = sum(1 for t in group['tasks'] if t['velped_task_count'] > 0)
-                total = 0
-                if PointType.velp in rule.groups[groupname].point_types:
-                    total += group['velp_sum']
+                group['task_sum'] = 0
+                group['velp_sum'] = 0
                 if PointType.task in rule.groups[groupname].point_types:
-                    total += group['task_sum']
-                groupsums.append((group['task_sum'], group['velp_sum'], total))
+                    group['task_sum'] = round(sum(t['task_points'] for t in group['tasks'] if t['task_points'] is not None), 2)
+                if PointType.velp in rule.groups[groupname].point_types:
+                    group['velp_sum'] = round(sum(t['velp_points'] for t in group['tasks'] if t['velp_points'] is not None), 2)
+                group['velped_task_count'] = sum(1 for t in group['tasks'] if t['velped_task_count'] > 0)
+                group['total_sum'] = group['task_sum'] + group['velp_sum']
+                groupsums.append((group['task_sum'], group['velp_sum'], group['total_sum']))
             if rule.count_type == 'best':
                 groupsums = sorted(groupsums, reverse=True, key=itemgetter(2))
             else:
@@ -364,7 +364,9 @@ ORDER BY {}, a.answered_on
                 row.pop('task_id', None)
                 row['groups'] = OrderedDict()
                 for groupname, _ in sorted(rule.groups.items()):
-                    row['groups'][groupname] = task_groups['groups'].get(groupname, {}).get('task_sum', 0)
+                    row['groups'][groupname] = {'task_sum': task_groups['groups'].get(groupname, {}).get('task_sum', 0),
+                                                'velp_sum': task_groups['groups'].get(groupname, {}).get('velp_sum', 0),
+                                                'total_sum': task_groups['groups'].get(groupname, {}).get('total_sum', 0)}
                 result_list.append(row)
             return result_list
         return result

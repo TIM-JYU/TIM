@@ -8,6 +8,7 @@ from itertools import product
 import dateutil.parser
 from lxml import html
 
+from documentmodel.pointsumrule import PointSumRule, PointType
 from plugin import Plugin
 from routes.sessioninfo import get_current_user_object
 from tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME
@@ -398,6 +399,24 @@ class PluginTest(TimRouteTest):
         self.check_save_points(TEST_USER_1_ID, answer_id, 1, 200, self.ok_resp)
 
     def test_point_sum_rule(self):
+        def get_pts(rule):
+            pts = OrderedDict([('1st', {'task_sum': 6.0, 'velp_sum': 7.0, 'total_sum': 13.0},),
+                               ('2nd', {'task_sum': 1.0, 'velp_sum': 5.0, 'total_sum': 6.0},),
+                               ('3rd', {'task_sum': 4.0, 'velp_sum': 4.0, 'total_sum': 8.0},)])
+            pts2 = OrderedDict([('1st', {'task_sum': 3.0, 'velp_sum': 7.0, 'total_sum': 10.0},),
+                                ('2nd', {'task_sum': 8.0, 'velp_sum': 5.0, 'total_sum': 13.0},),
+                                ('3rd', {'task_sum': 5.0, 'velp_sum': 4.0, 'total_sum': 9.0},)])
+            for k, _ in pts.items():
+                for n, t in zip(('task_sum', 'velp_sum'), (PointType.task, PointType.velp)):
+                    if t in rule.groups[k].point_types:
+                        pass
+                    else:
+                        pts[k]['total_sum'] -= pts[k][n]
+                        pts2[k]['total_sum'] -= pts2[k][n]
+                        pts[k][n] = 0
+                        pts2[k][n] = 0
+            return pts, pts2
+
         self.login_test1()
         d = self.create_doc(from_file='example_docs/mmcq_example.md').document
         timdb = self.get_db()
@@ -455,13 +474,13 @@ class PluginTest(TimRouteTest):
 
         cases = [
             (groups_type_t, 'best', 0, (0, 0, 0), (0, 0, 0)),
-            (groups_type_t, 'best', 1, (6, 7, 6), (8, 5, 8)),
-            (groups_type_t, 'best', 2, (10, 11, 10), (13, 9, 13)),
-            (groups_type_t, 'best', 3, (11, 16, 11), (16, 16, 16)),
+            (groups_type_t, 'best', 1, (6, 0, 6), (8, 0, 8)),
+            (groups_type_t, 'best', 2, (10, 0, 10), (13, 0, 13)),
+            (groups_type_t, 'best', 3, (11, 0, 11), (16, 0, 16)),
             (groups_type_t, 'worst', 0, (0, 0, 0), (0, 0, 0)),
-            (groups_type_t, 'worst', 1, (1, 5, 1), (3, 7, 3)),
-            (groups_type_t, 'worst', 2, (5, 9, 5), (8, 11, 8)),
-            (groups_type_t, 'worst', 3, (11, 16, 11), (16, 16, 16)),
+            (groups_type_t, 'worst', 1, (1, 0, 1), (3, 0, 3)),
+            (groups_type_t, 'worst', 2, (5, 0, 5), (8, 0, 8)),
+            (groups_type_t, 'worst', 3, (11, 0, 11), (16, 0, 16)),
 
             (groups_default, 'best', 0, (0, 0, 0), (0, 0, 0)),
             (groups_default, 'best', 1, (6, 7, 13), (8, 5, 13)),
@@ -473,37 +492,46 @@ class PluginTest(TimRouteTest):
             (groups_default, 'worst', 3, (11, 16, 27), (16, 16, 32)),
 
             (groups_type_v, 'best', 0, (0, 0, 0), (0, 0, 0)),
-            (groups_type_v, 'best', 1, (6, 7, 7), (3, 7, 7)),
-            (groups_type_v, 'best', 2, (7, 12, 12), (11, 12, 12)),
-            (groups_type_v, 'best', 3, (11, 16, 16), (16, 16, 16)),
+            (groups_type_v, 'best', 1, (0, 7, 7), (0, 7, 7)),
+            (groups_type_v, 'best', 2, (0, 12, 12), (0, 12, 12)),
+            (groups_type_v, 'best', 3, (0, 16, 16), (0, 16, 16)),
             (groups_type_v, 'worst', 0, (0, 0, 0), (0, 0, 0)),
-            (groups_type_v, 'worst', 1, (4, 4, 4), (5, 4, 4)),
-            (groups_type_v, 'worst', 2, (5, 9, 9), (13, 9, 9)),
-            (groups_type_v, 'worst', 3, (11, 16, 16), (16, 16, 16)),
+            (groups_type_v, 'worst', 1, (0, 4, 4), (0, 4, 4)),
+            (groups_type_v, 'worst', 2, (0, 9, 9), (0, 9, 9)),
+            (groups_type_v, 'worst', 3, (0, 16, 16), (0, 16, 16)),
 
             (groups_type_mixed, 'best', 0, (0, 0, 0), (0, 0, 0)),
             (groups_type_mixed, 'best', 1, (4, 4, 8), (5, 4, 9)),
-            (groups_type_mixed, 'best', 2, (10, 11, 14), (13, 9, 14)),
-            (groups_type_mixed, 'best', 3, (11, 16, 19), (16, 16, 17)),
+            (groups_type_mixed, 'best', 2, (10, 4, 14), (5, 9, 14)),
+            (groups_type_mixed, 'best', 3, (10, 9, 19), (8, 9, 17)),
             (groups_type_mixed, 'worst', 0, (0, 0, 0), (0, 0, 0)),
-            (groups_type_mixed, 'worst', 1, (1, 5, 5), (3, 7, 3)),
-            (groups_type_mixed, 'worst', 2, (7, 12, 11), (11, 12, 8)),
-            (groups_type_mixed, 'worst', 3, (11, 16, 19), (16, 16, 17)),
+            (groups_type_mixed, 'worst', 1, (0, 5, 5), (3, 0, 3)),
+            (groups_type_mixed, 'worst', 2, (6, 5, 11), (3, 5, 8)),
+            (groups_type_mixed, 'worst', 3, (10, 9, 19), (8, 9, 17)),
         ]
-        pts = OrderedDict([('1st', 6.0), ('2nd', 1.0), ('3rd', 4.0)])
-        pts2 = OrderedDict(((k, 9.0 - v) for k, v in pts.items()))
+
         for (g1, g2, g3), count_type, count, (tasksum1, velpsum1, sum1), (tasksum2, velpsum2, sum2) in cases:
+            rule_dict = {'groups': {'1st': g1, '2nd': g2, '3rd': g3},
+                 'count': {count_type: count}}
+            rule = PointSumRule(rule_dict)
             points = timdb.answers.get_points_by_rule(
-                {'groups': {'1st': g1, '2nd': g2, '3rd': g3},
-                 'count': {count_type: count}},
+                rule_dict,
                 task_ids, [TEST_USER_1_ID, TEST_USER_2_ID])
             self.assertEqual(tasksum1, points[TEST_USER_1_ID]['task_sum'])
             self.assertEqual(tasksum2, points[TEST_USER_2_ID]['task_sum'])
             self.assertEqual(velpsum1, points[TEST_USER_1_ID]['velp_sum'])
             self.assertEqual(velpsum2, points[TEST_USER_2_ID]['velp_sum'])
-            for k, v in pts.items():
-                self.assertEqual(v, points[TEST_USER_1_ID]['groups'][k]['task_sum'])
-                self.assertEqual(9 - v, points[TEST_USER_2_ID]['groups'][k]['task_sum'])
+            pts, pts2 = get_pts(rule)
+            for k, _ in pts.items():
+                for n, t in zip(('task_sum', 'velp_sum'), (PointType.task, PointType.velp)):
+                    if t in rule.groups[k].point_types:
+                        self.assertEqual(pts[k][n], points[TEST_USER_1_ID]['groups'][k][n])
+                        self.assertEqual(pts2[k][n], points[TEST_USER_2_ID]['groups'][k][n])
+                    else:
+                        self.assertEqual(0, points[TEST_USER_1_ID]['groups'][k][n])
+                        self.assertEqual(0, points[TEST_USER_2_ID]['groups'][k][n])
+                self.assertEqual(pts[k]['total_sum'], points[TEST_USER_1_ID]['groups'][k]['total_sum'])
+                self.assertEqual(pts2[k]['total_sum'], points[TEST_USER_2_ID]['groups'][k]['total_sum'])
             points = timdb.answers.get_points_by_rule(
                 {'groups': {'1st': g1, '2nd': g2, '3rd': g3},
                  'count': {count_type: count}},
@@ -528,15 +556,16 @@ class PluginTest(TimRouteTest):
                                    'velp_points': velpsum2,
                                    'total_points': sum2,
                                    'velped_task_count': 3}], points)
+
+        rule_dict = {'groups': {'1st': groups_type_t[0], '2nd': groups_type_t[1], '3rd': groups_type_t[2]},
+                     'count': {'best': 2}}
+        _, pts2 = get_pts(PointSumRule(rule_dict))
         d.set_settings({'show_task_summary': True,
-                        'point_sum_rule': {'groups': {'1st': groups_type_t[0],
-                                                      '2nd': groups_type_t[1],
-                                                      '3rd': groups_type_t[2]},
-                                           'count': {'best': 2}}})
+                        'point_sum_rule': rule_dict})
         d_html = self.get('/view/{}'.format(d.doc_id), as_tree=True)
         task_summary_text = d_html.cssselect('.taskSummary')[0].text_content()
         self.assertIn('Total points: {}'.format(cases[2][4][0]), task_summary_text)
-        self.assertIn(', '.join(('{}: {}'.format(k, v) for k, v in pts2.items())), task_summary_text)
+        self.assertIn(', '.join(('{}: {}'.format(k, v['total_sum']) for k, v in pts2.items())), task_summary_text)
 
         # Make sure invalid settings don't crash the document
         d.add_setting('point_sum_rule', {'groups': {'1st': '*', '2nd': 't2.*', '3rd': 't3.*'},
