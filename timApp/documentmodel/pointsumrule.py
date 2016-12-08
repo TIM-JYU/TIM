@@ -49,8 +49,7 @@ class PointSumRule:
         except (StopIteration, KeyError):
             self.count_type, self.count_amount = 'best', 9999
 
-    def find_group(self, task_id):
+    def find_groups(self, task_id):
         for g in self.groups.values():
             if g.check_match(task_id):
-                return g.name
-        return None
+                yield g.name

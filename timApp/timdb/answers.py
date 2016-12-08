@@ -324,8 +324,7 @@ ORDER BY {}, a.answered_on
         rule = PointSumRule(points_rule)
         result = defaultdict(lambda:defaultdict(lambda:defaultdict(lambda:defaultdict(list))))
         for tu in tasks_users:
-            group = rule.find_group(tu['task_id'])
-            if group:
+            for group in rule.find_groups(tu['task_id']):
                 result[tu['id']]['groups'][group]['tasks'].append(tu)
         for user_id, task_groups in result.items():
             groups = task_groups['groups']
