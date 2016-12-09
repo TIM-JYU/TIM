@@ -14,7 +14,7 @@ def gamify(initial_data):
     initial_json = convert_to_json(initial_data)
 
     # Find document IDs from json, and place them in their appropriate arrays(lectures and demos separately)
-    lecture_table, demo_table = get_doc_ids(initial_json)
+    lecture_table, demo_table = get_doc_data(initial_json)
 
     # Insert document, IDs, paths, and points in a dictionary
     gamification_data = place_in_dict(lecture_table, demo_table)
@@ -31,10 +31,10 @@ def convert_to_json(md_data):
     return json.loads(json.dumps(temp))
 
 
-def get_doc_ids(json_to_check):
-    """Parses json to find names of lecture and demo documents
+def get_doc_data(json_to_check):
+    """Parses json to find and link appropriate data into lecture and demo documents.
     :param json_to_check = Checked documents in JSON
-    :returns:
+    :returns: Arrays of lecture and demo documents
     """
     if json_to_check is None:
         raise GamificationException('JSON is None')
@@ -42,6 +42,7 @@ def get_doc_ids(json_to_check):
     lecture_paths = json_to_check['lectures']
     demo_paths = json_to_check['demos']
 
+    # Configure data of lecture documents
     lectures = []
     for path in lecture_paths:
         lecture = DocEntry.find_by_path(path['path'])
@@ -52,11 +53,13 @@ def get_doc_ids(json_to_check):
             temp_dict['link'] = request.url_root+'view/' + lecture.path
             lectures.append(temp_dict)
 
+    # Configure data of demo documents
     demos = []
     for path in demo_paths:
         demo = DocEntry.find_by_path(path['path'])
-        doc_set = demo.document.get_settings()
+
         if demo is not None:
+            doc_set = demo.document.get_settings()
             temp_dict = dict()
             temp_dict['id'] = demo.id
             temp_dict['name'] = demo.short_name
@@ -76,7 +79,7 @@ def place_in_dict(l_table, d_table):
     """
     :param l_table Array of lecture IDs
     :param d_table Array of demo IDs
-    :returns:
+    :returns: A dictionary of combined lecture and demo documents
     """
     document_dict = {'lectures': [], 'demos': []}
 
@@ -95,6 +98,11 @@ def place_in_dict(l_table, d_table):
 
 
 def get_points_for_doc(d):
+    """
+    Finds the current users point information for a specific document
+    :param d The document as a DocEntry
+    :returns: The current users points for the document
+    """
     document = d.document
     timdb = get_timdb()
     user_points = 0

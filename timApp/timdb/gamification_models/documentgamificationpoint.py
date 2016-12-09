@@ -1,5 +1,6 @@
 from timdb.tim_models import db
 
+
 class DocumentGamificationPoint(db.Model):
     """
     Created by TIMG
