@@ -209,15 +209,15 @@ def post_answer(plugintype: str, task_id_ext: str):
                 else:
                     points_given_by = get_current_user_group()
             if points or save_object or tags:
-                result['savedNew'], saved_answer_id = timdb.answers.saveAnswer(users,
-                                                          task_id,
-                                                          json.dumps(save_object),
-                                                          points,
-                                                          tags,
-                                                          is_valid,
-                                                          points_given_by)
+                result['savedNew'] = timdb.answers.saveAnswer(users,
+                                                              task_id,
+                                                              json.dumps(save_object),
+                                                              points,
+                                                              tags,
+                                                              is_valid,
+                                                              points_given_by)
             else:
-                result['savedNew'], saved_answer_id = False, None
+                result['savedNew'] = None
             if not is_valid:
                 result['error'] = explanation
         elif save_teacher:
@@ -225,18 +225,18 @@ def post_answer(plugintype: str, task_id_ext: str):
                 users.append(current_user_id)
             points = answer_browser_data.get('points', points)
             points = points_to_float(points)
-            result['savedNew'], saved_answer_id = timdb.answers.saveAnswer(users,
-                                                                           task_id,
-                                                                           json.dumps(save_object),
-                                                                           points,
-                                                                           tags,
-                                                                           valid=True,
-                                                                           points_given_by=get_current_user_group())
+            result['savedNew'] = timdb.answers.saveAnswer(users,
+                                                          task_id,
+                                                          json.dumps(save_object),
+                                                          points,
+                                                          tags,
+                                                          valid=True,
+                                                          points_given_by=get_current_user_group())
         else:
-            result['savedNew'], saved_answer_id = False, None
-        if result['savedNew'] and upload is not None:
+            result['savedNew'] = None
+        if result['savedNew'] is not None and upload is not None:
             # Associate this answer with the upload entry
-            upload.answer_id = saved_answer_id
+            upload.answer_id = result['savedNew']
             db.session.commit()
 
     return jsonResponse(result)

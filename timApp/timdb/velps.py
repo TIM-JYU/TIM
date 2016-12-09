@@ -10,7 +10,7 @@ from the database.
 """
 
 import copy
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 from timdb.timdbbase import TimDbBase
 from timdb.velp_models import Velp, VelpVersion, VelpLabel, VelpLabelContent
@@ -21,9 +21,9 @@ class Velps(TimDbBase):
     Used as an interface to query the database about velps.
     """
 
-    def create_new_velp(self, creator_id: int, content=str, default_points: Optional[float] = None,
+    def create_new_velp(self, creator_id: int, content: str, default_points: Optional[float] = None,
                         icon_id: Optional[int] = None, valid_until: Optional[str] = None,
-                        language_id: str = "FI", visible_to: Optional[int] = None) -> int:
+                        language_id: str = "FI", visible_to: Optional[int] = None) -> Tuple[int, int]:
         """Creates a new velp with all information.
 
         Creates a new velp with all necessary information in one function using three others.
@@ -35,12 +35,12 @@ class Velps(TimDbBase):
         :param valid_until: Time after velp becomes unusable.
         :param language_id: Language ID of velp.
         :param visible_to: Default visibility to annotation.
-        :return: ID of the new velp.
+        :return: A tuple of (velp id, velp version id).
         """
         new_velp_id = self._create_velp(creator_id, default_points, icon_id, valid_until, visible_to)
         new_version_id = self.create_velp_version(new_velp_id)
         self.create_velp_content(new_version_id, language_id, content)
-        return new_velp_id
+        return new_velp_id, new_version_id
 
     def _create_velp(self, creator_id: int, default_points: Optional[float], icon_id: Optional[int] = None,
                      valid_until: Optional[str] = None, visible_to: Optional[int] = None) -> int:

@@ -166,7 +166,7 @@
                 Total points: {{ task_info.total_points }}
                     {%- if task_info.groups %}
                         ({%- for k, v in task_info.groups.items() -%}
-                            {{ k }}: {{ v }}{% if not loop.last %}, {% endif %}
+                            {{ k }}: {{ v.total_sum }}{% if not loop.last %}, {% endif %}
                         {%- endfor -%})
                     {%- endif -%},
                 total tasks: {{ task_info.tasks_done }} / {{ task_info.total_tasks }}
