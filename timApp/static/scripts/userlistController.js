@@ -65,7 +65,7 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
         $scope.instantUpdate = false;
 
         $scope.exportKorppi = function (options) {
-            if (!options.pointField && !options.velpPointField) {
+            if (!options.taskPointField && !options.velpPointField && !options.totalPointField) {
                 return;
             }
             var data = $scope.gridApi.grid.getVisibleRows();
