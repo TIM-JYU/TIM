@@ -344,6 +344,9 @@ class PluginTest(TimRouteTest):
 \[True, True, True\]
         """.format(date_re, re.escape(task_id), 'testuser1', 'testuser2', TEST_USER_1_NAME, 'Test user 2').strip())
 
+        # make sure invalid date won't throw
+        self.get('/allDocumentAnswersPlain/{}'.format(doc.doc_id), query_string={'period': 'other', 'periodTo': 'asd'})
+
     def test_save_points(self):
         cannot_give_custom = {'error': 'You cannot give yourself custom points in this task.'}
         self.login_test1()
