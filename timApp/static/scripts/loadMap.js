@@ -25,11 +25,13 @@ $(document).ready(function () {
     var zoomInput = $(".mapZoom");
     zoomInput.attr({"max": 1, "min": 0.3, "step": 0.05});
     zoomInput.val(scale);
+    zoomInput.width(300)
 
     // Set properties for alpha input
     var alphaInput = $(".alphaRange");
     alphaInput.attr({"max": 1, "min": 0, "step": 0.05});
     alphaInput.val(alpha);
+    alphaInput.width(300)
 
     // Title and description elements for the info box
     var title = $("<p></p>");
@@ -377,10 +379,10 @@ $(document).ready(function () {
 
                     title.html("<a href='" + json.layers[tile.layerNo].properties.site + "'>" + json.layers[tile.layerNo].properties.title + "</a>");
 		                if(json.layers[tile.layerNo].properties.maxpoints !== 0) {
-                            description.html("Pisteet: " + json.layers[tile.layerNo].properties.studentpoints + "/" +
-                                json.layers[tile.layerNo].properties.maxpoints + "<br>Pisteet yhteensä: " + totalPoints + "/" + totalMax);
+                            description.html("Dokumentin pisteet: " + json.layers[tile.layerNo].properties.studentpoints + "/" +
+                                json.layers[tile.layerNo].properties.maxpoints + "<br>Kurssin pisteet yhteensä: " + totalPoints + "/" + totalMax);
 			                } else {
-			                    description.html("Pisteet yhteensä: " + totalPoints + "/" + totalMax);
+			                    description.html("Kurssin pisteet yhteensä: " + totalPoints + "/" + totalMax);
 			                }
 
 
