@@ -542,7 +542,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * including the ID of the velp.
      * @method editVelp
      * @param form - Velp form
-     */
+
     $scope.editVelp = function (form) {
         var valid = form.$valid;
         $scope.submitted.velp = true;
@@ -581,6 +581,23 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         }
 
         $scope.resetEditVelp();
+    };
+     */
+
+    /**
+     * Selects or deselects velp for being edited.
+     * @param velp - Velp information, contains edit info
+     */
+    $scope.setVelpToEdit = function (velp) {
+        $scope.velpToEdit = velp;
+    };
+
+    /**
+     * Returns whether velp is being edited or not.
+     * @returns Boolean
+     */
+    $scope.getVelpUnderEdit = function () {
+        return $scope.velpToEdit;
     };
 
     /**

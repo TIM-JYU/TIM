@@ -40,12 +40,27 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
     $scope.submitted = false;
     var doc_id = $scope.$parent.docId;
 
+    /**
+     * Toggles velp for editing. If another velp is currently open,
+     * this method closes it.
+     */
     $scope.toggleVelpToEdit = function () {
+        var lastEdited = $scope.$parent.getVelpUnderEdit();
+
+        if (lastEdited.edit && lastEdited.id !== $scope.velp.id){
+            lastEdited.edit = false;
+        }
+
         $scope.velp.edit = !$scope.velp.edit;
-        console.log($scope.velpGroups);
-        console.log($scope.advancedOn);
+        console.log($scope.velp.edit);
+        $scope.$parent.setVelpToEdit($scope.velp);
     };
 
+
+    /**
+     * Saves velp to database
+     * @param form
+     */
     $scope.saveVelp = function (form) {
         $scope.submitted = true;
         if (!form.$valid) return;
@@ -54,11 +69,18 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
 
         $scope.$parent.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), $scope.velp, function (json) {
             original = JSON.parse(JSON.stringify($scope.velp)); // clone object
+            $scope.toggleVelpToEdit();
         });
+
+
     };
 
     $scope.useVelp = function () {
+        console.log($scope.$parent.getVelpUnderEdit());
+        console.log($scope.velp.edit);
+        //if (!$scope.velp.edit) {
         $scope.$parent.useVelp($scope.velp);
+        //}
     };
 
     $scope.isVelpValid = function () {
