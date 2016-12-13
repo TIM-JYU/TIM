@@ -1,8 +1,0 @@
-demo1|8|9|https://tim.jyu.fi/view/kurssit/tie/ohj1/2015s/demot/Demo%201
-demo2|2|12|https://tim.jyu.fi/view/kurssit/tie/ohj1/2015s/demot/Demo%202
-demo3|5|12|https://tim.jyu.fi/view/kurssit/tie/ohj1/2015s/demot/Demo%203
-demo4|6|8|https://tim.jyu.fi/view/kurssit/tie/ohj1/2015s/demot/Demo%204
-demo5|12|12|https://tim.jyu.fi/view/kurssit/tie/ohj1/2015s/demot/Demo%205
-demo6|9|10|https://tim.jyu.fi/view/kurssit/tie/ohj1/2015s/demot/Demo%206
-demo7|2|6|https://tim.jyu.fi/view/kurssit/tie/ohj1/2015s/demot/Demo%207
-demo8|3|6|https://tim.jyu.fi/view/kurssit/tie/ohj1/2015s/demot/Demo%208
