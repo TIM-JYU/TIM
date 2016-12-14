@@ -13,7 +13,6 @@
 var angular;
 var timApp = angular.module('timApp');
 
-var colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "cornflowerblue", "coral", "goldenrod", "blue"];
 
 var UNDEFINED = "undefined";
 
@@ -28,30 +27,6 @@ timApp.directive('velpSelection', function () {
     };
 });
 
-
-timApp.filter('filterByVelpGroups', function () {
-    "use strict";
-    return function (velps, groups) {
-
-        var selected = [];
-        var checkedGroups = [];
-
-        if (typeof groups === UNDEFINED || typeof velps === UNDEFINED)
-            return velps;
-
-        for (var j = 0; j < groups.length; j++)
-            if (groups[j].show) checkedGroups.push(groups[j].id);
-
-        for (var i = 0; i < velps.length; i++) {
-            for (var k = 0; k < checkedGroups.length; k++) {
-                if (velps[i].velp_groups.indexOf(checkedGroups[k]) >= 0 && selected.indexOf(velps[i]) < 0)
-                    selected.push(velps[i]);
-            }
-        }
-
-        return selected;
-    };
-});
 
 /**
  * Controller for velp selection
@@ -69,7 +44,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
     $scope.advancedOn = false;
     $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2, velp_groups: []};
-    $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: []};
+    $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: [], orig: {}};
     $scope.newLabel = {content: "", selected: false, edit: false, valid: true};
     $scope.labelToEdit = {content: "", selected: false, edit: false, id: -3};
     $scope.newVelpGroup = {name: "", target_type: 0};
@@ -586,10 +561,12 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
     /**
      * Selects or deselects velp for being edited.
-     * @param velp - Velp information, contains edit info
+     * @param velp - Velp information, contains all edited info
+     * @param resetFuction - Function to execute in cancel edit
      */
-    $scope.setVelpToEdit = function (velp) {
+    $scope.setVelpToEdit = function (velp, resetFunction) {
         $scope.velpToEdit = velp;
+        $scope.resetEditVelp = resetFunction;
     };
 
     /**
@@ -1212,4 +1189,34 @@ timApp.filter('filterByLabels', function () {
         return returnVelps;
     };
 
+});
+
+timApp.filter('filterByVelpGroups', function () {
+    "use strict";
+    return function (velps, groups) {
+
+        var selected = [];
+        var checkedGroups = [];
+
+        if (typeof groups === UNDEFINED || typeof velps === UNDEFINED)
+            return velps;
+
+        for (var j = 0; j < groups.length; j++)
+            if (groups[j].show) checkedGroups.push(groups[j].id);
+
+        for (var i = 0; i < velps.length; i++) {
+            // always include velp that is being edited
+            if (velps[i].edit){
+                selected.push(velps[i]);
+                continue;
+            }
+
+            for (var k = 0; k < checkedGroups.length; k++) {
+                if (velps[i].velp_groups.indexOf(checkedGroups[k]) >= 0 && selected.indexOf(velps[i]) < 0)
+                    selected.push(velps[i]);
+            }
+        }
+
+        return selected;
+    };
 });
