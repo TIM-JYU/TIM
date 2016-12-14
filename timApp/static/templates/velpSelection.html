@@ -4,7 +4,7 @@
     <uib-tabset active="active" class="velpFill">
         <uib-tab index="0" heading="Select">
             <br/>
-            <label><input type="checkbox" ng-model="advancedOn"> Advanced view</label>
+            <label><input type="checkbox" ng-model="advancedOn" ng-change="setAdvancedOnlocalStorage(advancedOn)"> Advanced view</label>
             <div class="velpArea">
 
                 <!-- LABELS -->
@@ -41,7 +41,7 @@
                     <form class="form-inline adjustForm">
                         <div class="form-group">
                             <label class="formLabel" for="orderVelps">Order velps:</label>
-                            <select id="orderVelps" ng-model="velpSettings.order" ng-change="changeOrdering(velpSettings.order)">
+                            <select id="orderVelps" ng-model="order" ng-change="changeOrdering(order)">
                                 <option value="content">Alphabetical</option>
                                 <option value="-used">Most used</option>
                                 <option value="label">Labels</option>
@@ -159,6 +159,7 @@
     <div id="selectVelpsDiv" save="%%PAGEID%%selectVelpsDiv" tim-draggable-fixed>
         <span title="Close" class="glyphicon glyphicon-remove clickable-icon closedraggable" ng-click="releaseClicked()" style="visibility: hidden;position: absolute; margin-left: 16.7em;margin-top: 0.2em"></span>
                     <!-- EDIT VELPS -->
+
         <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:orderVelp | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn ) track by $index">
                 <velp-window velp="velp"
                              index="{{ $index }}"
@@ -166,6 +167,7 @@
                              labels="labels"
                              advanced-on="advancedOn"></velp-window>
         </span>
+
                 </div>
                 <!--p ng-hide="filteredVelps.length">No velps :'(</p -->
             </div>
