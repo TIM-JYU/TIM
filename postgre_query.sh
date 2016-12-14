@@ -20,8 +20,8 @@ if [ $1 = "2" ]; then
   container=postgresql-tempdb-$TIM_NAME
   database=tempdb_$TIM_NAME
 elif [ $1 = "3" ]; then
-  container=postgresql-timtest
-  database=timtest
+  container=postgresql-$TIM_NAME-test
+  database=$TIM_NAME-test
 else
   container=postgresql-$TIM_NAME
   database=$TIM_NAME
