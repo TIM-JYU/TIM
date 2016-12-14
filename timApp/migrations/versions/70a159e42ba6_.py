@@ -1,4 +1,4 @@
-"""Adds a unique constraint on translation (src_docid, land_id).
+"""Adds a unique constraint on translation (src_docid, lang_id).
 
 Revision ID: 70a159e42ba6
 Revises: 5adee46df88b
