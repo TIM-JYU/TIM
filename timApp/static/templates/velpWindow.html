@@ -45,10 +45,10 @@
                     <span class="float-right"
                           ng-class="['glyphicon', 'glyphicon-tag']"
                           ng-repeat="l in velp.labels"
-                          ng-style="{ color: getColor(l) }"> l
+                          ng-style="{ color: getColor(l) }">
                     </span>
                 </legend>
-                <!--
+
                 <span ng-repeat="l in labels">
                     <span ng-show="!l.edit">
                         <label>
@@ -82,11 +82,12 @@
                 </span>
 
                 <input class="addLabelField" placeholder="Add label"
-                       ng-model="newLabel['content']">
+                       ng-change="setLabelValid(newLabel)"
+                       ng-model="newLabel.content">
                 <input class="addLabelBtn" type="button" value="Add"
-                       ng-click="addLabel(velpToEdit)">
-                <span ng-hide="newLabel['valid']" class="error">Label content too short</span>
-                -->
+                       ng-click="addLabel()">
+                <span ng-hide="newLabel.valid" class="error">Label content too short</span>
+
             </fieldset>
 
             <!-- Velp groups -->

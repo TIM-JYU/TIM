@@ -40,6 +40,8 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
     $scope.original = JSON.parse(JSON.stringify($scope.velp)); // clone object
 
     $scope.submitted = false;
+    $scope.newLabel = {content: "", selected: true, valid: true};
+
     var doc_id = $scope.$parent.docId;
 
     /**
@@ -98,6 +100,21 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         return $scope.isSomeVelpGroupSelected() && $scope.velp.content.length > 0 ;
     };
 
+    $scope.setLabelValid = function (label) {
+        label.valid = label.content.length > 0;
+    };
+
+    /**
+     * Returns whether the velp contains the label or not.
+     * @method isLabelInVelp
+     * @param label - Label to check
+     * @returns {boolean} Whether the velp contains the label or not.
+     */
+    $scope.isLabelInVelp = function (label) {
+        return $scope.velp.labels.indexOf(label.id) >= 0;
+    };
+
+
     /**
      * Checks whether the velp contains the velp group.
      * @method isGroupInVelp
@@ -108,6 +125,22 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         if (typeof $scope.velp.velp_groups === UNDEFINED || typeof group.id === UNDEFINED)
             return false;
         return $scope.velp.velp_groups.indexOf(group.id) >= 0;
+    };
+
+    /**
+     * Updates the labels of the velp.
+     * @method updateVelpLabels
+     * @param label - Label to be added or removed from the velp
+     */
+    $scope.updateVelpLabels = function (label) {
+
+        var index = $scope.velp.labels.indexOf(label.id);
+        if (index < 0) {
+            $scope.velp.labels.push(label.id);
+        }
+        else if (index >= 0) {
+            $scope.velp.labels.splice(index, 1);
+        }
     };
 
     /**
@@ -125,6 +158,7 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         }
     };
 
+
     /**
      * Checks if the velp has any velp groups selected.
      * @method isSomeVelpGroupSelected
@@ -134,6 +168,44 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         if (typeof $scope.velp.velp_groups === UNDEFINED)
             return false;
         return $scope.velp.velp_groups.length > 0;
+    };
+
+    /**
+     * Adds new label to this velp.
+     * @method addLabel
+     */
+    $scope.addLabel = function () {
+
+        if ($scope.newLabel.content.length < 1) {
+            $scope.newLabel.valid = false;
+            return;
+        }
+
+        var labelToAdd = {
+            content: $scope.newLabel.content,
+            language_id: "FI", // TODO: Change to user language
+            selected: false
+        };
+
+        console.log(labelToAdd);
+
+
+        $scope.$parent.makePostRequest("/add_velp_label", labelToAdd, function (json) {
+            labelToAdd.id = parseInt(json.data.id);
+            $scope.resetNewLabel();
+            $scope.labels.push(labelToAdd);
+            //$scope.labelAdded = false;
+            $scope.velp.labels.push(labelToAdd.id);
+        });
+
+    };
+
+    /**
+     * Reset new label information to the initial (empty) state.
+     * @method resetNewLabel
+     */
+    $scope.resetNewLabel = function () {
+        $scope.newLabel = {content: "", selected: true, valid: true};
     };
 
     /**

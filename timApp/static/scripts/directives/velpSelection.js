@@ -365,17 +365,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     };
 
     /**
-     * Returns whether the velp contains the label or not.
-     * @method isLabelInVelp
-     * @param velp - Velp to check
-     * @param label - Label to check
-     * @returns {boolean} Whether the velp contains the label or not.
-     */
-    $scope.isLabelInVelp = function (velp, label) {
-        return velp.labels.indexOf(label.id) >= 0;
-    };
-
-    /**
      * Adds a new velp on form submit event.
      * @method addVelp
      * @param form - Form information
@@ -481,22 +470,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     };
 
 
-    /**
-     * Updates the labels of the velp.
-     * @method updateVelpLabels
-     * @param velp - Velp to update
-     * @param label - Label to be added or removed from the velp
-     */
-    $scope.updateVelpLabels = function (velp, label) {
 
-        var index = velp.labels.indexOf(label.id);
-        if (index < 0) {
-            velp.labels.push(label.id);
-        }
-        else if (index >= 0) {
-            velp.labels.splice(index, 1);
-        }
-    };
 
     /**
      * Selects velp to edit
