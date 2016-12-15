@@ -373,8 +373,14 @@ def get_all_answers_as_list(task_ids: List[str]):
     elif period_opt == 'other':
         period_from_str = get_option(request, 'periodFrom', period_from.isoformat())
         period_to_str = get_option(request, 'periodTo', period_to.isoformat())
-        period_from = dateutil.parser.parse(period_from_str)
-        period_to = dateutil.parser.parse(period_to_str)
+        try:
+            period_from = dateutil.parser.parse(period_from_str)
+        except (ValueError, OverflowError):
+            pass
+        try:
+            period_to = dateutil.parser.parse(period_to_str)
+        except (ValueError, OverflowError):
+            pass
     if not usergroup:
         usergroup = None
 

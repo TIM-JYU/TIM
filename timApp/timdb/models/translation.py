@@ -1,3 +1,5 @@
+from sqlalchemy import UniqueConstraint
+
 from timdb.docinfo import DocInfo
 from timdb.tim_models import db
 
@@ -9,6 +11,8 @@ class Translation(db.Model, DocInfo):
     src_docid = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
     lang_id = db.Column(db.Text, nullable=False)
     doc_title = db.Column(db.Text)
+    __table_args__ = (UniqueConstraint('src_docid', 'lang_id', name='translation_uc'),
+                      )
 
     block = db.relationship('Block', foreign_keys=[doc_id])
 

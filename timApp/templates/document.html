@@ -21,13 +21,14 @@
      <li role="presentation" {{ active('view_page.lecture_view') }}><a id="headerLecture" href="/lecture/{{ item.path }}">Lecture view</a></li>
      <li role="presentation" {{ active('view_page.velp_view') }}><a id="headerVelp" href="/velp/{{ item.path }}">Velp view</a></li>
      <li role="presentation" {{ active('view_page.slide_document') }}><a id="headerSlide" href="/slide/{{ item.path }}">Slide view</a></li>
+{% endblock %}
+{% block languages %}
     {% if translations %}
-        <span style="float: right;">
-                            {% for tr in translations %}
-                                <li role="presentation"><a href="/{{ route }}/{{ tr.name }}">{{ tr.lang_id }}</a></li>
-                                {% if not loop.last %}  {% endif %}
-                            {% endfor %}
-                        </span>
-        <span style="clear: left"></span>
+        <ul class="list-inline">
+            {% for tr in translations %}
+                <li role="presentation">
+                    <a class="label label-primary" href="/{{ route }}/{{ tr.name }}">{{ tr.lang_id }}</a></li>
+            {% endfor %}
+        </ul>
     {% endif %}
 {% endblock %}
