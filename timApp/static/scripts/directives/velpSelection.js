@@ -327,10 +327,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * Toggles the label's edit attribute.
      * @method toggleLabelToEdit
      * @param label - Label to edit
-     */
+
     $scope.toggleLabelToEdit = function (label) {
         label.edit = !label.edit;
     };
+     */
 
     $scope.setAdvancedOnlocalStorage = function (value) {
         $window.localStorage.setItem(advancedOnKey, value.toString());
@@ -448,10 +449,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
     /**
      * Selects the label for editing.
-     * @method selectLabelToEdit
+     * @method toggleLabelToEdit
      * @param label - Label to edit
-     */
-    $scope.selectLabelToEdit = function (label) {
+
+    $scope.toggleLabelToEdit = function (label) {
         if (label.id === $scope.labelToEdit.id && label.edit) {
             label.edit = false;
             $scope.labelToEdit = {content: "", selected: false, edit: false};
@@ -468,6 +469,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         label.edit = true;
         $scope.labelToEdit = Object.create(label);
     };
+     */
 
 
 
@@ -635,6 +637,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
     /**
      * Resets $scope.velpToEdit variable to the initial (empty) state.
+     * NOTE! this function is replaced in 'setVelpToEdit'. When replaced
+     * this mehtod resets the velp that is being edited to its original state.
      * @method resetEditVelp
      */
     $scope.resetEditVelp = function(){

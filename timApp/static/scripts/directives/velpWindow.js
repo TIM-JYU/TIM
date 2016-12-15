@@ -39,8 +39,8 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
     console.log($scope.velp);
     $scope.original = JSON.parse(JSON.stringify($scope.velp)); // clone object
 
-    $scope.submitted = false;
     $scope.newLabel = {content: "", selected: true, valid: true};
+    $scope.labelToEdit = {content: "", selected: false, edit: false, valid: true};
 
     var doc_id = $scope.$parent.docId;
 
@@ -64,13 +64,11 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
     };
 
 
-
     /**
      * Saves velp to database
      * @param form
      */
     $scope.saveVelp = function (form) {
-        $scope.submitted = true;
         if (!form.$valid) return;
 
         form.$setPristine();
@@ -81,7 +79,9 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         });
     };
 
-
+    /**
+     * Cancel edit and restore velp back to its original version
+     */
     $scope.cancelEdit = function () {
         $scope.velp = JSON.parse(JSON.stringify($scope.original));
         $scope.velp.edit = false;
@@ -197,8 +197,75 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
             //$scope.labelAdded = false;
             $scope.velp.labels.push(labelToAdd.id);
         });
+    };
+
+    /**
+     * Selects the label for editing.
+     * @method toggleLabelToEdit
+     * @param label - Label to edit
+     */
+    $scope.toggleLabelToEdit = function (label) {
+
+        if ($scope.labelToEdit.edit && label.id === $scope.labelToEdit.id){
+            $scope.cancelLabelEdit(label);
+            return;
+        }
+
+        if ($scope.labelToEdit.edit) {
+            $scope.labelToEdit.edit = false;
+            for (var i = 0; i < $scope.labels.length; i++) {
+                $scope.labels[i].edit = false;
+            }
+        }
+
+        label.edit = true;
+        copyLabelToEditLabel(label);
+        $scope.setLabelValid($scope.labelToEdit);
 
     };
+
+    $scope.cancelLabelEdit = function (label) {
+        label.edit = false;
+        $scope.labelToEdit = {content: "", selected: false, edit: false, valid: true};
+    };
+
+    var copyLabelToEditLabel = function (label) {
+        for (var key in label){
+            if(!label.hasOwnProperty(key)) continue;
+
+            $scope.labelToEdit[key] = label[key];
+        }
+    };
+
+
+
+    /**
+     * Edits the label according to the $scope.labelToedit variable.
+     * All required data exists in the $scope.labelToedit variable,
+     * including the ID of the label.
+     * TODO: This can be simplified
+     * @method editLabel
+     */
+    $scope.editLabel = function () {
+        if ($scope.labelToEdit.content.length < 1) {
+            return;
+        }
+
+        var updatedLabel = null;
+        for (var i = 0; i < $scope.labels.length; i++) {
+            if ($scope.labels[i].id === $scope.labelToEdit.id) {
+                $scope.labelToEdit.edit = false;
+                $scope.labels[i].content = $scope.labelToEdit.content;
+                $scope.labels[i].edit = false;
+                updatedLabel = $scope.labels[i];
+                break;
+            }
+        }
+
+        $scope.$parent.makePostRequest("/update_velp_label", updatedLabel, function (json) {
+        });
+    };
+
 
     /**
      * Reset new label information to the initial (empty) state.

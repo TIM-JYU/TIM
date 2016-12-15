@@ -4,14 +4,22 @@
                     positive: velp.points > 0,
                     negative: velp.points < 0,
                     inactive: notAnnotationRights(velp.points),
-                    edit: velp.edit}]">
+                    edit: velp.edit}]"><!--
 
+        Show this when velp is NOT being edited
 
-        <!-- Show this when velp is NOT being edited -->
-        <div ng-if="!velp.edit" class="content">
+       --><div ng-if="!velp.edit" class="content">
             <div>
                 {{ velp.content }}
-                {{ velp.points }}
+
+
+                <span ng-click="toggleVelpToEdit(); $event.stopPropagation();"
+                      class="pull-right glyphicon glyphicon-pencil clickable-icon"></span>
+                <span class="points pull-right">{{ velp.points }}</span>
+                <span ng-show="notAnnotationRights(velp.points)"
+                      class="annmark glyphicon glyphicon-exclamation-sign clickable-icon pull-right"
+                      title="You need to have teacher rights to make annotations with points." >
+                </span>
 
                 <div class="tags">
                     <span class="float-right" ng-show="advancedOn"
@@ -20,19 +28,18 @@
                           ng-style="{ color: getColor(label) }"></span>
                 </div>
 
-                <span ng-click="toggleVelpToEdit(); $event.stopPropagation();"
-                      ng-class="['float-right', 'glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
+
             </div>
             <div class="bottom-part"></div>
-        </div>
+        </div><!--
 
-        <!-- Show this when velp IS being edited -->
-        <div ng-if="velp.edit" class="content">
+        Show this when velp IS being edited
+
+     --><div ng-if="velp.edit" class="content">
                             <span ng-click="toggleVelpToEdit(); $event.stopPropagation();"
                             ng-class="['float-right', 'glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
 
         <form name="editVelpForm" ng-submit="saveVelp(editVelpForm)">
-
             <p><input name="velpName" type="text" ng-model="velp.content"
                        required placeholder="Edit velp!">
             </p>
@@ -50,7 +57,9 @@
                 </legend>
 
                 <span ng-repeat="l in labels">
-                    <span ng-show="!l.edit">
+
+                    <!-- Show this when label IS NOT being edited -->
+                    <span ng-if="!l.edit">
                         <label>
                             <input type="checkbox"
                                       ng-click="updateVelpLabels(l)"
@@ -58,27 +67,32 @@
                             {{ l.content }}
                         </label>
 
-                        <span class="float-right" ng-click="selectLabelToEdit(l)"
+                        <span class="float-right" ng-click="toggleLabelToEdit(l)"
                               ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']">
                         </span>
                         <br>
                     </span>
 
-                    <span ng-show="l.edit">
+                    <!-- Show this when label IS being edited -->
+                    <span ng-if="l.edit">
                         <input type="text"
                                placeholder="Add label"
+                               ng-change="setLabelValid(labelToEdit)"
                                ng-model="labelToEdit.content">
 
-                        <span class="float-right" ng-click="selectLabelToEdit(l)"
+                        <span class="float-right" ng-click="toggleLabelToEdit(l)"
                               ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']">
                         </span>
                         <input class="timButton" type="button"
                                value="Save" ng-click="editLabel(labelToEdit)">
                         <input class="timButton" type="button"
-                               value="Cancel" ng-click="selectLabelToEdit(l)">
+                               value="Cancel" ng-click="toggleLabelToEdit(l)">
                         <br>
+                        <span ng-hide="labelToEdit.valid">
+                            <span class="error">Label content too short</span>
+                            <br>
+                        </span>
                     </span>
-
                 </span>
 
                 <input class="addLabelField" placeholder="Add label"
@@ -87,7 +101,6 @@
                 <input class="addLabelBtn" type="button" value="Add"
                        ng-click="addLabel()">
                 <span ng-hide="newLabel.valid" class="error">Label content too short</span>
-
             </fieldset>
 
             <!-- Velp groups -->
@@ -117,6 +130,8 @@
     </div>
 
 </div>
+
+
 <!--
 
                                 <div title ="{{ showDisabledText(notAnnotationRights(velp.points)) }}" class="velp" ng-click="notAnnotationRights(velp.points)||useVelp(velp)"
@@ -179,21 +194,21 @@
                                                                       ng-click="updateVelpLabels(velpToEdit, l)"
                                                                       ng-checked="isLabelInVelp(velpToEdit, l)"> {{ l.content }}
                                                         </label>
-                                                        <span class="float-right" ng-click="selectLabelToEdit(l)"
+                                                        <span class="float-right" ng-click="toggleLabelToEdit(l)"
                                                               ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
                                                         <br>
                                                         </span>
                                                         <span ng-show="l.edit">
                                                             <input type="text" placeholder="Add label"
                                                                    ng-model="labelToEdit.content">
-                                                            <span class="float-right" ng-click="selectLabelToEdit(l)"
+                                                            <span class="float-right" ng-click="toggleLabelToEdit(l)"
                                                                   ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
                                                             <input class="timButton" type="button" value="Save"
                                                                    ng-click="editLabel(labelToEdit)">
                                                             <input
                                                                     class="timButton"
                                                                     type="button" value="Cancel"
-                                                                    ng-click="selectLabelToEdit(l)">
+                                                                    ng-click="toggleLabelToEdit(l)">
                                                             <br>
                                                         </span>
                                                     </span>
