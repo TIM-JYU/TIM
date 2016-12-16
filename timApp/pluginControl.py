@@ -122,23 +122,27 @@ def pluginify(doc: Document,
             <script>
             function showMap(button) {
                 var map = $(".mapContainer")[0];
+                var ui = $(".map_ui")[0];
                 if (button.getAttribute("data-toggle") === "false")
                 {
                     button.setAttribute("data-toggle", "true");
                     map.setAttribute("style", "z-index: 0; position: relative;");
+                    ui.setAttribute("style", "");
                 } else {
                     button.setAttribute("data-toggle", "false");
                     map.setAttribute("style", "z-index: 0; display: none; position: relative;");
+                    ui.setAttribute("style", "display: none;");
                 }
             }
             </script>
             <div class="json_to_mapgenerator" style="display: none;">
                     """+str(gamified_data)+"""</div>
-            <div class="mapContainer">
+            <div class="map_ui">
                 <button class="showFrames">Goals</button>
                 <input type="range" class="mapZoom">Zoom
                 <input type="range" class="alphaRange">Goal Transparency
             </div>
+            <div class="mapContainer"></div>
             """
 
         if plugin_name:
