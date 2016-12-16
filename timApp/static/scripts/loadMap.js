@@ -10,7 +10,7 @@ $(document).ready(function () {
 
     var json;
 
-    var json_to_generator = $(".json_to_mapgenerator")[0].innerHTML.replace(/ /g,'');
+    var json_to_generator = $(".json_to_mapgenerator")[0].innerHTML.replace(/ /g,'%20');
 
 
     // Get the div that will hold canvases

@@ -132,12 +132,13 @@ def pluginify(doc: Document,
                 }
             }
             </script>
+            <button class="showFrames">Goals</button>
+            <input type="range" class="mapZoom">Zoom
+            <input type="range" class="alphaRange">Goal Transparency
             <div class="json_to_mapgenerator" style="display: none;">
                 """+str(gamified_data)+"""</div>
             <div class="mapContainer">
-                <button class="showFrames">Goals</button>
-                <input type="range" class="mapZoom">Zoom
-                <input type="range" class="alphaRange">Goal Transparency
+
             </div>
             """
 
