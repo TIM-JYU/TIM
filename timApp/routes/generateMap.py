@@ -1,8 +1,6 @@
 from flask import Blueprint
-import json
 from copy import deepcopy
 from .common import *
-from timdb import gamificationdata
 
 
 ## Sitten kun painetaan show_mappia
@@ -23,7 +21,7 @@ def generate_Map():
 
     map = ""
     #TODO: Change this to the actual json.
-    coursedata = json.loads(request.query_string.decode("utf-8","strict").replace('%22','"'))
+    coursedata = json.loads(request.query_string.decode("utf-8","strict").replace('%22',' '))
 
     #Get lectures from json
     lecturejson = coursedata['lectures']
