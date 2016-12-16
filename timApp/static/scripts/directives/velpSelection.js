@@ -566,32 +566,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         return $scope.velpToEdit;
     };
 
-    /**
-     * Generates the default velp group and runs the custom method.
-     * @method generateDefaultVelpGroup
-     * @param method - Method to be run after this mehtod.
-     */
-    $scope.generateDefaultVelpGroup = function (method) {
-        if (default_velp_group.edit_access) {
-            $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), "{}", function (json) {
-                var new_default_velp_group = json.data;
-                new_default_velp_group.default = true;
 
-                var index = $scope.velpGroups.indexOf(default_velp_group);
-                $scope.velpGroups.splice(index, 1);
-
-                if ($scope.velpGroups.indexOf(new_default_velp_group) < 0)
-                    $scope.velpGroups.push(new_default_velp_group);
-
-                default_velp_group = new_default_velp_group;
-                console.log(new_default_velp_group);
-                method();
-            });
-        }
-        else {
-            // No edit access to default velp group
-        }
-    };
 
     /**
      * Edits the label according to the $scope.labelToedit variable.

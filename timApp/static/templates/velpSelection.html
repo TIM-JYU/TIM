@@ -57,7 +57,17 @@
 
                 <div class="stack" id="selectVelpsStack">
 
-                    <!-- NEW VELP -->
+                    <velp-window class="velp" ng-style="{top: 0}"
+                                 ng-show="newVelp.edit"
+                                 velp="newVelp"
+                                 index="{{ $index }}"
+                                 velp-groups="velpGroups"
+                                 labels="labels"
+                                 new="true"
+                                 advanced-on="advancedOn"></velp-window>
+
+
+                    <!-- NEW VELP
                     <div ng-model="newVelp" class="velp" ng-style="{top: 0}" ng-hide="!newVelp.edit">
     <div ng-class="['emphasise', 'new', { neutral: newVelp.points == 0, positive: newVelp.points > 0, negative: newVelp.points < 0,
         edit: newVelp.edit}]">
@@ -145,7 +155,7 @@
                     You need to select at least one velpgroup.
                 </p>
                 <p>
-                    <!-- The double click handler prevents adding two velps by accident. -->
+                    <!-- The double click handler prevents adding two velps by accident.
 
                     <input id="addVelpBtn" class="timButton" type="submit" value="Create velp"
                           ng-disabled="!isVelpValid(newVelp)"/>
@@ -153,7 +163,8 @@
             </form>
         </div>
     </div>
-</div>
+
+</div>-->
 
                     <button ng-click="releaseClicked()" class="timButton" id="releaseSelectVelpsButton" style="padding-top: 0px;padding-bottom: 0px;margin-bottom: 10px ">&#8592;</button>
     <div id="selectVelpsDiv" save="%%PAGEID%%selectVelpsDiv" tim-draggable-fixed>
@@ -165,6 +176,7 @@
                              index="{{ $index }}"
                              velp-groups="velpGroups"
                              labels="labels"
+                             new="false"
                              advanced-on="advancedOn"
                              ></velp-window>
         </span>
