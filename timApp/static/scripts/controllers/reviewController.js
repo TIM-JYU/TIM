@@ -753,7 +753,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.useVelp = function (velp) {
 
-        if ($scope.velpToEdit.id >= 0) return;
+        if ($scope.velpToEdit.edit) return;
 
         var newAnnotation = {
             id: -($scope.annotations.length + 1),
