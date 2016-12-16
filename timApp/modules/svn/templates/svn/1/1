@@ -1,21 +1,13 @@
 Gamification
-Inserts a gamification plugin
-``` {#PLUGINNAMEHERE gamification="g"}
----
+Inserts a gamification plugin template
+``` {plugin="gamification"}
 lectures:
-    -
-        path: "kurssit/ohj1/Luento1"
-    -
-        path: "kurssit/ohj1/Luento2"
-    -
-        path: "kurssit/ohj1/Luento3"
+    - path: "dokumentin_polku/Luento1"
+    - path: "dokumentin_polku/Luento2"
+    - path: "dokumentin_polku/Luento3"
 
 demos:
-    -
-        path: "kurssit/ohj1/Demo1"
-    -
-        path: "kurssit/ohj1/Demo2"
-    -
-        path: "kurssit/ohj1/Demo3"
-
+    - path: "dokumentin_polku/Demo1"
+    - path: "dokumentin_polku/Demo2"
+    - path: "dokumentin_polku/Demo3"
 ```
