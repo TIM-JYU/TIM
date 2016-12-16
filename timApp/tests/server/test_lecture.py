@@ -9,15 +9,14 @@ from tests.server.timroutetest import TimRouteTest
 class LectureTest(TimRouteTest):
     def test_lecture(self):
         self.login_test1()
-        doc = self.create_doc(initial_par='testing lecture').document
-        db = self.get_db()
-        name = db.documents.get_first_document_name(doc.doc_id)
+        doc = self.create_doc(initial_par='testing lecture')
+        name = doc.path
         current_time = datetime.datetime.now(tz=timezone.utc)
         time_format = '%H:%M:%S'
         start_time = (current_time - datetime.timedelta(minutes=15))
         end_time = (current_time + datetime.timedelta(hours=2))
         lecture_code = 'test lecture'
-        j = self.post('/createLecture', query_string=dict(doc_id=doc.doc_id,
+        j = self.post('/createLecture', query_string=dict(doc_id=doc.id,
                                                           end_date=end_time,
                                                           lecture_code=lecture_code,
                                                           max_students=50,
@@ -25,7 +24,7 @@ class LectureTest(TimRouteTest):
                                                           start_date=start_time))
         lecture_id = j['lectureId']
         self.assertIsInstance(lecture_id, int)
-        j = self.get('/checkLecture', query_string=dict(doc_id=doc.doc_id))
+        j = self.get('/checkLecture', query_string=dict(doc_id=doc.id))
 
         self.assertDictEqual({'doc_name': name,
                               'endTime': end_time.isoformat(),
@@ -41,7 +40,7 @@ class LectureTest(TimRouteTest):
 
         resp = self.get('/getUpdates',
                         query_string=dict(client_message_id=-1,
-                                          doc_id=doc.doc_id,
+                                          doc_id=doc.id,
                                           get_messages=True,
                                           lecture_id=lecture_id))
         self.assertDictEqual({"isLecture": -1}, resp)
@@ -55,7 +54,7 @@ class LectureTest(TimRouteTest):
         msg_time = msg_datetime.strftime(time_format)
         resp = self.get('/getUpdates',
                         query_string=dict(client_message_id=-1,
-                                          doc_id=doc.doc_id,
+                                          doc_id=doc.id,
                                           get_messages=True,
                                           lecture_id=lecture_id))
 
@@ -73,7 +72,7 @@ class LectureTest(TimRouteTest):
 
         resp = self.get('/getUpdates',
                         query_string=dict(client_message_id=msg_id,
-                                          doc_id=doc.doc_id,
+                                          doc_id=doc.id,
                                           get_messages=True,
                                           lecture_id=lecture_id))
 

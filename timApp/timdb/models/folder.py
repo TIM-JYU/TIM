@@ -1,6 +1,6 @@
 from typing import Optional
 
-from documentmodel.document import Document
+from timdb.item import Item
 from timdb.tim_models import db
 from timdb.blocktypes import blocktypes
 from timdb.dbutils import insert_block, copy_default_rights
@@ -11,21 +11,14 @@ from utils import split_location, join_location
 ROOT_FOLDER_ID = -1
 
 
-class Folder(db.Model):
+class Folder(db.Model, Item):
     __bind_key__ = 'tim_main'
     __tablename__ = 'folder'
     id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     name = db.Column(db.Text, nullable=False)
     location = db.Column(db.Text, nullable=False)
 
-    block = db.relationship('Block', backref=db.backref('folder', lazy='dynamic'))
-
-    def __getattr__(self, item):
-        from routes.accesshelper import get_rights
-        if item == 'rights':
-            self.rights = get_rights(self.id)
-            return self.rights
-        raise AttributeError
+    _block = db.relationship('Block', backref=db.backref('folder', lazy='dynamic'))
 
     @staticmethod
     def get_root() -> 'Folder':
@@ -57,20 +50,16 @@ class Folder(db.Model):
     def parent(self) -> Optional['Folder']:
         if self.is_root():
             return None
-        parent_loc, name = split_location(self.location)
-        return Folder.find_by_location(parent_loc, name) if name else Folder.get_root()
+        return super().parent
 
     @property
     def path(self):
         return self.get_full_path()
 
     @property
-    def title(self):
-        return self.name or 'All documents'
-
-    @property
-    def owner(self):
-        return self.block.owner if self.block else None  # root has no owner
+    def path_without_lang(self):
+        """Returns path without the language part. For folders, this is the same as the path itself."""
+        return self.path
 
     def get_full_path(self) -> str:
         return join_location(self.location, self.name)
@@ -90,9 +79,10 @@ class Folder(db.Model):
             return None
 
     @staticmethod
-    def create(path: str, owner_group_id: int, commit=True, apply_default_rights=False) -> 'Folder':
+    def create(path: str, owner_group_id: int, title=None, commit=True, apply_default_rights=False) -> 'Folder':
         """Creates a new folder with the specified name. If the folder already exists, it is returned.
 
+        :param title: The folder title.
         :param apply_default_rights: Whether to apply default rights from parents.
         :param commit: Whether to commit the changes.
         :param path: The name of the folder to be created.
@@ -114,7 +104,7 @@ class Folder(db.Model):
         if folder is not None:
             return folder
 
-        block_id = insert_block(path, owner_group_id, blocktypes.FOLDER, commit=False)
+        block_id = insert_block(title or path, owner_group_id, blocktypes.FOLDER, commit=False)
 
         f = Folder(id=block_id, name=rel_name, location=rel_path)
         db.session.add(f)
@@ -131,14 +121,6 @@ class Folder(db.Model):
         return f
 
     def to_json(self):
-        return {'id': self.id,
-                'name': self.name,
-                'title': self.title,
-                'location': self.location,
-                'path': self.path,
-                'isFolder': True,
-                'modified': None,  # this is not tracked yet for folders
-                'owner': self.owner,
-                'rights': self.rights,
-                'unpublished': self.block.is_unpublished() if self.block else False
+        return {**super().to_json(),
+                'isFolder': True
                 }

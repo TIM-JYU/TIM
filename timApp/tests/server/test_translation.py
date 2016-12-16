@@ -9,16 +9,20 @@ class TranslationTest(TimRouteTest):
         lang = 'en'
         doc_title = 'test'
         j = self.create_translation(doc, doc_title, lang)
-        self.get('/view/{}'.format(j['name']))
+        self.create_translation(doc, doc_title, lang, expect_status=403,
+                                expect_content={'error': 'Translation for this language already exists'})
+        self.get('/view/{}'.format(j['path']))
         self.logout()
         self.json_post('/translate/{}/{}'.format(doc.id, lang),
                        {'doc_title': doc_title},
                        expect_status=403)
 
-    def create_translation(self, doc, doc_title, lang):
+    def create_translation(self, doc, doc_title, lang, expect_contains=None, expect_content=None, **kwargs):
+        if expect_contains is None and expect_content is None:
+            expect_contains = {'title': doc_title, 'path': doc.name + '/' + lang, 'name': doc.short_name}
         j = self.json_post('/translate/{}/{}'.format(doc.id, lang),
                            {'doc_title': doc_title},
-                           expect_contains={'title': doc_title, 'name': doc.name + '/' + lang})
+                           expect_contains=expect_contains, expect_content=expect_content, **kwargs)
         return j
 
     def test_translation_content(self):

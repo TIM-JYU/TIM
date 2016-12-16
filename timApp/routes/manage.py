@@ -5,9 +5,11 @@ from options import get_option
 from routes.accesshelper import verify_manage_access, verify_ownership, get_rights, verify_view_access, \
     has_manage_access
 from timdb.blocktypes import from_str
+from timdb.item import Item
 from timdb.models.docentry import DocEntry
 from timdb.models.folder import Folder
 from timdb.models.usergroup import UserGroup
+from timdb.tim_models import db
 from .common import *
 
 manage_page = Blueprint('manage_page',
@@ -46,7 +48,7 @@ def manage(path):
 
     return render_template('manage_folder.html' if is_folder else 'manage_document.html',
                            route='manage',
-                           translations=timdb.documents.get_translations(block_id) if not is_folder else None,
+                           translations=doc.translations if not is_folder else None,
                            item=item,
                            access_types=access_types)
 
@@ -107,52 +109,49 @@ def remove_permission(item_id, group_id, perm_type):
 
 @manage_page.route("/alias/<int:doc_id>", methods=["GET"])
 def get_doc_names(doc_id):
-    timdb = get_timdb()
-    names = timdb.documents.get_names(doc_id, include_nonpublic=True)
-    return jsonResponse(names)
+    verify_manage_access(doc_id)
+    return jsonResponse(DocEntry.find_by_id(doc_id, try_translation=True).aliases)
 
 
 @manage_page.route("/alias/<int:doc_id>/<path:new_alias>", methods=["PUT"])
 def add_alias(doc_id, new_alias):
+    verify_manage_access(doc_id)
     timdb = get_timdb()
     is_public = bool(request.get_json()['public'])
 
     new_alias = new_alias.strip('/')
 
-    if not timdb.documents.exists(doc_id):
-        return abort(404, 'The document does not exist!')
+    d = DocEntry.find_by_id(doc_id, try_translation=True)
 
-    if not timdb.users.has_manage_access(get_current_user_id(), doc_id):
-        return abort(403, "You don't have permission to rename this object.")
+    if not d:
+        return abort(404, 'The document does not exist!')
 
     validate_item(new_alias, 'alias')
 
     parent_folder, _ = timdb.folders.split_location(new_alias)
-    timdb.folders.create(parent_folder, get_current_user_group())
-    timdb.documents.add_name(doc_id, new_alias, is_public)
+    Folder.create(parent_folder, get_current_user_group())
+    alias = d.add_alias(new_alias, is_public)
+    db.session.commit()
     return okJsonResponse()
 
 
-@manage_page.route("/alias/<int:doc_id>/<path:alias>", methods=["POST"])
-def change_alias(doc_id, alias):
+@manage_page.route("/alias/<path:alias>", methods=["POST"])
+def change_alias(alias):
     timdb = get_timdb()
     alias = alias.strip('/')
     new_alias = request.get_json()['new_name'].strip('/')
     is_public = bool(request.get_json()['public'])
 
-    doc_id2 = timdb.documents.get_document_id(alias)
-    if doc_id2 is None:
+    doc = DocEntry.find_by_path(alias)
+    if doc is None:
         return abort(404, 'The document does not exist!')
-    if doc_id2 != doc_id:
-        return abort(404, 'The document name does not match the id!')
 
-    if not timdb.users.has_manage_access(get_current_user_id(), doc_id):
-        return abort(403, "You don't have permission to rename this object.")
+    verify_manage_access(doc.id)
 
     new_parent, _ = timdb.folders.split_location(new_alias)
 
     if alias != new_alias:
-        if timdb.documents.get_document_id(new_alias) is not None or timdb.folders.get_folder_id(new_alias) is not None:
+        if DocEntry.find_by_path(new_alias, try_translation=True) is not None or timdb.folders.get_folder_id(new_alias) is not None:
             return abort(403, 'Item with a same name already exists.')
         parent, _ = timdb.folders.split_location(alias)
         if not can_write_to_folder(parent):
@@ -161,26 +160,25 @@ def change_alias(doc_id, alias):
     if not can_write_to_folder(new_parent):
         return abort(403, "You don't have permission to write to the destination folder.")
 
-    timdb.folders.create(new_parent, get_current_user_group())
-    timdb.documents.change_name(doc_id, alias, new_alias, is_public)
+    Folder.create(new_parent, get_current_user_group())
+    doc.name = new_alias
+    doc.public = is_public
+    db.session.commit()
     return okJsonResponse()
 
 
-@manage_page.route("/alias/<int:doc_id>/<path:alias>", methods=["DELETE"])
-def remove_alias(doc_id, alias):
+@manage_page.route("/alias/<path:alias>", methods=["DELETE"])
+def remove_alias(alias):
     timdb = get_timdb()
     alias = alias.strip('/')
 
-    doc_id2 = timdb.documents.get_document_id(alias)
-    if doc_id2 is None:
+    doc = DocEntry.find_by_path(alias)
+    if doc is None:
         return abort(404, 'The document does not exist!')
-    if doc_id2 != doc_id:
-        return abort(404, 'The document name does not match the id!')
 
-    if not timdb.users.user_is_owner(get_current_user_id(), doc_id):
-        return abort(403, "You don't have permission to delete this object.")
+    verify_manage_access(doc.id)
 
-    if len(timdb.documents.get_document_names(doc_id, include_nonpublic=True)) < 2:
+    if len(doc.aliases) <= 1:
         return abort(403, "You can't delete the only name the document has.")
 
     parent_folder, _ = timdb.folders.split_location(alias)
@@ -188,7 +186,8 @@ def remove_alias(doc_id, alias):
     if not can_write_to_folder(parent_folder):
         return abort(403, "You don't have permission to write to that folder.")
 
-    timdb.documents.delete_name(doc_id, alias)
+    db.session.delete(doc)
+    db.session.commit()
     return okJsonResponse()
 
 
@@ -287,4 +286,14 @@ def delete_folder(doc_id):
         return abort(403, "The folder is not empty. Only empty folders can be deleted.")
 
     timdb.folders.delete(doc_id)
+    return okJsonResponse()
+
+
+@manage_page.route("/changeTitle/<int:item_id>", methods=["PUT"])
+def change_title(item_id):
+    verify_manage_access(item_id)
+    item = Item.find_by_id(item_id)
+    new_title, = verify_json_params('new_title')
+    item.title = new_title
+    db.session.commit()
     return okJsonResponse()

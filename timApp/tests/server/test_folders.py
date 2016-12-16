@@ -6,24 +6,15 @@ class FolderTest(TimRouteTest):
     def get_personal_folder_path(self, path):
         return 'users/{}/{}'.format(self.current_user_name(), path)
 
-    def create_folder(self, fname, expect_status=200, **kwargs):
-        f = self.json_post('/createItem',
-                           {'item_path': fname,
-                            'item_type': 'folder'}, expect_status=expect_status, **kwargs)
-        if expect_status == 200:
-            self.assertEqual(fname, f['name'])
-            self.assertIsInstance(f['id'], int)
-        return f
-
     def test_folder_manage(self):
         self.login_test3()
         f = self.create_folder(self.get_personal_folder_path('test_manage'))
-        self.get('/manage/{}'.format(f['name']))
+        self.get('/manage/{}'.format(f['path']))
         self.login_test2()
-        self.get('/manage/{}'.format(f['name']), expect_status=403)
+        self.get('/manage/{}'.format(f['path']), expect_status=403)
         db = self.get_db()
         db.users.grant_access(db.users.get_personal_usergroup_by_id(TEST_USER_2_ID), f['id'], 'manage')
-        self.get('/manage/{}'.format(f['name']))
+        self.get('/manage/{}'.format(f['path']))
 
     def test_folder_delete(self):
         self.login_test1()
@@ -59,14 +50,14 @@ class FolderTest(TimRouteTest):
         fname2 = self.get_personal_folder_path('testing2')
         f3 = self.create_folder(fname2)
         db.users.grant_access(db.users.get_anon_group_id(), f3['id'], 'view')
-
+        self.maxDiff = None
         folder_loc = 'users/testuser1'
         self.get('/getItems', query_string={'folder': user_folder},
                  expect_content=[{'name': 'testing1',
-                                  'title': 'testing1',
+                                  'title': 'foldertitle',
                                   'id': f['id'],
                                   'isFolder': True,
-                                  'modified': None,
+                                  'modified': 'just now',
                                   'path': new_name,
                                   'location': folder_loc,
                                   'owner': {'id': 7, 'name': 'testuser1'},
@@ -78,12 +69,13 @@ class FolderTest(TimRouteTest):
                                              'owner': True,
                                              'see_answers': True,
                                              'teacher': True},
-                                  'unpublished': True},
+                                  'unpublished': True,
+                                  'public': True},
                                  {'name': 'testing2',
-                                  'title': 'testing2',
+                                  'title': 'foldertitle',
                                   'id': f3['id'],
                                   'isFolder': True,
-                                  'modified': None,
+                                  'modified': 'just now',
                                   'path': fname2,
                                   'location': folder_loc,
                                   'owner': {'id': 7, 'name': 'testuser1'},
@@ -95,14 +87,15 @@ class FolderTest(TimRouteTest):
                                              'owner': True,
                                              'see_answers': True,
                                              'teacher': True},
-                                  'unpublished': False}])
+                                  'unpublished': False,
+                                  'public': True}])
         self.logout()
         self.get('/getItems', query_string={'folder': user_folder},
                  expect_content=[{'name': 'testing2',
-                                  'title': 'testing2',
+                                  'title': 'foldertitle',
                                   'id': f3['id'],
                                   'isFolder': True,
-                                  'modified': None,
+                                  'modified': 'just now',
                                   'path': fname2,
                                   'location': folder_loc,
                                   'owner': {'id': 7, 'name': 'testuser1'},
@@ -114,7 +107,8 @@ class FolderTest(TimRouteTest):
                                              'owner': False,
                                              'see_answers': False,
                                              'teacher': False},
-                                  'unpublished': False}])
+                                  'unpublished': False,
+                                  'public': True}])
 
     def test_folders_invalid(self):
         self.login_test1()

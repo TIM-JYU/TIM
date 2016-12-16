@@ -1,6 +1,6 @@
 {% extends obj_name + ".html" %}
 {% set is_folder = obj_name == 'folder' %}
-{% block title %}{{ item.name }} - Manage{% endblock %}
+{% block title %}{{ item.title }} - Manage{% endblock %}
 {% block head %}
     {{ super() }}
     <script src="{{ url_for('static', filename='scripts/manageView/manageCtrl.js') }}"></script>
@@ -54,6 +54,24 @@
                         </rights-editor>
                     </uib-tab>
                 </uib-tabset>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">{{ obj_name|capitalize }} title</div>
+            <div class="panel-body">
+                <form>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <input class="form-control" id="newTitle" type="text" ng-model="newTitle">
+                            <span class="input-group-btn">
+                            <button ng-click="changeTitle(newTitle)" class="timButton"
+                                    ng-disabled="newTitle === item.title">
+                            Update
+                        </button>
+                        </span>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
         {% block managecontent %}{% endblock %}

@@ -38,10 +38,7 @@ class UploadTest(TimRouteTest):
                                            'Try users/{} instead.'.format(self.current_user_name())})
         test1_group = db.users.get_personal_usergroup_by_id(self.current_user_id())
         self.login_test3()
-
-        j = self.json_post('/createItem',
-                           {'item_path': fname,
-                            'item_type': 'folder'})
+        j = self.create_folder(fname)
         db.users.grant_access(test1_group, j['id'], 'edit')
 
         self.login_test1()

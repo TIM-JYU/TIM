@@ -16,7 +16,7 @@
     <div ng-controller="IndexCtrl" class="index">
         <span>Welcome! Start by choosing a document to view: </span>
 
-            <table class="table" ng-show="itemList.length > 0 || parentfolder != null">
+            <table class="table" ng-show="itemList.length > 0 || item.path">
                 <thead>
                 <tr>
                     <th></th>
@@ -27,13 +27,13 @@
                     <th>Rights</th>
                 </tr>
                 </thead>
-                <tr ng-show="parentfolder != null">
+                <tr ng-show="item.path">
                     <td>
-                        <a href="/view/{{ '{{ parentfolder | escape }}' }}">
+                        <a href="/view/{{ '{{ item.location | escape }}' }}">
                             <span class="glyphicon glyphicon-level-up" aria-hidden="true"></span>
                         </a>
                     </td>
-                    <td><a href="/view/{{ '{{ parentfolder | escape }}' }}">Go to parent folder</a></td>
+                    <td><a href="/view/{{ '{{ item.location | escape }}' }}">Go to parent folder</a></td>
                     <td></td>
                     <td></td>
                     <td></td>
@@ -46,7 +46,7 @@
                         </a>
                     </td>
                     <td>
-                        <a href="/view/{{ '{{ item.path | escape }}' }}">{{ '{{ item.name }}' }}</a>
+                        <a href="/view/{{ '{{ item.path | escape }}' }}">{{ '{{ item.title }}' }}</a>
                         <a><i ng-show="item.unpublished" class="glyphicon glyphicon-lock" title="Unpublished item"></i></a>
                     </td>
                     <td></td>

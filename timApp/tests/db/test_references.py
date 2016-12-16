@@ -9,15 +9,17 @@ import unittest
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.documentparser import DocumentParser
 from tests.db.timdbtest import TimDbTest
+from timdb.models.docentry import DocEntry
+from timdb.timdb2 import TimDb
 from timdb.timdbexception import TimDbException
 
 
 class RefTest(TimDbTest):
-    def doc_create(self, db, doc_name):
-        doc_id = db.documents.get_document_id(doc_name)
-        if doc_id is not None:
-            db.documents.delete(doc_id)
-        return db.documents.create(doc_name, owner_group_id=db.users.get_anon_group_id())
+    def doc_create(self, db: TimDb, doc_name):
+        doc = DocEntry.find_by_path(doc_name)
+        if doc is not None:
+            db.documents.delete(doc.id)
+        return DocEntry.create(doc_name, owner_group_id=db.users.get_anon_group_id()).document
 
     def dict_merge(self, a, b):
         c = a.copy()

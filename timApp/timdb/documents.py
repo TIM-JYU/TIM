@@ -8,7 +8,10 @@ from documentmodel.docparagraph import DocParagraph
 from documentmodel.docsettings import DocSettings
 from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser
+from timdb.models.block import Block
 from timdb.models.docentry import DocEntry
+from timdb.models.translation import Translation
+from timdb.tim_models import ReadParagraph, UserNotes, db
 from timdb.timdbbase import TimDbBase
 from timdb.blocktypes import blocktypes
 from timdb.timdbexception import TimDbException
@@ -43,22 +46,18 @@ class Documents(TimDbBase):
         self.update_last_modified(doc)
         return [par], doc
 
-    def create(self, name: str, owner_group_id: int) -> Document:
-        """Creates a new document with the specified name.
-        
-        :param name: The name of the document to be created (can be None).
-        :param owner_group_id: The id of the owner group (can be None).
-        :returns: The newly created document object.
-        """
+    def create_citation(self,
+                        original_doc: Document,
+                        owner_group_id: int,
+                        path: Optional[str]=None,
+                        title: Optional[str]=None,
+                        ref_attribs: Optional[Dict[str, str]] = None) -> Document:
+        """Creates a citation document with the specified name. Each paragraph of the citation document
+        references the paragraph in the original document.
 
-        return DocEntry.create(name, owner_group_id).document
-
-    def create_translation(self, original_doc: Document, name: Optional[str], owner_group_id: int,
-                           ref_attribs: Optional[Dict[str, str]] = None) -> Document:
-        """Creates a translation document with the specified name.
-
-        :param original_doc: The original document to be translated.
-        :param name: The name of the document to be created.
+        :param title: The document title.
+        :param original_doc: The original document to be cited.
+        :param path: The path of the document to be created.
         :param owner_group_id: The id of the owner group.
         :param ref_attribs: Reference attributes to be used globally.
         :returns: The newly created document object.
@@ -67,9 +66,12 @@ class Documents(TimDbBase):
         if not original_doc.exists():
             raise TimDbException('The document does not exist!')
 
-        ref_attrs = ref_attribs if ref_attribs is not None else []
+        ref_attrs = ref_attribs if ref_attribs is not None else {}
 
-        doc = self.create(name, owner_group_id)
+        # For translations, name is None and no DocEntry is created in database.
+        doc_entry = DocEntry.create(path, owner_group_id, title)
+        doc = doc_entry.document
+
         first_par = True
         r = ref_attrs['r'] if 'r' in ref_attrs else 'tr'
 
@@ -88,7 +90,7 @@ class Documents(TimDbBase):
 
             doc.add_paragraph_obj(ref_par)
 
-        return doc
+        return doc_entry
 
     def delete(self, document_id: int):
         """Deletes the specified document.
@@ -97,18 +99,15 @@ class Documents(TimDbBase):
         """
 
         assert self.exists(document_id), 'document does not exist: %d' % document_id
-
-        cursor = self.db.cursor()
-        cursor.execute('DELETE FROM DocEntry WHERE id = %s', [document_id])
-        cursor.execute('DELETE FROM Block WHERE type_id = %s AND id = %s', [blocktypes.DOCUMENT, document_id])
-        cursor.execute('DELETE FROM ReadParagraphs where doc_id = %s', [document_id])
-        cursor.execute('DELETE FROM UserNotes where doc_id = %s', [document_id])
-        cursor.execute('DELETE FROM Translation WHERE doc_id = %s OR src_docid = %s', [document_id, document_id])
-        self.db.commit()
-
+        DocEntry.query.filter_by(id=document_id).delete()
+        Block.query.filter_by(type_id=blocktypes.DOCUMENT, id=document_id).delete()
+        ReadParagraph.query.filter_by(doc_id=document_id).delete()
+        UserNotes.query.filter_by(doc_id=document_id).delete()
+        Translation.query.filter((Translation.doc_id == document_id) | (Translation.src_docid == document_id)).delete()
+        db.session.commit()
         Document.remove(document_id)
 
-    def recover_db(self, usergroup_id: int, folder: str = None) -> bool:
+    def recover_db(self, usergroup_id: int, folder: str = None) -> int:
         """Recreates database entries for documents that already exist on the disk
         :param usergroup_id Owner for recovered documents
         :param folder Folder in which the recovered documents are placed
@@ -146,118 +145,6 @@ class Documents(TimDbBase):
 
         return recovered
 
-    def get_names(self, document_id: int, return_json: bool = False, include_nonpublic: bool = False) -> List[dict]:
-        """Gets the list of all names a document is known by.
-
-        :param document_id: The id of the document to be retrieved.
-        :param include_nonpublic: Whether to include non-public document names or not.
-        :returns: A list of dictionaries with items {name, location, path, public}
-        """
-        cursor = self.db.cursor()
-        public_clause = '' if include_nonpublic else ' AND public = TRUE'
-        cursor.execute('SELECT name, public FROM DocEntry WHERE id = %s' + public_clause, [document_id])
-        names = self.resultAsDictionary(cursor)
-
-        for item in names:
-            name = item['name']
-            item['path'] = name
-            item['location'], item['name'] = self.split_location(name)
-
-        return names
-
-    def add_name(self, doc_id: int, name: str, public: bool = True):
-        cursor = self.db.cursor()
-        cursor.execute("INSERT INTO DocEntry (id, name, public) VALUES (%s, %s, %s)",
-                       [doc_id, name, public])
-        self.db.commit()
-
-    def delete_name(self, doc_id: int, name: str):
-        cursor = self.db.cursor()
-        cursor.execute("DELETE FROM DocEntry WHERE id = %s AND name = %s",
-                       [doc_id, name])
-        self.db.commit()
-
-    def change_name(self, doc_id: int, old_name: str, new_name: str, public: bool = True):
-        cursor = self.db.cursor()
-        cursor.execute("UPDATE DocEntry SET name = %s, public = %s WHERE id = %s AND name = %s",
-                       [new_name, public, doc_id, old_name])
-        self.db.commit()
-
-    def add_translation(self, doc_id: int, src_docid: int, lang_id: str, title: Optional[str]=None):
-        cursor = self.db.cursor()
-        cursor.execute("INSERT INTO Translation (doc_id, src_docid, lang_id, doc_title) VALUES (%s, %s, %s, %s)",
-                       [doc_id, src_docid, lang_id, title])
-        self.db.commit()
-
-    def remove_translation(self, doc_id: int, commit=True):
-        cursor = self.db.cursor()
-        cursor.execute("DELETE FROM Translation WHERE doc_id = %s", [doc_id])
-        if commit:
-            self.db.commit()
-
-    def get_translation_source(self, doc_id: int) -> int:
-        cursor = self.db.cursor()
-        cursor.execute("SELECT src_docid FROM Translation WHERE doc_id = %s", [doc_id])
-        result = cursor.fetchone()
-        return result[0] if result is not None else doc_id
-
-    def get_translations(self, doc_id: int) -> List[dict]:
-        cursor = self.db.cursor()
-        cursor.execute("SELECT src_docid FROM Translation WHERE doc_id = %s", [doc_id])
-        result = cursor.fetchone()
-        src_docid = doc_id if result is None else result[0]
-        src_name = self.get_first_document_name(src_docid, check_translations=False)
-
-        cursor.execute("""SELECT doc_id as id, lang_id, doc_title as title FROM Translation
-                          WHERE src_docid = %s
-                       """, [src_docid])
-        results = self.resultAsDictionary(cursor)
-
-        for tr in results:
-            tr['src_docid'] = src_docid
-            tr['owner_id'] = self.get_owner(tr['id'])
-            tr['name'] = self.get_translation_path(doc_id, src_name, tr['lang_id'])
-
-        return results
-
-    def get_translation(self, src_docid: int, lang_id: str) -> Optional[int]:
-        cursor = self.db.cursor()
-        cursor.execute("SELECT doc_id FROM Translation WHERE src_docid = %s AND lang_id = %s",
-                       [src_docid, lang_id])
-        result = cursor.fetchone()
-        return result[0] if result is not None else None
-
-    def get_translation_title(self, doc_id: int) -> Optional[str]:
-        cursor = self.db.cursor()
-        cursor.execute("SELECT doc_title FROM Translation WHERE doc_id = %s", [doc_id])
-        result = cursor.fetchone()
-        return result[0] if result is not None else None
-
-    def get_translation_path(self, doc_id: int, src_doc_name: Optional[str], lang_id: Optional[str]) -> str:
-        if src_doc_name is None or lang_id is None:
-            return str(doc_id)
-
-        return src_doc_name + '/' + lang_id
-
-    def translation_exists(self, src_doc_id: int, lang_id: Optional[str]=None, doc_id: Optional[int]=None) -> bool:
-        if lang_id is None and doc_id is None:
-            raise TimDbException("translation_exists called with all parameters null")
-
-        cursor = self.db.cursor()
-        base_statement = "SELECT EXISTS(SELECT doc_id FROM Translation WHERE src_docid = %s{0})"
-        langid_clause = " AND lang_id = %s"
-        docid_clause = " AND doc_id = %s"
-
-        if doc_id is None:
-            cursor.execute(base_statement.format(langid_clause), [src_doc_id, lang_id])
-        elif lang_id is None:
-            cursor.execute(base_statement.format(docid_clause), [src_doc_id, doc_id])
-        else:
-            cursor.execute(base_statement.format(docid_clause + langid_clause), [src_doc_id, doc_id, lang_id])
-
-        result = cursor.fetchone()
-        return result[0] == 1
-
     def delete_paragraph(self, doc: Document, par_id: str) -> Document:
         """Deletes a paragraph from a document.
         
@@ -277,70 +164,6 @@ class Documents(TimDbBase):
         """
 
         return self.blockExists(document_id, blocktypes.DOCUMENT)
-
-    def get_document_id(self, document_name: str, try_translation=True) -> Optional[int]:
-        """Gets the document's identifier by its name or None if not found.
-        
-        :param document_name: The name of the document.
-        :returns: The document id, or none if not found.
-        """
-        cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM DocEntry WHERE name = %s', [document_name])
-        row = cursor.fetchone()
-        if row is None:
-            # Try if it's a name for a translation
-            parts = document_name.rsplit('/', 1)
-            if len(parts) < 2:
-                return None
-            src_docid = self.get_document_id(parts[0], try_translation=False)
-            if src_docid is None:
-                return None
-            return self.get_translation(src_docid, parts[1])
-
-        return row[0]
-
-    def get_document_names(self, document_id: int, include_nonpublic=True) -> List[dict]:
-        """Gets the document's names by its id.
-
-        :param document_id: The id of the document.
-        :returns: A list of dictionaries in format [{'name': (str), 'public': (bool)}, ...].
-        """
-        cursor = self.db.cursor()
-        public_clause = '' if include_nonpublic else ' WHERE public = True'
-        cursor.execute('SELECT name, public FROM DocEntry WHERE id = %s' + public_clause, [document_id])
-        return self.resultAsDictionary(cursor)
-
-    def get_first_document_name(self, document_id: int, check_translations: bool = True) -> str:
-        """Gets the first public (or non-public if not found) name for a document id.
-
-        :param document_id: The id of the document.
-        :returns: A name for the document.
-        """
-        aliases = self.get_document_names(document_id)
-        for alias in aliases:
-            if alias['public']:
-                return alias['name']
-        if len(aliases) > 0:
-            return aliases[0]['name']
-
-        if check_translations:
-            translations = self.get_translations(document_id)
-            for tr in translations:
-                if tr['id'] == document_id:
-                    return tr['name']
-
-        return 'Untitled document'
-
-    def get_document(self, document_id: int) -> Optional[dict]:
-        """Gets the metadata information of the specified document.
-        
-        :param document_id: The id of the document to be retrieved.
-        :returns: A row representing the document.
-        """
-        cursor = self.db.cursor()
-        cursor.execute("SELECT id, name FROM DocEntry WHERE id = %s", [document_id])
-        rows = self.resultAsDictionary(cursor)
-        return rows[0] if len(rows) > 0 else None
 
     def get_documents(self, include_nonpublic: bool = False,
                       filter_ids: Optional[Iterable[int]]=None,
@@ -400,7 +223,7 @@ class Documents(TimDbBase):
         return self.import_document(content, document_name, owner_group_id)
 
     def import_document(self, content: str, document_name: str, owner_group_id: int) -> Document:
-        doc = self.create(document_name, owner_group_id)
+        doc = DocEntry.create(document_name, owner_group_id).document
         parser = DocumentParser(content)
         for block in parser.get_blocks():
             doc.add_paragraph(text=block['md'], attrs=block.get('attrs'))
@@ -456,18 +279,6 @@ class Documents(TimDbBase):
                        [blocktypes.DOCUMENT, doc.doc_id])
         if commit:
             self.db.commit()
-
-    def get_doc_title(self, doc_id: int, full_name: Optional[str]) -> Optional[str]:
-        title = self.get_translation_title(doc_id)
-        if title is not None:
-            return title
-        if full_name is None:
-            return "Untitled"
-        return self.get_short_name(full_name)
-
-    def get_short_name(self, full_name: str) -> str:
-        parts = full_name.rsplit('/', 1)
-        return parts[len(parts) - 1]
 
     def get_notify_settings(self, user_id: int, doc_id: int) -> dict:
         cursor = self.db.cursor()

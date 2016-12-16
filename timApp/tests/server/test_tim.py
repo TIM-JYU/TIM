@@ -41,8 +41,9 @@ class TimTest(TimRouteTest):
         for idx, n in enumerate(doc_names):
             self.json_post('/createItem', {
                 'item_path': n,
-                'item_type': 'document'
-            }, expect_content={'id': doc_id_list[idx], 'name': doc_names[idx]})
+                'item_type': 'document',
+                'item_title': 'document ' + n
+            }, expect_contains={'id': doc_id_list[idx], 'path': doc_names[idx]})
             doc_ids.add(doc_id_list[idx])
         self.json_put('/permissions/add/{}/{}/{}'.format(doc_id, 'Anonymous users', 'view'), expect_content=self.ok_resp)
         self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[1], 'Logged-in users', 'view'), expect_content=self.ok_resp)

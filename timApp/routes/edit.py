@@ -47,10 +47,10 @@ def update_document(doc_id):
         original = request.form['original']
         strict_validation = not request.form.get('ignore_warnings', False)
     elif 'template_name' in request.get_json():
-        template_id = timdb.documents.get_document_id(request.get_json()['template_name'])
-        if not has_manage_access(template_id):
+        template = DocEntry.find_by_path(request.get_json()['template_name'], try_translation=True)
+        if not has_manage_access(template.id):
             abort(403, 'Permission denied')
-        doc = Document(template_id)
+        doc = template.document
         content = doc.export_markdown()
         if content == '':
             return abort(400, 'The selected template is empty.')
@@ -659,8 +659,6 @@ def delete_paragraph(doc_id):
         text = doc.export_section(par_id, par_id)
         timdb.documents.delete_paragraph(doc, par_id)
 
-    user_name = get_current_user_name()
-    doc_name = timdb.documents.get_first_document_name(doc_id)
     notify_doc_owner(doc_id, '[user_name] has edited your document [doc_name]',
                      '[user_name] has deleted the following paragraph(s) from your document [doc_url]\n\n{}'.format(
                          text), setting="doc_modify",

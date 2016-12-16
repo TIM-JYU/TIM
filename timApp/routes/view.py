@@ -106,7 +106,8 @@ def par_info(doc_id, par_id):
     def just_name(fullpath):
         return ('/' + fullpath).rsplit('/', 1)[1]
 
-    doc_name = timdb.documents.get_first_document_name(doc_id)
+    doc = DocEntry.find_by_id(doc_id, try_translation=True)
+    doc_name = doc.path
     info['doc_name'] = just_name(doc_name) if doc_name is not None else 'Document #{}'.format(doc_id)
 
     group = timdb.users.get_owner_group(doc_id)
@@ -160,18 +161,16 @@ def try_return_folder(doc_name):
     if block_id is None and item_name == 'users/' + user_name:
         # This is the user's personal folder and it doesn't exist yet.
         # Create it
-        block_id = timdb.folders.create('users/' + user_name, get_current_user_group())
+        block_id = Folder.create('users/' + user_name, get_current_user_group()).id
 
     elif block_id is None:
-        while (block_id is None):
+        while block_id is None:
             item_name, _ = timdb.folders.split_location(item_name)
             block_id = timdb.folders.get_folder_id(item_name)
-            if block_id is None:
-                block_id = timdb.documents.get_document_id(item_name)
 
-        foundItem = None
+        found_item = None
         if verify_view_access(block_id, require=False):
-            foundItem = item_name
+            found_item = item_name
 
         can_create_new = can_write_to_folder(item_name) and timdb.folders.get_folder_id(item_name) is not None
 
@@ -180,7 +179,7 @@ def try_return_folder(doc_name):
                                in_lecture=is_in_lecture,
                                settings=settings,
                                newItem=doc_name,
-                               foundItem=foundItem), 404
+                               foundItem=found_item), 404
     verify_view_access(block_id)
     folder = Folder.get_by_id(block_id)
     return render_template('index.html',
@@ -297,8 +296,6 @@ def view(doc_path, template_name, usergroup=None, route="view"):
         if is_in_lecture:
             is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
 
-    translations = timdb.documents.get_translations(doc_id)
-
     # Close database here because we won't need it for a while
     timdb.close()
 
@@ -356,7 +353,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                            start_index=start_index,
                            in_lecture=is_in_lecture,
                            group=usergroup,
-                           translations=translations,
+                           translations=doc_info.translations,
                            reqs=pluginControl.get_all_reqs(),
                            settings=settings,
                            no_browser=hide_answers,

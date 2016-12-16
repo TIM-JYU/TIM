@@ -25,16 +25,16 @@ class VelpTest(TimRouteTest):
         root_velp_group_folder = "velp groups"
         user_velp_group_folder = "{}/velp groups".format(user_folder)   # users/testuser1/velp groups
         deep_velp_group_folder = "{}/velp groups".format(deeper_folder) # users/testuser1/test/velp groups
-        db.folders.create(user_folder, 7)
-        db.folders.create(deeper_folder, 7)
-        db.folders.create(root_velp_group_folder, 7)
-        db.folders.create(user_velp_group_folder, 7)
-        db.folders.create(deep_velp_group_folder, 7)
-        doc1 = db.documents.create(test_doc1, 7)    # users/testuser1/test1 #owner: testuser1
+        Folder.create(user_folder, 7)
+        Folder.create(deeper_folder, 7)
+        Folder.create(root_velp_group_folder, 7)
+        Folder.create(user_velp_group_folder, 7)
+        Folder.create(deep_velp_group_folder, 7)
+        doc1 = DocEntry.create(test_doc1, 7).document    # users/testuser1/test1 #owner: testuser1
         doc1_id = doc1.doc_id
-        doc2 = db.documents.create(test_doc2, 8)    # users/testuser1/test2 #owner: testuser2
+        doc2 = DocEntry.create(test_doc2, 8).document    # users/testuser1/test2 #owner: testuser2
         doc2_id = doc2.doc_id
-        doc3 = db.documents.create(test_doc3, 7)    # users/testuser1/test/test3 #owner: testuser1
+        doc3 = DocEntry.create(test_doc3, 7).document    # users/testuser1/test/test3 #owner: testuser1
         doc3_id = doc3.doc_id
 
         # Try to get velp groups for document that has none
@@ -62,14 +62,14 @@ class VelpTest(TimRouteTest):
         # User should only see one of them as velp group due to lack of view right for the other
         test_group1 = '{}/test1/test_group1'.format(user_velp_group_folder)
         test_group2 = '{}/test1/test_group2'.format(user_velp_group_folder)
-        db.documents.create(test_group1, 7)
-        db.documents.create(test_group2, 8)
+        DocEntry.create(test_group1, 7)
+        DocEntry.create(test_group2, 8)
         resp = self.get('/{}/get_velp_groups'.format(str(doc1_id)))
         self.assertEqual(len(resp), 3)
 
         # Create default velp group manually for test 3 file which route notices and turns that document to a velp group
         test3_default_path = '{}/test3/test3_default'.format(deep_velp_group_folder)
-        test3_default = db.documents.create(test3_default_path, 7)
+        test3_default = DocEntry.create(test3_default_path, 7).document
         test3_default_id = test3_default.doc_id
         j = self.json_post('/{}/create_default_velp_group'.format(str(doc3_id)))
         self.assertEqual('test3_default', j['name'])
@@ -82,7 +82,7 @@ class VelpTest(TimRouteTest):
         # Add velp group to root velp group folder
         # Both documents test1 and test3 should now have one more velp group to use
         test_group3 = '{}/test_group3'.format(root_velp_group_folder)
-        db.documents.create(test_group3, 7)
+        DocEntry.create(test_group3, 7)
         resp = self.get('/{}/get_velp_groups'.format(str(doc1_id)))
         self.assertEqual(len(resp), 4)
         resp = self.get('/{}/get_velp_groups'.format(str(doc3_id)))

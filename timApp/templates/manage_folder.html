@@ -2,11 +2,11 @@
 {% set obj_name = 'folder' %}
 {% block managecontent %}
     <div class="panel panel-default">
-        <div class="panel-heading">Name and location</div>
+        <div class="panel-heading">Short name and location</div>
         <div class="panel-body">
             <form>
                 <div class="form-group">
-                    <label for="newName" class="control-label">Folder name:</label>
+                    <label for="newName" class="control-label">Short name:</label>
                     <div class="input-group">
                         <input class="form-control" id="newName" type="text" ng-model="newName">
                         <span class="input-group-btn">
@@ -29,6 +29,9 @@
                     </div>
                 </div>
             </form>
+            <div class="alert alert-info" role="alert">
+                <i class="glyphicon glyphicon-info-sign"></i> Avoid spaces and scandinavian characters (e.g. ä, ö, å) in short name and location.
+            </div>
         </div>
     </div>
     <div class="margin">

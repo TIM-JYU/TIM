@@ -11,6 +11,7 @@ from routes.logger import log_info
 from sql.migrate_to_postgre import perform_migration
 from tim_app import app
 from timdb import tempdb_models
+from timdb.models.docentry import DocEntry
 from timdb.tim_models import Version, AccessType, db
 from timdb.timdb2 import TimDb
 from timdb.timdbexception import TimDbException
@@ -83,8 +84,8 @@ def initialize_database(create_docs=True):
             print('Skipping creating example documents.')
 
         elif create_docs:
-            timdb.documents.create('Testaus 1', anon_group)
-            timdb.documents.create('Testaus 2', anon_group)
+            DocEntry.create('Testaus 1', anon_group)
+            DocEntry.create('Testaus 2', anon_group)
             timdb.documents.import_document_from_file('example_docs/programming_examples.md',
                                                       'Programming examples',
                                                       anon_group)

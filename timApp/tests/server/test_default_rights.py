@@ -63,9 +63,7 @@ class DefaultRightTest(TimRouteTest):
                      'fullname': None,
                      'access_name': 'view'})
             elif obj_type == blocktypes.FOLDER:
-                f = self.json_post('/createItem',
-                                   {"item_path": 'users/testuser1/asd',
-                                    'item_type': 'folder'})
+                f = self.create_folder('users/testuser1/asd', 'folder')
                 new_item_rights = timdb.users.get_rights_holders(f['id'])
             else:
                 raise Exception('error in test: object type should be document or folder')

@@ -28,7 +28,7 @@ velps = Blueprint('velps',
 
 
 @velps.route("/<int:doc_id>/get_default_velp_group", methods=['GET'])
-def get_default_velp_group(doc_id: int) -> Dict:
+def get_default_velp_group(doc_id: int):
     """Get default velp group ID and if  velp group doesn't exist yet, create one.
 
     :param doc_id: ID of document
@@ -37,8 +37,8 @@ def get_default_velp_group(doc_id: int) -> Dict:
     timdb = get_timdb()
     user_id = get_current_user_id()
 
-    owner_group_id = timdb.documents.get_owner(doc_id)
-    full_path = timdb.documents.get_first_document_name(doc_id)
+    doc = DocEntry.find_by_id(doc_id)
+    full_path = doc.path
     doc_path, doc_name = timdb.documents.split_location(full_path)
     edit_access = False
     if timdb.users.has_edit_access(user_id, doc_id):
@@ -81,7 +81,7 @@ def get_default_velp_group(doc_id: int) -> Dict:
 
 
 @velps.route("/get_default_personal_velp_group", methods=['GET'])
-def get_default_personal_velp_group() -> Dict:
+def get_default_personal_velp_group():
     """ Get default personal velp group ID and if velp group doesn't exist yet, create one.
 
     :return: Dictionary containing personal velp group data.
@@ -100,9 +100,9 @@ def get_default_personal_velp_group() -> Dict:
     else:
         group_name = "Personal default"
         new_group_path = personal_velp_group_path + "/" + group_name
-        group_exists = DocEntry.find_by_path(new_group_path)
-        if group_exists:
-            default_id = timdb.documents.get_document_id(new_group_path)
+        group = DocEntry.find_by_path(new_group_path)
+        if group:
+            default_id = group.id
             timdb.velp_groups.update_velp_group_to_default_velp_group(default_id)
             created_new = False
         else:
@@ -620,7 +620,8 @@ def create_velp_group(doc_id: int) -> Dict:
 
     timdb = get_timdb()
 
-    full_path = timdb.documents.get_first_document_name(doc_id)
+    doc = DocEntry.find_by_id(doc_id)
+    full_path = doc.path
     doc_path, doc_name = timdb.documents.split_location(full_path)
 
     # valid_until = json_data.get('valid_until')
@@ -702,7 +703,8 @@ def create_default_velp_group(doc_id: int):
 
     timdb = get_timdb()
 
-    full_path = timdb.documents.get_first_document_name(doc_id)
+    doc = DocEntry.find_by_id(doc_id)
+    full_path = doc.path
     doc_path, doc_name = timdb.documents.split_location(full_path)
 
     verify_logged_in()
@@ -733,9 +735,9 @@ def create_default_velp_group(doc_id: int):
                 timdb.users.grant_access(right['gid'], velp_group_id, right['access_name'])
 
     else:
-        default_id = timdb.documents.get_document_id(new_group_path)
-        velp_group_id = timdb.velp_groups.make_document_a_velp_group(velp_group_name, default_id, None, True)
-        timdb.velp_groups.update_velp_group_to_default_velp_group(default_id)
+        default = DocEntry.find_by_path(new_group_path)
+        velp_group_id = timdb.velp_groups.make_document_a_velp_group(velp_group_name, default.id, None, True)
+        timdb.velp_groups.update_velp_group_to_default_velp_group(default.id)
         created_new_group = False
 
     created_velp_group = dict()
@@ -774,7 +776,8 @@ def get_velp_groups_from_tree(document_id: int):
 
     doc_id = int(document_id)
     timdb = get_timdb()
-    full_path = timdb.documents.get_first_document_name(doc_id)
+    doc = DocEntry.find_by_id(doc_id)
+    full_path = doc.path
     doc_path, doc_name = timdb.documents.split_location(full_path)
     velp_group_folder = "velp groups"
 
@@ -819,7 +822,7 @@ def get_velp_groups_from_tree(document_id: int):
     for result in results:
         is_velp_group = timdb.velp_groups.is_id_velp_group(result.id)
         if not is_velp_group:
-            _, group_name = timdb.documents.split_location(timdb.documents.get_first_document_name(result.id))
+            _, group_name = timdb.documents.split_location(result.path)
             timdb.velp_groups.make_document_a_velp_group(group_name, result.id)
 
     return results

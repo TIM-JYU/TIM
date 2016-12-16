@@ -1,8 +1,20 @@
 <div class="form-group">
     <label>
-        Name:
-        <input class="form-control" ng-model="itemName" type="text">
+        Title:
+        <input class="form-control" ng-model="itemTitle" type="text" ng-change="titleChanged()">
     </label>
+</div>
+<div class="form-group">
+    <label>
+        Short name:
+        <input class="form-control" ng-model="itemName" type="text" placeholder="Type title first"
+               ng-keyup="nameChanged()">
+    </label>
+    <div class="checkbox">
+        <label>
+            <input type="checkbox" ng-model="automaticShortName"> Set automatically based on title
+        </label>
+    </div>
 </div>
 <div class="form-group">
     <label>
@@ -11,5 +23,5 @@
 </div>
 <div uib-alert ng-repeat="alert in alerts" ng-class="'alert-' + (alert.type || 'warning')"
      close="closeAlert($index)">{{ alert.msg }}</div>
-<button class="timButton" ng-disabled="!itemName" ng-click="createItem(itemName)" type="button">Create
+<button class="timButton" ng-disabled="!itemName || !itemTitle" ng-click="createItem()" type="button">Create
 </button>

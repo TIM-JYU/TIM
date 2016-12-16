@@ -23,6 +23,8 @@ from routes.dbaccess import get_timdb
 from routes.sessioninfo import get_session_usergroup_ids, get_current_user_id, get_current_user_name, \
     get_current_user_group, logged_in
 from theme import Theme
+from timdb.models.docentry import DocEntry
+from timdb.models.folder import Folder
 from timdb.models.user import User
 from utils import generate_theme_scss, get_combined_css_filename, ThemeNotFoundException
 
@@ -349,7 +351,7 @@ def validate_item(item_name, item_type):
         abort(400, 'The {} name can not be a number to avoid confusion with document id.'.format(item_type))
     timdb = get_timdb()
     username = get_current_user_name()
-    if timdb.documents.get_document_id(item_name) is not None or timdb.folders.get_folder_id(item_name) is not None:
+    if DocEntry.find_by_path(item_name, try_translation=True) is not None or timdb.folders.get_folder_id(item_name) is not None:
         abort(403, 'Item with a same name already exists.')
 
     if not can_write_to_folder(item_name):
@@ -360,7 +362,7 @@ def validate_item_and_create(item_name, item_type, owner_group_id):
     timdb = get_timdb()
     validate_item(item_name, item_type)
     item_path, _ = timdb.folders.split_location(item_name)
-    timdb.folders.create(item_path, owner_group_id, apply_default_rights=True)
+    Folder.create(item_path, owner_group_id, apply_default_rights=True)
 
 
 def get_user_settings():

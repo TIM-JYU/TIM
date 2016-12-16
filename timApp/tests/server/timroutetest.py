@@ -207,7 +207,8 @@ class TimRouteTest(TimDbTest):
             for s in expect_contains:
                 self.assertIn(s, data)
         elif isinstance(expect_contains, dict):
-            self.assertTrue(set(expect_contains.items()).issubset(data.items()))
+            for k, v in expect_contains.items():
+                self.assertEqual(v, data[k], msg='Key {} was different'.format(k))
         else:
             self.assertTrue(False, 'Unknown type for expect_contains parameter')
 
@@ -442,27 +443,40 @@ class TimRouteTest(TimDbTest):
                          data={'email': email, 'password': passw, 'add_user': add},
                          follow_redirects=True, **kwargs)
 
-    def create_doc(self, docname: Optional[str] = None, from_file: Optional[str] = None,
+    def create_doc(self, path: Optional[str] = None,
+                   from_file: Optional[str] = None,
                    initial_par: Optional[str] = None,
-                   settings: Optional[Dict] = None) -> DocEntry:
+                   settings: Optional[Dict] = None,
+                   copy_from: Optional[int] = None,
+                   cite: Optional[int] = None,
+                   expect_status=200,
+                   **kwargs
+                   ) -> Optional[DocEntry]:
         """Creates a new document.
 
-        :param docname: The path of the document.
+        :param copy_from: The id of an existing document if creating a copy.
+        :param cite: The id of an existing document if citing another document.
+        :param path: The path of the document.
         :param from_file: If specified, loads the document content from the specified file.
         :param initial_par: The content of the initial paragraph.
         :param settings: The settings for the document.
         :return: The DocEntry object.
         """
-        if docname is None:
-            docname = 'users/{}/doc{}'.format(self.current_user_name(), self.doc_num)
+        if path is None:
+            path = 'users/{}/doc{}'.format(self.current_user_name(), self.doc_num)
             self.__class__.doc_num += 1
         resp = self.json_post('/createItem', {
-            'item_path': docname,
-            'item_type': 'document'
-        })
+            'item_path': path,
+            'item_type': 'document',
+            'item_title': 'document ' + str(self.doc_num),
+            **({'copy': copy_from} if copy_from else {}),
+            **({'cite': cite} if cite else {})
+        }, expect_status=expect_status, **kwargs)
+        if expect_status != 200:
+            return None
         self.assertIsInstance(resp['id'], int)
-        self.assertEqual(docname, resp['name'])
-        de = DocEntry.find_by_path(docname)
+        self.assertEqual(path, resp['path'])
+        de = DocEntry.find_by_path(path)
         doc = de.document
         if from_file is not None:
             with open(from_file, encoding='utf-8') as f:
@@ -472,6 +486,17 @@ class TimRouteTest(TimDbTest):
         if settings is not None:
             doc.set_settings(settings)
         return de
+
+    def create_folder(self, path: str, title: str='foldertitle', expect_status=200, **kwargs):
+        f = self.json_post('/createItem',
+                              {'item_path': path,
+                               'item_type': 'folder',
+                               'item_title': title}, expect_status=expect_status, **kwargs)
+
+        if expect_status == 200:
+            self.assertEqual(path, f['path'])
+            self.assertIsInstance(f['id'], int)
+        return f
 
     def tearDown(self):
         """While testing, the Flask-SQLAlchemy session needs to be removed manually;

@@ -1,29 +1,21 @@
 from documentmodel.document import Document
+from timdb.item import Item
+from timdb.models.block import Block
+from timdb.tim_models import db
 from utils import split_location, date_to_relative
 
 
-class DocInfo:
+class DocInfo(Item):
     """A base class for DocEntry and Translation."""
+    @property
+    def src_docid(self):
+        """Returns the source document id in case of a translation or the document id itself otherwise."""
+        return self.id
 
     @property
-    def block(self):
-        """Returns the Block object that corresponds to this DocInfo."""
-        raise NotImplementedError
-
-    @property
-    def id(self):
-        """Returns the Document id."""
-        raise NotImplementedError
-
-    @property
-    def path(self):
-        """Returns the Document path, including the language part in case of a translation."""
-        raise NotImplementedError
-
-    @property
-    def path_without_lang(self):
-        """Returns the Document path without the language part in case of a translation."""
-        raise NotImplementedError
+    def aliases(self):
+        from timdb.models.docentry import DocEntry
+        return DocEntry.find_all_by_id(self.src_docid)
 
     @property
     def document(self):
@@ -31,47 +23,30 @@ class DocInfo:
         return Document(self.id)
 
     @property
-    def location(self):
-        folder, _ = split_location(self.path_without_lang)
-        return folder
-
-    @property
-    def rights(self):
-        from routes.accesshelper import get_rights
-        return get_rights(self.id)
-
-    @property
-    def title(self):
-        return self.short_name or 'All documents'
-
-    @property
-    def owner(self):
-        return self.block.owner if self.block else None
-
-    @property
-    def short_name(self):
-        parts = self.path_without_lang.rsplit('/', 1)
-        return parts[len(parts) - 1]
-
-    @property
     def last_modified(self):
-        return self.document.get_last_modified()
+        return self.block.modified if self.block else None
 
     @property
-    def parent(self):
-        folder = self.location
-        from timdb.models.folder import Folder
-        return Folder.find_by_path(folder) if folder else Folder(id=-1)
+    def translations(self):
+        """Returns the translations of the document."""
+        raise NotImplementedError
+
+    @property
+    def lang_id(self):
+        raise NotImplementedError
+
+    def has_translation(self, lang_id):
+        for t in self.translations:
+            if t.lang_id == lang_id:
+                return True
+        return False
+
+    def add_alias(self, new_name, is_public):
+        from timdb.models.docentry import DocEntry
+        d = DocEntry(id=self.src_docid, name=new_name, public=is_public)
+        db.session.add(d)
 
     def to_json(self):
-        return {'name': self.short_name,
-                'path': self.path,
-                'title': self.title,
-                'location': self.location,
-                'id': self.id,
-                'modified': date_to_relative(self.last_modified),
-                'isFolder': False,
-                'owner': self.owner,
-                'rights': self.rights,
-                'unpublished': self.block.is_unpublished() if self.block else False
+        return {**super().to_json(),
+                'isFolder': False
                 }
