@@ -88,8 +88,25 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
     };
 
     $scope.useVelp = function () {
-        if (!$scope.velp.edit) {
+        if (!$scope.velp.edit && !$scope.notAnnotationRights($scope.velp.points)) {
             $scope.$parent.useVelp($scope.velp);
+        }
+    };
+
+    /**
+     * Detect user right to annotation to document.
+     * @param points - Points given in velp or annotation
+     * @returns {boolean} - Right to make annotations
+     */
+    $scope.notAnnotationRights = function (points) {
+        if ($scope.$parent.item.rights.teacher) {
+            return false;
+        } else {
+            if (points === null) {
+                return false;
+            } else {
+                return true;
+            }
         }
     };
 

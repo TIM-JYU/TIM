@@ -15,11 +15,11 @@
 
                 <span ng-click="toggleVelpToEdit(); $event.stopPropagation();"
                       class="pull-right glyphicon glyphicon-pencil clickable-icon"></span>
-                <span class="points pull-right">{{ velp.points }}</span>
                 <span ng-show="notAnnotationRights(velp.points)"
                       class="annmark glyphicon glyphicon-exclamation-sign clickable-icon pull-right"
                       title="You need to have teacher rights to make annotations with points." >
                 </span>
+                <span class="points pull-right">&nbsp;{{ velp.points }}</span>
 
                 <div class="tags">
                     <span class="float-right" ng-show="advancedOn"
@@ -46,6 +46,7 @@
             <p ng-show="allowChangePoints()"><input id="addVelpPoints" type="number" style="width: 100%;"
                                                           ng-model="velp.points"
                                                           placeholder="Points" value="0"></p>
+            <p ng-hide="allowChangePoints()" class="velpInfoText">You need to have teacher rights change points in this document.</p>
 
             <fieldset ng-show="advancedOn">
                 <legend>Labels
