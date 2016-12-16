@@ -94,7 +94,6 @@
     <script>
         var noBrowser = {{ no_browser|tojson }};
         var showIndex = {{(headers|length > 0)|tojson}};
-        var translations = {{translations|tojson}};
         var reqs = {{reqs|tojson}};
         var startIndex = {{start_index|tojson}};
         var teacherMode = {{teacher_mode|tojson}};
@@ -167,7 +166,7 @@
                 Total points: {{ task_info.total_points }}
                     {%- if task_info.groups %}
                         ({%- for k, v in task_info.groups.items() -%}
-                            {{ k }}: {{ v }}{% if not loop.last %}, {% endif %}
+                            {{ k }}: {{ v.total_sum }}{% if not loop.last %}, {% endif %}
                         {%- endfor -%})
                     {%- endif -%},
                 total tasks: {{ task_info.tasks_done }} / {{ task_info.total_tasks }}

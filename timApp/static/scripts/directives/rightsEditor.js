@@ -63,7 +63,7 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
             };
 
             sc.addPermission = function (groupname, type) {
-                $http.put('/' + sc.urlRoot + '/add/' + sc.itemId + '/' + groupname.replace('\n', ';') + '/' + type.name, {}).success(
+                $http.put('/' + sc.urlRoot + '/add/' + sc.itemId + '/' + groupname.split('\n').join(';') + '/' + type.name, {}).success(
                     function (data, status, headers, config) {
                         sc.getPermissions();
                         sc.showAddRight = false;

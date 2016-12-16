@@ -285,7 +285,7 @@ def add_velp() -> int:
 
     velp_groups = velp_groups_rights
 
-    new_velp_id = timdb.velps.create_new_velp(current_user_id, velp_content, default_points,
+    new_velp_id, _ = timdb.velps.create_new_velp(current_user_id, velp_content, default_points,
                                               icon_id, valid_until, language_id, visible_to)
 
     if velp_labels is not None:

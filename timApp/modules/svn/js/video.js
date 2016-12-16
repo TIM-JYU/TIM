@@ -132,6 +132,13 @@ videoApp.set = function(scope,attrs,name,def) {
 };
 
 
+videoApp.isYoutube = function(file) {
+    if ( !file ) return false;
+    if ( file.indexOf("youtube") >= 0 ) return true;
+    if ( file.indexOf("youtu.be") >= 0 ) return true;
+    return false;
+}
+
 videoApp.directiveFunction = function(t) {
 	return {
 		link: function (scope, element, attrs) {
@@ -158,7 +165,7 @@ videoApp.directiveFunction = function(t) {
             if ( scope.startt ) scope.startt = ", " + scope.startt;
 			if ( attrs.stem ) scope.stem = attrs.stem;
 			if ( attrs.iframe ) scope.iframe = true;
-            if ( scope.file && scope.file.indexOf("youtube") >= 0 )  scope.iframe = true; // youtube must be in iframe
+            if ( videoApp.isYoutube(scope.file) )  scope.iframe = true; // youtube must be in iframe
 			scope.videoHtml = element[0].childNodes[2];
 			var head = videoApp.getHeading(attrs,"header",scope,"h4");
 			element[0].childNodes[0].outerHTML = head;
@@ -267,10 +274,14 @@ videoApp.Controller = function($scope,$http,$transclude) {
 		    else t = "?start="+$scope.start+"&end="+$scope.end;
 		if ( $scope.iframe ) {
             var file = $scope.file;
-            if ( file.indexOf("youtube") >= 0 && file.indexOf("embed") < 0 ) {
+            if (  videoApp.isYoutube(file) && file.indexOf("embed") < 0 ) {
+                var yname = "youtu.be/";  // could be also https://youtu.be/1OygRiwlAok
+                var yembed = "//www.youtube.com/embed/"
+                var iy = file.indexOf(yname);
                 var parts = file.split("=");
                 if ( parts.length > 1 )
-                    file = "//www.youtube.com/embed/" + parts[1];
+                    file = yembed + parts[1];
+                else if ( iy >= 0 ) file = yembed + file.substring(iy+yname.length);
             }
 			$scope.videoHtml.innerHTML = '<iframe id="'+vid+'" class="showVideo" src="' + file + t +  '" ' + w + h + '  frameborder="0" allowfullscreen></iframe>';
 			// '&rel=0'+

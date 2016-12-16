@@ -51,7 +51,7 @@ timApp.defineReadings = function (sc, http, q, $injector, $compile, $window, $do
         if (sc.isReference($par)) {
             data = sc.getRefAttrs($par);
         }
-        if (!Users.isLoggedIn()) return true;
+        if (!Users.isLoggedIn()) return q.resolve(null);
         return http.put('/read/' + sc.docId + '/' + par_id + '/' + readingType, data)
             .then(function (response) {
                 $readline.removeClass(readClassName + '-modified');
