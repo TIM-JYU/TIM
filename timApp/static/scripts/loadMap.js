@@ -1,6 +1,6 @@
 $(document).ready(function () {
     // Scale of the map
-    var scale = 1;
+    var scale = 0.5;
 
     // Show all building frames
     var showAll = false;
