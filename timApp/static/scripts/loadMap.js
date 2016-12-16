@@ -365,13 +365,15 @@ $(document).ready(function () {
 
                     var totalMax = 0;
                     var totalPoints = 0;
+                    var titles = [];
 
                     for (var i = 0; i < json.layers.length; i++) {
-                          totalMax += json.layers[i].properties.maxpoints;
+                        if(!titles.includes(json.layers[i].properties.title)) {
+                            totalMax += json.layers[i].properties.maxpoints;
+                            titles.push(json.layers[i].properties.title);
+                        }
                         if (json.layers[i].name.length == 2) {
-                            //totalMax += parseInt(json.layers[i].properties.M);
                             totalPoints += json.layers[i].properties.studentpoints;
-                            //totalPoints += parseInt(json.layers[i].properties.P);
                         }
                     }
 
@@ -384,11 +386,6 @@ $(document).ready(function () {
 			                } else {
 			                    description.html("Kurssin pisteet yhteensä: " + totalPoints + "/" + totalMax);
 			                }
-
-
-                    //title.html("<a href='" + json.layers[tile.layerNo].properties.site + "'>" + json.layers[tile.layerNo].properties.title + "</a>");
-                    //description.html("Pisteet: " + json.layers[tile.layerNo].properties.studentpoints + "/" +
-                    //  json.layers[tile.layerNo].properties.maxpoints + "<br>YhteensÃ¤: " + totalPoints + "/" + totalMax);
 
                     // Draw the box on the canvas
                     var context = middleCanvas.getContext("2d");
