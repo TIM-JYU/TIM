@@ -46,7 +46,6 @@ from routes.settings import settings_page
 from routes.upload import upload
 from routes.velp import velps
 from routes.view import view_page
-from routes.gamification import gamification
 from tim_app import app
 from timdb.blocktypes import from_str, blocktypes
 from timdb.bookmarks import Bookmarks
@@ -78,7 +77,6 @@ app.register_blueprint(lecture_routes)
 app.register_blueprint(clipboard)
 app.register_blueprint(notify)
 app.register_blueprint(bookmarks)
-app.register_blueprint(gamification)
 app.register_blueprint(Blueprint('bower',
                                  __name__,
                                  static_folder='static/scripts/bower_components',
