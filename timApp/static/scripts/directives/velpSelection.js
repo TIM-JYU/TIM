@@ -620,6 +620,16 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
             $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: []};
     };
 
+    $scope.updateVelp = function (velp) {
+        $scope.velps.forEach(function (v) {
+            if (v.id = velp.id){
+                v = velp;
+                console.log("paivitti?");
+            }
+        });
+        $scope.updateVelpList();
+    };
+
     /**
      * Reset new label information to the initial (empty) state.
      * @method resetNewLabel
@@ -1185,4 +1195,43 @@ timApp.filter('filterByVelpGroups', function () {
 
         return selected;
     };
+});
+
+timApp.filter('orderByWhenNotEditing', function () {
+   "use strict";
+
+    return function (velps, order) {
+        for (var i=0; i<velps.length; i++){
+            if (velps[i].edit) return velps;
+        }
+
+        var list;
+        var reverse = false;
+
+        if (order[0] === '-'){
+            reverse = true;
+            order = order.substring(1);
+        }
+        else if (order === "labels"){
+            list = velps;
+        }
+        else if (order === "content"){
+            list = velps.sort(function (v1, v2) {
+                return v1[order].localeCompare(v2[order]);
+            });
+        } else {
+            list = velps.sort(function (v1, v2) {
+                if (v1[order] < v2[order]) return -1;
+                else if (v1[order] > v2[order]) return 1;
+                return 0;
+            });
+        }
+
+        if (reverse) list = list.reverse();
+
+        //console.log(velps);
+        //console.log(order);
+
+        return list;
+    }
 });

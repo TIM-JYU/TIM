@@ -3,12 +3,13 @@
                     {neutral: velp.points == 0,
                     positive: velp.points > 0,
                     negative: velp.points < 0,
+                    new: new === 'true',
                     inactive: notAnnotationRights(velp.points),
-                    edit: velpLocal.edit}]"><!--
+                    edit: velp.edit}]"><!--
 
         Show this when velp is NOT being edited
 
-       --><div ng-if="!velpLocal.edit" class="content">
+       --><div ng-if="!velp.edit" class="content">
             <div>
                 {{ velp.content }}
 
@@ -33,16 +34,16 @@
 
         Show this when velp IS being edited
 
-     --><div ng-if="velpLocal.edit" class="content">
+     --><div ng-if="velp.edit" class="content">
                             <span ng-click="toggleVelpToEdit(); $event.stopPropagation();"
                             ng-class="['float-right', 'glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
 
         <form name="saveVelpForm" ng-submit="saveVelp(saveVelpForm)">
-            <p><input name="velpName" type="text" ng-model="velpLocal.content"
+            <p><input name="velpName" type="text" ng-model="velp.content"
                        required placeholder="Velp content">
             </p>
             <p ng-show="allowChangePoints()"><input id="addVelpPoints" type="number" style="width: 100%;"
-                                                          ng-model="velpLocal.points"
+                                                          ng-model="velp.points"
                                                           placeholder="Points" value="0"></p>
             <p ng-hide="allowChangePoints()" class="velpInfoText">{{ settings.teacherRightsError }}</p>
 
@@ -50,7 +51,7 @@
                 <legend>Labels
                     <span class="float-right"
                           ng-class="['glyphicon', 'glyphicon-tag']"
-                          ng-repeat="l in velpLocal.labels"
+                          ng-repeat="l in velp.labels"
                           ng-style="{ color: getColor(l) }">
                     </span>
                 </legend>

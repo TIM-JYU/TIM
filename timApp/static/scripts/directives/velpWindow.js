@@ -66,16 +66,16 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
     $scope.toggleVelpToEdit = function () {
         var lastEdited = $scope.$parent.getVelpUnderEdit();
         console.log($scope.$parent.getVelpUnderEdit());
-        if (lastEdited.edit && lastEdited.id !== $scope.velpLocal.id){
+        if (lastEdited.edit && lastEdited.id !== $scope.velp.id){
             $scope.$parent.resetEditVelp();
         }
 
-        $scope.velpLocal.edit = !$scope.velpLocal.edit;
-        if (!$scope.velpLocal.edit){
+        $scope.velp.edit = !$scope.velp.edit;
+        if (!$scope.velp.edit){
             $scope.cancelEdit();
+        } else {
+            $scope.$parent.setVelpToEdit($scope.velp, $scope.cancelEdit);
         }
-
-        $scope.$parent.setVelpToEdit($scope.velpLocal, $scope.cancelEdit);
     };
 
 
@@ -90,9 +90,10 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         if ($scope.new === "true"){ // add new velp
             $scope.addVelp()
         } else { // edit velp
-            $scope.$parent.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), $scope.velpLocal, function (json) {
+            $scope.$parent.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), $scope.velp, function (json) {
+                $scope.velpLocal = JSON.parse(JSON.stringify($scope.velp));
                 $scope.toggleVelpToEdit();
-                $scope.velp = $scope.velpLocal;
+                //$scope.$parent.updateVelp($scope.velpLocal);
             });
         }
     };
@@ -101,12 +102,12 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
      * Cancel edit and restore velp back to its original version
      */
     $scope.cancelEdit = function () {
-        $scope.velpLocal = JSON.parse(JSON.stringify($scope.velp));
-        $scope.velpLocal.edit = false;
+        $scope.velp = JSON.parse(JSON.stringify($scope.velpLocal));
+        $scope.velp.edit = false;
     };
 
     $scope.useVelp = function () {
-        if (!$scope.velpLocal.edit && !$scope.notAnnotationRights($scope.velp.points)) {
+        if (!$scope.velp.edit && !$scope.notAnnotationRights($scope.velp.points)) {
             $scope.$parent.useVelp($scope.velp);
         }
     };
@@ -146,7 +147,7 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
      * @returns {boolean} Whether the velp contains the label or not.
      */
     $scope.isLabelInVelp = function (label) {
-        return $scope.velpLocal.labels.indexOf(label.id) >= 0;
+        return $scope.velp.labels.indexOf(label.id) >= 0;
     };
 
 
@@ -169,12 +170,12 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
      */
     $scope.updateVelpLabels = function (label) {
 
-        var index = $scope.velpLocal.labels.indexOf(label.id);
+        var index = $scope.velp.labels.indexOf(label.id);
         if (index < 0) {
-            $scope.velpLocal.labels.push(label.id);
+            $scope.velp.labels.push(label.id);
         }
         else if (index >= 0) {
-            $scope.velpLocal.labels.splice(index, 1);
+            $scope.velp.labels.splice(index, 1);
         }
     };
 
@@ -184,12 +185,12 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
      * @param group - Group to be added or removed from the velp
      */
     $scope.updateVelpGroups = function (group) {
-        var index = $scope.velpLocal.velp_groups.indexOf(group.id);
+        var index = $scope.velp.velp_groups.indexOf(group.id);
         if (index < 0) {
-            $scope.velpLocal.velp_groups.push(group.id);
+            $scope.velp.velp_groups.push(group.id);
         }
         else if (index >= 0) {
-            $scope.velpLocal.velp_groups.splice(index, 1);
+            $scope.velp.velp_groups.splice(index, 1);
         }
     };
 
@@ -227,7 +228,7 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
             $scope.resetNewLabel();
             $scope.labels.push(labelToAdd);
             //$scope.labelAdded = false;
-            $scope.velpLocal.labels.push(labelToAdd.id);
+            $scope.velp.labels.push(labelToAdd.id);
         });
     };
 
@@ -352,10 +353,10 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
      */
     var addNewVelpToDatabase = function () {
         var velpToAdd = {
-            labels: $scope.velpLocal.labels,
+            labels: $scope.velp.labels,
             used: 0,
-            points: $scope.velpLocal.points,
-            content: $scope.velpLocal.content,
+            points: $scope.velp.points,
+            content: $scope.velp.content,
             language_id: "FI",
             icon_id: null,
             valid_until: null,
@@ -363,13 +364,18 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
             velp_groups: JSON.parse(JSON.stringify($scope.velp.velp_groups))
         };
 
-        $scope.$parent.velps.push(velpToAdd);
-        $scope.cancelEdit();
+        console.log($scope.velpLocal);
+
 
         //$scope.velp.edit = false;
 
-        /*
+
         $scope.$parent.makePostRequest("/add_velp", velpToAdd, function (json) {
+            $scope.$parent.velps.push(velpToAdd);
+            $scope.cancelEdit();
+            //$scope.velp =  JSON.parse(JSON.stringify($scope.velpLocal));
+            //$scope.velpLocal = JSON.parse(JSON.stringify($scope.velp));
+            /*
             velpToAdd.id = parseInt(json.data);
 
             $scope.resetNewVelp();
@@ -378,10 +384,10 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
             $scope.velps.push(velpToAdd);
             $scope.submitted.velp = false;
             //$scope.resetLabels();
+            */
 
-            $scope.cancelEdit();
         });
-        */
+
     };
 
     /**
