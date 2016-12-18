@@ -171,7 +171,8 @@
         <span title="Close" class="glyphicon glyphicon-remove clickable-icon closedraggable" ng-click="releaseClicked()" style="visibility: hidden;position: absolute; margin-left: 16.7em;margin-top: 0.2em"></span>
                     <!-- EDIT VELPS -->
 
-        <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:order | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn ) track by $index">
+        <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderByWhenNotEditing:order:filteredVelps | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn
+                                                 ) track by $index">
                 <velp-window velp="velp"
                              index="{{ $index }}"
                              velp-groups="velpGroups"

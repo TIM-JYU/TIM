@@ -282,6 +282,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         $window.localStorage.setItem(velpOrderingKey, order);
     };
 
+
     $scope.changeSelectedLabels = function () {
         console.log($scope.selectedLabels);
         $window.localStorage.setItem(velpLabelsKey, JSON.stringify($scope.selectedLabels));
@@ -1200,9 +1201,9 @@ timApp.filter('filterByVelpGroups', function () {
 timApp.filter('orderByWhenNotEditing', function () {
    "use strict";
 
-    return function (velps, order) {
+    return function (velps, order, filteredVelps) {
         for (var i=0; i<velps.length; i++){
-            if (velps[i].edit) return velps;
+            if (velps[i].edit) return filteredVelps;
         }
 
         var list;
@@ -1212,7 +1213,8 @@ timApp.filter('orderByWhenNotEditing', function () {
             reverse = true;
             order = order.substring(1);
         }
-        else if (order === "labels"){
+
+        if (order === "labels"){
             list = velps;
         }
         else if (order === "content"){
@@ -1221,6 +1223,10 @@ timApp.filter('orderByWhenNotEditing', function () {
             });
         } else {
             list = velps.sort(function (v1, v2) {
+                if (v1[order] == null && v2[order] != null) return -1;
+                else if (v1[order] != null && v2[order] == null) return 1;
+                else if (v1[order] == null && v2[order] == null) return 0;
+
                 if (v1[order] < v2[order]) return -1;
                 else if (v1[order] > v2[order]) return 1;
                 return 0;
