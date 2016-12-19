@@ -1,8 +1,9 @@
-<div class="velp" ng-style="{top: 2+index*2 + 'em'}"  ng-click="useVelp()">
+<div class="velp" ng-style="{top: 2+index*2 + 'em'}"  ng-click="notAnnotationRights(velp.points) || useVelp()">
     <div ng-class="['velp-data', 'emphasise',
                     {neutral: velp.points == 0,
                     positive: velp.points > 0,
                     negative: velp.points < 0,
+                    new: new === 'true',
                     inactive: notAnnotationRights(velp.points),
                     edit: velp.edit}]"><!--
 
@@ -12,14 +13,14 @@
             <div>
                 {{ velp.content }}
 
-
                 <span ng-click="toggleVelpToEdit(); $event.stopPropagation();"
+                      ng-if="hasEditAccess"
                       class="pull-right glyphicon glyphicon-pencil clickable-icon"></span>
-                <span class="points pull-right">{{ velp.points }}</span>
                 <span ng-show="notAnnotationRights(velp.points)"
                       class="annmark glyphicon glyphicon-exclamation-sign clickable-icon pull-right"
-                      title="You need to have teacher rights to make annotations with points." >
+                      ng-attr-title="{{ settings.teacherRightsError }}" >
                 </span>
+                <span class="points pull-right">&nbsp;{{ velp.points }}</span>
 
                 <div class="tags">
                     <span class="float-right" ng-show="advancedOn"
@@ -27,7 +28,6 @@
                           ng-repeat="label in velp.labels" title="label.content"
                           ng-style="{ color: getColor(label) }"></span>
                 </div>
-
 
             </div>
             <div class="bottom-part"></div>
@@ -37,15 +37,22 @@
 
      --><div ng-if="velp.edit" class="content">
                             <span ng-click="toggleVelpToEdit(); $event.stopPropagation();"
-                            ng-class="['float-right', 'glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
+                            ng-class="['float-right', 'glyphicon', 'glyphicon-remove', 'clickable-icon']"></span>
 
-        <form name="editVelpForm" ng-submit="saveVelp(editVelpForm)">
+        <form name="saveVelpForm" ng-submit="saveVelp(saveVelpForm)">
             <p><input name="velpName" type="text" ng-model="velp.content"
-                       required placeholder="Edit velp!">
+                       required placeholder="Velp content">
             </p>
+            <p ng-show="(saveVelpForm.velpName.$invalid && !saveVelpForm.velpName.$pristine)"
+               class="error velpInfoText">
+                {{ settings.velpContentError }}
+            </p>
+
+
             <p ng-show="allowChangePoints()"><input id="addVelpPoints" type="number" style="width: 100%;"
                                                           ng-model="velp.points"
                                                           placeholder="Points" value="0"></p>
+            <p ng-hide="allowChangePoints()" class="velpInfoText">{{ settings.teacherRightsError }}</p>
 
             <fieldset ng-show="advancedOn">
                 <legend>Labels
@@ -89,18 +96,19 @@
                                value="Cancel" ng-click="toggleLabelToEdit(l)">
                         <br>
                         <span ng-hide="labelToEdit.valid">
-                            <span class="error">Label content too short</span>
+                            <span class="error velpInfoText">{{ settings.labelContentError }}</span>
                             <br>
                         </span>
                     </span>
                 </span>
 
+                <!-- Add new label -->
                 <input class="addLabelField" placeholder="Add label"
                        ng-change="setLabelValid(newLabel)"
                        ng-model="newLabel.content">
                 <input class="addLabelBtn" type="button" value="Add"
                        ng-click="addLabel()">
-                <span ng-hide="newLabel.valid" class="error">Label content too short</span>
+                <span ng-hide="newLabel.valid" class="error velpInfoText">{{ settings.labelContentError }}</span>
             </fieldset>
 
             <!-- Velp groups -->
@@ -112,17 +120,18 @@
                                                                         ng-click="updateVelpGroups(g)"
                                                                         ng-checked="isGroupInVelp(g)"
                                                                         ng-disabled="!g.edit_access"> {{ g.name }}
+                        <span ng-if="!g.show" class="glyphicon glyphicon-eye-close"></span>
                     </label>
                     <br>
                 </span>
             </fieldset>
 
-            <p class="error" ng-show="!isSomeVelpGroupSelected()">
-                You need to select at least one velpgroup.
+            <p class="error velpInfoText" ng-show="!isSomeVelpGroupSelected()">
+                {{ settings.velpGroupError }}
             </p>
 
             <!-- submit executes 'saveVelp'-function -->
-            <input type="submit" class="timButton" value="Save changes" ng-disabled="!isVelpValid(velpToEdit)"/>
+            <input type="submit" class="timButton" ng-value="settings.saveButtonText" ng-disabled="!isVelpValid()"/>
             <input type="button" class="timButton" value="Cancel" ng-click="toggleVelpToEdit(); $event.stopPropagation();">
             </p>
         </form>

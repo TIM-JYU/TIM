@@ -282,6 +282,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         $window.localStorage.setItem(velpOrderingKey, order);
     };
 
+
     $scope.changeSelectedLabels = function () {
         console.log($scope.selectedLabels);
         $window.localStorage.setItem(velpLabelsKey, JSON.stringify($scope.selectedLabels));
@@ -369,7 +370,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * Adds a new velp on form submit event.
      * @method addVelp
      * @param form - Form information
-     */
+
     $scope.addVelp = function (form) {
         var valid = form.$valid;
         $scope.submitted.velp = true;
@@ -401,7 +402,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
         $scope.updateVelpList();
     };
-
+*/
     /**
      * Adds a new velp to the database. Requires values in `$scope.newVelp` variable.
      * @method addNewVelpToDatabase
@@ -477,10 +478,20 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     /**
      * Selects velp to edit
      * @method selectVelpToEdit
-     * @param velp - Velp to edit
      */
-    $scope.selectVelpToEdit = function (velp) {
+    $scope.openCreateNewVelpWindow = function () {
+        var velp = angular.element(
+            document.getElementById("newVelp")
+        ).isolateScope();
+        velp.toggleVelpToEdit();
 
+        //if ($scope.getVelpUnderEdit().id !== $scope.newVelp.id)
+        //    $scope.resetEditVelp();
+
+        //$scope.resetEditVelp = $scope.resetNewVelp;
+
+
+        /*
         if (velp.id === $scope.velpToEdit.id && velp.edit) {
             velp.edit = false;
             $scope.velpToEdit = {content: "", points: "", labels: [], edit: false};
@@ -498,6 +509,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         velp.edit = true;
 
         $scope.velpToEdit = (JSON.parse(JSON.stringify(velp)));
+        */
     };
 
     /**
@@ -548,29 +560,12 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     };
      */
 
-    /**
-     * Selects or deselects velp for being edited.
-     * @param velp - Velp information, contains all edited info
-     * @param resetFuction - Function to execute in cancel edit
-     */
-    $scope.setVelpToEdit = function (velp, resetFunction) {
-        $scope.velpToEdit = velp;
-        $scope.resetEditVelp = resetFunction;
-    };
-
-    /**
-     * Returns whether velp is being edited or not.
-     * @returns Boolean
-     */
-    $scope.getVelpUnderEdit = function () {
-        return $scope.velpToEdit;
-    };
 
     /**
      * Generates the default velp group and runs the custom method.
      * @method generateDefaultVelpGroup
      * @param method - Method to be run after this mehtod.
-     */
+    */
     $scope.generateDefaultVelpGroup = function (method) {
         if (default_velp_group.edit_access) {
             $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), "{}", function (json) {
@@ -585,13 +580,43 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
                 default_velp_group = new_default_velp_group;
                 console.log(new_default_velp_group);
-                method();
+                method(new_default_velp_group);
             });
         }
         else {
             // No edit access to default velp group
         }
     };
+
+    /**
+     * Selects or deselects velp for being edited.
+     * @param velp - Velp information, contains all edited info
+     * @param resetFuction - Function to execute in cancel edit
+     */
+    $scope.setVelpToEdit = function (velp, resetFunction) {
+        $scope.velpToEdit = velp;
+        $scope.resetEditVelp = resetFunction;
+    };
+
+    /**
+     * Initially resets $scope.velpToEdit variable to the original (empty) state.
+     * NOTE! this function is replaced in 'setVelpToEdit'. When replaced
+     * this mehtod resets the velp that is being edited to its original state.
+     * @method resetEditVelp
+     */
+    $scope.resetEditVelp = function(){
+            $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: []};
+    };
+
+    /**
+     * Returns whether velp is being edited or not.
+     * @returns Boolean
+     */
+    $scope.getVelpUnderEdit = function () {
+        return $scope.velpToEdit;
+    };
+
+
 
     /**
      * Edits the label according to the $scope.labelToedit variable.
@@ -635,14 +660,15 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         };
     };
 
-    /**
-     * Resets $scope.velpToEdit variable to the initial (empty) state.
-     * NOTE! this function is replaced in 'setVelpToEdit'. When replaced
-     * this mehtod resets the velp that is being edited to its original state.
-     * @method resetEditVelp
-     */
-    $scope.resetEditVelp = function(){
-            $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: []};
+
+    $scope.updateVelp = function (velp) {
+        $scope.velps.forEach(function (v) {
+            if (v.id = velp.id){
+                v = velp;
+                console.log("paivitti?");
+            }
+        });
+        $scope.updateVelpList();
     };
 
     /**
@@ -654,6 +680,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     };
 
     /** Velpgroup methods **/
+
+    $scope.getDefaultVelpGroup = function () {
+        return default_velp_group;
+    };
+
+    $scope.setDefaultVelpGroup = function (group) {
+        default_velp_group = group;
+    };
 
     /**
      * Updates the velp list according to how the velp groups are selected in the area.
@@ -1210,4 +1244,48 @@ timApp.filter('filterByVelpGroups', function () {
 
         return selected;
     };
+});
+
+timApp.filter('orderByWhenNotEditing', function () {
+   "use strict";
+
+    return function (velps, order, filteredVelps) {
+        for (var i=0; i<velps.length; i++){
+            if (velps[i].edit) return filteredVelps;
+        }
+
+        var list;
+        var reverse = false;
+
+        if (order[0] === '-'){
+            reverse = true;
+            order = order.substring(1);
+        }
+
+        if (order === "labels"){
+            list = velps;
+        }
+        else if (order === "content"){
+            list = velps.sort(function (v1, v2) {
+                return v1[order].localeCompare(v2[order]);
+            });
+        } else {
+            list = velps.sort(function (v1, v2) {
+                if (v1[order] == null && v2[order] != null) return -1;
+                else if (v1[order] != null && v2[order] == null) return 1;
+                else if (v1[order] == null && v2[order] == null) return 0;
+
+                if (v1[order] < v2[order]) return -1;
+                else if (v1[order] > v2[order]) return 1;
+                return 0;
+            });
+        }
+
+        if (reverse) list = list.reverse();
+
+        //console.log(velps);
+        //console.log(order);
+
+        return list;
+    }
 });

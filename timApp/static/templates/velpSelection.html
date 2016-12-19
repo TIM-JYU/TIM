@@ -52,12 +52,23 @@
                     </form>
                 </div>
 
-                <input id="createVelpButton" class="timButton" type="button" ng-click="selectVelpToEdit(newVelp)"
+                <input id="createVelpButton" class="timButton" type="button" ng-click="openCreateNewVelpWindow(newVelp)"
                        value="Create new velp">
 
                 <div class="stack" id="selectVelpsStack">
 
-                    <!-- NEW VELP -->
+                    <velp-window id="newVelp"
+                                 class="velp" ng-style="{top: 0}"
+                                 ng-show="newVelp.edit"
+                                 velp="newVelp"
+                                 index="-1"
+                                 velp-groups="velpGroups"
+                                 labels="labels"
+                                 new="true"
+                                 advanced-on="advancedOn"></velp-window>
+
+
+                    <!-- NEW VELP
                     <div ng-model="newVelp" class="velp" ng-style="{top: 0}" ng-hide="!newVelp.edit">
     <div ng-class="['emphasise', 'new', { neutral: newVelp.points == 0, positive: newVelp.points > 0, negative: newVelp.points < 0,
         edit: newVelp.edit}]">
@@ -145,7 +156,7 @@
                     You need to select at least one velpgroup.
                 </p>
                 <p>
-                    <!-- The double click handler prevents adding two velps by accident. -->
+                    <!-- The double click handler prevents adding two velps by accident.
 
                     <input id="addVelpBtn" class="timButton" type="submit" value="Create velp"
                           ng-disabled="!isVelpValid(newVelp)"/>
@@ -153,18 +164,21 @@
             </form>
         </div>
     </div>
-</div>
+
+</div>-->
 
                     <button ng-click="releaseClicked()" class="timButton" id="releaseSelectVelpsButton" style="padding-top: 0px;padding-bottom: 0px;margin-bottom: 10px ">&#8592;</button>
     <div id="selectVelpsDiv" save="%%PAGEID%%selectVelpsDiv" tim-draggable-fixed>
         <span title="Close" class="glyphicon glyphicon-remove clickable-icon closedraggable" ng-click="releaseClicked()" style="visibility: hidden;position: absolute; margin-left: 16.7em;margin-top: 0.2em"></span>
                     <!-- EDIT VELPS -->
 
-        <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderBy:order | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn ) track by $index">
+        <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderByWhenNotEditing:order:filteredVelps | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn
+                                                 ) track by $index">
                 <velp-window velp="velp"
                              index="{{ $index }}"
                              velp-groups="velpGroups"
                              labels="labels"
+                             new="false"
                              advanced-on="advancedOn"
                              ></velp-window>
         </span>
