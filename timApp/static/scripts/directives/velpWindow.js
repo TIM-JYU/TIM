@@ -57,7 +57,7 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
 
     $scope.submitted = false;
 
-    $scope.hasEditAccess = "";//rights to at least one velp group, and velp is not 'new'
+    $scope.hasEditAccess = false;
 
     var doc_id = $scope.$parent.docId;
 
@@ -168,6 +168,8 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
             return false;
         return $scope.velp.velp_groups.indexOf(group.id) >= 0;
     };
+
+
 
     /**
      * Updates the labels of the velp.
@@ -436,5 +438,16 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
     $scope.getColor = function (index) {
         return colorPalette[index % colorPalette.length];
     };
+
+    if ($scope.new === "true") {
+        $scope.hasEditAccess = true;
+    } else {
+        $scope.velpGroups.some(function (g) {
+            if (g.edit_access && $scope.isGroupInVelp(g)){
+                $scope.hasEditAccess = true;
+                return;
+            }
+        });
+    }
 
 }]);
