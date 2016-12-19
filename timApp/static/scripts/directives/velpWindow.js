@@ -439,6 +439,7 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         return colorPalette[index % colorPalette.length];
     };
 
+    // declare edit rights
     if ($scope.new === "true") {
         $scope.hasEditAccess = true;
     } else {
