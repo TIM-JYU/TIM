@@ -9,10 +9,6 @@
         Location: <input class="form-control" type="text" ng-model="itemLocation">
     </label>
 </div>
-<div class="checkbox">
-    <label>
-        <input class="checkbox" ng-model="isGamified" type="checkbox">Gamification Document
-    </label>
 </div>
 <div uib-alert ng-repeat="alert in alerts" ng-class="'alert-' + (alert.type || 'warning')"
      close="closeAlert($index)">{{ alert.msg }}</div>

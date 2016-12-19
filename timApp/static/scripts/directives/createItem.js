@@ -31,7 +31,6 @@ timApp.directive("createItem", ['$window', '$log', '$http', function ($window, $
                 $http.post('/createItem', {
                     "item_path": sc.itemLocation + '/' + sc.itemName,
                     "item_type": sc.itemType,
-                    "gamified": sc.isGamified
                 }).then(function (response) {
                     $window.location.href = "/view/" + response.data.name;
                 }, function (response) {
