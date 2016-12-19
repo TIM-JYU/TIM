@@ -62,6 +62,15 @@ class Item:
         return self.block.modified if self.block else None
 
     @property
+    def parents_to_root(self):
+        crumbs = []
+        p = self.parent
+        while p:
+            crumbs.append(p)
+            p = p.parent
+        return crumbs
+
+    @property
     def parent(self):
         folder = self.location
         from timdb.models.folder import Folder
