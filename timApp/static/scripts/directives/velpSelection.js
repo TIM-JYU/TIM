@@ -370,7 +370,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * Adds a new velp on form submit event.
      * @method addVelp
      * @param form - Form information
-     */
+
     $scope.addVelp = function (form) {
         var valid = form.$valid;
         $scope.submitted.velp = true;
@@ -402,7 +402,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
         $scope.updateVelpList();
     };
-
+*/
     /**
      * Adds a new velp to the database. Requires values in `$scope.newVelp` variable.
      * @method addNewVelpToDatabase
@@ -478,10 +478,20 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     /**
      * Selects velp to edit
      * @method selectVelpToEdit
-     * @param velp - Velp to edit
      */
-    $scope.selectVelpToEdit = function (velp) {
+    $scope.openCreateNewVelpWindow = function () {
+        var velp = angular.element(
+            document.getElementById("newVelp")
+        ).isolateScope();
+        velp.toggleVelpToEdit();
 
+        //if ($scope.getVelpUnderEdit().id !== $scope.newVelp.id)
+        //    $scope.resetEditVelp();
+
+        //$scope.resetEditVelp = $scope.resetNewVelp;
+
+
+        /*
         if (velp.id === $scope.velpToEdit.id && velp.edit) {
             velp.edit = false;
             $scope.velpToEdit = {content: "", points: "", labels: [], edit: false};
@@ -499,6 +509,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         velp.edit = true;
 
         $scope.velpToEdit = (JSON.parse(JSON.stringify(velp)));
+        */
     };
 
     /**
@@ -549,6 +560,34 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     };
      */
 
+
+    /**
+     * Generates the default velp group and runs the custom method.
+     * @method generateDefaultVelpGroup
+     * @param method - Method to be run after this mehtod.
+    */
+    $scope.generateDefaultVelpGroup = function (method) {
+        if (default_velp_group.edit_access) {
+            $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), "{}", function (json) {
+                var new_default_velp_group = json.data;
+                new_default_velp_group.default = true;
+
+                var index = $scope.velpGroups.indexOf(default_velp_group);
+                $scope.velpGroups.splice(index, 1);
+
+                if ($scope.velpGroups.indexOf(new_default_velp_group) < 0)
+                    $scope.velpGroups.push(new_default_velp_group);
+
+                default_velp_group = new_default_velp_group;
+                console.log(new_default_velp_group);
+                method(new_default_velp_group);
+            });
+        }
+        else {
+            // No edit access to default velp group
+        }
+    };
+
     /**
      * Selects or deselects velp for being edited.
      * @param velp - Velp information, contains all edited info
@@ -557,6 +596,16 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     $scope.setVelpToEdit = function (velp, resetFunction) {
         $scope.velpToEdit = velp;
         $scope.resetEditVelp = resetFunction;
+    };
+
+    /**
+     * Initially resets $scope.velpToEdit variable to the original (empty) state.
+     * NOTE! this function is replaced in 'setVelpToEdit'. When replaced
+     * this mehtod resets the velp that is being edited to its original state.
+     * @method resetEditVelp
+     */
+    $scope.resetEditVelp = function(){
+            $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: []};
     };
 
     /**
@@ -611,15 +660,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         };
     };
 
-    /**
-     * Resets $scope.velpToEdit variable to the initial (empty) state.
-     * NOTE! this function is replaced in 'setVelpToEdit'. When replaced
-     * this mehtod resets the velp that is being edited to its original state.
-     * @method resetEditVelp
-     */
-    $scope.resetEditVelp = function(){
-            $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: []};
-    };
 
     $scope.updateVelp = function (velp) {
         $scope.velps.forEach(function (v) {
@@ -640,6 +680,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     };
 
     /** Velpgroup methods **/
+
+    $scope.getDefaultVelpGroup = function () {
+        return default_velp_group;
+    };
+
+    $scope.setDefaultVelpGroup = function (group) {
+        default_velp_group = group;
+    };
 
     /**
      * Updates the velp list according to how the velp groups are selected in the area.

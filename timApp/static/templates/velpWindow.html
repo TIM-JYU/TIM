@@ -1,4 +1,4 @@
-<div class="velp" ng-style="{top: 2+index*2 + 'em'}"  ng-click="useVelp()">
+<div class="velp" ng-style="{top: 2+index*2 + 'em'}"  ng-click="notAnnotationRights(velp.points) || useVelp()">
     <div ng-class="['velp-data', 'emphasise',
                     {neutral: velp.points == 0,
                     positive: velp.points > 0,
@@ -36,12 +36,18 @@
 
      --><div ng-if="velp.edit" class="content">
                             <span ng-click="toggleVelpToEdit(); $event.stopPropagation();"
-                            ng-class="['float-right', 'glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
+                            ng-class="['float-right', 'glyphicon', 'glyphicon-remove', 'clickable-icon']"></span>
 
         <form name="saveVelpForm" ng-submit="saveVelp(saveVelpForm)">
             <p><input name="velpName" type="text" ng-model="velp.content"
                        required placeholder="Velp content">
             </p>
+            <p ng-show="(saveVelpForm.velpName.$invalid && !saveVelpForm.velpName.$pristine)"
+               class="error">
+                {{ settings.velpContentError }}
+            </p>
+
+
             <p ng-show="allowChangePoints()"><input id="addVelpPoints" type="number" style="width: 100%;"
                                                           ng-model="velp.points"
                                                           placeholder="Points" value="0"></p>
@@ -95,6 +101,7 @@
                     </span>
                 </span>
 
+                <!-- Add new label -->
                 <input class="addLabelField" placeholder="Add label"
                        ng-change="setLabelValid(newLabel)"
                        ng-model="newLabel.content">
@@ -112,6 +119,7 @@
                                                                         ng-click="updateVelpGroups(g)"
                                                                         ng-checked="isGroupInVelp(g)"
                                                                         ng-disabled="!g.edit_access"> {{ g.name }}
+                        <span ng-if="!g.show" class="glyphicon glyphicon-eye-close"></span>
                     </label>
                     <br>
                 </span>

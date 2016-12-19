@@ -52,15 +52,16 @@
                     </form>
                 </div>
 
-                <input id="createVelpButton" class="timButton" type="button" ng-click="selectVelpToEdit(newVelp)"
+                <input id="createVelpButton" class="timButton" type="button" ng-click="openCreateNewVelpWindow(newVelp)"
                        value="Create new velp">
 
                 <div class="stack" id="selectVelpsStack">
 
-                    <velp-window class="velp" ng-style="{top: 0}"
+                    <velp-window id="newVelp"
+                                 class="velp" ng-style="{top: 0}"
                                  ng-show="newVelp.edit"
                                  velp="newVelp"
-                                 index="{{ $index }}"
+                                 index="-1"
                                  velp-groups="velpGroups"
                                  labels="labels"
                                  new="true"
