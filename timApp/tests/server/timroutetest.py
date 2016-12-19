@@ -498,11 +498,6 @@ class TimRouteTest(TimDbTest):
             self.assertIsInstance(f['id'], int)
         return f
 
-    def tearDown(self):
-        """While testing, the Flask-SQLAlchemy session needs to be removed manually;
-        see https://pythonhosted.org/Flask-Testing/#testing-with-sqlalchemy"""
-        db.session.remove()
-
 
 if __name__ == '__main__':
     unittest.main()
