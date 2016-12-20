@@ -1,3 +1,5 @@
+/* globals gamified_data, console, $ */
+
 $(document).ready(function () {
     // Scale of the map
     var scale = 0.5;
@@ -10,7 +12,7 @@ $(document).ready(function () {
 
     var json;
 
-    var json_to_generator = $(".json_to_mapgenerator")[0].innerHTML.replace(/ /g,'%20');
+    var json_to_generator = gamified_data.replace(/ /g,'%20');
 
 
     // Get the div that will hold canvases
@@ -25,13 +27,13 @@ $(document).ready(function () {
     var zoomInput = $(".mapZoom");
     zoomInput.attr({"max": 1, "min": 0.3, "step": 0.05});
     zoomInput.val(scale);
-    zoomInput.width(300)
+    zoomInput.width(300);
 
     // Set properties for alpha input
     var alphaInput = $(".alphaRange");
     alphaInput.attr({"max": 1, "min": 0, "step": 0.05});
     alphaInput.val(alpha);
-    alphaInput.width(300)
+    alphaInput.width(300);
 
     // Title and description elements for the info box
     var title = $("<p></p>");
