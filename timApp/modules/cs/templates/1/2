@@ -1,6 +1,7 @@
 Yksi monesta
 Kysmys jossa valitaan yksi monesta (Radiobutton)
 ``` {#PLUGINNAMEHERE plugin="mcq"}
+answerLimit: 1
 headerText: Kysymyksen otsikko
 stem: "Kysymyksen varsinainen kysymys"
 choices:
