@@ -3,34 +3,17 @@ from copy import deepcopy
 from .common import *
 
 
-## Sitten kun painetaan show_mappia
-
 generateMap = Blueprint('generateMap', __name__, url_prefix='')
 
-#TODO:
-# TODO: Read lectures
-# TODO: Read Demos
-# TODO: Get map
-# TODO: Remove Excess from map
-# TODO: Add Demos and Lectures to map.
-@generateMap.route('/generateMap', methods=["GET"])
-def generate_Map():
-    #database doesnt work yet.
-    ##gamification_doc_id, user_id = verify_json_params('gamificationDocId', 'userId')
-
-
-    map = ""
-    #TODO: Change this to the actual json.
-    coursedata = json.loads(request.query_string.decode("utf-8", "strict").replace('%22', '"').replace('%20', ' '))
-
+@generateMap.route('/generateMap', methods=["GET","POST"])
+def generate_map():
+    coursedata = request.get_json()
     #Get lectures from json
     lecturejson = coursedata['lectures']
     #Get demos from json
     demojson = coursedata['demos']
-
-
     #Get map
-    mapname = selectMap(len(lecturejson),len(demojson))
+    mapname = select_map(len(lecturejson),len(demojson))
     #Read map
     with open(mapname,"r") as f:
         map = json.loads(f.read())
@@ -44,14 +27,14 @@ def generate_Map():
     }
     # Width of the map, needed for calculating tiles.
     mapwidth = map['width']
-    map['layers'] = addProperties(map['layers'],properties)
+    map['layers'] = add_properties(map['layers'],properties)
     #The number of demos and lectures in the map.
     demosinmap = 0
     lecturesinmap = 0
 
     # Replace all of the tables with dicts and get number of lectures and demos in map.
     for layer in map['layers']:
-        layer = replaceTableWithDict(layer)
+        layer = replace_table_with_dict(layer)
         if layer['name'][0:1] == 'l':
             lecturesinmap +=1
         if layer['name'][0:1] == 'd':
@@ -84,7 +67,7 @@ def generate_Map():
                 # Change the name of the layer so it doesnt get caught in the loop a$
                 layer['name'] = 'L' + layer['name'][1:]
                 layer['properties'] = lectureproperties
-                map['layers'] = createLectureLayers(map['layers'], layerindex, int(points),int(maxpoints),mapwidth,lectureproperties)
+                map['layers'] = create_lecture_layers(map['layers'], layerindex, int(points),int(maxpoints),mapwidth,lectureproperties)
                 # Delete layer if no more lectures need to be added.
             else:
                 dellayers.append(layer)
@@ -103,7 +86,7 @@ def generate_Map():
                 # Change the name of the layer so it doesnt get caught in the loop again.
                 layer['name'] = 'D' + layer['name'][1:]
                 layer['properties'] = demoproperties
-                map['layers'] = createDemoLayers(map['layers'],layerindex,int(points),int(maxpoints),mapwidth,demoproperties)
+                map['layers'] = create_demo_layers(map['layers'],layerindex,int(points),int(maxpoints),mapwidth,demoproperties)
             # If there is no need for the layer delete it.
             else:
                 dellayers.append(layer)
@@ -122,7 +105,7 @@ def generate_Map():
     # Python for some reason modifies certain characters in the JSON and it has to be modified back to the proper form.
     map = str.replace(str(map), "\'", "\"")
     map = str.replace(str(map), "True", "true")
-   # layers = createLectureLayers(map['layers'],2,mapwidth)
+   # layers = create_lecture_layers(map['layers'],2,mapwidth)
     print(map)
     return str(map)
 
@@ -130,19 +113,19 @@ def generate_Map():
 # layers are the layers which need to be appended with more layers
 # layerid is the id for the layer above which the layers need to be appended
 # layerdict is the dictionary for the layer above which the layers need to be added
-def createLectureLayers(layers,layerid,points,maxpoints,mapwidth,properties):
+def create_lecture_layers(layers,layerid,points,maxpoints,mapwidth,properties):
     # Lets not divide by zero.
     if maxpoints == 0:
         maxpoints = 1
     if(float(points/maxpoints) > 0):
         layers.insert(layerid + 1, deepcopy(layers[layerid]))
         layers[layerid+1]['name'] = layers[layerid+1]['name'] +"b1"
-        layers[layerid + 1]['data'] = makeBuildBlocks(layers[layerid+1]['data'],0)
+        layers[layerid + 1]['data'] = make_build_blocks(layers[layerid+1]['data'],0)
         layers[layerid + 1]['properties'] = properties
     if(float(points/maxpoints) > 0.5):
         layers.insert(layerid + 2, deepcopy(layers[layerid]))
         layers[layerid + 2]['name'] = layers[layerid + 2]['name'] + "b2"
-        layers[layerid + 2]['data'] = makeBuildBlocks(layers[layerid+2]['data'],3)
+        layers[layerid + 2]['data'] = make_build_blocks(layers[layerid+2]['data'],3)
         layers[layerid + 2]['properties'] = properties
     #Delete unused keys, create offset for roof.
     deltable = []
@@ -163,8 +146,7 @@ def createLectureLayers(layers,layerid,points,maxpoints,mapwidth,properties):
 # layerid is the id for the layer above which the layers need to be appended
 # layerdict is the dictionary for the layer above which the layers need to be added
 # percentage is the percentage of points gotten from the demo.
-def createDemoLayers(layers,layerid,points,maxpoints,mapwidth,properties):
-    #TODO: specify number of tiles to be added to floor
+def create_demo_layers(layers,layerid,points,maxpoints,mapwidth,properties):
     if maxpoints == 0 and points == 0:
         maxpoints = 1
         points = 1
@@ -172,6 +154,7 @@ def createDemoLayers(layers,layerid,points,maxpoints,mapwidth,properties):
         maxpoints = 1
     percentage = float(points/maxpoints)
     floors = 0
+    tiles = 0
     #set number of floors
     if 0 <= percentage < 0.25:
         floors = 1
@@ -215,7 +198,7 @@ def createDemoLayers(layers,layerid,points,maxpoints,mapwidth,properties):
     while floorindex < floors:
         layers.insert(layerid + 1 + floorindex, deepcopy(layers[layerid]))
         layers[layerid + 1+ floorindex]['name'] = layers[layerid]['name'] + "b" + str(1+floorindex)
-        layers[layerid + 1+ floorindex]['data'] = makeBuildBlocks(layers[layerid + 1+ floorindex]['data'], floorindex)
+        layers[layerid + 1+ floorindex]['data'] = make_build_blocks(layers[layerid + 1+ floorindex]['data'], floorindex)
         layers[layerid + 1+ floorindex]['properties'] = properties
         if floorindex != 0:
             deltable = []
@@ -241,8 +224,7 @@ def createDemoLayers(layers,layerid,points,maxpoints,mapwidth,properties):
 
 # Makes buildblocks for tiles, dict is the dict to be modified,
 # floor defines the blocks to be added. 0 = ground floor, 1 = middle, 2 = middle, 3 = roof
-def makeBuildBlocks(dict,floor):
-    #TODO: make the tiles more interesting.
+def make_build_blocks(dict,floor):
     if floor == 0:
         for key in dict.keys():
             dict[key] = 23
@@ -256,7 +238,7 @@ def makeBuildBlocks(dict,floor):
 
 
 # Select a map based on the number of lectures and demos.
-def selectMap(lectures,demos):
+def select_map(lectures,demos):
     map = "static/map_files/d"
     # If there are more than twice as many demos as there are lectures select map based on lectures
     if (2*demos < lectures):
@@ -271,15 +253,15 @@ def selectMap(lectures,demos):
 
 
 # Add properties to every layer in the map. Properties dont contain anything of actual value at this point.
-def addProperties(layers,properties):
+def add_properties(layers,properties):
     for layer in layers:
         layer['properties'] = properties
     return layers
 
 
 # replaces data table of layer with a dict containing tile and image id.
-def replaceTableWithDict(layer):
-    toptiles = findTiles(layer)
+def replace_table_with_dict(layer):
+    toptiles = find_tiles(layer)
     # Dictionary the data will be replaced with.
     dict = {}
     for tile in toptiles:
@@ -292,7 +274,7 @@ def replaceTableWithDict(layer):
 
 
 # This method returns a list of tiles in the given data.
-def findTiles(layer):
+def find_tiles(layer):
     data = layer['data']
     #Table of the tiles
     ret = []
