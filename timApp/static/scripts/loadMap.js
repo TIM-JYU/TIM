@@ -66,7 +66,7 @@ $(document).ready(function () {
     // Get the JSON map file
     $.ajax({
         url: "/generateMap",
-        type: "get",
+        type: "post",
         datatype : "application/json",
         contentType: "application/json",
         data: gamified_data,
