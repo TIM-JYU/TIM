@@ -1640,12 +1640,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     # code, out, err, pwd = run2([runcommand], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                     #                               uargs=get_param(query, "runargs", "") + " " + userargs)
                     cmd = shlex.split(runcommand)
-                    extra = get_param(query, "cmds", "").format(pure_exename)
-                    if extra != "": cmd = []
+                    uargs = userargs
+                    extra = get_param(query, "cmds", "").format(pure_exename, uargs)
+                    if extra != "":
+                        cmd = []
+                        uargs = ""
                     print("run: ", cmd, extra, pure_exename, csfname)
                     try:
                         code, out, err, pwd = run2(cmd, cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                                   uargs=get_param(query, "runargs", "") + " " + userargs,
+                                                   uargs=get_param(query, "runargs", "") + " " + uargs,
                                                    extra=extra, noX11=noX11)
                     except Exception as e:
                         print(e)
