@@ -9,6 +9,7 @@ class AnswerTest(TimDbTest):
                                'email': user.email,
                                'real_name': user.real_name,
                                'task_count': task_count,
+                               'task_points': total_points,
                                'total_points': total_points,
                                'velp_points': None,
                                'velped_task_count': 0

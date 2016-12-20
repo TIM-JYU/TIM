@@ -20,7 +20,8 @@ timApp.controller('AllAnswersCtrl', ['$uibModalInstance', '$window', '$httpParam
         });
 
         $ctrl.options = $ctrl.$storage.allAnswersOptions;
-
+        $ctrl.options.periodFrom = $ctrl.options.periodFrom || Date.now();
+        $ctrl.options.periodTo = $ctrl.options.periodTo || Date.now();
         $ctrl.datePickerOptionsFrom = {
             format: 'D.M.YYYY HH:mm:ss',
             defaultDate: moment($ctrl.options.periodFrom),

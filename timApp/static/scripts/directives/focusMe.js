@@ -15,7 +15,11 @@ timApp.directive('focusMe', ['$timeout', '$parse', function ($timeout, $parse) {
                 }
             });
             element.bind('blur', function () {
-                scope.$apply(model.assign(scope, false));
+                // Catch "model.assign is not a function"
+                try {
+                    scope.$apply(model.assign(scope, false));
+                } catch (e) {
+                }
             });
         }
     };

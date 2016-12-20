@@ -505,7 +505,8 @@ csApp.directiveFunction = function(t,isInput) {
             scope.isSage = languageTypes.getRunType(scope.type,false) == "sage";
             scope.isSimcir = t === "simcir";
             scope.tiny = scope.type.indexOf("tiny") >= 0;
-            
+            var isArgs = scope.type.indexOf("args") >= 0;
+
 			csApp.set(scope,attrs,"file");
 			csApp.set(scope,attrs,"viewCode",false);
 			csApp.set(scope,attrs,"filename");
@@ -537,7 +538,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"argsplaceholder",scope.isText ? (english ? "Write file name here" : "Kirjoita tiedoston nimi tähän" ) : (english ? "Write your program args here": "Kirjoita ohjelman argumentit tähän"));
 			csApp.set(scope,attrs,"argsstem",scope.isText ? (english ? "File name:" : "Tiedoston nimi:") : (english ? "Args:": "Args"));
 			csApp.set(scope,attrs,"userinput","");
-			csApp.set(scope,attrs,"userargs",scope.isText ? scope.filename : "");
+			csApp.set(scope,attrs,"userargs",scope.isText && isArgs ? scope.filename : "");
 			csApp.set(scope,attrs,"selectedLanguage", scope.type);
 			csApp.set(scope,attrs,"inputstem","");
 			csApp.set(scope,attrs,"inputrows",1);

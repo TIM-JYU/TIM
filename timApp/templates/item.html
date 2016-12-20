@@ -22,6 +22,10 @@
 {% block header %}
     {{ super() }}
     {% if not hide_links %}
+        <div class="pull-right">
+            {% block languages %}
+            {% endblock %}
+        </div>
     <div class="nav nav-tabs">    {% block itemlinks %}
         <li role="presentation" {{ active('view_page.view_document') }}><a id="headerView" href="/view/{{ item.path }}">View</a></li>
         {% if item.rights.manage %}

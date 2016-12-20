@@ -16,10 +16,13 @@
     <form ng-submit="addPermission(groupName, accessType)">
         <div class="row">
             <div class="form-group col-md-6 input-group-sm">
-                <label for="groupName">Name: </label>
-                <input id="groupName" class="form-control" type="text" ng-model="groupName"
+                <label for="{{ listMode ? 'groupNameList' : 'groupName' }}">Name: </label>
+                <input ng-show="!listMode" id="groupName" class="form-control" type="text" ng-model="groupName"
                        focus-me="focusEditor"
-                       placeholder="enter username(s)/group name(s) separated by semicolons">
+                       placeholder="{{ getPlaceholder() }}">
+                <textarea ng-show="listMode" id="groupNameList" class="form-control" type="text" ng-model="groupName"
+                          focus-me="focusEditor"
+                          placeholder="{{ getPlaceholder() }}"></textarea>
             </div>
             <div class="form-group col-md-6 input-group-sm">
                 <label for="accessType">Right:</label>
@@ -28,8 +31,8 @@
             </div>
         </div>
         <button class="timButton" type="submit" ng-disabled="!groupName">Add</button>
-        <button class="timButton" type="button" ng-click="showAddRight = false">Cancel</button>
-
+        <button class="btn btn-default" type="button" ng-click="showAddRight = false">Cancel</button>
+        <button class="btn btn-default" type="button" ng-click="listMode = !listMode">Toggle multiline mode</button>
         <button class="timButton" type="button" ng-click="addPermission('Korppi users', accessType)">Add Korppi users
         </button>
         <button class="timButton" type="button" ng-click="addPermission('Logged-in users', accessType)">Add logged-in

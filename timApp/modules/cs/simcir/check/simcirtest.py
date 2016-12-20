@@ -117,6 +117,7 @@ class Logik:
         self.kytkematta = [] # Lista porteista joiden ulostulo(t) tai sisäänmeno(t) on kytkemättä. Ne joissa kaikki kytkemättä erotellaan erilleen
         self.kelluvat =[] # komponentit, joista ei mitään kytketty, eli ei vaikuta millään tavalla kytkentään.
         self.inputkytkematta = [] # Lista kytkimistä, joita ei ole kytketty
+        self.porttiennenkytkinta = [] # lista porteista, jotka on DC:n ja kytminen välissä
         if data is not None:
             self.devices = {}
             self.ulostulot = []
@@ -162,7 +163,10 @@ class Logik:
                     self.ulostulot.append(c)
                     # self.komponentit = {} # käytetään tämän tilalla self.devices
                     # self.reverse = reverse
-
+                # Jos kytkimen ja DC:n välissä on jokin portti
+                if self.devices[c.from_id].dev_type == 'Toggle' and self.devices[c.to_id].dev_type != 'DC':
+                    self.porttiennenkytkinta.append(self.devices[c.to_id].dev_type)
+                    #print(self.devices[c.to_id].dev_type)
                 #print(con.from_id in self.portit)
                 #if self.devices[con.from_id].dev_type == portti:
                     # save the device id which is connected to LED (portti)
@@ -170,7 +174,6 @@ class Logik:
                     #self.ulostulot.append(con)
                     # self.komponentit = {} # käytetään tämän tilalla self.devices
                     # self.reverse = reverse
-
             ## Lopuksi katsotaan että oliko 3+ input komponentti ja vaihdetaan tilalle 3-input komponentit ja vastaavat kytkennät
             # Ei toimi vielä
             # for k, dev in list(self.devices.items()): # list because we modify self.devices
@@ -281,6 +284,8 @@ class Logik:
             if c.from_id == c.to_id:  # Takaisinkytkentä (suoraan sisäänmenoon ulostulosta, helppo havaita, ei turhaan odoteta RecursionExce)
                 return -3, self.portit
 
+        if (self.ulostulot == [] or self.terminals == []): ## Kaikki ulostulot tai kytkimet on poistettu
+            return -4, self.portit
         for out in self.ulostulot:
             testlist.append(self.devices[out.from_id].label)
         if len(testlist) != len(set(testlist)): # Jos duplikaatti LEDejä
@@ -292,6 +297,8 @@ class Logik:
         # self.kytkematta <-- jos noita niin rangaistaan
         if self.kytkematta != []: # Jos jonkin komponentin (kaikki) inputit tai (kaikki) outputit kytkemättä
             return -9, self.inputkytkematta
+        if self.porttiennenkytkinta != []: # Jos portti on DC:n ja kytkimen välissä
+            return -10, self.porttiennenkytkinta
         kytkemattomat = list(set(self.ledit) - set(testlist))
         if kytkemattomat != []: # LED kytkemättä
             for k in kytkemattomat:
@@ -598,6 +605,7 @@ def tulosta_vai_ei(pisteet, taulu, tulosta = True, teksti = ''):
     # 0 -> -len, 1 -> -(len-1), ...
     # Tulostetaan virhetekstit aina (myös koetilanteessa)
     virhetekstit = [
+                    "Kytkennässä on portti jännitelähteen (DC) ja kytkimen (sisäänmeno) välissä.\nPortti ei voi olla ennen sisäänmenoa, siirrä portti kytkimen toiselle puolelle.\n",
                     "Kytkennässä ei ole johdotettu kaikkia käytettyjen porttien\nsisäänmenoja tai ulostuloja. Tarkista kytkennän johdotukset.\n",
                     "Kytkennässä ei ole johdotettu kaikkia kytkimiä (porttien kautta)\njohonkin ulostuloon. Tarkista kytkennän johdotukset.\n",
                     "Kytkennässä ei ole johdotettu kaikkia kytkimien sisäänmenoja\nja ulostuloja. Tarkista kytkinten johdotukset.\n",
@@ -615,52 +623,85 @@ def tulosta_vai_ei(pisteet, taulu, tulosta = True, teksti = ''):
     else:
         return pisteet, ""
 
-
 def muotoile_lauseke(lauseke):
     """
     Muuttaa LED = a AND b tyyppiset lausekkeet muotoon LED = AND(a,b)
-    Poistaa mahdolliset sulut, pyrkii säilyttämään 'puumaisen' rakenteen
-    uudessa lausekkeessa, testattu toimivaksi ao. lausekkeella
-    (((NOT (A1 XOR B1)) AND (NOT (A2 XOR B2))) AND (NOT (A3 XOR B3)) AND (NOT (A4 XOR B4)))
-    eli ensin käsitellään ne portit joiden sisäänmenona on pelkät muuttujat/kytkimet ja NOT:it
-    sitten vasta LEDiä lähimpänä puurakenteessa olevat portit
-    Tehdään lausekkeesta lista, johon lisätään muokatut termit ja poistetaan niitä vastaavat vanhat muotoilut
-    kunnes listassa on enää yksi termi ja se on uusi lauseke. LED irrotetaan alussa ja lisätään lopussa.
+	testattu toimivaksi ao. lausekkeella
+    LED = (((NOT (NOT(NOT A1) XOR B1)) AND (NOT (A2 XOR NOT (NOT (B2))))) AND NOT(NOT((NOT (A3 XOR B3)) AND (NOT (NOT(NOT(A4)) XOR B4)))))
+    Toiminta
+     - ensin käsitellään NOT, joilla parametrina yksi muuttuja
+     - sitten käsitellään NOT:ien alla olevat lausekkeet
+     - sitten NOT:tien alla olevat lausekkeet yhdistetään NOT:in kanssa samaksi lausekkeeksi
+     - sitten käsitellään muut operaattorit
+    Tehdään lausekkeesta lista, jossa muotattuja termejä yhdistellään ja niiden paikkoja vaihdellaan
+     - esim. listassa [... , 'A', 'XOR', 'B', ...] --> [... , 'XOR(A,B)', ...]
+    kunnes listassa on enää yksi termi ja se on uusi lauseke. LED irrotetaan alussa ja liitetään lopussa.
     :param lauseke: 'LED = a AND b' tai vastaava
     :return: 'LED = AND(a,b)' tai vastaava
     """
-    komponentit = ['AND', 'NAND', 'OR', 'NOR', 'XOR', 'XNOR', 'EOR', 'ENOR', 'NOT', 'DC']
-    osat = lauseke.split('=')
-    t = osat[1].lstrip().replace('(','').replace(')','').split(' ')
-    def muokkaa(lauseke):
-        tt = lauseke[a] + '(' + lauseke[a-1] + ',' + lauseke[a+1] + ')'
-        lauseke.insert(a-1,tt)
-        if a+2 == 0:
-            del lauseke[a-1:]
-        else:
-            del lauseke[a-1:a+2]
 
-    a = -2
-    toinen = False
-    while len(t) > 1:
-        if abs(a) > len(t):
-            a = -2
-            toinen = True
-        if t[a] == 'NOT':
-            tt = t[a] + '(' + t[a+1] + ')'
-            t.insert(a,tt)
-            if a+2 == 0:
-                del t[a:]
-            else:
-                del t[a:a+2]
-        elif (t[a] in komponentit and not t[a-1].startswith(tuple(komponentit)) and not t[a+1].startswith(tuple(komponentit))):
-            muokkaa(t)
-        elif toinen:
-            muokkaa(t)
-        else:
-            a -= 1
+    def muokkaaLauseke(t):
+        # muokkaillaan lauseketta, yhdistetään operaatioihin termit ja muutetaan järjestystä
+        while (len(t) > 1):
+            j = 0
+            while j < len(t):
+                # Käsitellään NOT:it ilman sulkeita
+                if j+1 < len(t) and t[j] == 'NOT' and t[j + 1] != '(':
+                    t[j], t[j + 1] = t[j] + '(', t[j + 1] + ')'
+                    t[j:j + 2] = [''.join(t[j:j + 2])]
+                    # print('0. t[j]: ' + t[j])
+                # yhdistetään ( -sulkeet sitä edeltävään loogiseen NOT operaatioon
+                if j+1 < len(t) and t[j] == 'NOT' and t[j+1] == '(':
+                    t[j:j+2] = [''.join(t[j:j+2])] # x[3:6] = [''.join(x[3:6])]
+                    #print('1. t[j]: ' + t[j])
+                # esim. 'NOT(', 'B2', ')' # Yhdistetään NOT sen sisällä olevaan lausekkeeseen
+                elif j+2 < len(t) and t[j] == 'NOT(' and t[j+2] == ')':
+                    t[j:j+3] = [''.join(t[j:j+3])]
+                    #print('2. t[j]: ' + t[j])
+                # esim. 'NOT(', '...', 'XOR', '...', ')' # Yhdistetään NOT:n sisällä oleva lauseke
+                elif j+5 < len(t) and t[j] == 'NOT(' and t[j+4] == ')' and t[j+2] in komponentit:
+                    t[j+1], t[j+2], t[j+3] = t[j+2]+'(', t[j+1]+',', t[j+3]+')'
+                    t[j:j+5] = [''.join(t[j:j+5])]
+                    #print('3. t[j]: ' + t[j])
+                # esim. '(', '...', ')', 'AND', '(', '...', ')'
+                elif j-3 >= 0 and j+3 < len(t) and t[j] in komponentit and t[j-1] == ')' and t[j+3] == ')' and t[j-3] == '(' and t[j+1] == '(':
+                    t[j-3], t[j-2], t[j-1], t[j], t[j+1] = t[j], t[j-3], t[j-2], ',', ''
+                    t[j-3:j+4] = [''.join(t[j-3:j+4])]
+                    #print('4. t[j-3]: ' + t[j-3])
+                    j = j-3
+                # esim. '...', 'AND', '(', '...', ')'
+                elif j-1 >= 0 and j+3 < len(t) and t[j] in komponentit  and t[j+3] == ')' and t[j+1] == '(' and t[j-1] != ')':
+                    t[j-1], t[j], t[j+1] = t[j], t[j+1], t[j-1] + ','
+                    t[j-1:j+4] = [''.join(t[j-1:j+4])]
+                    #print('5. t[j-1]: ' + t[j-1])
+                    j = j-1
+                # esim. '(', '...', 'AND', '...', ')'
+                elif j-2 >= 0 and j+2 < len(t) and t[j] in komponentit and t[j-2] == '(' and t[j+2] == ')':
+                    t[j-1], t[j] = t[j], t[j-1]
+                    t[j] = '(' + t[j]
+                    t[j+1] = ',' + t[j+1] + ')'
+                    t[j-1:j+2] = [''.join(t[j-1:j+2])]
+                    #print('6. t[j-1]: ' + t[j-1])
+                    j = j-1
+                 # jos yksi muuttuja tms. sulkeiden välissä --> yhdistetään
+                elif j+2 < len(t) and t[j].endswith('(') and t[j+2].startswith(')'):
+                    t[j:j+3] = [''.join(t[j:j+3])]
+                    #print('7. t[j]: ' + t[j])
+                else:
+                    j += 1
 
+    # NOT käsitellään erikseen, ei testattu DC:n kanssa vielä (opettajan ratkaisun ei 'pitäisi' sisältää DC:tä)
+    komponentit = ['AND', 'NAND', 'OR', 'NOR', 'XOR', 'XNOR', 'EOR', 'ENOR']
+    osat = lauseke.split('=') # irroitetaan LED
+    t = osat[1].lstrip().replace('(',' ( ').replace(')',' ) ') # varmistetaan että sulkujen ympärillä on välejä
+    t = ' '.join(t.split()) # poistetaan extra välit
+    t = t.split(' ') # taulukoidaan sulut, muuttujat ja operaatiot
+    #print(t)
+    muokkaaLauseke(t) # muokataan kunnes listassa on enää yksi lopullinen string
+    #print(len(t))
+    #print(t)
     return osat[0].rstrip() + ' = ' + ''.join(t)
+
 
 def testaa_kaaviot(testikaavio, oikeakaavio, maksimipisteet, hyvportit = [], tulosta = True):
     """

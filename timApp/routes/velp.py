@@ -285,7 +285,7 @@ def add_velp() -> int:
 
     velp_groups = velp_groups_rights
 
-    new_velp_id = timdb.velps.create_new_velp(current_user_id, velp_content, default_points,
+    new_velp_id, _ = timdb.velps.create_new_velp(current_user_id, velp_content, default_points,
                                               icon_id, valid_until, language_id, visible_to)
 
     if velp_labels is not None:
@@ -756,7 +756,8 @@ def create_default_velp_group(doc_id: int):
     # TODO Do we want to make just created default velp group selected in document immediately?
     # timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, user_id)
 
-    return jsonResponse(created_velp_group)
+    response = jsonResponse(created_velp_group)
+    return response
 
 
 def get_velp_groups_from_tree(document_id: int):

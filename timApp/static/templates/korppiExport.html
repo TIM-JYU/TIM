@@ -4,14 +4,25 @@
 <div class="modal-body" id="modal-body">
     <form name="korppiExportForm" class="form-horizontal">
         <div class="form-group">
-            <label for="pointField" class="col-sm-4 control-label">Point field name</label>
+            <label for="totalPointField" class="col-sm-4 control-label">Total point field name</label>
             <div class="col-sm-8">
                 <input focus-me="true"
-                       ng-model="$ctrl.options.pointField"
-                       name="pointField"
+                       ng-model="$ctrl.options.totalPointField"
+                       name="totalPointField"
                        type="text"
                        class="form-control"
-                       id="pointField"
+                       id="totalPointField"
+                       placeholder="Leave blank to skip exporting total points">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="taskPointField" class="col-sm-4 control-label">Task point field name</label>
+            <div class="col-sm-8">
+                <input ng-model="$ctrl.options.taskPointField"
+                       name="taskPointField"
+                       type="text"
+                       class="form-control"
+                       id="taskPointField"
                        placeholder="Leave blank to skip exporting task points">
             </div>
         </div>
@@ -29,7 +40,7 @@
     </form>
 </div>
 <div class="modal-footer">
-    <button ng-disabled="!$ctrl.options.velpPointField && !$ctrl.options.pointField" class="timButton" type="button" ng-click="$ctrl.ok()">Export
+    <button ng-disabled="!$ctrl.options.velpPointField && !$ctrl.options.taskPointField && !$ctrl.options.totalPointField" class="timButton" type="button" ng-click="$ctrl.ok()">Export
     </button>
     <button class="btn btn-default" type="button" ng-click="$ctrl.cancel()">Cancel</button>
 </div>

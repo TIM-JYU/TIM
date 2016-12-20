@@ -3,8 +3,10 @@ import json
 import re
 from collections import defaultdict, OrderedDict
 from datetime import datetime
+from operator import itemgetter
 from typing import List, Optional, Dict
 
+from documentmodel.pointsumrule import PointSumRule, PointType
 from utils import get_sql_template
 from timdb.tim_models import Answer, UserAnswer, AnswerTag
 from timdb.timdbbase import TimDbBase
@@ -38,7 +40,7 @@ class Answers(TimDbBase):
             a.points = points
             a.last_points_modifier = points_given_by
             self.session.commit()
-            return False, existing_id
+            return None
 
         a = Answer(task_id=task_id, content=content, points=points, valid=valid, last_points_modifier=points_given_by)
         self.session.add(a)
@@ -55,7 +57,7 @@ class Answers(TimDbBase):
             self.session.add(at)
 
         self.session.commit()
-        return True, answer_id
+        return answer_id
 
     def get_answers(self, user_id: int, task_id: str, get_collaborators: bool=True) -> List[dict]:
         """Gets the answers of a user in a task, ordered descending by submission time.
@@ -136,7 +138,7 @@ class Answers(TimDbBase):
         :param age: min, max or all
         :param valid: 0, 1 or all
         :param printname: True = put user full name as first in every task
-        :param print_opt: all = header and answers, header=only header, answers=only answers
+        :param print_opt: all = header and answers, header=only header, answers=only answers, korppi=korppi form
         """
         counts =  "count(a.answered_on)"
         groups = "group by a.task_id, u.id"
@@ -191,13 +193,25 @@ ORDER BY {}, a.answered_on
             # print(separator + header)
             line = json.loads(row[2])
             answ = str(line)
-            if isinstance(line, dict) and "usercode" in line:
-                answ = line.get("usercode", "-")
+            if isinstance(line, dict):  # maybe csPlugin?
+                if "usercode" in line:  # is csPlugin
+                    answ = line.get("usercode", "-")
+                else:
+                    if "points" in line:    # empty csPlugin answer
+                        answ = ""
 
             res = ""
             if printname and not hide_names: header = str(row[6]) + "; " + header
             if print_header: res = header
             if print_answers: res += "\n" + answ
+            if print_opt == "korppi":
+                res = name + ";"
+                taskid = row[1]
+                i = taskid.find(".")
+                if i >= 0:
+                    taskid = taskid[i+1:]
+                res += taskid + ";" + answ.replace("\n", "\\n")
+
             result.append(res)
         return result
 
@@ -254,13 +268,14 @@ ORDER BY {}, a.answered_on
         user_restrict_sql = '' if user_ids is None else 'AND UserAccount.id IN ({})'.format(','.join(['%s']*len(user_ids)))
         if user_ids is None:
             user_ids = []
-        cursor.execute(
-            """
+        sql = """
+                SELECT *, task_points + COALESCE(velp_points, 0) as total_points
+                FROM (
                 SELECT UserAccount.id, name, real_name, email,
-                       COUNT(DISTINCT task_id) AS task_count,
-                       ROUND(SUM(cast(points as float))::numeric,2) as total_points,
+                       COUNT(task_id) AS task_count,
+                       ROUND(SUM(cast(points as float))::numeric,2) as task_points,
                        ROUND(SUM(velp_points)::numeric,2) as velp_points,
-                       COUNT(DISTINCT annotation_answer_id) AS velped_task_count
+                       COUNT(annotation_answer_id) AS velped_task_count
                        {}
                 FROM UserAccount
                 JOIN UserAnswer ON UserAccount.id = UserAnswer.user_id
@@ -272,18 +287,24 @@ ORDER BY {}, a.answered_on
                       WHERE task_id IN ({}) AND Answer.valid = TRUE
                       GROUP BY UserAnswer.user_id, Answer.task_id) a1
                       JOIN (SELECT id, points FROM Answer) a2 ON a2.id = a1.aid
-                      LEFT JOIN (SELECT id as annotation_id, answer_id as annotation_answer_id, points as velp_points
-                                 FROM annotation) a3 ON a3.annotation_answer_id = a1.aid
+                      LEFT JOIN (SELECT
+                                 answer_id as annotation_answer_id,
+                                 SUM(points) as velp_points
+                                 FROM annotation
+                                 WHERE valid_until IS NULL
+                                 GROUP BY answer_id
+                                 ) a3 ON a3.annotation_answer_id = a1.aid
 
                       ) tmp ON tmp.aid = UserAnswer.answer_id AND UserAccount.id = tmp.uid
                 {}
                 GROUP BY UserAccount.id {}
                 ORDER BY real_name ASC
+                ) tmp
             """.format(', MIN(task_id) as task_id' if not group_by_user else '',
                        task_id_template,
                        user_restrict_sql,
-                       '' if group_by_user else ', task_id'), task_ids + user_ids)
-
+                       '' if group_by_user else ', task_id')
+        cursor.execute(sql, task_ids + user_ids)
         return self.resultAsDictionary(cursor)
 
     def get_points_by_rule(self, points_rule: Optional[Dict],
@@ -300,41 +321,52 @@ ORDER BY {}, a.answered_on
         if not points_rule:
             return self.get_users_for_tasks(task_ids, user_ids)
         tasks_users = self.get_users_for_tasks(task_ids, user_ids, group_by_user=False)
+        rule = PointSumRule(points_rule)
         result = defaultdict(lambda:defaultdict(lambda:defaultdict(lambda:defaultdict(list))))
         for tu in tasks_users:
-            try:
-                group = next((k for k, v in points_rule['groups'].items() if re.fullmatch(v, tu['task_id'].split('.')[1])), None)
-            except (re.error, AttributeError, KeyError):
-                continue
-            if group:
+            for group in rule.find_groups(tu['task_id']):
                 result[tu['id']]['groups'][group]['tasks'].append(tu)
         for user_id, task_groups in result.items():
             groups = task_groups['groups']
             groupsums = []
             for groupname, group in groups.items():
-                group['sum'] = round(sum(t['total_points'] for t in group['tasks']), 2)
-                groupsums.append(group['sum'])
-            count = points_rule.get('count', {}).get('best')
-            if count is not None:
-                groupsums = sorted(groupsums, reverse=True)
+                group['task_sum'] = 0
+                group['velp_sum'] = 0
+                if PointType.task in rule.groups[groupname].point_types:
+                    group['task_sum'] = round(sum(t['task_points'] for t in group['tasks'] if t['task_points'] is not None), 2)
+                if PointType.velp in rule.groups[groupname].point_types:
+                    group['velp_sum'] = round(sum(t['velp_points'] for t in group['tasks'] if t['velp_points'] is not None), 2)
+                group['velped_task_count'] = sum(1 for t in group['tasks'] if t['velped_task_count'] > 0)
+                group['total_sum'] = group['task_sum'] + group['velp_sum']
+                groupsums.append((group['task_sum'], group['velp_sum'], group['total_sum']))
+            if rule.count_type == 'best':
+                groupsums = sorted(groupsums, reverse=True, key=itemgetter(2))
             else:
-                count = points_rule.get('count', {}).get('worst', len(groupsums))
-                groupsums = sorted(groupsums)
+                groupsums = sorted(groupsums, key=itemgetter(2))
             try:
-                task_groups['sum'] = round(sum(groupsums[0:count]), 2)
+                task_groups['task_sum'] = round(sum(s[0] for s in groupsums[0:rule.count_amount]), 2)
+                task_groups['velp_sum'] = round(sum(s[1] for s in groupsums[0:rule.count_amount]), 2)
+                task_groups['total_sum'] = round(sum(s[2] for s in groupsums[0:rule.count_amount]), 2)
             except TypeError:
-                task_groups['sum'] = 0
+                task_groups['task_sum'] = 0
+                task_groups['velp_sum'] = 0
+                task_groups['total_sum'] = 0
         if flatten:
             result_list = []
             for user_id, task_groups in result.items():
                 first_group = next(v for _, v in task_groups['groups'].items())
                 row = first_group['tasks'][0]
-                row['total_points'] = task_groups['sum']
+                row['total_points'] = task_groups['total_sum']
+                row['task_points'] = task_groups['task_sum']
+                row['velp_points'] = task_groups['velp_sum']
                 row['task_count'] = len(task_groups['groups'])
+                row['velped_task_count'] = sum(1 for t in task_groups['groups'].values() if t['velped_task_count'] > 0)
                 row.pop('task_id', None)
                 row['groups'] = OrderedDict()
-                for groupname, _ in sorted(points_rule['groups'].items()):
-                    row['groups'][groupname] = task_groups['groups'].get(groupname, {}).get('sum', 0)
+                for groupname, _ in sorted(rule.groups.items()):
+                    row['groups'][groupname] = {'task_sum': task_groups['groups'].get(groupname, {}).get('task_sum', 0),
+                                                'velp_sum': task_groups['groups'].get(groupname, {}).get('velp_sum', 0),
+                                                'total_sum': task_groups['groups'].get(groupname, {}).get('total_sum', 0)}
                 result_list.append(row)
             return result_list
         return result

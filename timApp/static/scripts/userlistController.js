@@ -17,10 +17,12 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
         );
 
         var anyAnnotations = false;
+        var smallFieldWidth = 59;
 
         for (var i = 0; i < $scope.users.length; ++i) {
             if ($scope.users[i].velped_task_count > 0) {
                 anyAnnotations = true;
+                smallFieldWidth = 40;
                 break;
             }
         }
@@ -28,14 +30,21 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
         $scope.columns = [
             {field: 'real_name', name: 'Full name', cellTooltip: true, headerTooltip: true},
             {field: 'name', name: 'Username', cellTooltip: true, headerTooltip: true, maxWidth: 100},
-            {field: 'task_count', name: 'Tasks', cellTooltip: true, headerTooltip: true, maxWidth: 56},
-            {field: 'total_points', name: 'Points', cellTooltip: true, headerTooltip: true, maxWidth: 59},
+            {field: 'task_count', name: 'Tasks', cellTooltip: true, headerTooltip: true, maxWidth: smallFieldWidth},
+            {
+                field: 'task_points',
+                name: 'Task points',
+                cellTooltip: true,
+                headerTooltip: true,
+                maxWidth: smallFieldWidth,
+                visible: anyAnnotations
+            },
             {
                 field: 'velped_task_count',
                 name: 'Velped tasks',
                 cellTooltip: true,
                 headerTooltip: true,
-                maxWidth: 60,
+                maxWidth: smallFieldWidth,
                 visible: anyAnnotations
             },
             {
@@ -43,9 +52,10 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
                 name: 'Velp points',
                 cellTooltip: true,
                 headerTooltip: true,
-                maxWidth: 60,
+                maxWidth: smallFieldWidth,
                 visible: anyAnnotations
-            }
+            },
+            {field: 'total_points', name: 'Points', cellTooltip: true, headerTooltip: true, maxWidth: smallFieldWidth}
         ];
 
         $scope.fireUserChange = function (row, updateAll) {
@@ -55,25 +65,30 @@ timApp.controller('UserListController', ['$scope', '$element', '$filter', '$time
         $scope.instantUpdate = false;
 
         $scope.exportKorppi = function (options) {
-            if (!options.pointField && !options.velpPointField) {
+            if (!options.taskPointField && !options.velpPointField && !options.totalPointField) {
                 return;
             }
             var data = $scope.gridApi.grid.getVisibleRows();
             var dataKorppi = "";
 
-            if (options.pointField) {
-                for (var i = 0; i < data.length; i++) {
-                    dataKorppi += data[i].entity.name + ";" + options.pointField + ";" + data[i].entity.total_points + "\n";
+            var fields = ['task_points', 'velp_points', 'total_points'];
+            var fieldNames = {};
+            fieldNames[fields[0]] = options.taskPointField;
+            fieldNames[fields[1]] = options.velpPointField;
+            fieldNames[fields[2]] = options.totalPointField;
+
+            for (var i = 0; i < fields.length; ++i) {
+                if (fieldNames[fields[i]]) {
+                    if (dataKorppi !== "") {
+                        dataKorppi += "\n";
+                    }
+                    for (var j = 0; j < data.length; j++) {
+                        if (data[j].entity[fields[i]] !== null)
+                            dataKorppi += data[j].entity.name + ";" + fieldNames[fields[i]] + ";" + data[j].entity[fields[i]] + "\n";
+                    }
                 }
             }
-            if (options.velpPointField) {
-                if (dataKorppi !== "") {
-                    dataKorppi += "\n";
-                }
-                for (var j = 0; j < data.length; j++) {
-                    dataKorppi += data[j].entity.name + ";" + options.velpPointField + ";" + data[j].entity.velp_points + "\n";
-                }
-            }
+
             var filename = 'korppi_' + $scope.docId + '.txt';
             // from https://stackoverflow.com/a/33542499
             var blob = new Blob([dataKorppi], {type: 'text/plain'});
