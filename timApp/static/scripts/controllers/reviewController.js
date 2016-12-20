@@ -717,7 +717,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Detect user right to annotation to document.
      * @param points - Points given in velp or annotation
      * @returns {boolean} - Right to make annotations
-     */
+
 
     $scope.notAnnotationRights = function (points) {
         if ($scope.item.rights.teacher) {
@@ -730,7 +730,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             }
         }
     };
-
+    */
     /**
      * Return caption text if the user has no rights to the annotation.
      * @param state - Whether the annotation is disabled to the user or not
@@ -753,7 +753,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.useVelp = function (velp) {
 
-        if ($scope.velpToEdit.id >= 0) return;
+        if ($scope.velpToEdit.edit) return;
 
         var newAnnotation = {
             id: -($scope.annotations.length + 1),

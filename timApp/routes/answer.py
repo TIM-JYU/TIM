@@ -208,7 +208,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                     result['error'] = str(e)
                 else:
                     points_given_by = get_current_user_group()
-            if points or save_object or tags:
+            if points or save_object is not None or tags:
                 result['savedNew'] = timdb.answers.saveAnswer(users,
                                                               task_id,
                                                               json.dumps(save_object),

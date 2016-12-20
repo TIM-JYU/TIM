@@ -79,8 +79,6 @@ class Device:
         self.x = int(dat['x'])
         self.y = int(dat['y'])
         self.num_inputs = int(dat.get('numInputs', -1))
-        #self.func = funcs.get(self.label, None)
-        if self.dev_type == 'NAND': self.label = 'NAND'
 
     def tuple_type_label(self):
         return (self.dev_type, self.label)
@@ -105,42 +103,86 @@ class Connector:
     def __str__(self):
         return '{"from":"%s.%s","to":"%s.%s"}' \
                % (self.from_id, self.from_port, self.to_id, self.to_port)
-
+    def __repr__(self): # listattujen olioiden tulostamiseen (testausta varten)
+        return str(self)
 
 class Logik:
     # def __init__(self, data, reverse):
     def __init__(self, data):
         #self.terminals = set()
         self.terminals = [] # use list to catch possible duplicate switches
-        # Lista käytetyistä komponenteista, DC mukana lausekkeiden muodostamista varten (jos portti/LED kytketty suoraan DC:hen ohi kytkime
+        # Lista käytetyistä komponenteista, DC mukana lausekkeiden muodostamista varten (jos portti/LED kytketty suoraan DC:hen ohi kytkimen
         self.komponentit = ['AND', 'NAND', 'OR', 'NOR', 'XOR', 'XNOR', 'EOR', 'ENOR', 'NOT', 'DC']
-        self.portit = set() # Store the types of ports used in the schematic (ehkäpä lista olisi parempi, jos halutaan tallentaa myöhemmin määrää), vertailussa nykyään set kuitenkin muutetaan listaksi
+        self.portit = set() # Store the types of ports used in the schematic (ehkäpä lista olisi parempi, jos halutaan tallentaa myöhemmin määrää), vertailussa nykyään se kuitenkin muutetaan listaksi
+        self.kytkematta = [] # Lista porteista joiden ulostulo(t) tai sisäänmeno(t) on kytkemättä. Ne joissa kaikki kytkemättä erotellaan erilleen
+        self.kelluvat =[] # komponentit, joista ei mitään kytketty, eli ei vaikuta millään tavalla kytkentään.
+        self.inputkytkematta = [] # Lista kytkimistä, joita ei ole kytketty
+        self.porttiennenkytkinta = [] # lista porteista, jotka on DC:n ja kytminen välissä
         if data is not None:
             self.devices = {}
             self.ulostulot = []
             self.ledit = []
-            portti = 'LED'  ## fix to support others some day
+            self.connectors = []  # data['connectors']
+            portti = 'LED'  ## Mofify to support others some day, make a list of possible output types
+
+            for c in data['connectors']:
+                con = Connector(c)
+                self.connectors.append(con)
+
             for d in data['devices']:
                 dev = Device(d)
                 self.devices[dev.dev_id] = dev
                 if dev.dev_type == 'Toggle':  # lisää muita input tyyppejä
                     #self.terminals.add(dev.label)
-                    self.terminals.append(dev.label)
+                    if dev.dev_id in [x.from_id for x in self.connectors] and dev.dev_id in [x.to_id for x in self.connectors]:
+                        self.terminals.append(dev.label)
+                    else:
+                        self.inputkytkematta.append(dev.label)
+                        #print(self.inputkytkematta)
                 elif dev.dev_type == 'LED':  # verrataan tähän, onko kytketty
                     self.ledit.append(dev.label)
                 elif dev.dev_type in self.komponentit and dev.dev_type != 'DC':  # portit, joita kytkennässä käytetty
-                    self.portit.add(dev.dev_type)
+                    # Tarkastetaan että on oikeasti käytetty, eli ainakin 1 ulostulo ja sisäänmeno kytketty, että lisätään portteihin
+                    #print(dev.dev_id in [x.from_id for x in self.connectors])
+                    #print(dev.dev_id in [x.to_id for x in self.connectors])
+                    #print('dev ' + dev.dev_id)
+                    if dev.dev_id in [x.from_id for x in self.connectors] and dev.dev_id in [x.to_id for x in self.connectors]:
+                        self.portit.add(dev.dev_type) # ainakin 1 input ja 1 output kytketty
+                    elif dev.dev_id in [x.from_id for x in self.connectors] or dev.dev_id in [x.to_id for x in self.connectors]:
+                        self.kytkematta.append(dev.dev_type) # joko input tai output kytketty, mutta ei molempia
+                    else:
+                        self.kelluvat.append(dev.dev_type) # ei yhtään input tai output kytketty
 
-            self.connectors = []  # data['connectors']
-            for c in data['connectors']:
-                con = Connector(c)
-                self.connectors.append(con)
-                if self.devices[con.from_id].dev_type == portti:
+            #print('kytketty ' + str(self.portit))
+            #print('kytkemättä ' + str(self.kytkematta))
+
+            for c in self.connectors:
+                if self.devices[c.from_id].dev_type == portti:
                     # save the device id which is connected to LED (portti)
                     # self.ulostulot.append(con.to_id);
-                    self.ulostulot.append(con)
+                    self.ulostulot.append(c)
                     # self.komponentit = {} # käytetään tämän tilalla self.devices
                     # self.reverse = reverse
+                # Jos kytkimen ja DC:n välissä on jokin portti
+                if self.devices[c.from_id].dev_type == 'Toggle' and self.devices[c.to_id].dev_type != 'DC':
+                    self.porttiennenkytkinta.append(self.devices[c.to_id].dev_type)
+                    #print(self.devices[c.to_id].dev_type)
+                #print(con.from_id in self.portit)
+                #if self.devices[con.from_id].dev_type == portti:
+                    # save the device id which is connected to LED (portti)
+                    # self.ulostulot.append(con.to_id);
+                    #self.ulostulot.append(con)
+                    # self.komponentit = {} # käytetään tämän tilalla self.devices
+                    # self.reverse = reverse
+            ## Lopuksi katsotaan että oliko 3+ input komponentti ja vaihdetaan tilalle 3-input komponentit ja vastaavat kytkennät
+            # Ei toimi vielä
+            # for k, dev in list(self.devices.items()): # list because we modify self.devices
+            #     if dev.num_inputs > 2:
+            #         # print(dev.num_inputs)
+            #        self.poista_input(dev.dev_id, dev.dev_type, dev.num_inputs)
+            #print(self.connectors)
+
+                    # print(self.devices)
 
     def lausekkeesta_totuustaulu(self, lausekkeet):
         import itertools
@@ -218,7 +260,12 @@ class Logik:
                     else:
                         if lauseke == 'DC':
                             lauseke = 'DC()'
-                        arvo = eval(lauseke, globals(), locs)
+                        try:
+                            arvo = eval(lauseke, globals(), locs)
+                        except:
+                            return -6  ## jokin komponentti kytkennässä jota ei voida evaluoida
+                        if callable(arvo): # Jos on funktio, niin LED:ltä ei johdotusta kytkimelle asti
+                            return -8
                         tulostettava += ' '.center(max(len(nimi), label_length)) + str(int(arvo)) # change true,false to 1,0
                 tulostettava += '\n'
             tulostettava = hd + '\n' + tulostettava
@@ -233,17 +280,25 @@ class Logik:
         #    if j[1]=='B1': self.komponentit[i]=(j[0], 'B1')
         lausekkeet = {}
         testlist = []
-        for out in self.ulostulot:
-            testlist.append(self.devices[out.from_id].label)
-
         for c in self.connectors:
             if c.from_id == c.to_id:  # Takaisinkytkentä (suoraan sisäänmenoon ulostulosta, helppo havaita, ei turhaan odoteta RecursionExce)
                 return -3, self.portit
 
+        if (self.ulostulot == [] or self.terminals == []): ## Kaikki ulostulot tai kytkimet on poistettu
+            return -4, self.portit
+        for out in self.ulostulot:
+            testlist.append(self.devices[out.from_id].label)
         if len(testlist) != len(set(testlist)): # Jos duplikaatti LEDejä
             return -1, self.portit
         if len(self.terminals) != len(set(self.terminals)): # Jos duplikaatti kytkimiä
             return -2, self.portit
+        if self.inputkytkematta != []: # Jos kytkin kytkemättä
+            return -7, self.inputkytkematta
+        # self.kytkematta <-- jos noita niin rangaistaan
+        if self.kytkematta != []: # Jos jonkin komponentin (kaikki) inputit tai (kaikki) outputit kytkemättä
+            return -9, self.inputkytkematta
+        if self.porttiennenkytkinta != []: # Jos portti on DC:n ja kytkimen välissä
+            return -10, self.porttiennenkytkinta
         kytkemattomat = list(set(self.ledit) - set(testlist))
         if kytkemattomat != []: # LED kytkemättä
             for k in kytkemattomat:
@@ -323,40 +378,55 @@ class Logik:
         '''
 
     def poista_input(self, dev_id, tyyppi, num_inputs):
-        raise Error("ei toteutettu kunnolla vielä")
-        # self.komponentit[dev] = (tyyppi, tyyppi)
-        # if tyyppi.startswith('n'):
-        #     tyyppi = tyyppi[1:]
-        # elif tyyppi == 'XNOR':
-        #     tyyppi = 'XOR'
+        #raise Error("ei toteutettu kunnolla vielä")
+        print("ei toteutettu kunnolla vielä")
+        self.devices[dev_id].label = tyyppi # change label to type, because we use basic components (AND) to replace n-input ones e.g. label AND(3in)
+        # Käsitellään negatoidut komponentit erikseen, tehdään muutos ilman negatointeja, ja lopputulos vasta negatoidaan.
+        # Esim LED = NAND(a,b,c) --> LED = NOT(AND(a,AND(b,c)))
+        if tyyppi.startswith('n'):
+            tyyppi = tyyppi[1:]
+        elif tyyppi == 'XNOR':
+            tyyppi = 'XOR'
 
-        # self.komponentit[dev+'x'+str(num_inputs)] = (tyyppi, tyyppi)
+        print(self.devices[dev_id])
+        # Lisätään uusia virtuaalisia (x) portteja kompensoimaan n-input portin muutos 2-input porteiksi
+        # poistetaan muutettava komponentti myöhemmin...
 
-        # newlines = []
+        # Tässä pitäisi luoda uusi Device ja sitten lisätä se devices:iin ja sitten lopulta poistaa alkuperäinen n-input dev
+        self.devices[dev_id+'x'+str(num_inputs)] = (tyyppi, tyyppi)
+
+        newlines = []
 
         # for (indeksi,rivi) in enumerate(self.connectors):
-        #     if dev+'.in' in rivi:
-        #         if indeksi < num_inputs-1:
-        #             newlines.append(rivi.replace(dev, dev+'x'+str(num_inputs)))
-        #         else:
-        #             ind = rivi.index('in')
-        #             s = list(rivi)
-        #             s[ind+2] = '0'
-        #             rivi = "".join(s)
-        #             newlines.append(rivi)
-        #             newlines.append({'from': dev+'.in2', 'to':dev+'x'+str(num_inputs)+'.out0'})
+        # for c in self.connectors:
+        #     print(c)
+            # if dev_id+'.in' in rivi:
+            #     print (rivi)
+                # if indeksi < num_inputs-1:
+                #     newlines.append(rivi.replace(dev_id, dev_id+'x'+str(num_inputs)))
+                # else:
+                #     ind = rivi.index('in')
+                #     s = list(rivi)
+                #     s[ind+2] = '0'
+                #     rivi = "".join(s)
+                #     newlines.append(rivi)
+                #     newlines.append({'from': dev_id+'.in2', 'to':dev_id+'x'+str(num_inputs)+'.out0'})
 
-        # fromlines = [rivi for rivi in from_llines if not dev+'.in' in rivi]
+        # print(self.devices)
+        ## Tässä pitäisi self. connectorista poistaa dev:iä vastaavat rivit
+        ##fromlines = [rivi for rivi in from_llines if not dev_id+'.in' in rivi]
+        ## Ja myöhemmin lisätä uudet rivit...
+        ## TODO: mieti arin.py versiossa oleva rivien käsittely versus tässä kun käsitellään self.connectors luokkaa
 
         # print 'Vfrom ', fromlines
         # print 'Vnew ', newlines
-
+        #
         # for item in newlines:
         #     self.connectors.append(item)
-        #     dev = dev+'x'+str(num_inputs)
+        #     dev = dev_id+'x'+str(num_inputs)
         #     num_inputs -= 1
         # if num_inputs > 2:
-        #     return poista_input(kommponentit, dev, tyyppi, self.connectors, num_inputs)
+        #     return poista_input(kommponentit, dev_id, tyyppi, self.connectors, num_inputs)
         # else:
         #     return self.connectors
 
@@ -414,7 +484,7 @@ def testaa_totuustaulut(expected, actual):
     for line in result:
         if line[0] == '+':
             virheita += 1
-            difference += line
+            difference += line.replace("+"," ")
 
     return virheita, difference
 
@@ -450,11 +520,12 @@ def totuustaulu_muotoilu(totuustaulu):
             labels = str(' '.join(frmt1) + '   ' + ' '.join(frmt2))
             muokattu += labels.rstrip() + '\n'
         return muokattu
-    except ValueError:
+    except ValueError: # Tämä tapahtuu kun LED puuttuu
         return -4 ## palautetaan tyhjä totuustaulu, kaaviosta puuttuu sisäänmenoja ja/tai ulostuloja
 
 def onko_virheita(testitaulu, oikeataulu, maksimipisteet, portit = [], hyvportit = [], tulosta = True):
     """
+    23.8.2016 Lisätään testi että on käytetty vaadittuja portteja, aiemmin testattiin vain että onko ylimääräisiä
     :param testitaulu: testattava totuustaulu
     :param oikeataulu: oikea totuustaulu
     :param maksimipisteet: tehtävän maksimipisteet
@@ -463,52 +534,82 @@ def onko_virheita(testitaulu, oikeataulu, maksimipisteet, portit = [], hyvportit
     :param tulosta: Tulostetaanko virheelliset rivit (ja pisteet) opiskelijalle (esim. kokeessa ei tulosteta) - ei toteutettu vielä
     :return: tehtävästä saadut pisteet, virheelliset rivit (tai 'oikein' -teksti tai virheteksti)
     """
+
+    # portit voi sisältää simcir:n EOR je ENOR, kun käytän XOR ja XNOR, muutetaan -->
+    portit = [w.replace('EOR', 'XOR') for w in portit]
+    portit = [w.replace('ENOR', 'XNOR') for w in portit]
+
     if hyvportit != []:
         # check if portit only contains ports that are listed in hyvportit
         #print(all(any(p == hyvp for hyvp in hyvportit) for p in portit)) Antaa True tai False
-        #print([x for x in portit if x not in hyvportit]) # Antaa portit
-        ylimportit = [x for x in portit if x not in hyvportit] # Antaa portit
+        #print([x for x in portit if x not in hyvportit]) # Antaa ylimääräiset portit
+        #print([x for x in portit if x in hyvportit])  # Antaa hyväksytyt portit
+        ylimportit = [x for x in portit if x not in hyvportit]
+        vaaditutportit = [x for x in portit if x in hyvportit]
     else:
         ylimportit = []
+        vaaditutportit = []
     oikeatrivit = oikeataulu.splitlines()
     riveja = len(oikeatrivit) - 1  # poistetaan muuttuja/otsikko -rivi
     if isinstance( testitaulu, int ): # jotain vikaa jos testitaulu on (negatiivinen) int
         return tulosta_vai_ei(0.0, testitaulu, tulosta, oikeatrivit[0])
 
     virheita, virherivit = testaa_totuustaulut(testitaulu, oikeataulu)
+    #print('virheitä ' + str(virheita))
     # Tulostetaan vain maxrivit riviä virheitä
     maxrivit = 8
     if virheita > maxrivit:
         virherivit = '\n'.join(virherivit.splitlines()[:maxrivit])
-        virherivit += '\nlisäksi ' + str(virheita - maxrivit) + ' muuta virheellistä riviä\n'
-    # Lisätään muuttujat ja output virheellisten rivien yläpuolelle
-    virheet = '  ' + oikeatrivit[0] + '\n' + virherivit
+        virherivit += '\n  ...\nlisäksi ' + str(virheita - maxrivit) + ' muuta virheellistä riviä\n'
+    # Lisätään sisäänmenot ja ulostulot virheellisten rivien yläpuolelle
+    if virheita > 0:
+        virheet = 'Seuraavat rivit kytkentääsi vastaavassa totuustaulussa\npoikkeavat tehtävänantoa vastaavan totuustaulun riveistä:\n' + '  ' + oikeatrivit[0] + '\n' + virherivit
+    else:
+        virheet = ''
     # maksimipisteet kerrotaan oikeiden rivien suhteella kaikkiin riveihin
     pistekertoja = (riveja-virheita)/riveja
-    pisteet = round(maksimipisteet*pistekertoja*4)/4 # round to .25 intervals
+    # Muutetaan siten että pyöristetään alaspäin
+    #pisteet = round(maksimipisteet*pistekertoja*4)/4 # round to .25 intervals
+    from math import floor
+    pisteet = floor(maksimipisteet*pistekertoja*4)/4 # round down to .25 intervals
 
     if virheita == 0:
-        if ylimportit == []:
+        if hyvportit == []:
             return tulosta_vai_ei(pisteet, "Oikein, täydet pisteet!\n", tulosta)
-        else:
-            return tulosta_vai_ei(maksimipisteet/2, "Totuustaulu oikein, mutta puolet maksimipisteistä,\nkoska sallittujen porttien "
-                                  + str(hyvportit) + "\nlisäksi käytit myös portteja " + str(ylimportit) + "\n", tulosta)
-        #return pisteet, "Oikein, täydet pisteet!\n" # pitäisikö tulostaa oikea totuustaulu?
+        elif hyvportit != []:
+            if vaaditutportit == []:
+                return tulosta_vai_ei(maksimipisteet / 2,
+                                      "Totuustaulu oikein, mutta puolet maksimipisteistä,\nkytkennässä ei ole yhtään sallituista porteista\n"
+                                      + str(hyvportit) + ', siten että niiden sisäänmenot \nja ulostulot on kytketty.\n', tulosta)
+            elif ylimportit == []:
+                return tulosta_vai_ei(pisteet, "Oikein, täydet pisteet!\n", tulosta)
+            else:
+                return tulosta_vai_ei(maksimipisteet/2, "Totuustaulu oikein, mutta puolet maksimipisteistä,\nkoska et käyttänyt vain sallittuja portteja "
+                                      + str(hyvportit) + "\nvaan kytkennässä on myös portit " + str(ylimportit) + "\n", tulosta)
+        #else: # Ei määritelty erikseen käytettäviä portteja
+        #   return tulosta_vai_ei(pisteet, "Oikein, täydet pisteet!\n", tulosta)
     if pisteet < 0:
         return tulosta_vai_ei(0.0, -5 , tulosta, oikeatrivit[0])
-        #return 0.0, "Kytkennässä on liikaa sisäänmenoja tai ulostuloja.\nSisäänmenot ja ulostulot tulee olla: " + oikeatrivit[0] + "\n"
     # alla tapaukset, joissa totuustaulu väärin, ei syntaksivirheitä
-    if ylimportit == []:
+    if hyvportit != [] and vaaditutportit == []:
+        return tulosta_vai_ei(0.0, virheet + "lisäksi kytkennässä ei ole yhtään sallituista porteista\n"
+                                      + str(hyvportit) + ', siten että niiden sisäänmenot \nja ulostulot on kytketty.\n', tulosta)
+    elif ylimportit == []:
         return tulosta_vai_ei(pisteet, virheet, tulosta)
     else:
-        return tulosta_vai_ei(0.0, virheet + "\ntotuustaulussa yo. virheet ja sallittujen porttien "
-                              + str(hyvportit) + "\nlisäksi käytit myös portteja " + str(ylimportit) + "\n", tulosta)
+        return tulosta_vai_ei(0.0, virheet + "\nlisäksi sallitut portit olivat "
+                              + str(hyvportit) + "\nmutta kytkennässäsi on muita portteja " + str(ylimportit) + "\n", tulosta)
 
 
 def tulosta_vai_ei(pisteet, taulu, tulosta = True, teksti = ''):
     # 0 -> -len, 1 -> -(len-1), ...
     # Tulostetaan virhetekstit aina (myös koetilanteessa)
     virhetekstit = [
+                    "Kytkennässä on portti jännitelähteen (DC) ja kytkimen (sisäänmeno) välissä.\nPortti ei voi olla ennen sisäänmenoa, siirrä portti kytkimen toiselle puolelle.\n",
+                    "Kytkennässä ei ole johdotettu kaikkia käytettyjen porttien\nsisäänmenoja tai ulostuloja. Tarkista kytkennän johdotukset.\n",
+                    "Kytkennässä ei ole johdotettu kaikkia kytkimiä (porttien kautta)\njohonkin ulostuloon. Tarkista kytkennän johdotukset.\n",
+                    "Kytkennässä ei ole johdotettu kaikkia kytkimien sisäänmenoja\nja ulostuloja. Tarkista kytkinten johdotukset.\n",
+                    "Kytkennässä on jokin komponentti, jota tarkistin ei tue.\nKäytä vain työkaluissa ja piirikaaviossa olevia komponentteja\n",
                     "Kytkennässä on liikaa sisäänmenoja tai ulostuloja.\nSisäänmenot ja ulostulot tulee olla: " + teksti + "\n",
                     "Kytkennästä puuttuu sisäänmenoja tai ulostuloja.\nSisäänmenot ja ulostulot tulee olla: " + teksti + "\n",
                     "Kytkennässä takaisinkytkentä (portin ulostulo kytketty omaan sisäänmenoon,\njoko suoraan tai muiden porttien kautta). Poista takaisinkytkentä.\n",
@@ -522,52 +623,85 @@ def tulosta_vai_ei(pisteet, taulu, tulosta = True, teksti = ''):
     else:
         return pisteet, ""
 
-
 def muotoile_lauseke(lauseke):
     """
     Muuttaa LED = a AND b tyyppiset lausekkeet muotoon LED = AND(a,b)
-    Poistaa mahdolliset sulut, pyrkii säilyttämään 'puumaisen' rakenteen
-    uudessa lausekkeessa, testattu toimivaksi ao. lausekkeella
-    (((NOT (A1 XOR B1)) AND (NOT (A2 XOR B2))) AND (NOT (A3 XOR B3)) AND (NOT (A4 XOR B4)))
-    eli ensin käsitellään ne portit joiden sisäänmenona on pelkät muuttujat/kytkimet ja NOT:it
-    sitten vasta LEDiä lähimpänä puurakenteessa olevat portit
-    Tehdään lausekkeesta lista, johon lisätään muokatut termit ja poistetaan niitä vastaavat vanhat muotoilut
-    kunnes listassa on enää yksi termi ja se on uusi lauseke. LED irrotetaan alussa ja lisätään lopussa.
+	testattu toimivaksi ao. lausekkeella
+    LED = (((NOT (NOT(NOT A1) XOR B1)) AND (NOT (A2 XOR NOT (NOT (B2))))) AND NOT(NOT((NOT (A3 XOR B3)) AND (NOT (NOT(NOT(A4)) XOR B4)))))
+    Toiminta
+     - ensin käsitellään NOT, joilla parametrina yksi muuttuja
+     - sitten käsitellään NOT:ien alla olevat lausekkeet
+     - sitten NOT:tien alla olevat lausekkeet yhdistetään NOT:in kanssa samaksi lausekkeeksi
+     - sitten käsitellään muut operaattorit
+    Tehdään lausekkeesta lista, jossa muotattuja termejä yhdistellään ja niiden paikkoja vaihdellaan
+     - esim. listassa [... , 'A', 'XOR', 'B', ...] --> [... , 'XOR(A,B)', ...]
+    kunnes listassa on enää yksi termi ja se on uusi lauseke. LED irrotetaan alussa ja liitetään lopussa.
     :param lauseke: 'LED = a AND b' tai vastaava
     :return: 'LED = AND(a,b)' tai vastaava
     """
-    komponentit = ['AND', 'NAND', 'OR', 'NOR', 'XOR', 'XNOR', 'EOR', 'ENOR', 'NOT', 'DC']
-    osat = lauseke.split('=')
-    t = osat[1].lstrip().replace('(','').replace(')','').split(' ')
-    def muokkaa(lauseke):
-        tt = lauseke[a] + '(' + lauseke[a-1] + ',' + lauseke[a+1] + ')'
-        lauseke.insert(a-1,tt)
-        if a+2 == 0:
-            del lauseke[a-1:]
-        else:
-            del lauseke[a-1:a+2]
 
-    a = -2
-    toinen = False
-    while len(t) > 1:
-        if abs(a) > len(t):
-            a = -2
-            toinen = True
-        if t[a] == 'NOT':
-            tt = t[a] + '(' + t[a+1] + ')'
-            t.insert(a,tt)
-            if a+2 == 0:
-                del t[a:]
-            else:
-                del t[a:a+2]
-        elif (t[a] in komponentit and not t[a-1].startswith(tuple(komponentit)) and not t[a+1].startswith(tuple(komponentit))):
-            muokkaa(t)
-        elif toinen:
-            muokkaa(t)
-        else:
-            a -= 1
+    def muokkaaLauseke(t):
+        # muokkaillaan lauseketta, yhdistetään operaatioihin termit ja muutetaan järjestystä
+        while (len(t) > 1):
+            j = 0
+            while j < len(t):
+                # Käsitellään NOT:it ilman sulkeita
+                if j+1 < len(t) and t[j] == 'NOT' and t[j + 1] != '(':
+                    t[j], t[j + 1] = t[j] + '(', t[j + 1] + ')'
+                    t[j:j + 2] = [''.join(t[j:j + 2])]
+                    # print('0. t[j]: ' + t[j])
+                # yhdistetään ( -sulkeet sitä edeltävään loogiseen NOT operaatioon
+                if j+1 < len(t) and t[j] == 'NOT' and t[j+1] == '(':
+                    t[j:j+2] = [''.join(t[j:j+2])] # x[3:6] = [''.join(x[3:6])]
+                    #print('1. t[j]: ' + t[j])
+                # esim. 'NOT(', 'B2', ')' # Yhdistetään NOT sen sisällä olevaan lausekkeeseen
+                elif j+2 < len(t) and t[j] == 'NOT(' and t[j+2] == ')':
+                    t[j:j+3] = [''.join(t[j:j+3])]
+                    #print('2. t[j]: ' + t[j])
+                # esim. 'NOT(', '...', 'XOR', '...', ')' # Yhdistetään NOT:n sisällä oleva lauseke
+                elif j+5 < len(t) and t[j] == 'NOT(' and t[j+4] == ')' and t[j+2] in komponentit:
+                    t[j+1], t[j+2], t[j+3] = t[j+2]+'(', t[j+1]+',', t[j+3]+')'
+                    t[j:j+5] = [''.join(t[j:j+5])]
+                    #print('3. t[j]: ' + t[j])
+                # esim. '(', '...', ')', 'AND', '(', '...', ')'
+                elif j-3 >= 0 and j+3 < len(t) and t[j] in komponentit and t[j-1] == ')' and t[j+3] == ')' and t[j-3] == '(' and t[j+1] == '(':
+                    t[j-3], t[j-2], t[j-1], t[j], t[j+1] = t[j], t[j-3], t[j-2], ',', ''
+                    t[j-3:j+4] = [''.join(t[j-3:j+4])]
+                    #print('4. t[j-3]: ' + t[j-3])
+                    j = j-3
+                # esim. '...', 'AND', '(', '...', ')'
+                elif j-1 >= 0 and j+3 < len(t) and t[j] in komponentit  and t[j+3] == ')' and t[j+1] == '(' and t[j-1] != ')':
+                    t[j-1], t[j], t[j+1] = t[j], t[j+1], t[j-1] + ','
+                    t[j-1:j+4] = [''.join(t[j-1:j+4])]
+                    #print('5. t[j-1]: ' + t[j-1])
+                    j = j-1
+                # esim. '(', '...', 'AND', '...', ')'
+                elif j-2 >= 0 and j+2 < len(t) and t[j] in komponentit and t[j-2] == '(' and t[j+2] == ')':
+                    t[j-1], t[j] = t[j], t[j-1]
+                    t[j] = '(' + t[j]
+                    t[j+1] = ',' + t[j+1] + ')'
+                    t[j-1:j+2] = [''.join(t[j-1:j+2])]
+                    #print('6. t[j-1]: ' + t[j-1])
+                    j = j-1
+                 # jos yksi muuttuja tms. sulkeiden välissä --> yhdistetään
+                elif j+2 < len(t) and t[j].endswith('(') and t[j+2].startswith(')'):
+                    t[j:j+3] = [''.join(t[j:j+3])]
+                    #print('7. t[j]: ' + t[j])
+                else:
+                    j += 1
 
+    # NOT käsitellään erikseen, ei testattu DC:n kanssa vielä (opettajan ratkaisun ei 'pitäisi' sisältää DC:tä)
+    komponentit = ['AND', 'NAND', 'OR', 'NOR', 'XOR', 'XNOR', 'EOR', 'ENOR']
+    osat = lauseke.split('=') # irroitetaan LED
+    t = osat[1].lstrip().replace('(',' ( ').replace(')',' ) ') # varmistetaan että sulkujen ympärillä on välejä
+    t = ' '.join(t.split()) # poistetaan extra välit
+    t = t.split(' ') # taulukoidaan sulut, muuttujat ja operaatiot
+    #print(t)
+    muokkaaLauseke(t) # muokataan kunnes listassa on enää yksi lopullinen string
+    #print(len(t))
+    #print(t)
     return osat[0].rstrip() + ' = ' + ''.join(t)
+
 
 def testaa_kaaviot(testikaavio, oikeakaavio, maksimipisteet, hyvportit = [], tulosta = True):
     """
