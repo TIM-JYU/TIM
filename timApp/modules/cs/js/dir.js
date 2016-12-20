@@ -1822,6 +1822,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             'minWidth': "40px",
             'shuffle' : $scope.initUserCode,
             'styleWords' : csApp.getParam($scope,"style-words",""),
+            'maxcheck' : csApp.getParam($scope,"parsonsmaxcheck",""),
+            'notordermatters' : csApp.getParam($scope,"parsonsnotordermatters",false),
             'onChange': function(p) {
                 var s = p.join("\n");
                 $scope.usercode = s; 
