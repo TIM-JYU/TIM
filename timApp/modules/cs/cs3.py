@@ -517,6 +517,29 @@ def check_code(out, err, compiler_output, ttype):
     return out, err
 
 
+def check_parsons(expect_code, usercode, maxn, notordermatters):
+    p = 0
+    exlines = expect_code.splitlines()
+    exlines = exlines[:maxn]
+    usrlines = usercode.splitlines()
+    usrlines = usrlines[:maxn]
+
+    if notordermatters:
+        for usrline in usrlines:
+            for i, exline in enumerate(exlines):
+                if usrline == exline:
+                    exlines[i] = "XXXXXXXXXXXX"
+                    p += 1
+                    break
+    else:
+        for i, exline in enumerate(exlines):
+            if i >= len(usrlines):
+                break
+            if exline == usrlines[i]:
+                p += 1
+
+    return p
+
 def give_points(points_rule, rule, default=0):
     if not points_rule: return
     if rule in points_rule or default != 0:
@@ -1157,10 +1180,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 javaname = filepath + "/" + classname + ".java"
                 fileext = "java"
                 csfname = javaname
-                # imgsource = "capture.png" % basename
-                imgsource = "%s/run/capture.png" % prgpath
-                # pngname = "/csimages/%s.png" % basename
-                pngname = "/csimages/%s.png" % rndname
+                if "graphics" in ttype:
+                    # imgsource = "capture.png" % basename
+                    imgsource = "%s/run/capture.png" % prgpath
+                    # pngname = "/csimages/%s.png" % basename
+                    pngname = "/csimages/%s.png" % rndname
+
                 # print("TYYPPI = " + ttype + " nimi = " + csfname + " class = " + javaclassname)
 
             if "jcomtest" in ttype:
@@ -1214,8 +1239,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     expect_code = get_points_rule(points_rule, is_test + "expectCode", None)
                     if expect_code:
                         if expect_code == "byCode": expect_code = get_param(query, "byCode", "")
-                        excode = re.compile(expect_code.rstrip('\n'), re.M)
-                        if excode.match(usercode): give_points(points_rule, "code", 1)
+                        maxn = get_param(query, "parsonsmaxcheck", 0)
+                        if maxn > 0:
+                            p = check_parsons(expect_code, usercode, maxn, get_param(query, "parsonsnotordermatters", False))
+                            give_points(points_rule, "code", p)
+                        else:
+                            excode = re.compile(expect_code.rstrip('\n'), re.M)
+                            if excode.match(usercode): give_points(points_rule, "code", 1)
                     number_rule = get_points_rule(points_rule, is_test + "numberRule", None)
                     if number_rule:
                         give_points(points_rule, "code", check_number_rule(usercode, number_rule))
@@ -1640,12 +1670,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     # code, out, err, pwd = run2([runcommand], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                     #                               uargs=get_param(query, "runargs", "") + " " + userargs)
                     cmd = shlex.split(runcommand)
-                    extra = get_param(query, "cmds", "").format(pure_exename)
-                    if extra != "": cmd = []
+                    uargs = userargs
+                    extra = get_param(query, "cmds", "").format(pure_exename, uargs)
+                    if extra != "":
+                        cmd = []
+                        uargs = ""
                     print("run: ", cmd, extra, pure_exename, csfname)
                     try:
                         code, out, err, pwd = run2(cmd, cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                                   uargs=get_param(query, "runargs", "") + " " + userargs,
+                                                   uargs=get_param(query, "runargs", "") + " " + uargs,
                                                    extra=extra, noX11=noX11)
                     except Exception as e:
                         print(e)
@@ -1693,13 +1726,16 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         print(e)
                         code, out, err = (-1, "", str(e).encode())
                 elif ttype == "run":
+                    uargs = userargs
                     cmd = shlex.split(get_param(query, "cmd", "ls -la") + " " + pure_exename)
-                    extra = get_param(query, "cmds", "").format(pure_exename)
-                    if extra != "": cmd = []
+                    extra = get_param(query, "cmds", "").format(pure_exename, uargs)
+                    if extra != "":
+                        cmd = []
+                        uargs = ""
                     print("run: ", cmd, extra, pure_exename, csfname)
                     print("Run1: ", imgsource, pngname)
                     try:
-                        code, out, err, pwd = run2(cmd, cwd=prgpath, timeout=10, env=env, stdin=stdin, uargs=userargs,
+                        code, out, err, pwd = run2(cmd, cwd=prgpath, timeout=10, env=env, stdin=stdin, uargs=uargs,
                                                    extra=extra, noX11=noX11)
                     except Exception as e:
                         print(e)

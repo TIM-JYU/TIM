@@ -64,11 +64,39 @@
             //var div2 = document.createElement(typ);
             //div2.appendChild(div);
             parsonsEditDiv.appendChild(div);
+            if ( this.options.maxcheck && this.options.maxcheck == i+1) {
+                div = document.createElement(type);
+                div.className = "parsonsstatic";
+                parsonsEditDiv.appendChild(div);
+            }
+
         }    
         parsonsEditDiv.setAttribute('class',classes);
         parsonsEditDiv.setAttribute('style',"float: left; width: 100%" + ";" + this.options.styleWords);
         a = $(parsonsEditDiv);
-        a.sortable();
+        if ( this.options.maxcheck )
+            a.sortable( {
+                items: ':not(.parsonsstatic)',
+                start: function(){
+                    $('.parsonsstatic', this).each(function(){
+                        var $this = $(this);
+                        $this.data('pos', $this.index());
+                    });
+                },
+                change: function(){
+                    $sortable = $(this);
+                    $statics = $('.parsonsstatic', this).detach();
+                    $helper = $('<'+type+'></'+type+'>').prependTo(this);
+                    $statics.each(function(){
+                        var $this = $(this);
+                        var target = $this.data('pos');
+
+                        $this.insertAfter($(type, $sortable).eq(target));
+                    });
+                    $helper.remove();
+                }
+            });
+        else a.sortable();
         var parson = this;
         // a.sortable( "option", "axis", "x" );
         a.on( "sortstop", function( event, ui ) { 
@@ -83,9 +111,10 @@
         var div = this.options.sortable;
         var nosep = false;
         if ( !div ) return "";
-        for (i = 0; i < div.childElementCount; i++) {
+        for (var i = 0; i < div.childElementCount; i++) {
             var node = div.childNodes[i];
             var line = node.textContent;
+            if ( line === "" ) continue; // separatorline
             if ( line === "\\n" ) { line = "\n"; sep = ""; nosep = true; }
             result += sep + line;
             sep = separator;
@@ -102,11 +131,23 @@
         var lines = this.text.split("\n");
         var ulines = userText.split("\n");
         if ( !div ) return "";
-        for (i = 0; i < div.childElementCount; i++) {
+        var maxn = div.childElementCount;
+        if ( this.options.maxcheck && this.options.maxcheck < div.childElementCount) maxn = this.options.maxcheck
+        for (var i = 0; i < maxn; i++) {
             var node = div.childNodes[i];
-            if ( lines[i] !== ulines[i] ) {
-                node.setAttribute('style',"background-color: RED;");
-            }
+            var nodeok = true;
+            if ( this.options.notordermatters ) {
+                nodeok = false;
+                for (var j=0; j<maxn; j++) {
+                    if ( lines[j] === ulines[i] ) {
+                        lines[j] = "XXXXXXXXXXXXXX";
+                        nodeok = true;
+                        break;
+                    }
+                }
+            } else { if ( lines[i] !== ulines[i] ) nodeok = false; }
+            if ( !nodeok ) node.setAttribute('style',"background-color: RED;");
+            else if ( this.options.maxcheck )  node.setAttribute('style',"background-color: LIGHTGREEN;");
         }
         
         return result;
