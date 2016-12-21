@@ -22,12 +22,14 @@ class Velps(TimDbBase):
     """
 
     def create_new_velp(self, creator_id: int, content: str, default_points: Optional[float] = None,
-                        icon_id: Optional[int] = None, valid_until: Optional[str] = None,
-                        language_id: str = "FI", visible_to: Optional[int] = None) -> Tuple[int, int]:
+                        default_comment: Optional[str] = None, icon_id: Optional[int] = None,
+                        valid_until: Optional[str] = None, language_id: str = "FI",
+                        visible_to: Optional[int] = None) -> Tuple[int, int]:
         """Creates a new velp with all information.
 
         Creates a new velp with all necessary information in one function using three others.
 
+        :param default_comment: Default comment for velp
         :param creator_id: User ID of creator.
         :param content: Text for velp.
         :param default_points: Default points for velp, None if not given.
@@ -39,7 +41,8 @@ class Velps(TimDbBase):
         """
         new_velp_id = self._create_velp(creator_id, default_points, icon_id, valid_until, visible_to)
         new_version_id = self.create_velp_version(new_velp_id)
-        self.create_velp_content(new_version_id, language_id, content)
+        self.create_velp_content(new_version_id, language_id, content, default_comment)
+
         return new_velp_id, new_version_id
 
     def _create_velp(self, creator_id: int, default_points: Optional[float], icon_id: Optional[int] = None,
@@ -75,7 +78,7 @@ class Velps(TimDbBase):
         self.session.commit()
         return vv.id
 
-    def create_velp_content(self, version_id: int, language_id: str, content: str):
+    def create_velp_content(self, version_id: int, language_id: str, content: str, default_comment: str):
         """Method to create content (text) for velp.
 
         :param version_id: Version id where the content will be stored
@@ -85,9 +88,9 @@ class Velps(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO
-                      VelpContent(version_id, language_id, content)
-                      VALUES (%s, %s, %s)
-                      """, [version_id, language_id, content]
+                      VelpContent(version_id, language_id, content, default_comment)
+                      VALUES (%s, %s, %s, %s)
+                      """, [version_id, language_id, content, default_comment]
                        )
         self.db.commit()
 

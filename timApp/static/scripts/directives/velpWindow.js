@@ -369,6 +369,7 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
             used: 0,
             points: $scope.velp.points,
             content: $scope.velp.content,
+            default_comment: "Oletuskommentti",
             language_id: "FI",
             icon_id: null,
             valid_until: null,

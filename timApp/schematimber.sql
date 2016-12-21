@@ -80,6 +80,7 @@ CREATE TABLE VelpContent (
   version_id  INTEGER    NOT NULL,
   language_id VARCHAR(2) NOT NULL,
   content     TEXT,
+  default_comment TEXT,
 
   CONSTRAINT VelpContent_PK
   PRIMARY KEY (version_id, language_id),

@@ -93,6 +93,7 @@ class VelpContent(db.Model):
     version_id = db.Column(db.Integer, db.ForeignKey('velpversion.id'), primary_key=True)
     language_id = db.Column(db.Text, primary_key=True)
     content = db.Column(db.Text)
+    default_comment = db.Column(db.Text)
 
 
 class VelpGroup(db.Model):

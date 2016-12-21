@@ -235,6 +235,7 @@ def add_velp() -> int:
 
     Optional key(s):
         - points: velp points
+        - comment: default comment
         - language_id: language ID
         - icon_id: icon ID
         - valid_until: time stamp to until velp is still valid
@@ -255,6 +256,7 @@ def add_velp() -> int:
     # Optional stuff
     # .get returns null instead of throwing if data is missing.
     default_points = json_data.get('points')
+    default_comment = json_data.get('default_comment')
     language_id = json_data.get('language_id')
     icon_id = json_data.get('icon_id')
     valid_until = json_data.get('valid_until')
@@ -285,7 +287,7 @@ def add_velp() -> int:
 
     velp_groups = velp_groups_rights
 
-    new_velp_id, _ = timdb.velps.create_new_velp(current_user_id, velp_content, default_points,
+    new_velp_id, _ = timdb.velps.create_new_velp(current_user_id, velp_content, default_points, default_comment,
                                               icon_id, valid_until, language_id, visible_to)
 
     if velp_labels is not None:
