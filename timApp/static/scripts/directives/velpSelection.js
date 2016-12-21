@@ -43,8 +43,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     $scope.velpGroups = [];
 
 
-    $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2, velp_groups: []};
-    $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: [], orig: {}};
+    $scope.newVelp = {content: "", default_comment: "", points: "", labels: [], edit: false, id: -2, velp_groups: []};
+    $scope.velpToEdit = {content: "", default_comment: "",  points: "", labels: [], edit: false, id: -1, velp_groups: [], orig: {}};
     $scope.newLabel = {content: "", selected: false, edit: false, valid: true};
     $scope.labelToEdit = {content: "", selected: false, edit: false, id: -3};
     $scope.newVelpGroup = {name: "", target_type: 0};
