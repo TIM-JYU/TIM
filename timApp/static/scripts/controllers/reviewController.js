@@ -755,6 +755,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         if ($scope.velpToEdit.edit) return;
 
+        var comment = [];
+        if (velp.default_comment.length > 0){
+            comment.push({content: velp.default_comment});
+        }
+
         var newAnnotation = {
             id: -($scope.annotations.length + 1),
             velp: velp.id,
@@ -768,7 +773,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             timesince: "just now",
             creationtime: "now",
             coord: {},
-            comments: [],
+            comments: comment,
             newannotation: true,
             user_id: -1
         };
@@ -829,14 +834,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             newAnnotation.coord.start.node = nodeNums[0];
             newAnnotation.coord.end.node = nodeNums[1];
 
-
-            $scope.makePostRequest("/add_annotation", newAnnotation, function (json) {
-                $scope.annotationids[newAnnotation.id] = json.data.id;
-
-            });
-
             $scope.selectedArea = undefined;
-            velp.used += 1;
+
         } else if ($scope.selectedElement !== null) {
 
             newAnnotation.coord = {
@@ -860,11 +859,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             $scope.annotations.push(newAnnotation);
             $scope.annotationids[newAnnotation.id] = newAnnotation.id;
 
-            $scope.makePostRequest("/add_annotation", newAnnotation, function (json) {
-                $scope.annotationids[newAnnotation.id] = json.data.id;
-            });
-            velp.used += 1;
+
         }
+
+        $scope.makePostRequest("/add_annotation", newAnnotation, function (json) {
+            $scope.annotationids[newAnnotation.id] = json.data.id;
+
+        });
+
+        velp.used += 1;
 
         $scope.annotationsAdded = true;
     };

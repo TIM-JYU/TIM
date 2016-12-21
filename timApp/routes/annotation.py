@@ -76,6 +76,7 @@ def add_annotation() -> Dict:
     points = json_data.get('points')
     icon_id = json_data.get('icon_id')
     answer_id = json_data.get('answer_id')
+    default_comment = json_data.get('comments')
 
     try:
         paragraph_id_start = start['par_id']
@@ -84,8 +85,11 @@ def add_annotation() -> Dict:
         hash_end = end['t']
     except KeyError as e:
         return abort(400, "Missing data: " + e.args[0])
+
     verify_logged_in()
+
     annotator_id = get_current_user_id()
+    annotator_name = timdb.users.get_user(annotator_id)['name']
     velp_version_id = timdb.velps.get_latest_velp_version(velp_id)["id"]
 
     new_id = timdb.annotations.create_annotation(velp_version_id, visible_to, points, annotator_id, document_id,
@@ -93,7 +97,12 @@ def add_annotation() -> Dict:
                                                  depth_start, offset_end, node_end, depth_end, hash_start, hash_end,
                                                  element_path_start, element_path_end, None, icon_id, answer_id)
 
-    return jsonResponse({"id": new_id, "annotator_name": timdb.users.get_user(annotator_id)['name']})
+    if len(default_comment) > 0:
+        comment_data = Dict(content=default_comment,
+                            annoation_id=new_id)
+        add_comment_helper(comment_data)
+
+    return jsonResponse({"id": new_id, "annotator_name": annotator_name})
 
 
 @annotations.route("/update_annotation", methods=['POST'])
@@ -187,6 +196,10 @@ def add_comment() -> Dict:
     :return: Dictionary of information about user who added the comment
     """
     json_data = request.get_json()
+
+    return add_comment_helper(json_data)
+
+def add_comment_helper(json_data: Dict) -> Dict:
     try:
         annotation_id = json_data['annotation_id']
         content = json_data['content']

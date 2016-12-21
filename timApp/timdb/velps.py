@@ -84,6 +84,7 @@ class Velps(TimDbBase):
         :param version_id: Version id where the content will be stored
         :param language_id: Language id
         :param content: Text of velp
+        :param default_comment: Default comment for velp
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -300,10 +301,10 @@ class Velps(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT Velp.id AS id, Velp.default_points AS points, Velp.icon_id AS icon_id,
-                      y.content AS content, y.language_id AS language_id
+                      y.content AS content, y.language_id AS language_id, y.default_comment AS default_comment
                       FROM Velp
                       INNER JOIN(
-                        SELECT x.velp_id, VelpContent.content, VelpContent.language_id
+                        SELECT x.velp_id, VelpContent.content, VelpContent.language_id, VelpContent.default_comment
                         FROM VelpContent
                         INNER JOIN (
                           SELECT VelpVersion.velp_id, max(VelpVersion.id) AS latest_version
