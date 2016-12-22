@@ -2,6 +2,12 @@
 
 # Pulls the latest TIM images from the timimages repository and downloads prebuilt binaries.
 
+. ./variables.sh
+
+# TIM and Haskell plugins must not be running
+docker stop ${TIM_NAME} 2> /dev/null
+docker stop haskellplugins2 2> /dev/null
+
 docker pull ubuntu
 
 docker pull timimages/tim:$(./get_latest_date.sh)
@@ -11,9 +17,10 @@ docker pull timimages/haskellrun
 docker pull timimages/pali
 docker pull timimages/local_nginx
 docker pull timimages/funnel
+docker pull timimages/prebuilt
 
 # Remove leftover untagged images
-docker rmi $(docker images -q --filter dangling=true)
+docker rmi $(docker images -q --filter dangling=true) 2> /dev/null
 
 # download prebuilt Dumbo
 mkdir -p Ephemeral/Dumbo/dist/build/Dumbo
