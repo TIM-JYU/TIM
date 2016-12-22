@@ -119,7 +119,7 @@ class PluginTest(TimRouteTest):
                                    'par_id': par_id,
                                    'doc_id': doc.doc_id})
         self.assertDictEqual({'html': "<div id='" + task_id_ext + "' data-plugin='/mmcq'><mmcq "
-                                                                  "data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;onTry&quot;:null,&quot;stem&quot;:&quot;&lt;p&gt;Answer "
+                                                                  "data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;button&quot;:null,&quot;onTry&quot;:null,&quot;header&quot;:null,&quot;stem&quot;:&quot;&lt;p&gt;Answer "
                                                                   'yes or no to the following '
                                                                   'questions.&lt;/p&gt;&quot;,&quot;headerText&quot;:null,&quot;choices&quot;:[{&quot;text&quot;:&quot;&lt;p&gt;&lt;span '
                                                                   'class=\\&quot;math '
@@ -128,7 +128,7 @@ class PluginTest(TimRouteTest):
                                                                   'cats are '
                                                                   'black.&lt;/p&gt;&quot;,&quot;correct&quot;:false,&quot;reason&quot;:&quot;&lt;p&gt;No '
                                                                   'way.&lt;/p&gt;&quot;},{&quot;text&quot;:&quot;&lt;p&gt;Guess.&lt;/p&gt;&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;&lt;p&gt;No '
-                                                                  "reason.&lt;/p&gt;&quot;}]}}'></mmcq></div>",
+                                                                  "reason.&lt;/p&gt;&quot;}],&quot;buttonText&quot;:null}}'></mmcq></div>",
                               'reviewHtml': None}, j)
 
         timdb = self.get_db()

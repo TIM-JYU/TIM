@@ -87,6 +87,13 @@ a .glyphicon {
     line-height: 1.3;
 }
 
+// fixes mcq and mmcq style when specifying custom button text
+.mmcq, .mcq {
+    button p {
+        margin: 0;
+    }
+}
+
 // all document-related styles under .paragraphs selector!
 .paragraphs, .slides {
 //.paragraphs {
