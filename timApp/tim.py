@@ -264,11 +264,11 @@ def get_templates():
     return jsonResponse(templates)
 
 
-def create_item(item_name, item_type_str, item_title, create_function, owner_group_id):
-    item_name = item_name.strip('/')
-    validate_item_and_create(item_name, item_type_str, owner_group_id)
+def create_item(item_path, item_type_str, item_title, create_function, owner_group_id):
+    item_path = item_path.strip('/')
+    validate_item_and_create(item_path, item_type_str, owner_group_id)
 
-    item = create_function(item_name, owner_group_id, item_title)
+    item = create_function(item_path, owner_group_id, item_title)
     timdb = get_timdb()
     grant_access_to_session_users(timdb, item.id)
     item_type = from_str(item_type_str)

@@ -84,16 +84,19 @@ def initialize_database(create_docs=True):
             print('Skipping creating example documents.')
 
         elif create_docs:
-            DocEntry.create('Testaus 1', anon_group)
-            DocEntry.create('Testaus 2', anon_group)
+            DocEntry.create('testaus-1', anon_group, title='Testaus 1')
+            DocEntry.create('testaus-2', anon_group, title='Testaus 2')
             timdb.documents.import_document_from_file('example_docs/programming_examples.md',
-                                                      'Programming examples',
-                                                      anon_group)
+                                                      'programming-examples',
+                                                      anon_group,
+                                                      title='Programming examples')
             timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
-                                                      'Multiple choice plugin example',
-                                                      anon_group)
+                                                      'mmcq-example',
+                                                      anon_group,
+                                                      title='Multiple choice plugin example')
         log_info('Database initialization done.')
     timdb.close()
+
 
 def update_database():
     """Updates the database structure if needed.

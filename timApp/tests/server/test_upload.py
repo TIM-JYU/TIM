@@ -1,7 +1,5 @@
 import io
 
-from flask import session
-
 from documentmodel.document import Document
 from tests.server.timroutetest import TimRouteTest
 
@@ -14,6 +12,9 @@ class UploadTest(TimRouteTest):
         j = self.post('/upload/',
                       data={'folder': 'users/{}'.format(self.current_user_name()),
                             'file': (io.BytesIO(b'test file'), 'test.md')})
+        self.post('/upload/',
+                  data={'folder': 'users/{}'.format(self.current_user_name()),
+                        'file': (io.BytesIO(b'test file'), 'test2')})
         format_error = {"error": "Only markdown files are allowed. This file appears to be application/octet-stream."}
         self.post('/upload/',
                   data={'folder': 'users/{}'.format(self.current_user_name()),

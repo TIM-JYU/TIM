@@ -122,7 +122,7 @@ class Folders(TimDbBase):
         :param doc_name:
         :return: Path for velp group folder
         """
-        group_folder_name = "velp groups"   # Name of the folder all velp groups end up in
+        group_folder_name = "velp-groups"   # Name of the folder all velp groups end up in
         if root_path != "":
             velps_folder_path = root_path + "/" + group_folder_name
         else:
@@ -164,7 +164,7 @@ class Folders(TimDbBase):
         :param user_id: ID of current user
         :return:
         """
-        group_folder_name = "velp groups"
+        group_folder_name = "velp-groups"
         user_folder = "users/" + user
         user_velps_path = user_folder + "/" + group_folder_name
         folders = self.get_folders(user_folder)

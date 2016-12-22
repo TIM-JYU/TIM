@@ -209,21 +209,23 @@ class Documents(TimDbBase):
                                   search_recursively=False,
                                   filter_ids=filter_ids)
 
-    def import_document_from_file(self, document_file: str, document_name: str,
-                               owner_group_id: int) -> Document:
+    def import_document_from_file(self, document_file: str,
+                                  path: str,
+                                  owner_group_id: int,
+                                  title: Optional[str]=None) -> Document:
         """Imports the specified document in the database.
 
         :param document_file: The file path of the document to import.
-        :param document_name: The name for the document.
+        :param path: The path for the document.
         :param owner_group_id: The owner group of the document.
         :returns: The created document object.
         """
         with open(document_file, 'r', encoding='utf-8') as f:
             content = f.read()  # todo: use a stream instead
-        return self.import_document(content, document_name, owner_group_id)
+        return self.import_document(content, path, owner_group_id, title=title)
 
-    def import_document(self, content: str, document_name: str, owner_group_id: int) -> Document:
-        doc = DocEntry.create(document_name, owner_group_id).document
+    def import_document(self, content: str, path: str, owner_group_id: int, title: Optional[str]=None) -> Document:
+        doc = DocEntry.create(path, owner_group_id, title=title).document
         parser = DocumentParser(content)
         for block in parser.get_blocks():
             doc.add_paragraph(text=block['md'], attrs=block.get('attrs'))

@@ -22,9 +22,9 @@ class VelpTest(TimRouteTest):
         test_doc1 = '{}/test1'.format(user_folder)
         test_doc2 = '{}/test2'.format(user_folder)
         test_doc3 = '{}/test3'.format(deeper_folder)
-        root_velp_group_folder = "velp groups"
-        user_velp_group_folder = "{}/velp groups".format(user_folder)   # users/testuser1/velp groups
-        deep_velp_group_folder = "{}/velp groups".format(deeper_folder) # users/testuser1/test/velp groups
+        root_velp_group_folder = "velp-groups"
+        user_velp_group_folder = "{}/velp-groups".format(user_folder)   # users/testuser1/velp groups
+        deep_velp_group_folder = "{}/velp-groups".format(deeper_folder) # users/testuser1/test/velp groups
         Folder.create(user_folder, 7)
         Folder.create(deeper_folder, 7)
         Folder.create(root_velp_group_folder, 7)

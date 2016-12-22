@@ -104,7 +104,7 @@ class Folder(db.Model, Item):
         if folder is not None:
             return folder
 
-        block_id = insert_block(title or path, owner_group_id, blocktypes.FOLDER, commit=False)
+        block_id = insert_block(title or rel_name, owner_group_id, blocktypes.FOLDER, commit=False)
 
         f = Folder(id=block_id, name=rel_name, location=rel_path)
         db.session.add(f)

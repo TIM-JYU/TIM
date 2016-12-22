@@ -7,7 +7,7 @@ class Bookmarks:
     def __init__(self, user: User):
         self.user = user
         f = user.get_personal_folder()
-        self.bookmark_document = f.get_document('$Bookmarks',
+        self.bookmark_document = f.get_document('Bookmarks',
                                                 create_if_not_exist=True,
                                                 creator_group_id=user.get_personal_group().id).document
         self.bookmark_data = self.get_bookmarks()

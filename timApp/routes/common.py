@@ -337,24 +337,28 @@ def get_referenced_pars_from_req(par):
         return [par]
 
 
-def validate_item(item_name, item_type):
+def validate_item(item_path, item_type):
     if not logged_in():
         abort(403, 'You have to be logged in to perform this action.'.format(item_type))
 
-    if item_name is None:
+    if item_path is None:
         abort(400, 'item_name was None')
 
-    if not all(part for part in item_name.split('/')):
-        abort(400, 'The {} name cannot have empty parts.'.format(item_type))
+    if not all(part for part in item_path.split('/')):
+        abort(400, 'The {} path cannot have empty parts.'.format(item_type))
 
-    if re.match('^(\d)*$', item_name) is not None:
-        abort(400, 'The {} name can not be a number to avoid confusion with document id.'.format(item_type))
+    if re.match('^(\d)*$', item_path) is not None:
+        abort(400, 'The {} path can not be a number to avoid confusion with document id.'.format(item_type))
+
+    if set(item_path.lower()) - set('abcdefghijklmnopqrstuvwxyz0123456789/-_'):
+        abort(400, 'The {} path has invalid characters. Only letters, numbers, underscores and dashes are allowed.'.format(item_type))
+
     timdb = get_timdb()
     username = get_current_user_name()
-    if DocEntry.find_by_path(item_name, try_translation=True) is not None or timdb.folders.get_folder_id(item_name) is not None:
+    if DocEntry.find_by_path(item_path, try_translation=True) is not None or timdb.folders.get_folder_id(item_path) is not None:
         abort(403, 'Item with a same name already exists.')
 
-    if not can_write_to_folder(item_name):
+    if not can_write_to_folder(item_path):
         abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(item_type, username))
 
 

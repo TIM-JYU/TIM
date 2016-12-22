@@ -111,12 +111,12 @@ def upload_file():
     folder = request.form.get('folder')
     if folder is None:
         return upload_image_or_file(file)
-    filename = posixpath.join(folder, secure_filename(file.filename))
+    path = posixpath.join(folder, os.path.splitext(secure_filename(file.filename))[0])
 
     content = validate_uploaded_document_content(file)
-    validate_item_and_create(filename, 'document', get_current_user_group())
+    validate_item_and_create(path, 'document', get_current_user_group())
 
-    doc = timdb.documents.import_document(content, filename, get_current_user_group())
+    doc = timdb.documents.import_document(content, path, get_current_user_group())
     return jsonResponse({'id': doc.doc_id})
 
 

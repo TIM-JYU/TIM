@@ -42,9 +42,9 @@ def manage(path):
     if is_folder:
         item = folder
     else:
-        item = doc.to_json()
-        item['versions'] = get_changelog_with_names(doc.document, get_option(request, 'history', 100))
-        item['fulltext'] = doc.document.export_markdown()
+        item = doc
+        item.serialize_content = True
+        item.changelog_length = get_option(request, 'history', 100)
 
     return render_template('manage_folder.html' if is_folder else 'manage_document.html',
                            route='manage',
@@ -53,18 +53,11 @@ def manage(path):
                            access_types=access_types)
 
 
-def get_changelog_with_names(doc, length):
-    changelog = doc.get_changelog(length)
-    for ver in changelog:
-        ver['group'] = UserGroup.query.get(ver.pop('group_id')).name
-    return changelog
-
-
 @manage_page.route("/changelog/<int:doc_id>/<int:length>")
 def get_changelog(doc_id, length):
     verify_manage_access(doc_id)
-    doc = Document(doc_id)
-    return jsonResponse({'versions': get_changelog_with_names(doc, length)})
+    doc = DocEntry.find_by_id(doc_id, try_translation=True)
+    return jsonResponse({'versions': doc.get_changelog_with_names(length)})
 
 
 @manage_page.route("/changeOwner/<int:doc_id>/<new_owner_name>", methods=["PUT"])

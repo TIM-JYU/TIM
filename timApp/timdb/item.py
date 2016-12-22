@@ -40,7 +40,7 @@ class Item:
     def title(self):
         if self.block is None:
             return 'All documents'
-        if not self.block.description or '/' in self.block.description:
+        if not self.block.description:
             return self.short_name
         return self.block.description
 

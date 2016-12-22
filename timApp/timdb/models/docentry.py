@@ -85,7 +85,7 @@ class DocEntry(db.Model, DocInfo):
         return DocEntry(id=-1, name=title)
 
     @staticmethod
-    def create(path: Optional[str], owner_group_id: int, title=None) -> 'DocEntry':
+    def create(path: Optional[str], owner_group_id: int, title: Optional[str]=None) -> 'DocEntry':
         """Creates a new document with the specified name.
 
         :param title: The document title.

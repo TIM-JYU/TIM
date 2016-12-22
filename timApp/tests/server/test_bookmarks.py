@@ -16,7 +16,7 @@ class BookmarkTest(TimRouteTest):
         f = Folder.find_by_location('users/{}'.format(self.current_user_name()), '')
         self.assertIsNone(f)
 
-        d = DocEntry.query.filter_by(name='users/{}/$Bookmarks'.format(self.current_user_name())).first()
+        d = DocEntry.query.filter_by(name='users/{}/Bookmarks'.format(self.current_user_name())).first()
         self.assertIsNotNone(d)
         self.assertListEqual([], bookmarks)
         group_name = 'mygroup'

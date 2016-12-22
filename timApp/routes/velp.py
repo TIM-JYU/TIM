@@ -49,7 +49,7 @@ def get_default_velp_group(doc_id: int):
 
     # Check if document's path contains velp groups folder and if it does, make document its own default velp group.
     # This default document declaration isn't saved to database (else eventually all velp groups might be defaults).
-    if "velp groups/" in full_path:
+    if "velp-groups/" in full_path:
         if timdb.users.has_edit_access(user_id, doc_id):
             edit_access = True
         else:
@@ -64,9 +64,9 @@ def get_default_velp_group(doc_id: int):
         return set_no_cache_headers(jsonResponse({"id": doc_id, "name": doc_name, "edit_access": edit_access}))
 
     if doc_path != "":
-        found_velp_groups = timdb.documents.get_documents_in_folder(doc_path + "/velp groups/" + doc_name)
+        found_velp_groups = timdb.documents.get_documents_in_folder(doc_path + "/velp-groups/" + doc_name)
     else:  # Documents in root folder don't like / after empty path
-        found_velp_groups = timdb.documents.get_documents_in_folder("velp groups/" + doc_name)
+        found_velp_groups = timdb.documents.get_documents_in_folder("velp-groups/" + doc_name)
     velp_groups = []
     for v in found_velp_groups:
         # if timdb.users.has_view_access(user_id, timdb.documents.get_document_id(v['name'])):
@@ -89,7 +89,7 @@ def get_default_personal_velp_group():
     timdb = get_timdb()
     user_name = get_current_user_name()
 
-    personal_velp_group_path = "users/" + user_name + "/velp groups"
+    personal_velp_group_path = "users/" + user_name + "/velp-groups"
     found_velp_groups = timdb.documents.get_documents_in_folder(personal_velp_group_path)
     velp_groups = []
     for v in found_velp_groups:
@@ -780,7 +780,7 @@ def get_velp_groups_from_tree(document_id: int):
     doc = DocEntry.find_by_id(doc_id)
     full_path = doc.path
     doc_path, doc_name = timdb.documents.split_location(full_path)
-    velp_group_folder = "velp groups"
+    velp_group_folder = "velp-groups"
 
     current_path = doc_path
     velp_groups_path = current_path + "/" + velp_group_folder
