@@ -30,6 +30,6 @@ docker run --rm -v ${PWD}/Ephemeral/Dumbo/dist/build/Dumbo:/target timimages/pre
 mkdir -p timApp/modules/Haskell/bin
 docker run --rm -v ${PWD}/timApp/modules/Haskell/bin:/target timimages/prebuilt /bin/bash -c "cp /bin/*Plugin /target/"
 
-git submodule update --recursive --remote
+git submodule update --init --recursive --remote
 
 ./create_network.sh 2> /dev/null
