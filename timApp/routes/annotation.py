@@ -76,7 +76,10 @@ def add_annotation() -> Dict:
     points = json_data.get('points')
     icon_id = json_data.get('icon_id')
     answer_id = json_data.get('answer_id')
-    default_comment = json_data.get('comments')
+
+    default_comment = ""
+    if (len(json_data.get('comments')) > 0):
+        default_comment = json_data.get('comments')[0]['content']
 
     try:
         paragraph_id_start = start['par_id']
@@ -98,8 +101,7 @@ def add_annotation() -> Dict:
                                                  element_path_start, element_path_end, None, icon_id, answer_id)
 
     if len(default_comment) > 0:
-        comment_data = Dict(content=default_comment,
-                            annoation_id=new_id)
+        comment_data = dict(content=default_comment, annotation_id=new_id)
         add_comment_helper(comment_data)
 
     return jsonResponse({"id": new_id, "annotator_name": annotator_name})
@@ -199,7 +201,7 @@ def add_comment() -> Dict:
 
     return add_comment_helper(json_data)
 
-def add_comment_helper(json_data: Dict) -> Dict:
+def add_comment_helper(json_data) -> Dict:
     try:
         annotation_id = json_data['annotation_id']
         content = json_data['content']

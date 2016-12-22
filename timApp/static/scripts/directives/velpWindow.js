@@ -77,9 +77,17 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         if (!$scope.velp.edit){
             $scope.cancelEdit();
         } else {
-            if ($scope.new) $scope.velpLocal = JSON.parse(JSON.stringify($scope.velp));
+            if ($scope.new){
+                $scope.velpLocal = JSON.parse(JSON.stringify($scope.velp));
+                // TODO: focus velp content textarea
+            }
             $scope.$parent.setVelpToEdit($scope.velp, $scope.cancelEdit);
         }
+
+
+        console.log($scope.velp);
+        console.log($scope.velpLocal);
+
     };
 
 
@@ -135,6 +143,8 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
 
     $scope.isVelpValid = function () {
         if (typeof $scope.velp.content === UNDEFINED)
+            return false;
+        if (JSON.stringify($scope.velpLocal) === JSON.stringify($scope.velp)) // check if still original
             return false;
         return $scope.isSomeVelpGroupSelected() && $scope.velp.content.length > 0 ;
     };
@@ -262,7 +272,6 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         label.edit = true;
         copyLabelToEditLabel(label);
         $scope.setLabelValid($scope.labelToEdit);
-
     };
 
     $scope.cancelLabelEdit = function (label) {

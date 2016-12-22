@@ -378,7 +378,10 @@ def update_velp(doc_id: int):
 
     old_velp = timdb.velps.get_latest_velp_version(velp_id, language_id)
     old_content = old_velp['content']
-    old_default_comment = old_velp['default_comment']
+
+    old_default_comment = None
+    if 'default_comment' in old_velp:
+        old_default_comment = old_velp['default_comment']
 
     old_labels = timdb.velps.get_velp_label_ids_for_velp(velp_id)
     if old_content != new_content or old_default_comment != default_comment:

@@ -757,7 +757,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         var comment = [];
         if (velp.default_comment.length > 0){
-            comment.push({content: velp.default_comment});
+            comment.push({
+                content: velp.default_comment,
+                commenter_username: "me",
+                comment_time: "now",
+                comment_relative_time: "just now"
+            });
         }
 
         var newAnnotation = {
@@ -856,15 +861,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 newAnnotation.answer_id = el_answer_id.selectedAnswer.id;
 
             addAnnotationToElement($scope.selectedElement, newAnnotation, true, "No coordinate found");
-            $scope.annotations.push(newAnnotation);
+            var annotationCount = $scope.annotations.push(newAnnotation);
             $scope.annotationids[newAnnotation.id] = newAnnotation.id;
-
-
         }
 
         $scope.makePostRequest("/add_annotation", newAnnotation, function (json) {
             $scope.annotationids[newAnnotation.id] = json.data.id;
-
         });
 
         velp.used += 1;
@@ -1046,13 +1048,13 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     /**
      * Gets the comments of the given annotation.
      * @method getAnnotationComments
-     * @param id - Marking ID
-     * @returns {Array} Annotation comments
+     * @param id - Annotation ID
+     * @returns Object - Annotation
      */
-    $scope.getAnnotationComments = function (id) {
+    $scope.getAnnotation = function (id) {
         for (var i = 0; i < $scope.annotations.length; i++) {
             if (id === $scope.annotations[i].id)
-                return $scope.annotations[i].comments;
+                return $scope.annotations[i];
         }
     };
 
