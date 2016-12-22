@@ -30,8 +30,6 @@ docker run --rm -v ${PWD}/Ephemeral/Dumbo/dist/build/Dumbo:/target timimages/pre
 mkdir -p timApp/modules/Haskell/bin
 docker run --rm -v ${PWD}/timApp/modules/Haskell/bin:/target timimages/prebuilt /bin/bash -c "cp /bin/*Plugin /target/"
 
-(cd timApp/modules/Haskell \
- && git clone git://yousource.it.jyu.fi/ties343-funktio-ohjelmointi/MultipleChoicePlugin.git Choices 2> /dev/null \
- ; cd Choices && git pull)
+git submodule update --recursive --remote
 
 ./create_network.sh 2> /dev/null
