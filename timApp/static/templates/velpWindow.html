@@ -128,13 +128,30 @@
                     </label>
                     <br>
                 </span>
-            </fieldset>
 
             <p class="error velpInfoText" ng-show="!isSomeVelpGroupSelected()">
                 {{ settings.velpGroupError }}
             </p>
+            </fieldset>
+
+            <p>
+                <label>
+                    Visible to
+                    <div ng-class="['glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
+                         uib-popover="'Just me' means that the annotation is visible only to yourself.
+                                      'Document owner' refers to the person or group who has been named as the document owner.
+                                      'Teachers' refers to the users that have teacher access to this document.
+                                      'Everyone' means that the annotation is visible to everyone who can view the assessed content."
+                         popover-placement="left">
+                    </div>
+                    <select ng-model="velp.visible_to"
+                            ng-options="v as visible_options.names[v-1] for v in visible_options.values">
+                    </select>
+                </label>
+            </p>
 
             <!-- submit executes 'saveVelp'-function -->
+            <p>
             <input type="submit" class="timButton" ng-value="settings.saveButtonText" ng-disabled="!isVelpValid()"/>
             <input type="button" class="timButton" value="Cancel" ng-click="toggleVelpToEdit(); $event.stopPropagation();">
             </p>

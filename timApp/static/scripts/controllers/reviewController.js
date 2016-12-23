@@ -753,10 +753,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      */
     $scope.useVelp = function (velp) {
 
-        if ($scope.velpToEdit.edit) return;
+        if ($scope.velpToEdit.edit || $scope.selectedElement === null && $scope.selectedArea === null){
+            return;
+        }
 
         var comment = [];
-        if (velp.default_comment.length > 0){
+        if (velp.default_comment !== null && velp.default_comment.length > 0){
             comment.push({
                 content: velp.default_comment,
                 commenter_username: "me",
@@ -770,7 +772,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             velp: velp.id,
             points: velp.points,
             doc_id: $scope.docId,
-            visible_to: 4,
+            visible_to: velp.visible_to,
             content: velp.content,
             annotator_name: "me",
             edit_access: true,

@@ -301,7 +301,8 @@ class Velps(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT Velp.id AS id, Velp.default_points AS points, Velp.icon_id AS icon_id,
-                      y.content AS content, y.language_id AS language_id, y.default_comment AS default_comment
+                      Velp.visible_to AS visible_to, y.content AS content, y.language_id AS language_id,
+                      y.default_comment AS default_comment
                       FROM Velp
                       INNER JOIN(
                         SELECT x.velp_id, VelpContent.content, VelpContent.language_id, VelpContent.default_comment

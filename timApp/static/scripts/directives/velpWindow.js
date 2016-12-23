@@ -42,6 +42,18 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
     $scope.newLabel = {content: "", selected: true, valid: true};
     $scope.labelToEdit = {content: "", selected: false, edit: false, valid: true};
 
+    $scope.visible_options = {
+                "type": "select",
+                "values": [1, 2, 3, 4],
+                "names": ["Just me", "Document owner", "Teachers", "Everyone"]
+    };
+
+    if (typeof $scope.velp.visible_to === UNDEFINED){
+        $scope.velp.visible_to = 4; // Everyone by default
+    }
+
+
+
     $scope.settings = {
         saveButtonText: function () {
             if ($scope.new === "true") {
@@ -83,11 +95,6 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
             }
             $scope.$parent.setVelpToEdit($scope.velp, $scope.cancelEdit);
         }
-
-
-        console.log($scope.velp);
-        console.log($scope.velpLocal);
-
     };
 
 
@@ -382,15 +389,13 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
             language_id: "FI",
             icon_id: null,
             valid_until: null,
-            visible_to: 4, // TODO: make this work $scope.visible_options.value
+            visible_to: $scope.velp.visible_to,
             velp_groups: JSON.parse(JSON.stringify($scope.velp.velp_groups))
         };
-
 
         //$scope.velp.edit = false;
 
         $scope.$parent.makePostRequest("/add_velp", velpToAdd, function (json) {
-            console.log(json);
             velpToAdd.id = json.data;
             $scope.$parent.velps.push(velpToAdd);
 
@@ -426,7 +431,6 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         var old_default_group = $scope.$parent.getDefaultVelpGroup();
 
         $scope.$parent.generateDefaultVelpGroup(function (new_default_group) {
-            console.log("uusi", new_default_group);
             var oldGroupIndex = $scope.velp.velp_groups.indexOf(old_default_group.id);
             if (oldGroupIndex >= 0)
                 $scope.velp.velp_groups.splice(oldGroupIndex, 1);
