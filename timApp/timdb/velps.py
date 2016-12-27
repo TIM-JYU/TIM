@@ -24,7 +24,7 @@ class Velps(TimDbBase):
     def create_new_velp(self, creator_id: int, content: str, default_points: Optional[float] = None,
                         default_comment: Optional[str] = None, icon_id: Optional[int] = None,
                         valid_until: Optional[str] = None, language_id: str = "FI",
-                        visible_to: Optional[int] = None) -> Tuple[int, int]:
+                        visible_to: Optional[int] = None, color: Optional[int]) -> Tuple[int, int]:
         """Creates a new velp with all information.
 
         Creates a new velp with all necessary information in one function using three others.
@@ -37,6 +37,7 @@ class Velps(TimDbBase):
         :param valid_until: Time after velp becomes unusable.
         :param language_id: Language ID of velp.
         :param visible_to: Default visibility to annotation.
+        :param color: Velp color
         :return: A tuple of (velp id, velp version id).
         """
         new_velp_id = self._create_velp(creator_id, default_points, icon_id, valid_until, visible_to)

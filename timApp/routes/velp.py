@@ -237,6 +237,7 @@ def add_velp() -> int:
         - points: velp points
         - comment: default comment
         - language_id: language ID
+        - color: HEX color
         - icon_id: icon ID
         - valid_until: time stamp to until velp is still valid
         - labels: labels of the velp
@@ -262,6 +263,7 @@ def add_velp() -> int:
     valid_until = json_data.get('valid_until')
     velp_labels = json_data.get('labels')
     visible_to = json_data.get('visible_to')
+    color = json_data.get('color')
 
     default_points = float(default_points) if default_points is not None else None
     icon_id = int(icon_id) if icon_id is not None else None
@@ -288,7 +290,7 @@ def add_velp() -> int:
     velp_groups = velp_groups_rights
 
     new_velp_id, _ = timdb.velps.create_new_velp(current_user_id, velp_content, default_points, default_comment,
-                                              icon_id, valid_until, language_id, visible_to)
+                                              icon_id, valid_until, language_id, visible_to, color)
 
     if velp_labels is not None:
         timdb.velps.add_labels_to_velp(new_velp_id, velp_labels)

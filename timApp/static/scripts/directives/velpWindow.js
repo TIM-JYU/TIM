@@ -389,6 +389,7 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
             language_id: "FI",
             icon_id: null,
             valid_until: null,
+            color: $scope.velp.color,
             visible_to: $scope.velp.visible_to,
             velp_groups: JSON.parse(JSON.stringify($scope.velp.velp_groups))
         };
@@ -451,6 +452,11 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
      */
     $scope.getColor = function (index) {
         return colorPalette[index % colorPalette.length];
+    };
+
+    $scope.getCustomColor = function () {
+        if (typeof $scope.velp.color !== UNDEFINED || $scope.velp.color !== null)
+            return $scope.velp.color;
     };
 
     // declare edit rights

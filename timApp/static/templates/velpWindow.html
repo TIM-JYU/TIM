@@ -5,7 +5,9 @@
                     negative: velp.points < 0,
                     new: new === 'true',
                     inactive: notAnnotationRights(velp.points),
-                    edit: velp.edit}]"><!--
+                    edit: velp.edit}]"
+        ng-style="{ backgroundColor: getCustomColor()}"
+    ><!--
 
         Show this when velp is NOT being edited
 
@@ -149,6 +151,7 @@
                     </select>
                 </label>
             </p>
+            <p><label>Color <input type="color" ng-model="velp.color"></label></p>
 
             <!-- submit executes 'saveVelp'-function -->
             <p>
