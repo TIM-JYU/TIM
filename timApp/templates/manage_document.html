@@ -4,74 +4,81 @@
     <div class="panel panel-default">
         <div class="panel-heading">Short names</div>
 <div class="panel-body">
-    <form class="form form-group-sm">
-        <table class="table table-borderless table-alias">
-            <colgroup>
-                <col class="col-md-1">
-                <col class="col-md-3">
-                <col class="col-md-3">
-                <col class="col-md-1">
-            </colgroup>
-            <tr>
-                <th></th>
-                <th>Visible in index, location</th>
-                <th>Short name</th>
-                <th></th>
-            </tr>
-            <tr ng-repeat="alias in aliases">
-                <td>
+    <form class="form-horizontal" name="aliasForm">
+        <div class="row">
+            <div class="col-md-1"></div>
+            <div class="col-md-5">Visible in index, location</div>
+            <div class="col-md-5">Short name</div>
+        </div>
+        <div class="form-group" ng-repeat="alias in aliases">
+            <ng-form name="innerForm">
+                <div class="col-md-1">
                     <button title="Remove this alias" class="btn btn-danger btn-sm" ng-click="removeAlias(alias)">
                         <span class="glyphicon glyphicon-remove"></span>
                     </button>
-                </td>
-                <td>
-                    <div class="input-group input-group-sm">
+                </div>
+                <div class="col-md-5">
+                    <div class="input-group input-group-sm" tim-error-state data-for="innerForm.aliasLoc">
                         <span ng-click="aliasPublicClicked(alias)" class="input-group-addon">
                        <input type="checkbox" ng-checked="alias.public">
                        </span>
-                        <input class="form-control" type="text" ng-model="alias.location"/>
-                    <span class="input-group-btn">
+                        <input class="form-control" name="aliasLoc" tim-location type="text"
+                               ng-model="alias.location"/>
+                        <span class="input-group-btn">
                     <a class="timButton" href="{{ '/view/{{alias.location | escape}}' }}">View</a>
                     </span>
                     </div>
-                </td>
-                <td>
-                    <div class="input-group input-group-sm">
-                        <input class="form-control" type="text" ng-model="alias.name" placeholder="Document name"/>
+                    <tim-error-message for="innerForm.aliasLoc"></tim-error-message>
+                </div>
+                <div class="col-md-5">
+                    <div class="input-group input-group-sm" tim-error-state data-for="innerForm.aliasName">
+                        <input class="form-control" required name="aliasName" type="text" tim-short-name ng-model="alias.name"
+                               placeholder="Short name"/>
                         <span class="input-group-btn">
                     <a class="timButton" href="{{ '/view/{{alias.path | escape}}' }}">View</a>
                             </span>
                     </div>
-                </td>
-                <td>
+                    <tim-error-message for="innerForm.aliasName"></tim-error-message>
+                </div>
+                <div class="col-md-1">
                     <button class="timButton btn-sm" ng-click="updateAlias(alias, $first)"
-                            ng-disabled="!aliasChanged(alias)"><span class="glyphicon glyphicon-ok"></span>
+                            ng-disabled="!aliasChanged(alias) || innerForm.$invalid"><span class="glyphicon glyphicon-ok"></span>
                     </button>
-                </td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>
-                    <div class="input-group input-group-sm">
+                </div>
+            </ng-form>
+        </div>
+        <div class="form-group">
+            <ng-form name="newAliasForm">
+            <div class="col-md-1"></div>
+            <div class="col-md-5">
+                <div class="input-group input-group-sm" tim-error-state data-for="newAliasForm.newAliasLoc">
                         <span ng-click="aliasPublicClicked(newAlias)" class="input-group-addon">
                        <input type="checkbox" ng-checked="newAlias.public">
                        </span>
-                        <input class="form-control" type="text" ng-model="newAlias.location"/>
+                    <input class="form-control" name="newAliasLoc" tim-location type="text"
+                           ng-model="newAlias.location"/>
                     <span class="input-group-btn">
-                    <a class="timButton" href="{{ '/view/{{alias.location | escape}}' }}">View</a>
+                    <a class="timButton" href="{{ '/view/{{newAlias.location | escape}}' }}">View</a>
                     </span>
-                    </div>
-                </td>
-                <td>
-                    <input class="form-control" type="text" ng-model="newAlias.name" placeholder="Click to add"/>
-                </td>
-                <td>
-                    <button class="timButton btn-sm" ng-click="addAlias(newAlias)" ng-disabled="!newAlias.name">
-                        <span class="glyphicon glyphicon-plus"></span>
-                    </button>
-                </td>
-            </tr>
-        </table>
+                </div>
+                <tim-error-message for="newAliasForm.newAliasLoc"></tim-error-message>
+            </div>
+            <div class="col-md-5">
+                <div class="input-group input-group-sm" tim-error-state data-for="newAliasForm.newAliasName">
+                    <input class="form-control" required name="newAliasName" tim-short-name type="text"
+                           ng-model="newAlias.name"
+                           placeholder="Enter new short name"/>
+                    <span class="input-group-btn"><a class="timButton" disabled>View</a></span>
+                </div>
+                <tim-error-message for="newAliasForm.newAliasName"></tim-error-message>
+            </div>
+            <div class="col-md-1">
+                <button class="timButton btn-sm" ng-click="addAlias(newAlias)" ng-disabled="newAliasForm.$invalid">
+                    <span class="glyphicon glyphicon-plus"></span>
+                </button>
+            </div>
+            </ng-form>
+        </div>
     </form>
 </div>
     </div>

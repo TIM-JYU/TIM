@@ -5,9 +5,9 @@ timApp.directive("createItem", ['$window', '$log', '$http', 'Slugify', function 
     "use strict";
     return {
         restrict: 'E',
-        // TODO add itemTitle
         scope: {
             itemType: '@', // folder or document
+            itemTitle: '@?',
             itemName: '@?',
             itemLocation: '@?',
             fullPath: '@?',
@@ -27,6 +27,8 @@ timApp.directive("createItem", ['$window', '$log', '$http', 'Slugify', function 
                 var str = sc.fullPath;
                 sc.itemLocation = str.substring(0, str.lastIndexOf("/"));
                 sc.itemTitle = str.substring(str.lastIndexOf("/") + 1, str.length);
+            }
+            if (sc.itemTitle) {
                 sc.itemName = Slugify.slugify(sc.itemTitle);
             }
 
@@ -58,10 +60,6 @@ timApp.directive("createItem", ['$window', '$log', '$http', 'Slugify', function 
 
             sc.nameChanged = function () {
                 sc.automaticShortName = (sc.itemName || []).length === 0;
-            };
-
-            sc.formOk = function () {
-                return !sc.itemName || !sc.itemTitle || !angular.isDefined(sc.itemLocation);
             };
         }
     };

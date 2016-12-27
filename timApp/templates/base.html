@@ -47,10 +47,11 @@
 
         {% block ngscripts %}
             <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.min.js') }}"></script>
+            <script src="{{ url_for('bower.static', filename='angular-messages/angular-messages.min.js') }}"></script>
         {% endblock %}
 
         <script>
-            var timApp = angular.module('timApp', [{% block ngmodules %}'ngSanitize', 'ui.bootstrap', {% endblock %}]);
+            var timApp = angular.module('timApp', [{% block ngmodules %}'ngMessages', 'ngSanitize', 'ui.bootstrap', {% endblock %}]);
             // disable Angular URL manipulation when using ng-include; from http://stackoverflow.com/a/19825756
             timApp.config(['$provide', function ($provide) {
                 $provide.decorator('$browser', ['$delegate', function ($delegate) {
@@ -104,6 +105,7 @@
         <script src="{{ url_for('static', filename='scripts/directives/bookmarks.js') }}"></script>
         <script src="{{ url_for('static', filename='scripts/directives/createItem.js') }}"></script>
         <script src="{{ url_for('static', filename='scripts/directives/shortNameValidator.js') }}"></script>
+        <script src="{{ url_for('static', filename='scripts/directives/formErrorMessage.js') }}"></script>
 
         <!-- HTML5 shiv and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
