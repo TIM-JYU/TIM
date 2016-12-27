@@ -1,6 +1,7 @@
 <!-- Pop over element --><span class="annotation-element"><span   ng-init="showHidden=newannotation" ng-show="show" ng-click="updateVelpZIndex()"
                                                                 ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]"
-                                                                ng-keydown="keyDownFunc($event)" ng-keyup="keyUpFunc($event)">
+                                                                ng-keydown="keyDownFunc($event)" ng-keyup="keyUpFunc($event)"
+                                                                ng-style="{backgroundColor: color}">
     <span class="fulldiv">
         <span class="div-90 annTopSection">
             <p><span class="annHeader"><strong>{{ velp }}</strong></span></p>
@@ -91,4 +92,5 @@
 
 </span></span><!--
 Highlighted text--><span ng-click="showHidden=false;toggleAnnotation()" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
-{neutral: points == 0, negative: points < 0, positive: points > 0}]" ng-transclude="true"></span>
+{neutral: points == 0, negative: points < 0, positive: points > 0}]" ng-transclude="true"
+ng-style="{backgroundColor: color}"></span>

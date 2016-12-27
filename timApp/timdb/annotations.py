@@ -264,6 +264,7 @@ class Annotations(TimDbBase):
         cursor.execute("""
                       SELECT DISTINCT
                         annotation.id,
+                        velp.color AS color,
                         velpversion.velp_id AS velp,
                         velpcontent.content AS content,
                         annotation.visible_to,
@@ -292,6 +293,7 @@ class Annotations(TimDbBase):
                         UserAnswer.user_id
                       FROM annotation
                         INNER JOIN velpversion ON velpversion.id = annotation.velp_version_id
+                        INNER JOIN velp ON velp.id = velpversion.velp_id
                         INNER JOIN velpcontent ON velpcontent.version_id = annotation.velp_version_id
                         LEFT JOIN useranswer ON useranswer.answer_id = annotation.answer_id
                         INNER JOIN useraccount ON useraccount.id = annotation.annotator_id

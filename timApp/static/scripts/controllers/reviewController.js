@@ -782,6 +782,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             timesince: "just now",
             creationtime: "now",
             coord: {},
+            color: velp.color,
             comments: [],
             default_comment: velp.default_comment,
             newannotation: true,
@@ -1086,8 +1087,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             velp_content = annotation.content;
         }
 
-        if (typeof annotation.default_comment === UNDEFINED || annotation.default_comment === null){
+        if (isUndefinedOrNull(annotation.default_comment)){
             annotation.default_comment = "";
+        }
+
+        if (isUndefinedOrNull(annotation.color)){
+            annotation.color = "";
         }
 
         element.setAttribute("velp", velp_content);
@@ -1100,6 +1105,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         element.setAttribute("creationtime", annotation.creationtime);
         element.setAttribute("email", annotation.email);
         element.setAttribute("visibleto", annotation.visible_to);
+        element.setAttribute("color", annotation.color);
         element.setAttribute("show", show);
         element.setAttribute("newannotation", annotation.newannotation);
         if (typeof annotation.reason !== "undefined")
@@ -1109,6 +1115,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         element.setAttribute("comments", JSON.stringify(annotation.comments));
 
         return element;
+    };
+
+    var isUndefinedOrNull = function (attr) {
+        return typeof attr === UNDEFINED || attr === null;
     };
 
     /**

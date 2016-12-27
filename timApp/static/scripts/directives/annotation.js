@@ -38,6 +38,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             timesince: '@',
             creationtime: '@',
             velp: '@',
+            color: '@',
             newannotation: '@',
             showHidden: '@'
         },
@@ -73,7 +74,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 
             /**
              * Toggles the visibility of the annotation.
-             * @method toggleAnnotation
+             * @method toggleAnnota tion
              */
             scope.toggleAnnotation = function () {
                 if (scope.velpElement === null) {
