@@ -337,6 +337,14 @@ def get_referenced_pars_from_req(par):
         return [par]
 
 
+def has_special_chars(item_path):
+    return set(item_path.lower()) - set('abcdefghijklmnopqrstuvwxyz0123456789/-_')
+
+
+def remove_path_special_chars(item_path):
+    return re.sub('[^a-zA-Z0-9/_-]', '', item_path.translate(str.maketrans(' äöå', '-aoa')))
+
+
 def validate_item(item_path, item_type):
     if not logged_in():
         abort(403, 'You have to be logged in to perform this action.'.format(item_type))
@@ -350,7 +358,7 @@ def validate_item(item_path, item_type):
     if re.match('^(\d)*$', item_path) is not None:
         abort(400, 'The {} path can not be a number to avoid confusion with document id.'.format(item_type))
 
-    if set(item_path.lower()) - set('abcdefghijklmnopqrstuvwxyz0123456789/-_'):
+    if has_special_chars(item_path):
         abort(400, 'The {} path has invalid characters. Only letters, numbers, underscores and dashes are allowed.'.format(item_type))
 
     timdb = get_timdb()

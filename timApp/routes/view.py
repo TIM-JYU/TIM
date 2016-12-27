@@ -10,12 +10,10 @@ from documentmodel.docsettings import DocSettings
 from documentmodel.document import get_index_from_html_list, dereference_pars
 from htmlSanitize import sanitize_html
 from options import get_option
-from routes.accesshelper import has_edit_access, verify_view_access, verify_teacher_access, verify_seeanswers_access, \
+from routes.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     has_view_access, get_rights, get_viewable_blocks
 from routes.logger import log_error
 from routes.sessioninfo import get_current_user_object
-from timdb.models.docentry import DocEntry
-from timdb.models.folder import Folder
 from timdb.timdbexception import TimDbException
 from .common import *
 
@@ -199,13 +197,16 @@ def show_time(s):
     debug_time = now
 
 
-def view(doc_path, template_name, usergroup=None, route="view"):
+def view(item_path, template_name, usergroup=None, route="view"):
+    if has_special_chars(item_path):
+        return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
+
     save_last_page()
 
-    doc_info = DocEntry.find_by_path(doc_path, fallback_to_id=True, try_translation=True)
+    doc_info = DocEntry.find_by_path(item_path, fallback_to_id=True, try_translation=True)
 
     if doc_info is None:
-        return try_return_folder(doc_path)
+        return try_return_folder(item_path)
 
     doc_id = doc_info.id
     edit_mode = request.args.get('edit', None) if has_edit_access(doc_id) else None
@@ -214,13 +215,13 @@ def view(doc_path, template_name, usergroup=None, route="view"):
         if verify_teacher_access(doc_id, False) is False:
             if verify_view_access(doc_id):
                 flash("Did someone give you a wrong link? Showing normal view instead of teacher view.")
-                return redirect('/view/' + doc_path)
+                return redirect('/view/' + item_path)
 
     if route == 'answers':
         if verify_seeanswers_access(doc_id, False) is False:
             if verify_view_access(doc_id):
                 flash("Did someone give you a wrong link? Showing normal view instead of see answers view.")
-                return redirect('/view/' + doc_path)
+                return redirect('/view/' + item_path)
 
     if not has_view_access(doc_id):
         if not logged_in():

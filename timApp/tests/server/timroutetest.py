@@ -154,7 +154,8 @@ class TimRouteTest(TimDbTest):
         :param as_tree: Whether to return the response as an HTML tree.
         :param expect_status: The expected status code.
         :param expect_content: The expected response content.
-         * If as_tree is True, this parameter is not used.
+         * If the response is a redirect, this parameter is interpreted as the expected redirect target URL.
+         * Otherwise, if as_tree is True, this parameter is not used.
          * Otherwise, if the response mimetype is application/json, this parameter is interpreted as a dictionary or list
            that must match the response content.
          * Otherwise, this parameter is interpreted as a string that must match the response content.
@@ -175,6 +176,8 @@ class TimRouteTest(TimDbTest):
         headers.append(('X-Requested-With', 'XMLHttpRequest'))
         resp = self.client.open(url, method=method, headers=headers, **kwargs)
         self.assertEqual(expect_status, resp.status_code)
+        if resp.status_code == 302 and expect_content is not None:
+            self.assertEqual(expect_content, resp.location.lstrip('http://localhost/'))
         resp_data = resp.get_data(as_text=True)
         if as_tree:
             tree = html.fromstring(resp_data)
@@ -194,7 +197,7 @@ class TimRouteTest(TimDbTest):
                 self.assertLessEqual(1, len(html.fragment_fromstring(loaded, create_parent=True).findall(expect_xpath)))
             return loaded
         else:
-            if expect_content is not None:
+            if expect_content is not None and resp.status_code != 302:
                 self.assertEqual(expect_content, resp_data)
             elif expect_contains is not None:
                 self.check_contains(expect_contains, resp_data)

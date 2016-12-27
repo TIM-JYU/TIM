@@ -19,6 +19,8 @@ manage_page = Blueprint('manage_page',
 
 @manage_page.route("/manage/<path:path>")
 def manage(path):
+    if has_special_chars(path):
+        return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
     timdb = get_timdb()
     is_folder = False
     doc = DocEntry.find_by_path(path, fallback_to_id=True, try_translation=True)
