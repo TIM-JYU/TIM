@@ -21,7 +21,7 @@
                       ng-attr-title="{{ settings.teacherRightsError }}" >
                 </span>
                 <span class="points pull-right header">&nbsp;{{ velp.points }}</span>
-                <p class="velpInfoText truncate" ng-show="advancedOn">{{ velp.default_comment }}</p>
+                <p class="velpInfoText truncate">{{ velp.default_comment }}</p>
 
                 <div class="tags">
                     <span class="float-right" ng-show="advancedOn"
@@ -55,7 +55,7 @@
                                                     placeholder="Points" value="0"></p>
             <p ng-hide="allowChangePoints()" class="velpInfoText">{{ settings.teacherRightsError }}</p>
 
-            <p ng-show="advancedOn"><textarea placeholder="Add default comment" ng-model="velp.default_comment" ></textarea></p>
+            <p><textarea placeholder="Add default comment" ng-model="velp.default_comment" ></textarea></p>
 
             <fieldset ng-show="advancedOn">
                 <legend>Labels

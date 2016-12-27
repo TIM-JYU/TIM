@@ -77,9 +77,9 @@ def add_annotation() -> Dict:
     icon_id = json_data.get('icon_id')
     answer_id = json_data.get('answer_id')
 
-    default_comment = ""
-    if (len(json_data.get('comments')) > 0):
-        default_comment = json_data.get('comments')[0]['content']
+    # default_comment = ""
+    # if (len(json_data.get('comments')) > 0):
+    #     default_comment = json_data.get('comments')[0]['content']
 
     try:
         paragraph_id_start = start['par_id']
@@ -100,9 +100,9 @@ def add_annotation() -> Dict:
                                                  depth_start, offset_end, node_end, depth_end, hash_start, hash_end,
                                                  element_path_start, element_path_end, None, icon_id, answer_id)
 
-    if len(default_comment) > 0:
-        comment_data = dict(content=default_comment, annotation_id=new_id)
-        add_comment_helper(comment_data)
+    # if len(default_comment) > 0:
+    #     comment_data = dict(content=default_comment, annotation_id=new_id)
+    #     add_comment_helper(comment_data)
 
     return jsonResponse({"id": new_id, "annotator_name": annotator_name})
 

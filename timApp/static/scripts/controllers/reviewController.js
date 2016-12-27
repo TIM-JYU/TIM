@@ -757,7 +757,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             return;
         }
 
-        var comment = [];
+        var default_comment = "";
+        /*
         if (velp.default_comment !== null && velp.default_comment.length > 0){
             comment.push({
                 content: velp.default_comment,
@@ -766,6 +767,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 comment_relative_time: "just now"
             });
         }
+        */
 
         var newAnnotation = {
             id: -($scope.annotations.length + 1),
@@ -780,7 +782,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             timesince: "just now",
             creationtime: "now",
             coord: {},
-            comments: comment,
+            comments: [],
+            default_comment: velp.default_comment,
             newannotation: true,
             user_id: -1
         };
@@ -1082,9 +1085,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         } else {
             velp_content = annotation.content;
         }
+
+        if (typeof annotation.default_comment === UNDEFINED || annotation.default_comment === null){
+            annotation.default_comment = "";
+        }
+
         element.setAttribute("velp", velp_content);
         element.setAttribute("points", annotation.points);
         element.setAttribute("aid", annotation.id);
+        element.setAttribute("newcomment", annotation.default_comment);
         element.setAttribute("annotator", annotation.annotator_name);
         element.setAttribute("editaccess", annotation.edit_access);
         element.setAttribute("timesince", annotation.timesince);

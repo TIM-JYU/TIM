@@ -33,6 +33,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             ismargin: '=',
             annotator: '@',
             editaccess: '=',
+            newcomment: '@',
             //email: '@',
             timesince: '@',
             creationtime: '@',
@@ -42,7 +43,6 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
         },
 
         link: function (scope, element) {
-            scope.newComment = "";
             scope.velpElement = null;
             scope.ctrlDown = false;
             scope.ctrlKey = 17;
@@ -55,6 +55,8 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             scope.newannotation = false;
             scope.marginonly = false;
 
+            if (scope.newcomment === null) scope.newcomment = "";
+
             scope.isvalid = {
                 points: {value: true, msg: ""}
             };
@@ -65,7 +67,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 points: scope.points,
                 velp: scope.velp,
                 visible_to: scope.visibleto,
-                comment: scope.newComment,
+                comment: "",//scope.newcomment,
                 annotation_id: scope.aid
             };
 
@@ -200,10 +202,10 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 var id = scope.$parent.getRealAnnotationId(scope.aid);
 
                 // Add comment
-                if (scope.newComment.length > 0) {
-                    var comment = scope.newComment;
+                if (scope.newcomment.length > 0) {
+                    var comment = scope.newcomment;
 
-                    var data = {annotation_id: id, content: scope.newComment};
+                    var data = {annotation_id: id, content: scope.newcomment};
                     scope.$parent.makePostRequest("/add_annotation_comment", data, function (json) {
                         scope.comments.push({
                             commenter_username: json.data.name,
@@ -218,7 +220,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 } else {
                     scope.updateAnnotation();
                 }
-                scope.newComment = "";
+                scope.newcomment = "";
                 if (scope.visible_options.value !== scope.original.visible_to) {
                     scope.$parent.changeVisibility(scope.aid, scope.visible_options.value);
                 }
@@ -227,7 +229,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     annotation_id: id,
                     visible_to: scope.visible_options.value,
                     velp: scope.velp,
-                    comment: scope.newComment,
+                    comment: scope.newcomment,
                     doc_id: scope.$parent.docId
                 };
 
@@ -281,9 +283,11 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
              * @returns {boolean} - Whether any modifications were made or not
              */
             scope.checkIfChanged = function () {
+                if (!scope.showHidden)
+                    return false;
                 if (scope.original.points !== scope.points)
                     return true;
-                if (scope.original.comment !== scope.newComment)
+                if (scope.original.comment !== scope.newcomment)
                     return true;
                 if (scope.original.visible_to !== scope.visible_options.value)
                     return true;
