@@ -189,7 +189,6 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     scope.isvalid.points.value = false;
                     scope.isvalid.points.msg = "Insert a number or leave empty"
                 }
-                console.log(scope.isvalid.points.value);
             };
 
             /**
@@ -233,7 +232,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 };
 
                 scope.$parent.makePostRequest("/update_annotation", scope.original, function (json) {
-                    console.log(json);
+                    //console.log(json);
                 });
             };
 

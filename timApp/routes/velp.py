@@ -235,6 +235,7 @@ def add_velp() -> int:
 
     Optional key(s):
         - points: velp points
+        - comment: default comment
         - language_id: language ID
         - icon_id: icon ID
         - valid_until: time stamp to until velp is still valid
@@ -255,6 +256,7 @@ def add_velp() -> int:
     # Optional stuff
     # .get returns null instead of throwing if data is missing.
     default_points = json_data.get('points')
+    default_comment = json_data.get('default_comment')
     language_id = json_data.get('language_id')
     icon_id = json_data.get('icon_id')
     valid_until = json_data.get('valid_until')
@@ -285,7 +287,7 @@ def add_velp() -> int:
 
     velp_groups = velp_groups_rights
 
-    new_velp_id, _ = timdb.velps.create_new_velp(current_user_id, velp_content, default_points,
+    new_velp_id, _ = timdb.velps.create_new_velp(current_user_id, velp_content, default_points, default_comment,
                                               icon_id, valid_until, language_id, visible_to)
 
     if velp_labels is not None:
@@ -313,6 +315,7 @@ def update_velp(doc_id: int):
 
     Optional key(s):
         - points: velp points
+        - default_comment: velp default comment
         - icon_id: velp icon
         - labels: velp labels
 
@@ -332,6 +335,7 @@ def update_velp(doc_id: int):
         return abort(400, "Empty content string.")
 
     default_points = json_data.get('points')
+    default_comment = json_data.get('default_comment')
     icon_id = json_data.get('icon_id')
     new_labels = json_data.get('labels')
     timdb = get_timdb()
@@ -372,14 +376,20 @@ def update_velp(doc_id: int):
         timdb.velp_groups.remove_velp_from_groups(velp_id, groups_to_remove)
         timdb.velp_groups.add_velp_to_groups(velp_id, groups_to_add)
 
-    old_content = timdb.velps.get_latest_velp_version(velp_id, language_id)['content']
+    old_velp = timdb.velps.get_latest_velp_version(velp_id, language_id)
+    old_content = old_velp['content']
+
+    old_default_comment = None
+    if 'default_comment' in old_velp:
+        old_default_comment = old_velp['default_comment']
+
     old_labels = timdb.velps.get_velp_label_ids_for_velp(velp_id)
-    if old_content != new_content:
+    if old_content != new_content or old_default_comment != default_comment:
         # Todo this does not really work correctly, now any update to any language creates a new version, and we can not
         # produce different contents with the same version but different language.
 
         version_id = timdb.velps.create_velp_version(velp_id)
-        timdb.velps.create_velp_content(version_id, language_id, new_content)
+        timdb.velps.create_velp_content(version_id, language_id, new_content, default_comment)
     if old_labels != new_labels:
         timdb.velps.update_velp_labels(velp_id, new_labels)
     timdb.velps.update_velp(velp_id, default_points, icon_id)

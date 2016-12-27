@@ -43,8 +43,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     $scope.velpGroups = [];
 
 
-    $scope.newVelp = {content: "", points: "", labels: [], edit: false, id: -2, velp_groups: []};
-    $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: [], orig: {}};
+    $scope.newVelp = {content: "", default_comment: "", points: "", labels: [], edit: false, id: -2, velp_groups: [], visible_to: 4};
+    $scope.velpToEdit = {content: "", default_comment: "",  points: "", labels: [], edit: false, id: -1, velp_groups: [], visible_to: 4};
     $scope.newLabel = {content: "", selected: false, edit: false, valid: true};
     $scope.labelToEdit = {content: "", selected: false, edit: false, id: -3};
     $scope.newVelpGroup = {name: "", target_type: 0};
@@ -62,14 +62,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     var default_velp_group = {id: -1, name: "No access to default group", edit_access: false, show: true, default: true}; // TODO Use route to add this information
     var default_personal_velp_group = {id: -2, name: "Personal default"};
 
-    $scope.visible_options = {
-                "type": "select",
-                "value": 4,
-                "values": [1, 2, 3, 4],
-                "names": ["Just me", "Document owner", "Teachers", "Everyone"]
-    };
-
-    //
     var velpOrderingKey = "velpOrdering_" + doc_id;
     var velpLabelsKey = "velpLabels_" + doc_id;
     var advancedOnKey = "advancedOn"; // TODO: should this be document specific?

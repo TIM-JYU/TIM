@@ -252,6 +252,7 @@
 }
 
 .velp {
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     position: absolute;
     line-height: 1.25em;
     font-weight: 600;
@@ -259,6 +260,18 @@
     min-height: 10em;
     width: 18em;
 }
+
+.velp legend{
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.velp .truncate{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .velp-data {
     position: relative;
 }
@@ -331,6 +344,13 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
     position: relative;
     padding: 0.4em 0.25em;
     z-index: 1;
+    font-weight: 300;
+    font-size: 0.9em;
+}
+
+.velp .header{
+    font-size: 1.5rem;
+    font-weight: 600;
 }
 
 .velp .content .right{
@@ -341,15 +361,16 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
     float: left;
 }
 
+.velp textarea{
+    width: 100%;
+}
+
 /* Velp info and PopOver styles */
 .velpInfo {
     float: left;
     border: 0;
 }
 .velpInfoText {
-    font-size: x-small;
-    font-weight: lighter;
-    line-height: 100%;
     word-break: keep-all;
 }
 

@@ -5,5 +5,5 @@ IFS=$'\n\t'
 cd /Haskell
 
 (cd Choices/ \
-&& stack solver --update-config --allow-different-user \
-&& stack build --allow-different-user --copy-bins)
+&& stack solver --system-ghc --update-config --allow-different-user \
+&& stack build --system-ghc --allow-different-user --copy-bins)

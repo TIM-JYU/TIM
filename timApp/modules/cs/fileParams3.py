@@ -62,7 +62,7 @@ def get_param(query, key, default):
 
 def get_param_table(query, key):
     value = get_param(query, key, None)
-    if not value: return []
+    if not value: return None
     if not isinstance(value, list):
         # or (len(number_rule) >= 1 and isinstance(number_rule[0], float)):
         # number_rule = [number_rule]
@@ -141,6 +141,7 @@ def check(matcher, line):
 
 
 def get_json_eparam(jso, key1, key2, default):
+    # escaped param
     result = get_json_param(jso, key1, key2, default)
     if ( result == None ): return None
     if type(result) != type(''):
