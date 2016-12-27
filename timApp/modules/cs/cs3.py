@@ -338,6 +338,9 @@ def get_html(ttype, query):
     # do_lazy = False
     # print("do_lazy",do_lazy,type(do_lazy))
 
+    if query.hide_program:
+        get_param_del(query, 'program', '')
+
     js = query_params_to_map_check_parts(query)
     # print(js)
     if "byFile" in js and not ("byCode" in js):
@@ -497,6 +500,29 @@ def log(self):
     return
 
 
+def replace_code(rules, s):
+    result = s
+    if not rules:
+        return result
+
+    for rule in rules:
+        cut_replace, cut_by = get_2_items(rule, "replace", "by", None, "")
+        if cut_replace:
+            try:
+                while True:
+                    m = re.search(cut_replace, result, flags=re.S)
+                    if not m: break
+                    result = result.replace(m.group(1), cut_by)
+            except Exception as e:
+                msg = ""
+                if isinstance(e, IndexError):
+                    msg = "group () missing"
+                else:
+                    msg = e.msg
+                result = "replace pattern error: " + msg + "\n" + "Pattern: " + cut_replace + "\n\n" + result
+    return result
+
+
 def check_code(out, err, compiler_output, ttype):
     err = err.decode("utf-8") + compiler_output
     if ttype == "fs":
@@ -515,6 +541,62 @@ def check_code(out, err, compiler_output, ttype):
     except:
         out = out.decode('iso-8859-1')
     return out, err
+
+
+def check_fullprogram(query, cut_errors = False):
+    # Try to find fullprogram or fullfile attribute and if found,
+    # do program, bycode and replace attributes from that
+    query.cut_errors = get_param_table(query, "cutErrors")
+    # -cutErrors:
+    # - "(\n[^\n]*REMOVEBEGIN.* REMOVEEND[^\n]*)"
+    # - "(\n[^\n]*REMOVELINE[^\n]*)"
+    if not query.cut_errors:
+        query.cut_errors = [{'replace': "(\n[^\n]*REMOVEBEGIN.*? REMOVEEND[^\n]*)", 'by': ""},
+                            {'replace': "(\n[^\n]*REMOVELINE[^\n]*)", 'by': ""}]
+
+    query.hide_program = False
+    fullprogram = get_param(query, "-fullprogram", None)
+    if not fullprogram:
+        fullprogram = get_param(query, "fullprogram", None)
+    else:
+        query.hide_program = True
+    if not fullprogram:
+        fullfile = get_param(query, "-fullfile", None)
+        if not fullfile:
+            fullfile = get_param(query, "fullfile", None)
+        else:
+            query.hide_program = True
+        if not fullfile:
+            return False
+        fullprogram = get_url_lines_as_string(fullfile)
+    if not fullprogram:
+        return False
+
+    get_param_del(query, 'fullprogram', '')
+    get_param_del(query, 'fullfile', '')
+
+    program = fullprogram
+    by_code_replace = [{'replace': "(\\n[^\\n]*DELETEBEGIN.*? DELETEEND[^\\n]*)", 'by': ""}]
+    program = replace_code(by_code_replace, program)
+    delete_line = [{'replace': "(\n[^\n]*DELETELINE[^\n]*)", 'by': ""}]
+    program = replace_code(delete_line, program)
+    delete_line = get_param_table(query, "deleteLine")
+    if delete_line:
+        program = replace_code(delete_line, program)
+    m = re.search("BYCODEBEGIN[^\\n]*\n(.*)\n.*?BYCODEEND", program, flags=re.S)
+    by_code = ""
+    if m:
+        by_code = m.group(1)
+    by_code_replace = [{'replace': "(\\n[^\\n]*BYCODEBEGIN.*? BYCODEEND[^\\n]*)", 'by': "\nREPLACEBYCODE"}]
+    program = replace_code(by_code_replace, program)
+    if cut_errors:
+        program = replace_code(query.cut_errors, program)
+    query.query["replace"] = ["REPLACEBYCODE"]
+    query.query["program"] = [program]
+    query.query["by"] = [by_code]
+    # query.jso.markup["byCode"] = by_code
+    # query.jso.markup["program"] = program
+    return True
 
 
 def check_parsons(expect_code, usercode, maxn, notordermatters):
@@ -670,6 +752,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if is_tauno: ttype = 'tauno'
             if is_simcir: ttype = 'simcir'
             if is_parsons: ttype = 'parsons'
+            check_fullprogram(query, True)
             s = get_html(ttype, query)
             # print(s)
             htmls.append(s)
@@ -1120,6 +1203,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 # self.wfile.write(("Invalid project type given (type=" + ttype + ")").encode())
                 # return
 
+            check_fullprogram(query, print_file)
+
             # Check query parameters
             p0 = FileParams(query, "", "")
             # print("p0=")
@@ -1142,6 +1227,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # Open the file and write it
             # print(print_file,"Haetaan")
             if print_file:
+                s = replace_code(query.cut_errors, s)
                 return self.wout(s)
 
             mkdirs(prgpath)
@@ -1193,6 +1279,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 testcs = filepath + "/" + classname + "Test.java"
                 fileext = "java"
                 testdll = javaclassname + "Test"
+
+            if is_doc:
+                s = replace_code(query.cut_errors, s)
+
 
             if not s.startswith("File not found"):
                 print(os.path.dirname(csfname))
@@ -1403,19 +1493,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if not nocode: print_lines(output, lines, 0, 10000)
                 error_str += output.getvalue()
                 output.close()
-                cut_errors = get_param_table(query, "cutErrors")
-                for cut_error in cut_errors:
-                    cut_replace, cut_by = get_2_items(cut_error, "replace", "by", None, "")
-                    if cut_replace:
-                        try:
-                            m = re.search(cut_replace, error_str, flags=re.S)
-                            if m:
-                                error_str = error_str.replace(m.group(1), cut_by)
-                        except Exception as e:
-                            msg = ""
-                            if isinstance(e, IndexError): msg = "group () missing"
-                            else: msg = e.msg
-                            error_str = "cutErros pattern error: " + msg + "\n" + "Pattern: " + cut_replace + "\n\n" + error_str
+                error_str = replace_code(query.cut_errors, error_str)
+
                 if delete_tmp: removedir(prgpath)
                 give_points(points_rule, is_test + "notcompile")
                 return write_json_error(self.wfile, error_str, result, points_rule)
