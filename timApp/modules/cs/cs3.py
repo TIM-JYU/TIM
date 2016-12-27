@@ -281,7 +281,7 @@ def removedir(dirname):
         return
 
 
-def save_extra_files(extra_files, prgpath):
+def save_extra_files(query, extra_files, prgpath):
     if not extra_files:
         return
     ie = 0
@@ -293,13 +293,14 @@ def save_extra_files(extra_files, prgpath):
         mkdirs(os.path.dirname(efilename))
         if "text" in extra_file:
             try:
-                codecs.open(efilename, "w", "utf-8").write(extra_file["text"])
+                s = replace_random(query, extra_file["text"])
+                codecs.open(efilename, "w", "utf-8").write(s)
             except:
                 print("Can not write", efilename)
         if "file" in extra_file:
             try:
                 if extra_file.get("type", "") != "bin":
-                    lines = get_url_lines_as_string(extra_file["file"])
+                    lines = get_url_lines_as_string(replace_random(query, extra_file["file"]))
                     codecs.open(efilename, "w", "utf-8").write(lines)
                 else:
                     open(efilename, "wb").write(urlopen(extra_file["file"]).read())
@@ -576,6 +577,8 @@ def check_fullprogram(query, cut_errors = False):
     get_param_del(query, 'fullfile', '')
 
     program = fullprogram
+
+    program = replace_random(query, program)
     by_code_replace = [{'replace': "(\\n[^\\n]*DELETEBEGIN.*? DELETEEND[^\\n]*)", 'by': ""}]
     program = replace_code(by_code_replace, program)
     delete_line = [{'replace': "(\n[^\n]*DELETELINE[^\n]*)", 'by': ""}]
@@ -795,6 +798,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(e.msg)
 
     def do_all_t(self, query):
+        query.randomcheck = binascii.hexlify(os.urandom(16)).decode()
         pwd = ""
         print(threading.currentThread().getName())
         result = {}  # query.jso
@@ -1289,10 +1293,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 mkdirs(os.path.dirname(csfname))
                 print("Write file: " + csfname)
                 if s == "": s = "\n"
+
+                # Write the program to the file =======================================================
                 codecs.open(csfname, "w", "utf-8").write(before_code + s)
                 slines = s
 
-            save_extra_files(extra_files, prgpath)
+            save_extra_files(query, extra_files, prgpath)
 
             is_optional_image = get_json_param(query.jso, "markup", "optional_image", False)
             is_input = get_json_param(query.jso, "input", "isInput", None)
@@ -1987,6 +1993,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             readpointskeep = get_points_rule(points_rule, "readpointskeep", False)
             if readpoints:
                 try:
+                    readpoints = replace_random(query, readpoints)
                     m = re.search(readpoints, out)
                     m2 = re.findall(readpoints, out)
                     if m and m.group(1):
