@@ -154,13 +154,25 @@ def post_answer(plugintype: str, task_id_ext: str):
     # Get the newest answer (state). Only for logged in users.
     state = pluginControl.try_load_json(old_answers[0]['content']) if logged_in() and len(old_answers) > 0 else None
 
+    user_ids = ';'.join([timdb.users.get_user(uid)['name'] for uid in users])
+
+    # TODO Don't put these under markup; they are there for compatibility for now.
     plugin.values['current_user_id'] = get_current_user_name()
-    plugin.values['user_id'] = ';'.join([timdb.users.get_user(uid)['name'] for uid in users])
-    plugin.values['look_answer'] = is_teacher and not save_teacher
+    plugin.values['user_id'] = user_ids
+    look_answer = is_teacher and not save_teacher
+    plugin.values['look_answer'] = look_answer
 
     timdb.close()
 
-    answer_call_data = {'markup': plugin.values, 'state': state, 'input': answerdata, 'taskID': task_id}
+    answer_call_data = {'markup': plugin.values,
+                        'state': state,
+                        'input': answerdata,
+                        'taskID': task_id,
+                        'info': {'earlier_answers': len(old_answers),
+                                 'max_answers': plugin.answer_limit(),
+                                 'current_user_id': get_current_user_name(),
+                                 'user_id': user_ids,
+                                 'look_answer': look_answer}}
 
     try:
         plugin_response = containerLink.call_plugin_answer(plugintype, answer_call_data)
