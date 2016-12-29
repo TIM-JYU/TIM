@@ -31,19 +31,27 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
             var barFilled;
             $scope.internalControl = $scope.control || {};
 
+            $scope.cg = function() {
+                return "group"; // + $scope.gid;
+            }
+
             /**
              * Creates question answer/preview form.
              */
-            $scope.internalControl.createAnswer = function () {
+            $scope.internalControl.createAnswer = function (answclass, preview) {
                 $scope.result = $scope.$parent.result;
+                $scope.gid = $scope.$parent.tid || "";
+                $scope.gid = $scope.gid.replace(".","_");
+
+                if ( !answclass ) answclass = "answerSheet";
                 $scope.previousAnswer = $scope.$parent.previousAnswer;
                 var disabled = '';
                 // If showing preview or question result, inputs are disabled
-                if ($scope.preview || $scope.result) disabled = ' disabled ';
+                if (preview || $scope.preview || $scope.result) disabled = ' disabled ';
                 $element.empty();
                 $scope.json = $scope.$parent.json;
 
-                $scope.answerTable = [];
+                $scope.answerTable = $scope.$parent.answerTable || [];
                 // If user has answer to question, create table of answers and select inputs according to it
                 if ($scope.previousAnswer) {
                     var single_answers = [];
@@ -59,7 +67,9 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 $scope.askedTime = $scope.$parent.askedTime - $scope.$parent.clockOffset;
                 $scope.endTime = $scope.$parent.askedTime + $scope.json.timeLimit * 1000 - $scope.$parent.clockOffset;
 
-                var htmlSheet = $('<div>', {class: 'answerSheet'});
+                // var htmlSheet = $('<div>', {class: answclass});
+                var htmlSheet = $('<form>', {class: answclass});
+                $scope.htmlSheet = htmlSheet;
                 if ($scope.json.timeLimit !== "" && !$scope.preview && !$scope.result) {
                     var progress = $('<progress>', {
                         max: ($scope.endTime - $scope.askedTime),
@@ -103,7 +113,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                         var group;
                         if ($scope.json.questionType === "matrix" || $scope.json.questionType === "true-false") {
                             if ($scope.json.answerFieldType === "text") {
-                                group = "group" + i;
+                                group = $scope.cg() + i;
                                 var textArea = $('<textarea>', {
                                     id: 'textarea-answer',
                                     name: group
@@ -115,7 +125,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                 tr.append($('<td>', {class: 'answer-button'}).append($('<label>').append(textArea)));
                                 header++;
                             } else {
-                                group = "group" + row.text.replace(/[^a-zA-Z0-9]/g, "");
+                                group = $scope.cg() + row.text.replace(/[^a-zA-Z0-9]/g, "");
                                 var checked = false;
                                 if ($scope.answerTable && $scope.answerTable.length > row.id) {
                                     var value = (row.columns[i].id + 1).toString();
@@ -132,7 +142,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                 header++;
                             }
                         } else {
-                            group = "group" + row.type.replace(/[^a-zA-Z0-9]/g, "");
+                            group = $scope.cg() + row.type.replace(/[^a-zA-Z0-9]/g, "");
                             var checked = false;
                             if ($scope.answerTable && $scope.answerTable.length > 0) {
                                 var value = (row.id + 1).toString();
@@ -244,11 +254,8 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 }
             };
 
-            /**
-             * Function to create question answer and send it to server.
-             * @memberof module:dynamicAnswerSheet
-             */
-            $scope.internalControl.answerToQuestion = function () {
+
+            $scope.internalControl.getAnswers = function() {
                 var answers = [];
                 if (angular.isDefined($scope.json.data.rows)) {
                     var groupName = "";
@@ -256,10 +263,10 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                         for (var i = 0; i < $scope.json.data.rows.length; i++) {
                             var answer = [];
                             var matrixInputs;
-                            groupName = "group" + $scope.json.data.rows[i].text.replace(/[^a-zA-Z0-9]/g, '');
+                            groupName = $scope.cg() + $scope.json.data.rows[i].text.replace(/[^a-zA-Z0-9]/g, '');
 
                             if ($scope.json.answerFieldType === "text") {
-                                matrixInputs = $('textarea[name=' + "group" + i + ']');
+                                matrixInputs = $('textarea[name=' + $scope.cg() + i + ']', $scope.htmlSheet);
                                 for (var c = 0; c < matrixInputs.length; c++) {
                                     answer.push(matrixInputs[c].value);
                                 }
@@ -268,7 +275,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                 continue;
                             }
 
-                            matrixInputs = $('input[name=' + groupName + ']:checked');
+                            matrixInputs = $('input[name=' + groupName + ']:checked', $scope.htmlSheet);
 
                             for (var k = 0; k < matrixInputs.length; k++) {
                                 answer.push(matrixInputs[k].value);
@@ -281,8 +288,8 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     }
                     else {
                         answers.push([]);
-                        groupName = "group" + $scope.json.data.rows[0].type.replace(/[^a-zA-Z0-9]/g, '');
-                        var checkedInputs = $('input[name=' + groupName + ']:checked');
+                        groupName = $scope.cg() + $scope.json.data.rows[0].type.replace(/[^a-zA-Z0-9]/g, '');
+                        var checkedInputs = $('input[name=' + groupName + ']:checked', $scope.htmlSheet);
                         for (var j = 0; j < checkedInputs.length; j++) {
                             answers[0].push(checkedInputs[j].value);
                         }
@@ -295,10 +302,22 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
 
                 if (angular.isDefined($scope.json.data.columns)) {
                     angular.forEach($scope.json.data.columns, function (column) {
-                        var groupName = "group" + column.Value.replace(/ /g, '');
+                        var groupName = $scope.cg() + column.Value.replace(/ /g, '');
                         answers.push($('input[name=' + groupName + ']:checked').val());
                     });
                 }
+
+                return answers;
+
+            }
+
+            /**
+             * Function to create question answer and send it to server.
+             * @memberof module:dynamicAnswerSheet
+             */
+            $scope.internalControl.answerToQuestion = function () {
+
+                var answers = $scope.internalControl.getAnswers();
 
                 if (!$scope.$parent.isLecturer) {
                     $element.empty();

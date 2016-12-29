@@ -43,6 +43,7 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
         "graphviz":      {"host": TIM_HOST + ":60000/", "browser": False},
         "pali":          {"host": TIM_HOST + ":61000/"},
         "imagex":        {"host": TIM_HOST + ":62000/"},
+        "qst":           {"host": TIM_HOST + "/qst/"},
         "echo":          {"host": TIM_HOST + "/echoRequest/"},
     }
 else:
@@ -63,6 +64,7 @@ else:
         "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
         "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
         "imagex":        {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
+        "qst":           {"host": "http://" + "localhost" + ":5000/qst/"},
         "echo":          {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
     }
 
