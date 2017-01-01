@@ -45,6 +45,7 @@ qstApp.directiveTemplate = function () {
 				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
                   '<dynamic-answer-sheet  control="dynamicAnswerSheetControl"></dynamic-answer-sheet>' +
 				  '<button class="timButton" ng-if="button"  ng-disabled="isRunning" ng-click="qstScope.saveText();">{{button}}</button>&nbsp&nbsp' +
+                  '<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="Ask question"></span></a>' +
                   '<span ng-show="result">{{result}}</span>' +
     		      '<p class="plgfooter">Here comes footer</p>' +
               '</div>';
@@ -96,19 +97,18 @@ qstApp.initScope = function (scope, element, attrs) {
     if (n > 1) element[0].childNodes[n - 1].outerHTML = timHelper.getHeading(scope, attrs, "footer", 'p class="plgfooter"');
 
     // scope.stem = scope.attrs.markup.json.questionText;
-    var args = {};
-    args.questionjson = scope.attrs.markup.json;
+    var markup = scope.attrs.markup;
     scope.answerTable = scope.attrs.state;
     scope.questionId = 1; //args.questionId;
     scope.questionParId = 1; // args.questionParId;
     scope.questionParIdNext = 2; //args.questionParIdNext;
     scope.isLecturer = false;
-    scope.json = args.questionjson;
-    scope.questionTitle = args.questionjson.title;
-    scope.points = args.points;
-    scope.expl = args.expl;
-    //var preview = $element.parents('.previewcontent').length > 0;
-    var preview =  scope.$parent.previewReleased;
+    scope.markup = markup;
+    scope.questionTitle = markup.json.title;
+    scope.points = markup.points;
+    scope.expl = markup.expl;
+    // var preview = element.parents('.previewcontent').length > 0;
+    var preview =  false; // scope.$parent.previewUrl; // Released;
     scope.dynamicAnswerSheetControl.createAnswer("qstAnswerSheet", preview);
     scope.attrs = {}; // not needed any more
 
@@ -127,7 +127,6 @@ QstScope.prototype.initCode = function() {
 "use strict";
     var $scope = this.scope;
     $scope.muokattu = false;
-    $scope.userword = $scope.initword;
     $scope.error = "";
     $scope.result = "";
 };

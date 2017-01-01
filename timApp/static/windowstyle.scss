@@ -260,6 +260,25 @@ input[type="number"] {
     width: 100%
 }
 
+.qst label {
+    margin-bottom: 5px;
+    font-weight: normal;
+}
+
+.qst #answer-sheet-table {
+    margin-left: 2em;
+}
+
+.qst button.timButton {
+    margin-left: 2em;
+}
+
+.qstAnswerSheet h5 {
+    margin-left: 0.5em;
+    margin-top: 0.0em;
+}
+
+
 .buttons {
     margin-top: 5px;
     margin-bottom: 5px;

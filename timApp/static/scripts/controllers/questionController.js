@@ -12,6 +12,12 @@
 var angular;
 var timApp = angular.module('timApp');
 
+function cleanParId(id) {
+    var i = id.lastIndexOf(".");
+    if ( i < 0 ) return id;
+    return id.substring(i+1);
+}
+
 timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootScope', function (scope, http, $window, $rootScope) {
     "use strict";
 
@@ -56,8 +62,13 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     scope.$on("newQuestion", function (event, data) {
         scope.new_question = true;
         scope.par_id = "NEW_PAR";
+        scope.markup = {};
         scope.par_id_next = data.par_id_next;
+        scope.markup.qst = !!data.qst;
         scope.titleChanged = false;
+        if ( scope.markup.qst ) {
+            scope.question.endTimeSelected = false; // default no time
+        }
         scope.addKeyListeners();
     });
 
@@ -66,7 +77,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             var par_id = data.par_id;
             var par_id_next = data.par_id_next;
             var asked_id = data.asked_id;
-            var json = data.json;
+            var json = data.markup.json;
+            scope.markup = data.markup;
 
             scope.asked_id = false;
             scope.new_question = false;
@@ -90,11 +102,13 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             if (json["matrixType"]) scope.question.matrixType = json["matrixType"];
             if (json["answerFieldType"]) scope.question.answerFieldType = (json["answerFieldType"]);
 
-            var jsonData = json["data"];
-            var jsonHeaders = jsonData["headers"];
+            var jsonData = json.data || json;  // compability for old
+            fixQuestionJson(jsonData);
+            var jsonHeaders = jsonData.headers;
             var jsonRows = jsonData["rows"];
 
             var columnHeaders = [];
+            if ( jsonHeaders )
             for (var i = 0; i < jsonHeaders.length; i++) {
                 columnHeaders[i] = {
                     id: i,
@@ -105,8 +119,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             scope.columnHeaders = columnHeaders;
             scope.pointsTable = [];
 
-            if (data.points && data.points !== '') {
-                var points = data.points.split('|');
+            if (data.markup.points && data.markup.points !== '') {
+                var points = data.markup.points.split('|');
                 for (var i = 0; i < points.length; i++) {
                     var rowPoints = points[i].split(';');
                     var rowPointsDict = {};
@@ -120,20 +134,29 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 }
             }
             var rows = [];
+
             for (var i = 0; i < jsonRows.length; i++) {
+                var row = jsonRows[i];
+
                 rows[i] = {
-                    id: jsonRows[i].id,
-                    text: scope.putBackQuotations(jsonRows[i].text),
-                    type: jsonRows[i].type,
-                    value: jsonRows[i].value
+                    id: row.id,
+                    text: scope.putBackQuotations(row.text),
+                    type: row.type,
+                    value: row.value  // TODO: mikä on value?
                 };
 
-                var idString = rows[i].id.toString();
-                if (data.expl && idString in data.expl) {
-                    rows[i].expl = data.expl[idString];
+                var idString = ""+i; // rows[i].id.toString();
+                if (data.markup.expl && idString in data.markup.expl) {
+                    rows[i].expl = data.markup.expl[idString];
                 }
 
                 var jsonColumns = jsonRows[i]["columns"];
+                if (!jsonColumns ) {
+                    jsonColumns = [{}];
+                    var nh = 0; if ( columnHeaders ) nh = columnHeaders.length;
+                    for (var ic = 1; ic< nh; ic++) jsonColumns.push({});
+                }
+
                 var columns = [];
                 for (var j = 0; j < jsonColumns.length; j++) {
                     var columnPoints = '';
@@ -292,21 +315,46 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         {label: "Checkbox", value: "checkbox"}
     ];
 
+
+
     /**
      * A function for creating a matrix.
      * @memberof module:questionController
      * @param type The answer type of the matrix.
      */
     scope.createMatrix = function (type) {
+
+        if ( !scope.oldHeaders ) scope.oldHeaders = [];
+
+        for (var i=0; i < scope.columnHeaders.length; i++) {
+            if ( scope.columnHeaders[i].text ) scope.oldHeaders[i] = scope.columnHeaders[i].text;
+        }
+
+
+        var oldRows = scope.rows.count || 1;
+        var oldCols = 1;
+        if ( scope.rows.count ) oldCols = scope.rows[0].columns.length;
+
+        var constHeaders = {};
+        constHeaders["true-false"] = ["True", "False"];
+        constHeaders["likert"] = ["1", "2", "3", "4", "5"];
         var rowsCount = 0;
         var columnsCount = 0;
         if (type === 'matrix' || type === 'true-false') {
-            rowsCount = 2;
-            columnsCount = 2;
+            rowsCount = Math.max(2,oldRows);
+            columnsCount = Math.max(2,oldCols);
+        } else  if (type === 'textarea' ) {
+            rowsCount = Math.max(1,oldRows);
+            columnsCount = Math.max(1,oldCols);
+        } else  if ( type === "likert") {
+            rowsCount = Math.max(2,oldRows);
+            columnsCount = Math.max(5,oldCols);
         } else {
-            rowsCount = 4;
+            rowsCount = Math.max(4,oldRows);
             columnsCount = 1;
         }
+
+
 
         if (scope.rows.length < 1) {
             for (var i = 0; i < rowsCount; i++) {
@@ -315,29 +363,52 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
 
 
-        if (type === 'radio-vertical' || type === 'true-false') {
+        if (type === 'radio-vertical' || type === 'true-false' || type === "likert") {
             scope.question.answerFieldType = 'radio';
         } else if (type === 'checkbox-vertical') {
             scope.question.answerFieldType = 'checkbox';
         } else if (type === 'matrix') {
             scope.question.answerFieldType = 'matrix';
+        } else if (type === 'textarea') {
+            scope.question.answerFieldType = 'text';
         }
 
         for (var i = 0; i < scope.rows.length; i++) {
             if (scope.rows[i].columns.length > columnsCount) scope.rows[i].columns.splice(columnsCount, scope.rows[i].columns.length);
-            if (scope.rows[i].columns.length < columnsCount) scope.addCol(scope.rows[0].columns.length);
+            while (scope.rows[i].columns.length < columnsCount) scope.addCol(scope.rows[0].columns.length);
+        }
+
+        var t = type;
+        if (type === 'textarea' ||  type === "likert") {
+            type = "matrix";
         }
 
         scope.columnHeaders = [];
-        if (type === 'matrix') {
+        if (type === 'matrix' || type === 'true-false') {
             for (var i = 0; i < scope.rows[0].columns.length; i++) {
+                var text = '';
+                var ch = constHeaders[t];
+                if ( ch && i < ch.length  ) text = ch[i];
+                if ( i < scope.oldHeaders.length && scope.oldHeaders[i] ) text = scope.oldHeaders[i];
                 scope.columnHeaders[i] = {
                     id: i,
-                    text: "",
+                    text: text,
                     type: 'header'
                 };
             }
         }
+
+        if ( t === 'likert' ) {
+            scope.question.matrixType = 'radiobutton-horizontal';
+        }
+
+        if ( t == 'textarea') {
+            scope.question.matrixType = 'textArea';
+        }
+
+        scope.question.type = type;
+
+        // scope.columnHeaders = columnHeaders;
     };
 
     /**
@@ -606,6 +677,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         var points = '';
         var separator = '';
         var separator2 = '';
+        var n = 0;
         if (scope.question.type === 'matrix' || scope.question.type === 'true-false') {
             if (scope.question.matrixType !== 'textArea') {
                 for (var i = 0; i < scope.rows.length; i++) {
@@ -618,6 +690,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                             var id = parseInt(currentColumn.id) + 1;
                             points += id.toString() + ':' + parseFloat(currentColumn.points) || 0;
                             separator2 = ';';
+                            n++;
                         }
                     }
                     separator = '|';
@@ -632,10 +705,12 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                     var id = parseInt(scope.rows[i].id) + 1;
                     points += id.toString() + ':' + parseFloat(currentColumn.points) || 0;
                     separator2 = ';';
+                    n++;
                 }
             }
         }
-        return points;
+        if ( n ) return points;
+        return null;
     };
 
     /**
@@ -644,13 +719,16 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
      */
     scope.createExplanation = function () {
         var expl = {};
+        var n = 0;
         for (var i = 0; i < scope.rows.length; i++) {
             var row = scope.rows[i];
             if (row.expl && row.expl.trim()) {
                 expl[row.id] = row.expl.trim();
+                n++;
             }
         }
-        return expl;
+        if ( n ) return expl;
+        return null;
     };
 
     /**
@@ -674,9 +752,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             scope.errorize("qType", "Question type must be selected.");
         } else if (scope.question.type === "matrix" && (scope.question.matrixType === undefined || scope.question.matrixType === "")) {
             scope.errorize("check", "Answer type must be selected.");
-        } else if ((scope.question.type === "radio-vertical" ||
+        } else if ( /*(scope.question.type === "radio-vertical" ||
             scope.question.type === "checkbox-vertical" ||
-            scope.question.type === "true-false") &&
+            scope.question.type === "true-false") && */
             scope.rowHeadingsEmpty(scope.rows)) {
             scope.errorizeClass("rowHeading", "All rows must be filled in.");
         }
@@ -741,7 +819,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         scope.question.title = scope.replaceLinebreaksWithHTML(scope.question.title);
 
         var headersJson = [];
-        if (scope.question.type === "matrix") {
+        if (scope.question.type === "matrix" || scope.question.type === "true-false" || scope.question.type == "" ) {
             for (i = 0; i < scope.columnHeaders.length; i++) {
                 var header = {
                     'type': scope.columnHeaders[i].type,
@@ -751,6 +829,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 headersJson.push(header);
             }
         }
+
 
         var rowsJson = [];
         for (var i = 0; i < scope.rows.length; i++) {
@@ -780,12 +859,13 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             'answerFieldType': scope.question.answerFieldType,
             'matrixType': scope.question.matrixType,
             'timeLimit': timeLimit,
-            'data': {'headers': headersJson, 'rows': rowsJson}
+            'headers': headersJson,
+            'rows': rowsJson
         };
 
-        scope.json = questionjson;
+        scope.markup.json = questionjson;
         scope.dynamicAnswerSheetControl.createAnswer();
-        return questionjson;
+        return minimizeJson(questionjson);
     };
 
     /**
@@ -795,25 +875,13 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     scope.createQuestion = function (ask) {
         var questionjson = scope.createJson();
         if (!questionjson) return;
-        var points = scope.createPoints();
-        var expl = scope.createExplanation();
         var doc_id = scope.docId;
 
-        /*
-        // Create markdown for question to be saved as a paragraph
-        var md = '``` {question="' + scope.question.title + '"}\n';
-        md += 'points: ' + points + '\n';
-        md += 'expl: ' + JSON.stringify(expl) + '\n';
-        md += 'json: \n';
-        var questionjsonmd = JSON.stringify(questionjson, null, 4);
-        questionjsonmd = questionjsonmd.replace(/.+/g, '    $&');
-        md += questionjsonmd + '\n';
-        md += '```';
-        */
-        var md = {}; // '``` {question="' + scope.question.title + '"}\n';
-        md.question = scope.question.title;
-        md .points = points;
-        md.expl = expl;
+        var md = scope.markup;
+        var points = scope.createPoints();
+        if ( points ) md.points = points; else delete md.points;
+        var expl = scope.createExplanation();
+        if ( expl ) md.expl = expl; else delete md.expl;
         md.json = questionjson;
         md = JSON.stringify(md, null, 4);
 
@@ -821,9 +889,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         // console.log(yaml);
 
         // Without timeout 'timelimit' won't be saved in settings session variable. Thread issue?
-        scope.settings['timelimit'] = questionjson.timeLimit.toString();
+        scope.settings['timelimit'] = questionjson.timeLimit || "";
         setTimeout(function () {
-            setsetting('timelimit', questionjson.timeLimit.toString());
+            var v = questionjson.timeLimit || "";
+            if ( !v ) v = 0;
+            setsetting('timelimit', ""+v );
         }, 1000);
         
         var route = '/postParagraphQ/';
@@ -833,7 +903,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         http.post(route, angular.extend({
             docId: doc_id,
             text: md,
-            par: scope.par_id,
+            par: cleanParId(scope.par_id),
             par_next: scope.par_id_next
         })).success(function (data) {
             $window.console.log("The question was successfully added to database");
@@ -850,7 +920,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                     "question_id": scope.qId,
                     "doc_id": scope.docId,
                     "par_id": pid,
-                    "json": scope.json
+                    "markup": scope.markup
                 });
             }
             scope.close();

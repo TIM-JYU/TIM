@@ -1,6 +1,9 @@
 """Routes for qst (question) plugin"""
 from flask import Blueprint, render_template
 import binascii
+import routes.lecture
+
+from routes.lecture import *
 
 from options import get_option
 from routes.accesshelper import verify_manage_access, verify_ownership, get_rights, verify_view_access, \
@@ -38,9 +41,16 @@ def qst_reqs():
 @qst_plugin.route("/qst/answer/", methods=["PUT"])
 def qst_answer():
     jsondata = request.get_json()
-    save = jsondata['input']['answers']
+    tim_info = {}
+    answers = jsondata['input']['answers']
+    spoints = jsondata['markup']['points']
+    if spoints:
+        points_table = create_points_table(spoints)
+        points = calculate_points_from_json_answer(answers, points_table)
+        tim_info["points"] = points
+    save = answers
     web = {'result': "Vastattu"}
-    return jsonResponse({'save': save,'web': web })
+    return jsonResponse({'save': save, 'web': web, "tim_info": tim_info})
 
 
 @qst_plugin.route("/qst/multihtml/", methods=["POST"])

@@ -2,13 +2,14 @@
     <div class="questionTable">
         <table class="table" id="question-table">
             <thead>
-            <tr ng-show="question.type == 'matrix' || question.type == 'true-false'">
+            <tr ng-show="question.type == 'matrix' || question.type == 'true-false' ">
                 <th class="emptyBlock"></th>
 
-                <th ng-show="question.type == 'true-false'" class="true-false-title">True</th>
-                <th ng-show="question.type == 'true-false'" class="true-false-title">False</th>
+                <!--<th ng-show="question.type == 'true-false'" class="true-false-title">True</th>
+                <th ng-show="question.type == 'true-false'" class="true-false-title">False</th>-->
 
-                <th ng-repeat="item in columnHeaders" ng-if="question.type == 'matrix'" id="row-heading">
+                <!--<th ng-repeat="item in columnHeaders" ng-if="question.type == 'matrix' || question.type == 'true-false' " id="row-heading">-->
+                <th ng-repeat="item in columnHeaders"  id="row-heading">
                     {{ asked_id !== false ? columnHeaders[$index].text : "" }}
                     <div style="position: relative" ng-if="!asked_id">
                     <div class="cart">
@@ -16,13 +17,13 @@
                                   ng-model="columnHeaders[$index].text"></textarea>
                         <br/>
                     </div>
-                    <div class="buttonsTop">
+                    <div class="buttonsTop" ng-if ="question.type != 'true-false'">
                         <button class="timButton btn-xs" tabindex="-1" ng-click="addCol($index)"><span class="glyphicon glyphicon-plus"></span></button>
                         <button class="timButton btn-xs btn-danger" tabindex="-1" ng-click="delCol($index)"><span class="glyphicon glyphicon-minus"></span></button>
                     </div>
                     </div>
                 </th>
-                <th ng-if="question.type == 'matrix' && !asked_id">
+                <th ng-if="(question.type == 'matrix' ) && !asked_id">
                     <button class="wideButton" ng-click="addCol(-1)"><span class="glyphicon glyphicon-plus"></span></button>
                 </th>
 
@@ -30,7 +31,7 @@
             </thead>
             <tbody>
             <tr ng-repeat="row in rows">
-                <th id="row-heading">
+                <th id="left-question-row-heading">
                     {{ asked_id !== false ? row.text : "" }}
                     <div style="position: relative" ng-if="asked_id === false">
                     <textarea class="rowHeading questiontext" ng-model="row.text" form="question-form" rows="1"  id = "{{ 'r'+row.id }}"></textarea>
@@ -42,7 +43,7 @@
                 </th>
                 <td ng-repeat="column in row.columns" class="answer-columns">
                     <!-- Horizontal radio-button-->
-                    <div ng-if="(question.matrixType == 'radiobutton-horizontal' && question.type=='matrix') || question.type == 'true-false'">
+                    <div ng-if="(question.matrixType == 'radiobutton-horizontal' && question.type=='matrix') || question.type == 'true-false' ">
                         <!-- ng-model="row.id" -->
                         <div><input type="radio"
                                ng-value="column.id"

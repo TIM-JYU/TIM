@@ -178,17 +178,36 @@ def rename_task_ids():
         return jsonResponse({'versions': chg, 'fulltext': doc.export_markdown(), 'duplicates': duplicates})
 
 
+def delete_key(d, key):
+    if key in d:
+        del d[key]
+
 def question_convert_js_to_yaml(md):
-    mdjson = json.loads(md)
-    question = mdjson["question"]
-    del mdjson["question"]
-    mdyaml = yaml.dump(mdjson) # spoils ä and so on..
+    # save question. How to pick up question see lecture.py, get_question_data_from_document
+    markup = json.loads(md)
+    question = markup["json"]["title"]
+    question = question.replace('"', '').replace("'", '')
+    taskid = question.replace(" ","") # TODO: make better conversion to ID
+    oldid = markup.get('taskId')
+    if not oldid:
+        markup['taskId'] = taskid
+    else:
+        taskid = oldid
+    qst = markup.get("qst", False)
+    delete_key(markup, "question")  # old attribute
+    delete_key(markup, "taskId")
+    delete_key(markup, "qst")
+    mdyaml = yaml.dump(markup) # spoils ä and so on..
     mdyaml = mdyaml.replace("\\xC4","Ä").replace("\\xD6","Ö").replace("\\xC5","Å").replace("\\xE4","ä").replace("\\xF6","ö").replace("\\xE5","å")
-    return '``` {question="' + question + '"}\n'  + mdyaml + '```\n'
+    prefix = ' '
+    if qst:
+        prefix = ' d'  # like document question
+    result = '``` {#' + taskid + prefix + 'question="' + question + '" plugin="qst"}\n' + mdyaml + '```\n'
+    return result
 
 
 @edit_page.route("/postParagraphQ/", methods=['POST'])
-def modify_paragraphQ():
+def modify_paragraph_q():
     """
     Route for modifying a question editor paragraph in a document.
 

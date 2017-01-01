@@ -110,8 +110,7 @@ def pluginify(doc: Document,
         attr_taskid = block.get_attr('taskId')
         plugin_name = block.get_attr('plugin')
 
-
-        if plugin_name:
+        if plugin_name and not block.is_question():
             vals = parse_plugin_values(block, global_attrs=settings.global_plugin_attrs(),
                                        macros=settings.get_macros_with_user_specific(user),
                                        macro_delimiter=settings.get_macro_delimiter())

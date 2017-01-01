@@ -1,10 +1,8 @@
 <div ng-controller="QuestionPreviewController" class="popUpWindow questionPopUp">
     <div class="questionPreview">
         <div id="questionTypeAndTimeLimit">
-            <span>Time limit:</span>
-            <span ng-if="json.timeLimit > 0"
-                  ng-bind="json.timeLimit">{{ json.timeLimit }} seconds</span>
-            <span ng-if="json.timeLimit <= 0">No time limit.</span>
+            <span ng-if="markup.json.timeLimit > 0" >Time limit: {{ markup.json.timeLimit }} seconds</span>
+            <span ng-if="!markup.json.timeLimit">No time limit.</span>
         </div>
         <dynamic-answer-sheet preview="true" control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
     </div>

@@ -112,6 +112,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
          * @memberof module:sidebarMenuCtrl
          */
         $scope.toggleQuestions = function () {
+            // Does not work anymore after changing questions part of document
             $scope.lectureQuestions = [];
             $http({
                 url: '/questions/' + $scope.docId,

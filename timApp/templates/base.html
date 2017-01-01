@@ -89,6 +89,13 @@
                 }
             });
 
+            timApp.filter('timtim', function ($filter) {
+                var dateFilter = $filter('date');
+                return function (date) {
+                    return dateFilter(date, 'HH:mm:ss');
+                }
+            });
+
             var current_user = {{ current_user|tojson }};
             var other_users = {{ other_users|tojson }};
             var bookmarks = {{ bookmarks|tojson }};

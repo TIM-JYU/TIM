@@ -298,7 +298,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
          * Use data.par_id to ask a question from document.
          */
         $scope.$on("askQuestion", function (event, data) {
-            $scope.json = data.json;
+            $scope.markup = data.markup;
             var args = {
                 lecture_id: data.lecture_id,
                 doc_id: data.doc_id,
@@ -318,7 +318,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                     if ($scope.lectureSettings.useAnswers) {
                         // Because of dynamic creation needs to wait 1ms to ensure that the directive is made(maybe?)
                         $timeout(function () {
-                            $rootScope.$broadcast("createChart", $scope.json);
+                            $rootScope.$broadcast("createChart", $scope.markup.json);
                             $scope.showStudentAnswers = false;
                         }, 1);
 
@@ -327,14 +327,14 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                         $scope.getLectureAnswers(answer);
                     }
                     $rootScope.$broadcast("setQuestionJson", {
-                        questionjson: $scope.json,
+                        markup: $scope.markup,
                         questionParId: data.par_id,
                         questionId: data.question_id,
                         askedId: id,
+                        isAsking: true,
                         isLecturer: $scope.isLecturer,
                         askedTime: new Date().valueOf() + $scope.clockOffset,
                         clockOffset: $scope.clockOffset,
-                        expl: data.expl
                     });
                     $scope.showAnswerWindow = true;
                 })
@@ -413,20 +413,21 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
         $scope.$on("answerToQuestion", function (event, answer) {
             $scope.current_question_id = false;
             if (!$scope.isLecturer) $scope.showAnswerWindow = false;
+            /*
             var mark = "";
             var answerString = "";
             angular.forEach(answer.answer, function (singleAnswer) {
                 answerString += mark + singleAnswer;
                 mark = "|";
             });
-
+            */
             http({
                 url: '/answerToQuestion',
                 method: 'PUT',
                 params: {
                     'asked_id': answer.askedId,
                     'lecture_id': $scope.lectureId,
-                    'answers': answerString,
+                    'input': {'answers': answer.answer},        // 'answer': answerString,
                     'buster': new Date().getTime()
                 }
             })
@@ -1132,12 +1133,14 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             var showPoints = '';
             if (answer.result) showPoints = 'Show points: ';
             $scope.showAnswerWindow = true;
-            var json = JSON.parse(answer.questionjson);
-            var expl = {};
+            var markup = JSON.parse(answer.questionjson);
+            if ( !markup.json ) markup = { json: markup }; // compability for old
+            markup.expl = {};
             if (answer.expl) {
-                expl = JSON.parse(answer.expl)
+                markup.expl = JSON.parse(answer.expl)
             }
-            $scope.questionTitle = showPoints + json.title;
+
+            $scope.questionTitle = showPoints + markup.json.title;
             if (answer.result) {
                 $scope.current_question_id = false;
                 $scope.current_points_id = answer.askedId;
@@ -1145,12 +1148,11 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             $rootScope.$broadcast("setQuestionJson", {
                 result: answer.result,
                 answer: answer.answer,
-                questionjson: json,
+                markup: markup,
                 askedId: answer.askedId,
                 isLecturer: $scope.isLecturer,
                 askedTime: answer.asked,
                 clockOffset: $scope.clockOffset,
-                expl: expl
             });
         };
 

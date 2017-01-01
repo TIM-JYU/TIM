@@ -251,12 +251,14 @@ class Questions(TimDbBase):
         for_db = str(asked_ids)
         for_db = for_db.replace("[", "")
         for_db = for_db.replace("]", "")
-        cursor.execute("""
+        sql = """
                       SELECT *
                       FROM AskedQuestion q
                       JOIN AskedJson j
                       ON q.asked_json_id = j.asked_json_id
                       WHERE q.asked_id IN (""" + for_db + """)
-                      """)
+                      ORDER BY q.asked_id
+                      """
+        cursor.execute(sql)
 
         return self.resultAsDictionary(cursor)
