@@ -72,7 +72,7 @@ else:
 def call_plugin_generic(plugin, method, route, data=None, headers=None, params=None):
     plug = get_plugin(plugin)
     try:
-        request = requests.request(method, plug['host'] + route + "/", data=data, timeout=(0.5, 15), headers=headers, params=params)
+        request = requests.request(method, plug['host'] + route + "/", data=data, timeout=(0.5, 30), headers=headers, params=params)
         request.encoding = 'utf-8'
         return request.text
     except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError) as e:

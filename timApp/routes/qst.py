@@ -43,7 +43,7 @@ def qst_answer():
     jsondata = request.get_json()
     tim_info = {}
     answers = jsondata['input']['answers']
-    spoints = jsondata['markup']['points']
+    spoints = jsondata['markup'].get('points')
     if spoints:
         points_table = create_points_table(spoints)
         points = calculate_points_from_json_answer(answers, points_table)
