@@ -421,13 +421,7 @@ def par_response(pars,
 def get_pars_from_editor_text(doc: Document, text: str,
                               break_on_elements: bool = False, skip_access_check: bool = False) -> List[DocParagraph]:
 
-    options = DocumentParserOptions()
-    options.break_on_code_block = break_on_elements
-    options.break_on_header = break_on_elements
-    options.break_on_normal = break_on_elements
-    blocks = [DocParagraph.create(doc=doc, md=par['md'], attrs=par.get('attrs'))
-              for par in DocumentParser(text).validate_structure(
-                  is_whole_document=False).get_blocks(options)]
+    blocks = doc.text_to_paragraphs(text, break_on_elements)
     timdb = get_timdb()
     for p in blocks:
         if p.is_reference():

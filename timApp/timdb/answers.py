@@ -13,14 +13,14 @@ from timdb.timdbbase import TimDbBase
 
 
 class Answers(TimDbBase):
-    def saveAnswer(self,
-                   user_ids: List[int],
-                   task_id: str,
-                   content: str,
-                   points: Optional[float],
-                   tags: List[str],
-                   valid: bool=True,
-                   points_given_by=None):
+    def save_answer(self,
+                    user_ids: List[int],
+                    task_id: str,
+                    content: str,
+                    points: Optional[float],
+                    tags: Optional[List[str]]=None,
+                    valid: bool=True,
+                    points_given_by=None):
         """
         Saves an answer to the database.
         
@@ -32,7 +32,8 @@ class Answers(TimDbBase):
         :param content: The content of the answer.
         :param points: Points for the task.
         """
-
+        if tags is None:
+            tags = []
         existing_answers = self.get_common_answers(user_ids, task_id)
         if len(existing_answers) > 0 and existing_answers[0]['content'] == content:
             existing_id = existing_answers[0]['id']
@@ -104,10 +105,10 @@ class Answers(TimDbBase):
         template = ','.join(['%s'] * len(task_ids))
         c = self.db.cursor()
         c.execute("""
-        SELECT task_id, content, points, answered_on
+        SELECT task_id, content, points, answered_on, valid, cnt
         FROM
         (
-        SELECT MAX(Answer.id) as aid
+        SELECT MAX(Answer.id) as aid, COUNT(Answer.id) as cnt
         FROM Answer
         JOIN UserAnswer ON Answer.id = UserAnswer.answer_id
         WHERE task_id IN ({})
@@ -416,10 +417,22 @@ ORDER BY {}, a.answered_on
         return result
 
     def get_answer(self, answer_id: int) -> Optional[dict]:
+        """Gets data for a single answer.
+        The field 'cnt' is the 1-based index of the answer for the user (or the set of collaborators) for the task.
+        So cnt for the first answer is always 1.
+        """
         cursor = self.db.cursor()
         cursor.execute("""SELECT id, task_id, content, points,
-                                 answered_on, valid
-                          FROM Answer
+                                 answered_on, valid, cnt
+                          FROM Answer a
+                          CROSS JOIN LATERAL (
+                            SELECT COUNT(*) as cnt
+                            FROM Answer b
+                            JOIN useranswer ua ON ua.answer_id = b.id
+                            WHERE b.task_id = a.task_id
+                              AND b.answered_on <= a.answered_on
+                              AND ua.user_id IN (SELECT user_id FROM useranswer WHERE answer_id = a.id)
+                          ) t
                           WHERE id = %s
                           ORDER BY answered_on DESC""", [answer_id])
 

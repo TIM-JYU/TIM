@@ -5,6 +5,7 @@ import sqlalchemy.exc
 
 import dumboclient
 import initdb2
+from documentmodel.document import Document
 from filemodehelper import change_permission_and_retry
 from tim_app import app
 from timdb.tim_models import db
@@ -53,6 +54,25 @@ class TimDbTest(unittest.TestCase):
                 see https://pythonhosted.org/Flask-Testing/#testing-with-sqlalchemy"""
         db.session.remove()
         self.db.close()
+
+    def init_doc(self, doc: Document, from_file, initial_par, settings):
+        if from_file is not None:
+            with open(from_file, encoding='utf-8') as f:
+                doc.add_text(f.read())
+        elif initial_par is not None:
+            doc.add_text(initial_par)
+        if settings is not None:
+            doc.set_settings(settings)
+
+    def get_test_user_1_group_id(self):
+        return self.db.users.get_personal_usergroup_by_id(TEST_USER_1_ID)
+
+    def get_test_user_2_group_id(self):
+        return self.db.users.get_personal_usergroup_by_id(TEST_USER_2_ID)
+
+    def assert_dict_subset(self, data, subset):
+        for k, v in subset.items():
+            self.assertEqual(data[k], v, msg='Key {} was different'.format(k))
 
 
 TEST_USER_1_ID = 4

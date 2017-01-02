@@ -83,10 +83,9 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None, params=N
         raise PluginException("Read timeout occurred when calling {}.".format(plugin))
 
 
-def call_plugin_html(plugin, info, state, task_id=None, params=None):
-    data_dict = {"markup": info, "state": state, "taskID": task_id}
-    data_dict.update(params or {})
-    plugin_data = json.dumps(data_dict,
+def call_plugin_html(plugin, plugin_data, params=None):
+    plugin_data.update(params or {})
+    plugin_data = json.dumps(plugin_data,
                              cls=TimJsonEncoder)
     return call_plugin_generic(plugin,
                                'post',
