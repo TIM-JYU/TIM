@@ -15,6 +15,7 @@ from timdb.accesstype import AccessType
 from timdb.blocktypes import blocktypes
 from timdb.models.block import Block
 from timdb.tim_models import AnswerUpload, Answer, db
+from timdb.timdbexception import TimDbException
 from .common import *
 
 answers = Blueprint('answers',
@@ -67,12 +68,17 @@ def post_answer(plugintype: str, task_id_ext: str):
     task_id = str(doc_id) + '.' + str(task_id_name)
     verify_task_access(doc_id, task_id_name, AccessType.view)
     doc = Document(doc_id)
-    if par_id is None:
-        par = get_par_from_request(doc, task_id_name=task_id_name)
-    else:
-        par = get_par_from_request(doc, par_id)
-        if par.get_attr('taskId') != task_id_name:
-            abort(400)
+    try:
+        if par_id is None:
+            par = get_par_from_request(doc, task_id_name=task_id_name)
+        else:
+            par = get_par_from_request(doc, par_id)
+            if par.get_attr('taskId') != task_id_name:
+                abort(400)
+    except TimDbException as e:
+        # This happens when plugin tries to call answer route when previewing because the preview par is temporary
+        # and not part of the document.
+        abort(400, str(e))
     if 'input' not in request.get_json():
         return jsonResponse({'error': 'The key "input" was not found from the request.'}, 400)
     answerdata = request.get_json()['input']
