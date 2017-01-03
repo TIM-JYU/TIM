@@ -13,6 +13,7 @@ from flask import Blueprint
 from routes.accesshelper import verify_logged_in
 from timdb.annotations import Annotations
 from .common import *
+import re
 
 annotations = Blueprint('annotations',
                         __name__,
@@ -76,6 +77,12 @@ def add_annotation() -> Dict:
     points = json_data.get('points')
     icon_id = json_data.get('icon_id')
     answer_id = json_data.get('answer_id')
+    color = json_data.get('color')
+    print(color)
+
+    if len(color) > 0 and not is_hex_string(color):
+        print("Ei tännE")
+        return abort(400, "Color should be a hex string or None, e.g. '#FFFFFF'.")
 
     # default_comment = ""
     # if (len(json_data.get('comments')) > 0):
@@ -92,14 +99,15 @@ def add_annotation() -> Dict:
     verify_logged_in()
 
     annotator_id = get_current_user_id()
+    print("hei1")
     annotator_name = timdb.users.get_user(annotator_id)['name']
     velp_version_id = timdb.velps.get_latest_velp_version(velp_id)["id"]
-
+    print("hei2")
     new_id = timdb.annotations.create_annotation(velp_version_id, visible_to, points, annotator_id, document_id,
                                                  paragraph_id_start, paragraph_id_end, offset_start, node_start,
                                                  depth_start, offset_end, node_end, depth_end, hash_start, hash_end,
-                                                 element_path_start, element_path_end, None, icon_id, answer_id)
-
+                                                 element_path_start, element_path_end, None, icon_id, color, answer_id)
+    print(new_id)
     # if len(default_comment) > 0:
     #     comment_data = dict(content=default_comment, annotation_id=new_id)
     #     add_comment_helper(comment_data)
@@ -116,6 +124,7 @@ def update_annotation():
 
     Optional key(s):
         - visible_to: visibility group number (1-4)
+        - color: color as hex string e.g. "#FFFFFF"
         - points: number of points
         - doc_id: document ID.
 
@@ -131,6 +140,7 @@ def update_annotation():
     visible_to = json_data.get('visible_to')
     points = json_data.get('points')
     doc_id = json_data.get('doc_id')
+    color = json_data.get('color')
     timdb = get_timdb()
     # Get values from the database to fill in unchanged new values.
     new_values = timdb.annotations.get_annotation(annotation_id)
@@ -146,6 +156,10 @@ def update_annotation():
         except ValueError as e:
             return abort(400, "Visibility should be 1, 2, 3 or 4.")
         new_values['visible_to'] = visible_to
+    if color:
+        if not is_hex_string(color):
+            return  abort(400, "Color should be a hex string, e.g. '#FFFFFF'.")
+        new_values['color'] = color
     if timdb.users.has_teacher_access(user_id, doc_id):
         new_values['points'] = points
     else:
@@ -154,8 +168,22 @@ def update_annotation():
         else:
             new_values['points'] = None
     timdb.annotations.update_annotation(new_values['id'], new_values['velp_version_id'],
-                                        new_values['visible_to'], new_values['points'], new_values['icon_id'])
+                                        new_values['visible_to'], new_values['points'], new_values['icon_id'],
+                                        new_values['color'])
     return okJsonResponse()
+
+
+def is_hex_string(color: str) -> bool:
+    """ Checks if string is valid HTML hex string
+
+    :param color:
+    :return:
+    """
+    exp = r"#[a-fA-F0-9]{6}"
+    check = re.match(exp, color)
+    if check is not None:
+        return check.group() == color
+    return False
 
 
 @annotations.route("/invalidate_annotation", methods=['POST'])

@@ -98,19 +98,20 @@ class Velps(TimDbBase):
                        )
         self.db.commit()
 
-    def update_velp(self, velp_id: int, default_points: str, icon_id: str):
+    def update_velp(self, velp_id: int, default_points: str, icon_id: str, color: str):
         """Changes the non-versioned properties of a velp. Does not update labels.
 
         :param velp_id: ID of velp that's being updated
         :param default_points: New default points
         :param icon_id: ID of icon
+        :param color: Velp color
         """
         cursor = self.db.cursor()
         cursor.execute("""
                        UPDATE Velp
-                       SET icon_id = %s, default_points = %s
+                       SET icon_id = %s, default_points = %s, color = %s
                        WHERE id = %s
-                       """, [icon_id, default_points, velp_id]
+                       """, [icon_id, default_points, color, velp_id]
                        )
         self.db.commit()
 

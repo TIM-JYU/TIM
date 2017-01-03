@@ -338,6 +338,7 @@ def update_velp(doc_id: int):
 
     default_points = json_data.get('points')
     default_comment = json_data.get('default_comment')
+    color = json_data.get('color')
     icon_id = json_data.get('icon_id')
     new_labels = json_data.get('labels')
     timdb = get_timdb()
@@ -394,7 +395,7 @@ def update_velp(doc_id: int):
         timdb.velps.create_velp_content(version_id, language_id, new_content, default_comment)
     if old_labels != new_labels:
         timdb.velps.update_velp_labels(velp_id, new_labels)
-    timdb.velps.update_velp(velp_id, default_points, icon_id)
+    timdb.velps.update_velp(velp_id, default_points, icon_id, color)
 
     response = okJsonResponse()
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'

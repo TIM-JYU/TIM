@@ -40,7 +40,7 @@ class Annotations(TimDbBase):
                           paragraph_id_end: Optional[str], offset_start: int, node_start: int, depth_start: int,
                           offset_end: int, node_end: int, depth_end: int, hash_start: Optional[str],
                           hash_end: Optional[str], element_path_start: str, element_path_end: str,
-                          valid_until: Optional[str] = None, icon_id: Optional[int] = None,
+                          valid_until: Optional[str] = None, icon_id: Optional[int] = None, color: Optional[str] = "",
                           answer_id: Optional[int] = None) -> int:
         """Create a new annotation.
 
@@ -63,6 +63,7 @@ class Annotations(TimDbBase):
         :param element_path_end: List of elements as text (parsed in interface) connected to annotation end.
         :param valid_until: Datetime until which annotation is valid for, 'none' for forever.
         :param icon_id: ID of icon associated with annotation, can be 'none'.
+        :param color: Color as hex string.
         :param answer_id: ID of answer if annotation is located within one.
         :return: ID of the new, just added annotation.
         """
@@ -72,6 +73,7 @@ class Annotations(TimDbBase):
                        points=points,
                        valid_until=valid_until,
                        icon_id=icon_id,
+                       color=color,
                        annotator_id=annotator_id,
                        document_id=document_id,
                        answer_id=answer_id,
@@ -93,7 +95,7 @@ class Annotations(TimDbBase):
         return a.id
 
     def update_annotation(self, annotation_id: int, version_id: Optional[int], visible_to: AnnotationVisibility,
-                          points: Optional[float], icon_id: Optional[int]):
+                          points: Optional[float], icon_id: Optional[int], color: Optional[str]):
         """Changes an existing annotation.
 
         :param annotation_id: annotation to be changed.
@@ -101,6 +103,7 @@ class Annotations(TimDbBase):
         :param visible_to: visibility of the annotation
         :param points: Points given, overrides velp's default and can be null
         :param icon_id: Icon id, can be null
+        :param color: Color as hex, can be null
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -109,9 +112,10 @@ class Annotations(TimDbBase):
                         velp_version_id = %s,
                         visible_to      = %s,
                         points          = %s,
-                        icon_id         = %s
+                        icon_id         = %s,
+                        color           = %s
                       WHERE id = %s
-                      """, [version_id, visible_to.value, points, icon_id, annotation_id]
+                      """, [version_id, visible_to.value, points, icon_id, color, annotation_id]
                        )
         self.db.commit()
 
@@ -272,6 +276,7 @@ class Annotations(TimDbBase):
                         annotation.creation_time as creationtime,
                         annotation.valid_until,
                         annotation.icon_id,
+                        annotation.color AS color,
                         annotation.annotator_id,
                         Annotation.annotator_id = %s AS edit_access,
                         useraccount.name AS annotator_name,

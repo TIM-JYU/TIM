@@ -499,6 +499,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
     };
 
+    $scope.changeAnnotationColor = function (id, color) {
+        for (var i = 0; i < $scope.annotations.length; i++) {
+            if ($scope.annotations[i].id === id) {
+                $scope.annotations[i].color = color;
+                break;
+            }
+        }
+    };
+
     /**
      * Adds a comment to the given annotation.
      * @method addComment
@@ -836,6 +845,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             if (answer_id !== null)
                 newAnnotation.answer_id = answer_id.selectedAnswer.id;
+
             addAnnotationToElement($scope.selectedElement, newAnnotation, false, "Added also margin annotation");
             $scope.addAnnotationToCoord($scope.selectedArea, newAnnotation, true);
             $scope.annotations.push(newAnnotation);

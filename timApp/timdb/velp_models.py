@@ -28,6 +28,7 @@ class Annotation(db.Model):
     depth_end = db.Column(db.Integer)
     hash_start = db.Column(db.Text)
     hash_end = db.Column(db.Text)
+    color = db.Column(db.Text)
     element_path_start = db.Column(db.Text)
     element_path_end = db.Column(db.Text)
 

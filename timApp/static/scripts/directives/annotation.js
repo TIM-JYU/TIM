@@ -67,9 +67,10 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             scope.original = {
                 points: scope.points,
                 velp: scope.velp,
+                color: scope.color,
                 visible_to: scope.visibleto,
                 comment: "",//scope.newcomment,
-                annotation_id: scope.aid
+                aid: scope.aid
             };
 
             /**
@@ -81,37 +82,27 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     scope.velpElement = element[0].getElementsByClassName("annotation-info")[0];
                 }
                 var elementName = scope.velpElement.parentNode.offsetParent.className;
-                var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', scope.aid));
-                if ( elementName === "notes" &&  annotationParents.length > 1 ){
-                    if (scope.aid > 0)
-                    {
-                        if (true) {// todo: detect is scope.$$prevSibling visible $(scope.$$prevSibling).is(':visible')
-                            scope.$$prevSibling.show = !scope.$$prevSibling.show;
-                            scope.$$prevSibling.updateVelpZIndex();
-                        } else {
-                            scope.show = !scope.show;
-                            if (scope.show) {
-                                scope.updateVelpZIndex();
-                            }
-                        }
-                    } else {
-                        scope.$$nextSibling.show = !scope.$$nextSibling.show; // TODO: causes console error!!!
-                        scope.$$nextSibling.updateVelpZIndex();
-                        //scope.show = !scope.show;
-                        //scope.velpElement.parentNode. = !scope.velpElement.parentNode.$$prevSibling.show;
-                        //annotationParents.show = !annotationParents[0].show;
-                        //scope.show = !scope.show;
-                    }
+                var annotationElements = document.querySelectorAll('[aid="{0}"]'.replace('{0}', scope.aid));
 
-                    //scope.isolateScope.show = !scope.isolateScope.show;
-                } else {
-                    scope.show = !scope.show;
-                    if (scope.show) {
-                        scope.updateVelpZIndex();
-                    } else {
-                        //console.log(scope.$parent.annotations);
+                scope.toggleAnnotationShow();
+
+
+                if ( elementName === "notes" &&  annotationElements.length > 1 ){
+                    for (var i=0; i<annotationElements.length; i++){
+                        if (annotationElements[i].parentNode.offsetParent.className !== "notes"){
+                            angular.element(
+                                annotationElements[i]
+                            ).isolateScope().toggleAnnotationShow();
+                            scope.toggleAnnotationShow();
+                        }
                     }
                 }
+
+            };
+
+            scope.toggleAnnotationShow = function () {
+                scope.show = !scope.show;
+                scope.updateVelpZIndex();
             };
 
 
@@ -193,6 +184,12 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     scope.isvalid.points.msg = "Insert a number or leave empty"
                 }
             };
+            
+            scope.changeColor = function () {
+                if (scope.color !== "") {
+                    scope.$parent.changeAnnotationColor(scope.aid, scope.color);
+                }
+            };
 
             /**
              * Saves the changes made to the annotation. Queries parent scope
@@ -230,6 +227,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     annotation_id: id,
                     visible_to: scope.visible_options.value,
                     velp: scope.velp,
+                    color: scope.color,
                     comment: scope.newcomment,
                     doc_id: scope.$parent.docId
                 };
@@ -237,6 +235,11 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 scope.$parent.makePostRequest("/update_annotation", scope.original, function (json) {
                     //console.log(json);
                 });
+            };
+
+            scope.getCustomColor = function () {
+                if (typeof scope.color !== UNDEFINED || scope.color !== null)
+                    return scope.color;
             };
 
 
@@ -286,13 +289,9 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             scope.checkIfChanged = function () {
                 if (!scope.showHidden)
                     return false;
-                if (scope.original.points !== scope.points)
-                    return true;
-                if (scope.original.comment !== scope.newcomment)
-                    return true;
-                if (scope.original.visible_to !== scope.visible_options.value)
-                    return true;
-                if (scope.original.velp !== scope.velp)
+                if (scope.original.points !== scope.points || scope.original.comment !== scope.newcomment ||
+                    scope.original.visible_to !== scope.visible_options.value || scope.original.velp !== scope.velp ||
+                    scope.original.color !== scope.color)
                     return true;
                 return false;
             };
