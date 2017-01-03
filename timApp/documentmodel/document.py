@@ -13,6 +13,7 @@ from typing import List, Optional, Set, Tuple, Union, Iterable
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.docsettings import DocSettings
 from documentmodel.documentparser import DocumentParser, AttributesAtEndOfCodeBlockException, ValidationException
+from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
 from documentmodel.exceptions import DocExistsError
 from timdb.timdbexception import TimDbException
@@ -199,6 +200,16 @@ class Document:
         start_index, end_index = all_par_ids.index(par_id_start), all_par_ids.index(par_id_end)
         return all_pars[start_index:end_index + 1]
 
+    def text_to_paragraphs(self, text: str, break_on_elements: bool):
+        options = DocumentParserOptions()
+        options.break_on_code_block = break_on_elements
+        options.break_on_header = break_on_elements
+        options.break_on_normal = break_on_elements
+        blocks = [DocParagraph.create(doc=self, md=par['md'], attrs=par.get('attrs'))
+                  for par in DocumentParser(text).validate_structure(
+                is_whole_document=False).get_blocks(options)]
+        return blocks
+
     @classmethod
     def remove(cls, doc_id: int, files_root: Optional[str] = None, ignore_exists=False):
         """
@@ -356,6 +367,10 @@ class Document:
 
     def get_paragraph(self, par_id: str) -> DocParagraph:
         return DocParagraph.get_latest(self, par_id, self.files_root)
+
+    def add_text(self, text: str) -> Iterable[DocParagraph]:
+        """Converts the given text to (possibly) multiple paragraphs and adds them to the document."""
+        return [self.add_paragraph_obj(p) for p in self.text_to_paragraphs(text, False)]
 
     def add_paragraph_obj(self, p: DocParagraph) -> DocParagraph:
         """

@@ -62,7 +62,7 @@ class DocEntry(db.Model, DocInfo):
         return DocEntry(id=-1, name=title)
 
     @staticmethod
-    def create(name: Optional[str], owner_group_id: int) -> 'DocEntry':
+    def create(name: Optional[str], owner_group_id: int, from_file=None, initial_par=None, settings=None) -> 'DocEntry':
         """Creates a new document with the specified name.
 
         :param name: The name of the document to be created (can be None). If None, no DocEntry is actually added
@@ -81,5 +81,14 @@ class DocEntry(db.Model, DocInfo):
         docentry = DocEntry(id=document_id, name=name, public=True)
         if name is not None:
             db.session.add(docentry)
+
+        if from_file is not None:
+            with open(from_file, encoding='utf-8') as f:
+                document.add_text(f.read())
+        elif initial_par is not None:
+            document.add_text(initial_par)
+        if settings is not None:
+            document.set_settings(settings)
+
         db.session.commit()
         return docentry

@@ -19,6 +19,7 @@ from tim_app import app
 from timdb.models.docentry import DocEntry
 from timdb.tempdb_models import TempDb
 from timdb.tim_models import db
+from routes.edit import delete_key
 
 lecture_routes = Blueprint('lecture',
                            __name__,
@@ -870,17 +871,21 @@ def ask_question():
 
     timdb = get_timdb()
 
+
     if question_id or par_id:
         if question_id:
-            question = timdb.questions.get_question(question_id)[0]
+            question = timdb.questions.get_question(question_id)[0] # Old version???
             question_json_str = question.get("questionjson")
+            markup = json.loads(question_json_str)
             expl = question.get("expl")
             points = question.get("points")
         else:
-            question_json_str, points, expl = get_question_data_from_document(doc_id, par_id)
-            question_json_str = json.dumps(question_json_str)
-            expl = json.dumps(expl)
-            points = points
+            markup = get_question_data_from_document(doc_id, par_id)
+            delete_key(markup, "qst")
+            # question_json_str = json.dumps(markup.get('json'))
+            question_json_str = json.dumps(markup)
+            expl = json.dumps(markup.get('expl', ''))
+            points = markup.get('points', '')
 
         if not points:
             points = "0:0"
@@ -898,14 +903,21 @@ def ask_question():
         question = timdb.questions.get_asked_question(asked_id)[0]
         asked_json = timdb.questions.get_asked_json_by_id(question["asked_json_id"])[0]
         asked_json_id = asked_json["asked_json_id"]
-        question_json_str = asked_json["json"]
+        question_json_str = asked_json["json"] # actually now markup
+        markup = json.loads(question_json_str)
 
-    question_json = json.loads(question_json_str)
+    if "json" not in markup:  # compability for old version
+        markup = {"json" : markup}
 
-    if not question_json["timeLimit"]:
-        question_timelimit = 0
-    else:
-        question_timelimit = int(question_json["timeLimit"])
+    question_timelimit = 0
+    try:
+        tl = markup.get("json").get("timeLimit", "0")
+        if not tl:
+            tl = "0"
+        question_timelimit = int(tl)
+    except:
+        pass
+
 
     ask_time = int(time.time() * 1000)
     end_time = ask_time + question_timelimit * 1000
@@ -1012,8 +1024,10 @@ def get_question_by_par_id():
     doc_id = int(request.args.get('doc_id'))
     par_id = request.args.get('par_id')
     verify_ownership(doc_id)
-    question_json, points, expl = get_question_data_from_document(doc_id, par_id)
-    return jsonResponse({"points": points, "questionjson": question_json, "expl": expl})
+    # question_json, points, expl, markup = get_question_data_from_document(doc_id, par_id)
+    # return jsonResponse({"points": points, "questionjson": question_json, "expl": expl, "markup": markup})
+    markup = get_question_data_from_document(doc_id, par_id)
+    return jsonResponse({"markup": markup})
 
 
 @lecture_routes.route("/getAskedQuestionById", methods=['GET'])
@@ -1111,14 +1125,15 @@ def get_lecture_answers():
 
 @lecture_routes.route("/answerToQuestion", methods=['PUT'])
 def answer_to_question():
-    if not request.args.get("asked_id") or not request.args.get('answers') or not request.args.get('lecture_id'):
+    if not request.args.get("asked_id") or not request.args.get('input') or not request.args.get('lecture_id'):
         abort(400, "Bad request")
 
     timdb = get_timdb()
     tempdb = getTempDb()
 
     asked_id = int(request.args.get("asked_id"))
-    answer = request.args.get("answers")
+    input = json.loads(request.args.get("input"))
+    answer = input['answers']
     whole_answer = answer
     lecture_id = int(request.args.get("lecture_id"))
     current_user = get_current_user_id()
@@ -1138,12 +1153,12 @@ def answer_to_question():
         time_now = datetime.now(timezone.utc)
         question_points = timdb.questions.get_asked_question(asked_id)[0].get("points")
         points_table = create_points_table(question_points)
-        points = calculate_points(answer, points_table)
+        points = calculate_points_from_json_answer(answer, points_table)
         if lecture_answer and current_user != 0:
             timdb.lecture_answers.update_answer(lecture_answer[0]["answer_id"], current_user, asked_id,
-                                                lecture_id, whole_answer, time_now, points)
+                                                lecture_id, json.dumps(whole_answer), time_now, points)
         else:
-            timdb.lecture_answers.add_answer(current_user, asked_id, lecture_id, whole_answer, time_now,
+            timdb.lecture_answers.add_answer(current_user, asked_id, lecture_id, json.dumps(whole_answer), time_now,
                                              points)
         tempdb.newanswers.user_answered(lecture_id, asked_id, current_user)
 
@@ -1186,18 +1201,23 @@ def create_points_table(points):
     return points_table
 
 
-def calculate_points(answer, points_table):
-    single_answers = []
-    all_answers = answer.split('|')
-    for answer in all_answers:
-        single_answers.append(answer.split(','))
-
+def calculate_points_from_json_answer(single_answers, points_table):
     points = 0.0
     for (oneAnswer, point_row) in zip(single_answers, points_table):
         for oneLine in oneAnswer:
             if oneLine in point_row:
                 points += point_row[oneLine]
     return points
+
+
+def calculate_points(answer, points_table):
+    # single_answers = []
+    # all_answers = answer.split('|')
+    # for answer in all_answers:
+    #    single_answers.append(answer.split(','))
+
+    single_answers = json.loads(answer)
+    return calculate_points_from_json_answer(single_answers, points_table)
 
 
 def user_in_lecture():
@@ -1210,13 +1230,24 @@ def user_in_lecture():
 
 
 def get_question_data_from_document(doc_id, par_id):
+    # pick up question from document, for saving question see edit.py question_convert_js_to_yam
+    # par_id might be like 100.Ruksit.SpQA0NX2itOd  and one must cut the beginin
+    i = par_id.rfind(".")
+    if i >= 0:
+        par_id = par_id[i+1:]
     par = Document(doc_id).get_paragraph(par_id)
     question = parse_plugin_values(par)
     markup = question.get('markup')
-    points = markup.get('points', '')
-    json = markup.get('json')
-    expl = markup.get('expl', '')
-    return json, points, expl
+    markup["qst"] = not par.is_question()
+    attrs = par.get_attrs()
+    if attrs:
+        markup["taskId"] = attrs.get("taskId", "")
+    # points = markup.get('points', '')
+    # jso# n = markup.get('json')
+    # expl = markup.get('expl', '')
+    # markup['json'] = {}
+    # return json, points, expl, markup
+    return markup
 
 
 def getTempDb():

@@ -35,6 +35,7 @@ from routes.lecture import getTempDb, user_in_lecture, lecture_routes
 from routes.logger import log_info, log_error, log_debug
 from routes.login import login_page, logout
 from routes.manage import manage_page
+from routes.qst import qst_plugin
 from routes.notes import notes
 from routes.notify import notify
 from routes.readings import readings
@@ -59,6 +60,7 @@ with app.app_context():
 
 app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
+app.register_blueprint(qst_plugin)
 app.register_blueprint(edit_page)
 app.register_blueprint(view_page)
 app.register_blueprint(login_page)
@@ -433,6 +435,8 @@ def echo_request(filename):
         yield 'Headers:\n\n'
         yield from (k + ": " + v + "\n" for k, v in request.headers.items())
     return Response(stream_with_context(generate()), mimetype='text/plain')
+
+
 
 
 @app.route("/index/<int:doc_id>")

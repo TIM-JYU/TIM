@@ -89,6 +89,13 @@
                 }
             });
 
+            timApp.filter('timtim', function ($filter) {
+                var dateFilter = $filter('date');
+                return function (date) {
+                    return dateFilter(date, 'HH:mm:ss');
+                }
+            });
+
             var current_user = {{ current_user|tojson }};
             var other_users = {{ other_users|tojson }};
             var bookmarks = {{ bookmarks|tojson }};
@@ -109,6 +116,7 @@
         <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
         {% include 'common_head.html' %}
+        <script src="{{ url_for('static', filename='scripts/directives/dynamicAnswerSheet.js') }}"></script>
         {% if lecture_assets %}
             {% include 'lecture_head.html' %}
         {% endif %}

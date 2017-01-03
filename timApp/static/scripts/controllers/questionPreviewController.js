@@ -30,10 +30,8 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
             $scope.questionParId = args.questionParId;
             $scope.questionParIdNext = args.questionParIdNext;
             $scope.isLecturer = args.isLecturer;
-            $scope.json = args.questionjson;
-            $scope.questionTitle = args.questionjson.title;
-            $scope.points = args.points;
-            $scope.expl = args.expl;
+            $scope.markup = args.markup;
+            $scope.questionTitle = args.markup.json.title;
             $scope.dynamicAnswerSheetControl.createAnswer();
 
         });
@@ -48,9 +46,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
                 "question_id": $scope.questionId,
                 "par_id": $scope.questionParId,
                 "par_id_next": $scope.questionParIdNext,
-                "json": $scope.json,
-                "points": $scope.points,
-                "expl": $scope.expl
+                "markup": $scope.markup,
             });
         };
 
@@ -64,8 +60,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
                 "question_id": $scope.questionId,
                 "par_id": $scope.questionParId,
                 "doc_id": $scope.docId,
-                "json": $scope.json,
-                "expl": $scope.expl
+                "markup": $scope.markup
             });
             $scope.close();
         };

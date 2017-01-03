@@ -29,14 +29,15 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
         $scope.questionId = args.questionId;
         $scope.questionParId = args.questionParId;
         $scope.isLecturer = args.isLecturer;
-        $scope.json = args.questionjson;
-        $scope.questionTitle = args.questionjson.title;
+        $scope.markup = args.markup;
+        $scope.questionTitle = args.markup.json.title;
         $scope.askedTime = args.askedTime;
         $scope.clockOffset = args.clockOffset;
-        $scope.expl = args.expl;
         $scope.questionEnded = false;
         $scope.answered = false;
+        $scope.buttonText = $scope.markup.button || $scope.markup.buttonText || "Answer";
         $scope.dynamicAnswerSheetControl.createAnswer();
+        if ( args.isAsking ) $scope.isAsking = true;
     });
 
     /**
@@ -104,12 +105,13 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
             params: {'asked_id': $scope.askedId}
         })
             .success(function (data) {
-                var json = JSON.parse(data.json);
+                var markup = JSON.parse(data.json);
+                if (!markup.json) markup = {json: markup}; // compability for old
+                markup.points = data.points;
                 $rootScope.$broadcast('changeQuestionTitle', {'title': json.title});
                 $rootScope.$broadcast("editQuestion", {
                     "asked_id": $scope.askedId,
-                    "json": json,
-                    "points": data.points
+                    "markup": markup
                 });
             })
             .error(function () {
@@ -143,8 +145,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
             "par_id": $scope.questionParId,
             "question_id": $scope.questionId,
             "doc_id": $scope.docId,
-            "json": $scope.json,
-            "expl": $scope.expl
+            "markup": $scope.markup,
         });
     };
 
@@ -154,8 +155,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
             "question_id": $scope.questionId,
             "par_id": $scope.questionParId,
             "doc_id": $scope.docId,
-            "json": $scope.json,
-            "expl": $scope.expl
+            "markup": $scope.markup,
         });
     };
 }]);

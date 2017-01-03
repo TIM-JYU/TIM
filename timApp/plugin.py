@@ -1,8 +1,8 @@
 from copy import deepcopy
 
-from typing import Tuple, Optional, Union
+from typing import Tuple, Optional, Union, Iterable
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 import yaml
 
@@ -28,6 +28,10 @@ class Plugin:
         self.values = values
         self.type = plugin_type
         self.par = par
+
+    @property
+    def full_task_id(self):
+        return '{}.{}'.format(self.par.doc.doc_id, self.task_id)
 
     @staticmethod
     def get_date(d):
@@ -138,6 +142,40 @@ class Plugin:
 
     def save(self):
         self.to_paragraph().save()
+
+    def get_info(self, users: Iterable[User], old_answers: int, look_answer: bool = False, valid: bool = True):
+        user_ids = ';'.join([u.name for u in users])
+        from routes.sessioninfo import get_current_user_name
+        return {
+            # number of earlier answers
+            # TODO: this is None when browsing answers with answer browser; should determine the number of answers
+            # posted before the current one
+            'earlier_answers': old_answers,
+            'max_answers': self.answer_limit(),
+            'current_user_id': get_current_user_name(),
+            'user_id': user_ids,
+            # indicates whether we are just looking at an answer, not actually posting a new one
+            'look_answer': look_answer,
+            'valid': valid
+        }
+
+    def is_answer_valid(self, old_answers, tim_info):
+        """Determines whether the currently posted answer should be considered valid.
+
+        :param old_answers: The number of old answers for this task for the current user.
+        :param tim_info: The tim_info structure returned by the plugin or empty object.
+        :return: True if the answer should be considered valid, False otherwise.
+        """
+        answer_limit = self.answer_limit()
+        if answer_limit is not None and (answer_limit <= old_answers):
+            return False, 'You have exceeded the answering limit.'
+        if self.starttime(default=datetime(1970, 1, 1, tzinfo=timezone.utc)) > datetime.now(timezone.utc):
+            return False, 'You cannot submit answers yet.'
+        if self.deadline(default=datetime.max.replace(tzinfo=timezone.utc)) < datetime.now(timezone.utc):
+            return False, 'The deadline for submitting answers has passed.'
+        if tim_info.get('notValid', None):
+            return False, 'Answer is not valid'
+        return True, 'ok'
 
 
 class PluginException(Exception):

@@ -21,10 +21,12 @@
                         <option ng-option value="checkbox-vertical">Multiple choice (checkbox)</option>
                         <option ng-option value="true-false">True/False</option>
                         <option ng-option value="matrix">Many rows and columns</option>
+                        <option ng-option value="likert">5 choices likert scale</option>
+                        <option ng-option value="textarea">One text area</option>
                     </select>
                 </label>
             </div>
-            <div id="check" ng-if="question.type == 'matrix'">
+            <div id="check" ng-if="question.type == 'matrix' || question.type == 'likert'">
                 <label>Answer type:</label>
                 <select name="answerType" ng-model="question.matrixType" ng-dropdown
                         ng-options="item.value as item.label for item in answerFieldTypes ">
@@ -72,6 +74,7 @@
         <div class="questionPreview">
             <label>Show preview <input type="checkbox" ng-change="setShowPreview(question.showPreview)"
                                        ng-model="question.showPreview"/></label>
+            <label>Document question <input type="checkbox" ng-model="markup.qst"/></label>
             <dynamic-answer-sheet ng-show="question.showPreview" preview="true" control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
         </div>
         <p class="error_message" id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
@@ -86,14 +89,15 @@
     </div>
     <div class="popUpWindow" id="questionWindow" ng-if="asked_id">
         <form class="createQuestion" id="question-form">
+            <h5>{{ question.question }}</h5>
+            <!--
             <h3>Question title: {{ question.title }}</h3>
-
             <h3>Question title: {{ question.question }}</h3>
 
             <p>Question type: {{ question.type }}</p>
 
             <p ng-if="question.type == 'matrix'">Answer type: {{ question.matrixType }} </p>
-
+            -->
             <div ng-if="question.type" style="overflow-x: auto">
                 <ng-include src="'/static/templates/matrix.html'"></ng-include>
             </div>
