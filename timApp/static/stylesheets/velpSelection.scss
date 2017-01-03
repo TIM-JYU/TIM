@@ -272,6 +272,12 @@
     text-overflow: ellipsis;
 }
 
+.velp .warning{
+    border: 1px solid #f0ad4e;
+    background-color: #fcf8e3;
+}
+
+
 .velp-data {
     position: relative;
 }
@@ -493,8 +499,8 @@ label.disabled {
     margin: 0;
 }
 
-.annotation-info input, .annotation-info textarea {
-    background: transparent;
+.annotation-info input[type="number"], .annotation-info textarea {
+  background: transparent;
 }
 
 .annotation-info input[type="number"]{

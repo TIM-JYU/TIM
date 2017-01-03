@@ -69,8 +69,8 @@
                          popover-placement="left">
                         </div>
                     </label>
-                    <p><label>Color <input type="color" ng-model="color" ng-change="changeColor()"></label></p>
-
+                    <p><label>Color <input type="color" ng-model="color" ng-change="changeColor()"></label>
+                    <input ng-if="isVelpCustomColor()" type="button" ng-click="clearColor()" value="Clear color"></p>
                 </div>
             </form>
         </div>

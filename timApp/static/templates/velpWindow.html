@@ -126,15 +126,17 @@
                                                                         ng-click="updateVelpGroups(g)"
                                                                         ng-checked="isGroupInVelp(g)"
                                                                         ng-disabled="!g.edit_access"> {{ g.name }}
-                        <span ng-if="!g.show" class="glyphicon glyphicon-eye-close"></span>
+                        <span title="Hidden group" ng-if="!g.show" class="glyphicon glyphicon-eye-close"></span>
                     </label>
                     <br>
                 </span>
-
+            </fieldset>
             <p class="error velpInfoText" ng-show="!isSomeVelpGroupSelected()">
                 {{ settings.velpGroupError }}
             </p>
-            </fieldset>
+            <p class="warning velpInfoText" ng-show="!isSomeVelpGroupShown()">
+                {{ settings.velpGroupWarning }}
+            </p>
 
             <p>
                 <label>
@@ -151,7 +153,10 @@
                     </select>
                 </label>
             </p>
-            <p><label>Color <input type="color" ng-model="velp.color"></label></p>
+            <p>
+                <label>Color <input type="color" ng-model="velp.color"></label>
+                <input ng-if="isVelpCustomColor()" type="button" ng-click="clearVelpColor()" value="Clear color"></p>
+            </p>
 
             <!-- submit executes 'saveVelp'-function -->
             <p>

@@ -141,6 +141,7 @@ def update_annotation():
     points = json_data.get('points')
     doc_id = json_data.get('doc_id')
     color = json_data.get('color')
+    print(len(color))
     timdb = get_timdb()
     # Get values from the database to fill in unchanged new values.
     new_values = timdb.annotations.get_annotation(annotation_id)
@@ -156,10 +157,11 @@ def update_annotation():
         except ValueError as e:
             return abort(400, "Visibility should be 1, 2, 3 or 4.")
         new_values['visible_to'] = visible_to
-    if color:
-        if not is_hex_string(color):
-            return  abort(400, "Color should be a hex string, e.g. '#FFFFFF'.")
-        new_values['color'] = color
+
+    if len(color) > 0 and not is_hex_string(color):
+        return  abort(400, "Color should be a hex string, e.g. '#FFFFFF'.")
+    new_values['color'] = color
+
     if timdb.users.has_teacher_access(user_id, doc_id):
         new_values['points'] = points
     else:

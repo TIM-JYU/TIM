@@ -105,6 +105,15 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 scope.updateVelpZIndex();
             };
 
+            scope.clearColor = function () {
+                scope.color = "";
+                scope.changeColor()
+            };
+
+            scope.isVelpCustomColor = function () {
+                return scope.color.length === 7; // hex colors are 7 characters long
+            }
+
 
             /**
              * Updates the z-index attribute of the annotation.
@@ -186,9 +195,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             };
             
             scope.changeColor = function () {
-                if (scope.color !== "") {
-                    scope.$parent.changeAnnotationColor(scope.aid, scope.color);
-                }
+                scope.$parent.changeAnnotationColor(scope.aid, scope.color);
             };
 
             /**

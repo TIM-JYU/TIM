@@ -64,6 +64,7 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         teacherRightsError: "You need to have teacher rights change points in this document.",
         labelContentError: "Label content too short",
         velpGroupError: "Select at least one velp group.",
+        velpGroupWarning: "All selected velp groups are hidden in the current area.",
         velpContentError: "Velp content too short"
     };
 
@@ -231,6 +232,19 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         return $scope.velp.velp_groups.length > 0;
     };
 
+    $scope.isSomeVelpGroupShown = function(){
+        if (typeof $scope.velp.velp_groups === UNDEFINED || $scope.velp.velp_groups.length === 0)
+            return true;
+
+        for (var i=0; i<$scope.velp.velp_groups.length; i++){
+            for (var j=0; j<$scope.velpGroups.length; j++){
+                if ($scope.velpGroups[j].id === $scope.velp.velp_groups[i] && $scope.velpGroups[j].show)
+                    return true;
+            }
+        }
+        return false;
+    };
+
     /**
      * Adds new label to this velp.
      * @method addLabel
@@ -285,6 +299,14 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         label.edit = false;
         $scope.labelToEdit = {content: "", selected: false, edit: false, valid: true};
     };
+
+    $scope.clearVelpColor = function () {
+        $scope.velp.color = "";
+    };
+
+    $scope.isVelpCustomColor = function () {
+        return $scope.velp.color.length === 7; // hex colors are 7 characters long
+    }
 
     var copyLabelToEditLabel = function (label) {
         for (var key in label){
