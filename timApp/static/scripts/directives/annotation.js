@@ -50,6 +50,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             scope.visible_options = {
                 "type": "select",
                 "value": scope.visibleto,
+                "title": "Visible to",
                 "values": [1, 2, 3, 4],
                 "names": ["Just me", "Document owner", "Teachers", "Everyone"]
             };

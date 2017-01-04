@@ -48,6 +48,7 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
 
     $scope.visible_options = {
                 "type": "select",
+                "title": "Visible to",
                 "values": [1, 2, 3, 4],
                 "names": ["Just me", "Document owner", "Teachers", "Everyone"]
     };
