@@ -34,7 +34,6 @@ def add_annotation() -> Dict:
     :return: Dictionary oontaining annotation id and annotator name.
     """
     json_data = request.get_json()
-    print(json_data)
     timdb = get_timdb()
 
     # first get the non-optional arguments and abort if there is missing data.
@@ -78,10 +77,8 @@ def add_annotation() -> Dict:
     icon_id = json_data.get('icon_id')
     answer_id = json_data.get('answer_id')
     color = json_data.get('color')
-    print(color)
 
     if len(color) > 0 and not is_hex_string(color):
-        print("Ei tännE")
         return abort(400, "Color should be a hex string or None, e.g. '#FFFFFF'.")
 
     # default_comment = ""
@@ -99,15 +96,14 @@ def add_annotation() -> Dict:
     verify_logged_in()
 
     annotator_id = get_current_user_id()
-    print("hei1")
     annotator_name = timdb.users.get_user(annotator_id)['name']
     velp_version_id = timdb.velps.get_latest_velp_version(velp_id)["id"]
-    print("hei2")
+
     new_id = timdb.annotations.create_annotation(velp_version_id, visible_to, points, annotator_id, document_id,
                                                  paragraph_id_start, paragraph_id_end, offset_start, node_start,
                                                  depth_start, offset_end, node_end, depth_end, hash_start, hash_end,
                                                  element_path_start, element_path_end, None, icon_id, color, answer_id)
-    print(new_id)
+
     # if len(default_comment) > 0:
     #     comment_data = dict(content=default_comment, annotation_id=new_id)
     #     add_comment_helper(comment_data)
@@ -141,7 +137,7 @@ def update_annotation():
     points = json_data.get('points')
     doc_id = json_data.get('doc_id')
     color = json_data.get('color')
-    print(len(color))
+
     timdb = get_timdb()
     # Get values from the database to fill in unchanged new values.
     new_values = timdb.annotations.get_annotation(annotation_id)

@@ -277,6 +277,10 @@
     background-color: #fcf8e3;
 }
 
+.velp .gray{
+    color: gray;
+}
+
 
 .velp-data {
     position: relative;
@@ -503,9 +507,18 @@ label.disabled {
   background: transparent;
 }
 
+.annotation-info input[type="color"] {
+    background: transparent;
+    cursor: pointer;
+}
+
 .annotation-info input[type="number"]{
     width: 4em;
     border: 0;
+}
+
+.annotation-info select{
+    width:50%;
 }
 
 .annotation-info textarea {

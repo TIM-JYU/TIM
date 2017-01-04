@@ -61,16 +61,23 @@
                         </div>
                     </div>
 
-                    <label ng-show="checkRights()" class="annotationVisibleText">
-                        <div title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></div>
+                    <div ng-show="checkRights()" class="annotationVisibleText">
+
+                        <span title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></span>
                         {{ visible_options.names[visible_options.value - 1] }}
-                        <div ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
+
+                        <span ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
                          uib-popover="'Just me' means that the annotation is visible only to yourself. 'Document owner' refers to the person or group who has been named as the document owner. 'Teachers' refers to the users that have teacher access to this document. 'Everyone' means that the annotation is visible to everyone who can view the assessed content."
                          popover-placement="left">
-                        </div>
-                    </label>
-                    <p><label>Color <input type="color" ng-model="color" ng-change="changeColor()"></label>
-                    <input ng-if="isVelpCustomColor()" type="button" ng-click="clearColor()" value="Clear color"></p>
+                        </span>
+
+                    </div>
+                    <div>
+                        <label>Color
+                            <input type="color" ng-model="color" ng-change="changeColor()">
+                        </label>
+                        <input ng-if="isVelpCustomColor()" type="button" ng-click="clearColor()" value="Clear">
+                    </div>
                 </div>
             </form>
         </div>

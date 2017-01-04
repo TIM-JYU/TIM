@@ -10,6 +10,10 @@
 // var UNDEFINED = "undefined";
 var colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "cornflowerblue", "coral", "goldenrod", "blue"];
 
+// TODO: add keyboard shortcuts to velps
+// TODO: add min and max values for points
+// TODO: user should be able to delete velp without any annotations
+
 /**
  * Angular directive for velp selection
  */

@@ -766,7 +766,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             return;
         }
 
-        var default_comment = "";
         /*
         if (velp.default_comment !== null && velp.default_comment.length > 0){
             comment.push({
@@ -877,7 +876,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 newAnnotation.answer_id = el_answer_id.selectedAnswer.id;
 
             addAnnotationToElement($scope.selectedElement, newAnnotation, true, "No coordinate found");
-            var annotationCount = $scope.annotations.push(newAnnotation);
             $scope.annotationids[newAnnotation.id] = newAnnotation.id;
         }
 

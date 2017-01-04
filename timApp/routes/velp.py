@@ -25,6 +25,7 @@ velps = Blueprint('velps',
 # TODO: Add document handling for all velp group related stuff
 # TODO: Done create velp, get velp groups from folders (get_velp_groups),
 # TODO: make default velp group and necessary folder (velpabc)
+# TODO: Add route for deleting velp (at least a velp without any annotations). Remove by setting valid_until attribute.
 
 
 @velps.route("/<int:doc_id>/get_default_velp_group", methods=['GET'])

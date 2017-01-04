@@ -335,11 +335,12 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 		    };
 
             /**
-             * Watches changes on newannotation attribute.
+             * Watches changes on newannotation attribute. Shoulc scroll window
+             * only if annotation is not inside browser window.
              * TODO: Check scroll positions according to textarea element
              */
            scope.$watch('newannotation', function(newValue) {
-               if (newValue === "true" && scope.show) { // muuten ottaa undefined
+               if (newValue === "true" && scope.show) { // this check is necessary
 
                    var x = window.scrollX, y = window.scrollY;
 
