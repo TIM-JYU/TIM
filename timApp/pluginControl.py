@@ -124,7 +124,6 @@ def pluginify(doc: Document,
             info = None
             if load_states and custom_answer is not None:
                 state = try_load_json(custom_answer['content'])
-                # TODO cnt is always None
                 info = plugin.get_info([user], old_answers=custom_answer.get('cnt'), valid=custom_answer['valid'])
             else:
                 if not task_id.endswith('.'):
