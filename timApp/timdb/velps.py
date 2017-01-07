@@ -107,6 +107,7 @@ class Velps(TimDbBase):
         :param color: Velp color
         :param visible_to: Velp visibility
         """
+        if not visible_to: visible_to = 4
         cursor = self.db.cursor()
         cursor.execute("""
                        UPDATE Velp
