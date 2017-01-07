@@ -48,9 +48,10 @@
         <textarea placeholder="Add comment" ng-model="newcomment" >{{ newcomment }}</textarea>
         <div>
             <form class="form-inline adjustAnnForm">
-                <div class="form-group">
+                <!--<div class="form-group"> -->
 
-                    <div ng-hide="checkRights()">
+                    <div>
+                    <span ng-hide="checkRights()">
                         <label ng-class="{disabled: checkRights()}"><div title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></div></label>
                         <select ng-model="visible_options.value" ng-disabled="checkRights()"
                             ng-options="v as visible_options.names[v-1] for v in visible_options.values">
@@ -59,9 +60,9 @@
                          uib-popover="'Just me' means that the annotation is visible only to yourself. 'Document owner' refers to the person or group who has been named as the document owner. 'Teachers' refers to the users that have teacher access to this document. 'Everyone' means that the annotation is visible to everyone who can view the assessed content."
                          popover-placement="left">
                         </div>
-                    </div>
+                    </span>
 
-                    <div ng-show="checkRights()" class="annotationVisibleText">
+                    <span ng-show="checkRights()" class="annotationVisibleText">
 
                         <span title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></span>
                         {{ visible_options.names[visible_options.value - 1] }}
@@ -71,14 +72,13 @@
                          popover-placement="left">
                         </span>
 
+                    </span>
+                    <span style="float: right">
+                        <input type="color" ng-model="color" ng-change="changeColor()" class="colorchange-button" title="Change annotation color">
+                        <input ng-if="isVelpCustomColor()" class="smallButton" type="button" ng-click="clearColor()" title="Reset color to original value" value="R">
+                    </span>
                     </div>
-                    <div>
-                        <label>Color
-                            <input type="color" ng-model="color" ng-change="changeColor()">
-                        </label>
-                        <input ng-if="isVelpCustomColor()" type="button" ng-click="clearColor()" value="Clear">
-                    </div>
-                </div>
+              <!--  </div> -->
             </form>
         </div>
     </div>

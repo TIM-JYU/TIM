@@ -266,9 +266,13 @@ ORDER BY {}, a.answered_on
             return []
         cursor = self.db.cursor()
         task_id_template = ','.join(['%s']*len(task_ids))
-        user_restrict_sql = '' if user_ids is None else 'AND UserAccount.id IN ({})'.format(','.join(['%s']*len(user_ids)))
         if user_ids is None:
             user_ids = []
+            user_restrict_sql = ''
+        elif not user_ids:
+            user_restrict_sql = 'AND FALSE'
+        else:
+            user_restrict_sql = 'AND UserAccount.id IN ({})'.format(','.join(['%s'] * len(user_ids)))
         sql = """
                 SELECT *, task_points + COALESCE(velp_points, 0) as total_points
                 FROM (

@@ -2,18 +2,15 @@ c# main
 c# program with only main visible
 ``` {#PLUGINNAMEHERE plugin="csPlugin"}
 type: cs
-program: |!!
+fullprogram: |!!
 public class HelloWorld
 {
     public static void Main()
     {
-        // REPLACE
+        // BYCODEBEGIN
+        System.Console.WriteLine("Hello World");
+        // BYCODEEND
     }
 }
-!!
-replace: REPLACE
-byCode: |!!
-//
-        System.Console.WriteLine("Hello World"); 
 !!
 ```
