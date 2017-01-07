@@ -6,12 +6,10 @@ filename: PLUGINNAMEHERE
 opt: -g
 cmds: valgrind -q --leak-check=full {0}
 path: user
-program: |!!
+fullprogram: |!!
 //
-!!
-replace: REPLACE
-byCode: |!!
+// BYCODEBEGIN
+// BYCODEEND
 //
-
 !!
 ```

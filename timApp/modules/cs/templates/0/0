@@ -2,8 +2,14 @@ java
 Full Java program 
 ``` {#PLUGINNAMEHERE plugin="csPlugin"}
 type: java
-byCode: |!!
+fullprogram: |!!
 //
-INSERT PROGRAM CODE HERE
+// BYCODEBEGIN
+public class HelloWorld {
+    public static void main(String args[]) {
+        System.out.println("Hello World!");
+    }
+}
+// BYCODEEND
 !!
 ```
