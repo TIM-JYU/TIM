@@ -110,7 +110,7 @@ class LectureAnswers(TimDbBase):
         cursor = self.db.cursor()
 
         cursor.execute("""
-            SELECT answer_id, answer
+            SELECT answer_id, answer, points
             FROM LectureAnswer
             WHERE question_id = %s AND user_id = %s
         """, [asked_id, user_id])

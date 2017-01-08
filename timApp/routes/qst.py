@@ -48,8 +48,16 @@ def qst_answer():
         points_table = create_points_table(spoints)
         points = calculate_points_from_json_answer(answers, points_table)
         tim_info["points"] = points
+    info = jsondata['info']
+    markup = jsondata['markup']
+    result = False
+    if info and info['max_answers'] and info['max_answers'] <= info.get('earlier_answers', 0) + 1:
+        result = True
+    if not result:
+        markup = None
+
     save = answers
-    web = {'result': "Vastattu"}
+    web = {'result': "Vastattu", 'markup': markup, 'show_result' : result, 'state': save}
     return jsonResponse({'save': save, 'web': web, "tim_info": tim_info})
 
 
@@ -71,7 +79,18 @@ def qst_html():
 
 
 def qst_get_html(jso):
+    result = False
+    info = jso['info']
+    markup = jso['markup']
+    if info and info['max_answers'] and info['max_answers'] <= info.get('earlier_answers', 0):
+        result = True
+    if not result:
+        if 'points' in markup: del markup['points']
+        if 'expl' in markup: del markup['expl']
+    jso['show_result'] = result
+
     attrs = json.dumps(jso)
+
     hx = 'xxxHEXJSONxxx' + binascii.hexlify(attrs.encode("UTF8")).decode()
     attrs = hx
     runner = 'qst-runner'

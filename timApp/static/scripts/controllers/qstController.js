@@ -98,18 +98,22 @@ qstApp.initScope = function (scope, element, attrs) {
 
     // scope.stem = scope.attrs.markup.json.questionText;
     var markup = scope.attrs.markup;
-    scope.answerTable = scope.attrs.state;
-    scope.questionId = 1; //args.questionId;
-    scope.questionParId = 1; // args.questionParId;
-    scope.questionParIdNext = 2; //args.questionParIdNext;
-    scope.isLecturer = false;
-    scope.markup = markup;
-    scope.questionTitle = markup.json.title;
-    scope.points = markup.points;
-    scope.expl = markup.expl;
+    var params = {};
+    params.answerTable = scope.attrs.state;
+    params.questionId = 1; //args.questionId;
+    params.questionParId = 1; // args.questionParId;
+    params.questionParIdNext = 2; //args.questionParIdNext;
+    params.isLecturer = false;
+    params.markup = markup;
+    params.questionTitle = markup.json.title;
+    params.points = markup.points;
+    params.expl = markup.expl;
     // var preview = element.parents('.previewcontent').length > 0;
-    var preview =  false; // scope.$parent.previewUrl; // Released;
-    scope.dynamicAnswerSheetControl.createAnswer("qstAnswerSheet", preview);
+    params.preview =  false; // scope.$parent.previewUrl; // Released;
+    params.result = true;
+    params.answclass = "qstAnswerSheet";
+    params.noDisable = true;
+    scope.dynamicAnswerSheetControl.createAnswer(params);
     scope.attrs = {}; // not needed any more
 
 };
@@ -169,7 +173,26 @@ QstScope.prototype.doSaveText = function(nosave) {
         $scope.isRunning = false;
         $scope.error = data.web.error;
         $scope.result = data.web.result;
-        $scope.tries = data.web.tries;
+        if (data.web.markup && data.web.show_result) {
+            var params = {};
+            params.answerTable =data.web.state;
+            params.questionId = 1; //args.questionId;
+            params.questionParId = 1; // args.questionParId;
+            params.questionParIdNext = 2; //args.questionParIdNext;
+            params.isLecturer = false;
+            params.markup = data.web.markup;
+            params.questionTitle = data.web.markup.json.title;
+            params.points = data.web.markup.points;
+            params.expl = data.web.markup.expl;
+            // var preview = element.parents('.previewcontent').length > 0;
+            params.preview =  false; // scope.$parent.previewUrl; // Released;
+            params.result = true;
+            params.answclass = "qstAnswerSheet";
+            params.noDisable = true;
+
+            $scope.dynamicAnswerSheetControl.createAnswer(params);
+
+        }
     }).error(function (data, status) {
         $scope.isRunning = false;
         $scope.errors.push(status);

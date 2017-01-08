@@ -247,7 +247,7 @@ input[type="number"] {
     text-align: left;
 
     input[type=checkbox] {
-        margin-right: 5px;
+        /* margin-right: 5px; */
     }
 }
 
@@ -276,6 +276,27 @@ input[type="number"] {
 .qstAnswerSheet h5 {
     margin-left: 0.5em;
     margin-top: 0.0em;
+}
+
+.qst-points {
+    font-size: 0.5em;
+    line-height: 0.0em;
+    margin-bottom: 1pt;
+}
+
+.qst-correct {
+    border-color: #46a0ef;
+    border-style: solid;
+    border-width: 2pt;
+    border-radius: 10pt;
+    border-spacing: 1em;
+    padding-left: 2pt;
+    padding-right: 2pt;
+}
+
+.qst-normal {
+    padding-left: 2pt;
+    padding-right: 2pt;
 }
 
 .colorchange-button {

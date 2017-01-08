@@ -329,9 +329,11 @@ def get_new_question(lecture_id, current_question_id=None, current_points_id=Non
                 tempdb.pointsshown.add_user_info(lecture_id, asked_id, current_user)
                 answer = timdb.lecture_answers.get_user_answer_to_question(asked_id, current_user)
                 if answer:
+                    userpoints = answer[0]['points']
                     answer = answer[0]['answer']
                     return {"result": True, 'askedId': asked_id, "questionjson": question["json"], "answer": answer,
-                            "expl": question["expl"]}
+                            "userpoints": userpoints,
+                            "expl": question["expl"], "points": question["points"]}
         return None
 
 
@@ -956,6 +958,18 @@ def show_points():
     tempdb.showpoints.stop_showing_points(lecture_id)
     tempdb.showpoints.add_show_points(lecture_id, asked_id)
 
+    current_question_id = None
+    current_points_id = None
+    if 'current_question_id' in request.args:
+        current_question_id = int(request.args.get('current_question_id'))
+    if 'current_points_id' in request.args:
+        current_points_id = int(request.args.get('current_points_id'))
+    new_question = get_new_question(lecture_id, current_question_id, current_points_id)
+    if new_question is not None:
+        resp = {}
+        resp.update(new_question)
+        return jsonResponse(resp)
+
     return jsonResponse("")
 
 
@@ -966,12 +980,13 @@ def update_question_points():
         abort("400")
     asked_id = int(request.args.get('asked_id'))
     points = request.args.get('points')
+    expl = request.args.get('expl')
     timdb = get_timdb()
     asked_question = timdb.questions.get_asked_question(asked_id)[0]
     lecture_id = int(asked_question['lecture_id'])
     if not check_if_is_lecturer(lecture_id):
         abort("400")
-    timdb.questions.update_asked_question_points(asked_id, points)
+    timdb.questions.update_asked_question_points(asked_id, points, expl)
     points_table = create_points_table(points)
     question_answers = timdb.lecture_answers.get_answers_to_question(asked_id)
     for answer in question_answers:

@@ -36,7 +36,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
         $scope.questionEnded = false;
         $scope.answered = false;
         $scope.buttonText = $scope.markup.button || $scope.markup.buttonText || "Answer";
-        $scope.dynamicAnswerSheetControl.createAnswer();
+        $scope.dynamicAnswerSheetControl.createAnswer($scope);
         if ( args.isAsking ) $scope.isAsking = true;
     });
 
@@ -108,7 +108,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
                 var markup = JSON.parse(data.json);
                 if (!markup.json) markup = {json: markup}; // compability for old
                 markup.points = data.points;
-                $rootScope.$broadcast('changeQuestionTitle', {'title': json.title});
+                $rootScope.$broadcast('changeQuestionTitle', {'title': markup.title});
                 $rootScope.$broadcast("editQuestion", {
                     "asked_id": $scope.askedId,
                     "markup": markup
@@ -125,13 +125,16 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
             method: 'POST',
             params: {
                 'asked_id': $scope.askedId,
-                'lecture_id': $scope.lectureId
+                'lecture_id': $scope.lectureId,
+                'current_question_id': $scope.askedId
             }
         })
-            .success(function () {
+            .success(function (answer) {
                 $scope.current_points_id = $scope.askedId;
                 $scope.result = true;
-                $scope.dynamicAnswerSheetControl.createAnswer();
+                $scope.points = answer.points;
+                if (answer.expl) $scope.expl = JSON.parse(answer.expl);
+                $scope.dynamicAnswerSheetControl.createAnswer($scope);
             })
             .error(function () {
                 console.log("Could not show points to students.");

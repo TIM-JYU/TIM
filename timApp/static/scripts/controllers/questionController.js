@@ -117,22 +117,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 };
             }
             scope.columnHeaders = columnHeaders;
-            scope.pointsTable = [];
+            scope.pointsTable = getPointsTable(data.markup.points );
 
-            if (data.markup.points && data.markup.points !== '') {
-                var points = data.markup.points.split('|');
-                for (var i = 0; i < points.length; i++) {
-                    var rowPoints = points[i].split(';');
-                    var rowPointsDict = {};
-                    for (var k = 0; k < rowPoints.length; k++) {
-                        if (rowPoints[k] !== '') {
-                            var colPoints = rowPoints[k].split(':', 2);
-                            rowPointsDict[colPoints[0]] = colPoints[1];
-                        }
-                    }
-                    scope.pointsTable.push(rowPointsDict);
-                }
-            }
             var rows = [];
 
             for (var i = 0; i < jsonRows.length; i++) {
@@ -864,7 +850,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         };
 
         scope.markup.json = questionjson;
-        scope.dynamicAnswerSheetControl.createAnswer();
+        scope.dynamicAnswerSheetControl.createAnswer(scope);
         return minimizeJson(questionjson);
     };
 
@@ -970,12 +956,15 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
      */
     scope.updatePoints = function () {
         var points = scope.createPoints();
+        var expl = scope.createExplanation();
         http({
             method: 'POST',
             url: '/updatePoints/',
             params: {
                 'asked_id': scope.asked_id,
-                'points': points
+                'points': points,
+                'expl': expl
+
             }
         })
             .success(function () {

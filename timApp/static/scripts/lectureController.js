@@ -675,7 +675,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
          * @memberof module:lectureController
          */
         $scope.showBasicView = function (answer) {
-            if ($scope.$parent) {
+            if ($scope.$parent && $scope.$parent.item) {
                 $scope.docNamePath = encodeURI($scope.$parent.item.path);
             }
             $scope.isLecturer = answer.isLecturer;
@@ -986,7 +986,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 // $scope.newMsg = "Lähti";
                 var timeout;
 
-                if (lastID === null) {
+                if (!lastID) {
                     lastID = -1;
                 }
                 if ($scope.requestOnTheWay === true) {
@@ -1136,9 +1136,10 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             var markup = JSON.parse(answer.questionjson);
             if ( !markup.json ) markup = { json: markup }; // compability for old
             markup.expl = {};
-            if (answer.expl) {
-                markup.expl = JSON.parse(answer.expl)
-            }
+
+            if (answer.expl) markup.expl = JSON.parse(answer.expl);
+            if (answer.points) markup.points = answer.points;
+            markup.userpoints = answer.userpoints;
 
             $scope.questionTitle = showPoints + markup.json.title;
             if (answer.result) {

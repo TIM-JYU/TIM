@@ -8,6 +8,7 @@
  * @author Minna Lehtomäki
  * @author Juhani Sihvonen
  * @author Hannu Viinikainen
+ * @authos Vesa Lappalainen
  * @licence MIT
  * @copyright 2015 Timppa project authors
  */
@@ -43,6 +44,27 @@ function getJsonAnswers(answer) {
         single_answers.push(all_answers[i].split(','))
     }
     return single_answers;
+}
+
+
+function getPointsTable(markupPoints) {
+    // Format of markupPoints: 1:1.1;2:1.2;3:1.3||2:3.2
+    var pointsTable = [];
+    if (markupPoints && markupPoints !== '') {
+        var points = markupPoints.split('|');
+        for (var i = 0; i < points.length; i++) {
+            var rowPoints = points[i].split(';');
+            var rowPointsDict = {};
+            for (var k = 0; k < rowPoints.length; k++) {
+                if (rowPoints[k] !== '') {
+                    var colPoints = rowPoints[k].split(':', 2);
+                    rowPointsDict[colPoints[0]] = colPoints[1];
+                }
+            }
+            pointsTable.push(rowPointsDict);
+        }
+    }
+    return pointsTable;
 }
 
 
@@ -142,7 +164,7 @@ function fixQuestionJson(json) {
     var n = rows.length-1;
     if ( n >= 0 ) {
         var last = rows[n];  // remove ending object if needed
-        if ( $.isEmptyObject(last)) rows.splice(n,1);
+        if ( typeof last === 'object' && $.isEmptyObject(last)) rows.splice(n,1); // trust that null is also object!
     }
 
     for (var i = 0; i < rows.length; i++) {
@@ -185,34 +207,38 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
             /**
              * Creates question answer/preview form.
              */
-            $scope.internalControl.createAnswer = function (answclass, preview) {
-                $scope.result = $scope.$parent.result;
-                $scope.gid = $scope.$parent.tid || "";
+            $scope.internalControl.createAnswer = function (params) {
+                $scope.result = params.result;
+                $scope.gid = params.tid || "";
                 $scope.gid = $scope.gid.replace(".","_");
-                $scope.buttonText = $scope.$parent.markup.button || $scope.$parent.markup.buttonText || "Answer";
+                $scope.buttonText = params.markup.button || params.markup.buttonText || "Answer";
 
-                if ( !answclass ) answclass = "answerSheet";
-                $scope.previousAnswer = $scope.$parent.previousAnswer;
+                var answclass = params.answclass || "answerSheet";
+                $scope.previousAnswer = params.previousAnswer;
+                
                 var disabled = '';
                 // If showing preview or question result, inputs are disabled
-                if (preview || $scope.preview || $scope.result) disabled = ' disabled ';
+                if (params.preview || $scope.preview || $scope.result) disabled = ' disabled ';
+                if ( params.noDisable ) disabled = '';
+                
                 $element.empty();
-                $scope.json = $scope.$parent.markup.json;
-                $scope.markup = $scope.$parent.markup;
+                $scope.json = params.markup.json;
+                $scope.markup = params.markup;
                 var data = $scope.json.data || $scope.json; // compability to old format
                 var json = $scope.json;
 
                 fixQuestionJson(data);
 
-                $scope.answerTable = $scope.$parent.answerTable || [];
+                $scope.answerTable = params.answerTable || [];
 
                 // If user has answer to question, create table of answers and select inputs according to it
                 if ($scope.previousAnswer) $scope.answerTable = getJsonAnswers($scope.previousAnswer);
                 var answerTable = $scope.answerTable;
+                var pointsTable = getPointsTable(params.points || params.markup.points);
 
-                $scope.expl = $scope.$parent.expl;
-                $scope.askedTime = $scope.$parent.askedTime - $scope.$parent.clockOffset;
-                $scope.endTime = $scope.$parent.askedTime + $scope.json.timeLimit * 1000 - $scope.$parent.clockOffset;
+                $scope.expl = params.expl || params.markup.expl;
+                $scope.askedTime = params.askedTime - params.clockOffset;
+                $scope.endTime = params.askedTime + $scope.json.timeLimit * 1000 - params.clockOffset;
 
                 // var htmlSheet = $('<div>', {class: answclass});
                 var htmlSheet = $('<form>', {class: answclass});
@@ -230,6 +256,11 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     }));
                 }
                 htmlSheet.append($('<h5>', {text: json.questionText}));
+                if ( params.markup.userpoints !== undefined) {
+                    htmlSheet.append($('<p>', {text: "Points: " + params.markup.userpoints }));
+                }
+
+
                 var table = $('<table>', {id: 'answer-sheet-table', class: 'table table-borderless'});
 
 
@@ -242,7 +273,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     angular.forEach(data.headers, function (header) {
                         tr.append($('<th>', {text: header.text || header}));
                     });
-                    if ($scope.result && $scope.markup.expl)
+                    if ($scope.result && $scope.expl)
                         tr.append($('<th>', {}));
                     table.append(tr);
                 }
@@ -250,6 +281,8 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 var ir = -1;
                 angular.forEach(data.rows, function (row) {
                     ir++;
+                    var pointsRow = {};
+                    if ( params.result && pointsTable.length > ir &&  pointsTable[ir] ) pointsRow = pointsTable[ir];
 
                     var tr = $('<tr>');
                     if (json.questionType === "matrix" || json.questionType === "true-false") {
@@ -260,8 +293,19 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     for (var ic = 0; ic < row.columns.length; ic++) {
                         var group;
                         group = $scope.cg() + ir;
+
                         if (json.questionType === "matrix" || json.questionType === "true-false") {
+                            var value = "" +(ic + 1);// (row.columns[ic].id + 1).toString();
+
+                            var colTDPoints = undefined;
+                            var colPtsClass = 'qst-normal';
+                            if ( value in pointsRow ) {
+                                var colPoints = pointsRow[value];
+                                colTDPoints = $('<p>', {class: 'qst-points'}).append(colPoints);
+                                if ( colPoints > 0 ) colPtsClass =  'qst-correct';
+                            }
                             row.columns[ic].id = ic;
+
                             if (json.answerFieldType === "text") {
                                 var text = "";
                                 if (answerTable && ir < answerTable.length && ic < answerTable[ir].length) {
@@ -282,7 +326,6 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                 // group = $scope.cg() + row.text.replace(/[^a-zA-Z0-9]/g, "");
                                 var checked = false;
                                 if (answerTable && ir < answerTable.length ) {
-                                    var value = "" +(ic + 1);// (row.columns[ic].id + 1).toString();
                                     checked = (answerTable[ir].indexOf(value) >= 0);
                                 }
                                 var input = $('<input>', {
@@ -296,15 +339,34 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                     input.click(uncheckRadio);  // TODO: Tähän muutoskäsittely ja jokaiseen tyyppiin tämä
                                 }
                                 if (disabled !== '') input.attr('disabled', true);
-                                tr.append($('<td>', {class: 'answer-button'}).append($('<label>').append(input)));
+
+                                var td = $('<td>', {class: 'answer-button'});
+                                var ispan = $('<span>', {class:colPtsClass});
+                                ispan.append(input);
+                                td.append($('<label>').append(ispan))
+
+                                if ( colTDPoints ) td.append(colTDPoints);
+                                tr.append(td);
                                 header++;
                             }
                         } else {
+                            var value = ""+(ir+1); // (row.id + 1).toString();
+                            var colTDPoints = undefined;
+                            var colPtsClass = 'qst-normal';
+                            var pointsRow = {};
+                            if ( params.result && pointsTable.length > 0 &&  pointsTable[0] ) pointsRow = pointsTable[0];
+                            if ( value in pointsRow ) {
+                                var colPoints = pointsRow[value];
+                                colTDPoints = $('<p>', {class: 'qst-points'}).append(colPoints);
+                                if ( colPoints > 0 ) colPtsClass =  'qst-correct';
+                            }
+                            row.columns[ic].id = ic;
+
+
                             var type = row.type || "question";
                             group = $scope.cg() + type.replace(/[^a-zA-Z0-9]/g, "");
                             var checked = false;
                             if (answerTable && answerTable.length > 0) {
-                                var value = ""+(ir+1); // (row.id + 1).toString();
                                 checked = (answerTable[0].indexOf(value) >= 0);
                             }
                             var input = $('<input>', {
@@ -319,13 +381,20 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                             }
                             if (disabled !== '') input.attr('disabled', true);
                             var label = $('<label>');
-                            label.append(input).append(" " + row.text);
-                            tr.append($('<td>', {class: 'answer-button2'}).append(label));
+                            var ispan = $('<span>', {class:colPtsClass});
+                            ispan.append(input);
+                            label.append(ispan).append(" " + row.text);
+                            var td = $('<td>', {class: 'answer-button2'});
+                            td.append(label);
+                            if ( colTDPoints ) td.append(colTDPoints);
+                            tr.append(td);
                         }
                     }
                     // If showing question results, add question rows explanation
-                    if ($scope.result && $scope.markup.expl && ir.toString() in $scope.markup.expl) {
-                        tr.append($('<td>', {class: 'explanation', text: $scope.markup.expl[ir.toString()]}));
+                    if ($scope.result && $scope.expl ) {
+                        var expl = '';
+                        if ( ir.toString() in $scope.expl ) expl = $scope.expl[ir.toString()];
+                        tr.append($('<td>', {class: 'explanation', text: expl}));
                     }
                     table.append(tr);
                 });
@@ -343,7 +412,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                             $input = $table.find('input:first');
                         else
                             $input = $table.find('textarea:first');
-                        if ( $scope.$parent.isAsking ) $input[0].focus();
+                        if ( params.isAsking ) $input[0].focus();
                     }, 0);
                     //
                     $table.on('keyup.send', $scope.answerWithEnter);
@@ -362,7 +431,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     }
                 }
             };
-
+            // createAnswer ends
 
             /**
              * Use time parameter to either close question/points window or extend question end time.
