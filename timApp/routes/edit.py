@@ -7,7 +7,7 @@ from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser, ValidationException, ValidationWarning
 from documentmodel.documentparseroptions import DocumentParserOptions
 from markdownconverter import md_to_html
-from routes.accesshelper import verify_edit_access, verify_view_access, has_manage_access, get_rights
+from routes.accesshelper import verify_edit_access, verify_view_access, has_manage_access, get_rights, has_view_access
 from routes.notify import notify_doc_owner
 from routes.sessioninfo import get_current_user_object
 from timdb.bookmarks import Bookmarks
@@ -48,7 +48,7 @@ def update_document(doc_id):
         strict_validation = not request.form.get('ignore_warnings', False)
     elif 'template_name' in request.get_json():
         template_id = timdb.documents.get_document_id(request.get_json()['template_name'])
-        if not has_manage_access(template_id):
+        if not has_view_access(template_id):
             abort(403, 'Permission denied')
         doc = Document(template_id)
         content = doc.export_markdown()
