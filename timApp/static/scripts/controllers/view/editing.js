@@ -17,7 +17,7 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
         var url;
         var par_id = sc.getParId($par);
         var par_next_id = sc.getParId($par.next());
-        if (par_next_id == "null")
+        if (par_next_id === "HELP_PAR")
             par_next_id = null;
 
         if ($pars.length > 1) {
@@ -27,7 +27,7 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
 
         } else {
             // TODO: Use same route (postParagraph) for both cases, determine logic based on given parameters
-            if (par_id == "null" || $pars.hasClass("new")) {
+            if (par_id === "HELP_PAR" || $pars.hasClass("new")) {
                 url = '/newParagraph/';
             } else {
                 url = '/postParagraph/';
@@ -81,7 +81,7 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
         };
         if (options.showDelete) {
             caption = 'Edit paragraph';
-            if (par_id != "null")
+            if (par_id !== "HELP_PAR")
                 attrs["initial-text-url"] = '/getBlock/' + sc.docId + "/" + par_id;
         }
         sc.toggleEditor($par, options, attrs, caption, "pareditor");
@@ -135,7 +135,7 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
                 throw 'Faulty recursion stopped, there should be a settings paragraph already';
             }
             var par_next = sc.getParId($(".par:first"));
-            if (par_next == "null") {
+            if (par_next === "HELP_PAR") {
                 par_next = null;
             }
             http.post('/newParagraph/', {
@@ -327,7 +327,7 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
     };
 
     sc.removeDefaultPars = function () {
-        sc.getElementByParId("null").remove();
+        sc.getElementByParId("HELP_PAR").remove();
     };
 
     sc.extendSelection = function ($par, allowShrink) {
