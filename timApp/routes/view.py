@@ -223,7 +223,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                 flash("Did someone give you a wrong link? Showing normal view instead of see answers view.")
                 return redirect('/view/' + doc_path)
 
-    if not has_view_access(doc_id):
+    if not verify_view_access(doc_id, require=False, check_duration=True):
         if not logged_in():
             return redirect_to_login()
         else:

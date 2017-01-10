@@ -1,6 +1,7 @@
 import unittest
+from datetime import datetime, timezone, timedelta
 
-from tests.db.timdbtest import TimDbTest
+from tests.db.timdbtest import TimDbTest, TEST_USER_1_ID
 from timdb.dbutils import insert_block
 
 
@@ -153,6 +154,38 @@ class UserTest(TimDbTest):
             self.assertTrue(db.users.has_view_access(user_id, bid))
             self.assertTrue(db.users.has_teacher_access(user_id, bid))
             self.assertTrue(db.users.has_seeanswers_access(user_id, bid))
+
+    def test_timed_permissions(self):
+        db = self.get_db()
+        b = insert_block('testing', self.get_test_user_2_group_id(), 0)
+        self.assertFalse(db.users.has_view_access(TEST_USER_1_ID, b))
+        self.assertEqual(set(), db.users.get_accessible_blocks(TEST_USER_1_ID, [db.users.get_view_access_id()]))
+        v = 'view'
+
+        db.users.grant_access(self.get_test_user_1_group_id(), b, v,
+                              accessible_from=datetime.now(tz=timezone.utc) + timedelta(days=1))
+        self.assertFalse(db.users.has_view_access(TEST_USER_1_ID, b))
+        self.assertEqual(set(), db.users.get_accessible_blocks(TEST_USER_1_ID, [db.users.get_view_access_id()]))
+        db.users.remove_access(self.get_test_user_1_group_id(), b, v)
+
+        db.users.grant_access(self.get_test_user_1_group_id(), b, v,
+                              accessible_from=datetime.now(tz=timezone.utc) - timedelta(days=1))
+        self.assertTrue(db.users.has_view_access(TEST_USER_1_ID, b))
+        self.assertEqual({b}, db.users.get_accessible_blocks(TEST_USER_1_ID, [db.users.get_view_access_id()]))
+        db.users.remove_access(self.get_test_user_1_group_id(), b, v)
+
+        db.users.grant_access(self.get_test_user_1_group_id(), b, v,
+                              accessible_from=datetime.now(tz=timezone.utc) - timedelta(days=1),
+                              accessible_to=datetime.now(tz=timezone.utc) - timedelta(seconds=1))
+        self.assertFalse(db.users.has_view_access(TEST_USER_1_ID, b))
+        self.assertEqual(set(), db.users.get_accessible_blocks(TEST_USER_1_ID, [db.users.get_view_access_id()]))
+        db.users.remove_access(self.get_test_user_1_group_id(), b, v)
+
+        db.users.grant_access(self.get_test_user_1_group_id(), b, v,
+                              duration=timedelta(days=1))
+        self.assertFalse(db.users.has_view_access(TEST_USER_1_ID, b))
+        self.assertEqual(set(), db.users.get_accessible_blocks(TEST_USER_1_ID, [db.users.get_view_access_id()]))
+        db.users.remove_access(self.get_test_user_1_group_id(), b, v)
 
 
 if __name__ == '__main__':

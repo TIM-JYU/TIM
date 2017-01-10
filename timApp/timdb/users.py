@@ -1,5 +1,6 @@
 import hashlib
 import re
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Set
 
 from timdb.blocktypes import blocktypes, BlockType
@@ -243,7 +244,14 @@ class Users(TimDbBase):
 
     def get_rights_holders(self, block_id: int):
         cursor = self.db.cursor()
-        cursor.execute("""SELECT b.UserGroup_id as gid, u.name as name, a.id as access_type, a.name as access_name, fullname
+        cursor.execute("""SELECT b.UserGroup_id as gid,
+                                 u.name as name,
+                                 a.id as access_type,
+                                 a.name as access_name,
+                                 accessible_from,
+                                 accessible_to,
+                                 duration,
+                                 fullname
                           FROM BlockAccess b
                           JOIN UserGroup u ON b.UserGroup_id = u.id
                           JOIN AccessType a ON b.type = a.id
@@ -260,11 +268,25 @@ class Users(TimDbBase):
             return []
         return self.get_rights_holders(doc.id)
 
-    def grant_default_access(self, group_ids: List[int], folder_id: int, access_type: str, object_type: BlockType):
+    def grant_default_access(self, group_ids: List[int],
+                             folder_id: int,
+                             access_type: str,
+                             object_type: BlockType,
+                             accessible_from: Optional[datetime]=None,
+                             accessible_to: Optional[datetime]=None,
+                             duration: Optional[timedelta]=None) -> List[BlockAccess]:
         doc = self.get_default_right_document(folder_id, object_type, create_if_not_exist=True)
+        accesses = []
         for group_id in group_ids:
-            self.grant_access(group_id, doc.id, access_type, commit=False)
+            accesses.append(self.grant_access(group_id,
+                                              doc.id,
+                                              access_type,
+                                              commit=False,
+                                              accessible_from=accessible_from,
+                                              accessible_to=accessible_to,
+                                              duration=duration))
         db.session.commit()
+        return accesses
 
     def remove_default_access(self, group_id: int, folder_id: int, access_type: str, object_type: BlockType):
         doc = self.get_default_right_document(folder_id, object_type, create_if_not_exist=True)
@@ -465,21 +487,41 @@ class Users(TimDbBase):
                            WHERE User_id = %s AND UserGroup_id = %s""", (user_id, usergroup_id))
         return c.fetchone() is not None
 
-    def grant_access(self, group_id: int, block_id: int, access_type: str, commit:bool=True):
+    def grant_access(self,
+                     group_id: int,
+                     block_id: int,
+                     access_type: str,
+                     accessible_from: Optional[datetime]=None,
+                     accessible_to: Optional[datetime]=None,
+                     duration: Optional[timedelta]=None,
+                     commit: bool=True):
         """Grants access to a group for a block.
         
+        :param accessible_from: The optional start time for the permission.
+        :param accessible_to: The optional end time for the permission.
+        :param duration: The optional duration for the permission.
         :param commit: Whether to commit changes immediately.
         :param group_id: The group id to which to grant view access.
         :param block_id: The id of the block for which to grant view access.
-        :param access_type: The kind of access. Possible values are 'edit' and 'view'.
+        :param access_type: The kind of access. Possible values are listed in accesstype table.
         """
 
+        if accessible_from is None and duration is None:
+            # the delta is to ease testing; the clocks of container and PostgreSQL are not perfectly in sync
+            accessible_from = datetime.now(tz=timezone.utc) - timedelta(milliseconds=50)
+
         access_id = self.get_access_type_id(access_type)
-        if access_id is not None:
-            ba = BlockAccess(block_id=block_id, usergroup_id=group_id, type=access_id)
-            db.session.merge(ba)
+        assert access_id is not None
+        ba = BlockAccess(block_id=block_id,
+                         usergroup_id=group_id,
+                         type=access_id,
+                         accessible_from=accessible_from,
+                         accessible_to=accessible_to,
+                         duration=duration)
+        db.session.merge(ba)
         if commit:
             db.session.commit()
+        return ba
 
     def grant_view_access(self, group_id: int, block_id: int):
         """Grants view access to a group for a block.
@@ -580,6 +622,7 @@ WHERE UserGroup_id IN
       (SELECT UserGroup_id
        FROM BlockAccess
        WHERE Block_id = %s AND type IN ({})
+       AND accessible_from <= CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < COALESCE(accessible_to, 'infinity')
        UNION SELECT UserGroup_id
              FROM Block
              WHERE id = %s
@@ -606,6 +649,7 @@ WHERE UserGroup_id IN (SELECT UserGroup_id
 FROM UserGroupMember
 WHERE User_id IN ({}))
   AND type IN ({})
+  AND accessible_from <= CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < COALESCE(accessible_to, 'infinity')
 UNION
 SELECT id FROM Block
 WHERE UserGroup_id IN (SELECT UserGroup_id

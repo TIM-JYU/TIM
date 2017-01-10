@@ -1,3 +1,4 @@
+import glob
 import os
 import unittest
 
@@ -27,6 +28,10 @@ class TimDbTest(unittest.TestCase):
             # Safety mechanism
             assert cls.test_files_path != 'tim_files'
             del_content(cls.test_files_path, onerror=change_permission_and_retry)
+            for f in glob.glob('/tmp/heading_cache_*'):
+                os.remove(f)
+            for f in glob.glob('/tmp/tim_auto_macros_*'):
+                os.remove(f)
         else:
             os.mkdir(cls.test_files_path)
         initdb2.initialize_temp_database()

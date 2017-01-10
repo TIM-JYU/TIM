@@ -1,0 +1,11 @@
+{% extends 'item.html' %}
+{% block content %}
+    <div class="alert alert-warning">
+        <i class="glyphicon glyphicon-warning-sign"></i>
+        You are about to access a time-limited {{ item_type }}.
+        After you click Unlock, your access to this {{ item_type }} will be removed in {{ duration | timtimedelta }}.
+    </div>
+    <div class="text-center">
+        <a href="/view/{{ item.path }}?unlock=true" class="timButton">Unlock</a>
+    </div>
+{% endblock %}

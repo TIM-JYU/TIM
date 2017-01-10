@@ -1,8 +1,12 @@
 """Routes for manage view."""
+from datetime import timezone
+
 from flask import Blueprint, render_template
+from isodate import Duration
+from isodate import parse_duration
 
 from options import get_option
-from routes.accesshelper import verify_manage_access, verify_ownership, get_rights, verify_view_access, \
+from routes.accesshelper import verify_manage_access, verify_ownership, verify_view_access, \
     has_manage_access
 from timdb.blocktypes import from_str
 from timdb.models.docentry import DocEntry
@@ -83,11 +87,17 @@ def change_owner(doc_id, new_owner_name):
 
 @manage_page.route("/permissions/add/<int:item_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_permission(item_id, group_name, perm_type):
-    group_ids = verify_and_get_group(item_id, group_name)
+    group_ids, acc_from, acc_to, duration = verify_and_get_params(item_id, group_name)
     timdb = get_timdb()
     try:
         for group_id in group_ids:
-            timdb.users.grant_access(group_id, item_id, perm_type, commit=False)
+            timdb.users.grant_access(group_id,
+                                     item_id,
+                                     perm_type,
+                                     accessible_from=acc_from,
+                                     accessible_to=acc_to,
+                                     duration=duration,
+                                     commit=False)
         timdb.commit()
     except KeyError:
         abort(400, 'Invalid permission type.')
@@ -240,9 +250,15 @@ def get_default_document_permissions(folder_id, object_type):
 
 @manage_page.route("/defaultPermissions/<object_type>/add/<int:folder_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
-    group_ids = verify_and_get_group(folder_id, group_name)
+    group_ids, acc_from, acc_to, duration = verify_and_get_params(folder_id, group_name)
     timdb = get_timdb()
-    timdb.users.grant_default_access(group_ids, folder_id, perm_type, from_str(object_type))
+    timdb.users.grant_default_access(group_ids,
+                                     folder_id,
+                                     perm_type,
+                                     from_str(object_type),
+                                     accessible_from=acc_from,
+                                     accessible_to=acc_to,
+                                     duration=duration)
     return okJsonResponse()
 
 
@@ -254,13 +270,34 @@ def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
     return okJsonResponse()
 
 
-def verify_and_get_group(folder_id, group_name):
+def verify_and_get_params(folder_id, group_name):
     verify_manage_access(folder_id)
     groups = UserGroup.query.filter(UserGroup.name.in_(group_name.split(';'))).all()
     if len(groups) == 0:
         abort(404, 'No user group with this name was found.')
     group_ids = [group.id for group in groups]
-    return group_ids
+    access_type = request.get_json().get('type')
+
+    fr = request.get_json().get('from')
+    accessible_from = dateutil.parser.parse(fr) if access_type == 'range' else None
+    to = request.get_json().get('to')
+    accessible_to = dateutil.parser.parse(to) if to and access_type == 'range' else None
+
+    duration = parse_duration(request.get_json().get('duration')) if access_type == 'duration' else None
+
+    if access_type == 'always':
+        accessible_from = datetime.now(tz=timezone.utc)
+
+    if accessible_from is None and duration is None:
+        abort(400)
+
+    # SQLAlchemy doesn't know how to adapt Duration instances, so we convert it to timedelta.
+    if isinstance(duration, Duration):
+        try:
+            duration = duration.totimedelta(start=datetime.min)
+        except (OverflowError, ValueError):
+            abort(400, 'Duration is too long.')
+    return group_ids, accessible_from, accessible_to, duration
 
 
 @manage_page.route("/documents/<int:doc_id>", methods=["DELETE"])

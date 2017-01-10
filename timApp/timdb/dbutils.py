@@ -33,4 +33,10 @@ def copy_default_rights(item_id: int, item_type, commit=True):
         default_rights += timdb.users.get_default_rights_holders(folder.id, item_type)
         folder = folder.parent
     for d in default_rights:
-        timdb.users.grant_access(d['gid'], item_id, d['access_name'], commit=commit)
+        timdb.users.grant_access(d['gid'],
+                                 item_id,
+                                 d['access_name'],
+                                 commit=commit,
+                                 accessible_from=d['accessible_from'],
+                                 accessible_to=d['accessible_to'],
+                                 duration=d['duration'])

@@ -1,5 +1,7 @@
+from datetime import datetime, timezone
 from typing import Optional
 
+from flask import flash
 from flask import request, g
 from werkzeug.exceptions import abort
 
@@ -7,9 +9,11 @@ import documentmodel.document
 from documentmodel.document import Document
 from options import get_option
 from routes.dbaccess import get_timdb
-from routes.sessioninfo import get_current_user_id, logged_in, get_current_user_name, get_other_users_as_list
+from routes.filters import humanize_timedelta
+from routes.sessioninfo import get_current_user_id, logged_in, get_current_user_name, get_other_users_as_list, \
+    get_current_user_group
 from timdb.accesstype import AccessType
-from timdb.tim_models import db
+from timdb.tim_models import db, BlockAccess
 from timdb.timdb2 import TimDb
 from timdb.timdbexception import TimDbException
 
@@ -36,33 +40,59 @@ def has_edit_access(block_id):
 
 def verify_access(block_id: int, access_type: AccessType, require: bool = True, message: Optional[str] = None):
     if access_type == AccessType.view:
-        return abort_if_not_access_and_required(has_view_access(block_id), require, message)
+        return abort_if_not_access_and_required(has_view_access(block_id), block_id, access_type, require, message)
     elif access_type == AccessType.edit:
-        return abort_if_not_access_and_required(has_edit_access(block_id), require, message)
+        return abort_if_not_access_and_required(has_edit_access(block_id), block_id, access_type, require, message)
     elif access_type == AccessType.see_answers:
-        return abort_if_not_access_and_required(has_seeanswers_access(block_id), require, message)
+        return abort_if_not_access_and_required(has_seeanswers_access(block_id), block_id, access_type, require, message)
     elif access_type == AccessType.teacher:
-        return abort_if_not_access_and_required(has_teacher_access(block_id), require, message)
+        return abort_if_not_access_and_required(has_teacher_access(block_id), block_id, access_type, require, message)
     elif access_type == AccessType.manage:
-        return abort_if_not_access_and_required(has_manage_access(block_id), require, message)
+        return abort_if_not_access_and_required(has_manage_access(block_id), block_id, access_type, require, message)
     abort(400, 'Bad request - unknown access type')
 
 
-def verify_view_access(block_id, require=True, message=None):
-    return abort_if_not_access_and_required(has_view_access(block_id), require, message)
+def verify_view_access(block_id, require=True, message=None, check_duration=False):
+    return abort_if_not_access_and_required(has_view_access(block_id), block_id, 'view', require, message, check_duration)
 
 
-def verify_teacher_access(block_id, require=True, message=None):
-    return abort_if_not_access_and_required(has_teacher_access(block_id), require, message)
+def verify_teacher_access(block_id, require=True, message=None, check_duration=False):
+    return abort_if_not_access_and_required(has_teacher_access(block_id), block_id, 'teacher', require, message, check_duration)
 
 
-def verify_seeanswers_access(block_id, require=True, message=None):
-    return abort_if_not_access_and_required(has_seeanswers_access(block_id), require, message)
+def verify_seeanswers_access(block_id, require=True, message=None, check_duration=False):
+    return abort_if_not_access_and_required(has_seeanswers_access(block_id), block_id, 'see answers', require, message, check_duration)
 
 
-def abort_if_not_access_and_required(has_access, require=True, message=None):
+class ItemLockedException(Exception):
+    """The exception that is raised (in /view route) when a user attempts to access an item
+    for which he has a duration access that has not yet begun."""
+    def __init__(self, item_id, duration):
+        self.item_id = item_id
+        self.duration = duration
+
+
+def abort_if_not_access_and_required(has_access, block_id, access_type, require=True, message=None, check_duration=False):
     if has_access:
         return True
+    if check_duration:
+        timdb = get_timdb()
+        # TODO This does not work if the duration has been set for a larger group
+        ba = BlockAccess.query.filter_by(block_id=block_id,
+                                         type=timdb.users.get_access_type_id(access_type),
+                                         usergroup_id=get_current_user_group()).first()
+        if ba is not None and ba.duration is not None:
+            if ba.accessible_from is not None:
+                return abort(403, 'Your access to this item has expired.')
+            unlock = get_option(request, 'unlock', False)
+            if unlock:
+                ba.accessible_from = datetime.now(tz=timezone.utc)
+                ba.accessible_to = ba.accessible_from + ba.duration
+                db.session.commit()
+                flash('Item was unlocked successfully.')
+                return True
+            else:
+                raise ItemLockedException(block_id, ba.duration)
     if require:
         abort(403, message or "Sorry, you don't have permission to view this resource.")
     return False

@@ -1,5 +1,7 @@
 from operator import itemgetter
 
+from dateutil import parser
+
 from tests.server.timroutetest import TimRouteTest
 from timdb.blocktypes import from_str, blocktypes
 from timdb.models.docentry import DocEntry
@@ -20,9 +22,8 @@ class DefaultRightTest(TimRouteTest):
                                          blocktypes.DOCUMENT)
 
         # Make sure an exception won't be thrown if trying to add a right again
-        timdb.users.grant_default_access([timdb.users.get_korppi_group_id()], users_folder.id, 'view',
-                                         blocktypes.DOCUMENT)
-
+        acs = timdb.users.grant_default_access([timdb.users.get_korppi_group_id()], users_folder.id, 'view',
+                                               blocktypes.DOCUMENT)
         for obj_type_str in ('document', 'folder'):
             obj_type = from_str(obj_type_str)
             def_rights = timdb.users.get_default_rights_holders(folder.id, obj_type)
@@ -34,7 +35,7 @@ class DefaultRightTest(TimRouteTest):
             self.json_put(
                 '/defaultPermissions/{}/add/{}/{}/{}'.format(obj_type_str, folder.id,
                                                              'Anonymous users;testuser2',
-                                                             'view'),
+                                                             'view'), {'type': 'always'},
                 expect_content=self.ok_resp)
 
             def_rights = self.get('/defaultPermissions/{}/get/{}'.format(obj_type_str, folder.id),
@@ -43,15 +44,24 @@ class DefaultRightTest(TimRouteTest):
                                'access_type': 1,
                                'fullname': 'Test user 2',
                                'gid': 8,
-                               'name': 'testuser2'},
+                               'name': 'testuser2',
+                               'duration': None,
+                               'accessible_from': def_rights['grouprights'][0]['accessible_from'],
+                               'accessible_to': None},
                               {'access_name': 'view',
                                'access_type': 1,
                                'fullname': None,
                                'gid': 2,
-                               'name': 'Anonymous users'}]
+                               'name': 'Anonymous users',
+                               'duration': None,
+                               'accessible_from': def_rights['grouprights'][1]['accessible_from'],
+                               'accessible_to': None}]
             self.assertDictEqual(
                 {'grouprights': default_rights},
                 def_rights)
+            for d in default_rights:
+                d['accessible_from'] = parser.parse(d['accessible_from'])
+                d['accessible_to'] = parser.parse(d['accessible_to']) if d['accessible_to'] else None
             rights_doc = folder.get_document(timdb.users.default_right_paths[obj_type])
             self.assertIsNotNone(rights_doc)
 
@@ -59,9 +69,14 @@ class DefaultRightTest(TimRouteTest):
                 new_doc = self.create_doc().document
                 new_item_rights = timdb.users.get_rights_holders(new_doc.doc_id)
                 default_rights.append(
-                    {'gid': timdb.users.get_korppi_group_id(), 'name': KORPPI_GROUPNAME, 'access_type': 1,
+                    {'gid': timdb.users.get_korppi_group_id(),
+                     'name': KORPPI_GROUPNAME,
+                     'access_type': 1,
                      'fullname': None,
-                     'access_name': 'view'})
+                     'access_name': 'view',
+                     'duration': None,
+                     'accessible_from': acs[0].accessible_from,
+                     'accessible_to': None})
             elif obj_type == blocktypes.FOLDER:
                 f = self.json_post('/createItem',
                                    {"item_path": 'users/testuser1/asd',
@@ -69,6 +84,7 @@ class DefaultRightTest(TimRouteTest):
                 new_item_rights = timdb.users.get_rights_holders(f['id'])
             else:
                 raise Exception('error in test: object type should be document or folder')
+            self.maxDiff = None
             self.assertListEqual(sorted(default_rights, key=itemgetter('gid', 'access_type')),
                                  sorted(new_item_rights, key=itemgetter('gid', 'access_type')))
             self.json_put('/defaultPermissions/{}/remove/{}/{}/{}'

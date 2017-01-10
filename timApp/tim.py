@@ -21,7 +21,7 @@ from ReverseProxied import ReverseProxied
 from documentmodel.documentversion import DocumentVersion
 from plugin import PluginException
 from routes.accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
-    has_view_access, has_manage_access, grant_access_to_session_users, get_viewable_blocks
+    has_view_access, has_manage_access, grant_access_to_session_users, get_viewable_blocks, ItemLockedException
 from routes.annotation import annotations
 from routes.answer import answers
 from routes.bookmarks import bookmarks
@@ -51,6 +51,7 @@ from timdb.blocktypes import from_str, blocktypes
 from timdb.bookmarks import Bookmarks
 from timdb.dbutils import copy_default_rights
 from timdb.models.docentry import DocEntry
+from timdb.models.folder import Folder
 from timdb.users import NoSuchUserException
 
 cache.init_app(app)
@@ -143,6 +144,21 @@ def internal_error(error):
     log_error(get_request_message(500))
     error.description = "Something went wrong with the server, sorry. We'll fix this as soon as possible."
     return error_generic(error, 500)
+
+
+@app.errorhandler(ItemLockedException)
+def item_locked(error):
+    item = DocEntry.find_by_id(error.item_id)
+    is_folder = False
+    if not item:
+        is_folder = True
+        item = Folder.find_by_id(error.item_id)
+    if not item:
+        abort(404)
+    return render_template('duration_unlock.html',
+                           item=item,
+                           item_type='folder' if is_folder else 'document',
+                           duration=error.duration), 403
 
 
 @app.errorhandler(NoSuchUserException)

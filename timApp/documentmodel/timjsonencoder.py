@@ -1,6 +1,7 @@
 import datetime
 import json
 
+from isodate import duration_isoformat
 from sqlalchemy.ext.declarative import DeclarativeMeta
 
 from documentmodel.docparagraph import DocParagraph
@@ -12,6 +13,9 @@ class TimJsonEncoder(json.JSONEncoder):
             if o.tzinfo is None:
                 o = o.replace(tzinfo=datetime.timezone.utc)
             return o.isoformat()
+
+        if isinstance(o, datetime.timedelta):
+            return duration_isoformat(o)
 
         # from http://stackoverflow.com/a/31569287 with some changes
         if isinstance(o.__class__, DeclarativeMeta):

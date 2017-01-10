@@ -1,5 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
+import humanize
 from jinja2.utils import soft_unicode
 
 
@@ -15,3 +16,7 @@ def map_format(value, pattern):
 
 def timdate(value: datetime):
     return value.isoformat()
+
+
+def humanize_timedelta(value: timedelta):
+    return humanize.naturaldelta(value)
