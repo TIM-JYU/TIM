@@ -99,7 +99,11 @@
                     </div>
                     <div class="row" ng-show="timeOpt.type == 'duration'">
                         <div class="col-md-6">
-                            <input ng-model="timeOpt.durationAmount" class="form-control" type="number" min="0"/>
+                            <input ng-model="timeOpt.durationAmount"
+                                   class="form-control"
+                                   type="number"
+                                   min="0"
+                                   step="0.1"/>
                         </div>
                         <div class="col-md-6">
                             <select class="form-control" ng-model="timeOpt.durationType"
