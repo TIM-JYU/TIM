@@ -278,18 +278,19 @@ def verify_and_get_params(folder_id, group_name):
     group_ids = [group.id for group in groups]
     access_type = request.get_json().get('type')
 
-    fr = request.get_json().get('from')
-    accessible_from = dateutil.parser.parse(fr) if access_type == 'range' else None
-    to = request.get_json().get('to')
-    accessible_to = dateutil.parser.parse(to) if to and access_type == 'range' else None
+    try:
+        accessible_from = dateutil.parser.parse(request.get_json().get('from')) if access_type == 'range' else None
+    except TypeError:
+        accessible_from = None
+    try:
+        accessible_to = dateutil.parser.parse(request.get_json().get('to')) if access_type == 'range' else None
+    except TypeError:
+        accessible_to = None
 
     duration = parse_duration(request.get_json().get('duration')) if access_type == 'duration' else None
 
-    if access_type == 'always':
+    if access_type == 'always' or (accessible_from is None and duration is None):
         accessible_from = datetime.now(tz=timezone.utc)
-
-    if accessible_from is None and duration is None:
-        abort(400)
 
     # SQLAlchemy doesn't know how to adapt Duration instances, so we convert it to timedelta.
     if isinstance(duration, Duration):
