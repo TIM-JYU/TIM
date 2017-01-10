@@ -248,6 +248,7 @@ def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
 
 @manage_page.route("/defaultPermissions/<object_type>/remove/<int:folder_id>/<int:group_id>/<perm_type>", methods=["PUT"])
 def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
+    verify_manage_access(folder_id)
     timdb = get_timdb()
     timdb.users.remove_default_access(group_id, folder_id, perm_type, from_str(object_type))
     return okJsonResponse()
