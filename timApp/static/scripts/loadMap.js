@@ -12,6 +12,8 @@ $(document).ready(function () {
 
     var json;
 
+    console.log(gamified_data)
+
     // Get the div that will hold canvases
     var container = $(".mapContainer")[0];
     $(".mapContainer").css({
@@ -69,7 +71,7 @@ $(document).ready(function () {
         type: "post",
         datatype : "application/json",
         contentType: "application/json",
-        data: gamified_data,
+        data: JSON.stringify(gamified_data),
         charset: 'utf-8',
         success: function (newJson) {
 

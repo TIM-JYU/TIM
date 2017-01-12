@@ -18,6 +18,7 @@ from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import dereference_pars, Document
 from plugin import PluginException, parse_plugin_values
 from utils import get_error_html
+from flask import render_template
 
 
 LAZYSTART= "<!--lazy "
@@ -116,35 +117,7 @@ def pluginify(doc: Document,
         if is_gamified:
             raw_data = DocParagraph.get_markdown(block)
             gamified_data = gamificationdata.gamify(raw_data)
-            html_pars[idx]['html'] = """
-            <script src="/static/scripts/loadMap.js"></script>
-            <button class="showMap" onclick="showMap(this)" data-toggle="false">Show map</button>
-            <script>
-            function showMap(button) {
-                var map = $(".mapContainer")[0];
-                var ui = $(".uiContainer")[0];
-                if (button.getAttribute("data-toggle") === "false")
-                {
-                    button.setAttribute("data-toggle", "true");
-                    map.setAttribute("style", "z-index: 0; position: relative;");
-                    ui.setAttribute("style", "");
-                } else {
-                    button.setAttribute("data-toggle", "false");
-                    map.setAttribute("style", "z-index: 0; display: none; position: relative;");
-                    ui.setAttribute("style", "display: none;");
-                }
-            }
-            </script>
-            <div class="uiContainer">
-                <button class="showFrames">Goals</button>
-                <input type="range" class="mapZoom">Zoom
-                <input type="range" class="alphaRange">Goal Transparency
-            </div>
-            <div class="json_to_mapgenerator" style="display: none;">
-                """+str(gamified_data)+"""</div>
-            <div class="mapContainer">
-            </div>
-            """
+            html_pars[idx]['html'] = render_template('gamification_map.html', gamified_data=gamified_data)
 
         if plugin_name:
             vals = parse_plugin_values(block, global_attrs=settings.global_plugin_attrs(),

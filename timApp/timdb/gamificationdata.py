@@ -94,7 +94,7 @@ def place_in_dict(l_table, d_table):
     document_dict['lectures']=temp1
     document_dict['demos'] = temp2
 
-    return json.dumps(document_dict)
+    return document_dict
 
 
 def get_points_for_doc(d):
@@ -111,7 +111,7 @@ def get_points_for_doc(d):
 
     for entrys in users_task_info:
         if users_task_info is not None:
-            user_points += (users_task_info[0]['total_points'])
+            user_points += (entrys['total_points'])
 
     return user_points
 
