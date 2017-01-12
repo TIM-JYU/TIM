@@ -45,7 +45,7 @@ qstApp.directiveTemplate = function () {
 				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
                   '<dynamic-answer-sheet  control="dynamicAnswerSheetControl"></dynamic-answer-sheet>' +
 				  '<button class="timButton" ng-if="button"  ng-disabled="isRunning" ng-click="qstScope.saveText();">{{button}}</button>&nbsp&nbsp' +
-                  '<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="Ask question"></span></a>' +
+                  '<a class="questionAddedNew" ng-show="qstScope.checkQstMode()"><span class="glyphicon glyphicon-question-sign" title="Ask question"></span></a>' +
                   '<span ng-show="result">{{result}}</span>' +
     		      '<p class="plgfooter">Here comes footer</p>' +
               '</div>';
@@ -141,6 +141,12 @@ QstScope.prototype.saveText = function() {
     this.doSaveText(false);
 };
 
+
+QstScope.prototype.checkQstMode = function(nosave) {
+"use strict";
+    var $scope = this.scope;
+    return window.in_lecture || window.lectureMode; //  $scope.$parent.$parent.wallName; // TODO: better check if in lecture page
+}
 
 QstScope.prototype.doSaveText = function(nosave) {
 "use strict";

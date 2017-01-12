@@ -235,7 +235,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         for (var i = 0; i < annotations.length; i++) {
             var placeInfo = annotations[i].coord;
 
-            var element = par.getElementsByTagName("PRE")[0].firstChild;
+            var preElem =  par.getElementsByTagName("PRE")[0];
+            if ( !preElem ) continue;
+            var element = preElem.firstChild;
 
             if (!showInPlace || placeInfo.start.offset === null) {
                 addAnnotationToElement(par, annotations[i], false, "Added as margin annotation");
