@@ -5,19 +5,20 @@ from .common import *
 
 generateMap = Blueprint('generateMap', __name__, url_prefix='')
 
+
 @generateMap.route('/generateMap', methods=["GET","POST"])
 def generate_map():
     coursedata = request.get_json()
-    #Get lectures from json
+    # Get lectures from json
     lecturejson = coursedata['lectures']
-    #Get demos from json
+    # Get demos from json
     demojson = coursedata['demos']
-    #Get map
+    # Get map
     mapname = select_map(len(lecturejson),len(demojson))
-    #Read map
+    # Read map
     with open(mapname,"r") as f:
         map = json.loads(f.read())
-    #Dict for properties added to every layer.
+    # Dict for properties added to every layer.
     properties = {
         'studentpoints':0, #Points student got from this demo/lecture
         'maxpoints':0, # Maximum points attainable from this demo/lecture
@@ -28,7 +29,7 @@ def generate_map():
     # Width of the map, needed for calculating tiles.
     mapwidth = map['width']
     map['layers'] = add_properties(map['layers'],properties)
-    #The number of demos and lectures in the map.
+    # The number of demos and lectures in the map.
     demosinmap = 0
     lecturesinmap = 0
 
@@ -39,7 +40,6 @@ def generate_map():
             lecturesinmap +=1
         if layer['name'][0:1] == 'd':
             demosinmap += 1
-
 
     # Indexes for lectures and demos so correct information can be sent to layers in a loop.
     # Starts at -abs(len - number of demos/lectures) so that excess layers can be removed.
@@ -93,19 +93,19 @@ def generate_map():
             demoindex +=1
         layerindex += 1
 
-    #If a layer has no data remove it.
+    # If a layer has no data remove it.
     for layer in map['layers']:
         if len(layer['data']) == 0:
             dellayers.append(layer)
 
-    #Remove unused layers.
+    # Remove unused layers.
     for dellayer in dellayers:
         map['layers'].remove(dellayer)
 
     # Python for some reason modifies certain characters in the JSON and it has to be modified back to the proper form.
     map = str.replace(str(map), "\'", "\"")
     map = str.replace(str(map), "True", "true")
-   # layers = create_lecture_layers(map['layers'],2,mapwidth)
+    # layers = create_lecture_layers(map['layers'],2,mapwidth)
     print(map)
     return str(map)
 
