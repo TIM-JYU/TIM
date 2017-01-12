@@ -1,8 +1,4 @@
 from timdb.tim_models import db
-from timdb.gamification_models import gamificationdocument
-from timdb.gamification_models import gamificationdocumenttype
-from timdb.models import block
-from timdb.timdbexception import TimDbException
 
 
 class DocGamified(db.Model):
@@ -12,16 +8,16 @@ class DocGamified(db.Model):
     """
     __bind_key__ = 'tim_main'
     __tablename__ = 'docgamified'
-    gamification_doc_id = db.Column(db.Integer, db.ForeignKey('block.id'))
-    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'))
+    gamification_doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
+    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     doc_type_id = db.Column(db.Integer, db.ForeignKey('gamificationdocumenttype.document_type_id'))
 
 
     @staticmethod
-    def create(docGamID: int, documID: int, docTypeID: int) -> 'DocGamified':
+    def create(doc_game_id: int, document_id: int, doc_type_id: int) -> 'DocGamified':
         """Creates a new entry into DocGamified table"""
 
-        dgamified = DocGamified(docGamID, documID, docTypeID)
+        dgamified = DocGamified(doc_game_id, document_id, doc_type_id)
         db.session.add(dgamified)
         db.session.commit()
 

@@ -8,16 +8,16 @@ class UserGamification(db.Model):
     """
     __bind_key__ = 'tim_main'
     __tablename__ = 'usergamification'
-    gamification_doc_id = db.Column(db.Integer, db.ForeignKey('gamificationdocument.id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    gamification_doc_id = db.Column(db.Integer, db.ForeignKey('gamificationdocument.id'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     is_gamified = db.Column(db.Boolean)
 
 
     @staticmethod
-    def create(gamDocID: int, userID: int, isGamified: bool) -> 'UserGamification':
+    def create(game_doc_id: int, user_id: int, is_gamified: bool) -> 'UserGamification':
         """Creates a new entry into DocGamified table"""
 
-        uGamification = UserGamification(gamDocID, userID, isGamified)
+        uGamification = UserGamification(game_doc_id, user_id, is_gamified)
         db.session.add(uGamification)
         db.session.commit()
 

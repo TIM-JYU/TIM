@@ -12,10 +12,10 @@ class GamificationDocument(db.Model):
     id = db.Column (db.Integer, db.ForeignKey('block.id'), primary_key=True)
 
     @staticmethod
-    def create(id) -> 'GamificationDocument':
+    def create(document_id) -> 'GamificationDocument':
         """Creates a new entry into GamificationDocument table"""
 
-        gamificationdocument = GamificationDocument(id=id)
+        gamificationdocument = GamificationDocument(id=document_id)
         db.session.add(gamificationdocument)
         db.session.commit()
         return gamificationdocument

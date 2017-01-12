@@ -9,18 +9,18 @@ class DocumentGamificationPoint(db.Model):
     """
     __bind_key__ = 'tim_main'
     __tablename__ = 'documentgamificationpoint'
-    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'))
-    point_type_id = db.Column(db.Integer, db.ForeignKey('gamificationpointtype.point_type_id'))
+    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
+    point_type_id = db.Column(db.Integer, db.ForeignKey('gamificationpointtype.point_type_id'), primary_key=True)
     amount = db.Column(db.Integer)
     multiplier = db.Column(db.Integer)
     is_active = db.Column(db.Boolean)
 
 
     @staticmethod
-    def create(docID: int, pointtypeID: int, amount: int, multip: int, isActive: bool) -> 'DocumentGamificationPoint':
+    def create(doc_id: int, point_type_id: int, amount: int, multip: int, is_active: bool) -> 'DocumentGamificationPoint':
         """Creates a new entry into DocGamified table"""
 
-        DocGamiPoint = DocumentGamificationPoint(docID, pointtypeID, amount, multip, isActive)
+        DocGamiPoint = DocumentGamificationPoint(doc_id, point_type_id, amount, multip, is_ative)
         db.session.add(DocGamiPoint)
         db.session.commit()
 
