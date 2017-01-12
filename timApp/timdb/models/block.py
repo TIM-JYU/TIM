@@ -36,4 +36,4 @@ class Block(db.Model):
 
     def is_unpublished(self):
         from routes.accesshelper import has_ownership
-        return has_ownership(self.id) and not self.owner.is_large() and self.accesses.count() == 0
+        return has_ownership(self.id) is not None and not self.owner.is_large() and self.accesses.count() == 0

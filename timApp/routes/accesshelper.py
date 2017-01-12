@@ -9,7 +9,6 @@ import documentmodel.document
 from documentmodel.document import Document
 from options import get_option
 from routes.dbaccess import get_timdb
-from routes.filters import humanize_timedelta
 from routes.sessioninfo import get_current_user_id, logged_in, get_current_user_name, get_other_users_as_list, \
     get_current_user_group
 from timdb.accesstype import AccessType
@@ -72,9 +71,14 @@ class ItemLockedException(Exception):
         self.duration = duration
 
 
-def abort_if_not_access_and_required(has_access, block_id, access_type, require=True, message=None, check_duration=False):
-    if has_access:
-        return True
+def abort_if_not_access_and_required(access_obj: BlockAccess,
+                                     block_id: int,
+                                     access_type,
+                                     require=True,
+                                     message=None,
+                                     check_duration=False):
+    if access_obj:
+        return access_obj
     if check_duration:
         timdb = get_timdb()
         # TODO This does not work if the duration has been set for a larger group
@@ -88,22 +92,22 @@ def abort_if_not_access_and_required(has_access, block_id, access_type, require=
             if unlock:
                 ba.accessible_from = datetime.now(tz=timezone.utc)
                 ba.accessible_to = ba.accessible_from + ba.duration
-                db.session.commit()
+                db.session.commit()  # TODO ensure nothing else gets committed than the above
                 flash('Item was unlocked successfully.')
-                return True
+                return ba
             else:
                 raise ItemLockedException(block_id, ba.duration)
     if require:
         abort(403, message or "Sorry, you don't have permission to view this resource.")
-    return False
+    return None
 
 
 def has_view_access(block_id):
-    return block_id in get_viewable_blocks()
+    return get_viewable_blocks().get(block_id)
 
 
 def has_comment_right(doc_id):
-    return has_view_access(doc_id) and logged_in()
+    return has_view_access(doc_id) if logged_in() else None
 
 
 def verify_comment_right(doc_id):
@@ -112,7 +116,7 @@ def verify_comment_right(doc_id):
 
 
 def has_read_marking_right(doc_id):
-    return has_view_access(doc_id) and logged_in()
+    return has_view_access(doc_id) if logged_in() else None
 
 
 def verify_read_marking_right(doc_id):
@@ -121,26 +125,26 @@ def verify_read_marking_right(doc_id):
 
 
 def has_teacher_access(doc_id):
-    return doc_id in get_teachable_blocks()
+    return get_teachable_blocks().get(doc_id)
 
 
 def has_manage_access(doc_id):
-    return doc_id in get_manageable_blocks()
+    return get_manageable_blocks().get(doc_id)
 
 
 def has_seeanswers_access(doc_id):
-    return doc_id in get_see_answers_blocks()
+    return get_see_answers_blocks().get(doc_id)
 
 
 def get_rights(doc_id):
-    return {'editable': has_edit_access(doc_id),
-            'can_mark_as_read': has_read_marking_right(doc_id),
-            'can_comment': has_comment_right(doc_id),
+    return {'editable': bool(has_edit_access(doc_id)),
+            'can_mark_as_read': bool(has_read_marking_right(doc_id)),
+            'can_comment': bool(has_comment_right(doc_id)),
             'browse_own_answers': logged_in(),
-            'teacher': has_teacher_access(doc_id),
-            'see_answers': has_seeanswers_access(doc_id),
-            'manage': has_manage_access(doc_id),
-            'owner': has_ownership(doc_id)
+            'teacher': bool(has_teacher_access(doc_id)),
+            'see_answers': bool(has_seeanswers_access(doc_id)),
+            'manage': bool(has_manage_access(doc_id)),
+            'owner': bool(has_ownership(doc_id))
             }
 
 
@@ -150,7 +154,7 @@ def verify_logged_in():
 
 
 def has_ownership(block_id):
-    return block_id in get_owned_blocks()
+    return get_owned_blocks().get(block_id)
 
 
 def verify_ownership(block_id):

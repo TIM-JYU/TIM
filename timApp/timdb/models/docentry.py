@@ -74,7 +74,7 @@ class DocEntry(db.Model, DocInfo):
         if name is not None and '\0' in name:
             raise TimDbException('Document name cannot contain null characters.')
 
-        document_id = insert_block(name, owner_group_id, blocktypes.DOCUMENT, commit=False)
+        document_id = insert_block(name, owner_group_id, blocktypes.DOCUMENT, commit=False).id
         document = Document(document_id, modifier_group_id=owner_group_id)
         document.create()
 

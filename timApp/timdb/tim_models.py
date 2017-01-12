@@ -103,6 +103,30 @@ class BlockAccess(db.Model):
 
     block = db.relationship('Block', backref=db.backref('accesses', lazy='dynamic'))
 
+    @property
+    def seconds_left(self):
+        if self.accessible_to is None:
+            return None
+        return (self.accessible_to - datetime.datetime.now(tz=timezone.utc)).total_seconds()
+
+    def __eq__(self, other: 'BlockAccess'):
+        return self.block_id == other.block_id and self.usergroup_id == other.usergroup_id and self.type == other.type
+
+    def __ne__(self, other):
+        return not self == other
+
+    @staticmethod
+    def owner_from_block(block):
+        """Temporary method that returns a fake BlockAccess object that corresponds to the owner access
+        level for the given block.
+
+        This won't be needed anymore when the owner is moved to blockaccess table like the others.
+        """
+        return BlockAccess(block_id=block.id,
+                           usergroup_id=block.usergroup_id,
+                           type=6,
+                           accessible_from=block.created)
+
 
 class Lecture(db.Model):
     __bind_key__ = 'tim_main'

@@ -4,7 +4,7 @@ from timdb.models.block import Block
 from timdb.tim_models import db
 
 
-def insert_block(description: Optional[str], owner_group_id: int, block_type: int, commit: bool = True) -> int:
+def insert_block(description: Optional[str], owner_group_id: int, block_type: int, commit: bool = True) -> Block:
     """Inserts a block to database.
 
     :param commit: Whether to commit the change.
@@ -20,7 +20,7 @@ def insert_block(description: Optional[str], owner_group_id: int, block_type: in
     assert block_id != 0
     if commit:
         db.session.commit()
-    return block_id
+    return b
 
 
 def copy_default_rights(item_id: int, item_type, commit=True):

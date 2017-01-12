@@ -76,6 +76,7 @@ run mkdir /service
 run useradd -M agent
 run chown -R agent /service
 
+# angular-timer depends on humanize-duration version 2.8 but it appears to work fine with 3.10, so we force the install
 run apt-get install --no-install-recommends -y npm \
  && npm install -g bower \
  && npm install uglify-js -g \
@@ -102,6 +103,7 @@ run apt-get install --no-install-recommends -y npm \
  && bower --allow-root install eonasdan-bootstrap-datetimepicker#latest \
  && bower --allow-root install angular-eonasdan-datetimepicker#~0.3 \
  && bower --allow-root install humanize-duration#~3.10 \
+ && bower --allow-root --force install angular-timer#~1.3 \
  && apt-get purge -y --auto-remove npm
 
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27

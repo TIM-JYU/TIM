@@ -125,6 +125,18 @@
 {% block mainctrl %}ng-controller="ViewCtrl"{% endblock %}
 
 {% block rightside %}
+    {% if access.accessible_to %}
+        <span class="label label-default">
+        Time left:
+        <timer ng-cloak
+               countdown="{{ access.seconds_left }}"
+               interval="1000"
+               finish-callback="reload()">
+               {% raw %}{{ hhours }}:{{ mminutes }}:{{ sseconds }}{% endraw %}
+    </timer>
+    </span>
+    {% endif %}
+
     {% if teacher_mode %}
         <div  save="%%PAGEID%%studentList" class="userFixed" tim-draggable-fixed resize="true"  click="true"  caption="Users with answers ({{ plugin_users|length }})">
            <div ng-controller="UserListController" class="userlist draggable-content" >

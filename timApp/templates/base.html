@@ -46,12 +46,13 @@
         <script src="{{ url_for('bower.static', filename='eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='angular-eonasdan-datetimepicker/dist/angular-eonasdan-datetimepicker.min.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='humanize-duration/humanize-duration.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular-timer/dist/assets/js/angular-timer-all.min.js') }}"></script>
         {% block ngscripts %}
             <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.min.js') }}"></script>
         {% endblock %}
 
         <script>
-            var timApp = angular.module('timApp', [{% block ngmodules %}'ae-datetimepicker', 'ngSanitize', 'ui.bootstrap', {% endblock %}]);
+            var timApp = angular.module('timApp', [{% block ngmodules %}'timer', 'ae-datetimepicker', 'ngSanitize', 'ui.bootstrap', {% endblock %}]);
             // disable Angular URL manipulation when using ng-include; from http://stackoverflow.com/a/19825756
             timApp.config(['$provide', function ($provide) {
                 $provide.decorator('$browser', ['$delegate', function ($delegate) {

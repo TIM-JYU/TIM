@@ -1,7 +1,9 @@
 import hashlib
 import re
 from datetime import datetime, timedelta, timezone
-from typing import Optional, List, Set
+from typing import Optional, List, Set, Dict, Any
+
+from sqlalchemy import func
 
 from timdb.blocktypes import blocktypes, BlockType
 from timdb.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
@@ -634,52 +636,50 @@ WHERE UserGroup_id IN
         result = c.fetchone()
         return result is not None
 
-    def get_accessible_blocks(self, user_id: int, access_types: List[int]) -> Set[int]:
+    def get_accessible_blocks(self, user_id: int, access_types: List[int]) -> Dict[int, BlockAccess]:
         if self.has_admin_access(user_id):
-            c = self.db.cursor()
-            c.execute("""SELECT id FROM Block""")
-            return set(row[0] for row in c.fetchall())
+            return {row.id: BlockAccess(block_id=row.id,
+                                        type=6,
+                                        usergroup_id=row.usergroup_id,
+                                        accessible_from=row.created) for row in Block.query.all()}
         user_ids = [user_id, self.get_anon_user_id()]
         if user_id > 0:
             user_ids.append(self.get_logged_user_id())
-        c = self.db.cursor()
-        c.execute("""
-SELECT Block_id as id FROM BlockAccess
-WHERE UserGroup_id IN (SELECT UserGroup_id
-FROM UserGroupMember
-WHERE User_id IN ({}))
-  AND type IN ({})
-  AND accessible_from <= CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < COALESCE(accessible_to, 'infinity')
-UNION
-SELECT id FROM Block
-WHERE UserGroup_id IN (SELECT UserGroup_id
-FROM UserGroupMember
-WHERE User_id IN ({}))
-        """.format(self.get_sql_template(user_ids),
-                   self.get_sql_template(access_types),
-                   self.get_sql_template(user_ids)), user_ids + access_types + user_ids)
-        return set(row[0] for row in c.fetchall())
+        user_query = db.session.query(UserGroupMember.usergroup_id).filter(UserGroupMember.user_id.in_(user_ids))
+        q1 = BlockAccess.query.filter(
+            BlockAccess.usergroup_id.in_(user_query)
+            & BlockAccess.type.in_(access_types)
+            & (func.current_timestamp().between(BlockAccess.accessible_from, func.coalesce(BlockAccess.accessible_to,
+                                                                                           'infinity'))))
+        # print(str(q1))
+        # raise Exception()
+        q2 = Block.query.filter(Block.usergroup_id.in_(user_query))
+        return {row.block_id: row for row in q1.all()
+                + [BlockAccess(block_id=row.id,
+                               type=6,
+                               usergroup_id=row.usergroup_id,
+                               accessible_from=row.created) for row in q2.all()]}
 
-    def get_owned_blocks(self, user_id: int) -> Set[int]:
+    def get_owned_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
         return self.get_accessible_blocks(user_id, [-1])  # slight hack: the non-existent id -1 avoids syntax error in
 
-    def get_manageable_blocks(self, user_id: int) -> Set[int]:
+    def get_manageable_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
         return self.get_accessible_blocks(user_id, [self.get_manage_access_id()])
 
-    def get_teachable_blocks(self, user_id: int) -> Set[int]:
+    def get_teachable_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
         return self.get_accessible_blocks(user_id, [self.get_teacher_access_id(),
                                                     self.get_manage_access_id()])
 
-    def get_see_answers_blocks(self, user_id: int) -> Set[int]:
+    def get_see_answers_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
         return self.get_accessible_blocks(user_id, [self.get_seeanswers_access_id(),
                                                     self.get_teacher_access_id(),
                                                     self.get_manage_access_id()])
 
-    def get_editable_blocks(self, user_id: int) -> Set[int]:
+    def get_editable_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
         return self.get_accessible_blocks(user_id, [self.get_edit_access_id(),
                                                     self.get_manage_access_id()])
 
-    def get_viewable_blocks(self, user_id: int) -> Set[int]:
+    def get_viewable_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
         return self.get_accessible_blocks(user_id, [self.get_view_access_id(),
                                                     self.get_edit_access_id(),
                                                     self.get_manage_access_id(),
