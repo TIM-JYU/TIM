@@ -129,10 +129,11 @@
         <span class="label label-default">
         Time left:
         <timer ng-cloak
-               countdown="{{ access.seconds_left }}"
+               end-time="{{ access.accessible_to.timestamp() * 1000 }}"
                interval="1000"
+               max-time-unit="'day'"
                finish-callback="reload()">
-               {% raw %}{{ hhours }}:{{ mminutes }}:{{ sseconds }}{% endraw %}
+               {% raw %}{{ days > 0 ? days + ' day' + daysS + ' +' : '' }} {{ hhours }}:{{ mminutes }}:{{ sseconds }}{% endraw %}
     </timer>
     </span>
     {% endif %}
