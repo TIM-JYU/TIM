@@ -33,6 +33,7 @@ timApp.controller("ViewCtrl", [
         sc.teacherMode = $window.teacherMode;
         sc.velpMode = $window.velpMode;
         sc.lectureMode = $window.lectureMode;
+        sc.inLecture = $window.in_lecture;
         if (sc.users.length > 0) {
             sc.selectedUser = sc.users[0];
         } else {
@@ -43,7 +44,7 @@ timApp.controller("ViewCtrl", [
 
         // from https://stackoverflow.com/a/7317311
         $window.onload = function () {
-            sc.getAndEditQuestions();
+            sc.processQuestions();
             $window.addEventListener("beforeunload", function (e) {
                 if (!sc.editing) {
                     return undefined;
@@ -177,9 +178,12 @@ timApp.controller("ViewCtrl", [
             }
             sc.rebuildSections();
             sc.pendingUpdates = {};
-            if (sc.lectureMode) {
-                sc.getAndEditQuestions();
-            }
+            sc.processQuestions();
+        };
+
+        sc.showQuestions = function () {
+            return (sc.item.rights.teacher && (sc.lectureMode || sc.inLecture)) ||
+            ($window.editMode && sc.item.rights.editable);
         };
 
         sc.applyDynamicStyles = function ($par) {

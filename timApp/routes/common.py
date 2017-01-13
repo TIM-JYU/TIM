@@ -162,7 +162,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
         for htmlpar in html_pars:
             if htmlpar.get('is_question'):
                 htmlpar['html'] = ' '
-                htmlpar['cls'] += ' hidden'
+                htmlpar['cls'] = 'hidden'
 
     for htmlpar in html_pars:
         if htmlpar.get('ref_id') and htmlpar.get('ref_doc_id'):
