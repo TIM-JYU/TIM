@@ -36,17 +36,13 @@ nunit = ""  # globaali arvo johon haetaan kerraan nunitin paikka
 #     /tmp/uhome            - käyttäjän hakemistoja ohjelmien ajamisen ajan
 #     /tmp/uhome/user       - käyttäjän hakemistoja ohjelmien ajamisen ajan
 #     /tmp/uhome/user/HASH  - yhden käyttäjän hakemisto joka säilyy ajojen välillä
-#     /tmp/uhone/run        - tänne kirjoitetaan käynnistyskomento demonia varten
-#     /tmp/uhome/cs:        - c#-jypeli tiedostot
 #
 # tim-koneesta käynnistetään cs3 docker-kontti nimelle csPlugin (./startPlugins.sh), jossa
 # mountataan em. hakemistoja seuraavasti:
 #
 #   /opt/cs  ->          /cs/          read only
 #   /opt/cs/images/cs -> /csimages/    kuvat
-#   /tmp/uhome:          /tmp/         käyttäjien hakemistot ja ajokomennot tänne
-#   /tmp/uhome/cs:       /tmp/cs       c#-jypeli tiedostot, Jypeli ohjelmat myös laitetaan tänne
-#   /tmp/uhome/user:     /tmp/user     käyttäjän alihakemistot
+#   /tmp/uhome:       -> /tmp/         käyttäjän jutut tänne
 #
 # Käyttäjistä (csPlugin-kontissa) tehdään /tmp/user/HASHCODE
 # tai /tmp/HASHCODE nimiset hakemistot (USERPATH=user/HASHCODE tai HASHCODE), 
@@ -59,14 +55,15 @@ nunit = ""  # globaali arvo johon haetaan kerraan nunitin paikka
 # Tämä jälkeen tehdään /tmp/run -hakemistoon tiedosto
 # RNDNAME johon on kirjoitettu "USERPATH run/URNDFILE.sh" 
 # Tähän ajokonttiin mountataan tim-koneesta
+#  (udir = userhash + "/"  + docid  jos on path: user)
 #
-#   /opt/cs  ->            /cs/          read only
-#   /tmp/uhome/USERPATH -> /home/me      käyttäjän "kotihakemisto"
-#   /tmp/uhome/cs ->       /home/cs      c#-jypeli tiedostot
+#   /opt/cs          -> /cs/          read only
+#   /tmp/uhome/udir  -> /home/agent   käyttäjän "kotihakemisto"
 #
 # Docker-kontin käynnistyessä suoritetaan komento /cs/rcmd.sh
+# (TIMissä /opt/cs/rcmd.sh)
 # joka alustaa "näytön" ja luo sopivat ympäristömuuttajat mm. 
-# javan polkuja varten ja sitten vaihtaa hakemistoon /home/me
+# javan polkuja varten ja sitten vaihtaa hakemistoon /home/agent
 # ja ajaa sieltä komennon ./run/URNDFILE.sh
 # stdout ja stderr tulevat tiedostoihin ./run/URNDFILE.in ja ./run/URNDFILE.err
 # Kun komento on ajettu, docker-kontti häviää.  Ajon lopuksi tuohotaan

@@ -47,7 +47,6 @@ source ~/$cmd
 
 if ! [  -z "$savestate"  ]; then
     pwd >~/pwd.txt
-    echo "!$savestate!" >>~/s.txt
     export >$savestate
 fi
 rm ~/$cmd # Tämä ansiosta csRun jatkaa sitten suorittamista ja lukee inputin
