@@ -152,6 +152,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     cmnds = ' '.join(tquote(arg) for arg in args)  # otetaan args listan jonot yhteen
     # tehdään komentojono jossa suuntaukset
     cmnds = "#!/bin/bash\n" + ulimit + "\n" + extra + "source " + cmnds + " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
+    # cmnds = "#!/bin/bash\n" + ulimit + "\n" + extra + cmnds + " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
     print("============")
     print(cwd)
     print(stdoutf)
