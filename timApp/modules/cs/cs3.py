@@ -147,10 +147,11 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     urndname = "run/" + tmpname  # ohjaustiedostojen nimet
     stdoutf = urndname + ".in"
     stderrf = urndname + ".err"
+    print("cwd=",cwd)
     cmdf = cwd + "/" + urndname + ".sh"  # varsinaisen ajoskriptin nimi
     cmnds = ' '.join(tquote(arg) for arg in args)  # otetaan args listan jonot yhteen
     # tehdään komentojono jossa suuntaukset
-    cmnds = "#!/bin/bash\n" + ulimit + "\n" + extra + cmnds + " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
+    cmnds = "#!/bin/bash\n" + ulimit + "\n" + extra + "source " + cmnds + " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
     print("============")
     print(cwd)
     print(stdoutf)
@@ -183,6 +184,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
             pwd = codecs.open(cwd + '/pwd.txt', 'r', "utf-8").read()  # .encode("utf-8")
         except:
             pwd = ""
+        print("pwd=",pwd)
 
         if (stderr):
             remove(cwd + "/" + stdoutf)

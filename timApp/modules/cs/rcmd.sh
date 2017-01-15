@@ -29,18 +29,18 @@ export MONO_PATH=/cs/jypeli
 if [ -f ~/.state ]; then
     chmod 755 ~/.state
     source ~/.state 
-fi    
+fi
 # cd /home/agent/run
 # echo "Running: $cmd" >> /tmp/log/log.txt
 # echo "Running: $cmd" >> log.txt
-#chmod 755 ~/$cmd
+chmod 755 ~/$cmd
 #cp $cmd a.sh
-#cd $PWD # ei tässä kun kaikki eivät kestä muutosta
+cd $PWD # ei tässä kun kaikki eivät kestä muutosta, mutta ilman tätä ei aloita edellisestä hakemistosta
 ulimit -f 80000 # -t 1 -v 2000 -s 100 -u 10
 source ~/$cmd
 pwd >~/pwd.txt
-rm ~/$cmd # Tämä ansiosta csRun jatkaa sitten suorittamista ja lukee inputin
 export >~/.state
+rm ~/$cmd # Tämä ansiosta csRun jatkaa sitten suorittamista ja lukee inputin
 #set >>~/.state
 
  
