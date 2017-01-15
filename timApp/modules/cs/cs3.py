@@ -121,7 +121,7 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin
 
 
 def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8",
-         extra="", ulimit=None, noX11=False):
+         extra="", ulimit=None, noX11=False, savestate=""):
     """
     Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed
     to fullfill the run inside docker.
@@ -135,6 +135,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     :param uargs: user arguments for the run
     :param code: which coding schema to use ("utf-8" is default)
     :param extra: extra command used for the run
+    :param savastate: to which file to save te state of shell
     :return: error code, stdout text, stderr text
     """
     s_in = ""
@@ -150,8 +151,11 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     print("cwd=",cwd)
     cmdf = cwd + "/" + urndname + ".sh"  # varsinaisen ajoskriptin nimi
     cmnds = ' '.join(tquote(arg) for arg in args)  # otetaan args listan jonot yhteen
+    source = '';
+    if savestate:
+        source = 'source '
     # tehdään komentojono jossa suuntaukset
-    cmnds = "#!/bin/bash\n" + ulimit + "\n" + extra + "source " + cmnds + " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
+    cmnds = "#!/bin/bash\n" + ulimit + "\n" + extra + source  + cmnds + " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
     # cmnds = "#!/bin/bash\n" + ulimit + "\n" + extra + cmnds + " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
     print("============")
     print(cwd)
@@ -173,7 +177,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
              "/tmp/uhome/" + udir + "/:/home/agent/",
              # dargs = ["/cs/docker-run-timeout.sh", "10s", "-v", "/opt/cs:/cs/:ro", "-v", "/tmp/uhome/" + udir + ":/home/agent/",
              # "-w", "/home/agent", "ubuntu", "/cs/rcmd.sh", urndname + ".sh"]
-             "-w", "/home/agent", "timimages/cs3", "/cs/rcmd.sh", urndname + ".sh", str(noX11)]
+             "-w", "/home/agent", "timimages/cs3", "/cs/rcmd.sh", urndname + ".sh", str(noX11), str(savestate)]
     print(dargs)
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
     try:
@@ -1805,10 +1809,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     # if stdin: stdin = stdin
                     extra = ""  # ""cd $PWD\nsource "
                     try:
+                        savestate = get_param(query, "savestate", "")
                         # code, out, err = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
                         code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=timeout, env=env, stdin=stdin,
                                                    uargs=userargs,
-                                                   extra=extra, noX11=noX11)
+                                                   extra=extra, noX11=noX11, savestate=savestate)
                         print(pwd)
                     except OSError as e:
                         print(e)
