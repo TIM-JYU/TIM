@@ -107,11 +107,8 @@ def get_points_for_doc(d):
     timdb = get_timdb()
     user_points = 0
     task_id_list = (pluginControl.find_task_ids(document.get_paragraphs()))
-
-    if len(task_id_list) > 0:
-        users_task_info = timdb.answers.get_users_for_tasks(task_id_list[0], [common.get_current_user_id()])
-    else:
-        raise GamificationException('No tasks found!')
+    
+    users_task_info = timdb.answers.get_users_for_tasks(task_id_list[0], [common.get_current_user_id()])
 
     for entrys in users_task_info:
         if users_task_info is not None:
