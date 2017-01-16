@@ -12,7 +12,6 @@ class DocGamified(db.Model):
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     doc_type_id = db.Column(db.Integer, db.ForeignKey('gamificationdocumenttype.document_type_id'))
 
-
     @staticmethod
     def create(doc_game_id: int, document_id: int, doc_type_id: int) -> 'DocGamified':
         """Creates a new entry into DocGamified table"""

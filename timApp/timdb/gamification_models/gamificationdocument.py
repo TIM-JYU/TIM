@@ -9,7 +9,7 @@ class GamificationDocument(db.Model):
     """
     __bind_key__ = 'tim_main'
     __tablename__ = 'gamificationdocument'
-    id = db.Column (db.Integer, db.ForeignKey('block.id'), primary_key=True)
+    id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
 
     @staticmethod
     def create(document_id) -> 'GamificationDocument':

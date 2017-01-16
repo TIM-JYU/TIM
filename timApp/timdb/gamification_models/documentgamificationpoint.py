@@ -15,13 +15,12 @@ class DocumentGamificationPoint(db.Model):
     multiplier = db.Column(db.Integer)
     is_active = db.Column(db.Boolean)
 
-
     @staticmethod
     def create(doc_id: int, point_type_id: int, amount: int, multip: int, is_active: bool) -> 'DocumentGamificationPoint':
         """Creates a new entry into DocGamified table"""
 
-        DocGamiPoint = DocumentGamificationPoint(doc_id, point_type_id, amount, multip, is_ative)
-        db.session.add(DocGamiPoint)
+        doc_gamif_point = DocumentGamificationPoint(doc_id, point_type_id, amount, multip, is_active)
+        db.session.add(doc_gamif_point)
         db.session.commit()
 
-        return DocGamiPoint
+        return doc_gamif_point

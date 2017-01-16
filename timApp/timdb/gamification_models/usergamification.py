@@ -12,13 +12,12 @@ class UserGamification(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     is_gamified = db.Column(db.Boolean)
 
-
     @staticmethod
     def create(game_doc_id: int, user_id: int, is_gamified: bool) -> 'UserGamification':
         """Creates a new entry into DocGamified table"""
 
-        uGamification = UserGamification(game_doc_id, user_id, is_gamified)
-        db.session.add(uGamification)
+        user_gamification = UserGamification(game_doc_id, user_id, is_gamified)
+        db.session.add(user_gamification)
         db.session.commit()
 
-        return uGamification
+        return user_gamification
