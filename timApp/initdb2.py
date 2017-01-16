@@ -2,12 +2,13 @@
 
 import os
 
+import flask_migrate
 import sqlalchemy
 import sqlalchemy.exc
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
-from routes.logger import log_info
+from routes.logger import log_info, enable_loggers
 from sql.migrate_to_postgre import perform_migration
 from tim_app import app
 from timdb import tempdb_models
@@ -59,6 +60,10 @@ def initialize_database(create_docs=True):
             perform_migration(app.config['OLD_SQLITE_DATABASE'], app.config['DATABASE'])
             timdb.close()
             return
+        with app.app_context():
+            flask_migrate.stamp()
+        # Alembic disables loggers for some reason
+        enable_loggers()
         sess.add(AccessType(id=1, name='view'))
         sess.add(AccessType(id=2, name='edit'))
         sess.add(AccessType(id=3, name='teacher'))
