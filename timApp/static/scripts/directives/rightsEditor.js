@@ -200,7 +200,10 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
                     for (var i = sc.durationTypes.length - 1; i >= 0; --i) {
                         var amount = d.as(sc.durationTypes[i]);
                         if (parseInt(amount) === amount || i === 0) {
-                            sc.timeOpt.durationType = sc.durationTypes[i];
+                            // preserve last duration type choice if the amount is zero
+                            if (amount !== 0) {
+                                sc.timeOpt.durationType = sc.durationTypes[i];
+                            }
                             sc.timeOpt.durationAmount = amount;
                             break;
                         }
