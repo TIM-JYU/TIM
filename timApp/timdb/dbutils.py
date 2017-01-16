@@ -39,4 +39,6 @@ def copy_default_rights(item_id: int, item_type, commit=True):
                                  commit=commit,
                                  accessible_from=d['accessible_from'],
                                  accessible_to=d['accessible_to'],
+                                 duration_from=d['duration_from'],
+                                 duration_to=d['duration_to'],
                                  duration=d['duration'])

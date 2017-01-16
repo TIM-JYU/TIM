@@ -100,8 +100,22 @@ class BlockAccess(db.Model):
     accessible_from = db.Column(db.DateTime(timezone=True))
     accessible_to = db.Column(db.DateTime(timezone=True))
     duration = db.Column(db.Interval)
+    duration_from = db.Column(db.DateTime(timezone=True))
+    duration_to = db.Column(db.DateTime(timezone=True))
 
     block = db.relationship('Block', backref=db.backref('accesses', lazy='dynamic'))
+
+    @property
+    def unlockable(self):
+        return self.accessible_from is None and not self.duration_future and not self.duration_expired
+
+    @property
+    def duration_future(self):
+        return self.duration_from and datetime.datetime.now(tz=timezone.utc) < self.duration_from
+
+    @property
+    def duration_expired(self):
+        return self.duration_to and datetime.datetime.now(tz=timezone.utc) >= self.duration_to
 
     @property
     def seconds_left(self):

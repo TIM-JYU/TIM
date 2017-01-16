@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from typing import Optional
 
+import humanize
 from flask import flash
 from flask import request, g
 from werkzeug.exceptions import abort
@@ -66,9 +67,8 @@ def verify_seeanswers_access(block_id, require=True, message=None, check_duratio
 class ItemLockedException(Exception):
     """The exception that is raised (in /view route) when a user attempts to access an item
     for which he has a duration access that has not yet begun."""
-    def __init__(self, item_id, duration):
-        self.item_id = item_id
-        self.duration = duration
+    def __init__(self, access: BlockAccess):
+        self.access = access  # type: BlockAccess
 
 
 def abort_if_not_access_and_required(access_obj: BlockAccess,
@@ -84,19 +84,17 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
         # TODO This does not work if the duration has been set for a larger group
         ba = BlockAccess.query.filter_by(block_id=block_id,
                                          type=timdb.users.get_access_type_id(access_type),
-                                         usergroup_id=get_current_user_group()).first()
+                                         usergroup_id=get_current_user_group()).first()  # type: BlockAccess
         if ba is not None and ba.duration is not None:
-            if ba.accessible_from is not None:
-                return abort(403, 'Your access to this item has expired.')
             unlock = get_option(request, 'unlock', False)
-            if unlock:
+            if unlock and ba.unlockable:
                 ba.accessible_from = datetime.now(tz=timezone.utc)
                 ba.accessible_to = ba.accessible_from + ba.duration
                 db.session.commit()  # TODO ensure nothing else gets committed than the above
                 flash('Item was unlocked successfully.')
                 return ba
             else:
-                raise ItemLockedException(block_id, ba.duration)
+                raise ItemLockedException(ba)
     if require:
         abort(403, message or "Sorry, you don't have permission to view this resource.")
     return None

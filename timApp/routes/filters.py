@@ -20,3 +20,7 @@ def timdate(value: datetime):
 
 def humanize_timedelta(value: timedelta):
     return humanize.naturaldelta(value)
+
+
+def humanize_datetime(value: datetime):
+    return humanize.naturaltime(value.replace(tzinfo=None))

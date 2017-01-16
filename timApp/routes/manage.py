@@ -87,7 +87,7 @@ def change_owner(doc_id, new_owner_name):
 
 @manage_page.route("/permissions/add/<int:item_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_permission(item_id, group_name, perm_type):
-    group_ids, acc_from, acc_to, duration = verify_and_get_params(item_id, group_name)
+    group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(item_id, group_name)
     timdb = get_timdb()
     try:
         for group_id in group_ids:
@@ -96,6 +96,8 @@ def add_permission(item_id, group_name, perm_type):
                                      perm_type,
                                      accessible_from=acc_from,
                                      accessible_to=acc_to,
+                                     duration_from=dur_from,
+                                     duration_to=dur_to,
                                      duration=duration,
                                      commit=False)
         timdb.commit()
@@ -250,7 +252,7 @@ def get_default_document_permissions(folder_id, object_type):
 
 @manage_page.route("/defaultPermissions/<object_type>/add/<int:folder_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
-    group_ids, acc_from, acc_to, duration = verify_and_get_params(folder_id, group_name)
+    group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(folder_id, group_name)
     timdb = get_timdb()
     timdb.users.grant_default_access(group_ids,
                                      folder_id,
@@ -258,6 +260,8 @@ def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
                                      from_str(object_type),
                                      accessible_from=acc_from,
                                      accessible_to=acc_to,
+                                     duration_from=dur_from,
+                                     duration_to=dur_to,
                                      duration=duration)
     return okJsonResponse()
 
@@ -287,6 +291,15 @@ def verify_and_get_params(folder_id, group_name):
     except TypeError:
         accessible_to = None
 
+    try:
+        duration_accessible_from = dateutil.parser.parse(request.get_json().get('durationFrom')) if access_type == 'duration' else None
+    except TypeError:
+        duration_accessible_from = None
+    try:
+        duration_accessible_to = dateutil.parser.parse(request.get_json().get('durationTo')) if access_type == 'duration' else None
+    except TypeError:
+        duration_accessible_to = None
+
     duration = parse_duration(request.get_json().get('duration')) if access_type == 'duration' else None
 
     if access_type == 'always' or (accessible_from is None and duration is None):
@@ -298,7 +311,7 @@ def verify_and_get_params(folder_id, group_name):
             duration = duration.totimedelta(start=datetime.min)
         except (OverflowError, ValueError):
             abort(400, 'Duration is too long.')
-    return group_ids, accessible_from, accessible_to, duration
+    return group_ids, accessible_from, accessible_to, duration_accessible_from, duration_accessible_to, duration
 
 
 @manage_page.route("/documents/<int:doc_id>", methods=["DELETE"])

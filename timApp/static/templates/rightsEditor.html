@@ -6,8 +6,8 @@
 
     <ul>
         <li ng-repeat="right in filtered = (grouprights | filter: {access_type: type.id}:true | orderBy: ['!fullname', 'fullname', 'name'])">
-            <span ng-show="!shouldShowEndedTime(right)" ng-bind="getGroupDesc(right)"></span>
-            <s ng-show="shouldShowEndedTime(right)" ng-bind="getGroupDesc(right)"></s>
+            <span ng-show="!isObsolete(right)" ng-bind="getGroupDesc(right)"></span>
+            <s ng-show="isObsolete(right)" ng-bind="getGroupDesc(right)"></s>
             <i ng-show="showClock(right)"
                class="glyphicon glyphicon-time"></i>
             <span class="label label-success"
@@ -22,6 +22,15 @@
             <span class="label label-danger"
                   uib-tooltip="{{ right.accessible_to | timdate }}"
                   ng-show="shouldShowEndedTime(right)">Ended {{ right.accessible_to | timreldate }}</span>
+            <span class="label label-success"
+                  uib-tooltip="{{ right.duration_from | timdate }}"
+                  ng-show="shouldShowUnlockable(right)">Unlockable {{ right.duration_from | timreldate }}</span>
+            <span class="label label-warning"
+                  uib-tooltip="{{ right.duration_to | timdate }}"
+                  ng-show="shouldShowNotUnlockable(right)">No longer unlockable {{ right.duration_to | timreldate }}</span>
+            <span class="label label-danger"
+                  uib-tooltip="{{ right.duration_to | timdate }}"
+                  ng-show="shouldShowNotUnlockableAnymore(right)">No longer unlockable since {{ right.duration_to | timreldate }}</span>
             <a class="btn btn-default btn-xs" ng-click="removeConfirm(right, type.name)">remove</a>
             <a ng-show="selectedRight !== right" class="btn btn-default btn-xs" ng-click="editRight(right)">edit</a>
             <span ng-show="selectedRight === right" class="label label-primary">Editing</span>
@@ -74,30 +83,32 @@
                             Set start and/or end date...
                         </label>
                     </div>
-                    <div class="radio" ng-show="timeOpt.type == 'range'">
-                        <div class="input-group date" datetimepicker ng-model="timeOpt.from"
-                             data-options="datePickerOptionsFrom">
-                            <input type="text" class="form-control"/>
-                            <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-calendar"></span>
-                        </span>
-                        </div>
-                        to
-                        <div class="input-group date" datetimepicker ng-model="timeOpt.to"
-                             data-options="datePickerOptionsTo">
-                            <input type="text" class="form-control"/>
-                            <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-calendar"></span>
-                        </span>
-                        </div>
-                    </div>
                     <div class="radio">
                         <label>
                             <input type="radio" ng-model="timeOpt.type" value="duration">
                             Set duration...
                         </label>
                     </div>
-                    <div class="row" ng-show="timeOpt.type == 'duration'">
+                    <div class="form-group" ng-show="timeOpt.type == 'range'">
+                        <div class="col-md-12">
+                            <div class="input-group date" datetimepicker ng-model="timeOpt.from"
+                                 data-options="datePickerOptionsFrom">
+                                <input type="text" class="form-control"/>
+                                <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                            </div>
+                            to
+                            <div class="input-group date" datetimepicker ng-model="timeOpt.to"
+                                 data-options="datePickerOptionsTo">
+                                <input type="text" class="form-control"/>
+                                <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-show="timeOpt.type == 'duration'">
                         <div class="col-md-6">
                             <input ng-model="timeOpt.durationAmount"
                                    class="form-control"
@@ -108,6 +119,29 @@
                         <div class="col-md-6">
                             <select class="form-control" ng-model="timeOpt.durationType"
                                     ng-options="d for d in durationTypes"></select>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-show="timeOpt.type == 'duration'">
+                        <div class="col-md-12">Duration unlockable from:
+                            <div class="input-group date" datetimepicker ng-model="timeOpt.durationFrom"
+                                 data-options="datePickerOptionsDurationFrom">
+                                <input type="text"
+                                       class="form-control"
+                                       placeholder="Leave blank for no restriction"/>
+                                <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                            </div>
+                            to
+                            <div class="input-group date" datetimepicker ng-model="timeOpt.durationTo"
+                                 data-options="datePickerOptionsDurationTo">
+                                <input type="text"
+                                       class="form-control"
+                                       placeholder="Leave blank for no restriction"/>
+                                <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                            </div>
                         </div>
                     </div>
                 </fieldset>

@@ -36,6 +36,14 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
                 defaultDate: moment(),
                 showTodayButton: true
             };
+            sc.datePickerOptionsDurationFrom = {
+                format: 'D.M.YYYY HH:mm:ss',
+                showTodayButton: true
+            };
+            sc.datePickerOptionsDurationTo = {
+                format: 'D.M.YYYY HH:mm:ss',
+                showTodayButton: true
+            };
             if (sc.accessTypes) {
                 sc.accessType = sc.accessTypes[0];
             }
@@ -124,6 +132,31 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
                 return group.duration !== null && group.accessible_from === null;
             };
 
+            sc.shouldShowUnlockable = function (group) {
+                return group.duration !== null &&
+                    group.duration_from !== null &&
+                    group.accessible_from === null &&
+                    moment().diff(group.duration_from) < 0;
+            };
+
+            sc.shouldShowNotUnlockable = function (group) {
+                return group.duration !== null &&
+                    group.duration_to !== null &&
+                    group.accessible_from === null &&
+                    moment().diff(group.duration_to) <= 0;
+            };
+
+            sc.shouldShowNotUnlockableAnymore = function (group) {
+                return group.duration !== null &&
+                    group.duration_to !== null &&
+                    group.accessible_from === null &&
+                    moment().diff(group.duration_to) > 0;
+            };
+
+            sc.isObsolete = function (group) {
+                return sc.shouldShowEndedTime(group) || sc.shouldShowNotUnlockableAnymore(group);
+            };
+
             sc.showClock = function (group) {
                 return group.duration !== null || group.accessible_to !== null;
             };
@@ -138,8 +171,23 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
                 sc.accessType = {id: group.access_type, name: group.access_name};
                 sc.addingRight = false;
                 sc.selectedRight = group;
-                sc.timeOpt.type = 'range';
-                sc.timeOpt.from = moment(group.accessible_from);
+
+                if (group.duration_from) {
+                    sc.timeOpt.durationFrom = moment(group.duration_from);
+                } else {
+                    sc.timeOpt.durationFrom = null;
+                }
+                if (group.duration_to) {
+                    sc.timeOpt.durationTo = moment(group.duration_to);
+                } else {
+                    sc.timeOpt.durationTo = null;
+                }
+
+                if (group.accessible_from) {
+                    sc.timeOpt.from = moment(group.accessible_from);
+                } else {
+                    sc.timeOpt.from = null;
+                }
                 if (group.accessible_to) {
                     sc.timeOpt.to = moment(group.accessible_to);
                 } else {
@@ -157,6 +205,8 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
                             break;
                         }
                     }
+                } else {
+                    sc.timeOpt.type = 'range';
                 }
             };
 

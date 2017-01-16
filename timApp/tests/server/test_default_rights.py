@@ -47,7 +47,9 @@ class DefaultRightTest(TimRouteTest):
                                'name': 'testuser2',
                                'duration': None,
                                'accessible_from': def_rights['grouprights'][0]['accessible_from'],
-                               'accessible_to': None},
+                               'accessible_to': None,
+                               'duration_from': None,
+                               'duration_to': None},
                               {'access_name': 'view',
                                'access_type': 1,
                                'fullname': None,
@@ -55,7 +57,11 @@ class DefaultRightTest(TimRouteTest):
                                'name': 'Anonymous users',
                                'duration': None,
                                'accessible_from': def_rights['grouprights'][1]['accessible_from'],
-                               'accessible_to': None}]
+                               'accessible_to': None,
+                               'duration_from': None,
+                               'duration_to': None}]
+            self.maxDiff = None
+            default_rights = sorted(default_rights, key=itemgetter('gid'))
             self.assertDictEqual(
                 {'grouprights': default_rights},
                 def_rights)
@@ -76,7 +82,10 @@ class DefaultRightTest(TimRouteTest):
                      'access_name': 'view',
                      'duration': None,
                      'accessible_from': acs[0].accessible_from,
-                     'accessible_to': None})
+                     'accessible_to': None,
+                     'duration_from': None,
+                     'duration_to': None
+                     })
             elif obj_type == blocktypes.FOLDER:
                 f = self.json_post('/createItem',
                                    {"item_path": 'users/testuser1/asd',

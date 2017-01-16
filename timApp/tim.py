@@ -148,17 +148,17 @@ def internal_error(error):
 
 @app.errorhandler(ItemLockedException)
 def item_locked(error):
-    item = DocEntry.find_by_id(error.item_id)
+    item = DocEntry.find_by_id(error.access.block_id)
     is_folder = False
     if not item:
         is_folder = True
-        item = Folder.find_by_id(error.item_id)
+        item = Folder.find_by_id(error.access.block_id)
     if not item:
         abort(404)
     return render_template('duration_unlock.html',
                            item=item,
                            item_type='folder' if is_folder else 'document',
-                           duration=error.duration), 403
+                           access=error.access), 403
 
 
 @app.errorhandler(NoSuchUserException)

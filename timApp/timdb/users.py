@@ -253,6 +253,8 @@ class Users(TimDbBase):
                                  accessible_from,
                                  accessible_to,
                                  duration,
+                                 duration_from,
+                                 duration_to,
                                  fullname
                           FROM BlockAccess b
                           JOIN UserGroup u ON b.UserGroup_id = u.id
@@ -276,6 +278,8 @@ class Users(TimDbBase):
                              object_type: BlockType,
                              accessible_from: Optional[datetime]=None,
                              accessible_to: Optional[datetime]=None,
+                             duration_from: Optional[datetime] = None,
+                             duration_to: Optional[datetime] = None,
                              duration: Optional[timedelta]=None) -> List[BlockAccess]:
         doc = self.get_default_right_document(folder_id, object_type, create_if_not_exist=True)
         accesses = []
@@ -286,6 +290,8 @@ class Users(TimDbBase):
                                               commit=False,
                                               accessible_from=accessible_from,
                                               accessible_to=accessible_to,
+                                              duration_from=duration_from,
+                                              duration_to=duration_to,
                                               duration=duration))
         db.session.commit()
         return accesses
@@ -495,10 +501,14 @@ class Users(TimDbBase):
                      access_type: str,
                      accessible_from: Optional[datetime]=None,
                      accessible_to: Optional[datetime]=None,
+                     duration_from: Optional[datetime] = None,
+                     duration_to: Optional[datetime] = None,
                      duration: Optional[timedelta]=None,
-                     commit: bool=True):
+                     commit: bool=True) -> BlockAccess:
         """Grants access to a group for a block.
         
+        :param duration_from: The optional start time for duration unlock.
+        :param duration_to: The optional end time for duration unlock.
         :param accessible_from: The optional start time for the permission.
         :param accessible_to: The optional end time for the permission.
         :param duration: The optional duration for the permission.
@@ -506,6 +516,7 @@ class Users(TimDbBase):
         :param group_id: The group id to which to grant view access.
         :param block_id: The id of the block for which to grant view access.
         :param access_type: The kind of access. Possible values are listed in accesstype table.
+        :return: The BlockAccess object.
         """
 
         if accessible_from is None and duration is None:
@@ -519,6 +530,8 @@ class Users(TimDbBase):
                          type=access_id,
                          accessible_from=accessible_from,
                          accessible_to=accessible_to,
+                         duration_from=duration_from,
+                         duration_to=duration_to,
                          duration=duration)
         db.session.merge(ba)
         if commit:
@@ -651,8 +664,6 @@ WHERE UserGroup_id IN
             & BlockAccess.type.in_(access_types)
             & (func.current_timestamp().between(BlockAccess.accessible_from, func.coalesce(BlockAccess.accessible_to,
                                                                                            'infinity'))))
-        # print(str(q1))
-        # raise Exception()
         q2 = Block.query.filter(Block.usergroup_id.in_(user_query))
         return {row.block_id: row for row in q1.all()
                 + [BlockAccess(block_id=row.id,

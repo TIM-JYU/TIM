@@ -13,7 +13,7 @@ from flask_migrate import Migrate
 from sqlalchemy.sql.ddl import CreateTable
 
 from documentmodel.timjsonencoder import TimJsonEncoder
-from routes.filters import map_format, timdate, humanize_timedelta
+from routes.filters import map_format, timdate, humanize_timedelta, humanize_datetime
 from routes.logger import setup_logging, log_info, log_warning
 # noinspection PyUnresolvedReferences
 from timdb.tim_models import db
@@ -66,6 +66,7 @@ app.jinja_env.filters['datestr_to_relative'] = datestr_to_relative
 app.jinja_env.filters['date_to_relative'] = date_to_relative
 app.jinja_env.filters['timdate'] = timdate
 app.jinja_env.filters['timtimedelta'] = humanize_timedelta
+app.jinja_env.filters['timreldatetime'] = humanize_datetime
 app.jinja_env.add_extension('jinja2.ext.do')
 
 mimetypes.add_type('text/plain', '.scss')
