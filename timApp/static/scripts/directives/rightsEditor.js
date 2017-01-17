@@ -194,7 +194,7 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
                     sc.timeOpt.to = null;
                 }
 
-                if (group.duration) {
+                if (group.duration && group.accessible_from === null) {
                     var d = moment.duration(group.duration);
                     sc.timeOpt.type = 'duration';
                     for (var i = sc.durationTypes.length - 1; i >= 0; --i) {
