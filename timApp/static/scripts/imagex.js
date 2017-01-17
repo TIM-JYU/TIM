@@ -197,9 +197,9 @@ imagexApp.directiveTemplate = function () {
             '<div class="content">'+
             '</div>'+
         '</div>'+
-        '<button ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.save();">{{button}}</button>&nbsp&nbsp' +
+        '<p class="csRunMenu">&nbsp;<button ng-if="button" class="timButton" ng-disabled="isRunning" ng-click="imagexScope.save();">{{button}}</button>&nbsp&nbsp' +
         '<button ng-show="finalanswer && userHasAnswered" ng-disabled="isRunning" ng-click="imagexScope.showAnswer();">Showanswer</button>&nbsp&nbsp' +
-        '<a ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.resetExercise();">Reset</a>&nbsp&nbsp' +
+        '<a ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.resetExercise();">{{resetText}}</a>&nbsp&nbsp' +
         '<a href="" ng-if="muokattu" ng-click="imagexScope.initCode()">{{resetText}}</a>' +
 
         '<label ng-show="freeHandVisible">FreeHand <input type="checkbox" name="freeHand" value="true" ng-model="freeHand"></label> ' +
@@ -218,6 +218,7 @@ imagexApp.directiveTemplate = function () {
                 '</span>' +
             '</span>' +
         '</span>' +
+        '</p>' +
         '<div ng-show="preview" >' +
         '<span>' +
             '<span ng-style="{\'background-color\': previewColor}" style="display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.getPColor();">&lt;-</span> ' +
@@ -1464,6 +1465,7 @@ imagexApp.initScope = function (scope, element, attrs) {
     timHelper.set(scope, attrs, "freeHandShortCut", scope.freeHand || use); // f for toggle freeHand on/off
     timHelper.set(scope, attrs, "freeHandColor", scope.freeHandDrawing.params.color); //
     timHelper.set(scope, attrs, "freeHandWidth", scope.freeHandDrawing.params.w);
+    timHelper.set(scope, attrs, "state.freeHandData", null);
     timHelper.set(scope, attrs, "state.freeHandData", null);
 
 

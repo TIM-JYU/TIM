@@ -38,6 +38,11 @@ def setup_logging(app):
         tim_logger.addHandler(stdout_handler)
 
 
+def enable_loggers():
+    tim_logger.disabled = False
+    wz.disabled = False
+
+
 def log_debug(message: str):
     tim_logger.debug(message)
 
