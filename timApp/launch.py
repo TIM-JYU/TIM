@@ -22,7 +22,6 @@ if __name__ == '__main__':
             dumbo_started = True
         initdb2.initialize_database()
         initdb2.initialize_temp_database()
-        initdb2.update_database()
         if len(sys.argv) <= 1:
             log_info('Starting without gunicorn.')
             tim.start_app()

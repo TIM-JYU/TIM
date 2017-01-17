@@ -18,7 +18,7 @@ from timdb.messages import Messages
 from timdb.notes import Notes
 from timdb.questions import Questions
 from timdb.readings import Readings
-from timdb.tim_models import Version, db
+from timdb.tim_models import db
 from timdb.uploads import Uploads
 from timdb.users import Users
 from timdb.velpgroups import VelpGroups
@@ -173,25 +173,3 @@ class TimDb(object):
         """
         self.db.cursor().executescript(sql)
         self.db.commit()
-
-    def get_version(self) -> int:
-        """Gets the current database version.
-        :return: The database version as an integer.
-        """
-        ver = self.session.query(db.func.max(Version.id)).scalar()
-        assert isinstance(ver, int)
-        return ver
-
-    def update_version(self):
-        """Updates the database version by inserting a new sequential entry in the Version table.
-        """
-        c = self.db.cursor()
-        c.execute("""INSERT INTO Version(updated_on) VALUES (CURRENT_TIMESTAMP)""")
-        self.db.commit()
-
-    def table_exists(self, table_name):
-        """Checks whether a table with the specified name exists in the database.
-        """
-        c = self.db.cursor()
-        c.execute("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name = %s)", (table_name,))
-        return c.fetchone()[0]

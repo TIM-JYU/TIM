@@ -261,14 +261,3 @@ class UserNotes(db.Model):
     access = db.Column(db.Text, nullable=False)
     tags = db.Column(db.Text, nullable=False)
     html = db.Column(db.Text)
-
-
-class Version(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'version'
-    id = db.Column(db.Integer, primary_key=True)
-    updated_on = db.Column(db.DateTime(timezone=True))
-
-    def __init__(self, version_id):
-        self.id = version_id
-        self.updated_on = datetime.datetime.now(timezone.utc)
