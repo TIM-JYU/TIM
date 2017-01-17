@@ -104,6 +104,7 @@ class BlockAccess(db.Model):
     duration_to = db.Column(db.DateTime(timezone=True))
 
     block = db.relationship('Block', backref=db.backref('accesses', lazy='dynamic'))
+    usergroup = db.relationship('UserGroup', backref=db.backref('accesses', lazy='dynamic'))
 
     @property
     def unlockable(self):

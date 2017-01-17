@@ -16,6 +16,8 @@ from documentmodel.document import Document
 from routes.login import log_in_as_anonymous
 from tests.db.timdbtest import TimDbTest
 from timdb.models.docentry import DocEntry
+from timdb.models.user import User
+from timdb.models.usergroup import UserGroup
 from timdb.tim_models import db
 
 
@@ -365,6 +367,9 @@ class TimRouteTest(TimDbTest):
         :return: The name of the current user.
         """
         return session['user_id']
+
+    def current_group(self) -> UserGroup:
+        return User.query.get(self.current_user_id()).get_personal_group()
 
     def login_anonymous(self):
         with self.client.session_transaction() as s:

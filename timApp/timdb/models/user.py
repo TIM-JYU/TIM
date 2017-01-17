@@ -2,11 +2,13 @@ import json
 
 from typing import Dict
 
+from sqlalchemy.orm import Query
+
 from documentmodel.timjsonencoder import TimJsonEncoder
-from timdb.tim_models import db
+from timdb.tim_models import db, UserGroupMember
 from timdb.models.folder import Folder
 from timdb.models.usergroup import UserGroup
-from timdb.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME
+from timdb.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME
 from timdb.timdbexception import TimDbException
 
 
@@ -20,6 +22,10 @@ class User(db.Model):
     prefs = db.Column(db.Text)
     pass_ = db.Column('pass', db.Text)
     yubikey = db.Column(db.Text)
+
+    @property
+    def logged_in(self):
+        return self.id > 0
 
     def get_personal_group(self) -> UserGroup:
         if self.id < 0 or self.name == ANONYMOUS_USERNAME:
@@ -44,6 +50,16 @@ class User(db.Model):
 
     def set_prefs(self, prefs):
         self.prefs = json.dumps(prefs, cls=TimJsonEncoder)
+
+    def get_groups(self) -> Query:
+        special_groups = [ANONYMOUS_GROUPNAME]
+        if self.logged_in:
+            special_groups.append(LOGGED_IN_GROUPNAME)
+        return UserGroup.query.filter(
+            UserGroup.id.in_(db.session.query(UserGroupMember.usergroup_id).filter_by(user_id=self.id))
+        ).union(
+            UserGroup.query.filter(UserGroup.name.in_(special_groups))
+        )
 
     def to_json(self):
         return {'id': self.id,

@@ -4,6 +4,7 @@ from typing import Optional
 import humanize
 from flask import flash
 from flask import request, g
+from sqlalchemy import inspect
 from werkzeug.exceptions import abort
 
 import documentmodel.document
@@ -11,8 +12,9 @@ from documentmodel.document import Document
 from options import get_option
 from routes.dbaccess import get_timdb
 from routes.sessioninfo import get_current_user_id, logged_in, get_current_user_name, get_other_users_as_list, \
-    get_current_user_group
+    get_current_user_group, get_current_user_object
 from timdb.accesstype import AccessType
+from timdb.models.usergroup import UserGroup
 from timdb.tim_models import db, BlockAccess
 from timdb.timdb2 import TimDb
 from timdb.timdbexception import TimDbException
@@ -81,15 +83,33 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
         return access_obj
     if check_duration:
         timdb = get_timdb()
-        # TODO This does not work if the duration has been set for a larger group
         ba = BlockAccess.query.filter_by(block_id=block_id,
                                          type=timdb.users.get_access_type_id(access_type),
                                          usergroup_id=get_current_user_group()).first()  # type: BlockAccess
+        if ba is None:
+            ba_group = BlockAccess.query.filter_by(block_id=block_id,
+                                                   type=timdb.users.get_access_type_id(access_type)).filter(
+                BlockAccess.usergroup_id.in_(get_current_user_object().get_groups().with_entities(UserGroup.id))
+            ).first()  # type: BlockAccess
+            if ba_group is not None:
+                ba = BlockAccess(block_id=ba_group.block_id,
+                                 type=ba_group.type,
+                                 usergroup_id=get_current_user_group(),
+                                 accessible_from=ba_group.accessible_from,
+                                 accessible_to=ba_group.accessible_to,
+                                 duration=ba_group.duration,
+                                 duration_from=ba_group.duration_from,
+                                 duration_to=ba_group.duration_to)
         if ba is not None and ba.duration is not None:
             unlock = get_option(request, 'unlock', False)
             if unlock and ba.unlockable:
                 ba.accessible_from = datetime.now(tz=timezone.utc)
                 ba.accessible_to = ba.accessible_from + ba.duration
+
+                # if this is a group duration, it means we created a personal BlockAccess instance above, so we
+                # need to add it
+                if inspect(ba).transient:
+                    db.session.add(ba)
                 db.session.commit()  # TODO ensure nothing else gets committed than the above
                 flash('Item was unlocked successfully.')
                 return ba

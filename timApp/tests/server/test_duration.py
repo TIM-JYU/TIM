@@ -1,7 +1,5 @@
 from datetime import timedelta, datetime, timezone
 
-import humanize
-
 from routes.filters import humanize_datetime
 from tests.server.timroutetest import TimRouteTest
 from timdb.models.docentry import DocEntry
@@ -85,3 +83,50 @@ class DurationTest(TimRouteTest):
         db.session.commit()
         self.get('/view/' + d.path, expect_status=403,
                  expect_contains='Your access to this item has expired {}.'.format(humanize_datetime(ba.accessible_to)))
+
+    def test_duration_group_unlock(self):
+        self.login_test1()
+        d = self.create_doc()
+        doc_id = d.id
+        self.login_test2()
+        duration = timedelta(days=1)
+        now = datetime.now(tz=timezone.utc)
+        access = self.db.users.grant_access(self.db.users.get_logged_group_id(), doc_id, 'view',
+                                            duration=duration,
+                                            duration_to=now + duration)
+        accesses = self.current_group().accesses.all()
+        self.assertEqual(0, len(accesses))
+        d = DocEntry.find_by_id(doc_id)
+        self.get('/view/' + d.path,
+                 expect_status=403,
+                 expect_contains=self.about_to_access_msg)
+        self.get('/view/' + d.path, query_string={'unlock': 'true'},
+                 expect_contains=self.unlock_success)
+        accesses = self.current_group().accesses.all()
+        self.assertEqual(1, len(accesses))
+        granted_access = accesses[0]
+        self.assertEqual(access.duration, granted_access.duration)
+        self.assertEqual(access.block_id, granted_access.block_id)
+        self.assertEqual(access.type, granted_access.type)
+        self.assertEqual(access.duration_from, granted_access.duration_from)
+        self.assertEqual(access.duration_to, granted_access.duration_to)
+        self.assertEqual(self.current_group().id, granted_access.usergroup_id)
+        self.assertEqual(duration, granted_access.accessible_to - granted_access.accessible_from)
+        granted_access.accessible_to -= duration
+        db.session.commit()
+
+        self.get('/view/' + d.path,
+                 expect_status=403,
+                 expect_contains='Your access to this item has expired {}.'.format(
+                     humanize_datetime(granted_access.accessible_to)))
+        self.get('/view/' + d.path,
+                 expect_status=403,
+                 query_string={'unlock': 'true'},
+                 expect_contains='Your access to this item has expired {}.'.format(
+                     humanize_datetime(granted_access.accessible_to)))
+        db.session.expunge_all()
+        db.session.delete(granted_access)
+        db.session.commit()
+        self.get('/view/' + d.path,
+                 expect_status=403,
+                 expect_contains=self.about_to_access_msg)
