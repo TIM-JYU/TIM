@@ -17,6 +17,8 @@ tim_logger.addHandler(ch)
 
 
 def setup_logging(app):
+    if not app.config['TESTING']:
+        logging.getLogger('alembic').level = logging.INFO
     formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s ')
     if not os.path.exists(app.config['LOG_DIR']):
         try:
