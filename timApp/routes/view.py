@@ -212,13 +212,13 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     edit_mode = request.args.get('edit', None) if has_edit_access(doc_id) else None
 
     if route == 'teacher':
-        if not verify_teacher_access(doc_id, False):
+        if not verify_teacher_access(doc_id, require=False, check_duration=True):
             if verify_view_access(doc_id):
                 flash("Did someone give you a wrong link? Showing normal view instead of teacher view.")
                 return redirect('/view/' + doc_path)
 
     if route == 'answers':
-        if not verify_seeanswers_access(doc_id, False):
+        if not verify_seeanswers_access(doc_id, require=False, check_duration=True):
             if verify_view_access(doc_id):
                 flash("Did someone give you a wrong link? Showing normal view instead of see answers view.")
                 return redirect('/view/' + doc_path)

@@ -34,10 +34,10 @@ def manage(path):
     else:
         block_id = doc.id
 
-    if not has_manage_access(block_id):
-        if verify_view_access(block_id):
-            flash("Did someone give you a wrong link? Showing normal view instead of manage view.")
-            return redirect('/view/' + str(block_id))
+    if not verify_manage_access(block_id, require=False, check_duration=True):
+        verify_view_access(block_id)
+        flash("Did someone give you a wrong link? Showing normal view instead of manage view.")
+        return redirect('/view/' + path)
 
     access_types = timdb.users.get_access_types()
 

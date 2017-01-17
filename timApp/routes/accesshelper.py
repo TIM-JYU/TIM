@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-import humanize
 from flask import flash
 from flask import request, g
 from sqlalchemy import inspect
@@ -26,14 +25,14 @@ def verify_admin():
         abort(403, 'This action requires administrative rights.')
 
 
-def verify_edit_access(block_id, message="Sorry, you don't have permission to edit this resource."):
-    if not has_edit_access(block_id):
-        abort(403, message)
+def verify_edit_access(block_id, require=True, message=None, check_duration=False):
+    return abort_if_not_access_and_required(has_edit_access(block_id), block_id, 'edit', require, message,
+                                            check_duration)
 
 
-def verify_manage_access(block_id, message="Sorry, you don't have permission to manage this resource."):
-    if not has_manage_access(block_id):
-        abort(403, message)
+def verify_manage_access(block_id, require=True, message=None, check_duration=False):
+    return abort_if_not_access_and_required(has_manage_access(block_id), block_id, 'manage', require, message,
+                                            check_duration)
 
 
 def has_edit_access(block_id):
