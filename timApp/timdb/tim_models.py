@@ -108,7 +108,7 @@ class BlockAccess(db.Model):
 
     @property
     def unlockable(self):
-        return self.accessible_from is None and not self.duration_future and not self.duration_expired
+        return self.accessible_from is None and self.duration is not None and not self.duration_future and not self.duration_expired
 
     @property
     def duration_future(self):

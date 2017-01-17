@@ -100,7 +100,7 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
                                  duration=ba_group.duration,
                                  duration_from=ba_group.duration_from,
                                  duration_to=ba_group.duration_to)
-        if ba is not None and ba.duration is not None:
+        if ba is not None:
             unlock = get_option(request, 'unlock', False)
             if unlock and ba.unlockable:
                 ba.accessible_from = datetime.now(tz=timezone.utc)
