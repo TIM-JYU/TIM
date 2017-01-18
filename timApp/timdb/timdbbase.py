@@ -1,12 +1,16 @@
 """"""
 import decimal
 import os
+from datetime import datetime, timezone
 from typing import Iterable
 from typing import Optional, Tuple
 
 from psycopg2._psycopg import connection
 from sqlalchemy.orm import scoped_session
 
+from timdb.accesstype import AccessType
+from timdb.models.block import Block
+from timdb.tim_models import BlockAccess, db
 from utils import split_location, join_location, get_sql_template
 
 
@@ -70,10 +74,7 @@ class TimDbBase(object):
 
         :param block_id: The id of the block.
         """
-        cursor = self.db.cursor()
-        cursor.execute('SELECT UserGroup_id FROM Block WHERE id = %s', [block_id])
-        result = cursor.fetchone()
-        return result[0] if result is not None else None
+        return Block.query.get(block_id).owner.id
 
     def set_owner(self, block_id: int, usergroup_id: int):
         """Changes the owner group for a block.
@@ -81,10 +82,13 @@ class TimDbBase(object):
         :param block_id: The id of the block.
         :param usergroup_id: The id of the new usergroup.
         """
-        cursor = self.db.cursor()
-        cursor.execute('UPDATE Block SET UserGroup_id = %s WHERE id = %s',
-                       [usergroup_id, block_id])
-        self.db.commit()
+        BlockAccess.query.filter_by(block_id=block_id, type=AccessType.owner.value).delete()
+        b = BlockAccess(block_id=block_id,
+                        usergroup_id=usergroup_id,
+                        type=AccessType.owner.value,
+                        accessible_from=datetime.now(tz=timezone.utc))
+        db.session.add(b)
+        db.session.commit()
 
     def resultAsDictionary(self, cursor):
         """Converts the result in database cursor object to JSON."""

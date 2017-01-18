@@ -2,6 +2,7 @@ from datetime import timedelta, datetime, timezone
 
 from routes.filters import humanize_datetime
 from tests.server.timroutetest import TimRouteTest
+from timdb.accesstype import AccessType
 from timdb.models.docentry import DocEntry
 from timdb.tim_models import db, BlockAccess
 
@@ -94,15 +95,17 @@ class DurationTest(TimRouteTest):
         access = self.db.users.grant_access(self.db.users.get_logged_group_id(), doc_id, 'view',
                                             duration=duration,
                                             duration_to=now + duration)
-        accesses = self.current_group().accesses.all()
+        accesses = self.current_group().accesses.filter_by(type=AccessType.view.value).all()
         self.assertEqual(0, len(accesses))
         d = DocEntry.find_by_id(doc_id)
         self.get('/view/' + d.path,
                  expect_status=403,
                  expect_contains=self.about_to_access_msg)
+        accesses = self.current_group().accesses.filter_by(type=AccessType.view.value).all()
+        self.assertEqual(0, len(accesses))
         self.get('/view/' + d.path, query_string={'unlock': 'true'},
                  expect_contains=self.unlock_success)
-        accesses = self.current_group().accesses.all()
+        accesses = self.current_group().accesses.filter_by(type=AccessType.view.value).all()
         self.assertEqual(1, len(accesses))
         granted_access = accesses[0]
         self.assertEqual(access.duration, granted_access.duration)

@@ -94,6 +94,7 @@ class DefaultRightTest(TimRouteTest):
             else:
                 raise Exception('error in test: object type should be document or folder')
             self.maxDiff = None
+            new_item_rights = [right for right in new_item_rights if right['access_name'] != 'owner']
             self.assertListEqual(sorted(default_rights, key=itemgetter('gid', 'access_type')),
                                  sorted(new_item_rights, key=itemgetter('gid', 'access_type')))
             self.json_put('/defaultPermissions/{}/remove/{}/{}/{}'

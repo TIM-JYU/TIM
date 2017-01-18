@@ -2,12 +2,12 @@
 from datetime import timezone
 
 from flask import Blueprint, render_template
+from flask import g
 from isodate import Duration
 from isodate import parse_duration
 
 from options import get_option
-from routes.accesshelper import verify_manage_access, verify_ownership, verify_view_access, \
-    has_manage_access
+from routes.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_manage_access
 from timdb.blocktypes import from_str
 from timdb.models.docentry import DocEntry
 from timdb.models.folder import Folder
@@ -69,25 +69,9 @@ def get_changelog(doc_id, length):
     return jsonResponse({'versions': get_changelog_with_names(doc, length)})
 
 
-@manage_page.route("/changeOwner/<int:doc_id>/<new_owner_name>", methods=["PUT"])
-def change_owner(doc_id, new_owner_name):
-    timdb = get_timdb()
-    if not timdb.documents.exists(doc_id) and not timdb.folders.exists(doc_id):
-        abort(404)
-    verify_ownership(doc_id)
-    new_owner = timdb.users.get_usergroup_by_name(new_owner_name)
-    if new_owner is None:
-        abort(404, 'Non-existent usergroup.')
-    possible_groups = timdb.users.get_user_groups(get_current_user_id())
-    if new_owner not in [group['id'] for group in possible_groups]:
-        abort(403, "You must belong to the new usergroup.")
-    timdb.documents.set_owner(doc_id, new_owner)
-    return okJsonResponse()
-
-
 @manage_page.route("/permissions/add/<int:item_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_permission(item_id, group_name, perm_type):
-    group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(item_id, group_name)
+    group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(item_id, group_name, perm_type)
     timdb = get_timdb()
     try:
         for group_id in group_ids:
@@ -109,11 +93,18 @@ def add_permission(item_id, group_name, perm_type):
 @manage_page.route("/permissions/remove/<int:item_id>/<int:group_id>/<perm_type>", methods=["PUT"])
 def remove_permission(item_id, group_id, perm_type):
     timdb = get_timdb()
-    verify_manage_access(item_id)
+    had_ownership = verify_permission_edit_access(item_id, perm_type)
     try:
         timdb.users.remove_access(group_id, item_id, perm_type)
     except KeyError:
         abort(400, 'Unknown permission type')
+
+    # delete cached ownership information because it may have changed now
+    if hasattr(g, 'owned'):
+        delattr(g, 'owned')
+    if had_ownership and not has_ownership(item_id):
+        timdb.users.grant_access(group_id, item_id, perm_type)
+        abort(400, 'You cannot remove ownership from yourself.')
     return okJsonResponse()
 
 
@@ -189,7 +180,7 @@ def remove_alias(doc_id, alias):
     if doc_id2 != doc_id:
         return abort(404, 'The document name does not match the id!')
 
-    if not timdb.users.user_is_owner(get_current_user_id(), doc_id):
+    if not has_manage_access(doc_id):
         return abort(403, "You don't have permission to delete this object.")
 
     if len(timdb.documents.get_document_names(doc_id, include_nonpublic=True)) < 2:
@@ -252,7 +243,7 @@ def get_default_document_permissions(folder_id, object_type):
 
 @manage_page.route("/defaultPermissions/<object_type>/add/<int:folder_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
-    group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(folder_id, group_name)
+    group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(folder_id, group_name, perm_type)
     timdb = get_timdb()
     timdb.users.grant_default_access(group_ids,
                                      folder_id,
@@ -274,8 +265,8 @@ def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
     return okJsonResponse()
 
 
-def verify_and_get_params(folder_id, group_name):
-    verify_manage_access(folder_id)
+def verify_and_get_params(item_id, group_name, perm_type):
+    verify_permission_edit_access(item_id, perm_type)
     groups = UserGroup.query.filter(UserGroup.name.in_(group_name.split(';'))).all()
     if len(groups) == 0:
         abort(404, 'No user group with this name was found.')
@@ -314,13 +305,26 @@ def verify_and_get_params(folder_id, group_name):
     return group_ids, accessible_from, accessible_to, duration_accessible_from, duration_accessible_to, duration
 
 
+def verify_permission_edit_access(item_id: int, perm_type: str) -> bool:
+    """Verifies that the user has right to edit a permission.
+    :param item_id: The item id to check for permission.
+    :param perm_type: The permission type.
+    :return: True if the user has ownership, False if just manage access.
+    """
+    if perm_type == 'owner':
+        verify_ownership(item_id)
+        return True
+    else:
+        verify_manage_access(item_id)
+        return False
+
+
 @manage_page.route("/documents/<int:doc_id>", methods=["DELETE"])
 def delete_document(doc_id):
     timdb = get_timdb()
     if not timdb.documents.exists(doc_id):
         return abort(404, 'Document does not exist.')
-    if not timdb.users.user_is_owner(get_current_user_id(), doc_id):
-        return abort(403, "You don't have permission to delete this document.")
+    verify_ownership(doc_id)
     abort(403, 'Deleting documents has been disabled until a proper backup mechanism is implemented. '
                'Please contact TIM administrators if you really want to delete this document. '
                'You can hide this document from others by removing all permissions.')
@@ -333,8 +337,7 @@ def delete_folder(doc_id):
     timdb = get_timdb()
     if not timdb.folders.exists(doc_id):
         return abort(404, 'Folder does not exist.')
-    if not timdb.users.user_is_owner(get_current_user_id(), doc_id):
-        return abort(403, "You don't have permission to delete this folder.")
+    verify_ownership(doc_id)
     if not timdb.folders.is_empty(doc_id):
         return abort(403, "The folder is not empty. Only empty folders can be deleted.")
 

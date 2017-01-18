@@ -7,3 +7,4 @@ class AccessType(enum.Enum):
     teacher = 3
     manage = 4
     see_answers = 5
+    owner = 6

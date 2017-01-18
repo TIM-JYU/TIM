@@ -148,10 +148,10 @@ class UserTest(TimDbTest):
         self.assertFalse(db.users.has_teacher_access(user_id, test_block_id))
         self.assertFalse(db.users.has_seeanswers_access(user_id, test_block_id))
 
-        self.assertDictEqual({2: BlockAccess.owner_from_block(test_block_2)}, db.users.get_viewable_blocks(user_id))
+        self.assertDictEqual({2: test_block_2.owner_access}, db.users.get_viewable_blocks(user_id))
         db.users.addUserToAdmins(user_id)
-        self.assertDictEqual({1: BlockAccess.owner_from_block(test_block),
-                              2: BlockAccess.owner_from_block(test_block_2)}, db.users.get_viewable_blocks(user_id))
+        self.assertDictEqual({1: test_block.owner_access,
+                              2: test_block_2.owner_access}, db.users.get_viewable_blocks(user_id))
         for bid in (test_block_id, test_block_id2):
             self.assertTrue(db.users.has_manage_access(user_id, bid))
             self.assertTrue(db.users.has_edit_access(user_id, bid))

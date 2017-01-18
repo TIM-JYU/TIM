@@ -1,7 +1,9 @@
 import datetime
 from datetime import timezone
 
-from timdb.tim_models import db
+from timdb.accesstype import AccessType
+from timdb.models.usergroup import UserGroup
+from timdb.tim_models import db, BlockAccess
 
 
 class Block(db.Model):
@@ -13,16 +15,18 @@ class Block(db.Model):
     description = db.Column(db.Text)
     created = db.Column(db.DateTime(timezone=True), nullable=False)
     modified = db.Column(db.DateTime(timezone=True))
-    usergroup_id = db.Column(db.Integer, db.ForeignKey('usergroup.id'), nullable=False)
 
-    owner = db.relationship('UserGroup', backref=db.backref('owned_blocks', lazy='dynamic'))
-
-    def __init__(self, type_id, usergroup_id, description=None):
+    def __init__(self, type_id, description=None):
         self.type_id = type_id
-        self.usergroup_id = usergroup_id
         self.description = description
         self.created = datetime.datetime.now(timezone.utc)
         self.modified = self.created
+
+    @property
+    def owner(self) -> UserGroup:
+        return UserGroup.query.filter(UserGroup.id.in_(
+            BlockAccess.query.filter_by(block_id=self.id, type=AccessType.owner.value).with_entities(
+                BlockAccess.usergroup_id))).first()
 
     @property
     def parent(self) -> 'Folder':
@@ -36,4 +40,8 @@ class Block(db.Model):
 
     def is_unpublished(self):
         from routes.accesshelper import has_ownership
-        return has_ownership(self.id) is not None and not self.owner.is_large() and self.accesses.count() == 0
+        return has_ownership(self.id) is not None and (not self.owner or not self.owner.is_large()) and self.accesses.count() <= 1
+
+    @property
+    def owner_access(self):
+        return BlockAccess.query.filter_by(block_id=self.id, type=AccessType.owner.value).first()

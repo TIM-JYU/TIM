@@ -1,3 +1,4 @@
+from timdb.dbutils import insert_block
 from timdb.tim_models import AnswerUpload, db
 from timdb.models.block import Block
 from timdb.timdbbase import TimDbBase
@@ -40,8 +41,7 @@ class Uploads(TimDbBase):
 
         with open(file_path, 'wb') as f:
             f.write(file_data)
-
-        b = Block(type_id=blocktypes.UPLOAD, usergroup_id=owner_group_id, description=relfilename)
+        b = insert_block(description=relfilename, owner_group_id=owner_group_id, block_type=blocktypes.UPLOAD, commit=False)
         au = AnswerUpload(block=b)
         db.session.add(b)
         db.session.add(au)

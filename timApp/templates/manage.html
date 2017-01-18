@@ -13,24 +13,6 @@
         <div class="panel panel-default">
             <div class="panel-heading">{{ obj_name|capitalize }} permissions</div>
             <div class="panel-body">
-                {% if item.rights.owner %}
-                    <form ng-submit="changeOwner()">
-                        <div class="form-group">
-                            <label for="newOwnerInput">{{ obj_name|capitalize }} owner:</label>
-                            <div class="input-group">
-                                <input id="newOwnerInput" class="form-control" type="text" ng-model="newOwner">
-                                <span class="input-group-btn">
-                        <button ng-disabled="item.owner.name === newOwner" class="timButton">
-                            Update
-                        </button>
-                    </span>
-                            </div>
-                            <span ng-show="ownerUpdating">Updating...</span>
-                        </div>
-                    </form>
-                {% else %}
-                    {{ obj_name|capitalize }} owner: {{ item.owner.name }}
-                {% endif %}
                 <uib-tabset>
                     <uib-tab heading="Rights for this {{ obj_name }}">
                         <rights-editor

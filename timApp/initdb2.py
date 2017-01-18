@@ -65,6 +65,7 @@ def initialize_database(create_docs=True):
         sess.add(AccessType(id=3, name='teacher'))
         sess.add(AccessType(id=4, name='manage'))
         sess.add(AccessType(id=5, name='see answers'))
+        sess.add(AccessType(id=6, name='owner'))
         sess.commit()
 
         timdb.users.create_special_usergroups()

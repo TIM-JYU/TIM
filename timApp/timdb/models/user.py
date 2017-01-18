@@ -27,6 +27,14 @@ class User(db.Model):
     def logged_in(self):
         return self.id > 0
 
+    @property
+    def is_admin(self):
+        if not hasattr(self, '_is_admin'):
+            q = UserGroupMember.query.join(UserGroup, UserGroupMember.usergroup_id == UserGroup.id).filter(
+                (UserGroupMember.user_id == self.id) & (UserGroup.name == 'Administrators'))
+            self._is_admin = db.session.query(q.exists()).scalar()
+        return self._is_admin
+
     def get_personal_group(self) -> UserGroup:
         if self.id < 0 or self.name == ANONYMOUS_USERNAME:
             return UserGroup.query.filter_by(name=ANONYMOUS_GROUPNAME).first()

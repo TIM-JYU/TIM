@@ -1,10 +1,12 @@
+from datetime import datetime, timezone
 from typing import Optional
 
+from timdb.accesstype import AccessType
 from timdb.models.block import Block
-from timdb.tim_models import db
+from timdb.tim_models import db, BlockAccess
 
 
-def insert_block(description: Optional[str], owner_group_id: int, block_type: int, commit: bool = True) -> Block:
+def insert_block(description: Optional[str], owner_group_id: Optional[int], block_type: int, commit: bool = True) -> Block:
     """Inserts a block to database.
 
     :param commit: Whether to commit the change.
@@ -13,11 +15,16 @@ def insert_block(description: Optional[str], owner_group_id: int, block_type: in
     :param block_type: The type of the block.
     :returns: The id of the block.
     """
-    b = Block(description=description, type_id=block_type, usergroup_id=owner_group_id)
+    b = Block(description=description, type_id=block_type)
+    if owner_group_id is not None:
+        access = BlockAccess(block=b,
+                             usergroup_id=owner_group_id,
+                             type=AccessType.owner.value,
+                             accessible_from=datetime.now(tz=timezone.utc))
+        db.session.add(access)
     db.session.add(b)
     db.session.flush()
-    block_id = b.id
-    assert block_id != 0
+    assert b.id != 0
     if commit:
         db.session.commit()
     return b

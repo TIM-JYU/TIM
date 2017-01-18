@@ -100,6 +100,7 @@ class Documents(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute('DELETE FROM DocEntry WHERE id = %s', [document_id])
+        cursor.execute('DELETE FROM BlockAccess WHERE block_id = %s', [document_id])
         cursor.execute('DELETE FROM Block WHERE type_id = %s AND id = %s', [blocktypes.DOCUMENT, document_id])
         cursor.execute('DELETE FROM ReadParagraphs where doc_id = %s', [document_id])
         cursor.execute('DELETE FROM UserNotes where doc_id = %s', [document_id])

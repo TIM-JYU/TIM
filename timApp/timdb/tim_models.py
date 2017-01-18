@@ -124,23 +124,21 @@ class BlockAccess(db.Model):
             return None
         return (self.accessible_to - datetime.datetime.now(tz=timezone.utc)).total_seconds()
 
+    def __hash__(self):
+        return hash((self.block_id,
+                     self.usergroup_id,
+                     self.type,
+                     self.accessible_from,
+                     self.accessible_to,
+                     self.duration,
+                     self.duration_from,
+                     self.duration_to))
+
     def __eq__(self, other: 'BlockAccess'):
         return self.block_id == other.block_id and self.usergroup_id == other.usergroup_id and self.type == other.type
 
     def __ne__(self, other):
         return not self == other
-
-    @staticmethod
-    def owner_from_block(block):
-        """Temporary method that returns a fake BlockAccess object that corresponds to the owner access
-        level for the given block.
-
-        This won't be needed anymore when the owner is moved to blockaccess table like the others.
-        """
-        return BlockAccess(block_id=block.id,
-                           usergroup_id=block.usergroup_id,
-                           type=6,
-                           accessible_from=block.created)
 
 
 class Lecture(db.Model):

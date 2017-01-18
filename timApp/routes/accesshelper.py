@@ -20,8 +20,7 @@ from timdb.timdbexception import TimDbException
 
 
 def verify_admin():
-    timdb = get_timdb()
-    if not timdb.users.has_admin_access(get_current_user_id()):
+    if not check_admin_access():
         abort(403, 'This action requires administrative rights.')
 
 
@@ -36,7 +35,7 @@ def verify_manage_access(block_id, require=True, message=None, check_duration=Fa
 
 
 def has_edit_access(block_id):
-    return block_id in get_editable_blocks()
+    return check_admin_access(block_id) or get_editable_blocks().get(block_id)
 
 
 def verify_access(block_id: int, access_type: AccessType, require: bool = True, message: Optional[str] = None):
@@ -120,7 +119,7 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
 
 
 def has_view_access(block_id):
-    return get_viewable_blocks().get(block_id)
+    return check_admin_access(block_id) or get_viewable_blocks().get(block_id)
 
 
 def has_comment_right(doc_id):
@@ -141,16 +140,26 @@ def verify_read_marking_right(doc_id):
         abort(403)
 
 
+def check_admin_access(block_id=None):
+    curr_user = get_current_user_object()
+    if curr_user.is_admin:
+        return BlockAccess(block_id=block_id,
+                           accessible_from=datetime.min,
+                           type=AccessType.owner.value,
+                           usergroup_id=curr_user.get_personal_group().id)
+    return None
+
+
 def has_teacher_access(doc_id):
-    return get_teachable_blocks().get(doc_id)
+    return check_admin_access(doc_id) or get_teachable_blocks().get(doc_id)
 
 
 def has_manage_access(doc_id):
-    return get_manageable_blocks().get(doc_id)
+    return check_admin_access(doc_id) or get_manageable_blocks().get(doc_id)
 
 
 def has_seeanswers_access(doc_id):
-    return get_see_answers_blocks().get(doc_id)
+    return check_admin_access(doc_id) or get_see_answers_blocks().get(doc_id)
 
 
 def get_rights(doc_id):
@@ -171,7 +180,7 @@ def verify_logged_in():
 
 
 def has_ownership(block_id):
-    return get_owned_blocks().get(block_id)
+    return check_admin_access(block_id) or get_owned_blocks().get(block_id)
 
 
 def verify_ownership(block_id):

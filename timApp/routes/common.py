@@ -418,7 +418,7 @@ def save_last_page():
 def is_considered_unpublished(doc_id):
     timdb = get_timdb()
     owner = timdb.users.get_owner_group(doc_id)
-    return has_ownership(doc_id) and not owner.is_large() and len(timdb.users.get_rights_holders(doc_id)) == 0
+    return has_ownership(doc_id) and (not owner or not owner.is_large()) and len(timdb.users.get_rights_holders(doc_id)) <= 1
 
 
 def validate_uploaded_document_content(file_content):

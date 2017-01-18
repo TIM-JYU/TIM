@@ -123,18 +123,6 @@ PermApp.controller("PermCtrl", [
             });
         };
 
-        sc.changeOwner = function() {
-            sc.ownerUpdating = true;
-            $http.put('/changeOwner/' + sc.item.id + '/' + sc.newOwner).success(
-                function (data, status, headers, config) {
-                     sc.item.owner.name = sc.newOwner;
-                }).error(function (data, status, headers, config) {
-                    $window.alert(data.error);
-                }).finally(function () {
-                    sc.ownerUpdating = false;
-                });
-        };
-
         sc.renameFolder = function (newName) {
             $http.put('/rename/' + sc.item.id, {
                 'new_name': sc.oldFolderName + '/' + newName
@@ -621,7 +609,6 @@ text = '\n'.join(a)
         //sc.oldName = sc.newName;
         //sc.oldFolderName = sc.newFolderName;
         sc.newAlias = {location: sc.newFolderName};
-        sc.newOwner = sc.item.owner.name;
         sc.showCreateDiv = "";
         sc.getNotifySettings();
 
