@@ -628,21 +628,8 @@ class Users(TimDbBase):
         user_ids = [user_id, self.get_anon_user_id()]
         if user_id > 0:
             user_ids.append(self.get_logged_user_id())
-        whole_sql = """
-({}) INTERSECT
-SELECT User_id
-FROM UserGroupMember
-WHERE UserGroup_id IN
-      (SELECT UserGroup_id
-       FROM BlockAccess
-       WHERE Block_id = %s AND type IN ({})
-       AND accessible_from <= CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < COALESCE(accessible_to, 'infinity')
-      )
-""".format(' UNION '.join('SELECT ' + str(x) for x in user_ids), ','.join(['%s'] * len(access_ids)))
-        c = self.db.cursor()
-        c.execute(whole_sql, [block_id] + list(access_ids))
-        result = c.fetchone()
-        return result is not None
+        q = self.prepare_access_query(list(access_ids), user_ids).filter_by(block_id=block_id)
+        return db.session.query(q.exists()).scalar()
 
     def get_accessible_blocks(self, user_id: int, access_types: List[int]) -> Dict[int, BlockAccess]:
         if self.has_admin_access(user_id):
@@ -650,13 +637,18 @@ WHERE UserGroup_id IN
         user_ids = [user_id, self.get_anon_user_id()]
         if user_id > 0:
             user_ids.append(self.get_logged_user_id())
+        q = self.prepare_access_query(access_types, user_ids)
+        return {row.block_id: row for row in q.all()}
+
+    @staticmethod
+    def prepare_access_query(access_types, user_ids):
         user_query = db.session.query(UserGroupMember.usergroup_id).filter(UserGroupMember.user_id.in_(user_ids))
-        q1 = BlockAccess.query.filter(
+        q = BlockAccess.query.filter(
             BlockAccess.usergroup_id.in_(user_query)
             & BlockAccess.type.in_(access_types)
             & (func.current_timestamp().between(BlockAccess.accessible_from, func.coalesce(BlockAccess.accessible_to,
                                                                                            'infinity'))))
-        return {row.block_id: row for row in q1.all()}
+        return q
 
     def get_owned_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
         return self.get_accessible_blocks(user_id, [self.get_owner_access_id()])

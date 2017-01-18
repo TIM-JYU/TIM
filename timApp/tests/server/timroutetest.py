@@ -295,7 +295,7 @@ class TimRouteTest(TimDbTest):
         """
         return self.request(url,
                             method=method,
-                            data=json.dumps(json_data),
+                            data=json.dumps(json_data, cls=tim.TimJsonEncoder),
                             content_type='application/json',
                             as_tree=as_tree,
                             expect_status=expect_status,

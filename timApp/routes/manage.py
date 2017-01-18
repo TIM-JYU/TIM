@@ -71,7 +71,7 @@ def get_changelog(doc_id, length):
 
 @manage_page.route("/permissions/add/<int:item_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_permission(item_id, group_name, perm_type):
-    group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(item_id, group_name, perm_type)
+    is_owner, group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(item_id, group_name, perm_type)
     timdb = get_timdb()
     try:
         for group_id in group_ids:
@@ -87,6 +87,7 @@ def add_permission(item_id, group_name, perm_type):
         timdb.commit()
     except KeyError:
         abort(400, 'Invalid permission type.')
+    check_ownership_loss(is_owner, item_id, perm_type)
     return okJsonResponse()
 
 
@@ -98,14 +99,18 @@ def remove_permission(item_id, group_id, perm_type):
         timdb.users.remove_access(group_id, item_id, perm_type)
     except KeyError:
         abort(400, 'Unknown permission type')
+    check_ownership_loss(had_ownership, item_id, perm_type)
+    return okJsonResponse()
 
+
+def check_ownership_loss(had_ownership, item_id, perm_type):
     # delete cached ownership information because it may have changed now
     if hasattr(g, 'owned'):
         delattr(g, 'owned')
     if had_ownership and not has_ownership(item_id):
-        timdb.users.grant_access(group_id, item_id, perm_type)
-        abort(400, 'You cannot remove ownership from yourself.')
-    return okJsonResponse()
+        timdb = get_timdb()
+        timdb.users.grant_access(get_current_user_group(), item_id, perm_type)
+        abort(403, 'You cannot remove ownership from yourself.')
 
 
 @manage_page.route("/alias/<int:doc_id>", methods=["GET"])
@@ -243,7 +248,7 @@ def get_default_document_permissions(folder_id, object_type):
 
 @manage_page.route("/defaultPermissions/<object_type>/add/<int:folder_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
-    group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(folder_id, group_name, perm_type)
+    _, group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(folder_id, group_name, perm_type)
     timdb = get_timdb()
     timdb.users.grant_default_access(group_ids,
                                      folder_id,
@@ -266,7 +271,7 @@ def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
 
 
 def verify_and_get_params(item_id, group_name, perm_type):
-    verify_permission_edit_access(item_id, perm_type)
+    is_owner = verify_permission_edit_access(item_id, perm_type)
     groups = UserGroup.query.filter(UserGroup.name.in_(group_name.split(';'))).all()
     if len(groups) == 0:
         abort(404, 'No user group with this name was found.')
@@ -302,7 +307,7 @@ def verify_and_get_params(item_id, group_name, perm_type):
             duration = duration.totimedelta(start=datetime.min)
         except (OverflowError, ValueError):
             abort(400, 'Duration is too long.')
-    return group_ids, accessible_from, accessible_to, duration_accessible_from, duration_accessible_to, duration
+    return is_owner, group_ids, accessible_from, accessible_to, duration_accessible_from, duration_accessible_to, duration
 
 
 def verify_permission_edit_access(item_id: int, perm_type: str) -> bool:
