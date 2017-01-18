@@ -1,4 +1,4 @@
-"""empty message
+"""Add default_comment column to velpcontent table.
 
 Revision ID: 209fc28604ba
 Revises: 70a159e42ba6

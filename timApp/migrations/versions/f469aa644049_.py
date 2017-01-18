@@ -1,4 +1,4 @@
-"""Adds color table.
+"""Add color table.
 
 Revision ID: f469aa644049
 Revises: 209fc28604ba

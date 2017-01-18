@@ -1,4 +1,4 @@
-"""empty message
+"""Add color column to annotation table.
 
 Revision ID: 88c3e145844b
 Revises: f469aa644049

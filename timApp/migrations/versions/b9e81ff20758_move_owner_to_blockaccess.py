@@ -1,4 +1,4 @@
-"""Moves owner to blockaccess.
+"""Move owner to blockaccess.
 
 Revision ID: b9e81ff20758
 Revises: bc968697021c

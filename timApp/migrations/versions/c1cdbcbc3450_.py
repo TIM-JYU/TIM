@@ -1,4 +1,4 @@
-"""Adds duration column to blockaccess.
+"""Add duration column to blockaccess.
 
 Revision ID: c1cdbcbc3450
 Revises: 88c3e145844b

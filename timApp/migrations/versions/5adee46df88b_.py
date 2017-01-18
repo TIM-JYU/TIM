@@ -1,4 +1,4 @@
-"""Adds a unique constraint to useraccount.name column.
+"""Add a unique constraint to useraccount.name column.
 
 Revision ID: 5adee46df88b
 Revises: 504a7d9779b9

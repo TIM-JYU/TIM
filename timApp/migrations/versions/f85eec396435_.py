@@ -1,4 +1,4 @@
-"""Adds duration_from and duration_to columns to blockaccess.
+"""Add duration_from and duration_to columns to blockaccess.
 
 Revision ID: f85eec396435
 Revises: c1cdbcbc3450
