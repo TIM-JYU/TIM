@@ -255,8 +255,12 @@ def process_areas(html_pars: List[Dict]) -> List[Dict]:
                     cur_area = Area(get_free_index(), html_par[attrs])
                     new_areas[area_start] = cur_area
                 if area_end is not None:
-                    free_indexes[new_areas[area_end].index] = True
-                    new_areas.pop(area_end)
+                    try:
+                        free_indexes[new_areas[area_end].index] = True
+                    except KeyError:
+                        flash('area_end found for "{}" without corresponding start. '
+                              'Fix this to get rid of this warning.'.format(area_end))
+                    new_areas.pop(area_end, None)
                 break
 
         html_par['areas'] = new_areas
