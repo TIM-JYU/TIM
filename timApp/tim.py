@@ -305,7 +305,7 @@ def create_item(item_name, item_type_str, create_function, owner_group_id):
 def create_document():
     jsondata = request.get_json()
     item_path = jsondata['item_path']
-    is_gamified = jsondata.get('gamified', False)
+    is_gamified = False  # disable gamification permanently because the tables are not used so far
 
     timdb = get_timdb()
     item_type = jsondata['item_type']
