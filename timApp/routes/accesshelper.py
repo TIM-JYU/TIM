@@ -110,7 +110,10 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
                     db.session.add(ba)
                 db.session.commit()  # TODO ensure nothing else gets committed than the above
                 flash('Item was unlocked successfully.')
-                return ba
+                if ba.accessible_from < ba.accessible_to:
+                    return ba
+                else:
+                    raise ItemLockedException(ba)
             else:
                 raise ItemLockedException(ba)
     if require:

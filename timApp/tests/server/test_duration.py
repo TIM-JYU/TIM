@@ -8,9 +8,11 @@ from timdb.tim_models import db, BlockAccess
 
 
 class DurationTest(TimRouteTest):
-    about_to_access_msg = ['You are about to access a time-limited document.',
-                           'After you click Unlock, your access to this document will be removed in a day.']
-    unlock_success = ['Item was unlocked successfully.']
+    def get_about_to_access_msg(self, period='a day'):
+        return ['You are about to access a time-limited document.',
+                'After you click Unlock, your access to this document will be removed in {}.'.format(period)]
+
+    unlock_success = 'Item was unlocked successfully.'
 
     def test_duration_unlock(self):
         self.login_test1()
@@ -21,7 +23,7 @@ class DurationTest(TimRouteTest):
         d = DocEntry.find_by_id(doc_id)
         self.get('/view/' + d.path,
                  expect_status=403,
-                 expect_contains=self.about_to_access_msg)
+                 expect_contains=self.get_about_to_access_msg())
 
         self.get('/view/' + d.path, query_string={'unlock': 'true'},
                  expect_contains=self.unlock_success)
@@ -31,7 +33,7 @@ class DurationTest(TimRouteTest):
         ba.accessible_to -= timedelta(days=2)
         db.session.commit()
         self.get('/view/' + d.path, expect_status=403,
-                 expect_contains='Your access to this item has expired {}.'.format(humanize_datetime(ba.accessible_to)))
+                 expect_contains=self.get_expired_msg(ba.accessible_to))
 
     def test_timed_duration_unlock(self):
         self.login_test1()
@@ -73,7 +75,7 @@ class DurationTest(TimRouteTest):
                                    duration_from=now)
         self.get('/view/' + d.path,
                  expect_status=403,
-                 expect_contains=self.about_to_access_msg)
+                 expect_contains=self.get_about_to_access_msg())
         self.get('/view/' + d.path, query_string={'unlock': 'true'},
                  expect_status=200,
                  expect_contains=self.unlock_success)
@@ -83,7 +85,10 @@ class DurationTest(TimRouteTest):
         ba.accessible_to -= timedelta(days=2)
         db.session.commit()
         self.get('/view/' + d.path, expect_status=403,
-                 expect_contains='Your access to this item has expired {}.'.format(humanize_datetime(ba.accessible_to)))
+                 expect_contains=self.get_expired_msg(ba.accessible_to))
+
+    def get_expired_msg(self, access):
+        return 'Your access to this item has expired {}.'.format(humanize_datetime(access))
 
     def test_duration_group_unlock(self):
         self.login_test1()
@@ -100,7 +105,7 @@ class DurationTest(TimRouteTest):
         d = DocEntry.find_by_id(doc_id)
         self.get('/view/' + d.path,
                  expect_status=403,
-                 expect_contains=self.about_to_access_msg)
+                 expect_contains=self.get_about_to_access_msg())
         accesses = self.current_group().accesses.filter_by(type=AccessType.view.value).all()
         self.assertEqual(0, len(accesses))
         self.get('/view/' + d.path, query_string={'unlock': 'true'},
@@ -120,16 +125,29 @@ class DurationTest(TimRouteTest):
 
         self.get('/view/' + d.path,
                  expect_status=403,
-                 expect_contains='Your access to this item has expired {}.'.format(
-                     humanize_datetime(granted_access.accessible_to)))
+                 expect_contains=self.get_expired_msg(granted_access.accessible_to))
         self.get('/view/' + d.path,
                  expect_status=403,
                  query_string={'unlock': 'true'},
-                 expect_contains='Your access to this item has expired {}.'.format(
-                     humanize_datetime(granted_access.accessible_to)))
+                 expect_contains=self.get_expired_msg(granted_access.accessible_to))
         db.session.expunge_all()
         db.session.delete(granted_access)
         db.session.commit()
         self.get('/view/' + d.path,
                  expect_status=403,
-                 expect_contains=self.about_to_access_msg)
+                 expect_contains=self.get_about_to_access_msg())
+
+    def test_duration_zero(self):
+        self.login_test1()
+        d = self.create_doc()
+        doc_id = d.id
+        self.login_test2()
+        self.db.users.grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
+                                   duration=timedelta(days=0))
+        self.get('/view/' + d.path,
+                 expect_status=403,
+                 expect_contains=self.get_about_to_access_msg('a moment'))
+        self.get('/view/' + d.path,
+                 query_string={'unlock': 'true'},
+                 expect_status=403,
+                 expect_contains=[self.unlock_success, self.get_expired_msg(datetime.now(tz=timezone.utc))])
