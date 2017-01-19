@@ -3,17 +3,30 @@
 import os
 
 import flask_migrate
+import logging
 import sqlalchemy
 import sqlalchemy.exc
+import sys
+from alembic.runtime.environment import EnvironmentContext
+from alembic.runtime.migration import MigrationContext
+from alembic.script import ScriptDirectory
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
-from routes.logger import log_info, enable_loggers
+from routes.logger import log_info, enable_loggers, log_error
 from sql.migrate_to_postgre import perform_migration
 from tim_app import app
 from timdb import tempdb_models
 from timdb.tim_models import AccessType, db
 from timdb.timdb2 import TimDb
+
+
+def check_db_version(_, context: MigrationContext):
+    if context.get_current_revision() != context.environment_context.get_head_revision():
+        enable_loggers()
+        log_error('Your database is not up to date. To upgrade, run: ./run_command.sh flask db upgrade')
+        sys.exit(-1)
+    return []
 
 
 def postgre_create_database(host, db_name):
@@ -56,8 +69,9 @@ def initialize_database(create_docs=True):
             perform_migration(app.config['OLD_SQLITE_DATABASE'], app.config['DATABASE'])
             timdb.close()
             return
-        with app.app_context():
-            flask_migrate.stamp()
+        if not app.config['TESTING']:
+            with app.app_context():
+                flask_migrate.stamp()
         # Alembic disables loggers for some reason
         enable_loggers()
         sess.add(AccessType(id=1, name='view'))
@@ -93,7 +107,23 @@ def initialize_database(create_docs=True):
                                                       'Multiple choice plugin example',
                                                       anon_group)
         log_info('Database initialization done.')
+
+    if not app.config['TESTING']:
+        exit_if_not_db_up_to_date()
     timdb.close()
+
+
+def exit_if_not_db_up_to_date():
+    with app.app_context():
+        config = app.extensions['migrate'].migrate.get_config(None)
+        script = ScriptDirectory.from_config(config)
+        env = EnvironmentContext(config, script, fn=check_db_version)
+        prev_level = logging.getLogger('alembic').level
+        logging.getLogger('alembic').level = logging.WARN
+        with env:
+            script.run_env()
+        logging.getLogger('alembic').level = prev_level
+        enable_loggers()
 
 
 if __name__ == "__main__":
