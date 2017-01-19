@@ -1,6 +1,7 @@
 from typing import Optional, Union
 
 from documentmodel.document import Document
+from timdb.gamification_models.gamificationdocument import GamificationDocument
 from timdb.docinfo import DocInfo
 from timdb.tim_models import db
 from timdb.models.translation import Translation
@@ -62,12 +63,13 @@ class DocEntry(db.Model, DocInfo):
         return DocEntry(id=-1, name=title)
 
     @staticmethod
-    def create(name: Optional[str], owner_group_id: int, from_file=None, initial_par=None, settings=None) -> 'DocEntry':
+    def create(name: Optional[str], owner_group_id: int, from_file=None, initial_par=None, settings=None, is_gamified: bool = False) -> 'DocEntry':
         """Creates a new document with the specified name.
 
         :param name: The name of the document to be created (can be None). If None, no DocEntry is actually added
          to the database; only Block and Document objects are created.
         :param owner_group_id: The id of the owner group.
+        :param is_gamified: Boolean value indicating whether the document is gamified.
         :returns: The newly created document object.
         """
 
@@ -89,6 +91,8 @@ class DocEntry(db.Model, DocInfo):
             document.add_text(initial_par)
         if settings is not None:
             document.set_settings(settings)
+        if is_gamified:
+            GamificationDocument.create(document_id)
 
         db.session.commit()
         return docentry

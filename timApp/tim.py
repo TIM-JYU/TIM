@@ -34,6 +34,7 @@ from routes.groups import groups
 from routes.lecture import getTempDb, user_in_lecture, lecture_routes
 from routes.logger import log_info, log_error, log_debug
 from routes.login import login_page, logout
+from routes.generateMap import generateMap
 from routes.manage import manage_page
 from routes.qst import qst_plugin
 from routes.notes import notes
@@ -54,11 +55,13 @@ from timdb.models.docentry import DocEntry
 from timdb.models.folder import Folder
 from timdb.users import NoSuchUserException
 
+
 cache.init_app(app)
 
 with app.app_context():
     cache.clear()
 
+app.register_blueprint(generateMap)
 app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
 app.register_blueprint(qst_plugin)
@@ -302,12 +305,13 @@ def create_item(item_name, item_type_str, create_function, owner_group_id):
 def create_document():
     jsondata = request.get_json()
     item_path = jsondata['item_path']
+    is_gamified = jsondata.get('gamified', False)
 
     timdb = get_timdb()
     item_type = jsondata['item_type']
     return create_item(item_path,
                        item_type,
-                       (lambda name, group: timdb.documents.create(name, group).doc_id) if item_type == 'document' else timdb.folders.create,
+                       (lambda name, group: timdb.documents.create(name, group, is_gamified).doc_id) if item_type == 'document' else timdb.folders.create,
                        get_current_user_group())
 
 

@@ -6,6 +6,7 @@ from typing import List, Tuple, Optional
 
 from timdb.models.user import User
 from timtiming import taketime
+from timdb import gamificationdata
 
 from collections import OrderedDict
 
@@ -17,6 +18,8 @@ from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import dereference_pars, Document
 from plugin import PluginException, parse_plugin_values, Plugin
 from utils import get_error_html
+from flask import render_template
+
 
 LAZYSTART= "<!--lazy "
 LAZYEND = " lazy-->"
@@ -108,7 +111,11 @@ def pluginify(doc: Document,
     for idx, block in enumerate(pars):
         attr_taskid = block.get_attr('taskId')
         plugin_name = block.get_attr('plugin')
+        is_gamified = block.get_attr('gamification')
 
+        if is_gamified:
+            gamified_data = gamificationdata.gamify(block.get_markdown())
+            html_pars[idx]['html'] = render_template('gamification_map.html', gamified_data=gamified_data)
         if plugin_name and not block.is_question():
             try:
                 plugin = Plugin.from_paragraph(block, user)

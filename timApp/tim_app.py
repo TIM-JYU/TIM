@@ -21,6 +21,18 @@ from timdb.tim_models import db
 # We want to import all database models here to make sure e.g. Flask-Migrate is aware of them
 
 # noinspection PyUnresolvedReferences
+from timdb.gamification_models.docgamified import DocGamified
+# noinspection PyUnresolvedReferences
+from timdb.gamification_models.documentgamificationpoint import DocumentGamificationPoint
+# noinspection PyUnresolvedReferences
+from timdb.gamification_models.gamificationdocument import GamificationDocument
+# noinspection PyUnresolvedReferences
+from timdb.gamification_models.gamificationdocumenttype import GamificationDocumentType
+# noinspection PyUnresolvedReferences
+from timdb.gamification_models.gamificationpointtype import GamificationPointType
+# noinspection PyUnresolvedReferences
+from timdb.gamification_models.usergamification import UserGamification
+# noinspection PyUnresolvedReferences
 from timdb.models.translation import Translation
 # noinspection PyUnresolvedReferences
 from timdb.models.user import User
