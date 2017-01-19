@@ -1,3 +1,8 @@
+<div class="checkbox">
+    <label>
+        <input ng-model="showActiveOnly" type="checkbox"/> Show only active or upcoming rights
+    </label>
+</div>
 <div class="margin rights-list" ng-repeat="type in accessTypes">
     <a ng-click="showAddRightFn(type)"
        title="Click to add {{ type.name }} right to some usergroup">{{ type.name }} right</a><span
@@ -36,11 +41,6 @@
             <span ng-show="selectedRight === right" class="label label-primary">Editing</span>
         </li>
     </ul>
-</div>
-<div class="checkbox">
-    <label>
-        <input ng-model="showActiveOnly" type="checkbox"/> Show only active or upcoming rights
-    </label>
 </div>
 <button class="timButton" ng-show="!addingRight && !editingRight()" ng-click="showAddRightFn(accessType)">Add right...
 </button>
