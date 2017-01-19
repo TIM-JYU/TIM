@@ -28,6 +28,7 @@ if __name__ == '__main__':
                         'make sure the working directory is correct')
     copy_bower_libs_if_needed()
     dumbo_started = False
+    d = None
     try:
         if not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
             d = dumboclient.launch_dumbo()
