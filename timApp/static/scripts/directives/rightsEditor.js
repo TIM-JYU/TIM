@@ -22,6 +22,7 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
             sc.grouprights = [];
             sc.timeOpt = {};
             sc.selectedRight = null;
+            sc.showActiveOnly = true;
             sc.timeOpt.type = 'always';
             sc.timeOpt.durationType = 'hours';
             sc.timeOpt.durationAmount = 4;
@@ -155,6 +156,10 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
 
             sc.isObsolete = function (group) {
                 return sc.shouldShowEndedTime(group) || sc.shouldShowNotUnlockableAnymore(group);
+            };
+
+            sc.obsoleteFilterFn = function (group) {
+                return !sc.showActiveOnly || !sc.isObsolete(group);
             };
 
             sc.showClock = function (group) {
