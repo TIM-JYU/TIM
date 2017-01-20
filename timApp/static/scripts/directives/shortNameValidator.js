@@ -11,7 +11,7 @@ app.directive('timShortName', ['Slugify', function (Slugify) {
                     if (ctrl.$isEmpty(modelValue)) {
                         return true;
                     }
-                    return viewValue === Slugify.slugify(viewValue);
+                    return viewValue.toLowerCase() === Slugify.slugify(viewValue);
                 };
             }
         }
@@ -29,7 +29,7 @@ app.directive('timLocation', ['Slugify', function (Slugify) {
                         return true;
                     }
                     viewValue = viewValue.replace(/\//g, '');
-                    return viewValue === Slugify.slugify(viewValue);
+                    return viewValue.toLowerCase() === Slugify.slugify(viewValue);
                 };
             }
         }
