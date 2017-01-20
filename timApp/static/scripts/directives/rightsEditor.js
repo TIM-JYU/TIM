@@ -174,6 +174,7 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
             sc.expireRight = function (group) {
                 sc.editRight(group);
                 sc.timeOpt.to = moment();
+                sc.timeOpt.type = 'range';
                 sc.addOrEditPermission(group.name, sc.accessType);
             };
 
