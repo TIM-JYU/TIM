@@ -1,6 +1,9 @@
 import hashlib
 import re
-from typing import Optional, List, Set
+from datetime import datetime, timedelta, timezone
+from typing import Optional, List, Dict
+
+from sqlalchemy import func
 
 from timdb.blocktypes import blocktypes, BlockType
 from timdb.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
@@ -243,7 +246,16 @@ class Users(TimDbBase):
 
     def get_rights_holders(self, block_id: int):
         cursor = self.db.cursor()
-        cursor.execute("""SELECT b.UserGroup_id as gid, u.name as name, a.id as access_type, a.name as access_name, fullname
+        cursor.execute("""SELECT b.UserGroup_id as gid,
+                                 u.name as name,
+                                 a.id as access_type,
+                                 a.name as access_name,
+                                 accessible_from,
+                                 accessible_to,
+                                 duration,
+                                 duration_from,
+                                 duration_to,
+                                 fullname
                           FROM BlockAccess b
                           JOIN UserGroup u ON b.UserGroup_id = u.id
                           JOIN AccessType a ON b.type = a.id
@@ -260,11 +272,29 @@ class Users(TimDbBase):
             return []
         return self.get_rights_holders(doc.id)
 
-    def grant_default_access(self, group_ids: List[int], folder_id: int, access_type: str, object_type: BlockType):
+    def grant_default_access(self, group_ids: List[int],
+                             folder_id: int,
+                             access_type: str,
+                             object_type: BlockType,
+                             accessible_from: Optional[datetime]=None,
+                             accessible_to: Optional[datetime]=None,
+                             duration_from: Optional[datetime] = None,
+                             duration_to: Optional[datetime] = None,
+                             duration: Optional[timedelta]=None) -> List[BlockAccess]:
         doc = self.get_default_right_document(folder_id, object_type, create_if_not_exist=True)
+        accesses = []
         for group_id in group_ids:
-            self.grant_access(group_id, doc.id, access_type, commit=False)
+            accesses.append(self.grant_access(group_id,
+                                              doc.id,
+                                              access_type,
+                                              commit=False,
+                                              accessible_from=accessible_from,
+                                              accessible_to=accessible_to,
+                                              duration_from=duration_from,
+                                              duration_to=duration_to,
+                                              duration=duration))
         db.session.commit()
+        return accesses
 
     def remove_default_access(self, group_id: int, folder_id: int, access_type: str, object_type: BlockType):
         doc = self.get_default_right_document(folder_id, object_type, create_if_not_exist=True)
@@ -277,9 +307,11 @@ class Users(TimDbBase):
         right_doc_path = self.default_right_paths.get(object_type)
         if right_doc_path is None:
             raise TimDbException('Unsupported object type: {}'.format(object_type))
+
+        # we don't want to have an owner in the default rights by default
         doc = folder.get_document(right_doc_path,
                                   create_if_not_exist=create_if_not_exist,
-                                  creator_group_id=self.get_admin_group_id())
+                                  creator_group_id=None)
         return doc
 
     def get_owner_group(self, block_id: int) -> UserGroup:
@@ -442,15 +474,6 @@ class Users(TimDbBase):
                        """, [group_id, limit])
         return self.resultAsDictionary(cursor)
 
-    def get_group_users(self, group_id: int) -> List[dict]:
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT User_id as id, User_name FROM UserGroupMember WHERE
-                          User_name = (SELECT name FROM UserAccount WHERE id = %s) AND
-                          User_id   = (SELECT id FROM UserGroup WHERE UserGroup_id = %s)
-                       """)
-
-        return len(cursor.fetchall()) > 0
-
     def is_user_id_in_group(self, user_id: int, usergroup_name: str) -> bool:
         cursor = self.db.cursor()
         cursor.execute("""SELECT User_id FROM UserGroupMember WHERE
@@ -465,21 +488,48 @@ class Users(TimDbBase):
                            WHERE User_id = %s AND UserGroup_id = %s""", (user_id, usergroup_id))
         return c.fetchone() is not None
 
-    def grant_access(self, group_id: int, block_id: int, access_type: str, commit:bool=True):
+    def grant_access(self,
+                     group_id: int,
+                     block_id: int,
+                     access_type: str,
+                     accessible_from: Optional[datetime]=None,
+                     accessible_to: Optional[datetime]=None,
+                     duration_from: Optional[datetime] = None,
+                     duration_to: Optional[datetime] = None,
+                     duration: Optional[timedelta]=None,
+                     commit: bool=True) -> BlockAccess:
         """Grants access to a group for a block.
         
+        :param duration_from: The optional start time for duration unlock.
+        :param duration_to: The optional end time for duration unlock.
+        :param accessible_from: The optional start time for the permission.
+        :param accessible_to: The optional end time for the permission.
+        :param duration: The optional duration for the permission.
         :param commit: Whether to commit changes immediately.
         :param group_id: The group id to which to grant view access.
         :param block_id: The id of the block for which to grant view access.
-        :param access_type: The kind of access. Possible values are 'edit' and 'view'.
+        :param access_type: The kind of access. Possible values are listed in accesstype table.
+        :return: The BlockAccess object.
         """
 
+        if accessible_from is None and duration is None:
+            # the delta is to ease testing; the clocks of container and PostgreSQL are not perfectly in sync
+            accessible_from = datetime.now(tz=timezone.utc) - timedelta(milliseconds=50)
+
         access_id = self.get_access_type_id(access_type)
-        if access_id is not None:
-            ba = BlockAccess(block_id=block_id, usergroup_id=group_id, type=access_id)
-            db.session.merge(ba)
+        assert access_id is not None
+        ba = BlockAccess(block_id=block_id,
+                         usergroup_id=group_id,
+                         type=access_id,
+                         accessible_from=accessible_from,
+                         accessible_to=accessible_to,
+                         duration_from=duration_from,
+                         duration_to=duration_to,
+                         duration=duration)
+        db.session.merge(ba)
         if commit:
             db.session.commit()
+        return ba
 
     def grant_view_access(self, group_id: int, block_id: int):
         """Grants view access to a group for a block.
@@ -520,6 +570,9 @@ class Users(TimDbBase):
     def get_seeanswers_access_id(self) -> int:
         return self.get_access_type_id('see answers')
 
+    def get_owner_access_id(self) -> int:
+        return self.get_access_type_id('owner')
+
     def has_admin_access(self, user_id: int) -> bool:
         return self.is_user_id_in_group_id(user_id, self.get_admin_group_id())
 
@@ -536,7 +589,8 @@ class Users(TimDbBase):
                                self.get_edit_access_id(),
                                self.get_manage_access_id(),
                                self.get_teacher_access_id(),
-                               self.get_seeanswers_access_id())
+                               self.get_seeanswers_access_id(),
+                               self.get_owner_access_id())
 
     def has_teacher_access(self, user_id: int, block_id: int) -> bool:
         """Returns whether the user has teacher access to the specified block.
@@ -545,7 +599,8 @@ class Users(TimDbBase):
         :param block_id: The block id to check.
         :returns: True if the user with id 'user_id' has teacher access to the block 'block_id', false otherwise.
         """
-        return self.has_access(user_id, block_id, self.get_manage_access_id(), self.get_teacher_access_id())
+        return self.has_access(user_id, block_id, self.get_manage_access_id(), self.get_teacher_access_id(),
+                               self.get_owner_access_id())
 
     def has_manage_access(self, user_id: int, block_id: int) -> bool:
         """Returns whether the user has manage access to the specified block.
@@ -554,7 +609,8 @@ class Users(TimDbBase):
         :param block_id: The block id to check.
         :returns: True if the user with id 'user_id' has manage access to the block 'block_id', false otherwise.
         """
-        return self.has_access(user_id, block_id, self.get_manage_access_id())
+        return self.has_access(user_id, block_id, self.get_manage_access_id(),
+                               self.get_owner_access_id())
 
     def has_access(self, user_id: int, block_id: int, *access_ids) -> bool:
         """Returns whether the user has any of the specific kind of access types to the specified block.
@@ -572,75 +628,58 @@ class Users(TimDbBase):
         user_ids = [user_id, self.get_anon_user_id()]
         if user_id > 0:
             user_ids.append(self.get_logged_user_id())
-        whole_sql = """
-({}) INTERSECT
-SELECT User_id
-FROM UserGroupMember
-WHERE UserGroup_id IN
-      (SELECT UserGroup_id
-       FROM BlockAccess
-       WHERE Block_id = %s AND type IN ({})
-       UNION SELECT UserGroup_id
-             FROM Block
-             WHERE id = %s
-      )
-""".format(' UNION '.join('SELECT ' + str(x) for x in user_ids), ','.join(['%s'] * len(access_ids)))
-        c = self.db.cursor()
-        # print(whole_sql)
-        c.execute(whole_sql, [block_id] + list(access_ids) + [block_id])
-        result = c.fetchone()
-        return result is not None
+        q = self.prepare_access_query(list(access_ids), user_ids).filter_by(block_id=block_id)
+        return db.session.query(q.exists()).scalar()
 
-    def get_accessible_blocks(self, user_id: int, access_types: List[int]) -> Set[int]:
+    def get_accessible_blocks(self, user_id: int, access_types: List[int]) -> Dict[int, BlockAccess]:
         if self.has_admin_access(user_id):
-            c = self.db.cursor()
-            c.execute("""SELECT id FROM Block""")
-            return set(row[0] for row in c.fetchall())
+            return {row.block_id: row for row in BlockAccess.query.all()}
         user_ids = [user_id, self.get_anon_user_id()]
         if user_id > 0:
             user_ids.append(self.get_logged_user_id())
-        c = self.db.cursor()
-        c.execute("""
-SELECT Block_id as id FROM BlockAccess
-WHERE UserGroup_id IN (SELECT UserGroup_id
-FROM UserGroupMember
-WHERE User_id IN ({}))
-  AND type IN ({})
-UNION
-SELECT id FROM Block
-WHERE UserGroup_id IN (SELECT UserGroup_id
-FROM UserGroupMember
-WHERE User_id IN ({}))
-        """.format(self.get_sql_template(user_ids),
-                   self.get_sql_template(access_types),
-                   self.get_sql_template(user_ids)), user_ids + access_types + user_ids)
-        return set(row[0] for row in c.fetchall())
+        q = self.prepare_access_query(access_types, user_ids)
+        return {row.block_id: row for row in q.all()}
 
-    def get_owned_blocks(self, user_id: int) -> Set[int]:
-        return self.get_accessible_blocks(user_id, [-1])  # slight hack: the non-existent id -1 avoids syntax error in
+    @staticmethod
+    def prepare_access_query(access_types, user_ids):
+        user_query = db.session.query(UserGroupMember.usergroup_id).filter(UserGroupMember.user_id.in_(user_ids))
+        q = BlockAccess.query.filter(
+            BlockAccess.usergroup_id.in_(user_query)
+            & BlockAccess.type.in_(access_types)
+            & (func.current_timestamp().between(BlockAccess.accessible_from, func.coalesce(BlockAccess.accessible_to,
+                                                                                           'infinity'))))
+        return q
 
-    def get_manageable_blocks(self, user_id: int) -> Set[int]:
-        return self.get_accessible_blocks(user_id, [self.get_manage_access_id()])
+    def get_owned_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
+        return self.get_accessible_blocks(user_id, [self.get_owner_access_id()])
 
-    def get_teachable_blocks(self, user_id: int) -> Set[int]:
+    def get_manageable_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
+        return self.get_accessible_blocks(user_id, [self.get_manage_access_id(),
+                                                    self.get_owner_access_id()])
+
+    def get_teachable_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
         return self.get_accessible_blocks(user_id, [self.get_teacher_access_id(),
-                                                    self.get_manage_access_id()])
+                                                    self.get_manage_access_id(),
+                                                    self.get_owner_access_id()])
 
-    def get_see_answers_blocks(self, user_id: int) -> Set[int]:
+    def get_see_answers_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
         return self.get_accessible_blocks(user_id, [self.get_seeanswers_access_id(),
                                                     self.get_teacher_access_id(),
-                                                    self.get_manage_access_id()])
+                                                    self.get_manage_access_id(),
+                                                    self.get_owner_access_id()])
 
-    def get_editable_blocks(self, user_id: int) -> Set[int]:
+    def get_editable_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
         return self.get_accessible_blocks(user_id, [self.get_edit_access_id(),
-                                                    self.get_manage_access_id()])
+                                                    self.get_manage_access_id(),
+                                                    self.get_owner_access_id()])
 
-    def get_viewable_blocks(self, user_id: int) -> Set[int]:
+    def get_viewable_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
         return self.get_accessible_blocks(user_id, [self.get_view_access_id(),
                                                     self.get_edit_access_id(),
                                                     self.get_manage_access_id(),
                                                     self.get_teacher_access_id(),
-                                                    self.get_seeanswers_access_id()])
+                                                    self.get_seeanswers_access_id(),
+                                                    self.get_owner_access_id()])
 
     def has_edit_access(self, user_id: int, block_id: int) -> bool:
         """Returns whether the user has edit access to the specified block.
@@ -650,13 +689,15 @@ WHERE User_id IN ({}))
         :returns: True if the user with id 'user_id' has edit access to the block 'block_id', false otherwise.
         """
 
-        return self.has_access(user_id, block_id, self.get_edit_access_id(), self.get_manage_access_id())
+        return self.has_access(user_id, block_id, self.get_edit_access_id(), self.get_manage_access_id(),
+                               self.get_owner_access_id())
 
     def has_seeanswers_access(self, uid: int, block_id: int) -> bool:
         return self.has_access(uid, block_id,
                                self.get_seeanswers_access_id(),
                                self.get_manage_access_id(),
-                               self.get_teacher_access_id())
+                               self.get_teacher_access_id(),
+                               self.get_owner_access_id())
 
     def user_is_owner(self, user_id: int, block_id: int) -> bool:
         """Returns whether the user belongs to the owners of the specified block.
@@ -665,19 +706,7 @@ WHERE User_id IN ({}))
         :param block_id:
         :returns: True if the user with 'user_id' belongs to the owner group of the block 'block_id'.
         """
-        if self.has_admin_access(user_id):
-            return True
-
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT id FROM UserAccount WHERE
-                          id = %s
-                          AND (id IN
-                              (SELECT User_id FROM UserGroupMember WHERE UserGroup_id IN
-                              (SELECT UserGroup_id FROM Block WHERE id = %s))
-                              )""", [user_id, block_id])
-        result = cursor.fetchall()
-        assert len(result) <= 1, 'rowcount should be 1 at most'
-        return len(result) == 1
+        return self.has_access(user_id, block_id, self.get_owner_access_id())
 
     def get_preferences(self, user_id: int) -> str:
         """Gets the preferences of a user.

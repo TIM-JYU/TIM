@@ -121,10 +121,6 @@ fieldset, form {
     width: 25px;
 }
 
-input[type="number"] {
-    width: 30px;
-}
-
 .questionTable textarea {
     width: 100% !important;
     box-sizing: border-box;
@@ -247,7 +243,7 @@ input[type="number"] {
     text-align: left;
 
     input[type=checkbox] {
-        margin-right: 5px;
+        /* margin-right: 5px; */
     }
 }
 
@@ -258,6 +254,56 @@ input[type="number"] {
 
 #textarea-answer {
     width: 100%
+}
+
+.qst label {
+    margin-bottom: 5px;
+    font-weight: normal;
+}
+
+.qst #answer-sheet-table {
+    margin-left: 2em;
+}
+
+.qst button.timButton {
+    margin-left: 2em;
+}
+
+.qstAnswerSheet h5 {
+    margin-left: 0.5em;
+    margin-top: 0.0em;
+}
+
+.qst-points {
+    font-size: 0.5em;
+    line-height: 0.0em;
+    margin-bottom: 1pt;
+}
+
+.qst-correct {
+    border-color: $basic-color;
+    border-style: solid;
+    border-width: 2pt;
+    border-radius: 10pt;
+    border-spacing: 1em;
+    padding-left: 2pt;
+    padding-right: 2pt;
+}
+
+.qst-normal {
+    padding-left: 2pt;
+    padding-right: 2pt;
+}
+
+.colorchange-button {
+    width: 2em;
+}
+
+.smallButton {
+    height: 1.7em;
+    margin-top: 0px;
+    padding: 0.1em;
+    font-size: 0.9em;
 }
 
 .buttons {

@@ -229,3 +229,7 @@ def join_location(location: str, name: str) -> str:
 
 def get_sql_template(value_list: List) -> str:
     return ','.join(['%s'] * len(value_list))
+
+
+def pycharm_running():
+    return os.environ.get('PYCHARM_HOSTED') == '1'

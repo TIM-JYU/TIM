@@ -17,6 +17,8 @@ tim_logger.addHandler(ch)
 
 
 def setup_logging(app):
+    if not app.config['TESTING']:
+        logging.getLogger('alembic').level = logging.INFO
     formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s ')
     if not os.path.exists(app.config['LOG_DIR']):
         try:
@@ -36,6 +38,11 @@ def setup_logging(app):
         stdout_handler.setLevel(app.config['LOG_LEVEL_STDOUT'])
         stdout_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
         tim_logger.addHandler(stdout_handler)
+
+
+def enable_loggers():
+    tim_logger.disabled = False
+    wz.disabled = False
 
 
 def log_debug(message: str):

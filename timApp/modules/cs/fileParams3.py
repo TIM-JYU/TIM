@@ -337,7 +337,18 @@ def get_url_lines_as_string(url):
     # print(cache)
     return result
 
-    
+
+def replace_random(query, s):
+    if not hasattr(query, 'randomcheck'):
+        return s
+    result = s
+    try:
+        result = result.replace('RANDOMCHECK', query.randomcheck)
+    except Exception as e:
+        pass
+    return result
+
+
 def do_escape(s):
     line = html.escape(s)
     # line = line.replace("{","&#123;") # because otherwise problems with angular {{, no need if used inside ng-non-bindable
@@ -361,8 +372,8 @@ class FileParams:
         self.lastn = int(get_param(query, "lastn" + nr, "1000000"))
         self.include = get_param(query, "include" + nr, "")
         self.replace = do_matcher(get_param(query, "replace" + nr, ""))
-        self.by = get_param_by(query, "by" + nr, "")
-        self.prorgam = get_param_by(query, "program" + nr, "")
+        self.by = replace_random(query, get_param_by(query, "by" + nr, ""))
+        self.prorgam = replace_random(query, get_param_by(query, "program" + nr, ""))
         self.breakCount = int(get_param(query, "breakCount" + nr, "0"))
 
         self.reps = []
@@ -374,7 +385,7 @@ class FileParams:
             rep = do_matcher(
                 get_param(query, "replace" + repNr + str(i), ""))  # replace.1.1 tyyliin replace1 on siis replace.0.1
             if not rep: break
-            byc = get_param_by(query, "byCode" + repNr + str(i), "")
+            byc = replace_random(query, get_param_by(query, "byCode" + repNr + str(i), ""))
             self.reps.append({"by": rep, "bc": byc})
 
         if self.breakCount:
@@ -530,6 +541,7 @@ class FileParams:
         n2 += self.breaksAfter[part]
         if n2 >= n: n2 = n - 1
         return n1, n2
+
 
 def get_params(self):
     result = QueryClass()

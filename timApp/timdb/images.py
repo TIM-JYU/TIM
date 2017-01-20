@@ -82,7 +82,7 @@ class Images(TimDbBase):
         # TODO: Check that the file extension is allowed.
         # TODO: Use imghdr module to do basic validation of the file contents.
         # TODO: Should file name be unique among images?
-        img_id = insert_block(image_filename, owner_group_id, blocktypes.IMAGE, commit=False)
+        img_id = insert_block(image_filename, owner_group_id, blocktypes.IMAGE, commit=False).id
         img_path = self.getImagePath(img_id, image_filename)
         os.makedirs(os.path.dirname(img_path))  # TODO: Set mode.
 

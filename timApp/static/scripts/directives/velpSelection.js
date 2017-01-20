@@ -16,6 +16,8 @@ var timApp = angular.module('timApp');
 
 var UNDEFINED = "undefined";
 
+// TODO: show velps with same name side by side. Make changes to the template.
+
 /**
  * Angular directive for velp selection
  */
@@ -276,7 +278,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
 
     $scope.changeSelectedLabels = function () {
-        console.log($scope.selectedLabels);
         $window.localStorage.setItem(velpLabelsKey, JSON.stringify($scope.selectedLabels));
     };
 
@@ -571,7 +572,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
                     $scope.velpGroups.push(new_default_velp_group);
 
                 default_velp_group = new_default_velp_group;
-                console.log(new_default_velp_group);
                 method(new_default_velp_group);
             });
         }
@@ -657,7 +657,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         $scope.velps.forEach(function (v) {
             if (v.id = velp.id){
                 v = velp;
-                console.log("paivitti?");
             }
         });
         $scope.updateVelpList();
@@ -1274,9 +1273,6 @@ timApp.filter('orderByWhenNotEditing', function () {
         }
 
         if (reverse) list = list.reverse();
-
-        //console.log(velps);
-        //console.log(order);
 
         return list;
     }

@@ -25,6 +25,7 @@ velps = Blueprint('velps',
 # TODO: Add document handling for all velp group related stuff
 # TODO: Done create velp, get velp groups from folders (get_velp_groups),
 # TODO: make default velp group and necessary folder (velpabc)
+# TODO: Add route for deleting velp (at least a velp without any annotations). Remove by setting valid_until attribute.
 
 
 @velps.route("/<int:doc_id>/get_default_velp_group", methods=['GET'])
@@ -237,6 +238,7 @@ def add_velp() -> int:
         - points: velp points
         - comment: default comment
         - language_id: language ID
+        - color: HEX color
         - icon_id: icon ID
         - valid_until: time stamp to until velp is still valid
         - labels: labels of the velp
@@ -262,6 +264,7 @@ def add_velp() -> int:
     valid_until = json_data.get('valid_until')
     velp_labels = json_data.get('labels')
     visible_to = json_data.get('visible_to')
+    color = json_data.get('color')
 
     default_points = float(default_points) if default_points is not None else None
     icon_id = int(icon_id) if icon_id is not None else None
@@ -288,7 +291,7 @@ def add_velp() -> int:
     velp_groups = velp_groups_rights
 
     new_velp_id, _ = timdb.velps.create_new_velp(current_user_id, velp_content, default_points, default_comment,
-                                              icon_id, valid_until, language_id, visible_to)
+                                              icon_id, valid_until, language_id, visible_to, color)
 
     if velp_labels is not None:
         timdb.velps.add_labels_to_velp(new_velp_id, velp_labels)
@@ -336,8 +339,10 @@ def update_velp(doc_id: int):
 
     default_points = json_data.get('points')
     default_comment = json_data.get('default_comment')
+    color = json_data.get('color')
     icon_id = json_data.get('icon_id')
     new_labels = json_data.get('labels')
+    visible_to = json_data.get('visible_to')
     timdb = get_timdb()
     verify_logged_in()
     user_id = get_current_user_id()
@@ -392,7 +397,7 @@ def update_velp(doc_id: int):
         timdb.velps.create_velp_content(version_id, language_id, new_content, default_comment)
     if old_labels != new_labels:
         timdb.velps.update_velp_labels(velp_id, new_labels)
-    timdb.velps.update_velp(velp_id, default_points, icon_id)
+    timdb.velps.update_velp(velp_id, default_points, icon_id, color, visible_to)
 
     response = okJsonResponse()
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'

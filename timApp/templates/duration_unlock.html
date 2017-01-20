@@ -1,0 +1,21 @@
+{% extends 'item.html' %}
+{% block content %}
+    <div class="alert alert-warning">
+        <i class="glyphicon glyphicon-warning-sign"></i>
+        {% if access.unlockable %}
+            You are about to access a time-limited {{ item_type }}.
+            After you click Unlock, your access to this {{ item_type }} will be removed in {{ access.duration | timtimedelta }}.
+        {% elif access.duration_expired %}
+            You cannot unlock this item anymore (deadline expired {{ access.duration_to | timreldatetime }}).
+        {% elif access.duration_future %}
+            You can unlock this item in {{ access.duration_from | timreldatetime }}.
+        {% else %}
+            Your access to this item has expired {{ access.accessible_to | timreldatetime }}.
+        {% endif %}
+    </div>
+    {% if access.unlockable %}
+        <div class="text-center">
+            <a href="/view/{{ item.path }}?unlock=true" class="timButton">Unlock</a>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,6 +1,7 @@
 <!-- Pop over element --><span class="annotation-element"><span   ng-init="showHidden=newannotation" ng-show="show" ng-click="updateVelpZIndex()"
                                                                 ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]"
-                                                                ng-keydown="keyDownFunc($event)" ng-keyup="keyUpFunc($event)">
+                                                                ng-keydown="keyDownFunc($event)" ng-keyup="keyUpFunc($event)"
+                                                                ng-style="{backgroundColor: getCustomColor()}">
     <span class="fulldiv">
         <span class="div-90 annTopSection">
             <p><span class="annHeader"><strong>{{ velp }}</strong></span></p>
@@ -17,7 +18,7 @@
         <div ng-mouseenter="showHidden=true;updateVelpZIndex()">
             <div ng-show="showHidden">
             <p ng-hide="checkRights() || !allowChangePoints()"><label>Points: <input type="number" ng-model="points" ng-disabled="checkRights()"
-                                                                                     ng-change="changePoints(points)"/></label>
+                                                                                     ng-change="changePoints()"/></label>
             </p>
                 <p ng-hide="isvalid.points.value" class="error">{{ isvalid.points.msg }}</p>
                 <p ng-show="checkRights()"><label ng-hide="points == null">Points:  {{ points }}</label></p>
@@ -44,12 +45,13 @@
 
     </span>
     <div ng-show="showHidden" >
-        <textarea placeholder="Add comment" ng-model="newComment" ></textarea>
+        <textarea placeholder="Add comment" ng-model="newcomment" >{{ newcomment }}</textarea>
         <div>
             <form class="form-inline adjustAnnForm">
-                <div class="form-group">
+                <!--<div class="form-group"> -->
 
-                    <div ng-hide="checkRights()">
+                    <div>
+                    <span ng-hide="checkRights()">
                         <label ng-class="{disabled: checkRights()}"><div title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></div></label>
                         <select ng-model="visible_options.value" ng-disabled="checkRights()"
                             ng-options="v as visible_options.names[v-1] for v in visible_options.values">
@@ -58,23 +60,30 @@
                          uib-popover="'Just me' means that the annotation is visible only to yourself. 'Document owner' refers to the person or group who has been named as the document owner. 'Teachers' refers to the users that have teacher access to this document. 'Everyone' means that the annotation is visible to everyone who can view the assessed content."
                          popover-placement="left">
                         </div>
-                    </div>
+                    </span>
 
-                    <label ng-show="checkRights()" class="annotationVisibleText">
-                        <div title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></div>
+                    <span ng-show="checkRights()" class="annotationVisibleText">
+
+                        <span title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></span>
                         {{ visible_options.names[visible_options.value - 1] }}
-                        <div ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
+
+                        <span ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
                          uib-popover="'Just me' means that the annotation is visible only to yourself. 'Document owner' refers to the person or group who has been named as the document owner. 'Teachers' refers to the users that have teacher access to this document. 'Everyone' means that the annotation is visible to everyone who can view the assessed content."
                          popover-placement="left">
-                        </div>
-                    </label>
+                        </span>
 
-                </div>
+                    </span>
+                    <span style="float: right">
+                        <input type="color" ng-model="color" ng-change="changeColor()" class="colorchange-button" title="Change annotation color">
+                        <input ng-if="isVelpCustomColor()" class="smallButton" type="button" ng-click="clearColor()" title="Reset color to original value" value="R">
+                    </span>
+                    </div>
+              <!--  </div> -->
             </form>
         </div>
     </div>
     <span>
-        <button class="saveChanges timButton" ng-show="checkIfChanged()" ng-click="saveChanges()">Save changes
+        <button class="saveChanges timButton" ng-show="checkIfChanged()" ng-click="saveChanges()">Save
         </button>
     </span>
         <div ng-show="showHidden">
@@ -91,4 +100,5 @@
 
 </span></span><!--
 Highlighted text--><span ng-click="showHidden=false;toggleAnnotation()" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
-{neutral: points == 0, negative: points < 0, positive: points > 0}]" ng-transclude="true"></span>
+{neutral: points == 0, negative: points < 0, positive: points > 0}]" ng-transclude="true"
+ng-style="{backgroundColor: getCustomColor()}"></span>

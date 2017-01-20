@@ -164,7 +164,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
         for htmlpar in html_pars:
             if htmlpar.get('is_question'):
                 htmlpar['html'] = ' '
-                htmlpar['cls'] += ' hidden'
+                htmlpar['cls'] = 'hidden'
 
     for htmlpar in html_pars:
         if htmlpar.get('ref_id') and htmlpar.get('ref_doc_id'):
@@ -257,8 +257,12 @@ def process_areas(html_pars: List[Dict]) -> List[Dict]:
                     cur_area = Area(get_free_index(), html_par[attrs])
                     new_areas[area_start] = cur_area
                 if area_end is not None:
-                    free_indexes[new_areas[area_end].index] = True
-                    new_areas.pop(area_end)
+                    try:
+                        free_indexes[new_areas[area_end].index] = True
+                    except KeyError:
+                        flash('area_end found for "{}" without corresponding start. '
+                              'Fix this to get rid of this warning.'.format(area_end))
+                    new_areas.pop(area_end, None)
                 break
 
         html_par['areas'] = new_areas
@@ -428,7 +432,7 @@ def save_last_page():
 def is_considered_unpublished(doc_id):
     timdb = get_timdb()
     owner = timdb.users.get_owner_group(doc_id)
-    return has_ownership(doc_id) and not owner.is_large() and len(timdb.users.get_rights_holders(doc_id)) == 0
+    return has_ownership(doc_id) and (not owner or not owner.is_large()) and len(timdb.users.get_rights_holders(doc_id)) <= 1
 
 
 def validate_uploaded_document_content(file_content):

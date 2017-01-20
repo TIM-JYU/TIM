@@ -94,7 +94,7 @@ class Questions(TimDbBase):
         question_id = aq.asked_id
         return question_id
 
-    def update_asked_question_points(self, asked_id: int, points: str, commit: bool=True) -> int:
+    def update_asked_question_points(self, asked_id: int, points: str, expl: str, commit: bool=True) -> int:
 
         """
         Creates a new asked questions
@@ -105,9 +105,9 @@ class Questions(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                        UPDATE AskedQuestion
-                       SET points = %s
+                       SET points = %s, expl = %s
                        WHERE asked_id = %s
-                       """, [points, asked_id])
+                       """, [points, expl, asked_id])
         if commit:
             self.db.commit()
         return asked_id
@@ -251,12 +251,14 @@ class Questions(TimDbBase):
         for_db = str(asked_ids)
         for_db = for_db.replace("[", "")
         for_db = for_db.replace("]", "")
-        cursor.execute("""
+        sql = """
                       SELECT *
                       FROM AskedQuestion q
                       JOIN AskedJson j
                       ON q.asked_json_id = j.asked_json_id
                       WHERE q.asked_id IN (""" + for_db + """)
-                      """)
+                      ORDER BY q.asked_id
+                      """
+        cursor.execute(sql)
 
         return self.resultAsDictionary(cursor)

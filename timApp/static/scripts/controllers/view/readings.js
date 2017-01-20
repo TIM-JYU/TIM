@@ -43,7 +43,7 @@ timApp.defineReadings = function (sc, http, q, $injector, $compile, $window, $do
             return q.resolve(null);
         }
         var par_id = sc.getParId($par);
-        if (par_id === 'NEW_PAR' || par_id === null) {
+        if (par_id === 'NEW_PAR' || par_id === null || par_id === 'HELP_PAR') {
             return q.resolve(null);
         }
         $readline.addClass(readClassName);

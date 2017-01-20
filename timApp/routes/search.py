@@ -4,6 +4,7 @@ from flask import Blueprint, render_template
 from options import get_option
 from routes.sessioninfo import get_current_user_object
 from timdb.models.docentry import DocEntry
+from timdb.tim_models import BlockAccess
 from .cache import cache
 from .common import *
 
@@ -60,6 +61,7 @@ def search(query):
         t['ref_doc_id'] = t['doc_id']
         t['ref_id'] = t['id']
     return render_template('view_html.html',
+                           access=BlockAccess(),
                            route='search',
                            item=DocEntry.get_dummy('Search results'),
                            text=all_texts,

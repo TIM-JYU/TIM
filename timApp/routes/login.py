@@ -10,7 +10,7 @@ from yubico_client import Yubico
 from yubico_client.yubico_exceptions import YubicoError
 
 from options import get_option
-from routes.accesshelper import verify_logged_in
+from routes.accesshelper import verify_logged_in, verify_admin
 from routes.notify import send_email
 from routes.sessioninfo import get_current_user, get_other_users, get_session_users_ids, get_other_users_as_list
 from .common import *
@@ -334,8 +334,7 @@ def quick_login(username):
        For developer use only.
     """
     timdb = get_timdb()
-    if not timdb.users.has_admin_access(get_current_user_id()):
-        abort(403)
+    verify_admin()
     user = timdb.users.get_user_id_by_name(username)
     if user is None:
         abort(404, 'User not found.')

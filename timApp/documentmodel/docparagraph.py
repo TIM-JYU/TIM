@@ -240,6 +240,8 @@ class DocParagraph:
     def _cache_props(self):
         self.__is_plugin = self.get_attr('plugin') or ""  # self.get_attr('taskId')
         self.__is_question = self.get_attr('question') or ""
+        if self.__is_question:
+            self.__is_plugin = ""
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
         self.__is_setting = 'settings' in self.get_attrs()
 

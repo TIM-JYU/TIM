@@ -13,6 +13,7 @@ from typing import List, Optional, Set, Tuple, Union, Iterable
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.docsettings import DocSettings
 from documentmodel.documentparser import DocumentParser, AttributesAtEndOfCodeBlockException, ValidationException
+from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
 from documentmodel.exceptions import DocExistsError
 from timdb.timdbexception import TimDbException
@@ -189,15 +190,29 @@ class Document:
     def export_markdown(self, export_hashes : bool = False) -> str:
         return DocumentWriter([par.dict() for par in self], export_hashes=export_hashes).get_text()
 
-    def export_section(self, par_id_start: str, par_id_end: str, export_hashes=False) -> str:
+    def export_section(self, par_id_start: Optional[str], par_id_end: Optional[str], export_hashes=False) -> str:
         return DocumentWriter([par.dict() for par in self.get_section(par_id_start, par_id_end)],
                               export_hashes=export_hashes).get_text()
 
-    def get_section(self, par_id_start: str, par_id_end: str) -> List[DocParagraph]:
+    def get_section(self, par_id_start: Optional[str], par_id_end: Optional[str]) -> List[DocParagraph]:
+        if par_id_start is None and par_id_end is None:
+            return []
+        if par_id_start is None or par_id_end is None:
+            raise TimDbException('Either of par_id_start and par_id_end was None')
         all_pars = [par for par in self]
         all_par_ids = [par.get_id() for par in all_pars]
         start_index, end_index = all_par_ids.index(par_id_start), all_par_ids.index(par_id_end)
         return all_pars[start_index:end_index + 1]
+
+    def text_to_paragraphs(self, text: str, break_on_elements: bool):
+        options = DocumentParserOptions()
+        options.break_on_code_block = break_on_elements
+        options.break_on_header = break_on_elements
+        options.break_on_normal = break_on_elements
+        blocks = [DocParagraph.create(doc=self, md=par['md'], attrs=par.get('attrs'))
+                  for par in DocumentParser(text).validate_structure(
+                is_whole_document=False).get_blocks(options)]
+        return blocks
 
     @classmethod
     def remove(cls, doc_id: int, files_root: Optional[str] = None, ignore_exists=False):
@@ -356,6 +371,10 @@ class Document:
 
     def get_paragraph(self, par_id: str) -> DocParagraph:
         return DocParagraph.get_latest(self, par_id, self.files_root)
+
+    def add_text(self, text: str) -> Iterable[DocParagraph]:
+        """Converts the given text to (possibly) multiple paragraphs and adds them to the document."""
+        return [self.add_paragraph_obj(p) for p in self.text_to_paragraphs(text, False)]
 
     def add_paragraph_obj(self, p: DocParagraph) -> DocParagraph:
         """
@@ -648,7 +667,7 @@ class Document:
 
     def _perform_update(self, new_pars: List[dict],
                         old_pars: List[DocParagraph],
-                        last_par_id=None) -> Tuple[str, str]:
+                        last_par_id=None) -> Union[Tuple[str, str], Tuple[None, None]]:
         old_ids = [par.get_id() for par in old_pars]
         new_ids = [par['id'] for par in new_pars]
         s = SequenceMatcher(None, old_ids, new_ids)
@@ -686,6 +705,8 @@ class Document:
                                                   par_id=new_par['id'],
                                                   insert_before_id=old_ids[before_i] if before_i < len(
                                                       old_ids) else last_par_id)
+        if not new_ids:
+            return None, None
         return new_ids[0], new_ids[-1]
 
     def find_insert_index(self, i2, old_ids):

@@ -1,23 +1,33 @@
 """Initializes the TIM database."""
 
+import logging
 import os
+import sys
 
+import flask_migrate
 import sqlalchemy
 import sqlalchemy.exc
+from alembic.runtime.environment import EnvironmentContext
+from alembic.runtime.migration import MigrationContext
+from alembic.script import ScriptDirectory
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
-from routes.logger import log_info
+from routes.logger import log_info, enable_loggers, log_error
 from sql.migrate_to_postgre import perform_migration
 from tim_app import app
 from timdb import tempdb_models
 from timdb.models.docentry import DocEntry
-from timdb.tim_models import Version, AccessType, db
+from timdb.tim_models import AccessType, db
 from timdb.timdb2 import TimDb
-from timdb.timdbexception import TimDbException
-from timdb.users import LOGGED_IN_USERNAME
 
-NEWEST_DB_VERSION = 9
+
+def check_db_version(_, context: MigrationContext):
+    if context.get_current_revision() != context.environment_context.get_head_revision():
+        enable_loggers()
+        log_error('Your database is not up to date. To upgrade, run: ./run_command.sh flask db upgrade')
+        sys.exit(-1)
+    return []
 
 
 def postgre_create_database(host, db_name):
@@ -60,12 +70,17 @@ def initialize_database(create_docs=True):
             perform_migration(app.config['OLD_SQLITE_DATABASE'], app.config['DATABASE'])
             timdb.close()
             return
+        if not app.config['TESTING']:
+            with app.app_context():
+                flask_migrate.stamp()
+        # Alembic disables loggers for some reason
+        enable_loggers()
         sess.add(AccessType(id=1, name='view'))
         sess.add(AccessType(id=2, name='edit'))
         sess.add(AccessType(id=3, name='teacher'))
         sess.add(AccessType(id=4, name='manage'))
         sess.add(AccessType(id=5, name='see answers'))
-        sess.add(Version(version_id=NEWEST_DB_VERSION))
+        sess.add(AccessType(id=6, name='owner'))
         sess.commit()
 
         timdb.users.create_special_usergroups()
@@ -95,216 +110,23 @@ def initialize_database(create_docs=True):
                                                       anon_group,
                                                       title='Multiple choice plugin example')
         log_info('Database initialization done.')
+
+    if not app.config['TESTING']:
+        exit_if_not_db_up_to_date()
     timdb.close()
 
 
-def update_database():
-    """Updates the database structure if needed.
-
-    DEPRECATED: DO NOT USE THIS UPDATE METHOD ANYMORE, SEE tim_models.py!
-
-    The dict `update_dict` is a dictionary that describes which database versions need which update.
-    For example, if the current db version is 0, update_datamodel method will be called and also all other methods
-    whose key in the dictionary is greater than 0.
-
-    To add a new update method, create a new method in this file that performs the required updating steps and then
-    add a new entry "key: val" to the `update_dict` dictionary where "key" is one larger than the currently largest
-    key in the dictionary and "val" is the reference to the method you created.
-
-    The update method should return True if the update was applied or False if it was skipped for some reason.
-    """
-    timdb = TimDb(files_root_path=app.config['FILES_PATH'])
-    ver = timdb.get_version()
-    ver_old = ver
-    # DEPRECATED: DO NOT USE THIS UPDATE METHOD ANYMORE, SEE tim_models.py!
-    update_dict = {0: update_datamodel,
-                   1: update_answers,
-                   2: update_rights,
-                   3: add_seeanswers_right,
-                   4: add_translation_table,
-                   5: add_logged_in_user,
-                   6: add_notifications,
-                   7: add_yubikey,
-                   8: add_timber}
-    while ver in update_dict:
-        # TODO: Take automatic backup of the db (tim_files) before updating
-        log_info('Starting update {}'.format(update_dict[ver].__name__))
-        result = update_dict[ver](timdb)
-        if not result:
-            log_info('Update {} was skipped.'.format(update_dict[ver].__name__))
-        else:
-            log_info('Update {} was completed.'.format(update_dict[ver].__name__))
-        timdb.update_version()
-        ver = timdb.get_version()
-    if ver_old == ver:
-        log_info('Database is up to date.')
-    else:
-        log_info('Database was updated from version {} to {}.'.format(ver_old, ver))
-    timdb.close()
-
-
-def add_timber(timdb: TimDb) -> bool:
-    print('SQLAlchemy adds timber tables automatically.')
-    return True
-
-
-def add_notifications(timdb):
-    if timdb.table_exists('Notification'):
-        return False
-
-    timdb.execute_sql("""
-CREATE TABLE Notification (
-  user_id   INTEGER NOT NULL,
-  doc_id    INTEGER NOT NULL,
-
-  email_doc_modify      BOOLEAN NOT NULL DEFAULT FALSE,
-  email_comment_add     BOOLEAN NOT NULL DEFAULT FALSE,
-  email_comment_modify  BOOLEAN NOT NULL DEFAULT FALSE,
-
-  CONSTRAINT Notification_PK
-  PRIMARY KEY (user_id, doc_id),
-
-  CONSTRAINT Notification_docid
-  FOREIGN KEY (doc_id)
-  REFERENCES Block (id)
-  ON DELETE CASCADE
-  ON UPDATE CASCADE
-);
-""")
-
-    return True
-
-def add_yubikey(timdb):
-    timdb.execute_sql('ALTER TABLE User ADD COLUMN yubikey VARCHAR(12)')
-
-def add_logged_in_user(timdb):
-    lu = timdb.users.get_user_id_by_name(LOGGED_IN_USERNAME)
-    if lu is not None:
-        return False
-    uid = timdb.users.create_user(LOGGED_IN_USERNAME, LOGGED_IN_USERNAME, '')
-    timdb.users.add_user_to_group(timdb.users.get_logged_group_id(), uid)
-    return True
-
-
-def add_translation_table(timdb):
-    if timdb.table_exists('Translation'):
-        return False
-    timdb.execute_sql("""
-CREATE TABLE Translation (
-  doc_id      INTEGER      NOT NULL,
-  src_docid   INTEGER      NOT NULL,
-  lang_id     INTEGER      NOT NULL,
-  doc_title   VARCHAR(50),
-
-  CONSTRAINT Translation_PK
-  PRIMARY KEY (doc_id),
-
-  CONSTRAINT Translation_id
-  FOREIGN KEY (doc_id)
-  REFERENCES Block (id)
-  ON DELETE CASCADE
-  ON UPDATE CASCADE,
-
-  CONSTRAINT Translation_src_docid
-  FOREIGN KEY (src_docid)
-  REFERENCES Block (id)
-  ON DELETE CASCADE
-  ON UPDATE CASCADE
-);""")
-    return True
-
-
-def add_seeanswers_right(timdb):
-    timdb.execute_sql("""
-INSERT INTO AccessType(name) VALUES ('see answers')
-    """)
-    return True
-
-
-def update_rights(timdb):
-    timdb.execute_sql("""
-BEGIN TRANSACTION;
-
-CREATE TABLE BlockAccess (
-  accessible_from TIMESTAMP NOT NULL,
-  accessible_to   TIMESTAMP,
-  Block_id      INTEGER   NOT NULL,
-  UserGroup_id  INTEGER   NOT NULL,
-  type INTEGER NOT NULL,
-
-  CONSTRAINT BlockAccess_PK
-  PRIMARY KEY (Block_id, UserGroup_id, type),
-
-  CONSTRAINT BlockAccess_id
-  FOREIGN KEY (Block_id)
-  REFERENCES Block (id)
-  ON DELETE NO ACTION
-  ON UPDATE CASCADE,
-
-  CONSTRAINT BlockAccess_id
-  FOREIGN KEY (UserGroup_id)
-  REFERENCES UserGroup (id)
-  ON DELETE NO ACTION
-  ON UPDATE CASCADE,
-
-  FOREIGN KEY (type)
-  REFERENCES AccessType(id)
-  ON DELETE NO ACTION
-  ON UPDATE CASCADE
-);
-
-CREATE TABLE AccessType (
-  id INTEGER PRIMARY KEY,
-  name TEXT NOT NULL
-);
-
-INSERT INTO AccessType(id, name) VALUES (1, 'view');
-INSERT INTO AccessType(id, name) VALUES (2, 'edit');
-INSERT INTO AccessType(id, name) VALUES (3, 'teacher');
-INSERT INTO AccessType(id, name) VALUES (4, 'manage');
-
-INSERT INTO BlockAccess(accessible_from, accessible_to, Block_id, UserGroup_id, type)
-SELECT visible_from, visible_to, Block_id, UserGroup_id, 1
-FROM BlockViewAccess;
-
-INSERT INTO BlockAccess(accessible_from, accessible_to, Block_id, UserGroup_id, type)
-SELECT editable_from, editable_to, Block_id, UserGroup_id, 2
-FROM BlockEditAccess;
-
-DROP TABLE BlockViewAccess;
-DROP TABLE BlockEditAccess;
-
-COMMIT TRANSACTION;
-    """)
-    return True
-
-
-# noinspection PyUnusedLocal
-def update_datamodel(timdb):
-    raise TimDbException('This update is obsolete.')
-
-
-def update_answers(timdb):
-    timdb.execute_sql("""ALTER TABLE Answer ADD COLUMN valid BOOLEAN""")
-    timdb.execute_sql("""UPDATE Answer SET valid = 1 WHERE id IN
-(SELECT Answer.id
-FROM Answer
-JOIN UserAnswer ON UserAnswer.answer_id = Answer.id
-WHERE Answer.content LIKE '[%'
-GROUP BY UserAnswer.user_id, Answer.task_id
-HAVING answered_on = MIN(answered_on)
-ORDER BY Answer.content)""")
-    timdb.execute_sql("""UPDATE Answer SET valid = 0 WHERE id IN
-(SELECT Answer.id
-FROM Answer
-WHERE Answer.content LIKE '[%' AND valid IS NULL)
-""")
-    timdb.execute_sql("""UPDATE Answer SET valid = 1 WHERE id IN
-(SELECT Answer.id
-FROM Answer
-WHERE valid IS NULL)
-""")
-    return True
+def exit_if_not_db_up_to_date():
+    with app.app_context():
+        config = app.extensions['migrate'].migrate.get_config(None)
+        script = ScriptDirectory.from_config(config)
+        env = EnvironmentContext(config, script, fn=check_db_version)
+        prev_level = logging.getLogger('alembic').level
+        logging.getLogger('alembic').level = logging.WARN
+        with env:
+            script.run_env()
+        logging.getLogger('alembic').level = prev_level
+        enable_loggers()
 
 
 if __name__ == "__main__":

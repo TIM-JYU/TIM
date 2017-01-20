@@ -75,6 +75,7 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
                         var newElement = $compile(newHtml);
                         var parent = $scope.$element.parents(".par")[0];
                         parent.replaceChild(newElement($scope.$parent)[0], $scope.$element[0]);
+                        $scope.parentElement = parent;
                     }
                     // Next the inside of the plugin to non lazy
                     var origHtml = plugin[0].innerHTML;
@@ -419,6 +420,11 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
 
                 $scope.showTeacher = function () {
                     return $scope.$parent.teacherMode && $scope.$parent.item.rights.teacher;
+                };
+
+                $scope.showVelpsCheckBox = function () {
+                    // return $scope.$parent.teacherMode || $window.velpMode; // && $scope.$parent.item.rights.teacher;
+                    return $window.velpMode || $($scope.element).attr("class").indexOf("has-annotation") >= 0;
                 };
 
                 $scope.getTriesLeft = function () {

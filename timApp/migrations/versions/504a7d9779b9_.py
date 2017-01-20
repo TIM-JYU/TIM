@@ -1,4 +1,4 @@
-"""Adds support for different reading types (new column to readparagraphs).
+"""Add support for different reading types (new column to readparagraphs).
 
 Revision ID: 504a7d9779b9
 Revises: None

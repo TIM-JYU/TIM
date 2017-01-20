@@ -1,28 +1,70 @@
+<div class="checkbox">
+    <label>
+        <input ng-model="showActiveOnly" type="checkbox"/> Show only active or upcoming rights
+    </label>
+</div>
 <div class="margin rights-list" ng-repeat="type in accessTypes">
     <a ng-click="showAddRightFn(type)"
-       title="Click to add {{ type.name }} right to some usergroup">{{ type.name }} right</a><span ng-show="filtered.length > 0"> ({{ filtered.length }})</span>:
+       title="Click to add {{ type.name }} right to some usergroup">{{ type.name }} right</a><span
+        ng-show="filtered.length > 0"> ({{ filtered.length }})</span>:
     <span ng-show="filtered.length == 0">none</span>
 
     <ul>
-        <li ng-repeat="group in filtered = (grouprights | filter: {access_type: type.id}:true | orderBy: ['!fullname', 'fullname', 'name'])">
-            {{group.fullname ? group.fullname + ' (' + group.name + ')' : group.name}}
-            <a class="btn btn-default btn-xs" ng-click="removeConfirm(group, type.name)">remove</a>
+        <li ng-repeat="right in filtered = (grouprights | filter: {access_type: type.id}:true | filter: obsoleteFilterFn | orderBy: ['!fullname', 'fullname', 'name'])">
+            <span ng-show="!isObsolete(right)" ng-bind="getGroupDesc(right)"></span>
+            <s ng-show="isObsolete(right)" ng-bind="getGroupDesc(right)"></s>
+            <i ng-show="showClock(right)"
+               class="glyphicon glyphicon-time"></i>
+            <span class="label label-success"
+                  uib-tooltip="{{ right.accessible_from | timdate }}"
+                  ng-show="shouldShowBeginTime(right)">Begins {{ right.accessible_from | timreldate }}</span>
+            <span class="label label-info"
+                  ng-show="shouldShowDuration(right)"
+                  uib-tooltip="{{ right.duration | timpreciseduration }}">Duration: {{ right.duration | timduration }}</span>
+            <span class="label label-warning"
+                  uib-tooltip="{{ right.accessible_to | timdate }}"
+                  ng-show="shouldShowEndTime(right)">Ends {{ right.accessible_to | timreldate }}</span>
+            <span class="label label-danger"
+                  uib-tooltip="{{ right.accessible_to | timdate }}"
+                  ng-show="shouldShowEndedTime(right)">Ended {{ right.accessible_to | timreldate }}</span>
+            <span class="label label-success"
+                  uib-tooltip="{{ right.duration_from | timdate }}"
+                  ng-show="shouldShowUnlockable(right)">Unlockable {{ right.duration_from | timreldate }}</span>
+            <span class="label label-warning"
+                  uib-tooltip="{{ right.duration_to | timdate }}"
+                  ng-show="shouldShowNotUnlockable(right)">No longer unlockable {{ right.duration_to | timreldate }}</span>
+            <span class="label label-danger"
+                  uib-tooltip="{{ right.duration_to | timdate }}"
+                  ng-show="shouldShowNotUnlockableAnymore(right)">No longer unlockable since {{ right.duration_to | timreldate }}</span>
+            <a class="btn btn-default btn-xs" ng-click="removeConfirm(right, type.name)">remove</a>
+            <a ng-show="selectedRight !== right" class="btn btn-default btn-xs" ng-click="editRight(right)">edit</a>
+            <span ng-show="selectedRight === right" class="label label-primary">Editing</span>
+            <a ng-show="selectedRight === right" class="btn btn-default btn-xs" ng-click="expireRight(right)">expire</a>
         </li>
     </ul>
 </div>
-
-<button class="timButton" ng-show="!showAddRight" ng-click="showAddRight = true; focusEditor = true">Add right</button>
-<div ng-show="showAddRight" class="rights-list">
-    <form ng-submit="addPermission(groupName, accessType)">
-        <div class="row">
+<button class="timButton" ng-show="!addingRight && !editingRight()" ng-click="showAddRightFn(accessType)">Add right...
+</button>
+<div ng-show="addingRight || editingRight()" class="rights-list">
+    <form ng-submit="addOrEditPermission(groupName, accessType)">
+        <div class="row" ng-show="addingRight">
             <div class="form-group col-md-6 input-group-sm">
                 <label for="{{ listMode ? 'groupNameList' : 'groupName' }}">Name: </label>
-                <input ng-show="!listMode" id="groupName" class="form-control" type="text" ng-model="groupName"
-                       focus-me="focusEditor"
-                       placeholder="{{ getPlaceholder() }}">
-                <textarea ng-show="listMode" id="groupNameList" class="form-control" type="text" ng-model="groupName"
-                          focus-me="focusEditor"
-                          placeholder="{{ getPlaceholder() }}"></textarea>
+                <div class="input-group">
+                    <input ng-show="!listMode" id="groupName" class="form-control" type="text" ng-model="groupName"
+                           focus-me="focusEditor"
+                           placeholder="{{ getPlaceholder() }}">
+                    <textarea ng-show="listMode" id="groupNameList" class="form-control" type="text"
+                              ng-model="groupName"
+                              focus-me="focusEditor"
+                              placeholder="{{ getPlaceholder() }}"></textarea>
+                    <span class="input-group-addon btn btn-default"
+                          ng-click="listMode = !listMode"
+                          uib-tooltip="Toggle multiline mode"
+                          data-tooltip-placement="right">
+                        <i class="glyphicon glyphicon-align-left"></i>
+                    </span>
+                </div>
             </div>
             <div class="form-group col-md-6 input-group-sm">
                 <label for="accessType">Right:</label>
@@ -30,17 +72,102 @@
                         ng-options="access.name for access in accessTypes track by access.id"></select>
             </div>
         </div>
-        <button class="timButton" type="submit" ng-disabled="!groupName">Add</button>
-        <button class="btn btn-default" type="button" ng-click="showAddRight = false">Cancel</button>
-        <button class="btn btn-default" type="button" ng-click="listMode = !listMode">Toggle multiline mode</button>
-        <button class="timButton" type="button" ng-click="addPermission('Korppi users', accessType)">Add Korppi users
+        <div class="row">
+            <div class="form-group col-md-6 input-group-sm">
+                <fieldset>
+                    <legend>Time:</legend>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" ng-model="timeOpt.type" value="always">
+                            Always
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" ng-model="timeOpt.type" value="range">
+                            Set start and/or end date...
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" ng-model="timeOpt.type" value="duration">
+                            Set duration...
+                        </label>
+                    </div>
+                    <div class="form-group" ng-show="timeOpt.type == 'range'">
+                        <div class="col-md-12">
+                            <div class="input-group date" datetimepicker ng-model="timeOpt.from"
+                                 data-options="datePickerOptionsFrom">
+                                <input type="text"
+                                       class="form-control"
+                                       placeholder="Leave blank for no restriction"/>
+                                <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                            </div>
+                            to
+                            <div class="input-group date" datetimepicker ng-model="timeOpt.to"
+                                 data-options="datePickerOptionsTo">
+                                <input type="text"
+                                       class="form-control"
+                                       placeholder="Leave blank for no restriction"/>
+                                <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-show="timeOpt.type == 'duration'">
+                        <div class="col-md-6">
+                            <input ng-model="timeOpt.durationAmount"
+                                   class="form-control"
+                                   type="number"
+                                   min="0"
+                                   step="0.1"/>
+                        </div>
+                        <div class="col-md-6">
+                            <select class="form-control" ng-model="timeOpt.durationType"
+                                    ng-options="d for d in durationTypes"></select>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-show="timeOpt.type == 'duration'">
+                        <div class="col-md-12">Duration unlockable from:
+                            <div class="input-group date" datetimepicker ng-model="timeOpt.durationFrom"
+                                 data-options="datePickerOptionsDurationFrom">
+                                <input type="text"
+                                       class="form-control"
+                                       placeholder="Leave blank for no restriction"/>
+                                <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                            </div>
+                            to
+                            <div class="input-group date" datetimepicker ng-model="timeOpt.durationTo"
+                                 data-options="datePickerOptionsDurationTo">
+                                <input type="text"
+                                       class="form-control"
+                                       placeholder="Leave blank for no restriction"/>
+                                <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+        <button ng-show="addingRight" class="timButton" type="submit" ng-disabled="!groupName">Add</button>
+        <button ng-show="editingRight()" class="timButton" type="submit">Save</button>
+        <button class="btn btn-default" type="button" ng-click="cancel()">Cancel</button>
+        <span ng-show="addingRight">
+        <button class="timButton" type="button" ng-click="addOrEditPermission('Korppi users', accessType)">Add Korppi users
         </button>
-        <button class="timButton" type="button" ng-click="addPermission('Logged-in users', accessType)">Add logged-in
+        <button class="timButton" type="button" ng-click="addOrEditPermission('Logged-in users', accessType)">Add logged-in
             users
         </button>
-        <button class="timButton" type="button" ng-click="addPermission('Anonymous users', accessType)">Add anonymous
+        <button class="timButton" type="button" ng-click="addOrEditPermission('Anonymous users', accessType)">Add anonymous
             users
         </button>
-
+        </span>
     </form>
 </div>

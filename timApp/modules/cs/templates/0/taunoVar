@@ -11,15 +11,15 @@ indent: 8
 maxrows: 10
 placeholder: Näytä ensin Tauno, tee tehtävä ja kopioi sitten Taunon koodi tähän
 stem: "Sijoita i:n arvo summa-muuttujaan raahaamalla i:n arvo.  Kasvata i:n arvoa vetämälle sen päälle +1 'laatikko'.  Muuttuuko summa-muuttujan arvo kun kasvatat i:tä? "
-replace: "TODO: Kopioi"
-program: |
- public class Kasvata
- {
-     public static void Main()
-     {
-         // TODO: Kopioi 
-         System.Console.WriteLine("i = {0}, summa = {1}",i,summa);
-     }
- }
-byCode: ""
+fullprogram: |!!
+public class Kasvata
+{
+    public static void Main()
+    {
+        // BYCODEBEGIN
+        // BYCODEEND
+        System.Console.WriteLine("i = {0}, summa = {1}",i,summa);
+    }
+}
+!!
 ```

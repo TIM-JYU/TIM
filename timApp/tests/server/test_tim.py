@@ -45,10 +45,10 @@ class TimTest(TimRouteTest):
                 'item_title': 'document ' + n
             }, expect_contains={'id': doc_id_list[idx], 'path': doc_names[idx]})
             doc_ids.add(doc_id_list[idx])
-        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id, 'Anonymous users', 'view'), expect_content=self.ok_resp)
-        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[1], 'Logged-in users', 'view'), expect_content=self.ok_resp)
-        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[2], 'testuser2', 'view'), expect_content=self.ok_resp)
-        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[3], 'testuser2', 'edit'), expect_content=self.ok_resp)
+        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id, 'Anonymous users', 'view'), {'type': 'always'}, expect_content=self.ok_resp)
+        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[1], 'Logged-in users', 'view'), {'type': 'always'}, expect_content=self.ok_resp)
+        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[2], 'testuser2', 'view'), {'type': 'always'}, expect_content=self.ok_resp)
+        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[3], 'testuser2', 'edit'), {'type': 'always'}, expect_content=self.ok_resp)
         doc = Document(doc_id)
         doc.add_paragraph('Hello')
         pars = doc.get_paragraphs()
@@ -126,7 +126,7 @@ class TimTest(TimRouteTest):
         self.get('/note/{}'.format(test2_note_id), expect_contains=comment_of_test2, json_key='text')
         teacher_right_docs = {doc_id_list[3]}
         for i in teacher_right_docs:
-            self.json_put('/permissions/add/{}/{}/{}'.format(i, 'testuser2', 'teacher', expect_content=self.ok_resp))
+            self.json_put('/permissions/add/{}/{}/{}'.format(i, 'testuser2', 'teacher'), {'type': 'always'}, expect_content=self.ok_resp)
 
         self.json_post('/deleteNote', {'id': test2_note_id,
                                                                  'docId': doc_id,
@@ -148,11 +148,11 @@ class TimTest(TimRouteTest):
         for view_id in viewable_docs - teacher_right_docs:
             self.get('/view/' + str(view_id))
             self.get('/teacher/' + str(view_id), expect_status=302)
-            self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2', 'teacher'), expect_status=403)
+            self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2', 'teacher'), {'type': 'always'}, expect_status=403)
         for view_id in teacher_right_docs:
             self.get('/view/' + str(view_id))
             self.get('/teacher/' + str(view_id))
-            self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2', 'teacher'), expect_status=403)
+            self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2', 'teacher'), {'type': 'always'}, expect_status=403)
 
     def test_macro_doc(self):
         self.login_test1()

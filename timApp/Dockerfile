@@ -53,6 +53,8 @@ run pip3 install cssselect
 run pip3 install Flask-Migrate
 run pip3 install selenium
 run pip3 install Flask-Testing
+run pip3 install isodate
+run pip3 install humanize
 
 # requests must be the last package to be installed!
 # After this, pip3 stops working because it depends
@@ -74,6 +76,7 @@ run mkdir /service
 run useradd -M agent
 run chown -R agent /service
 
+# angular-timer depends on humanize-duration version 2.8 but it appears to work fine with 3.10, so we force the install
 run apt-get install --no-install-recommends -y npm \
  && npm install -g bower \
  && npm install uglify-js -g \
@@ -82,6 +85,7 @@ run apt-get install --no-install-recommends -y npm \
  && bower --allow-root install angular-ui-ace#36844ff7c0e0d9445bc8e31514d7f0f59cb8b048 \
  && bower --allow-root install ng-file-upload#~11.0 \
  && bower --allow-root install jquery#~2.1 \
+ && bower --allow-root install moment#~2.17 \
  && bower --allow-root install angular-sanitize#~1.4 \
  && bower --allow-root install bootstrap#~3.3 \
  && bower --allow-root install jquery-ui#~1.11 \
@@ -99,6 +103,8 @@ run apt-get install --no-install-recommends -y npm \
  && bower --allow-root install eonasdan-bootstrap-datetimepicker#latest \
  && bower --allow-root install angular-eonasdan-datetimepicker#~0.3 \
  && bower --allow-root install angular-messages#~1.4 \
+ && bower --allow-root install humanize-duration#~3.10 \
+ && bower --allow-root --force install angular-timer#~1.3 \
  && apt-get purge -y --auto-remove npm
 
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27

@@ -24,7 +24,7 @@ class Velps(TimDbBase):
     def create_new_velp(self, creator_id: int, content: str, default_points: Optional[float] = None,
                         default_comment: Optional[str] = None, icon_id: Optional[int] = None,
                         valid_until: Optional[str] = None, language_id: str = "FI",
-                        visible_to: Optional[int] = None) -> Tuple[int, int]:
+                        visible_to: Optional[int] = None, color: Optional[int] = None) -> Tuple[int, int]:
         """Creates a new velp with all information.
 
         Creates a new velp with all necessary information in one function using three others.
@@ -37,16 +37,18 @@ class Velps(TimDbBase):
         :param valid_until: Time after velp becomes unusable.
         :param language_id: Language ID of velp.
         :param visible_to: Default visibility to annotation.
+        :param color: Velp color
         :return: A tuple of (velp id, velp version id).
         """
-        new_velp_id = self._create_velp(creator_id, default_points, icon_id, valid_until, visible_to)
+        new_velp_id = self._create_velp(creator_id, default_points, icon_id, valid_until, visible_to, color)
         new_version_id = self.create_velp_version(new_velp_id)
         self.create_velp_content(new_version_id, language_id, content, default_comment)
 
         return new_velp_id, new_version_id
 
     def _create_velp(self, creator_id: int, default_points: Optional[float], icon_id: Optional[int] = None,
-                     valid_until: Optional[str] = None, visible_to: Optional[int] = None) -> int:
+                     valid_until: Optional[str] = None, visible_to: Optional[int] = None,
+                     color: Optional[str] = None) -> int:
         """Creates a new entry to the velp table.
 
         :param creator_id: User ID of creator.
@@ -60,6 +62,7 @@ class Velps(TimDbBase):
         v = Velp(creator_id=creator_id,
                  default_points=default_points,
                  icon_id=icon_id,
+                 color=color,
                  valid_until=valid_until,
                  visible_to=visible_to)
         self.session.add(v)
@@ -95,19 +98,22 @@ class Velps(TimDbBase):
                        )
         self.db.commit()
 
-    def update_velp(self, velp_id: int, default_points: str, icon_id: str):
+    def update_velp(self, velp_id: int, default_points: str, icon_id: str, color: str, visible_to: int):
         """Changes the non-versioned properties of a velp. Does not update labels.
 
         :param velp_id: ID of velp that's being updated
         :param default_points: New default points
         :param icon_id: ID of icon
+        :param color: Velp color
+        :param visible_to: Velp visibility
         """
+        if not visible_to: visible_to = 4
         cursor = self.db.cursor()
         cursor.execute("""
                        UPDATE Velp
-                       SET icon_id = %s, default_points = %s
+                       SET icon_id = %s, default_points = %s, color = %s, visible_to = %s
                        WHERE id = %s
-                       """, [icon_id, default_points, velp_id]
+                       """, [icon_id, default_points, color, visible_to, velp_id]
                        )
         self.db.commit()
 
@@ -300,7 +306,7 @@ class Velps(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute("""
-                      SELECT Velp.id AS id, Velp.default_points AS points, Velp.icon_id AS icon_id,
+                      SELECT Velp.id AS id, Velp.default_points AS points, Velp.icon_id AS icon_id, Velp.color AS color,
                       Velp.visible_to AS visible_to, y.content AS content, y.language_id AS language_id,
                       y.default_comment AS default_comment
                       FROM Velp

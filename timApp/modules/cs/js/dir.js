@@ -57,7 +57,7 @@ var ConsolePWD = {};
 
 ConsolePWD.pwdHolders = [];
 
-ConsolePWD.currentPWD = "/home/agent";
+ConsolePWD.currentPWD = {};
 
 ConsolePWD.register = function(scope) {
     if ( !ConsolePWD.isUser(scope) ) return;
@@ -65,25 +65,27 @@ ConsolePWD.register = function(scope) {
 }    
 
 ConsolePWD.isUser = function(scope) {
-    return ( scope.path === "user" );
- 
-}    
+   return ( scope.path === "user" || (scope.attrs && scope.attrs.path == "user") );
+}
 
 ConsolePWD.setPWD = function(pwd,scope) {
-    if ( !ConsolePWD.isUser(scope) ) {
-        scope.setPWD("/home/agent");
+    if ( !ConsolePWD.isUser(scope) || !scope.savestate) {
+        if ( scope.setPWD )  scope.setPWD("/home/agent");
         return;
     }
     
-    ConsolePWD.currentPWD = pwd;
+    ConsolePWD.currentPWD[scope.savestate] = pwd;
     for (var i = 0; i <ConsolePWD.pwdHolders.length; i++) {
         var pwdHolder = ConsolePWD.pwdHolders[i];
-        pwdHolder.setPWD(pwd);
+        if ( pwdHolder.savestate === scope.savestate )
+            pwdHolder.setPWD(pwd);
     }
 }
 
-ConsolePWD.getPWD = function() {
-    return ConsolePWD.currentPWD;
+ConsolePWD.getPWD = function(scope) {
+    if (scope.savestate)
+        return ConsolePWD.currentPWD[scope.savestate];
+    return "/home/agent";
 }
 //==============================================================
 
@@ -566,6 +568,7 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"justSave",false);
             csApp.set(scope,attrs,"validityCheck","");
             csApp.set(scope,attrs,"validityCheckMessage","");
+  			csApp.set(scope,attrs,"savestate");
 
             csApp.set(scope,attrs,"wrap", scope.isText ? 70 : -1);
             scope.wrap = {n:scope.wrap}; // to avoid child scope problems
@@ -1284,6 +1287,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 				$scope.error = data.web.error;
 				//return;
 			}
+            if ( data.web.pwd ) ConsolePWD.setPWD(data.web.pwd,$scope);
 			$scope.error = data.web.error;
 			var imgURL = "";
 			var wavURL = "";
@@ -2138,6 +2142,7 @@ csConsoleApp.directiveFunction = function (t, isInput, $timeout) {
 			csApp.set(scope,attrs,"usercode","");
   			csApp.set(scope,attrs,"type","cs");
   			csApp.set(scope,attrs,"path");
+  			csApp.set(scope,attrs,"savestate");
             scope.pwd = ConsolePWD.getPWD(scope);
             scope.oldpwd = scope.pwd;
             scope.isShell = languageTypes.getRunType(scope.type,false) == "shell";

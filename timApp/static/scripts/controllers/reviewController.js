@@ -235,7 +235,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         for (var i = 0; i < annotations.length; i++) {
             var placeInfo = annotations[i].coord;
 
-            var element = par.getElementsByTagName("PRE")[0].firstChild;
+            var preElem =  par.getElementsByTagName("PRE")[0];
+            if ( !preElem ) continue;
+            var element = preElem.firstChild;
 
             if (!showInPlace || placeInfo.start.offset === null) {
                 addAnnotationToElement(par, annotations[i], false, "Added as margin annotation");
@@ -499,6 +501,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
     };
 
+    $scope.changeAnnotationColor = function (id, color) {
+        for (var i = 0; i < $scope.annotations.length; i++) {
+            if ($scope.annotations[i].id === id) {
+                $scope.annotations[i].color = color;
+                break;
+            }
+        }
+    };
+
     /**
      * Adds a comment to the given annotation.
      * @method addComment
@@ -757,7 +768,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             return;
         }
 
-        var comment = [];
+        /*
         if (velp.default_comment !== null && velp.default_comment.length > 0){
             comment.push({
                 content: velp.default_comment,
@@ -766,6 +777,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 comment_relative_time: "just now"
             });
         }
+        */
 
         var newAnnotation = {
             id: -($scope.annotations.length + 1),
@@ -780,7 +792,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             timesince: "just now",
             creationtime: "now",
             coord: {},
-            comments: comment,
+            color: velp.color,
+            comments: [],
+            default_comment: velp.default_comment,
             newannotation: true,
             user_id: -1
         };
@@ -832,6 +846,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
             if (answer_id !== null)
                 newAnnotation.answer_id = answer_id.selectedAnswer.id;
+
             addAnnotationToElement($scope.selectedElement, newAnnotation, false, "Added also margin annotation");
             $scope.addAnnotationToCoord($scope.selectedArea, newAnnotation, true);
             $scope.annotations.push(newAnnotation);
@@ -863,7 +878,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 newAnnotation.answer_id = el_answer_id.selectedAnswer.id;
 
             addAnnotationToElement($scope.selectedElement, newAnnotation, true, "No coordinate found");
-            var annotationCount = $scope.annotations.push(newAnnotation);
             $scope.annotationids[newAnnotation.id] = newAnnotation.id;
         }
 
@@ -1082,15 +1096,26 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         } else {
             velp_content = annotation.content;
         }
+
+        if (isUndefinedOrNull(annotation.default_comment)){
+            annotation.default_comment = "";
+        }
+
+        if (isUndefinedOrNull(annotation.color)){
+            annotation.color = "";
+        }
+
         element.setAttribute("velp", velp_content);
         element.setAttribute("points", annotation.points);
         element.setAttribute("aid", annotation.id);
+        element.setAttribute("newcomment", annotation.default_comment);
         element.setAttribute("annotator", annotation.annotator_name);
         element.setAttribute("editaccess", annotation.edit_access);
         element.setAttribute("timesince", annotation.timesince);
         element.setAttribute("creationtime", annotation.creationtime);
         element.setAttribute("email", annotation.email);
         element.setAttribute("visibleto", annotation.visible_to);
+        element.setAttribute("color", annotation.color);
         element.setAttribute("show", show);
         element.setAttribute("newannotation", annotation.newannotation);
         if (typeof annotation.reason !== "undefined")
@@ -1100,6 +1125,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         element.setAttribute("comments", JSON.stringify(annotation.comments));
 
         return element;
+    };
+
+    var isUndefinedOrNull = function (attr) {
+        return typeof attr === UNDEFINED || attr === null;
     };
 
     /**

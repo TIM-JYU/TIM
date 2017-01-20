@@ -161,7 +161,8 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
              * @memberof module:showChartDirective
              * @param question FILL WITH SUITABLE TEXT
              */
-            $scope.internalControl.createChart = function (question) {
+            $scope.internalControl.createChart = function(question) {
+                var data = question;
                 $scope.ctx = $($scope.canvasId).get(0).getContext("2d");
                 $scope.x = 10;
                 $scope.y = 20;
@@ -172,8 +173,8 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 $scope.isText = false;
                 var labels = [];
                 var emptyData = [];
-                if (angular.isDefined(question.data.rows)) {
-                    angular.forEach(question.data.rows, function (row) {
+                if (angular.isDefined(data.rows)) {
+                    angular.forEach(data.rows, function (row) {
                         var text = row.text;
                         var max = 15;
                         if (text.length > max) text = text.substring(0, max-1) + '...';
@@ -182,8 +183,8 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     });
                 }
 
-                if (angular.isDefined(question.data.columns)) {
-                    angular.forEach(question.data.columns, function (column) {
+                if (angular.isDefined(data.columns)) {
+                    angular.forEach(data.columns, function (column) {
                         angular.forEach(column.rows, function (row) {
                             labels.push(row.Value);
                             emptyData.push(0);
@@ -199,13 +200,13 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 var usedDataSets = [];
 
 
-                if (question.questionType === "true-false") {
-                    question.data.headers[0] = {"type": "header", "id": 0, "text": "True"};
-                    question.data.headers[1] = {"type": "header", "id": 1, "text": "False"};
+                if (question.questionType === "true-false" && !question.headers ) {
+                    question.headers[0] = {"type": "header", "id": 0, "text": "True"};
+                    question.headers[1] = {"type": "header", "id": 1, "text": "False"};
                 }
 
                 if (question.questionType === "matrix" || question.questionType === "true-false") {
-                    for (var i = 0; i < question.data.rows[0].columns.length; i++) {
+                    for (var i = 0; i < data.rows[0].columns.length; i++) {
                         usedDataSets.push(basicSets[i]);
                         usedDataSets[i].data = emptyData;
                     }
@@ -213,8 +214,8 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     usedDataSets[usedDataSets.length - 1].data = emptyData;
                     usedDataSets[usedDataSets.length - 1].label = "No answer";
 
-                    for (i = 0; i < question.data.headers.length; i++) {
-                        usedDataSets[i].label = question.data.headers[i].text;
+                    for (i = 0; i < data.headers.length; i++) {
+                        usedDataSets[i].label = data.headers[i].text;
                     }
                 } else {
                     usedDataSets.push(basicSets[0]);
@@ -222,12 +223,12 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 }
 
 
-                var data = {
+                var bardata = {
                     labels: labels,
                     datasets: usedDataSets
                 };
 
-                $scope.answerChart = new Chart($scope.ctx).Bar(data, {animation: false} ,{
+                $scope.answerChart = new Chart($scope.ctx).Bar(bardata, {animation: false} ,{
                     multiTooltipTemplate: "<%= datasetLabel %> - <%= fvalue %>"
                 });
                 //$scope.answerChart.options.animation = false;
@@ -244,15 +245,19 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     return;
                 }
                 $scope.ctx.font = "20px Georgia";
+                try {
 
                 for (var answerersIndex = 0; answerersIndex < answers.length; answerersIndex++) {
-                    var onePersonAnswers = answers[answerersIndex].answer.split("|");
+                    var oldData = true;
+                    var answ =  answers[answerersIndex].answer;
+
+                    var onePersonAnswers = getJsonAnswers(answ);
                     var datasets;
                     if (!$scope.isText) {
                         datasets = $scope.answerChart.datasets;
                     }
                     for (var a = 0; a < onePersonAnswers.length; a++) {
-                        var singleAnswers = onePersonAnswers[a].split(',');
+                        var singleAnswers = onePersonAnswers[a];
                         for (var sa = 0; sa < singleAnswers.length; sa++) {
                             var singleAnswer = singleAnswers[sa];
 
@@ -291,6 +296,9 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
 
                 if (!$scope.isText) {
                     $scope.answerChart.update();
+                }
+                } catch (e) {
+                    return;
                 }
 
             };

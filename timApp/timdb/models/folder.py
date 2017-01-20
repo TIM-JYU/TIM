@@ -70,7 +70,6 @@ class Folder(db.Model, Item):
         if doc is not None:
             return doc
         if create_if_not_exist:
-            assert creator_group_id is not None
             rel_folder, _ = split_location(relative_path)
             Folder.create(join_location(self.get_full_path(), rel_folder), owner_group_id=creator_group_id,
                           commit=False)
@@ -104,7 +103,7 @@ class Folder(db.Model, Item):
         if folder is not None:
             return folder
 
-        block_id = insert_block(title or rel_name, owner_group_id, blocktypes.FOLDER, commit=False)
+        block_id = insert_block(title or rel_name, owner_group_id, blocktypes.FOLDER, commit=False).id
 
         f = Folder(id=block_id, name=rel_name, location=rel_path)
         db.session.add(f)

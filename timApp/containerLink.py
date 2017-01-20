@@ -43,6 +43,7 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
         "graphviz":      {"host": TIM_HOST + ":60000/", "browser": False},
         "pali":          {"host": TIM_HOST + ":61000/"},
         "imagex":        {"host": TIM_HOST + ":62000/"},
+        "qst":           {"host": TIM_HOST + "/qst/"},
         "echo":          {"host": TIM_HOST + "/echoRequest/"},
     }
 else:
@@ -63,6 +64,7 @@ else:
         "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
         "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
         "imagex":        {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
+        "qst":           {"host": "http://" + "localhost" + ":5000/qst/"},
         "echo":          {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
     }
 
@@ -70,7 +72,7 @@ else:
 def call_plugin_generic(plugin, method, route, data=None, headers=None, params=None):
     plug = get_plugin(plugin)
     try:
-        request = requests.request(method, plug['host'] + route + "/", data=data, timeout=(0.5, 15), headers=headers, params=params)
+        request = requests.request(method, plug['host'] + route + "/", data=data, timeout=(0.5, 30), headers=headers, params=params)
         request.encoding = 'utf-8'
         return request.text
     except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError) as e:
@@ -81,10 +83,9 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None, params=N
         raise PluginException("Read timeout occurred when calling {}.".format(plugin))
 
 
-def call_plugin_html(plugin, info, state, task_id=None, params=None):
-    data_dict = {"markup": info, "state": state, "taskID": task_id}
-    data_dict.update(params or {})
-    plugin_data = json.dumps(data_dict,
+def call_plugin_html(plugin, plugin_data, params=None):
+    plugin_data.update(params or {})
+    plugin_data = json.dumps(plugin_data,
                              cls=TimJsonEncoder)
     return call_plugin_generic(plugin,
                                'post',

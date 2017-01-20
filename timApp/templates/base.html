@@ -44,14 +44,16 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
         <script src="{{ url_for('bower.static', filename='moment/min/moment-with-locales.min.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js') }}"></script>
-
+        <script src="{{ url_for('bower.static', filename='angular-eonasdan-datetimepicker/dist/angular-eonasdan-datetimepicker.min.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='humanize-duration/humanize-duration.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular-timer/dist/assets/js/angular-timer-all.min.js') }}"></script>
         {% block ngscripts %}
             <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.min.js') }}"></script>
             <script src="{{ url_for('bower.static', filename='angular-messages/angular-messages.min.js') }}"></script>
         {% endblock %}
 
         <script>
-            var timApp = angular.module('timApp', [{% block ngmodules %}'ngMessages', 'ngSanitize', 'ui.bootstrap', {% endblock %}]);
+            var timApp = angular.module('timApp', [{% block ngmodules %}'ngMessages', 'timer', 'ae-datetimepicker', 'ngSanitize', 'ui.bootstrap', {% endblock %}]);
             // disable Angular URL manipulation when using ng-include; from http://stackoverflow.com/a/19825756
             timApp.config(['$provide', function ($provide) {
                 $provide.decorator('$browser', ['$delegate', function ($delegate) {
@@ -90,6 +92,31 @@
                 }
             });
 
+            timApp.filter('timreldate', function ($filter) {
+                return function (date) {
+                    return moment(date).fromNow();
+                }
+            });
+
+            timApp.filter('timduration', function ($filter) {
+                return function (duration) {
+                    return moment.duration(duration).humanize();
+                }
+            });
+
+            timApp.filter('timpreciseduration', function ($filter) {
+                return function (duration) {
+                    return humanizeDuration(moment.duration(duration).asMilliseconds());
+                }
+            });
+
+            timApp.filter('timtim', function ($filter) {
+                var dateFilter = $filter('date');
+                return function (date) {
+                    return dateFilter(date, 'HH:mm:ss');
+                }
+            });
+
             var current_user = {{ current_user|tojson }};
             var other_users = {{ other_users|tojson }};
             var bookmarks = {{ bookmarks|tojson }};
@@ -113,6 +140,7 @@
         <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
         {% include 'common_head.html' %}
+        <script src="{{ url_for('static', filename='scripts/directives/dynamicAnswerSheet.js') }}"></script>
         {% if lecture_assets %}
             {% include 'lecture_head.html' %}
         {% endif %}
@@ -191,11 +219,11 @@
                             col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
                     {% with messages = get_flashed_messages() %}
                         {% if messages %}
-                            <ul class="flashes">
-                                {% for message in messages %}
-                                    <li>{{ message }}</li>
-                                {% endfor %}
-                            </ul>
+                            {% for message in messages %}
+                                <div class="alert alert-info">
+                                    <i class="glyphicon glyphicon-info-sign"></i> {{ message }}
+                                </div>
+                            {% endfor %}
                         {% endif %}
                     {% endwith %}
                 </div>

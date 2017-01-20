@@ -327,6 +327,12 @@ class DocumentTest(TimDbTest):
                              + [{'type': 'change', 'id': par.get_id(), 'content': [par]} for par in pars[1:]],
                              list(ver_orig.parwise_diff(d, check_html=True)))
 
+    def test_clear_document(self):
+        d = self.init_testdoc()
+        d.add_paragraph('test')
+        d.update('', d.export_markdown())
+        self.assertEqual('', d.export_markdown())
+
 
 if __name__ == '__main__':
     unittest.main()

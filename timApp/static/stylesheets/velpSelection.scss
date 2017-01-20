@@ -272,6 +272,16 @@
     text-overflow: ellipsis;
 }
 
+.velp .warning{
+    border: 1px solid #f0ad4e;
+    background-color: #fcf8e3;
+}
+
+.velp .gray{
+    color: gray;
+}
+
+
 .velp-data {
     position: relative;
 }
@@ -419,7 +429,7 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 /* Annotation styles */
 .has-annotation:before {
     background: #3CC;
-    float: left;
+    /* float: left; */
     content: "\2002 V\2002";
     color: white;
     padding: 0.1em;
@@ -493,13 +503,22 @@ label.disabled {
     margin: 0;
 }
 
-.annotation-info input, .annotation-info textarea {
+.annotation-info input[type="number"], .annotation-info textarea {
+  background: transparent;
+}
+
+.annotation-info input[type="color"] {
     background: transparent;
+    cursor: pointer;
 }
 
 .annotation-info input[type="number"]{
     width: 4em;
     border: 0;
+}
+
+.annotation-info select{
+    width:50%;
 }
 
 .annotation-info textarea {

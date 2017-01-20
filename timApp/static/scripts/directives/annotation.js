@@ -33,27 +33,31 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             ismargin: '=',
             annotator: '@',
             editaccess: '=',
+            newcomment: '@',
             //email: '@',
             timesince: '@',
             creationtime: '@',
             velp: '@',
+            color: '@',
             newannotation: '@',
             showHidden: '@'
         },
 
         link: function (scope, element) {
-            scope.newComment = "";
             scope.velpElement = null;
             scope.ctrlDown = false;
             scope.ctrlKey = 17;
             scope.visible_options = {
                 "type": "select",
                 "value": scope.visibleto,
+                "title": "Visible to",
                 "values": [1, 2, 3, 4],
                 "names": ["Just me", "Document owner", "Teachers", "Everyone"]
             };
             scope.newannotation = false;
             scope.marginonly = false;
+
+            if (scope.newcomment === null) scope.newcomment = "";
 
             scope.isvalid = {
                 points: {value: true, msg: ""}
@@ -64,52 +68,52 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
             scope.original = {
                 points: scope.points,
                 velp: scope.velp,
+                color: scope.color,
                 visible_to: scope.visibleto,
-                comment: scope.newComment,
-                annotation_id: scope.aid
+                comment: "",//scope.newcomment,
+                aid: scope.aid
             };
 
             /**
              * Toggles the visibility of the annotation.
-             * @method toggleAnnotation
+             * @method toggleAnnota tion
              */
             scope.toggleAnnotation = function () {
                 if (scope.velpElement === null) {
                     scope.velpElement = element[0].getElementsByClassName("annotation-info")[0];
                 }
                 var elementName = scope.velpElement.parentNode.offsetParent.className;
-                var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', scope.aid));
-                if ( elementName === "notes" &&  annotationParents.length > 1 ){
-                    if (scope.aid > 0)
-                    {
-                        if (true) {// todo: detect is scope.$$prevSibling visible $(scope.$$prevSibling).is(':visible')
-                            scope.$$prevSibling.show = !scope.$$prevSibling.show;
-                            scope.$$prevSibling.updateVelpZIndex();
-                        } else {
-                            scope.show = !scope.show;
-                            if (scope.show) {
-                                scope.updateVelpZIndex();
-                            }
-                        }
-                    } else {
-                        scope.$$nextSibling.show = !scope.$$nextSibling.show; // TODO: causes console error!!!
-                        scope.$$nextSibling.updateVelpZIndex();
-                        //scope.show = !scope.show;
-                        //scope.velpElement.parentNode. = !scope.velpElement.parentNode.$$prevSibling.show;
-                        //annotationParents.show = !annotationParents[0].show;
-                        //scope.show = !scope.show;
-                    }
+                var annotationElements = document.querySelectorAll('[aid="{0}"]'.replace('{0}', scope.aid));
 
-                    //scope.isolateScope.show = !scope.isolateScope.show;
-                } else {
-                    scope.show = !scope.show;
-                    if (scope.show) {
-                        scope.updateVelpZIndex();
-                    } else {
-                        //console.log(scope.$parent.annotations);
+                scope.toggleAnnotationShow();
+
+
+                if ( elementName === "notes" &&  annotationElements.length > 1 ){
+                    for (var i=0; i<annotationElements.length; i++){
+                        if (annotationElements[i].parentNode.offsetParent.className !== "notes"){
+                            angular.element(
+                                annotationElements[i]
+                            ).isolateScope().toggleAnnotationShow();
+                            scope.toggleAnnotationShow();
+                        }
                     }
                 }
+
             };
+
+            scope.toggleAnnotationShow = function () {
+                scope.show = !scope.show;
+                scope.updateVelpZIndex();
+            };
+
+            scope.clearColor = function () {
+                scope.color = "";
+                scope.changeColor()
+            };
+
+            scope.isVelpCustomColor = function () {
+                return scope.color.length === 7; // hex colors are 7 characters long
+            }
 
 
             /**
@@ -190,6 +194,10 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     scope.isvalid.points.msg = "Insert a number or leave empty"
                 }
             };
+            
+            scope.changeColor = function () {
+                scope.$parent.changeAnnotationColor(scope.aid, scope.color);
+            };
 
             /**
              * Saves the changes made to the annotation. Queries parent scope
@@ -200,10 +208,10 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 var id = scope.$parent.getRealAnnotationId(scope.aid);
 
                 // Add comment
-                if (scope.newComment.length > 0) {
-                    var comment = scope.newComment;
+                if (scope.newcomment.length > 0) {
+                    var comment = scope.newcomment;
 
-                    var data = {annotation_id: id, content: scope.newComment};
+                    var data = {annotation_id: id, content: scope.newcomment};
                     scope.$parent.makePostRequest("/add_annotation_comment", data, function (json) {
                         scope.comments.push({
                             commenter_username: json.data.name,
@@ -218,7 +226,7 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                 } else {
                     scope.updateAnnotation();
                 }
-                scope.newComment = "";
+                scope.newcomment = "";
                 if (scope.visible_options.value !== scope.original.visible_to) {
                     scope.$parent.changeVisibility(scope.aid, scope.visible_options.value);
                 }
@@ -227,13 +235,19 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
                     annotation_id: id,
                     visible_to: scope.visible_options.value,
                     velp: scope.velp,
-                    comment: scope.newComment,
+                    color: scope.color,
+                    comment: scope.newcomment,
                     doc_id: scope.$parent.docId
                 };
 
                 scope.$parent.makePostRequest("/update_annotation", scope.original, function (json) {
                     //console.log(json);
                 });
+            };
+
+            scope.getCustomColor = function () {
+                if (typeof scope.color !== UNDEFINED || scope.color !== null)
+                    return scope.color;
             };
 
 
@@ -281,13 +295,11 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
              * @returns {boolean} - Whether any modifications were made or not
              */
             scope.checkIfChanged = function () {
-                if (scope.original.points !== scope.points)
-                    return true;
-                if (scope.original.comment !== scope.newComment)
-                    return true;
-                if (scope.original.visible_to !== scope.visible_options.value)
-                    return true;
-                if (scope.original.velp !== scope.velp)
+                if (!scope.showHidden)
+                    return false;
+                if (scope.original.points !== scope.points || scope.original.comment !== scope.newcomment ||
+                    scope.original.visible_to !== scope.visible_options.value || scope.original.velp !== scope.velp ||
+                    scope.original.color !== scope.color)
                     return true;
                 return false;
             };
@@ -324,11 +336,12 @@ timApp.directive("annotation",['$window', function ($window, $timeout) {
 		    };
 
             /**
-             * Watches changes on newannotation attribute.
+             * Watches changes on newannotation attribute. Shoulc scroll window
+             * only if annotation is not inside browser window.
              * TODO: Check scroll positions according to textarea element
              */
            scope.$watch('newannotation', function(newValue) {
-               if (newValue === "true" && scope.show) { // muuten ottaa undefined
+               if (newValue === "true" && scope.show) { // this check is necessary
 
                    var x = window.scrollX, y = window.scrollY;
 

@@ -11,6 +11,8 @@ fi
 export GNUTERM=png
 cmd=$1
 
+eval savestate=$3
+
 if [  -z "$cmd"  ]; then
     cmd="cmd.sh"
 fi
@@ -26,21 +28,28 @@ export MONO_PATH=/cs/jypeli
 #fi
 
 # ./.bashrc
-if [ -f ~/.state ]; then
-    chmod 755 ~/.state
-    source ~/.state 
-fi    
+if  ! [  -z "$savestate"  ] && [ -f $savestate ]; then
+    chmod 755 $savestate
+    source $savestate
+fi
 # cd /home/agent/run
 # echo "Running: $cmd" >> /tmp/log/log.txt
 # echo "Running: $cmd" >> log.txt
-#chmod 755 ~/$cmd
+chmod 755 ~/$cmd
 #cp $cmd a.sh
-#cd $PWD # ei tässä kun kaikki eivät kestä muutosta
+
+if ! [  -z "$savestate"  ]; then
+    cd $PWD # ei tässä kun kaikki eivät kestä muutosta, mutta ilman tätä ei aloita edellisestä hakemistosta
+fi
+
 ulimit -f 80000 # -t 1 -v 2000 -s 100 -u 10
 source ~/$cmd
-pwd >~/pwd.txt
+
+if ! [  -z "$savestate"  ]; then
+    pwd >~/pwd.txt
+    export >$savestate
+fi
 rm ~/$cmd # Tämä ansiosta csRun jatkaa sitten suorittamista ja lukee inputin
-export >~/.state
 #set >>~/.state
 
  

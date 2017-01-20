@@ -30,6 +30,10 @@ def get_session_users():
     return [get_current_user()] + get_other_users_as_list()
 
 
+def get_session_users_objs():
+    return [User.query.get(u['id']) for u in get_session_users()]
+
+
 def get_session_users_ids():
     return [u['id'] for u in get_session_users()]
 

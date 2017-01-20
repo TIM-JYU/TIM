@@ -11,7 +11,7 @@ from documentmodel.document import get_index_from_html_list, dereference_pars
 from htmlSanitize import sanitize_html
 from options import get_option
 from routes.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
-    has_view_access, get_rights, get_viewable_blocks
+    get_rights, get_viewable_blocks_or_none_if_admin
 from routes.logger import log_error
 from routes.sessioninfo import get_current_user_object
 from timdb.timdbexception import TimDbException
@@ -212,18 +212,19 @@ def view(item_path, template_name, usergroup=None, route="view"):
     edit_mode = request.args.get('edit', None) if has_edit_access(doc_id) else None
 
     if route == 'teacher':
-        if verify_teacher_access(doc_id, False) is False:
+        if not verify_teacher_access(doc_id, require=False, check_duration=True):
             if verify_view_access(doc_id):
                 flash("Did someone give you a wrong link? Showing normal view instead of teacher view.")
                 return redirect('/view/' + item_path)
 
     if route == 'answers':
-        if verify_seeanswers_access(doc_id, False) is False:
+        if not verify_seeanswers_access(doc_id, require=False, check_duration=True):
             if verify_view_access(doc_id):
                 flash("Did someone give you a wrong link? Showing normal view instead of see answers view.")
                 return redirect('/view/' + item_path)
 
-    if not has_view_access(doc_id):
+    access = verify_view_access(doc_id, require=False, check_duration=True)
+    if not access:
         if not logged_in():
             return redirect_to_login()
         else:
@@ -338,6 +339,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     show_unpublished_bg = is_considered_unpublished(doc_id)
 
     return render_template(template_name,
+                           access=access,
                            hide_links=should_hide_links(doc_settings, doc_info.rights),
                            show_unpublished_bg=show_unpublished_bg,
                            route=route,
@@ -378,12 +380,12 @@ def redirect_to_login():
 
 def get_items(folder: str):
     timdb = get_timdb()
-    docs = timdb.documents.get_documents(filter_ids=get_viewable_blocks(),
+    docs = timdb.documents.get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
                                          search_recursively=False,
                                          filter_folder=folder)
     docs.sort(key=lambda d: d.short_name.lower())
     folders = timdb.folders.get_folders(root_path=folder,
-                                        filter_ids=get_viewable_blocks())
+                                        filter_ids=get_viewable_blocks_or_none_if_admin())
     folders.sort(key=lambda d: d.name.lower())
     items = folders + docs
     return items

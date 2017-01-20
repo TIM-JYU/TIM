@@ -97,10 +97,48 @@ class BlockAccess(db.Model):
     block_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     usergroup_id = db.Column(db.Integer, db.ForeignKey('usergroup.id'), primary_key=True)
     type = db.Column(db.Integer, db.ForeignKey('accesstype.id'), primary_key=True)
-    accessible_from = db.Column(db.DateTime(timezone=True), default=func.now())
+    accessible_from = db.Column(db.DateTime(timezone=True))
     accessible_to = db.Column(db.DateTime(timezone=True))
+    duration = db.Column(db.Interval)
+    duration_from = db.Column(db.DateTime(timezone=True))
+    duration_to = db.Column(db.DateTime(timezone=True))
 
     block = db.relationship('Block', backref=db.backref('accesses', lazy='dynamic'))
+    usergroup = db.relationship('UserGroup', backref=db.backref('accesses', lazy='dynamic'))
+
+    @property
+    def unlockable(self):
+        return self.accessible_from is None and self.duration is not None and not self.duration_future and not self.duration_expired
+
+    @property
+    def duration_future(self):
+        return self.duration_from and datetime.datetime.now(tz=timezone.utc) < self.duration_from
+
+    @property
+    def duration_expired(self):
+        return self.duration_to and datetime.datetime.now(tz=timezone.utc) >= self.duration_to
+
+    @property
+    def seconds_left(self):
+        if self.accessible_to is None:
+            return None
+        return (self.accessible_to - datetime.datetime.now(tz=timezone.utc)).total_seconds()
+
+    def __hash__(self):
+        return hash((self.block_id,
+                     self.usergroup_id,
+                     self.type,
+                     self.accessible_from,
+                     self.accessible_to,
+                     self.duration,
+                     self.duration_from,
+                     self.duration_to))
+
+    def __eq__(self, other: 'BlockAccess'):
+        return self.block_id == other.block_id and self.usergroup_id == other.usergroup_id and self.type == other.type
+
+    def __ne__(self, other):
+        return not self == other
 
 
 class Lecture(db.Model):
@@ -221,14 +259,3 @@ class UserNotes(db.Model):
     access = db.Column(db.Text, nullable=False)
     tags = db.Column(db.Text, nullable=False)
     html = db.Column(db.Text)
-
-
-class Version(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'version'
-    id = db.Column(db.Integer, primary_key=True)
-    updated_on = db.Column(db.DateTime(timezone=True))
-
-    def __init__(self, version_id):
-        self.id = version_id
-        self.updated_on = datetime.datetime.now(timezone.utc)

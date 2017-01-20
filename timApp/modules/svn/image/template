@@ -1,4 +1,4 @@
-``` {#PLUGINNAMEHERE plugin="showImage"}
+``` {plugin="showImage"}
 width: 300
 height: 200
 file: IMAGEURLHERE

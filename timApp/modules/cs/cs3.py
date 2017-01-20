@@ -36,17 +36,13 @@ nunit = ""  # globaali arvo johon haetaan kerraan nunitin paikka
 #     /tmp/uhome            - käyttäjän hakemistoja ohjelmien ajamisen ajan
 #     /tmp/uhome/user       - käyttäjän hakemistoja ohjelmien ajamisen ajan
 #     /tmp/uhome/user/HASH  - yhden käyttäjän hakemisto joka säilyy ajojen välillä
-#     /tmp/uhone/run        - tänne kirjoitetaan käynnistyskomento demonia varten
-#     /tmp/uhome/cs:        - c#-jypeli tiedostot
 #
 # tim-koneesta käynnistetään cs3 docker-kontti nimelle csPlugin (./startPlugins.sh), jossa
 # mountataan em. hakemistoja seuraavasti:
 #
 #   /opt/cs  ->          /cs/          read only
 #   /opt/cs/images/cs -> /csimages/    kuvat
-#   /tmp/uhome:          /tmp/         käyttäjien hakemistot ja ajokomennot tänne
-#   /tmp/uhome/cs:       /tmp/cs       c#-jypeli tiedostot, Jypeli ohjelmat myös laitetaan tänne
-#   /tmp/uhome/user:     /tmp/user     käyttäjän alihakemistot
+#   /tmp/uhome:       -> /tmp/         käyttäjän jutut tänne
 #
 # Käyttäjistä (csPlugin-kontissa) tehdään /tmp/user/HASHCODE
 # tai /tmp/HASHCODE nimiset hakemistot (USERPATH=user/HASHCODE tai HASHCODE), 
@@ -59,14 +55,15 @@ nunit = ""  # globaali arvo johon haetaan kerraan nunitin paikka
 # Tämä jälkeen tehdään /tmp/run -hakemistoon tiedosto
 # RNDNAME johon on kirjoitettu "USERPATH run/URNDFILE.sh" 
 # Tähän ajokonttiin mountataan tim-koneesta
+#  (udir = userhash + "/"  + docid  jos on path: user)
 #
-#   /opt/cs  ->            /cs/          read only
-#   /tmp/uhome/USERPATH -> /home/me      käyttäjän "kotihakemisto"
-#   /tmp/uhome/cs ->       /home/cs      c#-jypeli tiedostot
+#   /opt/cs          -> /cs/          read only
+#   /tmp/uhome/udir  -> /home/agent   käyttäjän "kotihakemisto"
 #
 # Docker-kontin käynnistyessä suoritetaan komento /cs/rcmd.sh
+# (TIMissä /opt/cs/rcmd.sh)
 # joka alustaa "näytön" ja luo sopivat ympäristömuuttajat mm. 
-# javan polkuja varten ja sitten vaihtaa hakemistoon /home/me
+# javan polkuja varten ja sitten vaihtaa hakemistoon /home/agent
 # ja ajaa sieltä komennon ./run/URNDFILE.sh
 # stdout ja stderr tulevat tiedostoihin ./run/URNDFILE.in ja ./run/URNDFILE.err
 # Kun komento on ajettu, docker-kontti häviää.  Ajon lopuksi tuohotaan
@@ -121,7 +118,7 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin
 
 
 def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8",
-         extra="", ulimit=None, noX11=False):
+         extra="", ulimit=None, noX11=False, savestate=""):
     """
     Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed
     to fullfill the run inside docker.
@@ -135,6 +132,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     :param uargs: user arguments for the run
     :param code: which coding schema to use ("utf-8" is default)
     :param extra: extra command used for the run
+    :param savastate: to which file to save te state of shell
     :return: error code, stdout text, stderr text
     """
     s_in = ""
@@ -147,10 +145,15 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     urndname = "run/" + tmpname  # ohjaustiedostojen nimet
     stdoutf = urndname + ".in"
     stderrf = urndname + ".err"
+    print("cwd=",cwd)
     cmdf = cwd + "/" + urndname + ".sh"  # varsinaisen ajoskriptin nimi
     cmnds = ' '.join(tquote(arg) for arg in args)  # otetaan args listan jonot yhteen
+    source = '';
+    if savestate:
+        source = 'source '
     # tehdään komentojono jossa suuntaukset
-    cmnds = "#!/bin/bash\n" + ulimit + "\n" + extra + cmnds + " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
+    cmnds = "#!/bin/bash\n" + ulimit + "\n" + extra + source  + cmnds + " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
+    # cmnds = "#!/bin/bash\n" + ulimit + "\n" + extra + cmnds + " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
     print("============")
     print(cwd)
     print(stdoutf)
@@ -171,7 +174,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
              "/tmp/uhome/" + udir + "/:/home/agent/",
              # dargs = ["/cs/docker-run-timeout.sh", "10s", "-v", "/opt/cs:/cs/:ro", "-v", "/tmp/uhome/" + udir + ":/home/agent/",
              # "-w", "/home/agent", "ubuntu", "/cs/rcmd.sh", urndname + ".sh"]
-             "-w", "/home/agent", "timimages/cs3", "/cs/rcmd.sh", urndname + ".sh", str(noX11)]
+             "-w", "/home/agent", "timimages/cs3", "/cs/rcmd.sh", urndname + ".sh", str(noX11), str(savestate)]
     print(dargs)
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
     try:
@@ -183,6 +186,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
             pwd = codecs.open(cwd + '/pwd.txt', 'r', "utf-8").read()  # .encode("utf-8")
         except:
             pwd = ""
+        print("pwd=",pwd)
 
         if (stderr):
             remove(cwd + "/" + stdoutf)
@@ -281,7 +285,7 @@ def removedir(dirname):
         return
 
 
-def save_extra_files(extra_files, prgpath):
+def save_extra_files(query, extra_files, prgpath):
     if not extra_files:
         return
     ie = 0
@@ -293,13 +297,14 @@ def save_extra_files(extra_files, prgpath):
         mkdirs(os.path.dirname(efilename))
         if "text" in extra_file:
             try:
-                codecs.open(efilename, "w", "utf-8").write(extra_file["text"])
+                s = replace_random(query, extra_file["text"])
+                codecs.open(efilename, "w", "utf-8").write(s)
             except:
                 print("Can not write", efilename)
         if "file" in extra_file:
             try:
                 if extra_file.get("type", "") != "bin":
-                    lines = get_url_lines_as_string(extra_file["file"])
+                    lines = get_url_lines_as_string(replace_random(query, extra_file["file"]))
                     codecs.open(efilename, "w", "utf-8").write(lines)
                 else:
                     open(efilename, "wb").write(urlopen(extra_file["file"]).read())
@@ -576,6 +581,8 @@ def check_fullprogram(query, cut_errors = False):
     get_param_del(query, 'fullfile', '')
 
     program = fullprogram
+
+    program = replace_random(query, program)
     by_code_replace = [{'replace': "(\\n[^\\n]*DELETEBEGIN.*? DELETEEND[^\\n]*)", 'by': ""}]
     program = replace_code(by_code_replace, program)
     delete_line = [{'replace': "(\n[^\n]*DELETELINE[^\n]*)", 'by': ""}]
@@ -795,6 +802,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(e.msg)
 
     def do_all_t(self, query):
+        query.randomcheck = binascii.hexlify(os.urandom(16)).decode()
         pwd = ""
         print(threading.currentThread().getName())
         result = {}  # query.jso
@@ -1289,10 +1297,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 mkdirs(os.path.dirname(csfname))
                 print("Write file: " + csfname)
                 if s == "": s = "\n"
+
+                # Write the program to the file =======================================================
                 codecs.open(csfname, "w", "utf-8").write(before_code + s)
                 slines = s
 
-            save_extra_files(extra_files, prgpath)
+            save_extra_files(query, extra_files, prgpath)
 
             is_optional_image = get_json_param(query.jso, "markup", "optional_image", False)
             is_input = get_json_param(query.jso, "input", "isInput", None)
@@ -1796,10 +1806,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     # if stdin: stdin = stdin
                     extra = ""  # ""cd $PWD\nsource "
                     try:
+                        savestate = get_param(query, "savestate", "")
                         # code, out, err = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
                         code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=timeout, env=env, stdin=stdin,
                                                    uargs=userargs,
-                                                   extra=extra, noX11=noX11)
+                                                   extra=extra, noX11=noX11, savestate=savestate)
                         print(pwd)
                     except OSError as e:
                         print(e)
@@ -1987,6 +1998,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             readpointskeep = get_points_rule(points_rule, "readpointskeep", False)
             if readpoints:
                 try:
+                    readpoints = replace_random(query, readpoints)
                     m = re.search(readpoints, out)
                     m2 = re.findall(readpoints, out)
                     if m and m.group(1):

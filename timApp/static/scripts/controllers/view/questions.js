@@ -13,7 +13,8 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
     sc.firstTimeQuestions = true;
 
     sc.showQuestion = function (questionId) {
-        sc.json = "No data";
+        sc.markup = {}
+        sc.markup.json = "No data";
         sc.qId = questionId;
 
         http({
@@ -22,13 +23,13 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
             params: {'question_id': sc.qId}
         })
             .success(function (data) {
-                sc.json = JSON.parse(data.questionjson);
+                sc.markup.json = JSON.parse(data.questionjson);
+                sc.markup.points = data.points;
+                sc.markup.expl = data.expl;
                 $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.title});
                 $rootScope.$broadcast("setPreviewJson", {
-                    questionjson: sc.json,
+                    markup: sc.markup,
                     questionId: sc.qId,
-                    points: data.points,
-                    expl: JSON.parse(data.expl),
                     isLecturer: sc.isLecturer
                 });
             })
@@ -55,7 +56,8 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
     };
 
     sc.showQuestionNew = function (parId, parIdNext) {
-        sc.json = "No data";
+        sc.markup = {}
+        sc.markup.json = "No data";
         sc.questionParId = parId;
         sc.questionParIdNext = parIdNext;
 
@@ -65,14 +67,12 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
             params: {'par_id': sc.questionParId, 'doc_id': sc.docId}
         })
             .success(function (data) {
-                sc.json = data.questionjson;
-                $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.title});
+                sc.markup = data.markup;
+                $rootScope.$broadcast('changeQuestionTitle', {'title': sc.markup.json.title});
                 $rootScope.$broadcast("setPreviewJson", {
-                    questionjson: sc.json,
+                    markup: sc.markup,
                     questionParId: sc.questionParId,
                     questionParIdNext: sc.questionParIdNext,
-                    points: data.points,
-                    expl: data.expl,
                     isLecturer: sc.isLecturer
                 });
             })
@@ -97,6 +97,50 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
         $rootScope.$broadcast('getInLecture');
         sc.showQuestionPreview = true;
     };
+
+    // Event handler for "Add question below"
+    // Opens pop-up window to create question.
+    sc.addQuestionQst = function (e, $par) {
+        var parId = sc.getParId($par);
+        var parNextId = sc.getParId($par.next());
+        var $newpar = sc.createNewPar();
+        $par.before($newpar);
+        $rootScope.$broadcast('toggleQuestion');
+        $rootScope.$broadcast('newQuestion', {'par_id': parId, 'par_id_next': parNextId, 'qst': true});
+        sc.par = $par;
+    };
+
+    sc.editQst = function (e, $par) {
+        var parId = sc.getParId($par);
+        var parNextId = sc.getParId($par.next());
+        // $rootScope.$broadcast('toggleQuestion');
+        http({
+            url: '/getQuestionByParId',
+            method: 'GET',
+            params: {'par_id': parId, 'doc_id': sc.docId}
+        })
+            .success(function (data) {
+                if ( !data.markup ) return; // not a question
+                sc.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
+                sc.markup = data.markup;
+                // data.markup.qst = true;
+                $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.title});
+                $rootScope.$broadcast('editQuestion', {
+                    'par_id': parId,
+                    'par_id_next': parNextId,
+                    'markup': data.markup
+                });
+
+            })
+
+            .error(function () {
+                $log.error("Could not get question.");
+            });
+
+        sc.par = $par;
+    };
+
+
 
     // Event handler for "Add question below"
     // Opens pop-up window to create question.
@@ -153,20 +197,27 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
         return $questionsDiv;
     };
 
-    sc.getAndEditQuestions = function () {
-        if (sc.noQuestionAutoNumbering) {
-            return;
-        }
+    sc.processQuestions = function () {
         var questions = $('.questionPar');
-        for (var i = 0; i < questions.length; i++) {
-            var $par = $(questions[i]);
-            var questionChildren = $($par.children());
-            var questionNumber = $(questionChildren.find($('.questionNumber')));
-            var questionTitle = sc.getParAttributes($par).question;
-            if (questionTitle.length > 10) {
-                questionTitle = questionTitle.substr(0, 10) + "\r\n...";
+        if (sc.showQuestions()) {
+            for (var i = 0; i < questions.length; i++) {
+                var $par = questions.eq(i);
+                var questionChildren = $par.children();
+                var questionNumber = questionChildren.find('.questionNumber');
+                var questionTitle = sc.getParAttributes($par).question;
+                if (questionTitle.length > 10) {
+                    questionTitle = questionTitle.substr(0, 10) + "\r\n...";
+                }
+                if (questionNumber[0] && questionNumber[0].innerHTML) {
+                    if (sc.noQuestionAutoNumbering) {
+                        questionNumber[0].innerHTML = questionTitle;
+                    } else {
+                        questionNumber[0].innerHTML = (i + 1) + ")\r\n" + questionTitle;
+                    }
+                }
             }
-            questionNumber[0].innerHTML = (i + 1) + ")\r\n" + questionTitle;
+        } else {
+            questions.hide();
         }
     };
 

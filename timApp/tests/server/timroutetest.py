@@ -16,6 +16,8 @@ from documentmodel.document import Document
 from routes.login import log_in_as_anonymous
 from tests.db.timdbtest import TimDbTest
 from timdb.models.docentry import DocEntry
+from timdb.models.user import User
+from timdb.models.usergroup import UserGroup
 from timdb.tim_models import db
 
 
@@ -210,8 +212,7 @@ class TimRouteTest(TimDbTest):
             for s in expect_contains:
                 self.assertIn(s, data)
         elif isinstance(expect_contains, dict):
-            for k, v in expect_contains.items():
-                self.assertEqual(v, data[k], msg='Key {} was different'.format(k))
+            self.assert_dict_subset(data, expect_contains)
         else:
             self.assertTrue(False, 'Unknown type for expect_contains parameter')
 
@@ -297,7 +298,7 @@ class TimRouteTest(TimDbTest):
         """
         return self.request(url,
                             method=method,
-                            data=json.dumps(json_data),
+                            data=json.dumps(json_data, cls=tim.TimJsonEncoder),
                             content_type='application/json',
                             as_tree=as_tree,
                             expect_status=expect_status,
@@ -369,6 +370,9 @@ class TimRouteTest(TimDbTest):
         :return: The name of the current user.
         """
         return session['user_id']
+
+    def current_group(self) -> UserGroup:
+        return User.query.get(self.current_user_id()).get_personal_group()
 
     def login_anonymous(self):
         with self.client.session_transaction() as s:
@@ -481,13 +485,7 @@ class TimRouteTest(TimDbTest):
         self.assertEqual(path, resp['path'])
         de = DocEntry.find_by_path(path)
         doc = de.document
-        if from_file is not None:
-            with open(from_file, encoding='utf-8') as f:
-                self.new_par(doc, f.read())
-        elif initial_par is not None:
-            self.new_par(doc, initial_par)
-        if settings is not None:
-            doc.set_settings(settings)
+        self.init_doc(doc, from_file, initial_par, settings)
         return de
 
     def create_folder(self, path: str, title: str='foldertitle', expect_status=200, **kwargs):

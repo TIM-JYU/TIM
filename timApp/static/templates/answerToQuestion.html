@@ -6,7 +6,7 @@
         <button ng-show="isLecturer && questionEnded" class="timButton" ng-click="edit()">Edit points</button>
         <button ng-show="isLecturer && questionEnded" class="timButton" ng-click="askAsNew()">Ask as new</button>
         <button ng-show="isLecturer && questionEnded" class="timButton" ng-click="reAsk()">Reask</button>
-<button ng-show="!questionEnded && !answered && !result"  class="answerButton timButton" ng-click="answer()">Answer</button>
+<button ng-show="!questionEnded && !answered && !result"  class="answerButton timButton" ng-click="answer()">{{buttonText}}</button>
         <br />
 
         <button ng-show="isLecturer" class="timButton" ng-click="showAnswers()">Show answers</button>

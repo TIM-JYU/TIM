@@ -15,32 +15,12 @@ from timdb.accesstype import AccessType
 from timdb.blocktypes import blocktypes
 from timdb.models.block import Block
 from timdb.tim_models import AnswerUpload, Answer, db
+from timdb.timdbexception import TimDbException
 from .common import *
 
 answers = Blueprint('answers',
                     __name__,
                     url_prefix='')
-
-
-def is_answer_valid(plugin, old_answers, tim_info):
-    """Determines whether the currently posted answer should be considered valid.
-
-    :param plugin: The plugin object to which the answer was posted.
-    :param old_answers: The old answers for this task for the current user.
-    :param tim_info: The tim_info structure returned by the plugin or None.
-    :return: True if the answer should be considered valid, False otherwise.
-    """
-    answer_limit = plugin.answer_limit()
-    if answer_limit is not None and (answer_limit <= len(old_answers)):
-        return False, 'You have exceeded the answering limit.'
-    if plugin.starttime(default=datetime(1970, 1, 1, tzinfo=timezone.utc)) > datetime.now(timezone.utc):
-        return False, 'You cannot submit answers yet.'
-    if plugin.deadline(default=datetime.max.replace(tzinfo=timezone.utc)) < datetime.now(timezone.utc):
-        return False, 'The deadline for submitting answers has passed.'
-    if tim_info.get('notValid', None):
-        return False, 'Answer is not valid'
-
-    return True, 'ok'
 
 
 @answers.route("/savePoints/<int:user_id>/<int:answer_id>", methods=['PUT'])
@@ -88,12 +68,17 @@ def post_answer(plugintype: str, task_id_ext: str):
     task_id = str(doc_id) + '.' + str(task_id_name)
     verify_task_access(doc_id, task_id_name, AccessType.view)
     doc = Document(doc_id)
-    if par_id is None:
-        par = get_par_from_request(doc, task_id_name=task_id_name)
-    else:
-        par = get_par_from_request(doc, par_id)
-        if par.get_attr('taskId') != task_id_name:
-            abort(400)
+    try:
+        if par_id is None:
+            par = get_par_from_request(doc, task_id_name=task_id_name)
+        else:
+            par = get_par_from_request(doc, par_id)
+            if par.get_attr('taskId') != task_id_name:
+                return abort(400)
+    except TimDbException as e:
+        # This happens when plugin tries to call answer route when previewing because the preview par is temporary
+        # and not part of the document.
+        return abort(400, str(e))
     if 'input' not in request.get_json():
         return jsonResponse({'error': 'The key "input" was not found from the request.'}, 400)
     answerdata = request.get_json()['input']
@@ -148,19 +133,27 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     if users is None:
         users = [u['id'] for u in get_session_users()]
+    user_objs = [User.query.get(uid) for uid in users]
 
     old_answers = timdb.answers.get_common_answers(users, task_id)
+    valid, _ = plugin.is_answer_valid(len(old_answers), {})
+    info = plugin.get_info(user_objs, len(old_answers), look_answer=is_teacher and not save_teacher, valid=valid)
 
     # Get the newest answer (state). Only for logged in users.
     state = pluginControl.try_load_json(old_answers[0]['content']) if logged_in() and len(old_answers) > 0 else None
 
-    plugin.values['current_user_id'] = get_current_user_name()
-    plugin.values['user_id'] = ';'.join([timdb.users.get_user(uid)['name'] for uid in users])
-    plugin.values['look_answer'] = is_teacher and not save_teacher
+    # TODO Don't put these under markup; they are there for compatibility for now.
+    plugin.values['current_user_id'] = info['current_user_id']
+    plugin.values['user_id'] = info['user_id']
+    plugin.values['look_answer'] = info['look_answer']
 
     timdb.close()
 
-    answer_call_data = {'markup': plugin.values, 'state': state, 'input': answerdata, 'taskID': task_id}
+    answer_call_data = {'markup': plugin.values,
+                        'state': state,
+                        'input': answerdata,
+                        'taskID': task_id,
+                        'info': info}
 
     try:
         plugin_response = containerLink.call_plugin_answer(plugintype, answer_call_data)
@@ -199,7 +192,7 @@ def post_answer(plugintype: str, task_id_ext: str):
         except (TypeError, KeyError):
             pass
         if not is_teacher and save_answer:
-            is_valid, explanation = is_answer_valid(plugin, old_answers, tim_info)
+            is_valid, explanation = plugin.is_answer_valid(len(old_answers), tim_info)
             points_given_by = None
             if answer_browser_data.get('giveCustomPoints'):
                 try:
@@ -209,13 +202,13 @@ def post_answer(plugintype: str, task_id_ext: str):
                 else:
                     points_given_by = get_current_user_group()
             if points or save_object is not None or tags:
-                result['savedNew'] = timdb.answers.saveAnswer(users,
-                                                              task_id,
-                                                              json.dumps(save_object),
-                                                              points,
-                                                              tags,
-                                                              is_valid,
-                                                              points_given_by)
+                result['savedNew'] = timdb.answers.save_answer(users,
+                                                               task_id,
+                                                               json.dumps(save_object),
+                                                               points,
+                                                               tags,
+                                                               is_valid,
+                                                               points_given_by)
             else:
                 result['savedNew'] = None
             if not is_valid:
@@ -225,13 +218,13 @@ def post_answer(plugintype: str, task_id_ext: str):
                 users.append(current_user_id)
             points = answer_browser_data.get('points', points)
             points = points_to_float(points)
-            result['savedNew'] = timdb.answers.saveAnswer(users,
-                                                          task_id,
-                                                          json.dumps(save_object),
-                                                          points,
-                                                          tags,
-                                                          valid=True,
-                                                          points_given_by=get_current_user_group())
+            result['savedNew'] = timdb.answers.save_answer(users,
+                                                           task_id,
+                                                           json.dumps(save_object),
+                                                           points,
+                                                           tags,
+                                                           valid=True,
+                                                           points_given_by=get_current_user_group())
         else:
             result['savedNew'] = None
         if result['savedNew'] is not None and upload is not None:
@@ -432,13 +425,13 @@ def get_state():
                                                                   [block],
                                                                   user,
                                                                   timdb,
-                                                                  custom_state=answer['content'])
+                                                                  custom_answer=answer)
 
     [reviewhtml], _, _, _ = pluginControl.pluginify(doc,
                                                     [block],
                                                     user,
                                                     timdb,
-                                                    custom_state=answer['content'],
+                                                    custom_answer=answer,
                                                     plugin_params=plugin_params,
                                                     wrap_in_div=False) if review else ([None], None, None, None)
 

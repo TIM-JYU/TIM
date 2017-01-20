@@ -1,4 +1,4 @@
-"""Removes non-ascii and special characters from document and folder paths by replacing ä -> a etc. and removing
+"""Remove non-ascii and special characters from document and folder paths by replacing ä -> a etc. and removing
 others.
 
 Revision ID: fc12e43686f9

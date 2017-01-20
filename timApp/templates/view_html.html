@@ -2,7 +2,7 @@
 {% block ngmodules %}
     {{ super() }}
     {% if teacher_mode %}
-    {{ (['ae-datetimepicker', 'ui.grid', 'ui.grid.cellNav', 'ui.grid.selection', 'ui.grid.exporter', 'ui.grid.autoResize', 'oc.lazyLoad', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
+    {{ (['ui.grid', 'ui.grid.cellNav', 'ui.grid.selection', 'ui.grid.exporter', 'ui.grid.autoResize', 'oc.lazyLoad', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
     {% else %}
     {{ (['oc.lazyLoad', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
     {% endif %}
@@ -13,7 +13,6 @@
     <script src="{{ url_for('bower.static', filename='oclazyload/dist/ocLazyLoad.min.js') }}"></script>
     {% if teacher_mode %}
         <script src="{{ url_for('bower.static', filename='angular-ui-grid/ui-grid.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='angular-eonasdan-datetimepicker/dist/angular-eonasdan-datetimepicker.min.js') }}"></script>
     {% endif %}
 
     {% for script in js %}
@@ -126,6 +125,19 @@
 {% block mainctrl %}ng-controller="ViewCtrl"{% endblock %}
 
 {% block rightside %}
+    {% if access.accessible_to %}
+        <span class="label label-default">
+        Time left:
+        <timer ng-cloak
+               end-time="{{ access.accessible_to.timestamp() * 1000 }}"
+               interval="1000"
+               max-time-unit="'day'"
+               finish-callback="reload()">
+               {% raw %}{{ days > 0 ? days + ' day' + daysS + ' +' : '' }} {{ hhours }}:{{ mminutes }}:{{ sseconds }}{% endraw %}
+    </timer>
+    </span>
+    {% endif %}
+
     {% if teacher_mode %}
         <div  save="%%PAGEID%%studentList" class="userFixed" tim-draggable-fixed resize="true"  click="true"  caption="Users with answers ({{ plugin_users|length }})">
            <div ng-controller="UserListController" class="userlist draggable-content" >
@@ -192,8 +204,8 @@
             {% endif %}
             {% if not text %}
                 <bootstrap-panel title="Review document permissions" show-close="true">
-                    Here you can give suitable initial permissions for the document.
-                    You can change these later from the manage page.
+                    <p>These are the current permissions for this document; please modify if needed.
+                        You can always modify these permissions from the manage page.</p>
                     <rights-editor
                         item-id="docId"
                         url-root="permissions">

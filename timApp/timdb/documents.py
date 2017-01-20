@@ -11,7 +11,7 @@ from documentmodel.documentparser import DocumentParser
 from timdb.models.block import Block
 from timdb.models.docentry import DocEntry
 from timdb.models.translation import Translation
-from timdb.tim_models import ReadParagraph, UserNotes, db
+from timdb.tim_models import ReadParagraph, UserNotes, db, BlockAccess
 from timdb.timdbbase import TimDbBase
 from timdb.blocktypes import blocktypes
 from timdb.timdbexception import TimDbException
@@ -100,6 +100,7 @@ class Documents(TimDbBase):
 
         assert self.exists(document_id), 'document does not exist: %d' % document_id
         DocEntry.query.filter_by(id=document_id).delete()
+        BlockAccess.query.filter_by(block_id=document_id).delete()
         Block.query.filter_by(type_id=blocktypes.DOCUMENT, id=document_id).delete()
         ReadParagraph.query.filter_by(doc_id=document_id).delete()
         UserNotes.query.filter_by(doc_id=document_id).delete()

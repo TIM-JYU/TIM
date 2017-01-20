@@ -1,9 +1,13 @@
 """Routes for manage view."""
+from datetime import timezone
+
 from flask import Blueprint, render_template
+from flask import g
+from isodate import Duration
+from isodate import parse_duration
 
 from options import get_option
-from routes.accesshelper import verify_manage_access, verify_ownership, get_rights, verify_view_access, \
-    has_manage_access
+from routes.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_manage_access
 from timdb.blocktypes import from_str
 from timdb.item import Item
 from timdb.models.docentry import DocEntry
@@ -34,10 +38,10 @@ def manage(path):
     else:
         block_id = doc.id
 
-    if not has_manage_access(block_id):
-        if verify_view_access(block_id):
-            flash("Did someone give you a wrong link? Showing normal view instead of manage view.")
-            return redirect('/view/' + str(block_id))
+    if not verify_manage_access(block_id, require=False, check_duration=True):
+        verify_view_access(block_id)
+        flash("Did someone give you a wrong link? Showing normal view instead of manage view.")
+        return redirect('/view/' + path)
 
     access_types = timdb.users.get_access_types()
 
@@ -62,44 +66,48 @@ def get_changelog(doc_id, length):
     return jsonResponse({'versions': doc.get_changelog_with_names(length)})
 
 
-@manage_page.route("/changeOwner/<int:doc_id>/<new_owner_name>", methods=["PUT"])
-def change_owner(doc_id, new_owner_name):
-    timdb = get_timdb()
-    if not timdb.documents.exists(doc_id) and not timdb.folders.exists(doc_id):
-        abort(404)
-    verify_ownership(doc_id)
-    new_owner = timdb.users.get_usergroup_by_name(new_owner_name)
-    if new_owner is None:
-        abort(404, 'Non-existent usergroup.')
-    possible_groups = timdb.users.get_user_groups(get_current_user_id())
-    if new_owner not in [group['id'] for group in possible_groups]:
-        abort(403, "You must belong to the new usergroup.")
-    timdb.documents.set_owner(doc_id, new_owner)
-    return okJsonResponse()
-
-
 @manage_page.route("/permissions/add/<int:item_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_permission(item_id, group_name, perm_type):
-    group_ids = verify_and_get_group(item_id, group_name)
+    is_owner, group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(item_id, group_name, perm_type)
     timdb = get_timdb()
     try:
         for group_id in group_ids:
-            timdb.users.grant_access(group_id, item_id, perm_type, commit=False)
+            timdb.users.grant_access(group_id,
+                                     item_id,
+                                     perm_type,
+                                     accessible_from=acc_from,
+                                     accessible_to=acc_to,
+                                     duration_from=dur_from,
+                                     duration_to=dur_to,
+                                     duration=duration,
+                                     commit=False)
         timdb.commit()
     except KeyError:
         abort(400, 'Invalid permission type.')
+    check_ownership_loss(is_owner, item_id, perm_type)
     return okJsonResponse()
 
 
 @manage_page.route("/permissions/remove/<int:item_id>/<int:group_id>/<perm_type>", methods=["PUT"])
 def remove_permission(item_id, group_id, perm_type):
     timdb = get_timdb()
-    verify_manage_access(item_id)
+    had_ownership = verify_permission_edit_access(item_id, perm_type)
     try:
         timdb.users.remove_access(group_id, item_id, perm_type)
     except KeyError:
         abort(400, 'Unknown permission type')
+    check_ownership_loss(had_ownership, item_id, perm_type)
     return okJsonResponse()
+
+
+def check_ownership_loss(had_ownership, item_id, perm_type):
+    # delete cached ownership information because it may have changed now
+    if hasattr(g, 'owned'):
+        delattr(g, 'owned')
+    if had_ownership and not has_ownership(item_id):
+        timdb = get_timdb()
+        timdb.users.grant_access(get_current_user_group(), item_id, perm_type)
+        abort(403, 'You cannot remove ownership from yourself.')
 
 
 @manage_page.route("/alias/<int:doc_id>", methods=["GET"])
@@ -234,26 +242,80 @@ def get_default_document_permissions(folder_id, object_type):
 
 @manage_page.route("/defaultPermissions/<object_type>/add/<int:folder_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
-    group_ids = verify_and_get_group(folder_id, group_name)
+    _, group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(folder_id, group_name, perm_type)
     timdb = get_timdb()
-    timdb.users.grant_default_access(group_ids, folder_id, perm_type, from_str(object_type))
+    timdb.users.grant_default_access(group_ids,
+                                     folder_id,
+                                     perm_type,
+                                     from_str(object_type),
+                                     accessible_from=acc_from,
+                                     accessible_to=acc_to,
+                                     duration_from=dur_from,
+                                     duration_to=dur_to,
+                                     duration=duration)
     return okJsonResponse()
 
 
 @manage_page.route("/defaultPermissions/<object_type>/remove/<int:folder_id>/<int:group_id>/<perm_type>", methods=["PUT"])
 def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
+    verify_manage_access(folder_id)
     timdb = get_timdb()
     timdb.users.remove_default_access(group_id, folder_id, perm_type, from_str(object_type))
     return okJsonResponse()
 
 
-def verify_and_get_group(folder_id, group_name):
-    verify_manage_access(folder_id)
+def verify_and_get_params(item_id, group_name, perm_type):
+    is_owner = verify_permission_edit_access(item_id, perm_type)
     groups = UserGroup.query.filter(UserGroup.name.in_(group_name.split(';'))).all()
     if len(groups) == 0:
         abort(404, 'No user group with this name was found.')
     group_ids = [group.id for group in groups]
-    return group_ids
+    access_type = request.get_json().get('type')
+
+    try:
+        accessible_from = dateutil.parser.parse(request.get_json().get('from')) if access_type == 'range' else None
+    except TypeError:
+        accessible_from = None
+    try:
+        accessible_to = dateutil.parser.parse(request.get_json().get('to')) if access_type == 'range' else None
+    except TypeError:
+        accessible_to = None
+
+    try:
+        duration_accessible_from = dateutil.parser.parse(request.get_json().get('durationFrom')) if access_type == 'duration' else None
+    except TypeError:
+        duration_accessible_from = None
+    try:
+        duration_accessible_to = dateutil.parser.parse(request.get_json().get('durationTo')) if access_type == 'duration' else None
+    except TypeError:
+        duration_accessible_to = None
+
+    duration = parse_duration(request.get_json().get('duration')) if access_type == 'duration' else None
+
+    if access_type == 'always' or (accessible_from is None and duration is None):
+        accessible_from = datetime.now(tz=timezone.utc)
+
+    # SQLAlchemy doesn't know how to adapt Duration instances, so we convert it to timedelta.
+    if isinstance(duration, Duration):
+        try:
+            duration = duration.totimedelta(start=datetime.min)
+        except (OverflowError, ValueError):
+            abort(400, 'Duration is too long.')
+    return is_owner, group_ids, accessible_from, accessible_to, duration_accessible_from, duration_accessible_to, duration
+
+
+def verify_permission_edit_access(item_id: int, perm_type: str) -> bool:
+    """Verifies that the user has right to edit a permission.
+    :param item_id: The item id to check for permission.
+    :param perm_type: The permission type.
+    :return: True if the user has ownership, False if just manage access.
+    """
+    if perm_type == 'owner':
+        verify_ownership(item_id)
+        return True
+    else:
+        verify_manage_access(item_id)
+        return False
 
 
 @manage_page.route("/documents/<int:doc_id>", methods=["DELETE"])
@@ -261,8 +323,7 @@ def delete_document(doc_id):
     timdb = get_timdb()
     if not timdb.documents.exists(doc_id):
         return abort(404, 'Document does not exist.')
-    if not timdb.users.user_is_owner(get_current_user_id(), doc_id):
-        return abort(403, "You don't have permission to delete this document.")
+    verify_ownership(doc_id)
     abort(403, 'Deleting documents has been disabled until a proper backup mechanism is implemented. '
                'Please contact TIM administrators if you really want to delete this document. '
                'You can hide this document from others by removing all permissions.')
@@ -275,8 +336,7 @@ def delete_folder(doc_id):
     timdb = get_timdb()
     if not timdb.folders.exists(doc_id):
         return abort(404, 'Folder does not exist.')
-    if not timdb.users.user_is_owner(get_current_user_id(), doc_id):
-        return abort(403, "You don't have permission to delete this folder.")
+    verify_ownership(doc_id)
     if not timdb.folders.is_empty(doc_id):
         return abort(403, "The folder is not empty. Only empty folders can be deleted.")
 

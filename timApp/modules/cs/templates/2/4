@@ -1,0 +1,13 @@
+Gamification
+Inserts a gamification template
+``` {gamification="true"}
+lectures:
+    - path: "dokumentin_polku/Luento1"
+    - path: "dokumentin_polku/Luento2"
+    - path: "dokumentin_polku/Luento3"
+
+demos:
+    - path: "dokumentin_polku/Demo1"
+    - path: "dokumentin_polku/Demo2"
+    - path: "dokumentin_polku/Demo3"
+```

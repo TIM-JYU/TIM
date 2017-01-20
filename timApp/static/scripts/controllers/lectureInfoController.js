@@ -15,7 +15,7 @@
 var angular, item, lectureId, lectureCode, lectureStartTime, lectureEndTime, inLecture, $;
 
 var timApp = angular.module('timApp');
-timApp.controller('LectureInfoController', ['$scope', '$http', '$window', '$log', function ($scope, $http, $window, $log) {
+timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$window', '$log', function ($rootScope, $scope, $http, $window, $log) {
     "use strict";
     $scope.docId = item.id;
     $scope.docName = item.path;
@@ -60,7 +60,12 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', '$log'
                 for (var i = 0; i < answer.questions.length; i++) {
                     $scope.dynamicAnswerShowControls.push({});
                     $scope.points.push(0);
-                    answer.questions[i]['json'] = JSON.parse(answer.questions[i].json);
+                    var markup = JSON.parse(answer.questions[i].json);
+                    if (!markup.json) markup = {json: markup}; // compability for old
+                    var json = markup.json;
+                    fixQuestionJson(json);
+                    answer.questions[i].nr = i+1;
+                    answer.questions[i].json = json;
                 }
                 $scope.questions = answer.questions;
                 $scope.isLecturer = answer.isLecturer;
@@ -79,12 +84,13 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', '$log'
             params: {'asked_id': asked_id}
         })
             .success(function (data) {
-                var json = JSON.parse(data.json);
-                $scope.$broadcast('changeQuestionTitle', {'title': json.title});
-                $scope.$broadcast("editQuestion", {
+                var markup = JSON.parse(data.json);
+                if ( !markup.json ) markup = { json: markup}; // compability for old
+                markup.points = data.points;
+                $rootScope.$broadcast('changeQuestionTitle', {'title': markup.json.title});
+                $rootScope.$broadcast("editQuestion", {
                     "asked_id": asked_id,
-                    "json": json,
-                    "points": data.points
+                    "markup": markup
                 });
             })
             .error(function () {
@@ -103,22 +109,21 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', '$log'
      */
     $scope.updateHeaderLinks = function () {
         if (document.getElementById("headerView")) {
-            document.getElementById("headerView").setAttribute("href", "https://" + location.host + "/view/" + item.path);
+            document.getElementById("headerView").setAttribute("href", "/view/" + item.path);
         }
-        if (document.getElementById("headerManage")) {
-            document.getElementById("headerManage").setAttribute("href", "https://" + location.host + "/manage/" + item.path);
+        if (document.getElementById("headerManage")) { document.getElementById("headerManage").setAttribute("href",  "/manage/" + item.path);
         }
         if (document.getElementById("headerTeacher")) {
-            document.getElementById("headerTeacher").setAttribute("href", "https://" + location.host + "/teacher/" + item.path);
+            document.getElementById("headerTeacher").setAttribute("href",  "/teacher/" + item.path);
         }
         if (document.getElementById("headerAnswers")) {
-            document.getElementById("headerAnswers").setAttribute("href", "https://" + location.host + "/answers/" + item.path);
+            document.getElementById("headerAnswers").setAttribute("href",  "/answers/" + item.path);
         }
         if (document.getElementById("headerLecture")) {
-            document.getElementById("headerLecture").setAttribute("href", "https://" + location.host + "/lecture/" + item.path);
+            document.getElementById("headerLecture").setAttribute("href",  "/lecture/" + item.path);
         }
         if (document.getElementById("headerSlide")) {
-            document.getElementById("headerSlide").setAttribute("href", "https://" + location.host + "/slide/" + item.path);
+            document.getElementById("headerSlide").setAttribute("href",  "/slide/" + item.path);
         }
     };
 
@@ -129,7 +134,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', '$log'
     $scope.addReturnLinkToHeader = function () {
         var menu = document.getElementById("inLectureIconSection");
         var linkToLecture = document.createElement("a");
-        linkToLecture.setAttribute("href", "https://" + location.host + "/lecture/" + item.path + "?Lecture=" + lectureCode);
+        linkToLecture.setAttribute("href", /* "https://" + location.host + */ "/lecture/" + item.path + "?Lecture=" + lectureCode);
         linkToLecture.setAttribute("title", "Return to lecture");
         var returnImg = document.createElement("img");
         returnImg.setAttribute("src", "/static/images/join-icon3.png");

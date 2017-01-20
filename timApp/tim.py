@@ -6,6 +6,7 @@ import io
 import shutil
 import time
 
+import werkzeug.exceptions as ex
 from flask import Blueprint
 from flask import g
 from flask import render_template
@@ -14,15 +15,14 @@ from flask.helpers import send_file
 from flask_assets import Environment
 from sqlalchemy.exc import IntegrityError
 from werkzeug.contrib.profiler import ProfilerMiddleware
-from werkzeug.exceptions import default_exceptions
-import werkzeug.exceptions as ex
 
 import containerLink
 from ReverseProxied import ReverseProxied
 from documentmodel.documentversion import DocumentVersion
 from plugin import PluginException
 from routes.accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
-    has_view_access, has_manage_access, grant_access_to_session_users, get_viewable_blocks, verify_ownership
+    has_view_access, has_manage_access, grant_access_to_session_users, ItemLockedException, \
+    get_viewable_blocks_or_none_if_admin
 from routes.annotation import annotations
 from routes.answer import answers
 from routes.bookmarks import bookmarks
@@ -31,6 +31,7 @@ from routes.clipboard import clipboard
 from routes.common import *
 from routes.dbaccess import get_timdb
 from routes.edit import edit_page
+from routes.generateMap import generateMap
 from routes.groups import groups
 from routes.lecture import getTempDb, user_in_lecture, lecture_routes
 from routes.logger import log_info, log_error, log_debug
@@ -38,9 +39,10 @@ from routes.login import login_page, logout
 from routes.manage import manage_page
 from routes.notes import notes
 from routes.notify import notify
+from routes.qst import qst_plugin
 from routes.readings import readings
 from routes.search import search_routes
-from routes.sessioninfo import get_current_user, get_current_user_object, get_other_users_as_list, get_current_user_id, \
+from routes.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
     get_current_user_name, get_current_user_group, logged_in
 from routes.settings import settings_page
 from routes.upload import upload
@@ -53,6 +55,7 @@ from timdb.dbutils import copy_default_rights
 from timdb.models.docentry import DocEntry
 from timdb.models.translation import Translation
 from timdb.tim_models import db
+from timdb.models.folder import Folder
 from timdb.users import NoSuchUserException
 
 cache.init_app(app)
@@ -60,8 +63,10 @@ cache.init_app(app)
 with app.app_context():
     cache.clear()
 
+app.register_blueprint(generateMap)
 app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
+app.register_blueprint(qst_plugin)
 app.register_blueprint(edit_page)
 app.register_blueprint(view_page)
 app.register_blueprint(login_page)
@@ -144,6 +149,21 @@ def internal_error(error):
     log_error(get_request_message(500))
     error.description = "Something went wrong with the server, sorry. We'll fix this as soon as possible."
     return error_generic(error, 500)
+
+
+@app.errorhandler(ItemLockedException)
+def item_locked(error):
+    item = DocEntry.find_by_id(error.access.block_id)
+    is_folder = False
+    if not item:
+        is_folder = True
+        item = Folder.find_by_id(error.access.block_id)
+    if not item:
+        abort(404)
+    return render_template('duration_unlock.html',
+                           item=item,
+                           item_type='folder' if is_folder else 'document',
+                           access=error.access), 403
 
 
 @app.errorhandler(NoSuchUserException)
@@ -252,9 +272,9 @@ def get_templates():
     current_path = d.parent.path
 
     while True:
-        for t in timdb.documents.get_documents(filter_ids=get_viewable_blocks(),
-                                      filter_folder=current_path + '/Templates',
-                                      search_recursively=False):
+        for t in timdb.documents.get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
+                                               filter_folder=current_path + '/Templates',
+                                               search_recursively=False):
             if not t.short_name.startswith('$'):
                 templates.append(t)
         if current_path == '':
@@ -425,6 +445,8 @@ def echo_request(filename):
         yield 'Headers:\n\n'
         yield from (k + ": " + v + "\n" for k, v in request.headers.items())
     return Response(stream_with_context(generate()), mimetype='text/plain')
+
+
 
 
 @app.route("/index/<int:doc_id>")

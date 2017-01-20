@@ -10,6 +10,10 @@
 // var UNDEFINED = "undefined";
 var colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "cornflowerblue", "coral", "goldenrod", "blue"];
 
+// TODO: add keyboard shortcuts to velps
+// TODO: add min and max values for points
+// TODO: user should be able to delete velp without any annotations
+
 /**
  * Angular directive for velp selection
  */
@@ -44,6 +48,7 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
 
     $scope.visible_options = {
                 "type": "select",
+                "title": "Visible to",
                 "values": [1, 2, 3, 4],
                 "names": ["Just me", "Document owner", "Teachers", "Everyone"]
     };
@@ -64,6 +69,7 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         teacherRightsError: "You need to have teacher rights change points in this document.",
         labelContentError: "Label content too short",
         velpGroupError: "Select at least one velp group.",
+        velpGroupWarning: "All selected velp groups are hidden in the current area.",
         velpContentError: "Velp content too short"
     };
 
@@ -231,6 +237,19 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         return $scope.velp.velp_groups.length > 0;
     };
 
+    $scope.isSomeVelpGroupShown = function(){
+        if (typeof $scope.velp.velp_groups === UNDEFINED || $scope.velp.velp_groups.length === 0)
+            return true;
+
+        for (var i=0; i<$scope.velp.velp_groups.length; i++){
+            for (var j=0; j<$scope.velpGroups.length; j++){
+                if ($scope.velpGroups[j].id === $scope.velp.velp_groups[i] && $scope.velpGroups[j].show)
+                    return true;
+            }
+        }
+        return false;
+    };
+
     /**
      * Adds new label to this velp.
      * @method addLabel
@@ -285,6 +304,16 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         label.edit = false;
         $scope.labelToEdit = {content: "", selected: false, edit: false, valid: true};
     };
+
+    $scope.clearVelpColor = function () {
+        $scope.velp.color = "";
+    };
+
+    $scope.isVelpCustomColor = function () {
+        if ($scope.velp.color !== null)
+            return $scope.velp.color.length === 7; // hex colors are 7 characters long
+        return false;
+    }
 
     var copyLabelToEditLabel = function (label) {
         for (var key in label){
@@ -389,6 +418,7 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
             language_id: "FI",
             icon_id: null,
             valid_until: null,
+            color: $scope.velp.color,
             visible_to: $scope.velp.visible_to,
             velp_groups: JSON.parse(JSON.stringify($scope.velp.velp_groups))
         };
@@ -451,6 +481,11 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
      */
     $scope.getColor = function (index) {
         return colorPalette[index % colorPalette.length];
+    };
+
+    $scope.getCustomColor = function () {
+        if (typeof $scope.velp.color !== UNDEFINED || $scope.velp.color !== null)
+            return $scope.velp.color;
     };
 
     // declare edit rights
