@@ -6,6 +6,7 @@ import io
 import shutil
 import time
 
+import werkzeug.exceptions as ex
 from flask import Blueprint
 from flask import g
 from flask import render_template
@@ -13,15 +14,14 @@ from flask import stream_with_context
 from flask.helpers import send_file
 from flask_assets import Environment
 from werkzeug.contrib.profiler import ProfilerMiddleware
-from werkzeug.exceptions import default_exceptions
-import werkzeug.exceptions as ex
 
 import containerLink
 from ReverseProxied import ReverseProxied
 from documentmodel.documentversion import DocumentVersion
 from plugin import PluginException
 from routes.accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
-    has_view_access, has_manage_access, grant_access_to_session_users, get_viewable_blocks, ItemLockedException
+    has_view_access, has_manage_access, grant_access_to_session_users, ItemLockedException, \
+    get_viewable_blocks_or_none_if_admin
 from routes.annotation import annotations
 from routes.answer import answers
 from routes.bookmarks import bookmarks
@@ -30,18 +30,18 @@ from routes.clipboard import clipboard
 from routes.common import *
 from routes.dbaccess import get_timdb
 from routes.edit import edit_page
+from routes.generateMap import generateMap
 from routes.groups import groups
 from routes.lecture import getTempDb, user_in_lecture, lecture_routes
 from routes.logger import log_info, log_error, log_debug
 from routes.login import login_page, logout
-from routes.generateMap import generateMap
 from routes.manage import manage_page
-from routes.qst import qst_plugin
 from routes.notes import notes
 from routes.notify import notify
+from routes.qst import qst_plugin
 from routes.readings import readings
 from routes.search import search_routes
-from routes.sessioninfo import get_current_user, get_current_user_object, get_other_users_as_list, get_current_user_id, \
+from routes.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
     get_current_user_name, get_current_user_group, logged_in
 from routes.settings import settings_page
 from routes.upload import upload
@@ -54,7 +54,6 @@ from timdb.dbutils import copy_default_rights
 from timdb.models.docentry import DocEntry
 from timdb.models.folder import Folder
 from timdb.users import NoSuchUserException
-
 
 cache.init_app(app)
 
@@ -270,9 +269,9 @@ def get_templates():
     current_path = d.parent.path
 
     while True:
-        for t in timdb.documents.get_documents(filter_ids=get_viewable_blocks(),
-                                      filter_folder=current_path + '/Templates',
-                                      search_recursively=False):
+        for t in timdb.documents.get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
+                                               filter_folder=current_path + '/Templates',
+                                               search_recursively=False):
             if not t.short_name.startswith('$'):
                 templates.append(t)
         if current_path == '':

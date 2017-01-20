@@ -10,8 +10,8 @@ from documentmodel.docsettings import DocSettings
 from documentmodel.document import get_index_from_html_list, dereference_pars
 from htmlSanitize import sanitize_html
 from options import get_option
-from routes.accesshelper import has_edit_access, verify_view_access, verify_teacher_access, verify_seeanswers_access, \
-    has_view_access, get_rights, get_viewable_blocks
+from routes.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
+    get_rights, get_viewable_blocks_or_none_if_admin
 from routes.logger import log_error
 from routes.sessioninfo import get_current_user_object
 from timdb.models.docentry import DocEntry
@@ -382,12 +382,12 @@ def redirect_to_login():
 
 def get_items(folder: str):
     timdb = get_timdb()
-    docs = timdb.documents.get_documents(filter_ids=get_viewable_blocks(),
+    docs = timdb.documents.get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
                                          search_recursively=False,
                                          filter_folder=folder)
     docs.sort(key=lambda d: d.short_name.lower())
     folders = timdb.folders.get_folders(root_path=folder,
-                                        filter_ids=get_viewable_blocks())
+                                        filter_ids=get_viewable_blocks_or_none_if_admin())
     folders.sort(key=lambda d: d.name.lower())
     items = folders + docs
     return items

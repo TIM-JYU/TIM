@@ -279,6 +279,12 @@ def get_editable_blocks():
     return g.editable
 
 
+def get_viewable_blocks_or_none_if_admin():
+    if get_current_user_object().is_admin:
+        return None
+    return get_viewable_blocks()
+
+
 def get_viewable_blocks():
     if not hasattr(g, 'viewable'):
         timdb = get_timdb()
