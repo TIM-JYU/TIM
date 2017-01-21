@@ -76,8 +76,8 @@ def generate_map():
         if layer['name'][0:1] == 'd':
             # Attach properties and create buildings if there are still demos to be added.
             if len(demojson)-1 >= demoindex and demoindex >= 0:
-                points = int(demojson[len(demojson) - demoindex - 1]['gotPoints'])
-                maxpoints = int(demojson[len(demojson) - demoindex - 1]['maxPoints'])
+                points = demojson[len(demojson) - demoindex - 1]['gotPoints']
+                maxpoints = demojson[len(demojson) - demoindex - 1]['maxPoints']
                 demoproperties = {
                     'studentpoints': points,  # Points student got from this demo/lecture
                     'maxpoints': maxpoints,  # Maximum points attainable from this demo/lecture
@@ -87,7 +87,7 @@ def generate_map():
                 # Change the name of the layer so it doesnt get caught in the loop again.
                 layer['name'] = 'D' + layer['name'][1:]
                 layer['properties'] = demoproperties
-                map['layers'] = create_demo_layers(map['layers'], layerindex, int(points), int(maxpoints),
+                map['layers'] = create_demo_layers(map['layers'], layerindex, points, maxpoints,
                                                    mapwidth, demoproperties)
             # If there is no need for the layer delete it.
             else:
@@ -155,45 +155,13 @@ def create_demo_layers(layers, layerid, points, maxpoints, mapwidth, properties)
         points = 1
     if maxpoints <= 0:
         maxpoints = 1
-    percentage = float(points/maxpoints)
-    floors = 0
-    tiles = 0
-    # set number of floors
-    if 0 <= percentage < 0.25:
-        floors = 1
-        tiles = 0
-        if 0 < percentage < 0.075:
-            tiles = 1
-        if 0.075 <= percentage < 0.15:
-            tiles = 2
-        if 0.15 <= percentage:
-            tiles = 3
-    if 0.25 <= percentage < 0.50:
-        floors = 2
-        tiles = 0
-        if 0.25 < percentage < 0.325:
-            tiles = 1
-        if 0.325 <= percentage < 0.4:
-            tiles = 2
-        if 0.4 <= percentage:
-            tiles = 3
-    if 0.5 <= percentage < 0.75:
-        floors = 3
-        tiles = 0
-        if 0.5 < percentage < 0.575:
-            tiles = 1
-        if 0.575 <= percentage < 0.65:
-            tiles = 2
-        if 0.725 <= percentage:
-            tiles = 3
-    if 0.75 <= percentage:
-        floors = 4
-        if percentage < 0.825:
-            tiles = 1
-        if 0.825 <= percentage < 0.9:
-            tiles = 2
-        if 0.975 <= percentage:
-            tiles = 3
+    max_tiles = 12
+    totaltiles = max_tiles*points/maxpoints;
+    if totaltiles > max_tiles:
+        totaltiles = max_tiles
+    totaltiles = round(totaltiles)
+    floors = totaltiles//3 + 1
+    tiles = totaltiles % 3
     # index used to track progress of loop
     floorindex = 0
 

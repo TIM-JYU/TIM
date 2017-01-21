@@ -39,8 +39,9 @@ def get_doc_data(json_to_check):
     if json_to_check is None:
         raise GamificationException('JSON is None')
 
-    lecture_paths = json_to_check['lectures']
-    demo_paths = json_to_check['demos']
+    lecture_paths = json_to_check.get('lectures', [])
+    demo_paths = json_to_check.get('demos', [])
+    max_default = json_to_check.get('maxDefault', 5)
 
     # Configure data of lecture documents
     lectures = []
@@ -66,7 +67,7 @@ def get_doc_data(json_to_check):
             temp_dict['link'] = request.url_root+'view/' + demo.path
             doc_max_points = doc_set.max_points()
             if doc_max_points is None:
-                temp_dict['maxPoints'] = 0
+                temp_dict['maxPoints'] = max_default
             else:
                 temp_dict['maxPoints'] = doc_max_points
             temp_dict['gotPoints'] = get_points_for_doc(demo)
@@ -111,7 +112,7 @@ def get_points_for_doc(d):
     users_task_info = timdb.answers.get_users_for_tasks(task_id_list[0], [common.get_current_user_id()])
 
     for entrys in users_task_info:
-        if users_task_info is not None:
+        if entrys['total_points'] is not None:
             user_points += (entrys['total_points'])
 
     return user_points

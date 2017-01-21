@@ -381,6 +381,19 @@ p.caption {
     @extend .btn, .btn-primary;
 }
 
+
+button.showMap {
+   @extend .btn, .btn-primary;
+}
+
+.uiContainer table, .uiContainer td, .uiContainer tr, .uiContainer th {
+    border: none !important;
+    padding: 0;
+    font-size: small;
+    color: $basic-color;
+    margin-left: 1em;
+}
+
 .readline {
     position: absolute;
     right: $readline-offset;

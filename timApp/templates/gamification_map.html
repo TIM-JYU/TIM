@@ -1,6 +1,7 @@
 <script src="/static/scripts/loadMap.js"></script>
 
 <button class="showMap" onclick="showMap(this)" data-toggle="false">Show map</button>
+<!--<label class="showMap no-popup-menu">Show map <input type="checkbox"  onclick="showMap(this)" data-toggle="false"></input></label>-->
 
 <script>
 
@@ -25,9 +26,12 @@
 </script>
 
 <div class="uiContainer" style="display: none;">
-    <button class="showFrames">Goals</button>
-    <input type="range" class="mapZoom">Zoom
-    <input type="range" class="alphaRange">Goal Transparency
+    <!--<button type="checkbox" class="showFrames">Goals</button>-->
+    <table>
+    <tr><td>Goals <input type="checkbox" class="showFrames"></input></td></tr>
+    <tr><td>Zoom </td><td><input type="range" class="mapZoom" /></td></tr>
+    <tr><td>Goal Transparency</td><td><input type="range" class="alphaRange" /></td></tr>
+    </table>
 </div>
 
 <div class="mapContainer"> </div>

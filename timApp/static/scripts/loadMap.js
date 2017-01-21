@@ -177,6 +177,13 @@ $(document).ready(function () {
                     };
                 }
 
+
+                function hasOwnProperty(json, tile, layerdelta, datadelta) {
+                    if ( !json.layers[tile.layerNo + layerdelta] ) return false;
+                    if ( !json.layers[tile.layerNo + layerdelta].data ) return false;
+                    return ( json.layers[tile.layerNo + layerdelta].data.hasOwnProperty((tile.dataIndex + datadelta).toString()) );
+                }
+
                 /**
                  * Function for drawing a frame of a building on given position
                  * @param tile Tile that the frame is drawn over
@@ -186,9 +193,12 @@ $(document).ready(function () {
 
                     // if clicked on a "top tile", draw a full frame
                     if (tile.tileset.properties !== undefined &&
-                        tile.tileset.properties.frameProperty == 1 && !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex).toString())) {
+                        tile.tileset.properties.frameProperty == 1  && !hasOwnProperty(json, tile, 1, 0) ) {
+/*
+                        && json.layers[tile.layerNo + 1] && json.layers[tile.layerNo + 1].data &&
+                        !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex).toString()))  {
+*/
                         context.globalAlpha = alpha;
-
                         context.drawImage(tileImage, grayTile.x, grayTile.y,
                             tileFrameSet.tilewidth, tileFrameSet.tileheight, tile.x * scale, tile.y * scale,
                             tileFrameSet.tilewidth * scale, tileFrameSet.tileheight * scale);
@@ -224,8 +234,14 @@ $(document).ready(function () {
                             tileFrameSet.tilewidth * scale, tileFrameSet.tileheight * scale);
                         // If clicked on a bulding with one floor, draw two frame tiles and a roof frame
                     } else if (tile.tileset.properties !== undefined &&
-                        tile.tileset.properties.buildingProperty === 1 && !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex - json.width).toString()) &&
+                        tile.tileset.properties.buildingProperty === 1  && //&& json.layers[tile.layerNo + 1] &&
+
+                        !hasOwnProperty(json, tile, 1, -json.width) &&
+                        hasOwnProperty(json, tile, -1, 0) ) {
+                        /*
+                        !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex - json.width).toString()) &&
                         json.layers[tile.layerNo - 1].data.hasOwnProperty((tile.dataIndex).toString())) {
+                        */
                         context.globalAlpha = alpha;
 
                         context.drawImage(tileImage, grayTile.x, grayTile.y,
@@ -255,9 +271,15 @@ $(document).ready(function () {
                             tileFrameSet.tilewidth * scale, tileFrameSet.tileheight * scale);
                         // If clicked on a bulding with two floors, draw one frame tile and a roof frame
                     } else if (tile.tileset.properties !== undefined &&
-                        tile.tileset.properties.buildingProperty == 1 && !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex - json.width).toString()) &&
+                        tile.tileset.properties.buildingProperty == 1 && // json.layers[tile.layerNo + 1] &&
+                        !hasOwnProperty(json, tile, 1, -json.width) &&
+                        hasOwnProperty(json, tile, -1, json.width) &&
+                        hasOwnProperty(json, tile, -2, json.width) ) {
+                        /*
+                        !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex - json.width).toString()) &&
                         json.layers[tile.layerNo - 1].data.hasOwnProperty((tile.dataIndex + json.width).toString()) &&
                         json.layers[tile.layerNo - 2].data.hasOwnProperty((tile.dataIndex + json.width).toString())) {
+                        */
                         context.globalAlpha = alpha;
 
                         context.drawImage(tileImage, grayTile.x, grayTile.y,
@@ -279,10 +301,17 @@ $(document).ready(function () {
                             tileFrameSet.tilewidth * scale, tileFrameSet.tileheight * scale);
                         // If clicked on a building with three floors and no roof, draw a roof frame
                     } else if (tile.tileset.properties !== undefined &&
-                        tile.tileset.properties.buildingProperty == 1 && !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex - json.width).toString()) &&
+                        tile.tileset.properties.buildingProperty == 1 && // json.layers[tile.layerNo + 1] &&
+                        !hasOwnProperty(json, tile, 1, -json.width) &&
+                        hasOwnProperty(json, tile, -1, json.width) &&
+                        hasOwnProperty(json, tile, -2, json.width*2) &&
+                        hasOwnProperty(json, tile, -3, json.width*2) ) {
+                        /*
+                        !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex - json.width).toString()) &&
                         json.layers[tile.layerNo - 1].data.hasOwnProperty((tile.dataIndex + json.width).toString()) &&
                         json.layers[tile.layerNo - 2].data.hasOwnProperty((tile.dataIndex + json.width * 2).toString()) &&
                         json.layers[tile.layerNo - 3].data.hasOwnProperty((tile.dataIndex + json.width * 2).toString())) {
+                        */
                         context.globalAlpha = alpha;
 
                         context.drawImage(roofImage, roofTile.x, roofTile.y,
@@ -318,9 +347,11 @@ $(document).ready(function () {
                  * @param tile Clicked tile
                  */
                 function drawInfo(x, y, tile) {
+                    var tscale = scale;
+                    if ( tscale < 0.7 ) tscale = 0.7;
                     // Size and position of the box
-                    var height = json.tileheight * 10 * scale;
-                    var width = json.tilewidth * 8 * scale;
+                    var height = json.tileheight * 10 * tscale;
+                    var width = json.tilewidth * 8 * tscale;
                     var rectX = x - json.tilewidth * 4 * scale;
                     var rectY = y - json.tileheight * 6 * scale - height;
 
@@ -337,28 +368,29 @@ $(document).ready(function () {
                     }
 
                     // Set style settings for info box text elements
+
                     title.css({
                         "position": "absolute",
-                        "left": (rectX + 10 * scale) + "px",
-                        "top": (rectY + 5 * scale) + "px",
-                        "min-width": (width - 20 * scale) + "px",
-                        "max-width": (width - 20 * scale) + "px",
-                        "max-height": (2 * scale) + "em",
-                        "min-height": (2 * scale) + "em",
+                        "left": (rectX + 10 * tscale) + "px",
+                        "top": (rectY + 5 * tscale) + "px",
+                        "min-width": (width - 20 * tscale) + "px",
+                        "max-width": (width - 20 * tscale) + "px",
+                        "max-height": (2 * tscale) + "em",
+                        "min-height": (2 * tscale) + "em",
                         "overflow": "hidden",
                         "font-weight": "bold",
-                        "font-size": (1.1 * scale) + "em",
+                        "font-size": (1.1 * tscale) + "em",
                         "z-index": 4
                     });
                     description.css({
-                        "min-width": (width - 20 * scale) + "px",
-                        "max-width": (width - 20 * scale) + "px",
-                        "max-height": (height - 60 * scale) + "px",
+                        "min-width": (width - 20 * tscale) + "px",
+                        "max-width": (width - 20 * tscale) + "px",
+                        "max-height": (height - 60 * tscale) + "px",
                         "position": "absolute",
                         "overflow": "auto",
-                        "left": (rectX + 10 * scale) + "px",
-                        "top": (rectY + 40 * scale) + "px",
-                        "font-size": (scale) + "em",
+                        "left": (rectX + 10 * tscale) + "px",
+                        "top": (rectY + 40 * tscale) + "px",
+                        "font-size": (tscale) + "em",
                         "z-index": 4
                     });
 
