@@ -422,7 +422,7 @@ $(document).ready(function () {
                             description.html("Dokumentin pisteet: " + rround(json.layers[tile.layerNo].properties.studentpoints,2) + "/" +
                                 json.layers[tile.layerNo].properties.maxpoints + "<br>Kurssin pisteet yhteensä: " + rround(totalPoints,2) + "/" + totalMax);
 			                } else {
-			                    description.html("Kurssin pisteet yhteensä: " + totalPoints + "/" + totalMax);
+			                    description.html("Kurssin pisteet yhteensä: " + rround(totalPoints,2) + "/" + totalMax);
 			                }
 
                     // Draw the box on the canvas
