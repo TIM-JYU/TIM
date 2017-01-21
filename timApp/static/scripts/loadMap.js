@@ -340,6 +340,12 @@ $(document).ready(function () {
                     });
                 }
 
+
+                function rround(d, des) {
+                    var mult = Math.pow(10,des);
+                    return Math.round(d*mult)/mult;
+                }
+
                 /**
                  * Draws an info box
                  * @param x X coordinate for the box
@@ -391,6 +397,7 @@ $(document).ready(function () {
                         "left": (rectX + 10 * tscale) + "px",
                         "top": (rectY + 40 * tscale) + "px",
                         "font-size": (tscale) + "em",
+                        "text-align": "left",
                         "z-index": 4
                     });
 
@@ -412,8 +419,8 @@ $(document).ready(function () {
 
                     title.html("<a href='" + json.layers[tile.layerNo].properties.site + "'>" + json.layers[tile.layerNo].properties.title + "</a>");
 		                if(json.layers[tile.layerNo].properties.maxpoints !== 0) {
-                            description.html("Dokumentin pisteet: " + json.layers[tile.layerNo].properties.studentpoints + "/" +
-                                json.layers[tile.layerNo].properties.maxpoints + "<br>Kurssin pisteet yhteensä: " + totalPoints + "/" + totalMax);
+                            description.html("Dokumentin pisteet: " + rround(json.layers[tile.layerNo].properties.studentpoints,2) + "/" +
+                                json.layers[tile.layerNo].properties.maxpoints + "<br>Kurssin pisteet yhteensä: " + rround(totalPoints,2) + "/" + totalMax);
 			                } else {
 			                    description.html("Kurssin pisteet yhteensä: " + totalPoints + "/" + totalMax);
 			                }
