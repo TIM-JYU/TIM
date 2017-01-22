@@ -41,7 +41,7 @@ def get_doc_data(json_to_check):
 
     lecture_paths = json_to_check.get('lectures', [])
     demo_paths = json_to_check.get('demos', [])
-    max_default = json_to_check.get('maxDefault', 5)
+    default_max = json_to_check.get('defaultMax', 5)
 
     # Configure data of lecture documents
     lectures = []
@@ -67,7 +67,7 @@ def get_doc_data(json_to_check):
             temp_dict['link'] = request.url_root+'view/' + demo.path
             doc_max_points = doc_set.max_points()
             if doc_max_points is None:
-                temp_dict['maxPoints'] = max_default
+                temp_dict['maxPoints'] = default_max
             else:
                 temp_dict['maxPoints'] = doc_max_points
             temp_dict['gotPoints'] = get_points_for_doc(demo)
