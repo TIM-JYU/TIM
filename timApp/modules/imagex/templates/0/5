@@ -1,0 +1,31 @@
+Oma piirros
+Pohja johon saa itse piirtää
+``` {plugin="imagex" #PLUGINNAMEHERE}
+header: Piirrä tähän mitä tarvitsee
+#lazy: false
+canvasheight: 420
+#background:
+#  src: http://users.jyu.fi/~vesal/kurssit/ohj2/moniste/dna.jpg
+
+freeHand: true
+freeHandColor: red
+freeHandWidth: 3
+#freeHandVisible: false
+#freeHandLineVisible: false
+#freeHandLine: true
+
+fixedobjects:
+  -
+      type: "vector"
+      cornerradius: 0
+      position: [50, 400]
+      size: [400, 2]
+      vectorproperties:
+        color: "black"
+        arrowheadwidth: 20
+        arrowheadlength: 20
+  -
+      a: 90
+      position: [50, 400]
+      size: [400, 2]
+```

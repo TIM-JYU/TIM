@@ -1,24 +1,24 @@
 Monivalinta
 True/False tyyppinen monivalintakysymys
 ``` {#PLUGINNAMEHERE plugin="mmcq"}
-headerText: Kysymyksen otsikko
-buttonText: Tallenna
-stem: "Kysymyksen varsinainen kysymys"
+headerText: 'Kysymyksen otsikko'
+buttonText: 'Tallenna'
+stem: 'Kysymyksen varsinainen kysymys'
 choices:
   -
     correct: true
-    text: "Ensimmäisen kysymyksen teksti"
-    reason: "1. kysymyksen selitys oikeasta vastauksesta"
+    text: 'Ensimmäisen kysymyksen teksti'
+    reason: '1. kysymyksen selitys oikeasta vastauksesta'
   -
     correct: false
-    text: "Toisen kysymyksen teksti"
-    reason: "2. kysymyksen selitys oikeasta vastauksesta"
+    text: 'Toisen kysymyksen teksti'
+    reason: '2. kysymyksen selitys oikeasta vastauksesta'
   -
     correct: false
-    text: "Kolmannen kysymyksen teksti"
-    reason: "3. kysymyksen selitys oikeasta vastauksesta"
+    text: 'Kolmannen kysymyksen teksti'
+    reason: '3. kysymyksen selitys oikeasta vastauksesta'
   -
     correct: false
-    text: ""
-    reason: ""
+    text: ''
+    reason: ''
 ```
