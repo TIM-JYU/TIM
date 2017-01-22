@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Functions for dealing with plugin paragraphs."""
 import json
+import yaml
 
 from typing import List, Tuple, Optional
 
@@ -114,8 +115,18 @@ def pluginify(doc: Document,
         is_gamified = block.get_attr('gamification')
 
         if is_gamified:
-            gamified_data = gamificationdata.gamify(block.get_markdown())
-            html_pars[idx]['html'] = render_template('gamification_map.html', gamified_data=gamified_data)
+            md = ""
+            md = block.get_markdown();
+            try:
+                gamified_data = gamificationdata.gamify(md)
+                html_pars[idx]['html'] = render_template('gamification_map.html', gamified_data=gamified_data)
+            except yaml.parser.ParserError as e:
+                html_pars[idx]['html'] = '<div class="error"><p>Gamification error:</p><pre>' + \
+                                         str(e) + \
+                                         '</pre><p>From block:</p><pre>' + \
+                                         md + \
+                                         '</pre></div>'
+
         if plugin_name and not block.is_question():
             try:
                 plugin = Plugin.from_paragraph(block, user)
