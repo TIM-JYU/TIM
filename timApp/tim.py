@@ -148,7 +148,7 @@ def forbidden(error):
 def internal_error(error):
     log_error(get_request_message(500))
     error.description = Markup('Something went wrong with the server, sorry. '
-                               'An automatic email about this error has been sent to TIM developers. '
+                               'TIM developers have been notified about this. '
                                'If the problem persists, please send email to <a href="mailto:{0}">{0}</a>.'
                                .format(app.config['HELP_EMAIL']))
     tb = traceback.format_exc()
