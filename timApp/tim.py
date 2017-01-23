@@ -153,14 +153,17 @@ def internal_error(error):
                                .format(app.config['HELP_EMAIL']))
     tb = traceback.format_exc()
     message = """
-Exception happened on {}:
+Exception happened on {} at {}
 
 {}
 
 {}
-""".format(datetime.now(tz=timezone.utc), get_request_message(500), tb).strip()
+""".format(datetime.now(tz=timezone.utc),
+           request.url,
+           get_request_message(500),
+           tb).strip()
     send_email(rcpt=app.config['ERROR_EMAIL'],
-               subject='Error at {} ({})'.format(request.path, get_current_user_name()),
+               subject='{}: Error at {} ({})'.format(app.config['TIM_HOST'], request.path, get_current_user_name()),
                mail_from=app.config['WUFF_EMAIL'],
                reply_to='{},{}'.format(app.config['ERROR_EMAIL'], get_current_user_object().email),
                msg=message)
