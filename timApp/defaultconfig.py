@@ -47,3 +47,6 @@ UPLOADER_CONTAINER_URL = "http://uploader:41419/"
 
 # When enabled, the readingtypes on_screen and hover_par will not be saved in the database.
 DISABLE_AUTOMATIC_READINGS = False
+HELP_EMAIL = 'tim@jyu.fi'
+ERROR_EMAIL = 'timwuff.group@korppi.jyu.fi'
+WUFF_EMAIL = 'wuff@tim.jyu.fi'

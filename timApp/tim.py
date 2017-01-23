@@ -5,6 +5,8 @@ import imghdr
 import io
 import shutil
 import time
+import traceback
+from datetime import timezone
 
 import werkzeug.exceptions as ex
 from flask import Blueprint
@@ -13,6 +15,7 @@ from flask import render_template
 from flask import stream_with_context
 from flask.helpers import send_file
 from flask_assets import Environment
+from markupsafe import Markup
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
 import containerLink
@@ -37,7 +40,7 @@ from routes.logger import log_info, log_error, log_debug
 from routes.login import login_page, logout
 from routes.manage import manage_page
 from routes.notes import notes
-from routes.notify import notify
+from routes.notify import notify, send_email
 from routes.qst import qst_plugin
 from routes.readings import readings
 from routes.search import search_routes
@@ -144,8 +147,30 @@ def forbidden(error):
 @app.errorhandler(500)
 def internal_error(error):
     log_error(get_request_message(500))
-    error.description = "Something went wrong with the server, sorry. We'll fix this as soon as possible."
+    error.description = Markup('Something went wrong with the server, sorry. '
+                               'An automatic email about this error has been sent to TIM developers. '
+                               'If the problem persists, please send email to <a href="mailto:{0}">{0}</a>.'
+                               .format(app.config['HELP_EMAIL']))
+    tb = traceback.format_exc()
+    message = """
+Exception happened on {}:
+
+{}
+
+{}
+""".format(datetime.now(tz=timezone.utc), get_request_message(500), tb).strip()
+    send_email(rcpt=app.config['ERROR_EMAIL'],
+               subject='Error at {} ({})'.format(request.path, get_current_user_name()),
+               mail_from=app.config['WUFF_EMAIL'],
+               reply_to='{},{}'.format(app.config['ERROR_EMAIL'], get_current_user_object().email),
+               msg=message)
     return error_generic(error, 500)
+
+
+@app.route('/exception')
+def throw_ex():
+    verify_admin()
+    raise Exception('This route throws an exception intentionally for testing purposes.')
 
 
 @app.errorhandler(ItemLockedException)
