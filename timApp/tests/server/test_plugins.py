@@ -159,7 +159,7 @@ class PluginTest(TimRouteTest):
         anon_id = timdb.users.get_anon_user_id()
         anon_answers = timdb.answers.get_answers(anon_id, task_id)
 
-        self.assertListEqual([{'collaborators': [{'real_name': None, 'email': None, 'user_id': anon_id}],
+        self.assertListEqual([{'collaborators': [{'real_name': 'Anonymous user', 'email': None, 'user_id': anon_id}],
                                'content': '[true, false, false]',
                                'points': 6.0,
                                'task_id': task_id,

@@ -91,5 +91,6 @@ class User(db.Model):
                 'name': self.name,
                 'real_name': self.real_name,
                 'email': self.email,
-                'group': self.get_personal_group()
+                'group': self.get_personal_group(),
+                'folder': self.get_personal_folder()
                 }

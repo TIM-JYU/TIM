@@ -32,7 +32,7 @@
                     {% if session.user_id %}
                         <h3>Get started</h3>
                         <ul class="list-unstyled">
-                            <li class="h5"><a href="/view/users/{{ session.user_name }}">My documents</a></li>
+                            <li class="h5"><a href="/view/{{ current_user.get_personal_folder().path }}">My documents</a></li>
                             <li class="h5"><a href="/view/">All documents</a></li>
                             <li class="h5"><a ng-click="creatingNew = true" href="#">Create a new document</a></li>
                         </ul>

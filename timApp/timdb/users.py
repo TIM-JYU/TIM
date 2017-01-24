@@ -54,7 +54,8 @@ class Users(TimDbBase):
         ADMIN_GROUPID = 4
 
         cursor = self.db.cursor()
-        cursor.execute('INSERT INTO UserAccount (id, name) VALUES (%s, %s)', [ANONYMOUS_USERID, ANONYMOUS_USERNAME])
+        cursor.execute('INSERT INTO UserAccount (id, name, real_name) VALUES (%s, %s, %s)',
+                       [ANONYMOUS_USERID, ANONYMOUS_USERNAME, 'Anonymous user'])
         cursor.execute('INSERT INTO UserAccount (id, name) VALUES (%s, %s)', [LOGGED_IN_USERID, LOGGED_IN_USERNAME])
         cursor.execute('INSERT INTO UserGroup (id, name) VALUES (%s, %s)', [ANONYMOUS_GROUPID, ANONYMOUS_GROUPNAME])
         cursor.execute('INSERT INTO UserGroup (id, name) VALUES (%s, %s)', [LOGGED_IN_GROUPID, LOGGED_IN_GROUPNAME])
