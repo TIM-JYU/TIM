@@ -59,7 +59,7 @@ from timdb.models.docentry import DocEntry
 from timdb.models.translation import Translation
 from timdb.tim_models import db
 from timdb.models.folder import Folder
-from timdb.users import NoSuchUserException
+from timdb.users import NoSuchUserException, DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME
 
 cache.init_app(app)
 
@@ -303,7 +303,7 @@ def get_templates():
         for t in timdb.documents.get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
                                                filter_folder=current_path + '/Templates',
                                                search_recursively=False):
-            if not t.short_name.startswith('$'):
+            if t.short_name not in (DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME):
                 templates.append(t)
         if current_path == '':
             break

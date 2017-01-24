@@ -24,6 +24,9 @@ LOGGED_GROUP_ID = None
 ADMIN_GROUP_ID = None
 KORPPI_GROUP_ID = None
 
+DOC_DEFAULT_RIGHT_NAME = 'DefaultDocumentRights'
+FOLDER_DEFAULT_RIGHT_NAME = 'DefaultFolderRights'
+
 
 class NoSuchUserException(TimDbException):
     def __init__(self, user_id):
@@ -36,8 +39,8 @@ class Users(TimDbBase):
 
     access_type_map = {}
 
-    default_right_paths = {blocktypes.DOCUMENT: 'Templates/DefaultDocumentRights',
-                           blocktypes.FOLDER: 'Templates/DefaultFolderRights'}
+    default_right_paths = {blocktypes.DOCUMENT: 'Templates/{}'.format(DOC_DEFAULT_RIGHT_NAME),
+                           blocktypes.FOLDER: 'Templates/{}'.format(FOLDER_DEFAULT_RIGHT_NAME)}
 
     def create_special_usergroups(self) -> int:
         """Creates an anonymous user and a usergroup for it.
