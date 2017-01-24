@@ -41,10 +41,10 @@ class DocEntry(db.Model, DocInfo):
     @property
     def translations(self) -> List['Translation']:
         trs = Translation.find_by_docentry(self)
-        if not trs:
+        if not any(tr.doc_id == self.id for tr in trs):
             tr = Translation(src_docid=self.id, doc_id=self.id, lang_id='')
             tr.docentry = self
-            return [tr]
+            trs.append(tr)
         return trs
 
     @staticmethod
