@@ -31,3 +31,7 @@ class RedirectTest(TimRouteTest):
                 self.get(quote_plus('{}/{}/testing{}remove'.format(route, personal_folder, c)),
                          expect_status=302,
                          expect_content='{}/{}?{}'.format(route, testing_remove, params), query_string={'a': 'b'})
+
+            self.get('{}/{}/testing space'.format(route, personal_folder), follow_redirects=True)
+            self.get('{}/{}/testing spAce'.format(route, personal_folder), follow_redirects=True)
+            self.get('{}/{}/testing spÄce'.format(route, personal_folder), follow_redirects=True)

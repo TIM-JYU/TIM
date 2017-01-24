@@ -236,4 +236,4 @@ def pycharm_running():
 
 
 def remove_path_special_chars(item_path):
-    return re.sub('[^a-zA-Z0-9/_-]', '', item_path.translate(str.maketrans(' äöå', '-aoa')))
+    return re.sub('[^a-zA-Z0-9/_-]', '', item_path.translate(str.maketrans(' äöåÄÖÅ', '-aoaAOA')))
