@@ -36,8 +36,8 @@ class Users(TimDbBase):
 
     access_type_map = {}
 
-    default_right_paths = {blocktypes.DOCUMENT: 'Templates/$DefaultDocumentRights',
-                           blocktypes.FOLDER: 'Templates/$DefaultFolderRights'}
+    default_right_paths = {blocktypes.DOCUMENT: 'Templates/DefaultDocumentRights',
+                           blocktypes.FOLDER: 'Templates/DefaultFolderRights'}
 
     def create_special_usergroups(self) -> int:
         """Creates an anonymous user and a usergroup for it.
