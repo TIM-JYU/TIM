@@ -8,6 +8,7 @@ from isodate import parse_duration
 
 from options import get_option
 from routes.accesshelper import verify_manage_access, verify_ownership, verify_view_access
+from routes.sessioninfo import get_current_user_object
 from timdb.blocktypes import from_str
 from timdb.item import Item
 from timdb.models.usergroup import UserGroup
@@ -68,6 +69,9 @@ def get_changelog(doc_id, length):
 @manage_page.route("/permissions/add/<int:item_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_permission(item_id, group_name, perm_type):
     is_owner, group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(item_id, group_name, perm_type)
+    if get_current_user_object().get_personal_folder().id == item_id:
+        if perm_type == 'owner':
+            abort(403, 'You cannot add owners to your personal folder.')
     timdb = get_timdb()
     try:
         for group_id in group_ids:
@@ -269,27 +273,30 @@ def verify_and_get_params(item_id, group_name, perm_type):
     if len(groups) == 0:
         abort(404, 'No user group with this name was found.')
     group_ids = [group.id for group in groups]
-    access_type = request.get_json().get('type')
+    req_json = request.get_json()
+    if req_json is None:
+        abort(400)
+    access_type = req_json.get('type', 'always')
 
     try:
-        accessible_from = dateutil.parser.parse(request.get_json().get('from')) if access_type == 'range' else None
+        accessible_from = dateutil.parser.parse(req_json.get('from')) if access_type == 'range' else None
     except TypeError:
         accessible_from = None
     try:
-        accessible_to = dateutil.parser.parse(request.get_json().get('to')) if access_type == 'range' else None
+        accessible_to = dateutil.parser.parse(req_json.get('to')) if access_type == 'range' else None
     except TypeError:
         accessible_to = None
 
     try:
-        duration_accessible_from = dateutil.parser.parse(request.get_json().get('durationFrom')) if access_type == 'duration' else None
+        duration_accessible_from = dateutil.parser.parse(req_json.get('durationFrom')) if access_type == 'duration' else None
     except TypeError:
         duration_accessible_from = None
     try:
-        duration_accessible_to = dateutil.parser.parse(request.get_json().get('durationTo')) if access_type == 'duration' else None
+        duration_accessible_to = dateutil.parser.parse(req_json.get('durationTo')) if access_type == 'duration' else None
     except TypeError:
         duration_accessible_to = None
 
-    duration = parse_duration(request.get_json().get('duration')) if access_type == 'duration' else None
+    duration = parse_duration(req_json.get('duration')) if access_type == 'duration' else None
 
     if access_type == 'always' or (accessible_from is None and duration is None):
         accessible_from = datetime.now(tz=timezone.utc)
