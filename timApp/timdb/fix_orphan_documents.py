@@ -13,8 +13,8 @@ from timdb.tim_models import db
 def fix_orphans():
     with app.test_request_context():
         timdb = get_timdb()
-        orphan_folder_title = 'Orphaned documents'
-        f = Folder.create('orphans', timdb.users.get_admin_group_id(), title=orphan_folder_title)
+        orphan_folder_title = 'orphans'
+        f = Folder.create('orphans', timdb.users.get_admin_group_id())
         orphans = Block.query.filter(
             (Block.type_id == 0) &
             Block.id.notin_(DocEntry.query.with_entities(DocEntry.id)) &
