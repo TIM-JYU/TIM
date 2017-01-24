@@ -73,7 +73,9 @@ class Folder(db.Model, Item):
             rel_folder, _ = split_location(relative_path)
             Folder.create(join_location(self.get_full_path(), rel_folder), owner_group_id=creator_group_id,
                           commit=False)
-            return DocEntry.create(join_location(self.get_full_path(), relative_path), owner_group_id=creator_group_id)
+            return DocEntry.create(join_location(self.get_full_path(), relative_path),
+                                   owner_group_id=creator_group_id,
+                                   title=relative_path)
         else:
             return None
 
