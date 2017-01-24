@@ -17,7 +17,7 @@ def gamify(initial_data):
     lecture_table, demo_table = get_doc_data(initial_json)
 
     # Insert document, IDs, paths, and points in a dictionary
-    gamification_data = place_in_dict(lecture_table, demo_table)
+    gamification_data = {"lectures": lecture_table, "demos": demo_table}
 
     return gamification_data
 
@@ -27,7 +27,7 @@ def convert_to_json(md_data):
     :param md_data = the data read from paragraph in YAML
     :returns: same data in JSON
     """
-    temp = yaml.load(md_data[3:len(md_data) - 3])
+    temp = yaml.load(md_data[3:len(md_data) - 3]) # TODO: does not work if used other separtor than 3 `
     return json.loads(json.dumps(temp))
 
 
@@ -39,19 +39,31 @@ def get_doc_data(json_to_check):
     if json_to_check is None:
         raise GamificationException('JSON is None')
 
-    lecture_paths = json_to_check['lectures']
-    demo_paths = json_to_check['demos']
+    lecture_paths = json_to_check.get('lectures', [])
+    demo_paths = json_to_check.get('demos', [])
+    default_max = json_to_check.get('defaultMax', 5)
 
     # Configure data of lecture documents
     lectures = []
     for path in lecture_paths:
-        lecture = DocEntry.find_by_path(path['path'])
-        if lecture is not None:
+        p = path.get('path',None)
+        if not p: continue
+        if p.startswith('http'):
+            doc = path.get('shortname', 'doc')
             temp_dict = dict()
-            temp_dict['id'] = lecture.id
-            temp_dict['name'] = lecture.short_name
-            temp_dict['link'] = request.url_root+'view/' + lecture.path
+            temp_dict['id'] = 0
+            temp_dict['name'] = doc
+            temp_dict['link'] = p
             lectures.append(temp_dict)
+        else:
+            lecture = DocEntry.find_by_path(path['path'])
+            if lecture is not None:
+                doc = path.get('shortname', lecture.short_name)
+                temp_dict = dict()
+                temp_dict['id'] = lecture.id
+                temp_dict['name'] = doc
+                temp_dict['link'] = request.url_root+'view/' + lecture.path
+                lectures.append(temp_dict)
 
     # Configure data of demo documents
     demos = []
@@ -59,42 +71,21 @@ def get_doc_data(json_to_check):
         demo = DocEntry.find_by_path(path['path'])
 
         if demo is not None:
-            doc_set = demo.document.get_settings()
+            doc = path.get('shortname', demo.short_name)
+            doc_max_points = path.get('max_points', None)
             temp_dict = dict()
             temp_dict['id'] = demo.id
-            temp_dict['name'] = demo.short_name
+            temp_dict['name'] = doc
             temp_dict['link'] = request.url_root+'view/' + demo.path
-            doc_max_points = doc_set.max_points()
             if doc_max_points is None:
-                temp_dict['maxPoints'] = 0
-            else:
+                doc_set = demo.document.get_settings()
+                doc_max_points = doc_set.max_points() or default_max
+            if doc_max_points is not None:
                 temp_dict['maxPoints'] = doc_max_points
-            temp_dict['gotPoints'] = get_points_for_doc(demo)
+            temp_dict['gotPoints'] = get_points_for_doc(demo) # TODO: must pick all docs at once
             demos.append(temp_dict)
 
     return lectures, demos
-
-
-def place_in_dict(l_table, d_table):
-    """
-    :param l_table Array of lecture IDs
-    :param d_table Array of demo IDs
-    :returns: A dictionary of combined lecture and demo documents
-    """
-    document_dict = {'lectures': [], 'demos': []}
-
-    temp1 = document_dict['lectures']
-    for i in range(len(l_table)):
-        temp1.append(l_table[i])
-
-    temp2 = document_dict['demos']
-    for j in range(len(d_table)):
-        temp2.append(d_table[j])
-
-    document_dict['lectures'] = temp1
-    document_dict['demos'] = temp2
-
-    return document_dict
 
 
 def get_points_for_doc(d):
@@ -111,7 +102,7 @@ def get_points_for_doc(d):
     users_task_info = timdb.answers.get_users_for_tasks(task_id_list[0], [common.get_current_user_id()])
 
     for entrys in users_task_info:
-        if users_task_info is not None:
+        if entrys['total_points'] is not None:
             user_points += (entrys['total_points'])
 
     return user_points

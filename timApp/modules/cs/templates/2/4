@@ -1,6 +1,7 @@
 Gamification
 Inserts a gamification template
 ``` {gamification="true"}
+defaultMax: 5
 lectures:
     - path: "dokumentin_polku/Luento1"
     - path: "dokumentin_polku/Luento2"

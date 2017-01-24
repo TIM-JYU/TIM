@@ -235,6 +235,10 @@ progress {
     min-width: 150px;
 }
 
+.center p {
+    text-align: center;
+}
+
 /* Special style for mobile devices with width less than 500 px*/
 @media only screen and (max-device-width: 500px) {
     .answerSheet table {

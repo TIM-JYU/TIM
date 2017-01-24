@@ -553,7 +553,14 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 var touchDevice = false;
 
                 $scope.wrapFn = function (func) {
-                    if (!touchDevice) $scope.editor.focus();
+                    if (!touchDevice) {
+                        // For some reason, on Chrome, re-focusing the editor messes up scroll position
+                        // when clicking a tab and moving mouse while clicking, so
+                        // we save and restore it manually.
+                        var s = $(window).scrollTop();
+                        $scope.editor.focus();
+                        $(window).scrollTop(s);
+                    }
                     if (typeof(func) !== 'undefined') (func());
                     if ($scope.isIE) $scope.aceChanged();
                 };

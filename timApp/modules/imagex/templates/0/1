@@ -1,6 +1,6 @@
 Yksityiskohtainen
 Kuvaraahaustehtävä monimutkaisemmalla muotoilulla
-``` {plugin="imagex" #PLUGINNAMEHER}
+``` {plugin="imagex" #PLUGINNAMEHERE}
 header: Raahaa kuvat oikeille paikoille
 stem: Raahaa kuvat oikeille paikoille
 background: 
