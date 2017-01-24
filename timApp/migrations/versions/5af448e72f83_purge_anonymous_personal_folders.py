@@ -13,28 +13,7 @@ from alembic import op
 
 
 def upgrade():
-    op.execute("""DELETE FROM docentry
-                  WHERE name ~ 'users/Anonymous[0-9]+/.*'""")
-    op.execute("""DELETE FROM blockaccess
-                  WHERE block_id IN (
-                    SELECT id FROM block
-                    WHERE type_id = 0
-                      AND id NOT IN (
-                        SELECT id FROM docentry
-                      )
-                      AND id NOT IN (
-                        SELECT doc_id FROM translation
-                      )
-                  )""")
-    op.execute("""DELETE FROM block
-                  WHERE type_id = 0
-                    AND id NOT IN (
-                      SELECT id FROM docentry
-                    )
-                    AND id NOT IN (
-                      SELECT doc_id FROM translation
-                    )""")
-
+    return
 
 def downgrade():
     raise NotImplementedError
