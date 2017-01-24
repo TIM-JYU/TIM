@@ -56,11 +56,15 @@ class User(db.Model):
         return basename + index
 
     def get_personal_folder(self) -> Folder:
+        if self.logged_in:
+            group_condition = UserGroup.name == self.name
+        else:
+            group_condition = UserGroup.name == ANONYMOUS_GROUPNAME
         folders = Folder.query.join(
             BlockAccess, BlockAccess.block_id == Folder.id
         ).join(
             UserGroup, UserGroup.id == BlockAccess.usergroup_id
-        ).filter((Folder.location == 'users') & (UserGroup.name == self.name)).with_entities(Folder).all()  # type: List[Folder]
+        ).filter((Folder.location == 'users') & group_condition).with_entities(Folder).all()  # type: List[Folder]
         if len(folders) >= 2:
             raise TimDbException('Found multiple personal folders for user {}: {}'.format(self.name, [f.name for f in folders]))
         if not folders:

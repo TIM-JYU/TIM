@@ -1,5 +1,6 @@
 from tests.server.timroutetest import TimRouteTest
 from tim_app import app
+from timdb.models.folder import Folder
 
 
 class PersonalFolderTest(TimRouteTest):
@@ -19,3 +20,12 @@ class PersonalFolderTest(TimRouteTest):
             self.assertEqual("Weird Name?'s folder", f1.title)
             self.assertEqual("Weird Name??'s folder", f2.title)
             self.assertEqual("Weird ?Name's folder", f3.title)
+
+    def test_anon_personal_folder(self):
+        """Make sure personal folders aren't created for each anonymous request."""
+        self.logout()
+        self.get('/')
+        folders = Folder.query.filter_by(location='users').all()
+        self.get('/')
+        folders_after = Folder.query.filter_by(location='users').all()
+        self.assertEqual(len(folders), len(folders_after))
