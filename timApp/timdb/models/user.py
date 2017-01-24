@@ -6,6 +6,7 @@ from typing import List
 from sqlalchemy.orm import Query
 
 from documentmodel.timjsonencoder import TimJsonEncoder
+from timdb.accesstype import AccessType
 from timdb.tim_models import db, UserGroupMember, BlockAccess
 from timdb.models.folder import Folder
 from timdb.models.usergroup import UserGroup
@@ -64,7 +65,11 @@ class User(db.Model):
             BlockAccess, BlockAccess.block_id == Folder.id
         ).join(
             UserGroup, UserGroup.id == BlockAccess.usergroup_id
-        ).filter((Folder.location == 'users') & group_condition).with_entities(Folder).all()  # type: List[Folder]
+        ).filter(
+            (Folder.location == 'users') &
+            group_condition &
+            (BlockAccess.type == AccessType.owner.value)
+        ).with_entities(Folder).all()  # type: List[Folder]
         if len(folders) >= 2:
             raise TimDbException('Found multiple personal folders for user {}: {}'.format(self.name, [f.name for f in folders]))
         if not folders:
