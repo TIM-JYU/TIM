@@ -23,10 +23,10 @@ def upgrade():
                   WHERE block.id = folder.id""")
 
     op.execute("""UPDATE docentry
-                  SET name     = regexp_replace(translate(name, 'åäöÅÄÖ ', 'aaoAAO-'), '[^a-zA-Z0-9/_-]', '')""")
+                  SET name     = regexp_replace(translate(name, 'åäöÅÄÖ ', 'aaoAAO-'), '[^a-zA-Z0-9/_-]', '', 'g')""")
     op.execute("""UPDATE folder
-                  SET name     = regexp_replace(translate(name, 'åäöÅÄÖ ', 'aaoAAO-'), '[^a-zA-Z0-9/_-]', ''),
-                      location = regexp_replace(translate(location, 'åäöÅÄÖ ', 'aaoAAO-'), '[^a-zA-Z0-9/_-]', '')""")
+                  SET name     = regexp_replace(translate(name, 'åäöÅÄÖ ', 'aaoAAO-'), '[^a-zA-Z0-9/_-]', '', 'g'),
+                      location = regexp_replace(translate(location, 'åäöÅÄÖ ', 'aaoAAO-'), '[^a-zA-Z0-9/_-]', '', 'g')""")
 
 
 def downgrade():
