@@ -17,7 +17,7 @@ class VelpTest(TimRouteTest):
     def test_velp(self):
         db = self.get_db()
         self.login_test1()
-        user_folder = 'users/{}'.format(self.current_user_name())   # users/testuser1
+        user_folder = self.current_user.get_personal_folder().path   # users/testuser1
         deeper_folder = '{}/test'.format(user_folder)          # users/testuser1/test
         test_doc1 = '{}/test1'.format(user_folder)
         test_doc2 = '{}/test2'.format(user_folder)

@@ -193,7 +193,7 @@ def verify_ownership(block_id):
 
 def can_write_to_folder(folder_name):
     timdb = get_timdb()
-    user_folder = "users/" + get_current_user_name()
+    user_folder = get_current_user_object().get_personal_folder().path
     folder = folder_name
     while folder != '':
         if folder == user_folder:

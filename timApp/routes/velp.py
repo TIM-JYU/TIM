@@ -14,6 +14,7 @@ the document.
 from flask import Blueprint
 
 from routes.accesshelper import verify_logged_in
+from routes.sessioninfo import get_current_user_object
 from timdb.models.docentry import DocEntry
 from .common import *
 
@@ -88,9 +89,9 @@ def get_default_personal_velp_group():
     :return: Dictionary containing personal velp group data.
     """
     timdb = get_timdb()
-    user_name = get_current_user_name()
+    user = get_current_user_object()
 
-    personal_velp_group_path = "users/" + user_name + "/velp-groups"
+    personal_velp_group_path = user.get_personal_folder().path + "/velp-groups"
     found_velp_groups = timdb.documents.get_documents_in_folder(personal_velp_group_path)
     velp_groups = []
     for v in found_velp_groups:
@@ -647,8 +648,8 @@ def create_velp_group(doc_id: int) -> Dict:
 
     # Create a new velp group / document in users/username/velp groups folder
     if target_type == 0:
-        user_name = get_current_user_name()
-        user_velp_path = timdb.folders.check_personal_velp_folder(user_name, user_group_id)
+        user = get_current_user_object()
+        user_velp_path = timdb.folders.check_personal_velp_folder(user, user_group_id)
         new_group_path = user_velp_path + "/" + velp_group_name
         group_exists = DocEntry.find_by_path(new_group_path)
         if group_exists is None:
@@ -800,8 +801,8 @@ def get_velp_groups_from_tree(document_id: int):
     current_path = doc_path
     velp_groups_path = current_path + "/" + velp_group_folder
     doc_velp_path = velp_groups_path + "/" + doc_name
-    username = get_current_user_name()
-    personal_velps_path = "users/" + username + "/" + velp_group_folder
+    user = get_current_user_object()
+    personal_velps_path = user.get_personal_folder().path + "/" + velp_group_folder
     owner_group_id = 3  # TODO: Choose owner group correctly, now uses All Korppi users
 
     velp_groups = []  # type: List[DocEntry]

@@ -15,6 +15,7 @@ from routes.accesshelper import verify_view_access, verify_teacher_access, verif
 from routes.logger import log_error
 from routes.sessioninfo import get_current_user_object
 from timdb.timdbexception import TimDbException
+from utils import remove_path_special_chars
 from .common import *
 
 Range = Tuple[int, int]
@@ -146,7 +147,6 @@ def parse_range(start_index: Union[int, str, None], end_index: Union[int, str, N
 def try_return_folder(doc_name):
     timdb = get_timdb()
     user = get_current_user_id()
-    user_name = get_current_user_name()
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
     if is_in_lecture:
         is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
@@ -156,12 +156,7 @@ def try_return_folder(doc_name):
     item_name = doc_name.rstrip('/')
     block_id = timdb.folders.get_folder_id(item_name)
 
-    if block_id is None and item_name == 'users/' + user_name:
-        # This is the user's personal folder and it doesn't exist yet.
-        # Create it
-        block_id = Folder.create('users/' + user_name, get_current_user_group()).id
-
-    elif block_id is None:
+    if block_id is None:
         while block_id is None:
             item_name, _ = timdb.folders.split_location(item_name)
             block_id = timdb.folders.get_folder_id(item_name)

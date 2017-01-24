@@ -7,13 +7,12 @@ from isodate import Duration
 from isodate import parse_duration
 
 from options import get_option
-from routes.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_manage_access
+from routes.accesshelper import verify_manage_access, verify_ownership, verify_view_access
 from timdb.blocktypes import from_str
 from timdb.item import Item
-from timdb.models.docentry import DocEntry
-from timdb.models.folder import Folder
 from timdb.models.usergroup import UserGroup
 from timdb.tim_models import db
+from utils import remove_path_special_chars
 from .common import *
 
 manage_page = Blueprint('manage_page',

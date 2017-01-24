@@ -13,10 +13,10 @@ class BookmarkTest(TimRouteTest):
         bookmarks = self.get_bookmarks()
 
         # Test to make sure an invalid folder with empty name is not created
-        f = Folder.find_by_location('users/{}'.format(self.current_user_name()), '')
+        f = Folder.find_by_location(self.current_user.get_personal_folder().path, '')
         self.assertIsNone(f)
 
-        d = DocEntry.query.filter_by(name='users/{}/Bookmarks'.format(self.current_user_name())).first()
+        d = DocEntry.query.filter_by(name=self.current_user.get_personal_folder().path + '/Bookmarks').first()
         self.assertIsNotNone(d)
         self.assertListEqual([], bookmarks)
         group_name = 'mygroup'

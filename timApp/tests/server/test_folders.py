@@ -4,7 +4,7 @@ from tests.server.timroutetest import TimRouteTest
 
 class FolderTest(TimRouteTest):
     def get_personal_folder_path(self, path):
-        return 'users/{}/{}'.format(self.current_user_name(), path)
+        return '{}/{}'.format(self.current_user.get_personal_folder().path, path)
 
     def test_folder_manage(self):
         self.login_test3()
@@ -32,7 +32,7 @@ class FolderTest(TimRouteTest):
     def test_folders(self):
         self.login_test1()
         db = self.get_db()
-        user_folder = 'users/{}'.format(self.current_user_name())
+        user_folder = self.current_user.get_personal_folder().path
         fname = self.get_personal_folder_path('testing')
 
         f = self.create_folder(fname)
@@ -51,7 +51,6 @@ class FolderTest(TimRouteTest):
         f3 = self.create_folder(fname2)
         db.users.grant_access(db.users.get_anon_group_id(), f3['id'], 'view')
         self.maxDiff = None
-        folder_loc = 'users/testuser1'
         self.get('/getItems', query_string={'folder': user_folder},
                  expect_content=[{'name': 'testing1',
                                   'title': 'foldertitle',
@@ -59,7 +58,7 @@ class FolderTest(TimRouteTest):
                                   'isFolder': True,
                                   'modified': 'just now',
                                   'path': new_name,
-                                  'location': folder_loc,
+                                  'location': user_folder,
                                   'owner': {'id': 7, 'name': 'testuser1'},
                                   'rights': {'browse_own_answers': True,
                                              'can_comment': True,
@@ -77,7 +76,7 @@ class FolderTest(TimRouteTest):
                                   'isFolder': True,
                                   'modified': 'just now',
                                   'path': fname2,
-                                  'location': folder_loc,
+                                  'location': user_folder,
                                   'owner': {'id': 7, 'name': 'testuser1'},
                                   'rights': {'browse_own_answers': True,
                                              'can_comment': True,
@@ -97,7 +96,7 @@ class FolderTest(TimRouteTest):
                                   'isFolder': True,
                                   'modified': 'just now',
                                   'path': fname2,
-                                  'location': folder_loc,
+                                  'location': user_folder,
                                   'owner': {'id': 7, 'name': 'testuser1'},
                                   'rights': {'browse_own_answers': False,
                                              'can_comment': False,
@@ -120,8 +119,7 @@ class FolderTest(TimRouteTest):
                            expect_content={'error': 'The folder path cannot have empty parts.'},
                            expect_status=400)
         self.create_folder(invalid2,
-                           expect_content={'error': 'You cannot create folders in this folder. Try users/{} '
-                                                    'instead.'.format(self.current_user_name())},
+                           expect_content={'error': 'You cannot create folders in this folder.'},
                            expect_status=403)
         self.create_folder(invalid3,
                            expect_content={

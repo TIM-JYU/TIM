@@ -345,10 +345,6 @@ def has_special_chars(item_path):
     return set(item_path.lower()) - set('abcdefghijklmnopqrstuvwxyz0123456789/-_')
 
 
-def remove_path_special_chars(item_path):
-    return re.sub('[^a-zA-Z0-9/_-]', '', item_path.translate(str.maketrans(' äöå', '-aoa')))
-
-
 def validate_item(item_path, item_type):
     if not logged_in():
         abort(403, 'You have to be logged in to perform this action.'.format(item_type))
@@ -371,7 +367,7 @@ def validate_item(item_path, item_type):
         abort(403, 'Item with a same name already exists.')
 
     if not can_write_to_folder(item_path):
-        abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(item_type, username))
+        abort(403, 'You cannot create {}s in this folder.'.format(item_type))
 
 
 def validate_item_and_create(item_name, item_type, owner_group_id):

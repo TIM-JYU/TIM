@@ -371,8 +371,12 @@ class TimRouteTest(TimDbTest):
         """
         return session['user_id']
 
+    @property
+    def current_user(self) -> User:
+        return User.query.get(self.current_user_id())
+
     def current_group(self) -> UserGroup:
-        return User.query.get(self.current_user_id()).get_personal_group()
+        return self.current_user.get_personal_group()
 
     def login_anonymous(self):
         with self.client.session_transaction() as s:
@@ -470,7 +474,7 @@ class TimRouteTest(TimDbTest):
         :return: The DocEntry object.
         """
         if path is None:
-            path = 'users/{}/doc{}'.format(self.current_user_name(), self.doc_num)
+            path = '{}/doc{}'.format(self.current_user.get_personal_folder().path, self.doc_num)
             self.__class__.doc_num += 1
         resp = self.json_post('/createItem', {
             'item_path': path,

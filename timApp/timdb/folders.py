@@ -3,6 +3,7 @@ from typing import List, Optional, Iterable
 from timdb.blocktypes import blocktypes
 from timdb.models.block import Block
 from timdb.models.folder import Folder
+from timdb.models.user import User
 from timdb.tim_models import BlockAccess, db
 from timdb.timdbbase import TimDbBase
 
@@ -157,7 +158,7 @@ class Folders(TimDbBase):
 
         return doc_folder_path
 
-    def check_personal_velp_folder(self, user: str, user_id: int):
+    def check_personal_velp_folder(self, user: User, user_id: int):
         """ Checks if personal velp group folder path exists and if not, creates it
 
         :param user: Username of current user
@@ -165,7 +166,7 @@ class Folders(TimDbBase):
         :return:
         """
         group_folder_name = "velp-groups"
-        user_folder = "users/" + user
+        user_folder = user.get_personal_folder().path
         user_velps_path = user_folder + "/" + group_folder_name
         folders = self.get_folders(user_folder)
         velps_folder = False

@@ -10,14 +10,14 @@ class UploadTest(TimRouteTest):
         db.users.addUserToAdmins(db.users.get_user_by_name('testuser3').id)
         self.login_test1()
         j = self.post('/upload/',
-                      data={'folder': 'users/{}'.format(self.current_user_name()),
+                      data={'folder': self.current_user.get_personal_folder().path,
                             'file': (io.BytesIO(b'test file'), 'test.md')})
         self.post('/upload/',
-                  data={'folder': 'users/{}'.format(self.current_user_name()),
+                  data={'folder': self.current_user.get_personal_folder().path,
                         'file': (io.BytesIO(b'test file'), 'test2')})
         format_error = {"error": "Only markdown files are allowed. This file appears to be application/octet-stream."}
         self.post('/upload/',
-                  data={'folder': 'users/{}'.format(self.current_user_name()),
+                  data={'folder': self.current_user.get_personal_folder().path,
                         'file': (io.BytesIO(b'\x00'),
                                  'test2.md')},
                   expect_status=400,
@@ -35,8 +35,7 @@ class UploadTest(TimRouteTest):
                   data={'folder': fname,
                         'file': (io.BytesIO(b'test file'), 'test.md')},
                   expect_status=403,
-                  expect_content={'error': 'You cannot create documents in this folder. '
-                                           'Try users/{} instead.'.format(self.current_user_name())})
+                  expect_content={'error': 'You cannot create documents in this folder.'})
         test1_group = db.users.get_personal_usergroup_by_id(self.current_user_id())
         self.login_test3()
         j = self.create_folder(fname)

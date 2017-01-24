@@ -4,7 +4,7 @@ from tests.db.timdbtest import TEST_USER_1_ID
 from tests.server.timroutetest import TimRouteTest
 
 
-class ManageTest(TimRouteTest):
+class PermissionTest(TimRouteTest):
     def test_cannot_remove_ownership(self):
         self.login_test1()
         d = self.create_doc()
