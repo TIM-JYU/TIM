@@ -445,7 +445,7 @@ def check_lecture():
                 use_question = True
                 session['use_questions'] = True
 
-            doc_name = timdb.documents.get_document(lecture[0].get("doc_id"))["name"]
+            doc_name = DocEntry.find_by_id(lecture[0].get("doc_id")).path
 
             return jsonResponse({"isInLecture": is_in_lecture, "lectureId": lecture_id, "lectureCode": lecture_code,
                                  "isLecturer": is_lecturer, "startTime": lecture[0].get("start_time"),
@@ -529,7 +529,7 @@ def show_lecture_info(lecture_id):
                            lectureEndTime=lecture.get("end_time"),
                            in_lecture=in_lecture,
                            settings=settings,
-                           translations=timdb.documents.get_translations(doc.id))
+                           translations=doc.translations)
 
 
 @lecture_routes.route('/showLectureInfoGivenName/', methods=['GET'])
@@ -769,7 +769,7 @@ def join_lecture():
         current_user = anon_user.id
         anon_login = True
 
-    doc_name = timdb.documents.get_document(lecture[0].get("doc_id"))["name"]
+    doc_name = DocEntry.find_by_id(lecture[0].get("doc_id")).path
 
     in_lecture, current_lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user)
     if in_lecture:

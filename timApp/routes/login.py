@@ -120,8 +120,8 @@ def login_with_korppi():
             timdb.users.add_user_to_korppi_group(user_id)
             timdb.users.set_usergroup_name(group_id, user_name)
         else:
-            uid = timdb.users.create_user(user_name, real_name, email)
-            gid = timdb.users.create_usergroup(user_name)
+            uid = timdb.users.create_user(user_name, real_name, email).id
+            gid = timdb.users.create_usergroup(user_name).id
             timdb.users.add_user_to_group(gid, uid)
             timdb.users.add_user_to_korppi_group(uid)
             user_id = uid
@@ -245,8 +245,8 @@ def alt_signup_after():
         return finish_login(ready=False)
     
     if user_id == 0:
-        user_id = timdb.users.create_user(username, real_name, email, password=password)
-        gid = timdb.users.create_usergroup(username)
+        user_id = timdb.users.create_user(username, real_name, email, password=password).id
+        gid = timdb.users.create_usergroup(username).id
         timdb.users.add_user_to_group(gid, user_id)
     else:
         timdb.users.update_user(user_id, username, real_name, email, password=password)
@@ -273,7 +273,7 @@ def alt_login():
         user = timdb.users.get_user_by_email(email)
         # Check if the users' group exists
         if (len(timdb.users.get_usergroups_by_name(user['name'])) == 0):
-            gid = timdb.users.create_usergroup(user['name'])
+            gid = timdb.users.create_usergroup(user['name']).id
             timdb.users.add_user_to_group(gid, user['id'])
         set_user_to_session(user)
         return finish_login()

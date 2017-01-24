@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 from documentmodel.document import Document
 from timdb.gamification_models.gamificationdocument import GamificationDocument
@@ -18,7 +18,7 @@ class DocEntry(db.Model, DocInfo):
     id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
     public = db.Column(db.Boolean, nullable=False, default=True)
 
-    block = db.relationship('Block', backref=db.backref('docentries', lazy='dynamic'))
+    _block = db.relationship('Block', backref=db.backref('docentries', lazy='dynamic'))
 
     @property
     def path(self):
@@ -28,8 +28,31 @@ class DocEntry(db.Model, DocInfo):
     def path_without_lang(self):
         return self.name
 
+    # noinspection PyMethodOverriding
+    @DocInfo.lang_id.setter
+    def lang_id(self, value):
+        tr = Translation.query.filter_by(src_docid=self.id, doc_id=self.id).first()
+        if tr:
+            tr.lang_id = value
+        else:
+            tr = Translation(src_docid=self.id, doc_id=self.id, lang_id=value)
+            db.session.add(tr)
+
+    @property
+    def translations(self) -> List['Translation']:
+        trs = Translation.find_by_docentry(self)
+        if not trs:
+            tr = Translation(src_docid=self.id, doc_id=self.id, lang_id='')
+            tr.docentry = self
+            return [tr]
+        return trs
+
     @staticmethod
-    def find_by_id(doc_id: int, try_translation=False) -> Union['DocEntry', 'Translation']:
+    def find_all_by_id(doc_id: int):
+        return DocEntry.query.filter_by(id=doc_id).all()
+
+    @staticmethod
+    def find_by_id(doc_id: int, try_translation=False) -> Union['DocEntry', 'Translation', None]:
         d = DocEntry.query.filter_by(id=doc_id).first()
         if d:
             return d
@@ -38,7 +61,7 @@ class DocEntry(db.Model, DocInfo):
         return d
 
     @staticmethod
-    def find_by_path(path: str, fallback_to_id=False, try_translation=False) -> Union['DocEntry', 'Translation']:
+    def find_by_path(path: str, fallback_to_id=False, try_translation=False) -> Union['DocEntry', 'Translation', None]:
         d = DocEntry.query.get(path)
         if d:
             return d
@@ -63,25 +86,26 @@ class DocEntry(db.Model, DocInfo):
         return DocEntry(id=-1, name=title)
 
     @staticmethod
-    def create(name: Optional[str], owner_group_id: int, from_file=None, initial_par=None, settings=None, is_gamified: bool = False) -> 'DocEntry':
+    def create(path: Optional[str], owner_group_id: int, title: Optional[str]=None, from_file=None, initial_par=None, settings=None, is_gamified: bool = False) -> 'DocEntry':
         """Creates a new document with the specified name.
 
-        :param name: The name of the document to be created (can be None). If None, no DocEntry is actually added
+        :param title: The document title.
+        :param path: The path of the document to be created (can be None). If None, no DocEntry is actually added
          to the database; only Block and Document objects are created.
         :param owner_group_id: The id of the owner group.
         :param is_gamified: Boolean value indicating whether the document is gamified.
         :returns: The newly created document object.
         """
 
-        if name is not None and '\0' in name:
+        if path is not None and '\0' in path:
             raise TimDbException('Document name cannot contain null characters.')
 
-        document_id = insert_block(name, owner_group_id, blocktypes.DOCUMENT, commit=False).id
+        document_id = insert_block(title or path, owner_group_id, blocktypes.DOCUMENT, commit=False).id
         document = Document(document_id, modifier_group_id=owner_group_id)
         document.create()
 
-        docentry = DocEntry(id=document_id, name=name, public=True)
-        if name is not None:
+        docentry = DocEntry(id=document_id, name=path, public=True)
+        if path is not None:
             db.session.add(docentry)
 
         if from_file is not None:

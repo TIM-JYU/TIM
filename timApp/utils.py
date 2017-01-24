@@ -233,3 +233,7 @@ def get_sql_template(value_list: List) -> str:
 
 def pycharm_running():
     return os.environ.get('PYCHARM_HOSTED') == '1'
+
+
+def remove_path_special_chars(item_path):
+    return re.sub('[^a-zA-Z0-9/_-]', '', item_path.translate(str.maketrans(' äöå', '-aoa')))

@@ -76,12 +76,11 @@ def send_email(rcpt: str, subject: str, msg: str, mail_from: Optional[str] = Non
 
 
 def replace_macros(msg: str, doc_id: int, par_id: Optional[str]) -> str:
-    timdb = get_timdb()
     new_msg = msg
     if '[user_name]' in msg:
         new_msg = new_msg.replace('[user_name]', get_current_user_name())
     if '[doc_name]' in msg or '[doc_url]' in msg:
-        doc_name = timdb.documents.get_first_document_name(doc_id)
+        doc_name = DocEntry.find_by_id(doc_id, try_translation=True).path
         par_part = '' if par_id is None else '#' + par_id
         doc_url = '{}/view/{}{}'.format(os.environ.get("TIM_HOST", "http://localhost"), doc_name.replace(' ', '%20'),
                                                par_part)

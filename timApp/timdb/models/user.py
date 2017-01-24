@@ -1,15 +1,17 @@
 import json
 
 from typing import Dict
+from typing import List
 
 from sqlalchemy.orm import Query
 
 from documentmodel.timjsonencoder import TimJsonEncoder
-from timdb.tim_models import db, UserGroupMember
+from timdb.tim_models import db, UserGroupMember, BlockAccess
 from timdb.models.folder import Folder
 from timdb.models.usergroup import UserGroup
 from timdb.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME
 from timdb.timdbexception import TimDbException
+from utils import remove_path_special_chars
 
 
 class User(db.Model):
@@ -46,12 +48,31 @@ class User(db.Model):
             return g
         raise TimDbException('Personal usergroup for user {} was not found!'.format(self.name))
 
-    def get_personal_folder(self):
-        path = 'users/' + self.name
-        f = Folder.find_by_path(path)
-        if f is None:
-            return Folder.create(path, self.get_personal_group().id, apply_default_rights=True)
-        return f
+    def derive_personal_folder_name(self):
+        basename = remove_path_special_chars(self.real_name).lower()
+        index = ''
+        while Folder.find_by_path('users/' + basename + index):
+            index = str(int(index or 1) + 1)
+        return basename + index
+
+    def get_personal_folder(self) -> Folder:
+        if self.logged_in:
+            group_condition = UserGroup.name == self.name
+        else:
+            group_condition = UserGroup.name == ANONYMOUS_GROUPNAME
+        folders = Folder.query.join(
+            BlockAccess, BlockAccess.block_id == Folder.id
+        ).join(
+            UserGroup, UserGroup.id == BlockAccess.usergroup_id
+        ).filter((Folder.location == 'users') & group_condition).with_entities(Folder).all()  # type: List[Folder]
+        if len(folders) >= 2:
+            raise TimDbException('Found multiple personal folders for user {}: {}'.format(self.name, [f.name for f in folders]))
+        if not folders:
+            return Folder.create('users/' + self.derive_personal_folder_name(),
+                                 self.get_personal_group().id,
+                                 title="{}'s folder".format(self.real_name),
+                                 apply_default_rights=True)
+        return folders[0]
 
     def get_prefs(self) -> Dict:
         return json.loads(self.prefs)
@@ -74,5 +95,6 @@ class User(db.Model):
                 'name': self.name,
                 'real_name': self.real_name,
                 'email': self.email,
-                'group': self.get_personal_group()
+                'group': self.get_personal_group(),
+                'folder': self.get_personal_folder()
                 }

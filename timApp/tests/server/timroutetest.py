@@ -156,7 +156,8 @@ class TimRouteTest(TimDbTest):
         :param as_tree: Whether to return the response as an HTML tree.
         :param expect_status: The expected status code.
         :param expect_content: The expected response content.
-         * If as_tree is True, this parameter is not used.
+         * If the response is a redirect, this parameter is interpreted as the expected redirect target URL.
+         * Otherwise, if as_tree is True, this parameter is not used.
          * Otherwise, if the response mimetype is application/json, this parameter is interpreted as a dictionary or list
            that must match the response content.
          * Otherwise, this parameter is interpreted as a string that must match the response content.
@@ -177,6 +178,8 @@ class TimRouteTest(TimDbTest):
         headers.append(('X-Requested-With', 'XMLHttpRequest'))
         resp = self.client.open(url, method=method, headers=headers, **kwargs)
         self.assertEqual(expect_status, resp.status_code)
+        if resp.status_code == 302 and expect_content is not None:
+            self.assertEqual(expect_content, resp.location.lstrip('http://localhost/'))
         resp_data = resp.get_data(as_text=True)
         if as_tree:
             tree = html.fromstring(resp_data)
@@ -196,7 +199,7 @@ class TimRouteTest(TimDbTest):
                 self.assertLessEqual(1, len(html.fragment_fromstring(loaded, create_parent=True).findall(expect_xpath)))
             return loaded
         else:
-            if expect_content is not None:
+            if expect_content is not None and resp.status_code != 302:
                 self.assertEqual(expect_content, resp_data)
             elif expect_contains is not None:
                 self.check_contains(expect_contains, resp_data)
@@ -368,8 +371,12 @@ class TimRouteTest(TimDbTest):
         """
         return session['user_id']
 
+    @property
+    def current_user(self) -> User:
+        return User.query.get(self.current_user_id())
+
     def current_group(self) -> UserGroup:
-        return User.query.get(self.current_user_id()).get_personal_group()
+        return self.current_user.get_personal_group()
 
     def login_anonymous(self):
         with self.client.session_transaction() as s:
@@ -447,30 +454,54 @@ class TimRouteTest(TimDbTest):
                          data={'email': email, 'password': passw, 'add_user': add},
                          follow_redirects=True, **kwargs)
 
-    def create_doc(self, docname: Optional[str] = None, from_file: Optional[str] = None,
+    def create_doc(self, path: Optional[str] = None,
+                   from_file: Optional[str] = None,
                    initial_par: Optional[str] = None,
-                   settings: Optional[Dict] = None) -> DocEntry:
+                   settings: Optional[Dict] = None,
+                   copy_from: Optional[int] = None,
+                   cite: Optional[int] = None,
+                   expect_status=200,
+                   **kwargs
+                   ) -> Optional[DocEntry]:
         """Creates a new document.
 
-        :param docname: The path of the document.
+        :param copy_from: The id of an existing document if creating a copy.
+        :param cite: The id of an existing document if citing another document.
+        :param path: The path of the document.
         :param from_file: If specified, loads the document content from the specified file.
         :param initial_par: The content of the initial paragraph.
         :param settings: The settings for the document.
         :return: The DocEntry object.
         """
-        if docname is None:
-            docname = 'users/{}/doc{}'.format(self.current_user_name(), self.doc_num)
+        if path is None:
+            path = '{}/doc{}'.format(self.current_user.get_personal_folder().path, self.doc_num)
             self.__class__.doc_num += 1
         resp = self.json_post('/createItem', {
-            'item_path': docname,
-            'item_type': 'document'
-        })
+            'item_path': path,
+            'item_type': 'document',
+            'item_title': 'document ' + str(self.doc_num),
+            **({'copy': copy_from} if copy_from else {}),
+            **({'cite': cite} if cite else {})
+        }, expect_status=expect_status, **kwargs)
+        if expect_status != 200:
+            return None
         self.assertIsInstance(resp['id'], int)
-        self.assertEqual(docname, resp['name'])
-        de = DocEntry.find_by_path(docname)
+        self.assertEqual(path, resp['path'])
+        de = DocEntry.find_by_path(path)
         doc = de.document
         self.init_doc(doc, from_file, initial_par, settings)
         return de
+
+    def create_folder(self, path: str, title: str='foldertitle', expect_status=200, **kwargs):
+        f = self.json_post('/createItem',
+                              {'item_path': path,
+                               'item_type': 'folder',
+                               'item_title': title}, expect_status=expect_status, **kwargs)
+
+        if expect_status == 200:
+            self.assertEqual(path, f['path'])
+            self.assertIsInstance(f['id'], int)
+        return f
 
 
 if __name__ == '__main__':

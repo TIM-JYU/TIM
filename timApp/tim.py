@@ -15,6 +15,7 @@ from flask import render_template
 from flask import stream_with_context
 from flask.helpers import send_file
 from flask_assets import Environment
+from sqlalchemy.exc import IntegrityError
 from markupsafe import Markup
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
@@ -55,6 +56,8 @@ from timdb.blocktypes import from_str, blocktypes
 from timdb.bookmarks import Bookmarks
 from timdb.dbutils import copy_default_rights
 from timdb.models.docentry import DocEntry
+from timdb.models.translation import Translation
+from timdb.tim_models import db
 from timdb.models.folder import Folder
 from timdb.users import NoSuchUserException
 
@@ -309,37 +312,50 @@ def get_templates():
     return jsonResponse(templates)
 
 
-def create_item(item_name, item_type_str, create_function, owner_group_id):
-    validate_item_and_create(item_name, item_type_str, owner_group_id)
+def create_item(item_path, item_type_str, item_title, create_function, owner_group_id):
+    item_path = item_path.strip('/')
+    validate_item_and_create(item_path, item_type_str, owner_group_id)
 
-    item_id = create_function(item_name, owner_group_id)
+    item = create_function(item_path, owner_group_id, item_title)
     timdb = get_timdb()
-    grant_access_to_session_users(timdb, item_id)
+    grant_access_to_session_users(timdb, item.id)
     item_type = from_str(item_type_str)
     if item_type == blocktypes.DOCUMENT:
         bms = Bookmarks(get_current_user_object())
-        d = DocEntry.find_by_id(item_id)
         bms.add_bookmark('Last edited',
-                         d.short_name,
-                         '/view/' + d.path,
+                         item.short_name,
+                         '/view/' + item.path,
                          move_to_top=True,
                          limit=app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
-    copy_default_rights(item_id, item_type)
-    return jsonResponse({'id': item_id, 'name': item_name})
+    copy_default_rights(item.id, item_type)
+    return item
 
 
 @app.route("/createItem", methods=["POST"])
 def create_document():
-    jsondata = request.get_json()
-    item_path = jsondata['item_path']
-    is_gamified = False  # disable gamification permanently because the tables are not used so far
+    item_path, item_type, item_title = verify_json_params('item_path', 'item_type', 'item_title')
+    cite_id, copy_id = verify_json_params('cite', 'copy', require=False)
+    if cite_id:
+        return create_citation_doc(cite_id, item_path, item_title)
 
-    timdb = get_timdb()
-    item_type = jsondata['item_type']
-    return create_item(item_path,
+    copied_content = None
+    if copy_id:
+        verify_edit_access(copy_id)
+        d = DocEntry.find_by_id(copy_id, try_translation=True)
+        if not d:
+            return abort(404, 'The document to be copied was not found')
+        copied_content = d.document.export_markdown()
+
+    item = create_item(item_path,
                        item_type,
-                       (lambda name, group: timdb.documents.create(name, group, is_gamified).doc_id) if item_type == 'document' else timdb.folders.create,
+                       item_title,
+                       DocEntry.create if item_type == 'document' else Folder.create,
                        get_current_user_group())
+
+    if copied_content:
+        item.document.update(copied_content, item.document.export_markdown())
+
+    return jsonResponse(item)
 
 
 @app.route("/translations/<int:doc_id>", methods=["GET"])
@@ -351,11 +367,7 @@ def get_translations(doc_id):
     if not has_view_access(doc_id):
         abort(403, 'Permission denied')
 
-    trlist = timdb.documents.get_translations(doc_id)
-    for tr in trlist:
-        tr['owner'] = timdb.users.get_user_group_name(tr['owner_id']) if tr['owner_id'] else None
-
-    return jsonResponse(trlist)
+    return jsonResponse(DocEntry.find_by_id(doc_id, try_translation=True).translations)
 
 
 def valid_language_id(lang_id):
@@ -367,74 +379,53 @@ def create_translation(tr_doc_id, language):
     title = request.get_json().get('doc_title', None)
     timdb = get_timdb()
 
-    doc_id = timdb.documents.get_translation_source(tr_doc_id)
+    doc = DocEntry.find_by_id(tr_doc_id, try_translation=True)
 
-    if not timdb.documents.exists(doc_id):
+    if not doc:
         abort(404, 'Document not found')
+
+    doc_id = doc.src_docid
 
     if not has_view_access(doc_id):
         abort(403, 'Permission denied')
     if not valid_language_id(language):
         abort(404, 'Invalid language identifier')
-    if timdb.documents.translation_exists(doc_id, lang_id=language):
-        abort(403, 'Translation already exists')
+    if doc.has_translation(language):
+        abort(403, 'Translation for this language already exists')
     if not has_manage_access(doc_id):
         # todo: check for translation right
         abort(403, 'You have to be logged in to create a translation')
 
     src_doc = Document(doc_id)
-    doc = timdb.documents.create_translation(src_doc, None, get_current_user_group())
-    timdb.documents.add_translation(doc.doc_id, src_doc.doc_id, language, title)
-
-    src_doc_name = timdb.documents.get_first_document_name(src_doc.doc_id)
-    doc_name = timdb.documents.get_translation_path(doc_id, src_doc_name, language)
-
-    return jsonResponse({'id': doc.doc_id, 'title': title, 'name': doc_name})
+    cite_doc = timdb.documents.create_citation(src_doc, get_current_user_group())
+    tr = Translation(doc_id=cite_doc.id, src_docid=src_doc.doc_id, lang_id=language)
+    tr.title = title
+    db.session.add(tr)
+    db.session.commit()
+    return jsonResponse(tr)
 
 
 @app.route("/translation/<int:doc_id>", methods=["POST"])
 def update_translation(doc_id):
     (lang_id, doc_title) = verify_json_params('new_langid', 'new_title', require=True)
-    timdb = get_timdb()
-
-    src_doc_id = doc_id
-    translations = timdb.documents.get_translations(doc_id)
-    for tr in translations:
-        if tr['id'] == doc_id:
-            src_doc_id = tr['src_docid']
-        if tr['lang_id'] == lang_id and tr['id'] != doc_id:
-            abort(403, 'Translation ' + lang_id + ' already exists')
-
-    if src_doc_id is None or not timdb.documents.exists(src_doc_id):
-        abort(404, 'Source document does not exist')
-
     if not valid_language_id(lang_id):
-        if doc_id == src_doc_id and lang_id == "":
-            # Allow removing the language id for the document itself
-            timdb.documents.remove_translation(doc_id)
-
-            # Rename the document if requested
-            (prev_title,) = verify_json_params('old_title', require=False)
-            if prev_title is not None and doc_title != prev_title:
-                timdb.documents.change_name(doc_id, prev_title, doc_title)
-
-            return okJsonResponse()
-
         abort(403, 'Invalid language identifier')
-
-    if not has_ownership(src_doc_id) and not has_ownership(doc_id):
+    doc = DocEntry.find_by_id(doc_id, try_translation=True)
+    if not doc:
+        abort(404, 'Source document does not exist')
+    if not has_ownership(doc.src_docid) and not has_ownership(doc.id):
         abort(403, "You need ownership of either this or the translated document")
-
-    # Remove and add because we might be adding a language identifier for the source document
-    # In that case there may be nothing to update!
-    timdb.documents.remove_translation(doc_id, commit=False)
-    timdb.documents.add_translation(doc_id, src_doc_id, lang_id, doc_title)
+    doc.lang_id = lang_id
+    doc.title = doc_title
+    try:
+        db.session.commit()
+    except IntegrityError:
+        abort(403, 'This language already exists.')
     return okJsonResponse()
 
 
-@app.route("/cite/<int:docid>/<path:newname>", methods=["GET"])
-def create_citation_doc(docid, newname):
-    params = request.get_json()
+def create_citation_doc(docid, path, title):
+    params, = verify_json_params('params', require=False)
 
     # Filter for allowed reference parameters
     if params is not None:
@@ -444,14 +435,14 @@ def create_citation_doc(docid, newname):
         params = {'r': 'c'}
 
     timdb = get_timdb()
-    if not has_view_access(docid):
-        abort(403)
+    verify_edit_access(docid)
 
     src_doc = Document(docid)
 
-    def factory(name, group):
-        return timdb.documents.create_translation(src_doc, name, group, params).doc_id
-    return create_item(newname, 'document', factory, get_current_user_group())
+    def factory(path, group, title):
+        return timdb.documents.create_citation(src_doc, group, path, title, params)
+    item = create_item(path, 'document', title, factory, get_current_user_group())
+    return jsonResponse(item)
 
 
 @app.route("/getBlock/<int:doc_id>/<par_id>")

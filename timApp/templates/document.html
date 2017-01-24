@@ -27,7 +27,7 @@
         <ul class="list-inline">
             {% for tr in translations %}
                 <li role="presentation">
-                    <a class="label label-primary" href="/{{ route }}/{{ tr.name }}">{{ tr.lang_id }}</a></li>
+                    <a class="label label-primary" href="/{{ route }}/{{ tr.path }}">{{ tr.lang_id }}</a></li>
             {% endfor %}
         </ul>
     {% endif %}

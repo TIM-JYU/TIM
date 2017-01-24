@@ -12,11 +12,13 @@ The module also retrieves the velp groups and their default and show selections 
 """
 
 import copy
+from typing import Optional, List, Iterable, Dict
 
-from timdb.documents import *
+from timdb.models.docentry import DocEntry
+from timdb.timdbbase import TimDbBase
 
 
-class VelpGroups(Documents):
+class VelpGroups(TimDbBase):
     def create_default_velp_group(self, name: str, owner_group_id: int, default_group_path: str):
         """Creates default velp group for document.
 
@@ -27,8 +29,8 @@ class VelpGroups(Documents):
         """
 
         # Create new document and add its ID to VelpGroupTable
-        new_group = self.create(default_group_path, owner_group_id)
-        new_group_id = new_group.doc_id
+        new_group = DocEntry.create(default_group_path, owner_group_id)
+        new_group_id = new_group.id
         valid_until = None
         cursor = self.db.cursor()
         cursor.execute("""
@@ -52,8 +54,8 @@ class VelpGroups(Documents):
         """
 
         # Create new document and add its ID to VelpGroupTable
-        new_group = self.create(new_group_path, owner_group_id)
-        new_group_id = new_group.doc_id
+        new_group = DocEntry.create(new_group_path, owner_group_id)
+        new_group_id = new_group.id
         cursor = self.db.cursor()
         cursor.execute("""
                       INSERT INTO

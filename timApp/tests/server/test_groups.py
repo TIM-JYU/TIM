@@ -16,7 +16,7 @@ class GroupTest(TimRouteTest):
         t3 = names[2]
         t4 = names[3]
         t5 = 't5'
-        uids = [db.users.create_user_with_group(name)[0] for name in names]
+        uids = [db.users.create_user_with_group(name)[0].id for name in names]
         self.get('/groups/show/testgroup1', expect_status=404,
                  expect_content={'error': 'Usergroup does not exist.'})
         self.get('/groups/create/testgroup1', expect_content=self.ok_resp)

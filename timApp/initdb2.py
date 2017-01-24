@@ -1,12 +1,12 @@
 """Initializes the TIM database."""
 
+import logging
 import os
+import sys
 
 import flask_migrate
-import logging
 import sqlalchemy
 import sqlalchemy.exc
-import sys
 from alembic.runtime.environment import EnvironmentContext
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
@@ -17,6 +17,7 @@ from routes.logger import log_info, enable_loggers, log_error
 from sql.migrate_to_postgre import perform_migration
 from tim_app import app
 from timdb import tempdb_models
+from timdb.models.docentry import DocEntry
 from timdb.tim_models import AccessType, db
 from timdb.timdb2 import TimDb
 
@@ -98,14 +99,16 @@ def initialize_database(create_docs=True):
             print('Skipping creating example documents.')
 
         elif create_docs:
-            timdb.documents.create('Testaus 1', anon_group)
-            timdb.documents.create('Testaus 2', anon_group)
+            DocEntry.create('testaus-1', anon_group, title='Testaus 1')
+            DocEntry.create('testaus-2', anon_group, title='Testaus 2')
             timdb.documents.import_document_from_file('example_docs/programming_examples.md',
-                                                      'Programming examples',
-                                                      anon_group)
+                                                      'programming-examples',
+                                                      anon_group,
+                                                      title='Programming examples')
             timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
-                                                      'Multiple choice plugin example',
-                                                      anon_group)
+                                                      'mmcq-example',
+                                                      anon_group,
+                                                      title='Multiple choice plugin example')
         log_info('Database initialization done.')
 
     if not app.config['TESTING']:

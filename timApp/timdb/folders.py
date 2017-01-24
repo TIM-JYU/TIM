@@ -3,34 +3,13 @@ from typing import List, Optional, Iterable
 from timdb.blocktypes import blocktypes
 from timdb.models.block import Block
 from timdb.models.folder import Folder
+from timdb.models.user import User
 from timdb.tim_models import BlockAccess, db
 from timdb.timdbbase import TimDbBase
 
 ID_ROOT_FOLDER = -1
 
 class Folders(TimDbBase):
-    def create(self, name: str, owner_group_id: int, apply_default_rights: bool=False) -> int:
-        """Creates a new folder with the specified name.
-
-        :param apply_default_rights: Whether to apply default rights from parents.
-        :param name: The name of the folder to be created.
-        :param owner_group_id: The id of the owner group.
-        :returns: The id of the newly created folder.
-        """
-
-        return Folder.create(name, owner_group_id, apply_default_rights=apply_default_rights).id
-
-    def get_id(self, name: str) -> Optional[int]:
-        """Gets the folders's identifier by its name or None if not found.
-
-        :param name: The name of the folder.
-        :returns: Integer block identifier.
-        """
-        cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM Folder WHERE name = %s', [name])
-        row = cursor.fetchone()
-        return row[0] if row is not None else None
-
     def get(self, block_id: int) -> Optional[dict]:
         """Gets the metadata information of the specified folder.
 
@@ -144,7 +123,7 @@ class Folders(TimDbBase):
         :param doc_name:
         :return: Path for velp group folder
         """
-        group_folder_name = "velp groups"   # Name of the folder all velp groups end up in
+        group_folder_name = "velp-groups"   # Name of the folder all velp groups end up in
         if root_path != "":
             velps_folder_path = root_path + "/" + group_folder_name
         else:
@@ -166,28 +145,28 @@ class Folders(TimDbBase):
                 if folder.name == doc_name:
                     doc_velp_folder = True
 
-        # If velps folder doesn't exists, create one
+        # If velps folder doesn't exist, create one
         if velps_folder is False:
-            new_block = self.create(velps_folder_path, owner_group_id)
+            new_block = Folder.create(velps_folder_path, owner_group_id)
 
         if doc_name == "":
             return velps_folder_path
 
         # If folder for document in velps folder doesn't exists, create one
         if doc_velp_folder is False:
-            new_block = self.create(doc_folder_path, owner_group_id)
+            new_block = Folder.create(doc_folder_path, owner_group_id)
 
         return doc_folder_path
 
-    def check_personal_velp_folder(self, user: str, user_id: int):
+    def check_personal_velp_folder(self, user: User, user_id: int):
         """ Checks if personal velp group folder path exists and if not, creates it
 
         :param user: Username of current user
         :param user_id: ID of current user
         :return:
         """
-        group_folder_name = "velp groups"
-        user_folder = "users/" + user
+        group_folder_name = "velp-groups"
+        user_folder = user.get_personal_folder().path
         user_velps_path = user_folder + "/" + group_folder_name
         folders = self.get_folders(user_folder)
         velps_folder = False
@@ -197,6 +176,6 @@ class Folders(TimDbBase):
                 velps_folder = True
 
         if velps_folder is False:
-            new_block = self.create(user_velps_path, user_id)
+            new_block = Folder.create(user_velps_path, user_id)
 
         return user_velps_path

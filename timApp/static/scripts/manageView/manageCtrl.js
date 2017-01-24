@@ -27,23 +27,14 @@ PermApp.controller("PermCtrl", [
             });
         };
 
-        sc.getJustDocName = function(path) {
-            var i = path.lastIndexOf('/');
-            return i < 0 ? path : path.substr(i + 1);
-        };
-
-        sc.getFolderName = function(path) {
-            var i = path.lastIndexOf('/');
-            return i < 0 ? '' : path.substring(0, path.lastIndexOf('/'));
-        };
-
         sc.getAliases = function() {
             $http.get('/alias/' + sc.item.id, {
             }).success(function (data, status, headers, config) {
                 if (sc.aliases.length > 0 &&
-                    (data.length === 0 || data[0].path !== sc.aliases[0].path))
+                    data.length > 0 &&
+                    data[0].path !== sc.aliases[0].path)
                         // The first name has changed, reload to update the links
-                        location.reload();
+                        $window.location.replace('/manage/' + data[0].path);
                 else
                     sc.aliases = data;
 
@@ -60,51 +51,23 @@ PermApp.controller("PermCtrl", [
 
             $http.get('/translations/' + sc.item.id, {
             }).success(function (data, status, headers, config) {
-                sc.lang_id = "";
                 sc.translations = [];
 
                 for (var i = 0; i < data.length; i++) {
                     var tr = data[i];
-
-                    if (tr.id === sc.item.id) {
-                        sc.lang_id = tr.lang_id;
-                    }
-                    else {
-                        var trnew = JSON.parse(JSON.stringify(tr));
-                        trnew.old_langid = tr.lang_id;
-                        trnew.old_title = tr.title;
-                        sc.translations.push(trnew);
-                    }
+                    var trnew = JSON.parse(JSON.stringify(tr));
+                    trnew.old_langid = tr.lang_id;
+                    trnew.old_title = tr.title;
+                    sc.translations.push(trnew);
                 }
 
                 sc.old_title = sc.item.title;
-                sc.old_langid = sc.lang_id;
 
             }).error(function (data, status, headers, config) {
                 $window.alert("Error loading translations: " + data.error);
             });
 
             return [];
-        };
-
-        sc.metaChanged = function() {
-            return sc.item.title !== sc.old_title || sc.lang_id !== sc.old_langid;
-        };
-
-        sc.updateMetadata = function() {
-            $http.post('/translation/' + sc.item.id, {
-                'new_langid': sc.lang_id,
-                'new_title': sc.item.title,
-                'old_title': sc.old_title
-            }).success(function (data, status, headers, config) {
-                if (sc.item.title === sc.old_title)
-                    sc.getTranslations();
-                else
-                    location.replace('/manage/' + sc.item.title);
-
-            }).error(function (data, status, headers, config) {
-                $window.alert(data.error);
-            });
         };
 
         sc.trChanged = function(tr) {
@@ -118,8 +81,33 @@ PermApp.controller("PermCtrl", [
                 'old_title': tr.old_title
             }).success(function (data, status, headers, config) {
                 sc.getTranslations();
+                if (tr.id === sc.item.id) {
+                    sc.syncTitle(tr.title);
+                }
             }).error(function (data, status, headers, config) {
                 $window.alert(data.error);
+            });
+        };
+
+        sc.syncTitle = function (title) {
+            sc.item.title = title;
+            sc.newTitle = title;
+            $window.document.title = title + ' - Manage - TIM';
+            for (var i = 0; i < sc.translations.length; ++i) {
+                if (sc.translations[i].id === sc.item.id) {
+                    sc.translations[i].title = title;
+                    sc.translations[i].old_title = title;
+                }
+            }
+        };
+
+        sc.changeTitle = function () {
+            $http.put('/changeTitle/' + sc.item.id, {
+                'new_title': sc.newTitle
+            }).then(function (response) {
+                sc.syncTitle(sc.newTitle);
+            }, function (response) {
+                $window.alert(response.data.error);
             });
         };
 
@@ -129,9 +117,6 @@ PermApp.controller("PermCtrl", [
             }).success(function (data, status, headers, config) {
                 // This is needed to update the breadcrumbs
                 location.reload();
-                //sc.item.path = sc.oldFolderName + '/' + newName;
-                //sc.item.name = newName;
-                //sc.oldName = newName;
             }).error(function (data, status, headers, config) {
                 $window.alert(data.error);
             });
@@ -143,9 +128,6 @@ PermApp.controller("PermCtrl", [
             }).success(function (data, status, headers, config) {
                 // This is needed to update the breadcrumbs
                 location.reload();
-                //sc.item.path = newLocation + '/' + sc.oldName;
-                //sc.item.location = newLocation;
-                //sc.oldFolderName = newLocation;
             }).error(function (data, status, headers, config) {
                 $window.alert(data.error);
             });
@@ -165,7 +147,7 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.addAlias = function(newAlias) {
-            $http.put('/alias/' + sc.item.id + '/' + $window.encodeURIComponent(sc.combine(newAlias.location, newAlias.name)), {
+            $http.put('/alias/' + sc.item.id + '/' + $window.encodeURIComponent(sc.combine(newAlias.location || '', newAlias.name)), {
                 'public': Boolean(newAlias.public)
             }).success(function (data, status, headers, config) {
                 sc.getAliases();
@@ -177,7 +159,7 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.removeAlias = function(alias) {
-            $http.delete('/alias/' + sc.item.id + '/' + $window.encodeURIComponent(alias.path), {
+            $http.delete('/alias/' + $window.encodeURIComponent(alias.path), {
             }).success(function (data, status, headers, config) {
                 sc.getAliases();
             }).error(function (data, status, headers, config) {
@@ -187,7 +169,7 @@ PermApp.controller("PermCtrl", [
 
         sc.updateAlias = function(alias, first) {
             var new_alias = sc.combine(alias.location, alias.name);
-            $http.post('/alias/' + sc.item.id + '/' + $window.encodeURIComponent(alias.path), {
+            $http.post('/alias/' + $window.encodeURIComponent(alias.path), {
                 'public': Boolean(alias.public),
                 'new_name': new_alias
             }).success(function (data, status, headers, config) {
@@ -514,57 +496,13 @@ text = '\n'.join(a)
                 });
         };
 
-        sc.toggleDiv = function(divName) {
-            if (sc.showCreateDiv === divName)
-                sc.showCreateDiv = "";
-            else
-                sc.showCreateDiv = divName;
-        };
-
         sc.createTranslation = function() {
-            $http.post('/translate/' + sc.item.id + "/" + sc.translationName, {
-                'doc_title': sc.translationTitle
+            $http.post('/translate/' + sc.item.id + "/" + sc.newTranslation.language, {
+                'doc_title': sc.newTranslation.title
             }).success(function (data, status, headers, config) {
-                location.href = "/view/" + data.name;
+                location.href = "/view/" + data.path;
             }).error(function (data, status, headers, config) {
-                $window.alert('Could not create a translation. Error message is: ' + data.error);
-            });
-        };
-
-        sc.createCitation = function() {
-            $http.get('/cite/' + sc.item.id + "/" + sc.citationName)
-                .success(function (data, status, headers, config) {
-                    location.assign("/view/" + data.name);
-                }).error(function (data, status, headers, config) {
-                    $window.alert('Could not create a translation. Error message is: ' + data.error);
-                }).finally(function (data, status, headers, config) {
-                });
-        };
-
-        sc.createCopy = function() {
-            var docPath = "";
-            if (sc.documentPath === "")
-            {
-                docPath = sc.documentName;
-            }
-            else
-            {
-                docPath = sc.documentPath + "/" + sc.documentName;
-            }
-            $http.post('/createItem', {
-                'item_path': docPath,
-                'item_type': 'document'
-            }).success(function (data, status, headers, config) {
-                var forwardName = data.name;
-                $http.post('/update/' + data.id, {
-                    'template_name': $window.item.path
-                }).success(function (data, status, headers, config) {
-                    location.href = "/view/" + forwardName;
-                }).error(function (data, status, headers, config) {
-                    $window.alert(data);
-                });
-            }).error(function (data, status, headers, config) {
-                $window.alert('Could not create a copy. Error message is: ' + data);
+                $window.alert(data.error);
             });
         };
 
@@ -598,19 +536,14 @@ text = '\n'.join(a)
         sc.accessTypes = $window.accessTypes;
         sc.item = $window.item;
         sc.hasMoreChangelog = true;
-
-        var docPath = sc.item.path.split("/");
-        docPath.pop();
-        sc.documentPath = docPath.join("/");
-        sc.documentName = sc.item.name;
-
-        //sc.newName = sc.getJustDocName(doc.name);
-        sc.newFolderName = sc.getFolderName(sc.item.path);
-        //sc.oldName = sc.newName;
-        //sc.oldFolderName = sc.newFolderName;
+        sc.newFolderName = sc.item.location;
+        sc.newTitle = sc.item.title;
         sc.newAlias = {location: sc.newFolderName};
-        sc.showCreateDiv = "";
+        sc.copyParams = {copy: sc.item.id};
+        sc.citeParams = {cite: sc.item.id};
         sc.getNotifySettings();
+        sc.translations = [];
+        sc.newTranslation = {};
 
         if (sc.item.isFolder) {
             sc.newName = sc.item.name;

@@ -27,13 +27,14 @@ class TimTest(TimRouteTest):
                               'other_users': []}, login_resp)
 
         # Make sure user's personal folder exists
-        self.get('/view/users/' + self.current_user_name())
+        personal_folder = self.current_user.get_personal_folder().path
+        self.get('/view/' + personal_folder)
 
-        doc_names = ['users/testuser1/testing',
-                     'users/testuser1/testing2',
-                     'users/testuser1/testing3',
-                     'users/testuser1/testing4',
-                     'users/testuser1/testing5']
+        doc_names = [personal_folder + '/testing',
+                     personal_folder + '/testing2',
+                     personal_folder + '/testing3',
+                     personal_folder + '/testing4',
+                     personal_folder + '/testing5']
         doc_name = doc_names[0]
         doc_id_list = [4, 5, 6, 7, 8]
         doc_id = doc_id_list[0]
@@ -41,8 +42,9 @@ class TimTest(TimRouteTest):
         for idx, n in enumerate(doc_names):
             self.json_post('/createItem', {
                 'item_path': n,
-                'item_type': 'document'
-            }, expect_content={'id': doc_id_list[idx], 'name': doc_names[idx]})
+                'item_type': 'document',
+                'item_title': 'document ' + n
+            }, expect_contains={'id': doc_id_list[idx], 'path': doc_names[idx]})
             doc_ids.add(doc_id_list[idx])
         self.json_put('/permissions/add/{}/{}/{}'.format(doc_id, 'Anonymous users', 'view'), {'type': 'always'}, expect_content=self.ok_resp)
         self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[1], 'Logged-in users', 'view'), {'type': 'always'}, expect_content=self.ok_resp)
@@ -250,7 +252,7 @@ header: %%username%% and %%realname%%
 
     def test_document_intermediate_folders(self):
         self.login_test1()
-        self.create_doc('users/testuser1/a/b/c')
+        self.create_doc('users/test-user-1/a/b/c')
 
 
     def test_hide_links(self):

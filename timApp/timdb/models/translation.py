@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy import UniqueConstraint
 
 from timdb.docinfo import DocInfo
@@ -10,11 +12,10 @@ class Translation(db.Model, DocInfo):
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     src_docid = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
     lang_id = db.Column(db.Text, nullable=False)
-    doc_title = db.Column(db.Text)
     __table_args__ = (UniqueConstraint('src_docid', 'lang_id', name='translation_uc'),
                       )
 
-    block = db.relationship('Block', foreign_keys=[doc_id])
+    _block = db.relationship('Block', foreign_keys=[doc_id])
 
     @property
     def docentry(self):
@@ -40,5 +41,21 @@ class Translation(db.Model, DocInfo):
         return self.docentry.path
 
     @property
-    def title(self):
-        return self.doc_title
+    def public(self):
+        return self.docentry.public
+
+    @property
+    def translations(self) -> List['Translation']:
+        return Translation.query.filter_by(src_docid=self.src_docid).all()
+
+    @staticmethod
+    def find_by_docentry(d: 'DocEntry'):
+        trs = Translation.query.filter_by(src_docid=d.id).all()
+        for tr in trs:
+            tr.docentry = d
+        return trs
+
+    def to_json(self):
+        return {**super(Translation, self).to_json(),
+                'src_docid': self.src_docid,
+                'lang_id': self.lang_id}

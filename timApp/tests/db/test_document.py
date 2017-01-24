@@ -13,6 +13,7 @@ from documentmodel.documentwriter import DocumentWriter
 from documentmodel.exceptions import DocExistsError
 from documentmodel.randutils import random_paragraph
 from tests.db.timdbtest import TimDbTest
+from timdb.models.docentry import DocEntry
 
 
 class DocumentTest(TimDbTest):
@@ -22,7 +23,7 @@ class DocumentTest(TimDbTest):
         except AttributeError:
             DocumentTest.init_testdoc.counter = 12345
         db = self.get_db()
-        d = db.documents.create(str(DocumentTest.init_testdoc.counter), db.users.get_anon_group_id())
+        d = DocEntry.create(str(DocumentTest.init_testdoc.counter), db.users.get_anon_group_id()).document
         return d
 
     def add_pars(self, d, num_docs):

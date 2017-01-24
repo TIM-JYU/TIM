@@ -7,6 +7,7 @@ python3 -m unittest dumboclient filemodehelper documentmodel/test_clipboard.py
 from documentmodel.clipboard import Clipboard
 from documentmodel.randutils import random_id, hashfunc
 from tests.db.timdbtest import TimDbTest
+from timdb.models.docentry import DocEntry
 
 
 class ClipboardTest(TimDbTest):
@@ -62,7 +63,7 @@ class ClipboardTest(TimDbTest):
 
     def test_copy(self):
         db = self.get_db()
-        doc = db.documents.create('Lähdedokumentti', db.users.get_anon_group_id())
+        doc = DocEntry.create('Lähdedokumentti', db.users.get_anon_group_id()).document
 
         pars = [doc.add_paragraph('Kappale {}'.format(i), attrs={'kappale': str(i)}) for i in range(0, 10)]
 
@@ -82,7 +83,7 @@ class ClipboardTest(TimDbTest):
         clip.write(pars)
 
         db = self.get_db()
-        doc = db.documents.create('Kohdedokumentti', db.users.get_anon_group_id())
+        doc = DocEntry.create('Kohdedokumentti', db.users.get_anon_group_id()).document
         dest_pars = [doc.add_paragraph('Kohdekappale {}'.format(i), attrs={'kkappale': str(i)}) for i in range(0, 10)]
 
         ver_before = doc.get_version()
@@ -126,8 +127,8 @@ def test_paste_ref(self):
     clip = self.clipboard.get(1)
     db = self.get_db()
 
-    src_doc = db.documents.create('Lähdedokumentti', 2)
-    dest_doc = db.documents.create('Kohdedokumentti', 1)
+    src_doc = DocEntry.create('Lähdedokumentti', 2).document
+    dest_doc = DocEntry.create('Kohdedokumentti', 1).document
     src_pars = [src_doc.add_paragraph('Lähdekappale {}'.format(i), attrs={'lkappale': str(i)}) for i in range(0, 3)]
     dest_pars = [dest_doc.add_paragraph('Kohdekappale {}'.format(i), attrs={'kkappale': str(i)}) for i in range(0, 5)]
 

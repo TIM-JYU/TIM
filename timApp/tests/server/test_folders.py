@@ -4,26 +4,17 @@ from tests.server.timroutetest import TimRouteTest
 
 class FolderTest(TimRouteTest):
     def get_personal_folder_path(self, path):
-        return 'users/{}/{}'.format(self.current_user_name(), path)
-
-    def create_folder(self, fname, expect_status=200, **kwargs):
-        f = self.json_post('/createItem',
-                           {'item_path': fname,
-                            'item_type': 'folder'}, expect_status=expect_status, **kwargs)
-        if expect_status == 200:
-            self.assertEqual(fname, f['name'])
-            self.assertIsInstance(f['id'], int)
-        return f
+        return '{}/{}'.format(self.current_user.get_personal_folder().path, path)
 
     def test_folder_manage(self):
         self.login_test3()
         f = self.create_folder(self.get_personal_folder_path('test_manage'))
-        self.get('/manage/{}'.format(f['name']))
+        self.get('/manage/{}'.format(f['path']))
         self.login_test2()
-        self.get('/manage/{}'.format(f['name']), expect_status=403)
+        self.get('/manage/{}'.format(f['path']), expect_status=403)
         db = self.get_db()
         db.users.grant_access(db.users.get_personal_usergroup_by_id(TEST_USER_2_ID), f['id'], 'manage')
-        self.get('/manage/{}'.format(f['name']))
+        self.get('/manage/{}'.format(f['path']))
 
     def test_folder_delete(self):
         self.login_test1()
@@ -41,7 +32,7 @@ class FolderTest(TimRouteTest):
     def test_folders(self):
         self.login_test1()
         db = self.get_db()
-        user_folder = 'users/{}'.format(self.current_user_name())
+        user_folder = self.current_user.get_personal_folder().path
         fname = self.get_personal_folder_path('testing')
 
         f = self.create_folder(fname)
@@ -59,16 +50,15 @@ class FolderTest(TimRouteTest):
         fname2 = self.get_personal_folder_path('testing2')
         f3 = self.create_folder(fname2)
         db.users.grant_access(db.users.get_anon_group_id(), f3['id'], 'view')
-
-        folder_loc = 'users/testuser1'
+        self.maxDiff = None
         self.get('/getItems', query_string={'folder': user_folder},
                  expect_content=[{'name': 'testing1',
-                                  'title': 'testing1',
+                                  'title': 'foldertitle',
                                   'id': f['id'],
                                   'isFolder': True,
-                                  'modified': None,
+                                  'modified': 'just now',
                                   'path': new_name,
-                                  'location': folder_loc,
+                                  'location': user_folder,
                                   'owner': {'id': 7, 'name': 'testuser1'},
                                   'rights': {'browse_own_answers': True,
                                              'can_comment': True,
@@ -78,14 +68,15 @@ class FolderTest(TimRouteTest):
                                              'owner': True,
                                              'see_answers': True,
                                              'teacher': True},
-                                  'unpublished': True},
+                                  'unpublished': True,
+                                  'public': True},
                                  {'name': 'testing2',
-                                  'title': 'testing2',
+                                  'title': 'foldertitle',
                                   'id': f3['id'],
                                   'isFolder': True,
-                                  'modified': None,
+                                  'modified': 'just now',
                                   'path': fname2,
-                                  'location': folder_loc,
+                                  'location': user_folder,
                                   'owner': {'id': 7, 'name': 'testuser1'},
                                   'rights': {'browse_own_answers': True,
                                              'can_comment': True,
@@ -95,16 +86,17 @@ class FolderTest(TimRouteTest):
                                              'owner': True,
                                              'see_answers': True,
                                              'teacher': True},
-                                  'unpublished': False}])
+                                  'unpublished': False,
+                                  'public': True}])
         self.logout()
         self.get('/getItems', query_string={'folder': user_folder},
                  expect_content=[{'name': 'testing2',
-                                  'title': 'testing2',
+                                  'title': 'foldertitle',
                                   'id': f3['id'],
                                   'isFolder': True,
-                                  'modified': None,
+                                  'modified': 'just now',
                                   'path': fname2,
-                                  'location': folder_loc,
+                                  'location': user_folder,
                                   'owner': {'id': 7, 'name': 'testuser1'},
                                   'rights': {'browse_own_answers': False,
                                              'can_comment': False,
@@ -114,21 +106,31 @@ class FolderTest(TimRouteTest):
                                              'owner': False,
                                              'see_answers': False,
                                              'teacher': False},
-                                  'unpublished': False}])
+                                  'unpublished': False,
+                                  'public': True}])
 
     def test_folders_invalid(self):
         self.login_test1()
         invalid = self.get_personal_folder_path('/test')
         invalid2 = "test"
         invalid3 = "1234"
+        invalid4 = ''
         self.create_folder(invalid,
-                           expect_content={'error': 'The folder name cannot have empty parts.'},
+                           expect_content={'error': 'The folder path cannot have empty parts.'},
                            expect_status=400)
         self.create_folder(invalid2,
-                           expect_content={'error': 'You cannot create folders in this folder. Try users/{} '
-                                                    'instead.'.format(self.current_user_name())},
+                           expect_content={'error': 'You cannot create folders in this folder.'},
                            expect_status=403)
         self.create_folder(invalid3,
                            expect_content={
-                               'error': 'The folder name can not be a number to avoid confusion with document id.'},
+                               'error': 'The folder path can not be a number to avoid confusion with document id.'},
                            expect_status=400)
+        self.create_folder(invalid4,
+                           expect_content={'error': 'The folder path cannot have empty parts.'},
+                           expect_status=400)
+        for c in 'ãàáäâåẽèéëêìíïîõòóöôùúüûñç·,:;<>|^~¨"!½#¤%&()=?`.@£$€{[]}\\ ':
+            self.create_folder(self.get_personal_folder_path(c),
+                               expect_content={
+                                   'error': 'The folder path has invalid characters. Only letters, numbers, '
+                                            'underscores and dashes are allowed.'},
+                               expect_status=400)

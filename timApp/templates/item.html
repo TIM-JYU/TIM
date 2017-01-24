@@ -16,6 +16,7 @@
     {{ super() }}
     <script>
         var item = {{item|tojson}};
+        var breadcrumbs = {{item.parents_to_root|tojson}};
     </script>
     <script src="{{ url_for('static', filename='scripts/breadcrumbs.js') }}"></script>
 {% endblock %}
@@ -32,6 +33,13 @@
              <li role="presentation" {{ active('manage_page.manage') }}><a id="headerManage" href="/manage/{{ item.path }}">Manage</a></li>
         {% endif %}
     {% endblock %}</div>
-    {% include 'breadcrumbs.html' %}
+        <div ng-controller="Breadcrumbs" ng-show="crumbs" class="ng-cloak">
+            <ol class="breadcrumb">
+                <li ng-repeat="c in crumbs | orderBy:'-'">
+                    <a href="/{{ route or 'view' }}/{{ '{{ c.path | escape }}' }}">{{ '{{ c.title }}' }}</a>
+                </li>
+                <li class="active">{{ '{{ item.title }}' }}</li>
+            </ol>
+        </div>
     {% endif %}
 {% endblock %}

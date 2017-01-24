@@ -1,5 +1,4 @@
-import datetime
-from datetime import timezone
+from sqlalchemy import func
 
 from timdb.accesstype import AccessType
 from timdb.models.usergroup import UserGroup
@@ -13,14 +12,8 @@ class Block(db.Model):
     latest_revision_id = db.Column(db.Integer)
     type_id = db.Column(db.Integer, nullable=False)
     description = db.Column(db.Text)
-    created = db.Column(db.DateTime(timezone=True), nullable=False)
-    modified = db.Column(db.DateTime(timezone=True))
-
-    def __init__(self, type_id, description=None):
-        self.type_id = type_id
-        self.description = description
-        self.created = datetime.datetime.now(timezone.utc)
-        self.modified = self.created
+    created = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
+    modified = db.Column(db.DateTime(timezone=True), default=func.now())
 
     @property
     def owner(self) -> UserGroup:

@@ -36,8 +36,8 @@ class Users(TimDbBase):
 
     access_type_map = {}
 
-    default_right_paths = {blocktypes.DOCUMENT: 'Templates/$DefaultDocumentRights',
-                           blocktypes.FOLDER: 'Templates/$DefaultFolderRights'}
+    default_right_paths = {blocktypes.DOCUMENT: 'Templates/DefaultDocumentRights',
+                           blocktypes.FOLDER: 'Templates/DefaultFolderRights'}
 
     def create_special_usergroups(self) -> int:
         """Creates an anonymous user and a usergroup for it.
@@ -54,7 +54,8 @@ class Users(TimDbBase):
         ADMIN_GROUPID = 4
 
         cursor = self.db.cursor()
-        cursor.execute('INSERT INTO UserAccount (id, name) VALUES (%s, %s)', [ANONYMOUS_USERID, ANONYMOUS_USERNAME])
+        cursor.execute('INSERT INTO UserAccount (id, name, real_name) VALUES (%s, %s, %s)',
+                       [ANONYMOUS_USERID, ANONYMOUS_USERNAME, 'Anonymous user'])
         cursor.execute('INSERT INTO UserAccount (id, name) VALUES (%s, %s)', [LOGGED_IN_USERID, LOGGED_IN_USERNAME])
         cursor.execute('INSERT INTO UserGroup (id, name) VALUES (%s, %s)', [ANONYMOUS_GROUPID, ANONYMOUS_GROUPNAME])
         cursor.execute('INSERT INTO UserGroup (id, name) VALUES (%s, %s)', [LOGGED_IN_GROUPID, LOGGED_IN_GROUPNAME])
@@ -75,7 +76,7 @@ class Users(TimDbBase):
         return 0
 
     def create_user(self, name: str, real_name: str, email: str, password: str = '',
-                    commit: bool = True) -> int:
+                    commit: bool = True) -> User:
         """Creates a new user with the specified name.
         
         :param email: The email address of the user.
@@ -91,9 +92,8 @@ class Users(TimDbBase):
         self.session.flush()
         if commit:
             self.session.commit()
-        user_id = user.id
-        assert user_id != 0
-        return user_id
+        assert user.id != 0
+        return user
 
     def create_anonymous_user(self, name: str, real_name: str, commit: bool = True) -> User:
         """Creates a new anonymous user.
@@ -153,7 +153,7 @@ class Users(TimDbBase):
             self.db.commit()
 
 
-    def create_usergroup(self, name: str, commit: bool = True) -> int:
+    def create_usergroup(self, name: str, commit: bool = True) -> UserGroup:
         """Creates a new user group.
         
         :param name: The name of the user group.
@@ -167,7 +167,7 @@ class Users(TimDbBase):
         assert group_id is not None and group_id != 0, 'group_id was None'
         if commit:
             self.session.commit()
-        return group_id
+        return ug
 
     def add_user_to_group(self, group_id: int, user_id: int, commit: bool = True):
         """Adds a user to a usergroup.
@@ -773,15 +773,15 @@ class Users(TimDbBase):
                                password: Optional[str]=None,
                                is_admin: bool=False,
                                commit: bool=True):
-        user_id = self.create_user(name, real_name or name, email or name + '@example.com', password=password or '',
+        user = self.create_user(name, real_name or name, email or name + '@example.com', password=password or '',
                                    commit=False)
-        user_group = self.create_usergroup(name, commit=False)
-        self.add_user_to_group(user_group, user_id, commit=False)
+        group = self.create_usergroup(name, commit=False)
+        self.add_user_to_group(group.id, user.id, commit=False)
         if is_admin:
-            self.addUserToAdmins(user_id, commit=False)
+            self.addUserToAdmins(user.id, commit=False)
         if commit:
             db.session.commit()
-        return user_id, user_group
+        return user, group
 
     def get_personal_usergroup_by_id(self, user_id: int) -> Optional[int]:
         return self.get_personal_usergroup(self.get_user(user_id))

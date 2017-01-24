@@ -102,6 +102,7 @@ run apt-get install --no-install-recommends -y npm \
  && bower --allow-root install angular-bootstrap-colorpicker#~3.0 \
  && bower --allow-root install eonasdan-bootstrap-datetimepicker#latest \
  && bower --allow-root install angular-eonasdan-datetimepicker#~0.3 \
+ && bower --allow-root install angular-messages#~1.4 \
  && bower --allow-root install humanize-duration#~3.10 \
  && bower --allow-root --force install angular-timer#~1.3 \
  && apt-get purge -y --auto-remove npm

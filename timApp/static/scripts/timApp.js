@@ -1,7 +1,7 @@
+/* globals angular */
 var timApp = angular.module('timApp');
 
 // Controller used in document index and folders
-var angular, folder, crumbs, groups;
 timApp.controller("IndexCtrl", [ '$scope', '$controller', '$http', '$q', 'Upload', '$window', '$timeout',
 
 function(sc, controller, http, q, Upload, $window, $timeout) {
@@ -17,20 +17,6 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
         return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
     };
 
-    sc.getAbsolutePath = function(name) {
-        // startsWith and endsWith are ES6 features and do not work on IE
-        if (name.lastIndexOf('/', 0) === 0)
-            return name.substr(1);
-
-        if (sc.folder === '')
-            return name;
-
-        if (sc.endsWith(sc.folder, '/'))
-            return sc.folder + name;
-
-        return sc.folder + '/' + name;
-    };
-
     sc.copyDocument = function(docId, templateName) {
         http.post('/update/' + docId, {
             "template_name" : templateName
@@ -41,35 +27,12 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
         });
     };
 
-    sc.createFolder = function(name, owner) {
-        http.post('/createFolder', {
-            "name" : sc.getAbsolutePath(name),
-            "owner" : owner
-        }).success(function(data, status, headers, config) {
-            $window.window.location.href = "/view/" + data.name;
-        }).error(function(data, status, headers, config) {
-            $window.alert(data.error);
-        });
-    };
-
-    sc.initFolderVars = function() {
-       sc.folder = sc.item.path;
-
-       if (sc.getParameterByName('folder') !== '')
-           sc.folder = sc.getParameterByName('folder');
-
-       if (sc.folder === '' || sc.folder === undefined || sc.folder === null)
-           sc.parentfolder = null;
-       else
-           sc.parentfolder = sc.folder.substr(0, sc.folder.lastIndexOf('/'));
-    };
-
     sc.getItems = function() {
        http({
             method : 'GET',
             url : '/getItems',
             params: {
-                folder: sc.folder
+                folder: sc.item.location
             }
         }).success(function(data, status, headers, config) {
             sc.itemList = data;
@@ -93,13 +56,11 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
         });
     };
 
-    sc.crumbs = crumbs;
     sc.user = $window.current_user;
     sc.folderOwner = $window.current_user.name;
 	sc.parentfolder = "";
     sc.itemList = $window.items;
     sc.item = $window.item;
-    sc.initFolderVars();
     sc.templateList = [];
     sc.templates = $window.templates;
     if (sc.templates)
@@ -115,7 +76,7 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
                 url: '/upload/',
                 data: {
                     file: file,
-                    folder: sc.folder
+                    folder: sc.item.location
                 }
             });
 

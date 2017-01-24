@@ -1,15 +1,33 @@
-<div class="form-group">
-    <label>
-        Name:
-        <input class="form-control" ng-model="itemName" type="text">
-    </label>
-</div>
-<div class="form-group">
-    <label>
-        Location: <input class="form-control" type="text" ng-model="itemLocation">
-    </label>
-</div>
-<div uib-alert ng-repeat="alert in alerts" ng-class="'alert-' + (alert.type || 'warning')"
-     close="closeAlert($index)">{{ alert.msg }}</div>
-<button class="timButton" ng-disabled="!itemName" ng-click="createItem(itemName)" type="button">Create
-</button>
+<form name="itemForm">
+    <div class="form-group" tim-error-state data-for="itemForm.itemTitle">
+        <label>
+            Title:
+            <input class="form-control" name="itemTitle" required ng-model="itemTitle" type="text" ng-change="titleChanged()">
+        </label>
+        <tim-error-message for="itemForm.itemTitle"></tim-error-message>
+    </div>
+    <div class="form-group" tim-error-state data-for="itemForm.itemName">
+        <label>
+            Short name:
+            <input class="form-control" tim-short-name required name="itemName" ng-model="itemName" type="text"
+                   placeholder="Type title first"
+                   ng-keyup="nameChanged()">
+        </label>
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" ng-model="automaticShortName"> Set automatically based on title
+            </label>
+        </div>
+        <tim-error-message for="itemForm.itemName"></tim-error-message>
+    </div>
+    <div class="form-group" tim-error-state data-for="itemForm.itemLocation">
+        <label>
+            Location: <input class="form-control" name="itemLocation" type="text" tim-location ng-model="itemLocation">
+        </label>
+        <tim-error-message for="itemForm.itemLocation"></tim-error-message>
+    </div>
+    <div uib-alert ng-repeat="alert in alerts" ng-class="'alert-' + (alert.type || 'warning')"
+         close="closeAlert($index)">{{ alert.msg }}</div>
+    <button class="timButton" ng-disabled="itemForm.$invalid" ng-click="createItem()" type="button">Create
+    </button>
+</form>
