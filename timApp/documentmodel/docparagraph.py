@@ -8,6 +8,7 @@ from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
 from htmlSanitize import sanitize_html
 from markdownconverter import par_list_to_html_list, expand_macros
+from timdb.invalidreferenceexception import InvalidReferenceException
 from timdb.timdbexception import TimDbException
 from typing import Generic, Optional, Dict, List, Tuple, Any
 from utils import count_chars, get_error_html
@@ -747,7 +748,7 @@ class DocParagraph:
         par_doc_id = self.get_doc_id(), self.get_id()
         if par_doc_id in cycle:
             cycle.append(par_doc_id)
-            raise TimDbException(
+            raise InvalidReferenceException(
                 'Infinite referencing loop detected: ' + ' -> '.join(('{}:{}'.format(d, p) for d, p in cycle)))
         cycle.append(par_doc_id)
 
@@ -784,7 +785,7 @@ class DocParagraph:
             try:
                 ref_docid = int(attrs['rd'])
             except ValueError as e:
-                raise TimDbException('Invalid reference document id: "{}"'.format(attrs['rd']))
+                raise InvalidReferenceException('Invalid reference document id: "{}"'.format(attrs['rd']))
         elif source_doc is not None:
             ref_doc = source_doc
         else:
@@ -793,12 +794,12 @@ class DocParagraph:
 
         if ref_doc is None:
             if ref_docid is None:
-                raise TimDbException('Source document for reference not specified.')
+                raise InvalidReferenceException('Source document for reference not specified.')
             from documentmodel.document import Document  # Document import needs to be here to avoid circular import
             ref_doc = Document(ref_docid)
 
         if not ref_doc.exists():
-            raise TimDbException('The referenced document does not exist.')
+            raise InvalidReferenceException('The referenced document does not exist.')
 
         if self.is_par_reference():
             try:
@@ -808,7 +809,7 @@ class DocParagraph:
                     ref_par.add_class('deleted')
 
             except TimDbException:
-                raise TimDbException('The referenced paragraph does not exist.')
+                raise InvalidReferenceException('The referenced paragraph does not exist.')
 
             if ref_par.is_reference():
                 ref_pars = ref_par.get_referenced_pars(set_html=set_html,

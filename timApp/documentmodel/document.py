@@ -16,6 +16,7 @@ from documentmodel.documentparser import DocumentParser, AttributesAtEndOfCodeBl
 from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
 from documentmodel.exceptions import DocExistsError
+from timdb.invalidreferenceexception import InvalidReferenceException
 from timdb.timdbexception import TimDbException
 from utils import get_error_html
 
@@ -799,7 +800,7 @@ class Document:
                     end_found = True
                     break
         if not start_found or not end_found:
-            raise TimDbException('Area not found: ' + section_name)
+            raise InvalidReferenceException('Area not found: ' + section_name)
         return pars
 
     def named_section_exists(self, section_name: str) -> bool:

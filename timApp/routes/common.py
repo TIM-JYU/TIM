@@ -23,6 +23,7 @@ from routes.dbaccess import get_timdb
 from routes.sessioninfo import get_session_usergroup_ids, get_current_user_id, get_current_user_name, \
     get_current_user_group, logged_in
 from theme import Theme
+from timdb.invalidreferenceexception import InvalidReferenceException
 from timdb.models.docentry import DocEntry
 from timdb.models.folder import Folder
 from timdb.models.user import User
@@ -334,9 +335,13 @@ def process_areas(html_pars: List[Dict]) -> List[Dict]:
 
     return new_pars
 
+
 def get_referenced_pars_from_req(par):
     if par.is_reference():
-        return [ref_par for ref_par in par.get_referenced_pars(set_html=False, tr_get_one=False)]
+        try:
+            return [ref_par for ref_par in par.get_referenced_pars(set_html=False, tr_get_one=False)]
+        except InvalidReferenceException as e:
+            abort(404, str(e))
     else:
         return [par]
 
