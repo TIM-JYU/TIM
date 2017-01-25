@@ -55,6 +55,7 @@
             <p ng-show="allowChangePoints()" class="header"><input id="addVelpPoints" type="number" style="width: 100%;"
                                                     title="Default points from this velp"
                                                     ng-model="velp.points"
+                                                    step="0.01"
                                                     placeholder="Points" value="0"></p>
             <p ng-hide="allowChangePoints()" class="velpInfoText">{{ settings.teacherRightsError }}</p>
 
