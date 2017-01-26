@@ -297,6 +297,9 @@ def get_templates():
     timdb = get_timdb()
     templates = []
     d = DocEntry.find_by_path(current_path, try_translation=True)
+    if not d:
+        abort(404)
+    verify_edit_access(d.id)
     current_path = d.parent.path
 
     while True:
