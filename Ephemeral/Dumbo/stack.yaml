@@ -1,5 +1,9 @@
 flags: {}
 packages:
 - '.'
-extra-deps: []
-resolver: lts-7.9
+extra-deps:
+- doctemplates-0.1.0.2
+- pandoc-1.19.1
+- pandoc-types-1.17.0.5
+- texmath-0.9
+resolver: lts-7.16

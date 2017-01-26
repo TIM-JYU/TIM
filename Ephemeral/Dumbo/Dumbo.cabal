@@ -21,7 +21,7 @@ executable Dumbo
   -- other-extensions:    
   build-depends:       
         base
-      , pandoc 
+      , pandoc >= 1.19
       , pandoc-types
       , text 
       , bytestring 
