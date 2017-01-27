@@ -55,7 +55,7 @@ timApp.directive("bookmarks", ['$window', '$log', '$http', '$uibModal', '$timeou
 
             sc.newBookmark = function (group, e) {
                 e.preventDefault();
-                var currentPage = decodeURIComponent($window.location.pathname.replace(/\/$/, ""));
+                var suggestedName = ($window.item || {}).title || document.title;
                 var modalInstance = $uibModal.open({
                     animation: false,
                     ariaLabelledBy: 'modal-title',
@@ -68,7 +68,7 @@ timApp.directive("bookmarks", ['$window', '$log', '$http', '$uibModal', '$timeou
                         bookmark: function () {
                             return {
                                 group: group || '',
-                                name: currentPage.slice(currentPage.lastIndexOf('/') + 1),
+                                name: suggestedName,
                                 link: ''
                             };
                         }
