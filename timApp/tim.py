@@ -326,7 +326,7 @@ def create_item(item_path, item_type_str, item_title, create_function, owner_gro
     if item_type == blocktypes.DOCUMENT:
         bms = Bookmarks(get_current_user_object())
         bms.add_bookmark('Last edited',
-                         item.short_name,
+                         item.title,
                          '/view/' + item.path,
                          move_to_top=True,
                          limit=app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()

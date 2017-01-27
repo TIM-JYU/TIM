@@ -62,7 +62,7 @@ def delete_bookmark():
 def mark_last_read(doc_id):
     d = DocEntry.find_by_id(doc_id, try_translation=True)
     g.bookmarks.add_bookmark('Last read',
-                             d.short_name,
+                             d.title,
                              '/view/' + d.path,
                              move_to_top=True,
                              limit=current_app.config['LAST_READ_BOOKMARK_LIMIT']).save_bookmarks()

@@ -58,34 +58,34 @@ class BookmarkTest(TimRouteTest):
         d = self.create_doc()
         view = '/view/'
         self.assertListEqual([{'name': 'Last edited',
-                               'items': [{'name': d.short_name, 'path': view + d.path}],
+                               'items': [{'name': d.title, 'path': view + d.path}],
                                'editable': False}],
                              self.get_bookmarks())
         d2 = self.create_doc()
         self.assertListEqual([{'name': 'Last edited',
-                               'items': [{'name': d2.short_name, 'path': view + d2.path},
-                                         {'name': d.short_name, 'path': view + d.path}],
+                               'items': [{'name': d2.title, 'path': view + d2.path},
+                                         {'name': d.title, 'path': view + d.path}],
                                'editable': False}],
                              self.get_bookmarks())
         d3 = self.create_doc()
         self.assertListEqual([{'name': 'Last edited',
-                               'items': [{'name': d3.short_name, 'path': view + d3.path},
-                                         {'name': d2.short_name, 'path': view + d2.path},
-                                         {'name': d.short_name, 'path': view + d.path}],
+                               'items': [{'name': d3.title, 'path': view + d3.path},
+                                         {'name': d2.title, 'path': view + d2.path},
+                                         {'name': d.title, 'path': view + d.path}],
                                'editable': False}],
                              self.get_bookmarks())
         self.new_par(d.document, 'test')
         self.assertListEqual([{'name': 'Last edited',
-                               'items': [{'name': d.short_name, 'path': view + d.path},
-                                         {'name': d3.short_name, 'path': view + d3.path},
-                                         {'name': d2.short_name, 'path': view + d2.path}],
+                               'items': [{'name': d.title, 'path': view + d.path},
+                                         {'name': d3.title, 'path': view + d3.path},
+                                         {'name': d2.title, 'path': view + d2.path}],
                                'editable': False}],
                              self.get_bookmarks())
         d4 = self.create_doc()
         # LAST_EDITED_BOOKMARK_LIMIT = 3 when testing
         self.assertListEqual([{'name': 'Last edited',
-                               'items': [{'name': d4.short_name, 'path': view + d4.path},
-                                         {'name': d.short_name, 'path': view + d.path},
-                                         {'name': d3.short_name, 'path': view + d3.path}],
+                               'items': [{'name': d4.title, 'path': view + d4.path},
+                                         {'name': d.title, 'path': view + d.path},
+                                         {'name': d3.title, 'path': view + d3.path}],
                                'editable': False}],
                              self.get_bookmarks())

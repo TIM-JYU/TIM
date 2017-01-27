@@ -383,12 +383,10 @@ def par_response(pars,
         duplicates = check_duplicates(pars, doc, get_timdb())
         if edited and logged_in():
             bms = Bookmarks(get_current_user_object())
-            d = DocEntry.find_by_id(doc.doc_id)
-            # d can be None when editing a translation because they don't have a row in DocEntry.
-            # Skip this case for now; TODO: fix
+            d = DocEntry.find_by_id(doc.doc_id, try_translation=True)
             if d is not None:
                 bms.add_bookmark('Last edited',
-                                 d.short_name,
+                                 d.title,
                                  '/view/' + d.path,
                                  move_to_top=True,
                                  limit=current_app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
