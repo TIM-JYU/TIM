@@ -41,6 +41,11 @@ class MarkdownConverterTest(unittest.TestCase):
         for html, md, macros in macrotests:
             self.check_conversion(html, md, macros, delimiter='%%')
 
+    def test_bracketed_spans(self):
+        self.assertEqual('<p><span class="testing">test</span></p>', md_to_html('[test]{.testing}'),
+                         msg='If this test fails, you probably do not have up-to-date Dumbo. '
+                             'Run ./pull_all.sh to update.')
+
     def tearDown(self):
         self.d.kill()
 
