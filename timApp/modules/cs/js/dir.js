@@ -315,9 +315,9 @@ csApp.directiveTemplateCS = function(t,isInput) {
     if ( t == 'text') {
         return '<div class="csRunDiv csTinyDiv" ng-cloak style="text-align: left;">' +
                 '<p>Here comes header</p>' +
-    		  '<span ng-if="stem" class="stem" >{{stem}}</span>' +
+    		  '<span ng-if="stem" class="stem"  ng-bind-html="stem"></span>' +
 			  '<input class="csTinyText no-popup-menu" ng-hide="noeditor && !viewCode" size="{{cols}}" ng-model="usercode" ng-trim="false" ng-attr-placeholder="{{placeholder}}" ng-keypress="runCodeIfCR($event);" />'+
-			  '<button ng-if="isRun"  ng-disabled="isRunning" title="(Ctrl-S)" ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
+			  '<button ng-if="isRun"  ng-disabled="isRunning" title="(Ctrl-S)" ng-click="runCode();" ng-bind-html="buttonText"></button>&nbsp&nbsp'+
 			  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>&nbsp&nbsp' +
 			  '<pre  class="console ng-hide" ng-show="result" ng-cloak>{{result}}</pre>'+
 			  '<span class="csRunError"  ng-if="runError" ng-style="tinyErrorStyle">{{error}}</span>'+
@@ -328,7 +328,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
     
 				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>
-				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
+				  '<p ng-if="stem" class="stem" ng-bind-html="stem"></p>' +
   				  (t === "tauno" || t === "simcir" ?
 				    '<p ng-if="taunoOn" class="pluginHide""><a ng-click="hideTauno()">{{hideTaunoText}}</a></p>' +
 				    '<div ><p></p></div>' + // Tauno code place holder nr 3!!
@@ -389,7 +389,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   '</p>' +
                   '<div class="csRunMenuArea" ng-if="!forcedupload">'+
 				  '<p class="csRunMenu" >' +
-				  '<button ng-if="isRun"  ng-disabled="isRunning" title="(Ctrl-S)" ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
+				  '<button ng-if="isRun"  ng-disabled="isRunning" title="(Ctrl-S)" ng-click="runCode();" ng-bind-html="buttonText"></button>&nbsp&nbsp'+
 				  '<button ng-if="isTest" ng-disabled="isRunning" ng-click="runTest();">Test</button>&nbsp&nbsp'+
 				  '<button ng-if="isUnitTest" ng-disabled="isRunning" ng-click="runUnitTest();">UTest</button>&nbsp&nbsp'+
 				  '<span ng-if="isDocument"><a href="" ng-disabled="isRunning" ng-click="runDocument();">{{docLink}}</a>&nbsp&nbsp</span>'+

@@ -42,9 +42,11 @@ qstApp.directiveTemplate = function () {
     if ( qstApp.TESTWITHOUTPLUGINS ) return '';
 	return  '<div class="csRunDiv qst no-popup-menu">' +
 				  '<p>Here comes header</p>' +
-				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
+				  // '<p ng-if="stem" class="stem" >{{stem}}</p>' +
+                  '<p ng-if="stem" class="stem" ng-bind-html="stem" ></p>' +
                   '<dynamic-answer-sheet  control="dynamicAnswerSheetControl"></dynamic-answer-sheet>' +
-				  '<button class="timButton" ng-if="button"  ng-disabled="isRunning" ng-click="qstScope.saveText();">{{button}}</button>&nbsp&nbsp' +
+				  // '<button class="timButton" ng-bind-html="button" ng-if="button"  ng-disabled="isRunning" ng-click="qstScope.saveText();">{{button}}</button>&nbsp&nbsp' +
+                  '<button class="timButton" ng-bind-html="button" ng-if="button"  ng-disabled="isRunning" ng-click="qstScope.saveText();"></button>&nbsp&nbsp' +
                   '<a class="questionAddedNew" ng-show="qstScope.checkQstMode()"><span class="glyphicon glyphicon-question-sign" title="Ask question"></span></a>' +
                   '<span ng-show="result">{{result}}</span>' +
     		      '<p class="plgfooter">Here comes footer</p>' +

@@ -5,6 +5,7 @@ from functools import lru_cache
 import requests
 
 from documentmodel.timjsonencoder import TimJsonEncoder
+from dumboclient import call_dumbo
 from plugin import PluginException
 from routes.logger import log_info, log_warning
 from tim_app import app
@@ -83,8 +84,10 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None, params=N
         raise PluginException("Read timeout occurred when calling {}.".format(plugin))
 
 
-def call_plugin_html(plugin, plugin_data, params=None):
+def call_plugin_html(doc, plugin, plugin_data, params=None):
     plugin_data.update(params or {})
+    if is_plugin_md(doc):
+        convert_md(plugin_data)
     plugin_data = json.dumps(plugin_data,
                              cls=TimJsonEncoder)
     return call_plugin_generic(plugin,
@@ -94,11 +97,80 @@ def call_plugin_html(plugin, plugin_data, params=None):
                                headers={'Content-type': 'application/json'},
                                params=params)
 
+def remove_p(s):
+    if not s.startswith('<p>'):
+        return s
+    rs = s[3:]
+    if not rs.endswith('</p>'):
+        return s
+    return rs[:-4]
 
-def call_plugin_multihtml(plugin, plugin_data, params=None):
+
+def list_to_dumbo(list):
+    i = 0
+    for val in list:
+        ic = i
+        i += 1
+        if type(val) is dict:
+            dict_to_dumbo(val)
+            continue
+        if type(val) is list:
+            list_to_dumbo(val)
+            continue
+        if not type(val) is str: continue
+        if not val.startswith("md:"): continue
+
+        v = [val[3:]]
+        v = call_dumbo(v)
+        list[ic] = remove_p(v[0])
+
+
+def dict_to_dumbo(pm):
+    for mkey in pm:
+        val = pm[mkey]
+        if type(val) is dict:
+            dict_to_dumbo(val)
+            continue
+        if type(val) is list:
+            list_to_dumbo(val)
+            continue
+
+        if not type(val) is str: continue
+
+        if not val.startswith("md:"): continue
+        v = [val[3:]]
+        v = call_dumbo(v)
+        pm[mkey] = remove_p(v[0])
+
+
+def convert_md(plugin_data):
+    # return
+    if type(plugin_data) is dict:
+        dict_to_dumbo(plugin_data)
+        return
+    for p in plugin_data:
+        pm = p["markup"]
+        dict_to_dumbo(pm)
+
+
+def is_plugin_md(doc):
+    if not doc:
+        return False
+    if hasattr(doc, 'settings') and doc.settings.plugin_md():
+        return True
+    if not hasattr(doc, 'plugin_md'):
+        return False
+    return doc.plugin_md
+
+
+def call_plugin_multihtml(doc, plugin, plugin_data, params=None):
     if params is not None:
         for p in plugin_data:
             p.update(params)
+
+    if is_plugin_md(doc):
+        convert_md(plugin_data)
+
     return call_plugin_generic(plugin,
                                'post',
                                'multihtml',

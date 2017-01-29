@@ -421,12 +421,13 @@ def get_state():
     if user is None:
         abort(400, 'Non-existent user')
 
+    doc.plugin_md = True # force for plugin attribute markdown calculation
+
     texts, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                   [block],
                                                                   user,
                                                                   timdb,
                                                                   custom_answer=answer)
-
     [reviewhtml], _, _, _ = pluginControl.pluginify(doc,
                                                     [block],
                                                     user,

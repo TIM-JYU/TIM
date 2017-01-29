@@ -89,7 +89,8 @@
     </div>
     <div class="popUpWindow" id="questionWindow" ng-if="asked_id">
         <form class="createQuestion" id="question-form">
-            <h5>{{ question.question }}</h5>
+            <!-- <h5 >{{ question.question }}</h5> -->
+            <h5 ng-bind-html="question.question"></h5>
             <!--
             <h3>Question title: {{ question.title }}</h3>
             <h3>Question title: {{ question.question }}</h3>

@@ -47,6 +47,15 @@ function getJsonAnswers(answer) {
 }
 
 
+function deletePar(s) {
+    if ( !s.startsWith("<p>") ) return s;
+    var rs = s.substring(3);
+    if ( !rs.endsWith("</p>") ) return s;
+    return rs.substring(0,rs.length-4);
+}
+
+
+
 function getPointsTable(markupPoints) {
     // Format of markupPoints: 1:1.1;2:1.2;3:1.3||2:3.2
     var pointsTable = [];
@@ -255,7 +264,10 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                         text: $scope.json.timeLimit + " s"
                     }));
                 }
-                htmlSheet.append($('<h5>', {text: json.questionText}));
+                var h5 = $('<h5>');
+                h5.append(json.questionText);
+                htmlSheet.append(h5);
+                // htmlSheet.append($('<h5>', {text: json.questionText}));
                 if ( params.markup.userpoints !== undefined) {
                     htmlSheet.append($('<p>', {text: "Points: " + params.markup.userpoints }));
                 }
@@ -271,7 +283,10 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                         tr.append($('<th>'));
                     }
                     angular.forEach(data.headers, function (header) {
-                        tr.append($('<th>', {text: header.text || header}));
+                        var th = $('<th>')
+                        th.append(header.text);
+                        tr.append(th);
+                        // tr.append($('<th>', {text: header.text || header}));
                     });
                     if ($scope.result && $scope.expl)
                         tr.append($('<th>', {}));
@@ -286,7 +301,10 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
 
                     var tr = $('<tr>');
                     if (json.questionType === "matrix" || json.questionType === "true-false") {
-                        tr.append($('<td>', {text: row.text}));
+                        var td = $('<td>');
+                        td.append(row.text);
+                        tr.append(td);
+                        //tr.append($('<td>', {text: row.text}));
                     }
                     var header = 0;
                     //TODO: Needs correct JSON to be made better way
@@ -383,7 +401,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                             var label = $('<label>');
                             var ispan = $('<span>', {class:colPtsClass});
                             ispan.append(input);
-                            label.append(ispan).append(" " + row.text);
+                            label.append(ispan).append(" " + deletePar("" + row.text));
                             var td = $('<td>', {class: 'answer-button2'});
                             td.append(label);
                             if ( colTDPoints ) td.append(colTDPoints);

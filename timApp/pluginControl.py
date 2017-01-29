@@ -218,7 +218,7 @@ def pluginify(doc: Document,
         needs_browser = get_plugin_needs_browser(plugin_name)
         if 'multihtml' in reqs and reqs['multihtml']:
             try:
-                response = call_plugin_multihtml(plugin_name, [val for _, val in plugin_block_map.items()], plugin_params)
+                response = call_plugin_multihtml(doc, plugin_name, [val for _, val in plugin_block_map.items()], plugin_params)
             except PluginException as e:
                 for idx in plugin_block_map.keys():
                     html_pars[idx]['html'] = get_error_html_plugin(plugin_name, str(e))
@@ -242,7 +242,7 @@ def pluginify(doc: Document,
         else:
             for idx, val in plugin_block_map.items():
                 try:
-                    html = call_plugin_html(plugin_name, val, plugin_params)
+                    html = call_plugin_html(doc, plugin_name, val, plugin_params)
                 except PluginException as e:
                     html_pars[idx]['html'] = get_error_html_plugin(plugin_name, str(e))
                     continue

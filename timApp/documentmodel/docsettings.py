@@ -25,6 +25,7 @@ class DocSettings:
     point_sum_rule_key = 'point_sum_rule'
     max_points_key = 'max_points'
     live_updates_key = 'live_updates'
+    plugin_md_key = 'plugin_md'
 
     @classmethod
     def is_valid_paragraph(cls, par):
@@ -183,3 +184,6 @@ class DocSettings:
 
     def live_updates(self, default=None):
         return self.__dict.get(self.live_updates_key, default)
+
+    def plugin_md(self, default=None):
+        return self.__dict.get(self.plugin_md_key, default)

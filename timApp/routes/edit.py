@@ -320,6 +320,7 @@ See the changes here:
            version_after[0], version_after[1]), setting="doc_modify", par_id=par_id,
            group_id=get_group_id(), group_subject=get_group_subject())
 
+    doc.plugin_md = True # force md calc
     return par_response(pars,
                         doc,
                         original_par,
@@ -351,6 +352,7 @@ def preview_paragraphs(doc_id):
         else:
             context_par = doc.get_last_par()
         try:
+            doc.plugin_md = True # for md calc
             blocks = get_pars_from_editor_text(doc, text, break_on_elements=editing_area)
             doc.insert_temporary_pars(blocks, context_par)
             return par_response(blocks, doc, preview=True, context_par=context_par)

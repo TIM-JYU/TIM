@@ -73,7 +73,8 @@
                             <p>{{ "{{question.nr}}" }}. <span class="bold" ng-bind-html="question.json.title">{{ "{{question.json.title}}" }}</span> /
                                <span ng-bind="question.asked_time | timtim"></span>
                             </p>
-                            <p ng-bind-html="question.json.questionText">{{ "{{question.json.questionText}}" }}</p>
+                            <!-- <p ng-bind-html="question.json.questionText">{{ "{{question.json.questionText}}" }}</p> -->
+                            <p ng-bind-html="question.json.questionText"></p>
                         </div>
                         <show-chart-directive canvas='answerChart{{ "{{question.asked_id }}" }}'
                                               control='dynamicAnswerShowControls[$index]'

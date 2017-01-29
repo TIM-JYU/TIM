@@ -1518,6 +1518,19 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     //Insert
                     /**
                      * @param descDefault Placeholder for description
+                     * @param styleDefault Placeholder for link address
+                     */
+                    $scope.styleClicked = function (descDefault, styleDefault) {
+                        if (($scope.editor.session.getTextRange($scope.editor.getSelectionRange()) === "")) {
+                            if ($scope.selectWord())
+                                descDefault = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
+                        } else
+                            descDefault = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
+                        $scope.snippetManager.insertSnippet($scope.editor, "[" + descDefault + "]{.${0:" + styleDefault + "}}");
+                    };
+
+                    /**
+                     * @param descDefault Placeholder for description
                      * @param linkDefault Placeholder for link address
                      * @param isImage true, if link is an image
                      */

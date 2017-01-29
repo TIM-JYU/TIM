@@ -41,6 +41,9 @@
             <i>I</i></button>
         <button class="editorButton" title="Underline" ng-click="surroundClicked('<u>', '</u>'); wrapFn()"><u>U</u></button>
         <button class="editorButton" title="Strikethrough" ng-click="surroundClicked('<s>', '</s>'); wrapFn()"><s>Z</s></button>
+        <button class="editorButton" title="Add any style"
+                ng-click="styleClicked('Teksti', 'red'); wrapFn()">Style
+        </button>
         <button class="editorButton" title="Code (Ctrl-O)" ng-click="surroundClicked('`', '`'); wrapFn()">Code</button>
         <button class="editorButton" title="Code block (Ctrl-Alt-O)" ng-click="wrapFn(codeBlockClicked)">Code block</button>
         <button class="editorButton" title="Subscript" ng-click="surroundClicked('~', '~'); wrapFn()">X_</button>
