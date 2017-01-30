@@ -12,4 +12,4 @@ docker run \
  -t -i \
  -w /service/timApp \
  timimages/tim:$(./get_latest_date.sh) \
- $@
+ "$@"
