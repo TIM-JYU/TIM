@@ -143,7 +143,8 @@ class TimDb(object):
     def commit(self):
         """Commits any changes to the database."""
         db.session.commit()
-        self.db.commit()
+        if self.db:
+            self.db.commit()
 
     def close(self):
         """Closes the database connection."""

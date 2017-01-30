@@ -31,6 +31,8 @@ class ReadingsTest(TimRouteTest):
         self.check_readlines(self.get_readings(doc), (READ, MODIFIED, PAR_CLICK_MODIFIED))
         self.mark_as_read(doc, pars[2].get_id())
         self.check_readlines(self.get_readings(doc), (READ, MODIFIED, PAR_CLICK_MODIFIED + ' ' + READ))
+        self.mark_as_unread(doc, pars[2].get_id())
+        self.check_readlines(self.get_readings(doc), (READ, MODIFIED, PAR_CLICK_MODIFIED))
 
     def test_readings_group(self):
         self.login_test1()
@@ -69,6 +71,9 @@ class ReadingsTest(TimRouteTest):
     def get_readings(self, doc):
         readlines = readline_selector(self.get('/view/{}'.format(doc.doc_id), as_tree=True))
         return readlines
+
+    def mark_as_unread(self, doc, par_id):
+        self.json_put('/unread/{}/{}'.format(doc.doc_id, par_id))
 
     def mark_as_read(self, doc, par_id, read_type=ReadParagraphType.click_red, **kwargs):
         self.json_put('/read/{}/{}/{}'.format(doc.doc_id, par_id, read_type.value), **kwargs)
