@@ -2,9 +2,8 @@ from timdb.tempdbbase import TempDbBase
 
 
 class ShowPoints(TempDbBase):
-    """
-    LectureAnswer class to handle database for lecture answers
-    """
+    """LectureAnswer class to handle database for lecture answers."""
+
     def add_show_points(self, lecture_id: int, asked_id: int):
         points = self.table(lecture_id, asked_id)
         self.session.merge(points)

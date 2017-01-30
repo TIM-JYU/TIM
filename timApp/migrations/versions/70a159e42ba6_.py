@@ -1,8 +1,6 @@
 """Add a unique constraint on translation (src_docid, lang_id).
 
-Revision ID: 70a159e42ba6
-Revises: 5adee46df88b
-Create Date: 2016-12-13 11:55:35.335541
+Revision ID: 70a159e42ba6 Revises: 5adee46df88b Create Date: 2016-12-13 11:55:35.335541
 
 """
 

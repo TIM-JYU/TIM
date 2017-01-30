@@ -58,14 +58,18 @@ class Folder(db.Model, Item):
 
     @property
     def path_without_lang(self):
-        """Returns path without the language part. For folders, this is the same as the path itself."""
+        """Returns path without the language part.
+
+        For folders, this is the same as the path itself.
+
+        """
         return self.path
 
     def get_full_path(self) -> str:
         return join_location(self.location, self.name)
 
     def get_document(self, relative_path: str, create_if_not_exist=False, creator_group_id: int = None) -> Optional[
-        DocEntry]:
+            DocEntry]:
         doc = DocEntry.query.filter_by(name=join_location(self.get_full_path(), relative_path)).first()
         if doc is not None:
             return doc
@@ -89,6 +93,7 @@ class Folder(db.Model, Item):
         :param path: The name of the folder to be created.
         :param owner_group_id: The id of the owner group.
         :returns: The created or existing folder.
+
         """
 
         if '\0' in path:

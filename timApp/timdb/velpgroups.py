@@ -1,9 +1,8 @@
-"""
-The module contains the database functions related to velp groups and their default and show selections. This includes
-adding new velp groups and editing the information of their default and show selections in the document
-(and its paragraphs). The module also retrieves or creates the default and personal velp groups.
-Information about velp group selections are managed through this module.
-The module also retrieves the velp groups and their default and show selections from the database.
+"""The module contains the database functions related to velp groups and their default and show selections. This
+includes adding new velp groups and editing the information of their default and show selections in the document (and
+its paragraphs). The module also retrieves or creates the default and personal velp groups. Information about velp group
+selections are managed through this module. The module also retrieves the velp groups and their default and show
+selections from the database.
 
 :authors: Joonas Lattu, Petteri Palojärvi
 :copyright: 2016 Timber project members
@@ -19,6 +18,7 @@ from timdb.timdbbase import TimDbBase
 
 
 class VelpGroups(TimDbBase):
+
     def create_default_velp_group(self, name: str, owner_group_id: int, default_group_path: str):
         """Creates default velp group for document.
 
@@ -26,6 +26,7 @@ class VelpGroups(TimDbBase):
         :param owner_group_id: The id of the owner group.
         :param default_group_path: Path of new document / velp group
         :return:
+
         """
 
         # Create new document and add its ID to VelpGroupTable
@@ -44,13 +45,14 @@ class VelpGroups(TimDbBase):
         return new_group_id
 
     def create_velp_group(self, name: str, owner_group_id: int, new_group_path: str, valid_until: Optional[str] = None):
-        """Create a velp group
+        """Create a velp group.
 
         :param name: Name of the created group.
         :param owner_group_id: The id of the owner group.
         :param new_group_path: Path of new document / velp group
         :param valid_until: How long velp group is valid (None is forever).
         :return: new velp group ID
+
         """
 
         # Create new document and add its ID to VelpGroupTable
@@ -68,13 +70,14 @@ class VelpGroups(TimDbBase):
 
     def make_document_a_velp_group(self, name: str, velp_group_id: int, valid_until: Optional[str] = None,
                                    default_group: Optional[bool] = False):
-        """Adds document to VelpGroup table
+        """Adds document to VelpGroup table.
 
         :param name: Name of the created group.
         :param velp_group_id: ID of new velp group (and existing document)
         :param valid_until: How long velp group is valid (None is forever)
         :param default_group: Boolean whether velp group should be default or not
         :return: velp group ID
+
         """
         cursor = self.db.cursor()
 
@@ -89,9 +92,10 @@ class VelpGroups(TimDbBase):
         return velp_group_id
 
     def update_velp_group_to_default_velp_group(self, velp_group_id: int):
-        """Makes velp group a default velp group in velp group table
+        """Makes velp group a default velp group in velp group table.
 
         :param velp_group_id: ID of velp group
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -103,10 +107,11 @@ class VelpGroups(TimDbBase):
         self.db.commit()
 
     def check_velp_group_ids_for_default_group(self, velp_group_ids: List[int]):
-        """Checks if list of velp group IDs contains a default velp group
+        """Checks if list of velp group IDs contains a default velp group.
 
         :param velp_group_ids: List of velp group IDs
         :return: First found default velp group ID and name
+
         """
         if not velp_group_ids:
             return None
@@ -122,10 +127,11 @@ class VelpGroups(TimDbBase):
         return results[0] if len(results) > 0 else None
 
     def add_velp_to_group(self, velp_id: int, velp_group_id: int):
-        """Adds a velp to a specific group
+        """Adds a velp to a specific group.
 
         :param velp_id: Velp if
         :param velp_group_id: Velp group ID
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -138,10 +144,11 @@ class VelpGroups(TimDbBase):
         self.db.commit()
 
     def add_velp_to_groups(self, velp_id: int, velp_group_ids: [int]):
-        """Adds a velp to specific groups
+        """Adds a velp to specific groups.
 
         :param velp_id: ID of velp
         :param velp_group_ids: List of velp group IDs
+
         """
         cursor = self.db.cursor()
         for velp_group in velp_group_ids:
@@ -155,10 +162,11 @@ class VelpGroups(TimDbBase):
         self.db.commit()
 
     def remove_velp_from_group(self, velp_id: int, velp_group_id: int):
-        """Removes a velp from a specific group
+        """Removes a velp from a specific group.
 
         :param velp_id: Velp id
         :param velp_group_id: Velp group id
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -170,10 +178,11 @@ class VelpGroups(TimDbBase):
         self.db.commit()
 
     def remove_velp_from_groups(self, velp_id: int, velp_group_ids: [int]):
-        """Removes a velp from specific groups
+        """Removes a velp from specific groups.
 
         :param velp_id: ID of velp
         :param velp_group_ids: List of velp group IDs
+
         """
         cursor = self.db.cursor()
         for velp_group in velp_group_ids:
@@ -186,10 +195,11 @@ class VelpGroups(TimDbBase):
         self.db.commit()
 
     def get_velp_group_name(self, velp_group_id: int) -> str:
-        """Gets velp group's name
+        """Gets velp group's name.
 
         :param velp_group_id: velp group ID
         :return: velp group's name as a string.
+
         """
         cursor = self.db.cursor()
         cursor.execute('SELECT name FROM VelpGroup WHERE id = %s', [velp_group_id])
@@ -197,10 +207,11 @@ class VelpGroups(TimDbBase):
         return result[0] if result is not None else None
 
     def get_groups_for_velp(self, velp_id):
-        """Gets velp group's of the velp
+        """Gets velp group's of the velp.
 
         :param velp_id: velp ID
         :return: velp groups of the velp.
+
         """
         cursor = self.db.cursor()
         cursor.execute('SELECT velp_group_id AS id FROM VelpInGroup WHERE velp_id = %s', [velp_id])
@@ -208,10 +219,11 @@ class VelpGroups(TimDbBase):
         return result
 
     def is_id_velp_group(self, doc_id: int) -> bool:
-        """ Checks whether given document id can also be found from VelpGroup table
+        """Checks whether given document id can also be found from VelpGroup table.
 
         :param doc_id: ID of document
         :return: True if part of VelpGroup table, else False
+
         """
         cursor = self.db.cursor()
         cursor.execute('SELECT name FROM VelpGroup WHERE id = %s', [doc_id])
@@ -220,7 +232,7 @@ class VelpGroups(TimDbBase):
 
     def add_group_to_imported_table(self, user_group: int, doc_id: int, target_type: int, target_id: int,
                                     velp_group_id: int):
-        """Adds velp groups to ImportedVelpGroups table for specific document / user group combo
+        """Adds velp groups to ImportedVelpGroups table for specific document / user group combo.
 
         :param user_group: ID of user group
         :param doc_id: Id of document
@@ -228,6 +240,7 @@ class VelpGroups(TimDbBase):
         :param target_id:  ID of target (0 for documents)
         :param velp_group_id: ID of velp group
         :return: void
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -242,11 +255,12 @@ class VelpGroups(TimDbBase):
         return
 
     def get_groups_from_imported_table(self, user_groups: [int], doc_id: int):
-        """Gets velp groups from ImportedVelpGroups table for specific document / user group IDs combo
+        """Gets velp groups from ImportedVelpGroups table for specific document / user group IDs combo.
 
         :param user_groups: List of user group IDs
         :param doc_id: ID of document
         :return: velp groups in document that user has access to via group.
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -260,11 +274,12 @@ class VelpGroups(TimDbBase):
         return results
 
     def add_groups_to_document(self, velp_groups: Iterable[Dict], doc_id: int, user_id: int):
-        """Adds velp groups to VelpGroupsInDocument table
+        """Adds velp groups to VelpGroupsInDocument table.
 
         :param velp_groups: Velp groups as dictionaries
         :param doc_id: ID of document
         :param user_id: ID of user
+
         """
         cursor = self.db.cursor()
         for velp_group in velp_groups:
@@ -279,11 +294,12 @@ class VelpGroups(TimDbBase):
         self.db.commit()
 
     def get_groups_from_document_table(self, doc_id: int, user_id: int):
-        """Gets velp groups from VelpGroupsInDocument table of specific document / user combo
+        """Gets velp groups from VelpGroupsInDocument table of specific document / user combo.
 
         :param doc_id: ID of document
         :param user_id: ID of user
         :return: velp groups in document that user has access to.
+
         """
 
         cursor = self.db.cursor()
@@ -303,11 +319,12 @@ class VelpGroups(TimDbBase):
         return results
 
     def add_groups_to_selection_table(self, velp_groups: dict, doc_id: int, user_id: int):
-        """Adds velp groups to VelpGroupSelection table
+        """Adds velp groups to VelpGroupSelection table.
 
         :param velp_groups: Velp groups as dictionaries
         :param doc_id: ID of document
         :param user_id: ID of user
+
         """
         cursor = self.db.cursor()
         for velp_group in velp_groups:
@@ -325,11 +342,12 @@ class VelpGroups(TimDbBase):
         self.db.commit()
 
     def get_personal_selections_for_velp_groups(self, doc_id: int, user_id: int):
-        """Gets all velp group personal selections for document
+        """Gets all velp group personal selections for document.
 
         :param doc_id: ID of document
         :param user_id: ID of user
         :return: Dict with following info { target_id: [{velp_group_id, selected}, etc], etc }
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -378,11 +396,12 @@ class VelpGroups(TimDbBase):
             return {'0': []}
 
     def get_default_selections_for_velp_groups(self, doc_id: int, user_id: int):
-        """Gets all velp group default selections for document
+        """Gets all velp group default selections for document.
 
         :param doc_id: ID of document
         :param user_id: ID of user
         :return: Dict with following info { target_id: [{velp_group_id, selected}, etc], etc }
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -434,12 +453,11 @@ class VelpGroups(TimDbBase):
         else:
             return {'0': []}
 
-
     # Methods for changing selections
 
     def change_selection(self, doc_id: int, velp_group_id: int, target_type: int, target_id: str, user_id: int,
                          selected: bool):
-        """Changes selection for velp group in VelpGroupSelection for specific user / document / target combo
+        """Changes selection for velp group in VelpGroupSelection for specific user / document / target combo.
 
         :param doc_id: ID of document
         :param velp_group_id: ID of velp group
@@ -447,6 +465,7 @@ class VelpGroups(TimDbBase):
         :param target_id: ID of targeted area
         :param user_id: ID of user
         :param selected: Boolean whether group is selected or not
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -471,6 +490,7 @@ class VelpGroups(TimDbBase):
         :param target_id: ID of target ('0' for documents)
         :param user_id: ID of user
         :param selected: True or False
+
         """
         cursor = self.db.cursor()
         if target_type == 0:
@@ -479,7 +499,7 @@ class VelpGroups(TimDbBase):
                       SET selected = %s
                       WHERE doc_id = %s AND target_id = %s AND user_id = %s
                       """, [selected, doc_id, target_id, user_id]
-                        )
+                           )
         elif target_type == 1:
             cursor.execute("""
                           DELETE FROM VelpGroupSelection
@@ -499,13 +519,14 @@ class VelpGroups(TimDbBase):
 
     def change_default_selection(self, doc_id: int, velp_group_id: int, target_type: int, target_id: str,
                                  selected: bool):
-        """Changes selection for velp group's default selection in target area
+        """Changes selection for velp group's default selection in target area.
 
         :param doc_id: ID of document
         :param target_type: 0 document, 1 paragraph
         :param target_id: ID of targeted area
         :param velp_group_id: ID of velp group
         :param selected: Boolean whether group is selected or not
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -523,7 +544,7 @@ class VelpGroups(TimDbBase):
         self.db.commit()
 
     def change_all_target_area_default_selections(self, doc_id: int, target_type: int, target_id: str, user_id: int,
-                                          selected: bool):
+                                                  selected: bool):
         """Change all default selections to True or False for currently chose area (document or paragraph)
 
         :param doc_id: ID of document
@@ -531,6 +552,7 @@ class VelpGroups(TimDbBase):
         :param target_id: ID of target ('0' for documents)
         :param user_id: ID of user (with manage access) to get all defaults from that user's selection table
         :param selected: True or False
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -549,11 +571,12 @@ class VelpGroups(TimDbBase):
         self.db.commit()
 
     def reset_target_area_selections_to_defaults(self, doc_id: int, target_id: str, user_id: int):
-        """Changes user's personal velp group selections in target area to defaults
+        """Changes user's personal velp group selections in target area to defaults.
 
         :param doc_id: ID of document
         :param target_id: ID of target area
         :param user_id: ID of user
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -564,10 +587,11 @@ class VelpGroups(TimDbBase):
         self.db.commit()
 
     def reset_all_selections_to_defaults(self, doc_id: int, user_id: int):
-        """Changes user's all personal velp group selections in document to defaults
+        """Changes user's all personal velp group selections in document to defaults.
 
         :param doc_id: ID of document
         :param user_id: ID of user
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -580,7 +604,7 @@ class VelpGroups(TimDbBase):
     # Unused methods
 
     def update_velp_group(self, velp_group_id: int, name: str, valid_until: Optional[str]):
-        """Updates name and/or valid until time of velp group
+        """Updates name and/or valid until time of velp group.
 
         :param velp_group_id: Velp group id
         :param name: Name of velp group
@@ -597,10 +621,10 @@ class VelpGroups(TimDbBase):
         self.db.commit()
 
     def delete_velp_group(self, velp_group_id: int):
-        """
-        Deletes velp group. Doesn't delete velps belonging to group, only their links to deleted group
+        """Deletes velp group. Doesn't delete velps belonging to group, only their links to deleted group.
 
         :param velp_group_id: Velp group id
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -615,10 +639,11 @@ class VelpGroups(TimDbBase):
 
     # TODO: Unused
     def add_groups_to_default_table(self, velp_groups: dict, doc_id: int):
-        """Adds velp groups to VelpGroupDefaults table
+        """Adds velp groups to VelpGroupDefaults table.
 
         :param velp_groups: Velp groups as dictionaries
         :param doc_id: ID of document
+
         """
         cursor = self.db.cursor()
         for velp_group in velp_groups:

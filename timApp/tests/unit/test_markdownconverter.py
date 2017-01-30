@@ -9,6 +9,7 @@ from markdownconverter import md_to_html, par_list_to_html_list
 
 
 class MarkdownConverterTest(unittest.TestCase):
+
     def setUp(self):
         self.d = dumboclient.launch_dumbo()
         time.sleep(0.1)  # Need to wait a bit to make sure Dumbo is up when running the test

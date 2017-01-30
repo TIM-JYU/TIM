@@ -7,6 +7,7 @@ from documentmodel.docparagraph import DocParagraph
 
 
 class DocumentVersion(Document):
+
     def __init__(self, doc_id: int, doc_ver: 'tuple(int, int)',
                  files_root=None, modifier_group_id: Optional[int] = 0):
         super(DocumentVersion, self).__init__(doc_id, files_root, modifier_group_id)
@@ -40,7 +41,7 @@ class DocumentVersion(Document):
             self.does_exist = Document.version_exists(self.doc_id, self.version, self.files_root)
         return self.does_exist
 
-    def create(self, ignore_exists : bool = False):
+    def create(self, ignore_exists: bool = False):
         assert False, "Called DocumentVersion.create"
 
     @classmethod
@@ -51,10 +52,11 @@ class DocumentVersion(Document):
         return self.version
 
     def has_paragraph(self, par_id: str) -> bool:
-        """
-        Checks if the document has the given paragraph.
+        """Checks if the document has the given paragraph.
+
         :param par_id: The paragraph id.
         :return: Boolean.
+
         """
         self.cache_index()
         return par_id in self.index
@@ -81,7 +83,7 @@ class DocumentVersion(Document):
             par_id: Optional[str]=None,
             attrs: Optional[dict]=None,
             properties: Optional[dict]=None
-            ) -> DocParagraph:
+    ) -> DocParagraph:
         assert False, "Called DocumentVersion.add_paragraph"
 
     def add_ref_paragraph(self, src_par: DocParagraph, text: Optional[str] = None) -> DocParagraph:

@@ -2,7 +2,8 @@
 
 
 def get_option(request, name, default, cast=None):
-    if name not in request.args: return default
+    if name not in request.args:
+        return default
     result = request.args[name]
     lresult = result.lower()
     if isinstance(default, bool):

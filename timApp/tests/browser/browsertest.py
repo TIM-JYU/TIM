@@ -55,7 +55,9 @@ class BrowserTest(LiveServerTestCase, TimRouteTest):
 
     def goto(self, url: str):
         """Navigates to a new URL using the browser.
+
         :param url: The URL to which to navigate. This must be relative.
+
         """
         self.drv.get("{}:{}{}".format(self.app.config['SELENIUM_BROWSER_URL'], self.app.config['LIVESERVER_PORT'], url))
 
@@ -63,6 +65,7 @@ class BrowserTest(LiveServerTestCase, TimRouteTest):
         """Saves the current browser screen to a PNG file in screenshots directory.
 
         :param filename: The file name of the PNG file.
+
         """
         screenshot_dir = '/service/screenshots/'
         os.makedirs(screenshot_dir, exist_ok=True)
@@ -73,6 +76,7 @@ class BrowserTest(LiveServerTestCase, TimRouteTest):
         """Asserts that the current document should not contain any elements that match the specified CSS selector.
 
         :param css_selector: The CSS selector to test.
+
         """
         self.drv.implicitly_wait(0.5)
         try:

@@ -1,7 +1,5 @@
-"""
-The module contains the database functions related to velps and velp labels. This includes
-adding and modifying velps and their labels. The module also retrieves the data related to velps and their labels
-from the database.
+"""The module contains the database functions related to velps and velp labels. This includes adding and modifying velps
+and their labels. The module also retrieves the data related to velps and their labels from the database.
 
 :authors: Joonas Lattu, Petteri Palojärvi
 :copyright: 2016 Timber project members
@@ -17,9 +15,7 @@ from timdb.velp_models import Velp, VelpVersion, VelpLabel, VelpLabelContent
 
 
 class Velps(TimDbBase):
-    """
-    Used as an interface to query the database about velps.
-    """
+    """Used as an interface to query the database about velps."""
 
     def create_new_velp(self, creator_id: int, content: str, default_points: Optional[float] = None,
                         default_comment: Optional[str] = None, icon_id: Optional[int] = None,
@@ -39,6 +35,7 @@ class Velps(TimDbBase):
         :param visible_to: Default visibility to annotation.
         :param color: Velp color
         :return: A tuple of (velp id, velp version id).
+
         """
         new_velp_id = self._create_velp(creator_id, default_points, icon_id, valid_until, visible_to, color)
         new_version_id = self.create_velp_version(new_velp_id)
@@ -57,8 +54,10 @@ class Velps(TimDbBase):
         :param valid_until: Time after velp becomes unusable.
         :param visible_to: Default visibility to annotation.
         :return: ID of velp that was just created.
+
         """
-        if not visible_to: visible_to = 4
+        if not visible_to:
+            visible_to = 4
         v = Velp(creator_id=creator_id,
                  default_points=default_points,
                  icon_id=icon_id,
@@ -74,6 +73,7 @@ class Velps(TimDbBase):
 
         :param velp_id: ID of velp we're adding version for
         :return: ID of version that was just created
+
         """
 
         vv = VelpVersion(velp_id=velp_id)
@@ -88,6 +88,7 @@ class Velps(TimDbBase):
         :param language_id: Language id
         :param content: Text of velp
         :param default_comment: Default comment for velp
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -106,8 +107,10 @@ class Velps(TimDbBase):
         :param icon_id: ID of icon
         :param color: Velp color
         :param visible_to: Velp visibility
+
         """
-        if not visible_to: visible_to = 4
+        if not visible_to:
+            visible_to = 4
         cursor = self.db.cursor()
         cursor.execute("""
                        UPDATE Velp
@@ -118,11 +121,12 @@ class Velps(TimDbBase):
         self.db.commit()
 
     def get_latest_velp_version(self, velp_id: int, language_id: str = "FI"):
-        """Method to fetch the latest version for velp in specific language
+        """Method to fetch the latest version for velp in specific language.
 
         :param velp_id: ID of velp we're checking
         :param language_id: ID of language
         :return: Dictionary containing ID and content of velp version.
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -139,7 +143,7 @@ class Velps(TimDbBase):
                       """, [velp_id, language_id]
                        )
         row = cursor.fetchone()
-        return {"id":row[0], "content":row[1]}
+        return {"id": row[0], "content": row[1]}
 
     # Methods concerning velp labels
 
@@ -149,8 +153,8 @@ class Velps(TimDbBase):
         :param language_id: Language chosen
         :param content: Label content
         :return: id of the new label
-        """
 
+        """
 
         vl = VelpLabel()
         self.session.add(vl)
@@ -164,6 +168,7 @@ class Velps(TimDbBase):
         :param label_id: Label id
         :param language_id: Language chosen
         :param content: New translation
+
         """
         vlc = VelpLabelContent(velplabel_id=label_id, language_id=language_id, content=content)
         self.session.add(vlc)
@@ -175,8 +180,10 @@ class Velps(TimDbBase):
         :param label_id: Label id
         :param language_id: Language chosen
         :param content: Updated content
+
         """
-        vlc = self.session.query(VelpLabelContent).filter((VelpLabelContent.velplabel_id == label_id) & (VelpLabelContent.language_id == language_id)).one()
+        vlc = self.session.query(VelpLabelContent).filter((VelpLabelContent.velplabel_id ==
+                                                           label_id) & (VelpLabelContent.language_id == language_id)).one()
         vlc.content = content
         self.session.commit()
 
@@ -185,6 +192,7 @@ class Velps(TimDbBase):
 
         :param velp_id: ID of velp
         :return: List of labels represented by their ids associated with the velp.
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -202,6 +210,7 @@ class Velps(TimDbBase):
 
         :param velp_id: id of the velp that
         :param labels: list of label ids
+
         """
         cursor = self.db.cursor()
         if labels:  # Labels list can theoretically be null at some situations
@@ -218,6 +227,7 @@ class Velps(TimDbBase):
 
         :param velp_id: velp ID
         :param labels: list of label IDs.
+
         """
         cursor = self.db.cursor()
         # First nuke existing labels.
@@ -229,7 +239,6 @@ class Velps(TimDbBase):
         # self.db.commit() # changes will be commited in add_labels_to_velp
         # Then add the new ones.
         self.add_labels_to_velp(velp_id, labels)
-
 
     # Methods for getting information for document
 
@@ -243,6 +252,7 @@ class Velps(TimDbBase):
         :param user_id: ID of current user
         :param language_id: ID of language used
         :return: List of velps as dictionaries
+
         """
         velp_data = self.get_velps_for_document(doc_id, user_id, language_id)
         label_data = self.get_velp_label_ids_for_document(doc_id, user_id)
@@ -302,6 +312,7 @@ class Velps(TimDbBase):
         :param user_id: ID of current user
         :param language_id: ID of language used
         :return: List of dicts containing velp ids, default points, content, icon ids and language ids
+
         """
 
         cursor = self.db.cursor()
@@ -333,7 +344,7 @@ class Velps(TimDbBase):
                       )
 
                       """, [language_id, user_id, doc_id]
-                      )
+                       )
         results = self.resultAsDictionary(cursor)
         return results
 
@@ -346,6 +357,7 @@ class Velps(TimDbBase):
         :param doc_id: ID of document in question
         :param user_id: ID of current user
         :return: List of dicts containing velp ids and velp groups ids
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -368,7 +380,7 @@ class Velps(TimDbBase):
                       )
                       ORDER BY velp_id ASC
                       """, [doc_id, user_id]
-                      )
+                       )
         results = self.resultAsDictionary(cursor)
         return results
 
@@ -381,6 +393,7 @@ class Velps(TimDbBase):
         :param doc_id: ID of document in question
         :param user_id: ID of current user
         :return: List of dicts containing velp ids and label ids
+
         """
 
         cursor = self.db.cursor()
@@ -404,7 +417,7 @@ class Velps(TimDbBase):
                       )
                       ORDER BY velp_id ASC
                       """, [doc_id, user_id]
-                      )
+                       )
         results = self.resultAsDictionary(cursor)
         return results
 
@@ -418,6 +431,7 @@ class Velps(TimDbBase):
         :param user_id: ID of current user
         :param language_id: ID of language used
         :return: List of dicts containing velp label ids and content
+
         """
         cursor = self.db.cursor()
         cursor.execute("""

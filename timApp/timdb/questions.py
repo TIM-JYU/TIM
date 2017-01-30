@@ -9,11 +9,13 @@ from timdb.timdbbase import TimDbBase
 
 class Questions(TimDbBase):
     # TODO: Doesn't work until question table has been altered
+
     def get_paragraphs_question(self, doc_id: int, par_index: int):
-        """
-        Gets the questions of some paragraph
+        """Gets the questions of some paragraph.
+
         :param par_id: Paragraph to get question.
         :return: The list of question from that paragraph
+
         """
 
         cursor = self.db.cursor()
@@ -24,10 +26,11 @@ class Questions(TimDbBase):
                        """, [doc_id, par_index])
         return self.resultAsDictionary(cursor)
 
-    def delete_question(self, question_id: int, commit:bool=True):
-        """
-        Deletes the question from database
+    def delete_question(self, question_id: int, commit: bool=True):
+        """Deletes the question from database.
+
         :param question_id: question to delete
+
         """
 
         cursor = self.db.cursor()
@@ -42,10 +45,11 @@ class Questions(TimDbBase):
             self.db.commit()
 
     def get_question(self, question_id: int) -> List[dict]:
-        """
-        Gets question with specific id
+        """Gets question with specific id.
+
         :param question_id: question id
         :return: the question
+
         """
         cursor = self.db.cursor()
 
@@ -58,22 +62,21 @@ class Questions(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-
     def get_questions(self) -> List[dict]:
-        """
-        Gets the question
+        """Gets the question.
+
         :return: Questions as a list
+
         """
         cursor = self.db.cursor()
         cursor.execute("""SELECT id, question, answer FROM Question """)
 
         return self.resultAsDictionary(cursor)
 
-
     def add_asked_questions(self, lecture_id: int, doc_id: int, par_id: Optional[str], asked_time: datetime,
                             points: str, asked_json_id: int, expl: str, commit: bool=True) -> int:
-        """
-        Creates a new asked questions
+        """Creates a new asked questions.
+
         :param lecture_id: Lecture where question was asked
         :param doc_id: Document, where the question belongs
         :param par_id: Paragraph, where the question belongs
@@ -83,6 +86,7 @@ class Questions(TimDbBase):
         :param asked_json_id: Json of asked question
         :param commit: Commit or not to commit
         :return: The id of the newly created asked question
+
         """
 
         aq = AskedQuestion(lecture_id=lecture_id, doc_id=doc_id, par_id=par_id, asked_time=asked_time, points=points,
@@ -95,11 +99,11 @@ class Questions(TimDbBase):
         return question_id
 
     def update_asked_question_points(self, asked_id: int, points: str, expl: str, commit: bool=True) -> int:
+        """Creates a new asked questions.
 
-        """
-        Creates a new asked questions
         :param commit: Commit or not to commit
         :return: The id of the newly created asked question
+
         """
 
         cursor = self.db.cursor()
@@ -113,9 +117,10 @@ class Questions(TimDbBase):
         return asked_id
 
     def get_asked_question(self, asked_id: int) -> List[dict]:
-        """
-        Gets the asked question by id
+        """Gets the asked question by id.
+
         :return: Questions as a list
+
         """
         cursor = self.db.cursor()
         cursor.execute(
@@ -130,9 +135,10 @@ class Questions(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     def add_asked_json(self, json: str, hash: str, commit: bool=True) -> int:
-        """
-        Gets the asked question by id
+        """Gets the asked question by id.
+
         :return: Questions as a list
+
         """
         aj = AskedJson(json=json, hash=hash)
         self.session.add(aj)
@@ -142,9 +148,10 @@ class Questions(TimDbBase):
         return aj.asked_json_id
 
     def get_asked_json_by_id(self, asked_json_id: int) -> List[dict]:
-        """
-        Gets the asked question by id
+        """Gets the asked question by id.
+
         :return: Questions as a list
+
         """
         cursor = self.db.cursor()
         cursor.execute(
@@ -157,9 +164,10 @@ class Questions(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     def get_asked_json_by_hash(self, asked_hash: str) -> List[dict]:
-        """
-        Gets the asked question by id
+        """Gets the asked question by id.
+
         :return: Questions as a list
+
         """
         cursor = self.db.cursor()
         cursor.execute(
@@ -173,12 +181,13 @@ class Questions(TimDbBase):
 
     def add_questions(self, doc_id: int, par_id: str, question_title: str, answer: str, questionjson: str,
                       points: str, expl: str, commit: bool=True) -> int:
-        """
-        Creates a new questions
+        """Creates a new questions.
+
         :param question_title: Question to be saved
         :param answer: Answer to the question
         :param commit: Commit or not to commit
         :return: The id of the newly creater question
+
         """
 
         q = Question(doc_id=doc_id, par_id=par_id, question_title=question_title, answer=answer,
@@ -189,12 +198,9 @@ class Questions(TimDbBase):
             self.session.commit()
         return q.question_id
 
-
     def update_question(self, question_id: int, doc_id: int, par_id: str, question_title: str, answer: str,
                         questionjson: str, points: str, expl: str,) -> int:
-        """
-        Updates the question with particular id
-        """
+        """Updates the question with particular id."""
 
         cursor = self.db.cursor()
         cursor.execute("""
@@ -207,9 +213,7 @@ class Questions(TimDbBase):
         return question_id
 
     def get_doc_questions(self, doc_id: int) -> List[dict]:
-        """
-        Gets questions related to a specific document
-        """
+        """Gets questions related to a specific document."""
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT *
@@ -220,10 +224,11 @@ class Questions(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     def get_multiple_questions(self, question_ids: List[int]) -> List[dict]:
-        """
-        Gets multiple questions
+        """Gets multiple questions.
+
         :param question_ids: quesitons ids as integet array
         :return: list of dictionaries of the matching questions.
+
         """
 
         cursor = self.db.cursor()
@@ -239,10 +244,11 @@ class Questions(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     def get_multiple_asked_questions(self, asked_ids: List[int]) -> List[dict]:
-        """
-        Gets multiple questions
+        """Gets multiple questions.
+
         :param asked_ids: question ids as integer array
         :return: list of dictionaries of the matching questions
+
         """
         if not asked_ids:
             return []

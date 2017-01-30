@@ -26,7 +26,7 @@ def setup_logging(app):
             os.mkdir(app.config['LOG_DIR'])
         except FileExistsError:
             pass
-    file_handler = RotatingFileHandler(app.config['LOG_PATH'], maxBytes=1024*1024*100, backupCount=1000)
+    file_handler = RotatingFileHandler(app.config['LOG_PATH'], maxBytes=1024 * 1024 * 100, backupCount=1000)
     file_handler.setLevel(app.config['LOG_LEVEL'])
     file_handler.setFormatter(formatter)
     global tim_logger

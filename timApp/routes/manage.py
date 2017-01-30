@@ -68,7 +68,8 @@ def get_changelog(doc_id, length):
 
 @manage_page.route("/permissions/add/<int:item_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_permission(item_id, group_name, perm_type):
-    is_owner, group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(item_id, group_name, perm_type)
+    is_owner, group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(
+        item_id, group_name, perm_type)
     if get_current_user_object().get_personal_folder().id == item_id:
         if perm_type == 'owner':
             abort(403, 'You cannot add owners to your personal folder.')
@@ -288,11 +289,13 @@ def verify_and_get_params(item_id, group_name, perm_type):
         accessible_to = None
 
     try:
-        duration_accessible_from = dateutil.parser.parse(req_json.get('durationFrom')) if access_type == 'duration' else None
+        duration_accessible_from = dateutil.parser.parse(
+            req_json.get('durationFrom')) if access_type == 'duration' else None
     except TypeError:
         duration_accessible_from = None
     try:
-        duration_accessible_to = dateutil.parser.parse(req_json.get('durationTo')) if access_type == 'duration' else None
+        duration_accessible_to = dateutil.parser.parse(
+            req_json.get('durationTo')) if access_type == 'duration' else None
     except TypeError:
         duration_accessible_to = None
 
@@ -312,9 +315,11 @@ def verify_and_get_params(item_id, group_name, perm_type):
 
 def verify_permission_edit_access(item_id: int, perm_type: str) -> bool:
     """Verifies that the user has right to edit a permission.
+
     :param item_id: The item id to check for permission.
     :param perm_type: The permission type.
     :return: True if the user has ownership, False if just manage access.
+
     """
     if perm_type == 'owner':
         verify_ownership(item_id)

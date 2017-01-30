@@ -52,12 +52,13 @@ def get_upload(relfilename: str):
     if slashes == 3 and not relfilename.endswith('/'):
         abort(400, 'Incorrect filename specification.')
     timdb = get_timdb()
-    block = Block.query.filter((Block.description.startswith(relfilename)) & (Block.type_id == blocktypes.UPLOAD)).order_by(Block.description.desc()).first()
+    block = Block.query.filter((Block.description.startswith(relfilename)) & (
+        Block.type_id == blocktypes.UPLOAD)).order_by(Block.description.desc()).first()
     if not block or (block.description != relfilename and not relfilename.endswith('/')):
         abort(404, 'The requested upload was not found.')
     if not verify_view_access(block.id, require=False):
         answerupload = block.answerupload.first()
-        
+
         # Answerupload may only be None for early test uploads (before the AnswerUpload model was implemented)
         # or if the upload process was interrupted at a specific point
         if answerupload is None:
@@ -162,5 +163,6 @@ def get_file(file_id, file_filename):
     mime = magic.Magic(mime=True)
     file_path = timdb.files.getFilePath(file_id, file_filename)
     mt = mime.from_file(file_path)
-    if isinstance(mt, bytes): mt = mt.decode('utf-8')
+    if isinstance(mt, bytes):
+        mt = mt.decode('utf-8')
     return send_file(file_path, mimetype=mt)

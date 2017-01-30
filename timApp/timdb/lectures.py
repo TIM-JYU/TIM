@@ -10,6 +10,7 @@ import json
 
 
 class Lectures(TimDbBase):
+
     def create_lecture(self, doc_id: int, lecturer: int, start_time: str, end_time: str,
                        lecture_code: str, password: str, options: str, commit: bool) -> int:
         l = Lecture(lecture_code=lecture_code, lecturer=lecturer, start_time=start_time, end_time=end_time,
@@ -19,7 +20,6 @@ class Lectures(TimDbBase):
         if commit:
             self.session.commit()
         return l.lecture_id
-
 
     def update_lecture(self, lecture_id: int, doc_id: int, lecturer: int, start_time: str, end_time: str,
                        lecture_code: str, password: str, options: str):
@@ -88,7 +88,7 @@ class Lectures(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    def get_all_lectures_from_document(self, document_id:int) -> List[dict]:
+    def get_all_lectures_from_document(self, document_id: int) -> List[dict]:
         cursor = self.db.cursor()
 
         cursor.execute(
@@ -111,7 +111,7 @@ class Lectures(TimDbBase):
             if commit:
                 self.db.commit()
         except:
-            return # was allready
+            return  # was allready
 
     def leave_lecture(self, lecture_id: int, user_id: int, commit: bool=True):
         cursor = self.db.cursor()
@@ -160,7 +160,7 @@ class Lectures(TimDbBase):
 
         return cursor.fetchone()[0]
 
-    def check_if_correct_name(self, doc_id: int, lecture_code: str, lecture_id : int) -> int:
+    def check_if_correct_name(self, doc_id: int, lecture_code: str, lecture_id: int) -> int:
         cursor = self.db.cursor()
 
         cursor.execute("""
@@ -240,11 +240,12 @@ class Lectures(TimDbBase):
             return students + 1 >= max
 
     def check_if_in_lecture(self, doc_id: int, user_id: int) -> Tuple:
-        """
-        Check if user is in lecture from specific document
+        """Check if user is in lecture from specific document.
+
         :param doc_id: document id
         :param user_id: user id
         :return:
+
         """
 
         cursor = self.db.cursor()
@@ -281,11 +282,12 @@ class Lectures(TimDbBase):
             return False, -1
 
     def check_if_in_any_lecture(self, user_id: int) -> Tuple:
-        """
-        Check if user is in lecture from specific document
+        """Check if user is in lecture from specific document.
+
         :param doc_id: document id
         :param user_id: user id
         :return:
+
         """
 
         cursor = self.db.cursor()
@@ -340,8 +342,7 @@ class Lectures(TimDbBase):
                         UPDATE Lecture
                         SET end_time = %s
                         WHERE lecture_id = %s
-        """,[new_end_time, lecture_id])
+        """, [new_end_time, lecture_id])
 
         if commit:
             self.db.commit()
-

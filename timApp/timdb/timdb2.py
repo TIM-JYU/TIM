@@ -1,6 +1,4 @@
-"""
-Defines the TimDb database class.
-"""
+"""Defines the TimDb database class."""
 import os
 import time
 from time import sleep
@@ -33,6 +31,7 @@ worker_pid = 0
 DB_PART_NAMES = {'notes', 'readings', 'users', 'images', 'uploads', 'files', 'documents', 'answers', 'questions',
                  'messages', 'lectures', 'folders', 'lecture_answers', 'velps', 'velp_groups', 'annotations', 'session'}
 
+
 class TimDb(object):
     instances = 0
     """Handles saving and retrieving information from TIM database.
@@ -42,16 +41,17 @@ class TimDb(object):
                  current_user_name: str = 'Anonymous',
                  route_path: str = ''):
         """Initializes TimDB with the specified files root path, SQLAlchemy session and user name.
-        
+
         created.
         :param current_user_name: The username of the current user.
         :param files_root_path: The root path where all the files will be stored.
         :param route_path: Path for the route requesting the db
+
         """
         self.files_root_path = os.path.abspath(files_root_path)
         self.route_path = route_path
         self.current_user_name = current_user_name
-        
+
         self.blocks_path = os.path.join(self.files_root_path, 'blocks')
         for path in [self.blocks_path]:
             if not os.path.exists(path):
@@ -92,7 +92,8 @@ class TimDb(object):
         num += 1
         self.num = num
         self.time = time.time()
-        log_debug(  "GetDb      {:2d} {:6d} {:2s} {:3s} {:7s} {:s}".format(worker_pid,self.num,"","","",self.route_path))
+        log_debug("GetDb      {:2d} {:6d} {:2s} {:3s} {:7s} {:s}".format(
+            worker_pid, self.num, "", "", "", self.route_path))
         # log_info('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid,self.num, TimDb.instances, bes, time.time() - self.time, self.route_path))
         waiting = False
         from tim_app import app
@@ -103,11 +104,13 @@ class TimDb(object):
                 self.session = db.session
                 break
             except Exception as err:
-                if not waiting: log_warning("WaitDb " + str(self.num) + " " + str(err))
+                if not waiting:
+                    log_warning("WaitDb " + str(self.num) + " " + str(err))
                 waiting = True
                 sleep(0.1)
 
-        if waiting: log_warning("ReadyDb " + str(self.num))
+        if waiting:
+            log_warning("ReadyDb " + str(self.num))
 
         TimDb.instances += 1
         # num_connections = self.get_pg_connections()
@@ -124,10 +127,13 @@ class TimDb(object):
         self.messages = Messages(self.db, self.files_root_path, 'messages', self.current_user_name, self.session)
         self.lectures = Lectures(self.db, self.files_root_path, 'lectures', self.current_user_name, self.session)
         self.folders = Folders(self.db, self.files_root_path, 'folders', self.current_user_name, self.session)
-        self.lecture_answers = LectureAnswers(self.db, self.files_root_path, 'lecture_answers', self.current_user_name, self.session)
+        self.lecture_answers = LectureAnswers(self.db, self.files_root_path,
+                                              'lecture_answers', self.current_user_name, self.session)
         self.velps = Velps(self.db, self.files_root_path, 'velps', self.current_user_name, self.session)
-        self.velp_groups = VelpGroups(self.db, self.files_root_path, 'velp_groups', self.current_user_name, self.session)
-        self.annotations = Annotations(self.db, self.files_root_path, 'annotations', self.current_user_name, self.session)
+        self.velp_groups = VelpGroups(self.db, self.files_root_path, 'velp_groups',
+                                      self.current_user_name, self.session)
+        self.annotations = Annotations(self.db, self.files_root_path, 'annotations',
+                                       self.current_user_name, self.session)
 
     def get_pg_connections(self):
         """Returns the number of clients currently connected to PostgreSQL."""
@@ -157,12 +163,15 @@ class TimDb(object):
             except Exception as err:
                 log_error('close error: ' + str(self.num) + ' ' + str(err))
 
-            log_debug('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid, self.num, TimDb.instances , bes,  time.time() - self.time, self.route_path ))
+            log_debug('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid,
+                                                                               self.num, TimDb.instances, bes, time.time() - self.time, self.route_path))
             self.reset_attrs()
 
     def execute_script(self, sql_file):
         """Executes an SQL file on the database.
+
         :param sql_file: The SQL script to be executed.
+
         """
         with open(sql_file, 'r', encoding='utf-8') as schema_file:
             self.db.cursor().executescript(schema_file.read())
@@ -170,7 +179,9 @@ class TimDb(object):
 
     def execute_sql(self, sql):
         """Executes an SQL command on the database.
+
         :param sql: The SQL command to be executed.
+
         """
         self.db.cursor().executescript(sql)
         self.db.commit()

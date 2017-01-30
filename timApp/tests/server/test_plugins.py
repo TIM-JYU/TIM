@@ -44,9 +44,9 @@ class PluginTest(TimRouteTest):
         resp = self.post_answer(plugin_type, task_id_ext, [True, False, False])
         self.check_failed_answer(resp)
         self.post_answer(plugin_type, task_id_ext_wrong, [True, False, False],
-                                expect_status=400,
-                                expect_content={'error': 'Document {}: Paragraph not found: {}'
-                                .format(doc.doc_id, par_id + 'x')})
+                         expect_status=400,
+                         expect_content={'error': 'Document {}: Paragraph not found: {}'
+                                         .format(doc.doc_id, par_id + 'x')})
 
         wrongname = 'mmcqexamplez'
         self.post_answer(plugin_type, str(doc.doc_id) + '.' + wrongname, [True, False, False],
@@ -230,7 +230,8 @@ class PluginTest(TimRouteTest):
         self.get(ur['file'], expect_status=403, expect_content=self.permission_error)
 
         # and cannot post answers
-        resp = self.post_answer('csPlugin', task_id, user_input, expect_status=403, expect_content=self.permission_error)
+        resp = self.post_answer('csPlugin', task_id, user_input, expect_status=403,
+                                expect_content=self.permission_error)
 
         # until he is granted a permission
         ug = db.users.get_personal_usergroup_by_id(self.current_user_id())
@@ -515,7 +516,7 @@ class PluginTest(TimRouteTest):
 
         for (g1, g2, g3), count_type, count, (tasksum1, velpsum1, sum1), (tasksum2, velpsum2, sum2) in cases:
             rule_dict = {'groups': {'1st': g1, '2nd': g2, '3rd': g3},
-                 'count': {count_type: count}}
+                         'count': {count_type: count}}
             rule = PointSumRule(rule_dict)
             points = timdb.answers.get_points_by_rule(
                 rule_dict,

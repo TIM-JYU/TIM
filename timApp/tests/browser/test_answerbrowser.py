@@ -7,6 +7,7 @@ from timdb.models.docentry import DocEntry
 
 
 class AnswerBrowserTest(BrowserTest):
+
     def test_referenced_area_plugin(self):
         self.login_browser_test1()
         self.login_test1()

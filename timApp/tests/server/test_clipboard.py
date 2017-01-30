@@ -6,6 +6,7 @@ from timdb.models.docentry import DocEntry
 
 
 class ClipboardTest(TimRouteTest):
+
     def copy(self, doc: DocEntry, par_start: DocParagraph, par_end: DocParagraph):
         self.json_post('/clipboard/copy/{}/{}/{}'.format(doc.id, par_start.get_id(), par_end.get_id()))
 

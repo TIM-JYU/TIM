@@ -13,7 +13,8 @@ from theme import Theme
 
 
 def datestr_to_relative(dstr):
-    if isinstance(dstr, str): dstr = datetime.strptime(dstr, '%Y-%m-%d %H:%M:%S')
+    if isinstance(dstr, str):
+        dstr = datetime.strptime(dstr, '%Y-%m-%d %H:%M:%S')
     return date_to_relative(dstr) if dstr else ''
 
 
@@ -22,6 +23,7 @@ def date_to_relative(d: Optional[datetime]):
 
     :param d: The datetime object to convert.
     :return: A string representing the given date relative to current time.
+
     """
 
     if d is None:
@@ -29,7 +31,7 @@ def date_to_relative(d: Optional[datetime]):
     diff = datetime.now(timezone.utc) - d
     s = diff.seconds
     if diff.days > 7 or diff.days < 0:
-        return (datetime.now()-diff).strftime('%d %b %y')
+        return (datetime.now() - diff).strftime('%d %b %y')
     elif diff.days == 1:
         return '1 day ago'
     elif diff.days > 1:
@@ -41,17 +43,19 @@ def date_to_relative(d: Optional[datetime]):
     elif s < 120:
         return '1 minute ago'
     elif s < 3600:
-        return '{} minutes ago'.format(s//60)
+        return '{} minutes ago'.format(s // 60)
     elif s < 7200:
         return '1 hour ago'
     else:
-        return '{} hours ago'.format(s//3600)
+        return '{} hours ago'.format(s // 3600)
 
 
 def merge(a, b):
     """Merges two dictionaries recursively. Stores the result in the first dictionary.
+
     :param a: The first dictionary.
     :param b: The second dictionary.
+
     """
     for key in b:
         if key in a:
@@ -139,8 +143,7 @@ def count_chars(md, char):
 
 
 def get_error_html(message, response=None):
-    """
-    Wraps an error message in an HTML element with class 'error'.
+    """Wraps an error message in an HTML element with class 'error'.
 
     :param message: The message to be displayed in the error.
 
@@ -168,8 +171,7 @@ class ThemeNotFoundException(Exception):
 
 
 def generate_theme_scss(themes: List[Theme], gen_dir: str) -> None:
-    """
-    Generates an SCSS file based on the given theme names.
+    """Generates an SCSS file based on the given theme names.
 
     NOTE: This function sorts the given theme list.
 
@@ -188,6 +190,7 @@ def generate_theme_scss(themes: List[Theme], gen_dir: str) -> None:
 
     :param themes: The list of themes.
     :param gen_dir: The directory where the SCSS file should be generated.
+
     """
     for t in themes:
         if not t.exists():
@@ -209,10 +212,11 @@ def generate_theme_scss(themes: List[Theme], gen_dir: str) -> None:
 
 
 def get_combined_css_filename(themes: List[Theme]):
-    """
-    Returns the combined file name based on the given list of theme names.
+    """Returns the combined file name based on the given list of theme names.
+
     :param themes: The list of themes.
     :return: The combined file name based on the themes. If the list is empty, 'default' is returned.
+
     """
     return '-'.join(t.filename for t in themes) or 'default'
 

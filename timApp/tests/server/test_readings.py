@@ -13,6 +13,7 @@ PAR_CLICK_MODIFIED = PAR_CLICK + '-modified'
 
 
 class ReadingsTest(TimRouteTest):
+
     def test_readings_normal(self):
         self.login_test1()
         doc = self.create_doc(initial_par='test\n#-\ntest2\n#-\ntest3').document

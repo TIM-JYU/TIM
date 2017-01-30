@@ -2,6 +2,7 @@ from tests.server.timroutetest import TimRouteTest
 
 
 class IndexTest(TimRouteTest):
+
     def test_index_one_heading_per_par(self):
         self.login_test1()
         doc = self.create_doc(initial_par="""

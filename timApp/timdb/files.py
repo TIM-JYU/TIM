@@ -10,33 +10,37 @@ import datetime
 
 
 class Files(TimDbBase):
+
     def getFilePath(self, file_id: int, file_filename: str):
         """Gets the path of an file.
-        
+
         :param file_id: The id of the file.
         :param file_filename: The filename of the file.
         :returns: The path of the file.
+
         """
 
         return os.path.join(self.blocks_path, str(file_id), file_filename)
 
     def getFileRelativePath(self, file_id: int, file_filename: str):
         """Gets the relative path of a file.
-        
+
         :param file_id: The id of the file.
         :param file_filename: The filename of the file.
         :returns: The path of the file.
+
         """
 
         return os.path.relpath(self.getFilePath(file_id, file_filename), self.blocks_path)
 
     def saveFile(self, file_data: 'bytes', file_filename: str, owner_group_id: int) -> Tuple[int, str]:
         """Saves a file to the database.
-        
+
         :param file_data: The file data.
         :param file_filename: The filename of the file.
         :param owner_group_id: The owner group of the file.
         :returns: A tuple containing the id of the file and its relative path of the form 'file_id/file_filename'.
+
         """
 
         # TODO: Check that the file extension is allowed.
@@ -70,10 +74,11 @@ class Files(TimDbBase):
 
     def getFile(self, file_id: int, file_filename: str) -> bytes:
         """Gets the specified file.
-        
+
         :param file_id: The id of the file.
         :param file_filename: The filename of the file.
         :returns: The content of the file.
+
         """
 
         with open(self.getFilePath(file_id, file_filename), 'rb') as f:
@@ -81,8 +86,9 @@ class Files(TimDbBase):
 
     def getFiles(self) -> List[dict]:
         """Gets all the files.
-        
+
         :returns: A list of dictionaries of the form {'id': xx, 'file': 'xx/filename.ext'}.
+
         """
 
         cursor = self.db.cursor()
@@ -92,10 +98,11 @@ class Files(TimDbBase):
 
     def fileExists(self, file_id: int, file_filename: str):
         """Returns whether the specified file exists.
-        
+
         :param file_id: The id of the file.
         :param file_filename: The filename of the file.
         :returns: True if the file exists, false otherwise.
+
         """
 
         if not self.blockExists(file_id, blocktypes.FILE):

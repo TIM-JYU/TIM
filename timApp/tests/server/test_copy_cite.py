@@ -2,6 +2,7 @@ from tests.server.timroutetest import TimRouteTest
 
 
 class CopyCiteTest(TimRouteTest):
+
     def test_copy(self):
         self.login_test1()
         d = self.create_doc(from_file='example_docs/multiple_mmcqs.md')

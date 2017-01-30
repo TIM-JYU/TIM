@@ -42,6 +42,7 @@ class DocSettings:
         :param par: The DocParagraph to extract settings from.
         :type par: DocParagraph
         :return: The DocSettings object.
+
         """
         if par.is_reference():
             try:
@@ -96,10 +97,8 @@ class DocSettings:
         return self.__dict.get(self.macros_key, {})
 
     def get_macros_preserving_user(self):
-        """
-        Gets the macros and defines user-specific variables in such a way that the macro replacement for user variables
-        does effectively nothing.
-        """
+        """Gets the macros and defines user-specific variables in such a way that the macro replacement for user
+        variables does effectively nothing."""
         if self.user_macros is not None:
             return self.user_macros
         macros = deepcopy(self.get_macros())

@@ -9,12 +9,15 @@ from timdb.timdbbase import TimDbBase
 
 ID_ROOT_FOLDER = -1
 
+
 class Folders(TimDbBase):
+
     def get(self, block_id: int) -> Optional[dict]:
         """Gets the metadata information of the specified folder.
 
         :param block_id: The block id of the folder to be retrieved.
         :returns: A row representing the folder.
+
         """
         cursor = self.db.cursor()
         cursor.execute('SELECT id, name, location FROM Folder WHERE id = %s', [block_id])
@@ -30,6 +33,7 @@ class Folders(TimDbBase):
 
         :param folder_id: The id of the folder.
         :returns: True if the folder exists, false otherwise.
+
         """
         cursor = self.db.cursor()
         cursor.execute('SELECT EXISTS(SELECT id FROM Folder WHERE id = %s)', [folder_id])
@@ -44,10 +48,12 @@ class Folders(TimDbBase):
 
     def get_folders(self, root_path: str = '', filter_ids: Optional[Iterable[int]]=None) -> List[Folder]:
         """Gets all the folders under a path.
+
         :param root_path: Restricts the search to a specific folder.
         :param filter_ids: An optional iterable of document ids for filtering the documents.
                Must be non-empty if supplied.
         :return: A list of dictionaries of the form {'id': <folder_id>, 'name': 'folder_name', 'path': 'folder_path'}
+
         """
         q = Folder.query.filter_by(location=root_path)
         if filter_ids:
@@ -59,6 +65,7 @@ class Folders(TimDbBase):
 
         :param block_id: The id of the folder to be renamed.
         :param new_name: The new name for the folder.
+
         """
 
         folder_info = self.get(block_id)
@@ -87,7 +94,6 @@ class Folders(TimDbBase):
             cursor.execute('UPDATE Folder SET location = %s WHERE location = %s',
                            [new_docname, old_docname])
 
-
         self.db.commit()
 
     def is_empty(self, block_id: int) -> bool:
@@ -100,8 +106,7 @@ class Folders(TimDbBase):
         return cursor.fetchone()[0] == 0
 
     def delete(self, block_id: int) -> None:
-        """Deletes an empty folder.
-        """
+        """Deletes an empty folder."""
         folder_info = self.get(block_id)
         assert folder_info is not None, 'folder does not exist: ' + str(block_id)
         folder_name = folder_info['path']
@@ -116,12 +121,13 @@ class Folders(TimDbBase):
         db.session.commit()
 
     def check_velp_group_folder_path(self, root_path: str, owner_group_id: int, doc_name: str):
-        """ Checks if velp group folder path exists and if not, creates it
+        """Checks if velp group folder path exists and if not, creates it.
 
         :param root_path: Root path where method was called from
         :param owner_group_id: Owner group ID for the new folder if one is to be created
         :param doc_name:
         :return: Path for velp group folder
+
         """
         group_folder_name = "velp-groups"   # Name of the folder all velp groups end up in
         if root_path != "":
@@ -159,11 +165,12 @@ class Folders(TimDbBase):
         return doc_folder_path
 
     def check_personal_velp_folder(self, user: User, user_id: int):
-        """ Checks if personal velp group folder path exists and if not, creates it
+        """Checks if personal velp group folder path exists and if not, creates it.
 
         :param user: Username of current user
         :param user_id: ID of current user
         :return:
+
         """
         group_folder_name = "velp-groups"
         user_folder = user.get_personal_folder().path

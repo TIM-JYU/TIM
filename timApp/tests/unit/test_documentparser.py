@@ -7,6 +7,7 @@ from documentmodel.documentwriter import DocumentWriter
 
 
 class DocumentParserTest(unittest.TestCase):
+
     def test_parsing(self):
         doc_text = """
 ``` {plugin=csPlugin}
@@ -186,7 +187,8 @@ test
         # ignore 'type' because some of them are now 'atom'
         self.assertListEqual([{'md': p['md'], 'attrs': p['attrs']} for p in expected],
                              [{'md': p['md'], 'attrs': p['attrs']} for p in DocumentParser(exported).get_blocks()])
-        self.assertListEqual([{'attrs': {}, 'type': 'code', 'md': '```\nasd\n```'}], DocumentParser('```\nasd').get_blocks())
+        self.assertListEqual([{'attrs': {}, 'type': 'code', 'md': '```\nasd\n```'}],
+                             DocumentParser('```\nasd').get_blocks())
         self.assertListEqual([{'attrs': {}, 'type': 'code', 'md': '```\n```'}], DocumentParser('```').get_blocks())
 
     def test_validation(self):
@@ -216,14 +218,14 @@ test
 """, """
 #- {area=test area_end=test}
 """,
-# """
-##- {#test}
-##- {#test}
-# """,
-"""
+            # """
+            # - {#test}
+            # - {#test}
+            # """,
+            """
 #- {id=someinvalid}
 """,
-"""
+            """
 ```
 ``` {a=b}
 """]
@@ -243,7 +245,7 @@ test
 #- {area_end=test3}
 #- {area_end=test}
 """,
-"""```
+            """```
 ``{a=b}
 """]
         for f in failures:

@@ -3,6 +3,7 @@ from tests.server.timroutetest import TimRouteTest
 
 
 class FolderTest(TimRouteTest):
+
     def get_personal_folder_path(self, path):
         return '{}/{}'.format(self.current_user.get_personal_folder().path, path)
 

@@ -95,6 +95,7 @@ class DocEntry(db.Model, DocInfo):
         :param owner_group_id: The id of the owner group.
         :param is_gamified: Boolean value indicating whether the document is gamified.
         :returns: The newly created document object.
+
         """
 
         if path is not None and '\0' in path:

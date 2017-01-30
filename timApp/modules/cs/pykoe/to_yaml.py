@@ -46,7 +46,8 @@ def correct_yaml(text):
 def parse_yaml(text):
     values = {}
 
-    if len(text) == 0: return False
+    if len(text) == 0:
+        return False
     try:
         text = correct_yaml(text)
         values = yaml.load(text)  # , Loader=CLoader)
@@ -70,7 +71,8 @@ def parse_plugin_values(nodes):
         values = {}
         name = node['plugin']
 
-        if not len(node.text): continue
+        if not len(node.text):
+            continue
         try:
             values = parse_yaml(node.text)
             if type(values) is str:
@@ -108,7 +110,7 @@ def parse_plugin_values_old(nodes):
 
         if len(node.text) > 0:
             try:
-                values = yaml.load(node.text) #, Loader=CLoader)
+                values = yaml.load(node.text)  # , Loader=CLoader)
             except (yaml.parser.ParserError, yaml.scanner.ScannerError):
                 plugins.append({"plugin": name, 'error': "YAML is malformed"})
         try:
@@ -122,6 +124,7 @@ def parse_plugin_values_old(nodes):
 
 
 class Node(dict):
+
     def __init__(self, plugin, text, id):
         self["plugin"] = plugin
         self.text = text

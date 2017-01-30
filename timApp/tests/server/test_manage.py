@@ -3,6 +3,7 @@ from tests.server.timroutetest import TimRouteTest
 
 
 class ManageTest(TimRouteTest):
+
     def test_manage(self):
         self.login_test1()
         doc = self.create_doc(initial_par='testing manage').document

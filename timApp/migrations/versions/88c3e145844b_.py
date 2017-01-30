@@ -1,8 +1,6 @@
 """Add color column to annotation table.
 
-Revision ID: 88c3e145844b
-Revises: f469aa644049
-Create Date: 2017-01-03 08:49:41.244996
+Revision ID: 88c3e145844b Revises: f469aa644049 Create Date: 2017-01-03 08:49:41.244996
 
 """
 

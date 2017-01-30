@@ -28,52 +28,53 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
     log_info("Using nginx for plugins")
     log_info('Uploader plugin URL is: {}'.format(app.config['UPLOADER_NGINX_URL']))
     PLUGINS = {
-        "csPlugin":      {"host": TIM_HOST + ":56000/cs/"},
-        "taunoPlugin":   {"host": TIM_HOST + ":56000/cs/tauno/"},
-        "simcirPlugin":  {"host": TIM_HOST + ":56000/cs/simcir/"},
+        "csPlugin": {"host": TIM_HOST + ":56000/cs/"},
+        "taunoPlugin": {"host": TIM_HOST + ":56000/cs/tauno/"},
+        "simcirPlugin": {"host": TIM_HOST + ":56000/cs/simcir/"},
         "csPluginRikki": {"host": TIM_HOST + ":56000/cs/rikki/"},  # demonstrates a broken plugin
-        "showCode":      {"host": TIM_HOST + ":55000/svn/", "browser": False},
-        "showImage":     {"host": TIM_HOST + ":55000/svn/image/", "browser": False},
-        "showVideo":     {"host": TIM_HOST + ":55000/svn/video/", "browser": False},
-        "mcq":           {"host": TIM_HOST + ":57000/"},
-        "mmcq":          {"host": TIM_HOST + ":58000/"},
-        "uploader":      {"host": app.config['UPLOADER_NGINX_URL']},
+        "showCode": {"host": TIM_HOST + ":55000/svn/", "browser": False},
+        "showImage": {"host": TIM_HOST + ":55000/svn/image/", "browser": False},
+        "showVideo": {"host": TIM_HOST + ":55000/svn/video/", "browser": False},
+        "mcq": {"host": TIM_HOST + ":57000/"},
+        "mmcq": {"host": TIM_HOST + ":58000/"},
+        "uploader": {"host": app.config['UPLOADER_NGINX_URL']},
         #"mcq":           {"host": "http://ciao.it.jyu.fi:41941"},
         #"mmcq":          {"host": "http://ciao.it.jyu.fi:41940"},
-        "shortNote":     {"host": TIM_HOST + ":59000/"},
-        "graphviz":      {"host": TIM_HOST + ":60000/", "browser": False},
-        "pali":          {"host": TIM_HOST + ":61000/"},
-        "imagex":        {"host": TIM_HOST + ":62000/"},
-        "qst":           {"host": TIM_HOST + "/qst/"},
-        "echo":          {"host": TIM_HOST + "/echoRequest/"},
+        "shortNote": {"host": TIM_HOST + ":59000/"},
+        "graphviz": {"host": TIM_HOST + ":60000/", "browser": False},
+        "pali": {"host": TIM_HOST + ":61000/"},
+        "imagex": {"host": TIM_HOST + ":62000/"},
+        "qst": {"host": TIM_HOST + "/qst/"},
+        "echo": {"host": TIM_HOST + "/echoRequest/"},
     }
 else:
     log_info("Using container network for plugins")
     log_info('Uploader plugin URL is: {}'.format(app.config['UPLOADER_CONTAINER_URL']))
     PLUGINS = {
-        "csPlugin":      {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/"},
-        "taunoPlugin":   {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/tauno/"},
-        "simcirPlugin":  {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/simcir/"},
+        "csPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/"},
+        "taunoPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/tauno/"},
+        "simcirPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/simcir/"},
         "csPluginRikki": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/rikki/"},  # demonstrates a broken plugin
-        "showCode":      {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/", "browser": False},
-        "showImage":     {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/image/", "browser": False},
-        "showVideo":     {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
-        "mcq":           {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
-        "mmcq":          {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
-        "uploader":      {"host": app.config['UPLOADER_CONTAINER_URL']},
-        "shortNote":     {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
-        "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
-        "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
-        "imagex":        {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
-        "qst":           {"host": "http://" + "localhost" + ":5000/qst/"},
-        "echo":          {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
+        "showCode": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/", "browser": False},
+        "showImage": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/image/", "browser": False},
+        "showVideo": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
+        "mcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
+        "mmcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
+        "uploader": {"host": app.config['UPLOADER_CONTAINER_URL']},
+        "shortNote": {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
+        "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
+        "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
+        "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
+        "qst": {"host": "http://" + "localhost" + ":5000/qst/"},
+        "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
     }
 
 
 def call_plugin_generic(plugin, method, route, data=None, headers=None, params=None):
     plug = get_plugin(plugin)
     try:
-        request = requests.request(method, plug['host'] + route + "/", data=data, timeout=(0.5, 30), headers=headers, params=params)
+        request = requests.request(method, plug['host'] + route + "/", data=data,
+                                   timeout=(0.5, 30), headers=headers, params=params)
         request.encoding = 'utf-8'
         return request.text
     except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError) as e:
@@ -97,6 +98,7 @@ def call_plugin_html(doc, plugin, plugin_data, params=None):
                                headers={'Content-type': 'application/json'},
                                params=params)
 
+
 def remove_p(s):
     if not s.startswith('<p>'):
         return s
@@ -117,8 +119,10 @@ def list_to_dumbo(list):
         if type(val) is list:
             list_to_dumbo(val)
             continue
-        if not type(val) is str: continue
-        if not val.startswith("md:"): continue
+        if not type(val) is str:
+            continue
+        if not val.startswith("md:"):
+            continue
 
         v = [val[3:]]
         v = call_dumbo(v)
@@ -135,9 +139,11 @@ def dict_to_dumbo(pm):
             list_to_dumbo(val)
             continue
 
-        if not type(val) is str: continue
+        if not type(val) is str:
+            continue
 
-        if not val.startswith("md:"): continue
+        if not val.startswith("md:"):
+            continue
         v = [val[3:]]
         v = call_dumbo(v)
         pm[mkey] = remove_p(v[0])
@@ -220,5 +226,6 @@ def get_plugin_tim_url(plugin):
 def get_plugin_needs_browser(plugin):
     # if not plugin: return False
     plg = get_plugin(plugin)
-    if "browser" not in plg: return True
+    if "browser" not in plg:
+        return True
     return plg["browser"] != False

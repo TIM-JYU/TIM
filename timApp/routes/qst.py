@@ -1,4 +1,4 @@
-"""Routes for qst (question) plugin"""
+"""Routes for qst (question) plugin."""
 from flask import Blueprint, render_template
 import binascii
 import routes.lecture
@@ -18,22 +18,22 @@ from flask.helpers import send_file
 from .common import *
 
 qst_plugin = Blueprint('qst_plugin',
-                        __name__,
-                        url_prefix='')  # TODO: Better URL prefix.
+                       __name__,
+                       url_prefix='')  # TODO: Better URL prefix.
 
 
 @qst_plugin.route("/qst/reqs/")
 def qst_reqs():
     reqs = {
-            "type": "embedded",
-            "js": ["/static/scripts/timHelper.js",
-                   "/static/scripts/controllers/qstController.js",
-                   # "/static/scripts/directives/dynamicAnswerSheet.js"
-                   ],
-            # "css": [],dynami
-            "angularModule": ["qstApp"],
-            "multihtml": True,
-           }
+        "type": "embedded",
+        "js": ["/static/scripts/timHelper.js",
+               "/static/scripts/controllers/qstController.js",
+               # "/static/scripts/directives/dynamicAnswerSheet.js"
+               ],
+        # "css": [],dynami
+        "angularModule": ["qstApp"],
+        "multihtml": True,
+    }
 
     return jsonResponse(reqs)
 
@@ -57,7 +57,7 @@ def qst_answer():
         markup = None
 
     save = answers
-    web = {'result': "Vastattu", 'markup': markup, 'show_result' : result, 'state': save}
+    web = {'result': "Vastattu", 'markup': markup, 'show_result': result, 'state': save}
     return jsonResponse({'save': save, 'web': web, "tim_info": tim_info})
 
 
@@ -85,8 +85,10 @@ def qst_get_html(jso):
     if info and info['max_answers'] and info['max_answers'] <= info.get('earlier_answers', 0):
         result = True
     if not result:
-        if 'points' in markup: del markup['points']
-        if 'expl' in markup: del markup['expl']
+        if 'points' in markup:
+            del markup['points']
+        if 'expl' in markup:
+            del markup['expl']
     jso['show_result'] = result
 
     attrs = json.dumps(jso)

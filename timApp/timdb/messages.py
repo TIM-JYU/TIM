@@ -10,7 +10,8 @@ from timdb.timdbbase import TimDbBase
 
 
 class Messages(TimDbBase):
-    def delete_messages_from_lecture(self, lecture_id:int, commit: bool):
+
+    def delete_messages_from_lecture(self, lecture_id: int, commit: bool):
         cursor = self.db.cursor()
         cursor.execute(
             """
@@ -33,9 +34,10 @@ class Messages(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     def get_messages(self, lecture_id: int) -> List[dict]:
-        """
-        Gets the question
+        """Gets the question.
+
         :return: Questions as a list
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -43,7 +45,7 @@ class Messages(TimDbBase):
                       FROM Message
                       WHERE lecture_id = %s
                       """, [lecture_id]
-        )
+                       )
 
         return self.resultAsDictionary(cursor)
 
@@ -55,7 +57,7 @@ class Messages(TimDbBase):
                       WHERE lecture_id = %s AND msg_id > %s
                       ORDER BY msg_id
                       DESC
-                      """, [lecture_id,client_last_message ])
+                      """, [lecture_id, client_last_message ])
 
         return self.resultAsDictionary(cursor)
 
@@ -74,8 +76,7 @@ class Messages(TimDbBase):
 
     def add_message(self, user_id: int, lecture_id: int, message: str, timestamp: datetime,
                     commit: bool=True) -> int:
-        """ Creates a new message
-        """
+        """Creates a new message."""
 
         m = Message(user_id=user_id, lecture_id=lecture_id, message=message, timestamp=timestamp)
         self.session.add(m)

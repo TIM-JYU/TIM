@@ -4,6 +4,7 @@ from timdb.models.user import User
 
 
 class Bookmarks:
+
     def __init__(self, user: User):
         self.user = user
         f = user.get_personal_folder()

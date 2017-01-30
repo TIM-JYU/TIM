@@ -94,12 +94,12 @@ def login_with_korppi():
         r = requests.get(url, params={'request': session['appcookie']}, verify=True)
     except requests.exceptions.SSLError:
         return abort(503, korppi_down_text)
-    
+
     if r.status_code != 200:
         return abort(503, korppi_down_text)
     korppi_response = r.text.strip()
     if not korppi_response:
-        return redirect(url+"?authorize=" + session['appcookie'] + "&returnTo=" + urlfile, code=303)
+        return redirect(url + "?authorize=" + session['appcookie'] + "&returnTo=" + urlfile, code=303)
     pieces = (korppi_response + "\n\n").split('\n')
     user_name = pieces[0]
     real_name = pieces[1]
@@ -107,7 +107,7 @@ def login_with_korppi():
 
     timdb = get_timdb()
     user_id = timdb.users.get_user_id_by_name(user_name)
-    
+
     if user_id is None:
         # Try email
         user = timdb.users.get_user_by_email(email)
@@ -181,9 +181,9 @@ def alt_signup():
     if not email or not is_valid_email(email):
         flash("You must supply a valid email address!")
         return finish_login(ready=False)
-        
+
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-    
+
     timdb = get_timdb()
     timdb.users.create_potential_user(email, password)
 
@@ -235,24 +235,24 @@ def alt_signup_after():
         if timdb.users.get_user_id_by_name(username) is not None:
             flash('User name already exists. Please try another one.', 'loginmsg')
             return finish_login(ready=False)
-    
+
     if password != confirm:
         flash('Passwords do not match.', 'loginmsg')
         return finish_login(ready=False)
-        
+
     if len(password) < 6:
         flash('A password should contain at least six characters.', 'loginmsg')
         return finish_login(ready=False)
-    
+
     if user_id == 0:
         user_id = timdb.users.create_user(username, real_name, email, password=password).id
         gid = timdb.users.create_usergroup(username).id
         timdb.users.add_user_to_group(gid, user_id)
     else:
         timdb.users.update_user(user_id, username, real_name, email, password=password)
-    
+
     timdb.users.delete_potential_user(email)
-    
+
     session.pop('altlogin', None)
     session['user_id'] = user_id
     session['user_name'] = username
@@ -286,7 +286,7 @@ def alt_login():
         session['email'] = email
         session['altlogin'] = 'signup2'
         session['token'] = password
-        
+
     else:
         error_msg = "Email address or password did not match. Please try again."
         if request.is_xhr:
@@ -331,7 +331,9 @@ def finish_login(ready=True):
 @login_page.route("/quickLogin/<username>")
 def quick_login(username):
     """A debug helping method for logging in as another user.
-       For developer use only.
+
+    For developer use only.
+
     """
     timdb = get_timdb()
     verify_admin()

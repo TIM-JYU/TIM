@@ -4,6 +4,7 @@ from timdb.tim_models import db
 
 
 class TemplateTest(TimRouteTest):
+
     def test_templates(self):
         self.login_test1()
         db.session.expire_on_commit = False

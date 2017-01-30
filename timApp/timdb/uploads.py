@@ -7,17 +7,19 @@ import os
 
 
 class Uploads(TimDbBase):
+
     def get_file_path(self, path: str, filename: str):
-        """Gets the path of for a file.  Creates a new dir by file_id one creater than number of files in dir
+        """Gets the path of for a file.  Creates a new dir by file_id one creater than number of files in dir.
 
         :param path: The path for the file
         :param filename: The filename of the image.
         :returns: The id and path of the image file.
+
         """
         p = os.path.join(self.blocks_path, path)
         if not os.path.exists(p):
             os.makedirs(p)
-        file_id = len(os.listdir(p))+1
+        file_id = len(os.listdir(p)) + 1
         relpath = os.path.join(path, str(file_id))
         p = os.path.join(self.blocks_path, relpath)
         os.makedirs(p)
@@ -32,6 +34,7 @@ class Uploads(TimDbBase):
         :param filename: The filename
         :param owner_group_id: The owner group of the file.
         :returns: The AnswerUpload object that was created.
+
         """
 
         # TODO: Check that the file extension is allowed.
@@ -41,7 +44,8 @@ class Uploads(TimDbBase):
 
         with open(file_path, 'wb') as f:
             f.write(file_data)
-        b = insert_block(description=relfilename, owner_group_id=owner_group_id, block_type=blocktypes.UPLOAD, commit=False)
+        b = insert_block(description=relfilename, owner_group_id=owner_group_id,
+                         block_type=blocktypes.UPLOAD, commit=False)
         au = AnswerUpload(block=b)
         db.session.add(b)
         db.session.add(au)
@@ -54,6 +58,7 @@ class Uploads(TimDbBase):
 
         :param relfilename: The filename.
         :returns: The content of the file.
+
         """
 
         p = os.path.join(self.blocks_path, relfilename)

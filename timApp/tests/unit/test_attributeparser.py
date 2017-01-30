@@ -3,6 +3,7 @@ from documentmodel.attributeparser import AttributeParser
 
 
 class AttributeParserTest(unittest.TestCase):
+
     def test_random(self):
         self.check_valid('{}', {})
         self.check_valid('{#asd}', {'taskId': 'asd'})

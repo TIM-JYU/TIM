@@ -7,6 +7,7 @@ from timdb.tim_models import BlockAccess
 
 
 class UserTest(TimDbTest):
+
     def test_create_user(self):
         db = self.get_db()
         anonymous_usergroup_id = db.users.get_anon_group_id()

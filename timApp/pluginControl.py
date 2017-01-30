@@ -22,7 +22,7 @@ from utils import get_error_html
 from flask import render_template
 
 
-LAZYSTART= "<!--lazy "
+LAZYSTART = "<!--lazy "
 LAZYEND = " lazy-->"
 NOLAZY = "<!--nolazy-->"
 NEVERLAZY = "NEVERLAZY"
@@ -38,8 +38,7 @@ def get_error_html_plugin(plugin_name, message, response=None):
 
 
 def find_task_ids(blocks: List[DocParagraph]) -> Tuple[List[str], int]:
-    """Finds all task plugins from the given list of paragraphs and returns their ids.
-    """
+    """Finds all task plugins from the given list of paragraphs and returns their ids."""
     task_ids = []
     plugin_count = 0
     for block in blocks:
@@ -54,9 +53,7 @@ def find_task_ids(blocks: List[DocParagraph]) -> Tuple[List[str], int]:
 
 
 def try_load_json(json_str: str):
-    """
-
-    """
+    """"""
     try:
         if json_str is not None:
             return json.loads(json_str)
@@ -76,8 +73,8 @@ def pluginify(doc: Document,
               load_states=True,
               plugin_params=None,
               wrap_in_div=True):
-    """ "Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding
-        plugin route for each plugin paragraph.
+    """"Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding plugin route for each plugin
+    paragraph.
 
     :param doc Document / DocumentVersion object.
     :param pars: A list of DocParagraphs to be processed.
@@ -91,6 +88,7 @@ def pluginify(doc: Document,
     :return: Processed HTML blocks along with JavaScript, CSS stylesheet and AngularJS module dependencies.
 
     :type pars: list[DocParagraph]
+
     """
 
     # taketime("answ", "start")
@@ -116,7 +114,7 @@ def pluginify(doc: Document,
 
         if is_gamified:
             md = ""
-            md = block.get_markdown();
+            md = block.get_markdown()
             try:
                 gamified_data = gamificationdata.gamify(md)
                 html_pars[idx]['html'] = render_template('gamification_map.html', gamified_data=gamified_data)
@@ -191,7 +189,8 @@ def pluginify(doc: Document,
                 reqs['multihtml'] = True
         except ValueError as e:
             for idx in plugin_block_map.keys():
-                html_pars[idx]['html'] = get_error_html_plugin(plugin_name, 'Failed to parse JSON from plugin reqs route: {}'.format(e), resp)
+                html_pars[idx]['html'] = get_error_html_plugin(
+                    plugin_name, 'Failed to parse JSON from plugin reqs route: {}'.format(e), resp)
             continue
         plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
         for src in plugin_js_files:
@@ -218,7 +217,8 @@ def pluginify(doc: Document,
         needs_browser = get_plugin_needs_browser(plugin_name)
         if 'multihtml' in reqs and reqs['multihtml']:
             try:
-                response = call_plugin_multihtml(doc, plugin_name, [val for _, val in plugin_block_map.items()], plugin_params)
+                response = call_plugin_multihtml(
+                    doc, plugin_name, [val for _, val in plugin_block_map.items()], plugin_params)
             except PluginException as e:
                 for idx in plugin_block_map.keys():
                     html_pars[idx]['html'] = get_error_html_plugin(plugin_name, str(e))
@@ -257,19 +257,26 @@ def pluginify(doc: Document,
 
     return html_pars, js_paths, css_paths, modules
 
+
 def get_markup_value(markup, key, default):
-    if key not in markup["markup"]: return default
+    if key not in markup["markup"]:
+        return default
     return markup["markup"][key]
 
 
 def make_lazy(html, markup, do_lazy):
-    if do_lazy == NEVERLAZY: return html, False
-    markup_lazy = get_markup_value(markup,"lazy", "")
-    if markup_lazy == False: return html, False # user do not want lazy
-    if not do_lazy and markup_lazy != True: return html, False
-    if html.find(NOLAZY) >= 0: return html, False  # not allowed to make lazy
-    if html.find(LAZYSTART) >= 0: return html, True # allredy lazy
-    header = str(get_markup_value(markup, "header", get_markup_value(markup,"headerText", "")))
+    if do_lazy == NEVERLAZY:
+        return html, False
+    markup_lazy = get_markup_value(markup, "lazy", "")
+    if markup_lazy == False:
+        return html, False  # user do not want lazy
+    if not do_lazy and markup_lazy != True:
+        return html, False
+    if html.find(NOLAZY) >= 0:
+        return html, False  # not allowed to make lazy
+    if html.find(LAZYSTART) >= 0:
+        return html, True  # allredy lazy
+    header = str(get_markup_value(markup, "header", get_markup_value(markup, "headerText", "")))
     stem = str(get_markup_value(markup, "stem", "Open plugin"))
     html = html.replace("<!--", "<!-LAZY-").replace("-->", "-LAZY->")
     # print(header, stem)

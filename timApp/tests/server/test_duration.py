@@ -8,6 +8,7 @@ from timdb.tim_models import db, BlockAccess
 
 
 class DurationTest(TimRouteTest):
+
     def get_about_to_access_msg(self, period='a day'):
         return ['You are about to access a time-limited document.',
                 'After you click Unlock, your access to this document will be removed in {}.'.format(period)]

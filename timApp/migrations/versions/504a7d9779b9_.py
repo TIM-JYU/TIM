@@ -1,8 +1,6 @@
 """Add support for different reading types (new column to readparagraphs).
 
-Revision ID: 504a7d9779b9
-Revises: None
-Create Date: 2016-10-10 14:43:14.044658
+Revision ID: 504a7d9779b9 Revises: None Create Date: 2016-10-10 14:43:14.044658
 
 """
 

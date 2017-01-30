@@ -7,6 +7,7 @@ from timdb.timdbbase import TimDbBase
 
 
 class Notes(TimDbBase):
+
     def __tagstostr(self, tags: List[str]) -> str:
         tagstr = ''
         if 'difficult' in tags:
@@ -28,6 +29,7 @@ class Notes(TimDbBase):
 
         :param usergroup_id: The usergroup id for which to check access.
         :param note_id: The id of the note.
+
         """
         cursor = self.db.cursor()
 
@@ -50,6 +52,7 @@ class Notes(TimDbBase):
         :param content: The content of the note.
         :param access: Who can read the note.
         :param tags: Tags for the note (difficult, unclear).
+
         """
         cursor = self.db.cursor()
         note_html = md_to_html(content)
@@ -73,6 +76,7 @@ class Notes(TimDbBase):
         :param access: The access of the note.
         :param new_content: New note text to set.
         :param new_tags: New tags to set.
+
         """
         cursor = self.db.cursor()
         new_html = md_to_html(new_content)
@@ -105,6 +109,7 @@ class Notes(TimDbBase):
         """Deletes a note.
 
         :param note_id: The id of the note.
+
         """
         cursor = self.db.cursor()
 
@@ -121,6 +126,7 @@ class Notes(TimDbBase):
 
         :param usergroup_id: The usergroup id.
         :param doc: The document for which to get the notes.
+
         """
         ids = doc.get_referenced_document_ids()
         ids.add(doc.doc_id)
@@ -171,7 +177,7 @@ class Notes(TimDbBase):
             if note['html'] is None:
                 note['html'] = md_to_html(note['content'])
                 c.execute('UPDATE UserNotes SET html = %s '
-                                'WHERE id = %s', [note['html'], note['id']])
+                          'WHERE id = %s', [note['html'], note['id']])
 
         self.db.commit()
         return result

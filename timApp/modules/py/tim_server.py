@@ -15,21 +15,18 @@ PORT = 5000
 PROGDIR = "."
 
 
-
-
 class TimServer(http.server.BaseHTTPRequestHandler):
-    """
-    Base class for TIM-server
-    """
+    """Base class for TIM-server."""
 
     def __init__(self, request, client_address, _server):
         super().__init__(request, client_address, _server)
         self.user_id = "--"
 
     def do_OPTIONS(self):
-        """
-        Do needed things for OPTIONS request
+        """Do needed things for OPTIONS request.
+
         :return: nothing
+
         """
         print("do_OPTIONS ==============================================")
         do_headers(self, "text/plain")
@@ -37,28 +34,36 @@ class TimServer(http.server.BaseHTTPRequestHandler):
         print(self.headers)
 
     def do_GET(self):
-        """
-        Do needed things for GET request
+        """Do needed things for GET request.
+
         :return: nothing
+
         """
         # print("do_GET ==================================================")
-        if self.path.find('/reqs') >= 0: return self.do_reqs()
-        if self.path.find('/favicon.ico') >= 0: return self.send_response(404)
-        if self.path.find('/template') >= 0: return self.send_text(self.do_template(get_params(self)), "text/plain")
+        if self.path.find('/reqs') >= 0:
+            return self.do_reqs()
+        if self.path.find('/favicon.ico') >= 0:
+            return self.send_response(404)
+        if self.path.find('/template') >= 0:
+            return self.send_text(self.do_template(get_params(self)), "text/plain")
         fname = self.path.split("?")[0]
-        if fname.find('.css') >= 0: return self.send_text_file(fname, "css", "text/css")
-        if fname.find('.js') >= 0: return self.send_text_file(fname, "js", "application/javascript")
-        if fname.find('.html') >= 0: return self.send_text_file(fname, "html", "text/html")
+        if fname.find('.css') >= 0:
+            return self.send_text_file(fname, "css", "text/css")
+        if fname.find('.js') >= 0:
+            return self.send_text_file(fname, "js", "application/javascript")
+        if fname.find('.html') >= 0:
+            return self.send_text_file(fname, "html", "text/html")
         return self.do_all(get_params(self))
 
     def do_POST(self):
-        """
-        Do needed things for POST request
-        This may be a f.ex a request single html-plugin or multiple plugins
+        """Do needed things for POST request This may be a f.ex a request single html-plugin or multiple plugins.
+
         :return: nothing
+
         """
-        # print("do_POST =================================================")   
-        if self.path.find('/multihtml') < 0: return self.do_all(post_params(self))
+        # print("do_POST =================================================")
+        if self.path.find('/multihtml') < 0:
+            return self.do_all(post_params(self))
 
         print("do_POST MULTIHML ==========================================")
         querys = multi_post_params(self)
@@ -82,29 +87,32 @@ class TimServer(http.server.BaseHTTPRequestHandler):
         log(self)  # to measure time spend in doing all the html
 
     def do_PUT(self):
-        """
-        Do needed things for PUT request
+        """Do needed things for PUT request.
+
         :return: nothing
+
         """
         # print("do_PUT =================================================")
         self.do_all(post_params(self))
 
     def wout(self, s: str):
-        """
-        Write s to servers output stream as UTF8
+        """Write s to servers output stream as UTF8.
+
         :rtype : object
         :param s: string to write
         :return: nothing
+
         """
         self.wfile.write(s.encode("UTF-8"))
 
     def send_text_file(self, name: str, ftype: str, content_type: str):
-        """
-        Sends a file to server from directory ftype with contect_type
+        """Sends a file to server from directory ftype with contect_type.
+
         :param name: files name part, possible extra directories
         :param ftype: files type (js, html, css), specifies also the directory where to get the file
         :param content_type: files_content type
         :return: nothing
+
         """
         # fname = re.sub(".*/", "", name)
         fname = os.path.basename(name)
@@ -112,24 +120,25 @@ class TimServer(http.server.BaseHTTPRequestHandler):
         return self.wout(file_to_string(ftype + "/" + fname))
 
     def send_text(self, txt: str, content_type: str):
-        """
-        Sends a txt to server 
+        """Sends a txt to server.
+
         :param txt: text to send
         :param content_type: files_content type
         :return: nothing
+
         """
         # fname = re.sub(".*/", "", name)
         do_headers(self, content_type)
-        return self.wout(txt) 
+        return self.wout(txt)
 
     def get_html(self, query: QueryParams) -> str:
-        """
-        Return the html for this query. Params are dumbed as hexstring to avoid problems
-        with html input and so on.
+        """Return the html for this query. Params are dumbed as hexstring to avoid problems with html input and so on.
+
         :type query: QueryParams
         :rtype : str
         :param query: get or put params
         :return : html string for this markup
+
         """
         return ""
 
@@ -140,32 +149,35 @@ class TimServer(http.server.BaseHTTPRequestHandler):
         return {}
 
     def do_reqs(self):
-        """
-        Answer to /reqs route
+        """Answer to /reqs route.
+
         :type self: TimServer
+
         """
         do_headers(self, "application/json")
         result_json = self.get_reqs_result()
         result_str = json.dumps(result_json)
         return self.wout(result_str)
 
-    def do_template(self,query: QueryParams):
-        """
-        Gets a template
+    def do_template(self, query: QueryParams):
+        """Gets a template.
+
         :type query: QueryParams
         :rtype : str
         :param query: get or put params
         :return: template result as json
+
         """
         tempfile = query.get_param("file", "")
         tidx = query.get_param("idx", "0")
-        return get_template('templates', tidx, tempfile) 
+        return get_template('templates', tidx, tempfile)
 
     def do_all(self, query: QueryParams):
-        """
-        Do all other routes
+        """Do all other routes.
+
         :param query: post and get params
         :return: nothing
+
         """
 
         if self.path.find('/html') >= 0:
@@ -173,28 +185,32 @@ class TimServer(http.server.BaseHTTPRequestHandler):
             s = self.get_html(query)
             return self.wout(s)
 
-        if self.path.find('/answer') >= 0: return self.do_answer(query)
+        if self.path.find('/answer') >= 0:
+            return self.do_answer(query)
 
         do_headers(self, 'text/plain')
         return self.wout("Unknow query: " + self.path)
 
     def do_answer(self, query: QueryParams):
-        """
-        Do answer route
+        """Do answer route.
+
         :type query: QueryParams
         :param query: post and get params
         :return: nothing
+
         """
 
 
 def log(request: TimServer):
-    """
-    Log the time and user
+    """Log the time and user.
+
     :param request:
     :return: Nothing
+
     """
     agent = " :AG: " + request.headers["User-Agent"]
-    if agent.find("ython") >= 0: agent = ""
+    if agent.find("ython") >= 0:
+        agent = ""
     logging.info(request.path + agent + " u:" + request.user_id)
 
 
@@ -219,11 +235,9 @@ def start_server(http_server: TimServer, logname: str):
     if not os.path.exists("/var/log"):
         os.makedirs("/var/log")
     CURRENTDIR = os.getcwd()
-    logging.basicConfig(filename='/var/log/'+logname+'.log', level=logging.INFO, format='%(asctime)s %(message)s')
+    logging.basicConfig(filename='/var/log/' + logname + '.log', level=logging.INFO, format='%(asctime)s %(message)s')
 
     server = ThreadedHTTPServer(('', PORT), http_server)
     print('Starting server, use <Ctrl-C> to stop')
     logging.info('Starting server')
     server.serve_forever()
-
-

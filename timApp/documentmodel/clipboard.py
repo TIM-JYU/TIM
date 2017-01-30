@@ -10,6 +10,7 @@ from typing import Dict, Generic, List, Optional
 
 
 class Clipboard:
+
     def __init__(self, files_root: str):
         self.files_root = files_root
 
@@ -25,6 +26,7 @@ class Clipboard:
             shutil.rmtree(path)
 
     class UserClipboard:
+
         def __init__(self, parent: 'Clipboard', user_id: int):
             self.user_id = user_id
             self.path = os.path.join(parent.get_path(), str(self.user_id))

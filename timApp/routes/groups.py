@@ -32,8 +32,7 @@ def show_members(groupname):
 
 @groups.route('/create/<groupname>')
 def create_group(groupname):
-    """
-    Route for creating a usergroup.
+    """Route for creating a usergroup.
 
     The usergroup name has the following restrictions:
 
@@ -46,6 +45,7 @@ def create_group(groupname):
 
      1. email addresses (containing '@' character), or
      2. lowercase ASCII strings (Korppi users) with length being in range [2,8].
+
     """
     verify_admin()
     timdb = get_timdb()

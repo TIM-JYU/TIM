@@ -2,9 +2,8 @@ from timdb.tempdbbase import TempDbBase
 
 
 class NewAnswers(TempDbBase):
-    """
-    LectureAnswer class to handle database for lecture answers
-    """
+    """LectureAnswer class to handle database for lecture answers."""
+
     def user_answered(self, lecture_id: int, asked_id: int, user_id: int):
         new_answer = self.table(lecture_id, asked_id, user_id)
         self.session.add(new_answer)

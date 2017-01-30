@@ -1,7 +1,7 @@
-"""
-Defines the temporary data models used by TIM.
+"""Defines the temporary data models used by TIM.
 
 Each model MUST have 'tempdb' as the __bind_key__ attribute.
+
 """
 from sqlalchemy.orm import scoped_session
 from typing import Optional
@@ -135,6 +135,7 @@ class SlideStatus(db.Model):
 
 
 class TempDb(object):
+
     def __init__(self, session: Optional[scoped_session]=None):
         if session is None:
             session = db.create_scoped_session()

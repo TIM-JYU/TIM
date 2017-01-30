@@ -1,6 +1,4 @@
-"""
-Used to handle temp data that is related to lecture, question and user
-"""
+"""Used to handle temp data that is related to lecture, question and user."""
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import scoped_session
@@ -9,6 +7,7 @@ from timdb.tim_models import db
 
 
 class TempInfoUserQuestion:
+
     def __init__(self, session: scoped_session, table: db.Model):
         self.session = session
         self.table = table

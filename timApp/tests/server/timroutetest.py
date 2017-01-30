@@ -31,10 +31,7 @@ orig_getaddrinfo = socket.getaddrinfo
 # noinspection PyIncorrectDocstring
 @lru_cache(maxsize=100)
 def fast_getaddrinfo(host, port, family=0, addrtype=0, proto=0, flags=0):
-    """
-    On Windows/Boot2docker, the getaddrinfo function is really slow,
-    so we wrap the function and cache the result.
-    """
+    """On Windows/Boot2docker, the getaddrinfo function is really slow, so we wrap the function and cache the result."""
     return orig_getaddrinfo(host, port, family, addrtype, proto, flags)
 
 
@@ -45,9 +42,7 @@ testclient = testclient.__enter__()  # type: FlaskClient
 
 
 class TimRouteTest(TimDbTest):
-    """
-    A base class for running tests for TIM routes.
-    """
+    """A base class for running tests for TIM routes."""
     doc_num = 1
 
     # The expected content of an AJAX response that does not return any specific information.
@@ -74,6 +69,7 @@ class TimRouteTest(TimDbTest):
         """Performs a GET request.
 
         See the 'request' method for parameter explanations.
+
         """
         return self.request(url,
                             'GET',
@@ -99,6 +95,7 @@ class TimRouteTest(TimDbTest):
         """Performs a POST request.
 
         See the 'request' method for parameter explanations.
+
         """
         return self.request(url,
                             'POST',
@@ -124,6 +121,7 @@ class TimRouteTest(TimDbTest):
         """Performs a DELETE request.
 
         See the 'request' method for parameter explanations.
+
         """
         return self.request(url,
                             'DELETE',
@@ -172,6 +170,7 @@ class TimRouteTest(TimDbTest):
         :return: If as_tree is True: Returns the response as an HTML tree.
                  Otherwise, if the response mimetype is application/json, returns the response as a JSON dict or list.
                  Otherwise, returns the response as a string.
+
         """
         if headers is None:
             headers = []
@@ -233,6 +232,7 @@ class TimRouteTest(TimDbTest):
         :param json_data: The JSON data to be submitted.
         :param kwargs: Any custom parameters that are accepted by the 'request' method.
         :return: See the 'request' method.
+
         """
         return self.json_req(url,
                              json_data,
@@ -263,6 +263,7 @@ class TimRouteTest(TimDbTest):
         :param json_data: The JSON data to be submitted.
         :param kwargs: Any custom parameters that are accepted by the 'request' method.
         :return: See the 'request' method.
+
         """
         return self.json_req(url,
                              json_data,
@@ -295,6 +296,7 @@ class TimRouteTest(TimDbTest):
         :param json_data: The JSON data to be submitted.
         :param kwargs: Any custom parameters that are accepted by the 'request' method.
         :return: See the 'request' method.
+
         """
         return self.request(url,
                             method=method,
@@ -316,6 +318,7 @@ class TimRouteTest(TimDbTest):
         :param text: The new text for the paragraph.
         :param par_id: The id of the paragraph to be edited.
         :return: The response object.
+
         """
         doc.clear_mem_cache()
         return self.json_post('/postParagraph/', {
@@ -332,6 +335,7 @@ class TimRouteTest(TimDbTest):
         :param text: The text for the paragraph.
         :param next_id: The id of the paragraph following the new paragraph.
         :return: The response object.
+
         """
         doc.clear_mem_cache()
         return self.json_post('/newParagraph/', {
@@ -360,6 +364,7 @@ class TimRouteTest(TimDbTest):
         """Returns the name of the current user.
 
         :return: The name of the current user.
+
         """
         return session['user_name']
 
@@ -368,6 +373,7 @@ class TimRouteTest(TimDbTest):
         """Returns the name of the current user.
 
         :return: The name of the current user.
+
         """
         return session['user_id']
 
@@ -389,6 +395,7 @@ class TimRouteTest(TimDbTest):
         :param force: Whether to force the login route to be called even if the user is already logged in.
         :param add: Whether to add this user to the session group.
         :return: Response as a JSON dict.
+
         """
         return self.login('testuser1', 'test1@example.com', 'test1pass', force=force, add=add, **kwargs)
 
@@ -398,6 +405,7 @@ class TimRouteTest(TimDbTest):
         :param force: Whether to force the login route to be called even if the user is already logged in.
         :param add: Whether to add this user to the session group.
         :return: Response as a JSON dict.
+
         """
         return self.login('testuser2', 'test2@example.com', 'test2pass', force=force, add=add, **kwargs)
 
@@ -407,6 +415,7 @@ class TimRouteTest(TimDbTest):
         :param force: Whether to force the login route to be called even if the user is already logged in.
         :param add: Whether to add this user to the session group.
         :return: Response as a JSON dict.
+
         """
         return self.login('testuser3', 'test3@example.com', 'test3pass', force=force, add=add, **kwargs)
 
@@ -415,6 +424,7 @@ class TimRouteTest(TimDbTest):
 
         :param user_id: The id of the user to log out. If None, everyone in the session gets logged out.
         :return: Response as a JSON dict.
+
         """
         return self.json_post('/logout', json_data={'user_id': user_id})
 
@@ -430,6 +440,7 @@ class TimRouteTest(TimDbTest):
         :param force: Whether to force the login route to be called even if the user is already logged in.
         :param add: Whether to add this user to the session group.
         :return: Response as a JSON dict.
+
         """
         if self.client.application.got_first_request:
             if not force and not add:
@@ -456,7 +467,7 @@ class TimRouteTest(TimDbTest):
 
     def create_doc(self, path: Optional[str] = None,
                    from_file: Optional[str] = None,
-                   initial_par: Optional[Union[str, List[str]]]=None,
+                   initial_par: Optional[Union[str, List[str]]] = None,
                    settings: Optional[Dict] = None,
                    copy_from: Optional[int] = None,
                    cite: Optional[int] = None,
@@ -472,6 +483,7 @@ class TimRouteTest(TimDbTest):
         :param initial_par: The content of the initial paragraph.
         :param settings: The settings for the document.
         :return: The DocEntry object.
+
         """
         if path is None:
             path = '{}/doc{}'.format(self.current_user.get_personal_folder().path, self.doc_num)
@@ -492,11 +504,11 @@ class TimRouteTest(TimDbTest):
         self.init_doc(doc, from_file, initial_par, settings)
         return de
 
-    def create_folder(self, path: str, title: str='foldertitle', expect_status=200, **kwargs):
+    def create_folder(self, path: str, title: str = 'foldertitle', expect_status=200, **kwargs):
         f = self.json_post('/createItem',
-                              {'item_path': path,
-                               'item_type': 'folder',
-                               'item_title': title}, expect_status=expect_status, **kwargs)
+                           {'item_path': path,
+                            'item_type': 'folder',
+                            'item_title': title}, expect_status=expect_status, **kwargs)
 
         if expect_status == 200:
             self.assertEqual(path, f['path'])

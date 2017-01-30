@@ -4,6 +4,7 @@ from timdb.models.docentry import DocEntry
 
 
 class PluginTest(TimDbTest):
+
     def test_info(self):
         db = self.get_db()
         d = DocEntry.create('test', self.get_test_user_1_group_id(), from_file='example_docs/mmcq_example.md')
@@ -13,8 +14,10 @@ class PluginTest(TimDbTest):
             break
         a_ids = []
         for i in range(1, 5):
-            aid = db.answers.save_answer([TEST_USER_1_ID], p.full_task_id, 'content{}'.format(i), points=None, valid=True)
-            aid2 = db.answers.save_answer([TEST_USER_2_ID], p.full_task_id, 'content{}'.format(i), points=None, valid=True)
+            aid = db.answers.save_answer([TEST_USER_1_ID], p.full_task_id,
+                                         'content{}'.format(i), points=None, valid=True)
+            aid2 = db.answers.save_answer([TEST_USER_2_ID], p.full_task_id,
+                                          'content{}'.format(i), points=None, valid=True)
             a_ids.append((aid, aid2))
         for i, (aid, aid2) in enumerate(a_ids, start=1):
             answer_data = db.answers.get_answer(aid)

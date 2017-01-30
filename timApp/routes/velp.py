@@ -1,5 +1,4 @@
-"""
-The module handles the main logic related to velps, velp groups and labels. This includes adding and modifiying velps
+"""The module handles the main logic related to velps, velp groups and labels. This includes adding and modifiying velps
 and labels as well as adding new velp groups. The module also retrieves or creates the default velp group for the
 document and the personal default group for the user. Velp groups can be set to shown or shown as default in specific
 element (or in the whole document) through this module. The module also retrieves the velps, velp groups and labels to
@@ -35,6 +34,7 @@ def get_default_velp_group(doc_id: int):
 
     :param doc_id: ID of document
     :return: Dictionary containing default velp group's ID and name
+
     """
     timdb = get_timdb()
     user_id = get_current_user_id()
@@ -75,7 +75,7 @@ def get_default_velp_group(doc_id: int):
         velp_groups.append(v.id)
     default_group = timdb.velp_groups.check_velp_group_ids_for_default_group(velp_groups)
     if default_group is not None:
-        default_group["edit_access"] = timdb.users.has_edit_access(user_id,default_group['id'])
+        default_group["edit_access"] = timdb.users.has_edit_access(user_id, default_group['id'])
         return set_no_cache_headers(jsonResponse(default_group))
 
     response = jsonResponse({"id": -1, "name": doc_name + "_default", "edit_access": edit_access})
@@ -84,9 +84,10 @@ def get_default_velp_group(doc_id: int):
 
 @velps.route("/get_default_personal_velp_group", methods=['GET'])
 def get_default_personal_velp_group():
-    """ Get default personal velp group ID and if velp group doesn't exist yet, create one.
+    """Get default personal velp group ID and if velp group doesn't exist yet, create one.
 
     :return: Dictionary containing personal velp group data.
+
     """
     timdb = get_timdb()
     user = get_current_user_object()
@@ -134,6 +135,7 @@ def get_velps(doc_id: int):
 
     :param doc_id: ID of document
     :return: List of velps as dictionaries containing all needed information
+
     """
     timdb = get_timdb()
 
@@ -151,6 +153,7 @@ def get_velp_groups(doc_id: int):
 
     :param doc_id: ID of document
     :return: List of dictionaries containing velp group information
+
     """
     timdb = get_timdb()
     user_id = get_current_user_id()
@@ -185,6 +188,7 @@ def get_velp_group_personal_selections(doc_id: int) -> Dict:
 
     :param doc_id: ID of document
     :return: Dictionary containing list of selected velp groups for each target area IDs
+
     """
     timdb = get_timdb()
     user_id = get_current_user_id()
@@ -201,6 +205,7 @@ def get_velp_group_default_selections(doc_id: int) -> Dict:
 
     :param doc_id: ID of document
     :return: Dictionary containing list of default velp groups for each target area IDs
+
     """
     timdb = get_timdb()
     user_id = get_current_user_id()
@@ -217,6 +222,7 @@ def get_velp_labels(doc_id: int) -> 'str':
 
     :param doc_id: ID of document
     :return: List of dicts containing velp label IDs and content for the document
+
     """
     timdb = get_timdb()
     # Todo select language.
@@ -246,6 +252,7 @@ def add_velp() -> int:
         - visible_to: visibility group of the velp (1-4)
 
     :return: ID of new velp
+
     """
     json_data = request.get_json()
     try:
@@ -292,7 +299,7 @@ def add_velp() -> int:
     velp_groups = velp_groups_rights
 
     new_velp_id, _ = timdb.velps.create_new_velp(current_user_id, velp_content, default_points, default_comment,
-                                              icon_id, valid_until, language_id, visible_to, color)
+                                                 icon_id, valid_until, language_id, visible_to, color)
 
     if velp_labels is not None:
         timdb.velps.add_labels_to_velp(new_velp_id, velp_labels)
@@ -325,6 +332,7 @@ def update_velp(doc_id: int):
 
     :param doc_id: ID of document
     :return: okJsonResponse
+
     """
 
     try:
@@ -416,6 +424,7 @@ def add_label() -> int:
         - language_id: language ID of the label.
 
     :return: ID of new velp label
+
     """
     json_data = request.get_json()
     try:
@@ -440,6 +449,7 @@ def update_velp_label():
         - id: label ID.
 
     :return: okJsonResponse
+
     """
     json_data = request.get_json()
     try:
@@ -471,6 +481,7 @@ def change_selection(doc_id: int):
 
     :param doc_id: ID of document
     :return: okJsonResponse
+
     """
 
     json_data = request.get_json()
@@ -514,6 +525,7 @@ def change_all_selections(doc_id: int):
 
     :param doc_id: ID of document
     :return: okJsonResponse
+
     """
 
     json_data = request.get_json()
@@ -549,6 +561,7 @@ def change_default_selection(doc_id: int):
 
     :param doc_id: ID of document
     :return: okJsonResponse
+
     """
 
     json_data = request.get_json()
@@ -579,6 +592,7 @@ def reset_target_area_selections_to_defaults(doc_id: int):
 
     :param doc_id: ID of document
     :return: okJsonResponse()
+
     """
 
     json_data = request.get_json()
@@ -603,6 +617,7 @@ def reset_all_selections_to_defaults(doc_id: int):
 
     :param doc_id: ID of document
     :return: okJsonResponse()
+
     """
 
     timdb = get_timdb()
@@ -625,6 +640,7 @@ def create_velp_group(doc_id: int) -> Dict:
 
     :param doc_id: ID of the document
     :return: Dictionary containing information of new velp group.
+
     """
 
     json_data = request.get_json()
@@ -656,7 +672,6 @@ def create_velp_group(doc_id: int) -> Dict:
             velp_group_id = timdb.velp_groups.create_velp_group(velp_group_name, user_group_id, new_group_path)
         else:
             return abort(400, "Velp group with same name and location exists already.")
-
 
     else:
         if target_type == 2:
@@ -699,7 +714,6 @@ def create_velp_group(doc_id: int) -> Dict:
     created_velp_group['edit_access'] = True
     created_velp_group['default_group'] = False
 
-
     timdb.velp_groups.add_groups_to_document([created_velp_group], doc_id, user_id)
     # TODO Do we want to make just created velp group selected in document immediately?
     timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, user_id)
@@ -715,6 +729,7 @@ def create_default_velp_group(doc_id: int):
 
     :param doc_id: ID of document
     :return: Dictionary containing information of new default velp group.
+
     """
 
     timdb = get_timdb()
@@ -779,7 +794,7 @@ def create_default_velp_group(doc_id: int):
 
 
 def get_velp_groups_from_tree(document_id: int):
-    """Returns all velp groups found from tree from document to root and from users own velp folder
+    """Returns all velp groups found from tree from document to root and from users own velp folder.
 
     Checks document's own velp group folder first, then default velp group folders going up all the
     way to root. Doesn't branch side ways or down, only checks parents. After root has been reached,
@@ -789,6 +804,7 @@ def get_velp_groups_from_tree(document_id: int):
 
     :param document_id: ID of document
     :return: List of document / velp group information of found hits.
+
     """
 
     doc_id = int(document_id)

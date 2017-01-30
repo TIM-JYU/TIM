@@ -3,9 +3,8 @@ from sqlalchemy.exc import IntegrityError
 
 
 class UserActivity(TempDbBase):
-    """
-    LectureAnswer class to handle database for lecture answers
-    """
+    """LectureAnswer class to handle database for lecture answers."""
+
     def update_or_add_activity(self, lecture_id: int, user_id: int, active: str):
         activity = self.table(lecture_id, user_id, active)
         try:
@@ -14,7 +13,6 @@ class UserActivity(TempDbBase):
         except IntegrityError:
             print("Activity already exists.")
             self.session.rollback()
-
 
     def delete_lecture_activity(self, lecture_id: int):
         self.table.query.filter_by(lecture_id=lecture_id).delete()

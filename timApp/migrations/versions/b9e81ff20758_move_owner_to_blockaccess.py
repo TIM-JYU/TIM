@@ -1,8 +1,6 @@
 """Move owner to blockaccess.
 
-Revision ID: b9e81ff20758
-Revises: bc968697021c
-Create Date: 2017-01-18 12:08:55.004521
+Revision ID: b9e81ff20758 Revises: bc968697021c Create Date: 2017-01-18 12:08:55.004521
 
 """
 

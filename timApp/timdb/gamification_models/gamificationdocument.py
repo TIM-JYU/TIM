@@ -2,10 +2,10 @@ from timdb.tim_models import db
 
 
 class GamificationDocument(db.Model):
-    """
-    Created by TIMG
-    This class represents the GamificationDocument database table. If a line exists in this table, the document with
-    the indicated ID is gamified.
+    """Created by TIMG This class represents the GamificationDocument database table.
+
+    If a line exists in this table, the document with the indicated ID is gamified.
+
     """
     __bind_key__ = 'tim_main'
     __tablename__ = 'gamificationdocument'
@@ -13,7 +13,7 @@ class GamificationDocument(db.Model):
 
     @staticmethod
     def create(document_id) -> 'GamificationDocument':
-        """Creates a new entry into GamificationDocument table"""
+        """Creates a new entry into GamificationDocument table."""
 
         gamificationdocument = GamificationDocument(id=document_id)
         db.session.add(gamificationdocument)

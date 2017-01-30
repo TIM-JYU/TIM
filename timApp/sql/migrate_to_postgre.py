@@ -20,7 +20,8 @@ def perform_migration(sqlite_path: str, postgre_path: str):
     migrate_table(sq3c, pgc, 'accesstype')
     migrate_table(sq3c, pgc, 'usergroup')
 
-    # For the column last_points_modifier, any valid non-null value is fine; we'll update the correct value in the next step.
+    # For the column last_points_modifier, any valid non-null value is fine;
+    # we'll update the correct value in the next step.
     migrate_table(sq3c, pgc, 'answer',
                   placeholders={'valid': 'cast(%s as boolean)',
                                 'last_points_modifier': "case when %s like '%% ' then 4 else NULL end",
@@ -31,7 +32,8 @@ def perform_migration(sqlite_path: str, postgre_path: str):
     log_info('Setting last_points_modifier for table answer...')
 
     # Some answers have more than 2 authors (often in case a teacher has checked and fixed an answer). In such cases,
-    # we pick the minimum of the usergroup ids of the authors because it is more likely that the teacher's id is smaller.
+    # we pick the minimum of the usergroup ids of the authors because it is
+    # more likely that the teacher's id is smaller.
     pgc.execute("""UPDATE answer a SET last_points_modifier =
                    (SELECT MIN(ug.id) FROM usergroup ug JOIN useraccount u ON ug.name = u.name JOIN useranswer ua ON ua.user_id = u.id WHERE ua.answer_id = a.id)
                    WHERE last_points_modifier IS NOT NULL""")
@@ -64,7 +66,8 @@ def perform_migration(sqlite_path: str, postgre_path: str):
     migrate_table(sq3c, pgc, 'question', id_column='question_id', extra_clause='WHERE doc_id IN (SELECT id FROM block)')
     migrate_table(sq3c, pgc, 'readparagraphs', id_column=None, extra_clause='WHERE doc_id IN (SELECT id FROM block)')
     migrate_table(sq3c, pgc, 'translation', id_column=None)
-    migrate_table(sq3c, pgc, 'usergroupmember', id_column=None, extra_clause='WHERE usergroup_id IN (SELECT id FROM usergroup)')
+    migrate_table(sq3c, pgc, 'usergroupmember', id_column=None,
+                  extra_clause='WHERE usergroup_id IN (SELECT id FROM usergroup)')
     migrate_table(sq3c, pgc, 'usernotes')
     migrate_table(sq3c, pgc, 'version')
     migrate_table(sq3c, pgc, 'lectureanswer', id_column='answer_id',

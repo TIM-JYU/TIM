@@ -9,6 +9,7 @@ import datetime
 
 
 class Images(TimDbBase):
+
     def get_file_path(self, path: str, filename: str):
         """Gets the path of an image.
 
@@ -16,11 +17,12 @@ class Images(TimDbBase):
         :param file_id: The id of the image.
         :param filename: The filename of the image.
         :returns: The id and path of the image file.
+
         """
         p = os.path.join(self.blocks_path, 'dl', path)
         if not os.path.exists(p):
             os.makedirs(p)
-        file_id = len(os.listdir(p))+1
+        file_id = len(os.listdir(p)) + 1
         p = os.path.join(self.blocks_path, 'dl', path, str(file_id))
         os.makedirs(p)
 
@@ -28,20 +30,22 @@ class Images(TimDbBase):
 
     def getImagePath(self, image_id: int, image_filename: str):
         """Gets the path of an image.
-        
+
         :param image_id: The id of the image.
         :param image_filename: The filename of the image.
         :returns: The path of the image file.
+
         """
 
         return os.path.join(self.blocks_path, str(image_id), image_filename)
 
     def getImageRelativePath(self, image_id: int, image_filename: str):
         """Gets the relative path of an image.
-        
+
         :param image_id: The id of the image.
         :param image_filename: The filename of the image.
         :returns: The path of the image file.
+
         """
 
         return os.path.relpath(self.getImagePath(image_id, image_filename), self.blocks_path)
@@ -54,6 +58,7 @@ class Images(TimDbBase):
         :param filename: The filename
         :param owner_group_id: The owner group of the file.
         :returns: the relative path of the form 'path/file_id/filename'.
+
         """
 
         # TODO: Check that the file extension is allowed.
@@ -72,11 +77,12 @@ class Images(TimDbBase):
 
     def saveImage(self, image_data: 'bytes', image_filename: str, owner_group_id: int) -> Tuple[int, str]:
         """Saves an image to the database.
-        
+
         :param image_data: The image data.
         :param image_filename: The filename of the image.
         :param owner_group_id: The owner group of the image.
         :returns: A tuple containing the id of the image and its relative path of the form 'image_id/image_filename'.
+
         """
 
         # TODO: Check that the file extension is allowed.
@@ -110,10 +116,11 @@ class Images(TimDbBase):
 
     def getImage(self, image_id: int, image_filename: str) -> bytes:
         """Gets the specified image.
-        
+
         :param image_id: The id of the image.
         :param image_filename: The filename of the image.
         :returns: The content of the image.
+
         """
 
         with open(self.getImagePath(image_id, image_filename), 'rb') as f:
@@ -121,21 +128,24 @@ class Images(TimDbBase):
 
     def getImages(self) -> List[dict]:
         """Gets all the images.
-        
+
         :returns: A list of dictionaries of the form {'id': xx, 'file': 'xx/filename.ext'}.
+
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT id, id || \'/\' || description AS file FROM Block WHERE type_id = %s', [blocktypes.IMAGE])
+        cursor.execute('SELECT id, id || \'/\' || description AS file FROM Block WHERE type_id = %s',
+                       [blocktypes.IMAGE])
         images = self.resultAsDictionary(cursor)
         return images
 
     def imageExists(self, image_id: int, image_filename: str):
         """Returns whether the specified image exists.
-        
+
         :param image_id: The id of the image.
         :param image_filename: The filename of the image.
         :returns: True if the image exists, false otherwise.
+
         """
 
         if not self.blockExists(image_id, blocktypes.IMAGE):

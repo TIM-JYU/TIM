@@ -5,6 +5,7 @@ from tests.server.timroutetest import TimRouteTest
 
 
 class UploadTest(TimRouteTest):
+
     def test_upload_permissions(self):
         db = self.get_db()
         db.users.addUserToAdmins(db.users.get_user_by_name('testuser3').id)
@@ -46,4 +47,3 @@ class UploadTest(TimRouteTest):
                   data={'folder': fname,
                         'file': (io.BytesIO(b'test file'), 'test.md')},
                   expect_status=200)
-

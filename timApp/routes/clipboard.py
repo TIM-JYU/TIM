@@ -1,4 +1,4 @@
-"""Routes for the clipboard"""
+"""Routes for the clipboard."""
 
 from flask import Blueprint
 
@@ -139,4 +139,3 @@ def get_clipboard_status():
     clip = Clipboard(timdb.files_root_path).get(get_current_user_id())
     status = clip.read_metadata()
     return jsonResponse(status)
-

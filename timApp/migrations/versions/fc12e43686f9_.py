@@ -1,9 +1,6 @@
-"""Remove non-ascii and special characters from document and folder paths by replacing ä -> a etc. and removing
-others.
+"""Remove non-ascii and special characters from document and folder paths by replacing ä -> a etc. and removing others.
 
-Revision ID: fc12e43686f9
-Revises: cdeeff4028b9
-Create Date: 2016-12-21 13:55:28.930245
+Revision ID: fc12e43686f9 Revises: cdeeff4028b9 Create Date: 2016-12-21 13:55:28.930245
 
 """
 

@@ -32,5 +32,6 @@ LAST_EDITED_BOOKMARK_LIMIT = 3
 TRAP_HTTP_EXCEPTIONS = True
 PROPAGATE_EXCEPTIONS = True
 SELENIUM_REMOTE_URL = os.environ.get('SELENIUM_REMOTE_URL', 'http://' + TIM_NAME + '-chrome')
-SELENIUM_BROWSER_URL = os.environ.get('SELENIUM_BROWSER_URL', 'http://' + (TIM_NAME.rstrip('-test') if pycharm_running() else TIM_NAME))
+SELENIUM_BROWSER_URL = os.environ.get('SELENIUM_BROWSER_URL', 'http://' +
+                                      (TIM_NAME.rstrip('-test') if pycharm_running() else TIM_NAME))
 LIVESERVER_PORT = 5001

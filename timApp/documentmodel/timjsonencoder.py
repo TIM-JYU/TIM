@@ -8,6 +8,7 @@ from documentmodel.docparagraph import DocParagraph
 
 
 class TimJsonEncoder(json.JSONEncoder):
+
     def default(self, o):
         if isinstance(o, datetime.datetime):
             if o.tzinfo is None:

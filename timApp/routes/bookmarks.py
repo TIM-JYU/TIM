@@ -75,6 +75,7 @@ def get_bookmarks(user_id=None):
     """Gets user bookmark data for the currently logged in user.
 
     Parameter user_id is unused for now.
+
     """
 
     return jsonResponse(g.bookmarks.as_dict())

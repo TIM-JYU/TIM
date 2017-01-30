@@ -10,6 +10,7 @@ from timdb.special_group_names import KORPPI_GROUPNAME
 
 
 class DefaultRightTest(TimRouteTest):
+
     def test_document_default_rights(self):
         self.login_test1()
         doc = self.create_doc().document

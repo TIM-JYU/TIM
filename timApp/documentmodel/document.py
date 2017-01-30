@@ -71,21 +71,23 @@ class Document:
 
     @classmethod
     def doc_exists(cls, doc_id: int, files_root: Optional[str] = None) -> bool:
-        """
-        Checks if a document id exists.
+        """Checks if a document id exists.
+
         :param doc_id: Document id.
         :return: Boolean.
+
         """
         froot = cls.get_default_files_root() if files_root is None else files_root
         return os.path.exists(os.path.join(cls.get_documents_dir(froot), str(doc_id)))
 
     @classmethod
     def version_exists(cls, doc_id: int, doc_ver: 'tuple(int,int)', files_root: Optional[str] = None) -> bool:
-        """
-        Checks if a document version exists.
+        """Checks if a document version exists.
+
         :param doc_id: Document id.
         :param doc_ver: Document version.
         :return: Boolean.
+
         """
         froot = cls.get_default_files_root() if files_root is None else files_root
         return os.path.isfile(os.path.join(cls.get_documents_dir(froot), str(doc_id), str(doc_ver[0]), str(doc_ver[1])))
@@ -94,14 +96,12 @@ class Document:
         self.par_map = {}
         for i in range(0, len(self.par_cache)):
             curr_p = self.par_cache[i].get_id()
-            prev_p = self.par_cache[i-1] if i > 0 else None
-            next_p = self.par_cache[i+1] if i+1 < len(self.par_cache) else None
+            prev_p = self.par_cache[i - 1] if i > 0 else None
+            next_p = self.par_cache[i + 1] if i + 1 < len(self.par_cache) else None
             self.par_map[curr_p] = {'p': prev_p, 'n': next_p}
 
     def load_pars(self):
-        """
-        Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster.
-        """
+        """Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster."""
         self.par_cache = [par for par in self]
         self.__update_par_map()
 
@@ -178,7 +178,7 @@ class Document:
         finally:
             i.close()
 
-    def create(self, ignore_exists : bool = False):
+    def create(self, ignore_exists: bool = False):
         path = os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id))
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
@@ -188,7 +188,7 @@ class Document:
     def exists(self) -> bool:
         return Document.doc_exists(self.doc_id, self.files_root)
 
-    def export_markdown(self, export_hashes : bool = False) -> str:
+    def export_markdown(self, export_hashes: bool = False) -> str:
         return DocumentWriter([par.dict() for par in self], export_hashes=export_hashes).get_text()
 
     def export_section(self, par_id_start: Optional[str], par_id_end: Optional[str], export_hashes=False) -> str:
@@ -212,15 +212,16 @@ class Document:
         options.break_on_normal = break_on_elements
         blocks = [DocParagraph.create(doc=self, md=par['md'], attrs=par.get('attrs'))
                   for par in DocumentParser(text).validate_structure(
-                is_whole_document=False).get_blocks(options)]
+            is_whole_document=False).get_blocks(options)]
         return blocks
 
     @classmethod
     def remove(cls, doc_id: int, files_root: Optional[str] = None, ignore_exists=False):
-        """
-        Removes the whole document.
+        """Removes the whole document.
+
         :param doc_id: Document id to remove.
         :return:
+
         """
         froot = cls.get_default_files_root() if files_root is None else files_root
         if cls.doc_exists(doc_id, files_root=froot):
@@ -231,18 +232,20 @@ class Document:
 
     @classmethod
     def get_next_free_id(cls, files_root: Optional[str] = None) -> int:
-        """
-        Gets the next free document id.
+        """Gets the next free document id.
+
         :return:
+
         """
         froot = cls.get_default_files_root() if files_root is None else files_root
         res = 1 + cls.__get_largest_file_number(cls.get_documents_dir(froot), default=0)
         return res
 
     def get_version(self) -> Tuple[int, int]:
-        """
-        Gets the latest version of the document as a major-minor tuple.
+        """Gets the latest version of the document as a major-minor tuple.
+
         :return: Latest version, or (-1, 0) if there isn't yet one.
+
         """
         if self.version is not None:
             return self.version
@@ -353,10 +356,11 @@ class Document:
         self.__save_reflist(new_reflist_file, reflist)
 
     def has_paragraph(self, par_id: str) -> bool:
-        """
-        Checks if the document has the given paragraph.
+        """Checks if the document has the given paragraph.
+
         :param par_id: The paragraph id.
         :return: Boolean.
+
         """
         file_name = self.get_version_path(self.get_version())
         if not os.path.isfile(file_name):
@@ -378,10 +382,11 @@ class Document:
         return [self.add_paragraph_obj(p) for p in self.text_to_paragraphs(text, False)]
 
     def add_paragraph_obj(self, p: DocParagraph) -> DocParagraph:
-        """
-        Appends a new paragraph into the document.
+        """Appends a new paragraph into the document.
+
         :param p: Paragraph to be added.
         :return: The same paragraph object, or None if could not add.
+
         """
         p.add_link(self.doc_id)
         p.set_latest()
@@ -403,13 +408,14 @@ class Document:
             par_id: Optional[str]=None,
             attrs: Optional[dict]=None,
             properties: Optional[dict]=None
-            ) -> DocParagraph:
-        """
-        Appends a new paragraph into the document.
+    ) -> DocParagraph:
+        """Appends a new paragraph into the document.
+
         :param par_id: The id of the paragraph or None if it should be autogenerated.
         :param attrs: The attributes for the paragraph.
         :param text: New paragraph text.
         :return: The new paragraph object.
+
         """
         p = DocParagraph.create(
             doc=self,
@@ -455,9 +461,10 @@ class Document:
         return self.add_paragraph(text, attrs=ref_attrs, properties=properties)
 
     def delete_paragraph(self, par_id: str):
-        """
-        Removes a paragraph from the document.
+        """Removes a paragraph from the document.
+
         :param par_id: Paragraph id to remove.
+
         """
         if not self.has_paragraph(par_id):
             return
@@ -483,14 +490,15 @@ class Document:
                          insert_after_id: Optional[str] = None,
                          attrs: Optional[dict]=None, properties: Optional[dict]=None,
                          par_id: Optional[str]=None) -> DocParagraph:
-        """
-        Inserts a paragraph before a given paragraph id.
+        """Inserts a paragraph before a given paragraph id.
+
         :param par_id: The id of the new paragraph or None if it should be autogenerated.
         :param attrs: The attributes for the paragraph.
         :param text: New paragraph text.
         :param insert_before_id: Id of the paragraph to insert before, or None if last.
         :param insert_after_id: Id of the paragraph to insert after, or None if first.
         :return: The inserted paragraph object.
+
         """
         p = DocParagraph.create(
             doc=self,
@@ -540,13 +548,14 @@ class Document:
 
     def modify_paragraph(self, par_id: str, new_text: str, new_attrs: Optional[dict]=None,
                          new_properties: Optional[dict]=None) -> DocParagraph:
-        """
-        Modifies the text of the given paragraph.
+        """Modifies the text of the given paragraph.
+
         :param par_id: Paragraph id.
         :param new_text: New text.
         :param new_attrs: New attributes.
         :param new_properties: New properties.
         :return: The new paragraph object.
+
         """
 
         if new_attrs is None:
@@ -595,7 +604,7 @@ class Document:
                         f.write(line)
         return p
 
-    def parwise_diff(self, other_doc: 'Document', check_html:bool=False):
+    def parwise_diff(self, other_doc: 'Document', check_html: bool=False):
         if self.get_version() == other_doc.get_version():
             raise StopIteration
         old_pars = [par for par in self]
@@ -627,8 +636,10 @@ class Document:
         :param text: The text of the section.
         :param par_id_first: The id of the paragraph that denotes the start of the section.
         :param par_id_last: The id of the paragraph that denotes the end of the section.
+
         """
-        new_pars = DocumentParser(text).add_missing_attributes().validate_structure(is_whole_document=False).get_blocks()
+        new_pars = DocumentParser(text).add_missing_attributes(
+        ).validate_structure(is_whole_document=False).get_blocks()
         new_par_id_set = set([par['id'] for par in new_pars])
         all_pars = [par for par in self]
         all_par_ids = [par.get_id() for par in all_pars]
@@ -650,8 +661,10 @@ class Document:
         :param text: The new text for the document.
         :param original: The original text for the document.
         :param strict_validation: Whether to use stricter validation rules for areas etc.
+
         """
-        new_pars = DocumentParser(text).add_missing_attributes().validate_structure(is_whole_document=strict_validation).get_blocks()
+        new_pars = DocumentParser(text).add_missing_attributes().validate_structure(
+            is_whole_document=strict_validation).get_blocks()
 
         # If the original document has validation errors, it probably means the document export routine has a bug.
         try:
@@ -810,7 +823,9 @@ class Document:
 
     def calculate_referenced_document_ids(self, ver: Optional[Tuple[int, int]]=None) -> Set[int]:
         """Gets all the document ids that are referenced from this document recursively.
+
         :return: The set of the document ids.
+
         """
 
         refs = set()
@@ -892,7 +907,7 @@ class Document:
             for i, par in enumerate(self.par_cache):
                 if par.get_id() == context_par.get_id():
                     break
-            self.par_cache = self.par_cache[:i+1] + pars + self.par_cache[i+1:]
+            self.par_cache = self.par_cache[:i + 1] + pars + self.par_cache[i + 1:]
         self.__update_par_map()
 
     def clear_mem_cache(self):
@@ -902,6 +917,7 @@ class Document:
 
 
 class CacheIterator:
+
     def __init__(self, i):
         self.i = i
 
@@ -919,6 +935,7 @@ class CacheIterator:
 
 
 class DocParagraphIter:
+
     def __init__(self, doc: Document):
         self.doc = doc
         self.next_index = 0
@@ -981,6 +998,7 @@ def dereference_pars(pars: Iterable[DocParagraph], source_doc: Optional[Document
 
     :param pars: The DocParagraphs to be processed.
     :param source_doc: Default document for referencing.
+
     """
     new_pars = []
     for par in pars:

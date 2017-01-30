@@ -1,7 +1,7 @@
 """Unit tests for Clipboard class.
 
-Run from parent directory with command:
-python3 -m unittest dumboclient filemodehelper documentmodel/test_clipboard.py
+Run from parent directory with command: python3 -m unittest dumboclient filemodehelper documentmodel/test_clipboard.py
+
 """
 
 from documentmodel.clipboard import Clipboard
@@ -11,6 +11,7 @@ from timdb.models.docentry import DocEntry
 
 
 class ClipboardTest(TimDbTest):
+
     def setUp(self):
         super(ClipboardTest, self).setUp()
         db = self.get_db()
@@ -73,8 +74,8 @@ class ClipboardTest(TimDbTest):
         read_pars = clip.read()
         self.assertEqual(len(read_pars), 4)
         for i in range(3, 7):
-            self.assertEqual(read_pars[i-3]['md'], pars[i].get_markdown())
-            self.assertDictEqual(read_pars[i-3]['attrs'], pars[i].get_attrs())
+            self.assertEqual(read_pars[i - 3]['md'], pars[i].get_markdown())
+            self.assertDictEqual(read_pars[i - 3]['attrs'], pars[i].get_attrs())
 
     def test_paste(self):
         clip = self.clipboard.get(1)

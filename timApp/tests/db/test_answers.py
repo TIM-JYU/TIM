@@ -3,6 +3,7 @@ from timdb.models.user import User
 
 
 class AnswerTest(TimDbTest):
+
     def check_totals(self, db, user: User, task_ids, task_count, total_points):
         self.assertListEqual([{'id': user.id,
                                'name': user.name,

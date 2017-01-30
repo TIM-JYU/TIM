@@ -4,6 +4,7 @@ from timdb.models.folder import Folder
 
 
 class PersonalFolderTest(TimRouteTest):
+
     def test_personal_folder_name(self):
         with app.test_request_context():
             db = self.get_db()

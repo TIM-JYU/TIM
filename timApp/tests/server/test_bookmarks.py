@@ -4,6 +4,7 @@ from timdb.models.folder import Folder
 
 
 class BookmarkTest(TimRouteTest):
+
     def get_bookmarks(self, expect_status=200):
         bms = self.get('/bookmarks/get', expect_status=expect_status)
         return bms

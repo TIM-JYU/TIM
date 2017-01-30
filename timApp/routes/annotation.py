@@ -1,5 +1,4 @@
-"""
-The module handles the main logic related to annotations. This includes adding, modifiying and deleting annotations
+"""The module handles the main logic related to annotations. This includes adding, modifiying and deleting annotations
 as well as adding comments to the annotations. The module also retrieves the annotations to the document.
 
 :authors: Joonas Lattu, Petteri Palojärvi
@@ -32,6 +31,7 @@ def add_annotation() -> Dict:
         - coord: start and end coordinates of the annotation.
 
     :return: Dictionary oontaining annotation id and annotator name.
+
     """
     json_data = request.get_json()
     timdb = get_timdb()
@@ -125,6 +125,7 @@ def update_annotation():
         - doc_id: document ID.
 
     :return: okJsonResponse()
+
     """
     verify_logged_in()
     user_id = get_current_user_id()
@@ -155,7 +156,7 @@ def update_annotation():
         new_values['visible_to'] = visible_to
 
     if len(color) > 0 and not is_hex_string(color):
-        return  abort(400, "Color should be a hex string, e.g. '#FFFFFF'.")
+        return abort(400, "Color should be a hex string, e.g. '#FFFFFF'.")
     new_values['color'] = color
 
     if timdb.users.has_teacher_access(user_id, doc_id):
@@ -172,10 +173,11 @@ def update_annotation():
 
 
 def is_hex_string(color: str) -> bool:
-    """ Checks if string is valid HTML hex string
+    """Checks if string is valid HTML hex string.
 
     :param color:
     :return:
+
     """
     exp = r"#[a-fA-F0-9]{6}"
     check = re.match(exp, color)
@@ -192,6 +194,7 @@ def invalidate_annotation():
         - annotation_id: annotation ID
 
     :return: okJsonResponse()
+
     """
     json_data = request.get_json()
     try:
@@ -222,10 +225,12 @@ def add_comment() -> Dict:
         - content: content of the comment.
 
     :return: Dictionary of information about user who added the comment
+
     """
     json_data = request.get_json()
 
     return add_comment_helper(json_data)
+
 
 def add_comment_helper(json_data) -> Dict:
     try:
@@ -248,6 +253,7 @@ def get_annotations(doc_id: int):
 
     :param doc_id: ID of the document
     :return: List of dictionaries containing annotations with comments
+
     """
     timdb = get_timdb()
     user_id = get_current_user_id()
@@ -264,4 +270,3 @@ def get_annotations(doc_id: int):
     response = jsonResponse(results)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     return response
-

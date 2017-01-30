@@ -10,6 +10,7 @@ class PointType(enum.Enum):
 
 
 class Group:
+
     def __init__(self, name: str, data: Union[str, Dict]):
         self.name = name
         if isinstance(data, str):
@@ -39,6 +40,7 @@ class Group:
 
 
 class PointSumRule:
+
     def __init__(self, data: Dict):
         try:
             self.groups = dict((k, Group(k, v)) for k, v in data['groups'].items())

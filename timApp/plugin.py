@@ -35,7 +35,8 @@ class Plugin:
 
     @staticmethod
     def get_date(d):
-        if type(d) is str: d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
+        if type(d) is str:
+            d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
         return d
 
     @staticmethod
@@ -57,7 +58,7 @@ class Plugin:
         return Plugin.from_paragraph(par, user)
 
     @staticmethod
-    def from_paragraph(par: DocParagraph, user:Optional[User]=None):
+    def from_paragraph(par: DocParagraph, user: Optional[User]=None):
         doc = par.doc
         if not par.is_plugin():
             raise TimDbException('The paragraph {} is not a plugin.'.format(par.get_id()))
@@ -81,6 +82,7 @@ class Plugin:
         :type task_id: str
         :param task_id: task_id that is of the form "22.palindrome"
         :return: tuple of the form (22, "palindrome")
+
         """
         pieces = task_id.split('.')
         if not 2 <= len(pieces) <= 3:
@@ -98,8 +100,9 @@ class Plugin:
 
     def points_rule(self, default=None):
         pr = self.values.get(self.points_rule_key, default)
-        if pr: return pr
-        return self.values.get("-"+self.points_rule_key, default)
+        if pr:
+            return pr
+        return self.values.get("-" + self.points_rule_key, default)
 
     def max_points(self, default=None):
         return self.points_rule({}).get('maxPoints', default)
@@ -165,6 +168,7 @@ class Plugin:
         :param old_answers: The number of old answers for this task for the current user.
         :param tim_info: The tim_info structure returned by the plugin or empty object.
         :return: True if the answer should be considered valid, False otherwise.
+
         """
         answer_limit = self.answer_limit()
         if answer_limit is not None and (answer_limit <= old_answers):

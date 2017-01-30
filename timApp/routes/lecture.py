@@ -28,7 +28,11 @@ lecture_routes = Blueprint('lecture',
 
 @lecture_routes.route('/getLectureInfo')
 def get_lecture_info():
-    """Route to get info from lectures. Gives answers, and messages and other necessary info."""
+    """Route to get info from lectures.
+
+    Gives answers, and messages and other necessary info.
+
+    """
     if not request.args.get("lecture_id"):
         abort(400, "Bad request, missing lecture id")
     lecture_id = int(request.args.get("lecture_id"))
@@ -73,6 +77,7 @@ def get_lecture_answer_totals(lecture_id):
     results = timdb.lecture_answers.get_totals(lecture_id, None if is_lecturer else get_current_user_id())
     sum_field_name = get_option(request, 'sum_field_name', 'sum')
     count_field_name = get_option(request, 'count_field_name', 'count')
+
     def generate_text():
         for a in results:
             yield '{};{};{}\n'.format(a['name'], sum_field_name, a['sum'])
@@ -85,7 +90,10 @@ def get_lecture_answer_totals(lecture_id):
 @lecture_routes.route('/getAllMessages')
 def get_all_messages(param_lecture_id=-1):
     """Route to get all the messages from some lecture.
-       Tulisi hakea myös kaikki aukiolevat kysymykset, joihin käyttäjä ei ole vielä vastannut."""
+
+    Tulisi hakea myös kaikki aukiolevat kysymykset, joihin käyttäjä ei ole vielä vastannut.
+
+    """
     if not request.args.get("lecture_id") and param_lecture_id is -1:
         abort(400, "Bad request, missing lecture id")
     timdb = get_timdb()
@@ -128,7 +136,11 @@ def get_all_messages(param_lecture_id=-1):
 
 @lecture_routes.route('/getUpdates')
 def get_updates():
-    """Gets updates from some lecture. Checks updates in 1 second frequently and answers if there is updates."""
+    """Gets updates from some lecture.
+
+    Checks updates in 1 second frequently and answers if there is updates.
+
+    """
     if not request.args.get('client_message_id') or not request.args.get("lecture_id"):
         abort(400, "Bad request")
     client_last_id = int(request.args.get('client_message_id'))
@@ -143,7 +155,7 @@ def get_updates():
     session['use_wall'] = use_wall
     use_questions = get_option(request, 'get_questions', False)
     session['use_questions'] = use_questions
-    is_lecturer =  get_option(request, 'is_lecturer', False) # TODO: check from session
+    is_lecturer = get_option(request, 'is_lecturer', False)  # TODO: check from session
 
     helper = request.args.get("lecture_id")
     if len(helper) > 0:
@@ -258,13 +270,12 @@ def get_updates():
     if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
         lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
 
-
     if lecture_ending != 100 or len(lecturers) or len(students):
         return jsonResponse(
             {"status": "no-results", "data": ["No new messages"], "lastid": client_last_id, "lectureId": lecture_id,
              "isLecture": True, "lecturers": lecturers, "students": students, "lectureEnding": lecture_ending})
 
-    return jsonResponse({ "isLecture": -1 })  # no new updates
+    return jsonResponse({"isLecture": -1})  # no new updates
 
 
 @lecture_routes.route('/getQuestionManually')
@@ -338,12 +349,14 @@ def get_new_question(lecture_id, current_question_id=None, current_points_id=Non
 
 
 def check_if_lecture_is_ending(current_user, timdb, lecture_id):
-    """Checks if the lecture is about to end.
-    1 -> ends in 1 min. 5 -> ends in 5 min. 100 -> goes on atleast for 5 mins.
+    """Checks if the lecture is about to end. 1 -> ends in 1 min. 5 -> ends in 5 min. 100 -> goes on atleast for 5 mins.
+
     :param current_user: The current user id.
     :param timdb: The TimDb object.
     :param lecture_id: The lecture id.
-    :return: """
+    :return:
+
+    """
     lecture = timdb.lectures.get_lecture(lecture_id)
     lecture_ending = 100
     if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
@@ -364,7 +377,7 @@ def send_message():
     new_message = request.args.get("message")
     lecture_id = int(request.args.get("lecture_id"))
 
-    new_timestamp = datetime.now(timezone.utc) # was timezone.utc)
+    new_timestamp = datetime.now(timezone.utc)  # was timezone.utc)
     msg_id = timdb.messages.add_message(get_current_user_id(), lecture_id, new_message, new_timestamp, True)
     return jsonResponse({'id': msg_id, 'time': new_timestamp})
 
@@ -603,7 +616,9 @@ def check_if_lecture_is_full(lecture_id):
 
 def get_running_lectures(doc_id=None):
     """Gets all running and future lectures.
+
     :param doc_id: The document id for which to get lectures.
+
     """
     timdb = get_timdb()
     time_now = datetime.now(timezone.utc)
@@ -696,7 +711,9 @@ def end_lecture():
 
 def clean_dictionaries_by_lecture(lecture_id):
     """Cleans data from lecture that isn't running anymore.
+
     :param lecture_id: The lecture id.
+
     """
     tempdb = getTempDb()
     tempdb.runningquestions.delete_lectures_running_questions(lecture_id)
@@ -741,7 +758,11 @@ def delete_lecture():
 
 @lecture_routes.route('/joinLecture', methods=['POST'])
 def join_lecture():
-    """Route to join lecture. Checks that the given password is correct."""
+    """Route to join lecture.
+
+    Checks that the given password is correct.
+
+    """
     if not request.args.get("doc_id") or not request.args.get("lecture_code"):
         abort(400, "Missing parameters")
     timdb = get_timdb()
@@ -873,10 +894,9 @@ def ask_question():
 
     timdb = get_timdb()
 
-
     if question_id or par_id:
         if question_id:
-            question = timdb.questions.get_question(question_id)[0] # Old version???
+            question = timdb.questions.get_question(question_id)[0]  # Old version???
             question_json_str = question.get("questionjson")
             markup = json.loads(question_json_str)
             expl = question.get("expl")
@@ -905,11 +925,11 @@ def ask_question():
         question = timdb.questions.get_asked_question(asked_id)[0]
         asked_json = timdb.questions.get_asked_json_by_id(question["asked_json_id"])[0]
         asked_json_id = asked_json["asked_json_id"]
-        question_json_str = asked_json["json"] # actually now markup
+        question_json_str = asked_json["json"]  # actually now markup
         markup = json.loads(question_json_str)
 
     if "json" not in markup:  # compability for old version
-        markup = {"json" : markup}
+        markup = {"json": markup}
 
     question_timelimit = 0
     try:
@@ -919,7 +939,6 @@ def ask_question():
         question_timelimit = int(tl)
     except:
         pass
-
 
     ask_time = int(time.time() * 1000)
     end_time = ask_time + question_timelimit * 1000
@@ -975,7 +994,7 @@ def show_points():
 
 @lecture_routes.route('/updatePoints/', methods=['POST'])
 def update_question_points():
-    """Route to get add question to database"""
+    """Route to get add question to database."""
     if 'asked_id' not in request.args or 'points' not in request.args:
         abort("400")
     asked_id = int(request.args.get('asked_id'))
@@ -1003,7 +1022,7 @@ def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_tim
         # Adding extra time to limit so when people gets question a bit later than others they still get to answer
         extra_time = 3
         end_time += extra_time * 1000
-        while int(time.time() * 1000) < end_time: # TODO: check carefully if any sense
+        while int(time.time() * 1000) < end_time:  # TODO: check carefully if any sense
             time.sleep(1)
             stopped = True
             question = tempdb.runningquestions.get_running_question_by_id(asked_id)
@@ -1249,7 +1268,7 @@ def get_question_data_from_document(doc_id, par_id):
     # par_id might be like 100.Ruksit.SpQA0NX2itOd  and one must cut the beginin
     i = par_id.rfind(".")
     if i >= 0:
-        par_id = par_id[i+1:]
+        par_id = par_id[i + 1:]
     par = Document(doc_id).get_paragraph(par_id)
     question = parse_plugin_values(par)
     markup = question.get('markup')

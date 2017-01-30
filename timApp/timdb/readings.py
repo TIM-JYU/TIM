@@ -11,11 +11,13 @@ from timdb.timdbbase import TimDbBase
 
 
 class Readings(TimDbBase):
+
     def get_readings(self, usergroup_id: int, doc: Document) -> List[ReadParagraph]:
         """Gets the reading info for a document for a user.
 
         :param doc: The document for which to get the readings.
         :param usergroup_id: The id of the user group whose readings will be fetched.
+
         """
         ids = doc.get_referenced_document_ids()
         ids.add(doc.doc_id)
@@ -70,9 +72,9 @@ WHERE doc_id = %s AND par_id = %s
             self.db.commit()
 
     def get_common_readings(self, usergroup_ids: List[int], doc: Document):
-        users = [] # type: List[Dict[str, ReadParagraph]]
+        users = []  # type: List[Dict[str, ReadParagraph]]
         for u in usergroup_ids:
-            reading_map = defaultdict(lambda:defaultdict(lambda:ReadParagraph(par_hash=None)))
+            reading_map = defaultdict(lambda: defaultdict(lambda: ReadParagraph(par_hash=None)))
             rs = self.get_readings(u, doc)
             for r in rs:
                 reading_map[r.par_id][r.type] = r

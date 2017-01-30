@@ -21,15 +21,17 @@ class TimDbBase(object):
     :type files_root_path: str
     :type current_user_name: str
     :type blocks_path: str
+
     """
 
     def __init__(self, db: connection, files_root_path: str, type_name: str, current_user_name: str, session: scoped_session):
         """Initializes TimDB with the specified database and root path.
-        
+
         :param db: The database connection.
         :param files_root_path: The root path where all the files will be stored.
         :param type_name: The type name.
         :param current_user_name: The current user name.
+
         """
         self.files_root_path = os.path.abspath(files_root_path)
         self.current_user_name = current_user_name
@@ -46,18 +48,20 @@ class TimDbBase(object):
 
     def getBlockPath(self, block_id: int) -> str:
         """Gets the path of the specified block.
-        
+
         :param block_id: The id of the block.
         :returns: The path of the block.
+
         """
         return os.path.join(self.blocks_path, str(block_id))
 
     def blockExists(self, block_id: int, block_type: int, check_file: bool = True) -> bool:
         """Checks whether the specified block exists.
-        
+
         :param block_id: The id of the block to check.
         :param block_type: The type of the block to check.
         :returns: True if the block exists, false otherwise.
+
         """
 
         cursor = self.db.cursor()
@@ -73,6 +77,7 @@ class TimDbBase(object):
         """Returns the owner group for a block.
 
         :param block_id: The id of the block.
+
         """
         return Block.query.get(block_id).owner.id
 
@@ -81,6 +86,7 @@ class TimDbBase(object):
 
         :param block_id: The id of the block.
         :param usergroup_id: The id of the new usergroup.
+
         """
         BlockAccess.query.filter_by(block_id=block_id, type=AccessType.owner.value).delete()
         b = BlockAccess(block_id=block_id,
@@ -99,7 +105,8 @@ class TimDbBase(object):
         for row in rows:
             result = {}
             for prop, val in zip(cols, row):
-                if isinstance(val, decimal.Decimal): val = float(val)
+                if isinstance(val, decimal.Decimal):
+                    val = float(val)
                 result[prop] = val
             results.append(result)
         return results

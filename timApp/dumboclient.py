@@ -13,11 +13,11 @@ DUMBO_PATH = os.path.join("..", "Ephemeral", "Dumbo", "dist", "build", "Dumbo")
 
 
 def launch_dumbo():
-    """
-    Launches Dumbo.
+    """Launches Dumbo.
 
     :return: The process object that represents the Dumbo process.
     :rtype: subprocess.Popen
+
     """
     path = DUMBO_PATH
     old = os.getcwd()
@@ -29,12 +29,12 @@ def launch_dumbo():
 
 
 def call_dumbo(md_blocks: List[str]) -> List[str]:
-    """
-    Calls Dumbo for converting the given list of markdown texts to HTML.
+    """Calls Dumbo for converting the given list of markdown texts to HTML.
 
     :type md_blocks: list[str]
     :rtype: list[str]
     :param md_blocks: A list of markdown blocks to be converted.
+
     """
     try:
         r = requests.post(url=DUMBO_URL, data=json.dumps(md_blocks))

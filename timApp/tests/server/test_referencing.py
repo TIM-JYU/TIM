@@ -2,6 +2,7 @@ from tests.server.timroutetest import TimRouteTest
 
 
 class ReferencingTest(TimRouteTest):
+
     def test_reference(self):
         self.login_test1()
         text = 'Par 1'

@@ -184,8 +184,7 @@ class DocParagraph:
     @classmethod
     def get(cls, doc, par_id: str, t: str, files_root: Optional[str] = None) -> 'DocParagraph':
         try:
-            """Loads a paragraph from file system based on given parameters.
-            """
+            """Loads a paragraph from file system based on given parameters."""
             with open(cls._get_path(doc, par_id, t, files_root), 'r') as f:
                 return cls.from_dict(doc, json.loads(f.read()), files_root=files_root)
         except FileNotFoundError:
@@ -240,7 +239,8 @@ class DocParagraph:
         self.__htmldata['cls'] = 'par ' + self.get_class_str() + (' questionPar' if self.is_question() else '')
         self.__htmldata['is_plugin'] = self.is_plugin()
         self.__htmldata['is_question'] = self.is_question()
-        self.__htmldata['needs_browser'] = True #self.is_plugin() and containerLink.get_plugin_needs_browser(self.get_attr('plugin'))
+        # self.is_plugin() and containerLink.get_plugin_needs_browser(self.get_attr('plugin'))
+        self.__htmldata['needs_browser'] = True
 
     def _cache_props(self):
         self.__is_plugin = self.get_attr('plugin') or ""  # self.get_attr('taskId')
@@ -269,7 +269,7 @@ class DocParagraph:
 
         default_rd = self.doc.get_settings().get_source_document()
         if default_rd is not None:
-            return  default_rd
+            return default_rd
 
         return None
 
@@ -322,17 +322,19 @@ class DocParagraph:
             return '<div class="pluginError">Invalid settings paragraph detected</div>'
 
     def get_html(self, from_preview: bool = True) -> str:
-        """
-        Gets the html for the paragraph.
+        """Gets the html for the paragraph.
+
         :param from_preview: Whether this is called from a preview window or not.
                              If True, previous paragraphs are preloaded too and the result is not cached.
                              Safer, but slower. Set explicitly False if you know what you're doing.
         :return: html string
+
         """
         question_title = self.is_question()
         if question_title:
-            return self.__set_html(sanitize_html('<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="{0}"></span></a>'
-                                   '<p class="questionNumber">{0}</p>'.format(question_title)))
+            return self.__set_html(sanitize_html(
+                '<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="{0}"></span></a>'
+                '<p class="questionNumber">{0}</p>'.format(question_title)))
         if self.html is not None:
             return self.html
         if self.is_plugin():
@@ -350,14 +352,15 @@ class DocParagraph:
     @classmethod
     def preload_htmls(cls, pars: List['DocParagraph'], settings,
                       clear_cache: bool = False, context_par: Optional['DocParagraph'] = None, persist: bool = True):
-        """
-        Loads the HTML for each paragraph in the given list.
+        """Loads the HTML for each paragraph in the given list.
+
         :param context_par: The context paragraph. Required only for previewing for now.
         :param persist: Whether the result of preloading should be saved to disk.
         :param clear_cache: Whether all caches should be refreshed.
         :param settings: The document settings.
         :param pars: Paragraphs to preload.
         :return: A list of paragraphs whose HTML changed as the result of preloading.
+
         """
         if not pars:
             return []
@@ -374,8 +377,8 @@ class DocParagraph:
         if not persist:
             cache = {}
             heading_cache = {}
-            with shelve.open(macro_cache_file) as c,\
-                 shelve.open(heading_cache_file) as hc:
+            with shelve.open(macro_cache_file) as c, \
+                    shelve.open(heading_cache_file) as hc:
 
                 # Basically we want the cache objects to be non-persistent, so we convert them to normal dicts
                 # Find out better way if possible...
@@ -398,8 +401,8 @@ class DocParagraph:
                     os.remove(heading_cache_file + '.db')
                 except FileNotFoundError:
                     pass
-            with shelve.open(macro_cache_file) as cache,\
-                 shelve.open(heading_cache_file) as heading_cache:
+            with shelve.open(macro_cache_file) as cache, \
+                    shelve.open(heading_cache_file) as heading_cache:
                 unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
                 for k, v in heading_cache.items():
                     heading_cache[k] = v
@@ -407,7 +410,8 @@ class DocParagraph:
         changed_pars = []
         if len(unloaded_pars) > 0:
             htmls = par_list_to_html_list([par for par, _, _, _, _ in unloaded_pars],
-                                          auto_macros=({'h': auto_macros['h'], 'headings': hs} for _, _, auto_macros, hs, _ in unloaded_pars),
+                                          auto_macros=({'h': auto_macros['h'], 'headings': hs}
+                                                       for _, _, auto_macros, hs, _ in unloaded_pars),
                                           settings=settings)
             for (par, auto_macro_hash, _, _, old_html), h in zip(unloaded_pars, htmls):
                 # h is not sanitized but old_html is, but HTML stays unchanged after sanitization most of the time
@@ -423,8 +427,7 @@ class DocParagraph:
 
     @classmethod
     def get_unloaded_pars(cls, pars, settings, auto_macro_cache, heading_cache, clear_cache=False):
-        """
-        Finds out which of the given paragraphs need to be preloaded again.
+        """Finds out which of the given paragraphs need to be preloaded again.
 
         :param pars: The list of paragraphs to be processed.
         :param settings: The settings for the document.
@@ -434,6 +437,7 @@ class DocParagraph:
         :param clear_cache: Whether all caches should be refreshed.
         :return: A 5-tuple of the form:
           (paragraph, hash of the auto macro values, auto macros, so far used headings, old HTML).
+
         """
         cumulative_headings = []
         unloaded_pars = []
@@ -452,7 +456,8 @@ class DocParagraph:
             try:
                 auto_macros = par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache)
             except RecursionError:
-                raise TimDbException('Infinite recursion detected in get_auto_macro_values; the document may be broken.')
+                raise TimDbException(
+                    'Infinite recursion detected in get_auto_macro_values; the document may be broken.')
             auto_macro_hash = hashfunc(m + str(auto_macros))
 
             par_headings = heading_cache.get(par.get_id())
@@ -503,8 +508,8 @@ class DocParagraph:
             self.__data['attrs']['classes'].append(class_name)
 
     def get_auto_macro_values(self, macros, macro_delim, auto_macro_cache, heading_cache):
-        """Gets the auto macros values for the current paragraph.
-        Auto macros include things like current heading/table/figure numbers.
+        """Gets the auto macros values for the current paragraph. Auto macros include things like current
+        heading/table/figure numbers.
 
         :param heading_cache: A cache object to store headings into. The key is paragraph id and value is a list of headings
          in that paragraph.
@@ -513,6 +518,7 @@ class DocParagraph:
         :return: Auto macro values as a dict.
         :param macro_delim: Delimiter for macros.
         :return: A dict(str, dict(int,int)) containing the auto macro information.
+
         """
 
         key = str((self.get_id(), self.doc.get_version()))
@@ -654,7 +660,7 @@ class DocParagraph:
 
         if does_exist and not should_exist:
             # Uncomment to remove old versions
-            #os.unlink(file_name)
+            # os.unlink(file_name)
             base_path = self.get_base_path()
             if os.listdir(base_path) == ['current']:
                 os.unlink(os.path.join(base_path, 'current'))
@@ -683,7 +689,11 @@ class DocParagraph:
         os.symlink(self.get_hash(), linkpath)
 
     def clone(self) -> 'DocParagraph':
-        """Clones the paragraph. A new ID is generated for the cloned paragraph."""
+        """Clones the paragraph.
+
+        A new ID is generated for the cloned paragraph.
+
+        """
         return DocParagraph.create(self.doc,
                                    md=self.get_markdown(),
                                    attrs=self.get_attrs(),
@@ -692,7 +702,9 @@ class DocParagraph:
 
     def save(self, add=False):
         """Saves the paragraph to disk.
+
         :param add: Whether to add (True) or modify an existing (False).
+
         """
         # TODO: Possibly get rid of 'add' parameter altogether.
         if add:
@@ -701,7 +713,7 @@ class DocParagraph:
             self.doc.modify_paragraph_obj(self.get_id(), self)
 
     def add_link(self, doc_id: int):
-        #self.__read()
+        # self.__read()
         self.__data['links'].append(str(doc_id))
         self.__write()
 
@@ -744,7 +756,8 @@ class DocParagraph:
         return s[:rindex] + new + s[rindex + len(old):] if rindex >= 0 else s
 
     def get_referenced_pars(self, set_html: bool = True, source_doc: bool = None,
-                            tr_get_one: bool = True, cycle: Optional[List[Tuple[int, str]]] = None) -> List['DocParagraph']:
+                            tr_get_one: bool = True, cycle: Optional[List[Tuple[int, str]]] = None) -> List[
+            'DocParagraph']:
         if self.ref_pars is not None:
             return self.ref_pars
         if cycle is None:
@@ -760,21 +773,22 @@ class DocParagraph:
             tr = self.get_attr('r') == 'tr'
             doc = ref_par.doc
 
-            md = DocParagraph.__combine_md(ref_par.get_markdown(), self.get_markdown()) if tr else ref_par.get_markdown()
-            attrs = self.get_attrs(ref_par.get_attrs()) #if tr else ref_par.get_attrs()
-            props = self.get_properties(ref_par.get_properties()) #if tr else ref_par.get_properties()
+            md = DocParagraph.__combine_md(ref_par.get_markdown(), self.get_markdown()
+                                           ) if tr else ref_par.get_markdown()
+            attrs = self.get_attrs(ref_par.get_attrs())  # if tr else ref_par.get_attrs()
+            props = self.get_properties(ref_par.get_properties())  # if tr else ref_par.get_properties()
 
             # Remove reference attributes
             for ref_attr in ['r', 'rd', 'rp', 'ra', 'rt']:
                 attrs.pop(ref_attr, None)
 
             par = DocParagraph.create(doc, par_id=ref_par.get_id(), md=md, t=ref_par.get_hash(),
-                                           attrs=attrs, props=props)
+                                      attrs=attrs, props=props)
             par.set_original(self)
 
             if set_html:
                 html = self.get_html(from_preview=False) if tr else ref_par.get_html(from_preview=False)
-                
+
                 # if html is empty, use the source
                 if html == '':
                     html = ref_par.get_html(from_preview=False)
@@ -809,7 +823,7 @@ class DocParagraph:
             try:
                 ref_par = DocParagraph.get_latest(ref_doc, attrs['rp'], ref_doc.files_root)
                 if not ref_doc.has_paragraph(attrs['rp']):
-                    #ref_par.set_attr('deleted', 'True')
+                    # ref_par.set_attr('deleted', 'True')
                     ref_par.add_class('deleted')
 
             except TimDbException:
@@ -851,8 +865,8 @@ class DocParagraph:
 
     def is_dynamic(self) -> bool:
         return self.__is_plugin \
-               or (self.__is_ref and self.__data.get('attrs', {}).get('r', '') != 'tr')\
-               or self.__is_setting
+            or (self.__is_ref and self.__data.get('attrs', {}).get('r', '') != 'tr') \
+            or self.__is_setting
 
     def is_plugin(self) -> bool:
         return self.__is_plugin

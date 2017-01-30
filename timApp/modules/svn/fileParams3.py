@@ -12,7 +12,9 @@ import os
 
 CACHE_DIR = "/tmp/cache/"
 
+
 class QueryClass:
+
     def __init__(self):
         self.get_query = {}
         self.query = {}
@@ -20,69 +22,91 @@ class QueryClass:
 
 
 def check_key(query, key):
-    # return key   
-    key2 = "-" + key;
-    if key in query.query: return key
-    if key2 in query.query: return key2
-    if key in query.get_query: return key
-    if key2 in query.get_query: return key2
-    if not query.jso: return key
+    # return key
+    key2 = "-" + key
+    if key in query.query:
+        return key
+    if key2 in query.query:
+        return key2
+    if key in query.get_query:
+        return key
+    if key2 in query.get_query:
+        return key2
+    if not query.jso:
+        return key
     if "input" in query.jso and "markup" in query.jso["input"]:
-       if key in query.jso["input"]["markup"]: return key
-       if key2 in query.jso["input"]["markup"]: return key2
-    if "markup" not in query.jso: return key
-    if key in query.jso["markup"]: return key
-    if key2 in query.jso["markup"]: return key2
+        if key in query.jso["input"]["markup"]:
+            return key
+        if key2 in query.jso["input"]["markup"]:
+            return key2
+    if "markup" not in query.jso:
+        return key
+    if key in query.jso["markup"]:
+        return key
+    if key2 in query.jso["markup"]:
+        return key2
     return key
 
 
 def get_param(query, key, default):
-    key = check_key(query,key)
+    key = check_key(query, key)
     dvalue = default
-    if key in query.query: dvalue = query.query[key][0]
-    if dvalue == 'undefined': 
+    if key in query.query:
+        dvalue = query.query[key][0]
+    if dvalue == 'undefined':
         dvalue = default
 
     if key not in query.get_query:
-        if query.jso is None: return dvalue
+        if query.jso is None:
+            return dvalue
         if "input" in query.jso and "markup" in query.jso["input"] and key in query.jso["input"]["markup"]:
             value = query.jso["input"]["markup"][key]
-            if value != 'undefined': return value
+            if value != 'undefined':
+                return value
 
-        if "markup" not in query.jso: return dvalue
-        if key in query.jso["markup"]: return query.jso["markup"][key]
+        if "markup" not in query.jso:
+            return dvalue
+        if key in query.jso["markup"]:
+            return query.jso["markup"][key]
         return dvalue
     value = query.get_query[key][0]
-    if value == 'undefined': return dvalue
+    if value == 'undefined':
+        return dvalue
     return value
 
 
 def handle_by(byc):
-    if not byc: return byc
+    if not byc:
+        return byc
     bycs = byc.split("\n")
     if len(bycs) > 0 and bycs[0].strip() == "//":  # remove empty comment on first line (due YAML limatations)
         del bycs[0]
         byc = "\n".join(bycs)
     n = len(byc)
-    if n > 0 and byc[n - 1] == "\n": byc = byc[0:n - 1]
+    if n > 0 and byc[n - 1] == "\n":
+        byc = byc[0:n - 1]
     return byc
 
 
 def get_param_by(query, key, default):
     byc = get_param(query, key, default)
     # print("KEY: ", key, " PYC: ", byc, "|||")
-    if not byc: byc = default
-    if not byc: return byc
+    if not byc:
+        byc = default
+    if not byc:
+        return byc
     byc = handle_by(byc)
     # print("KEY: ", key, " PYC: ", byc, "|||")
     return byc
 
 
 def get_param_del(query, key, default):
-    key = check_key(query,key)
+    key = check_key(query, key)
     if key not in query.query:
-        if query.jso is None: return default
-        if "markup" not in query.jso: return default
+        if query.jso is None:
+            return default
+        if "markup" not in query.jso:
+            return default
         if key in query.jso["markup"]:
             value = query.jso["markup"][key]
             del query.jso["markup"][key]
@@ -90,19 +114,23 @@ def get_param_del(query, key, default):
         return default
     value = query.query[key][0]
     del query.query[key]
-    if value == 'undefined': return default
+    if value == 'undefined':
+        return default
     return value
 
 
 def replace_param(query, key, new_value):
     if key not in query.query:
-        if query.jso is None: return
-        if "markup" not in query.jso: return
+        if query.jso is None:
+            return
+        if "markup" not in query.jso:
+            return
         if key in query.jso["markup"]:
             query.jso["markup"][key] = new_value
         return
     value = query.query[key][0]
-    if value == 'undefined': return
+    if value == 'undefined':
+        return
     query.query[key][0] = new_value
 
 
@@ -121,11 +149,16 @@ def check(matcher, line):
 
 def get_json_param(jso, key1, key2, default):
     try:
-        if jso is None: return default
-        if key1 not in jso: return default
-        if not key2: return jso[key1]
-        if not jso[key1]: return default
-        if key2 not in jso[key1]: return default
+        if jso is None:
+            return default
+        if key1 not in jso:
+            return default
+        if not key2:
+            return jso[key1]
+        if not jso[key1]:
+            return default
+        if key2 not in jso[key1]:
+            return default
         return jso[key1][key2]
     except:
         # print("JSO XXXXXXXXXXXXX", jso)
@@ -135,12 +168,18 @@ def get_json_param(jso, key1, key2, default):
 
 def get_json_param3(jso, key1, key2, key3, default):
     try:
-        if jso is None: return default
-        if key1 not in jso: return default
-        if not key2: return jso[key1]
-        if not jso[key1]: return default
-        if key2 not in jso[key1]: return default
-        if key3 not in jso[key1][key2]: return default
+        if jso is None:
+            return default
+        if key1 not in jso:
+            return default
+        if not key2:
+            return jso[key1]
+        if not jso[key1]:
+            return default
+        if key2 not in jso[key1]:
+            return default
+        if key3 not in jso[key1][key2]:
+            return default
         return jso[key1][key2][key3]
     except:
         # print("JSO XXXXXXXXXXXXX", jso)
@@ -161,14 +200,18 @@ def get_scan_value(s):
 
 
 def scan_lines(lines, n, i, scanner, direction):
-    if not scanner: return i
+    if not scanner:
+        return i
     i += direction
     while 0 <= i < n:
         line = lines[i]
-        if check(scanner, line): return i
+        if check(scanner, line):
+            return i
         i += direction
-    if i < 0: i = 0
-    if i >= n: i = n - 1
+    if i < 0:
+        i = 0
+    if i >= n:
+        i = n - 1
     return i
 
 
@@ -179,13 +222,14 @@ def clear_cache():
     global cache
     cache = {}
     for f in os.listdir(CACHE_DIR):
-        os.remove(CACHE_DIR+f)
+        os.remove(CACHE_DIR + f)
 
 
 def get_chache_keys():
     global cache
     s = ""
-    for key in cache.keys(): s += key + "\n"
+    for key in cache.keys():
+        s += key + "\n"
     s = s + "\n".join(os.listdir(CACHE_DIR))
     return s
 
@@ -193,18 +237,18 @@ def get_chache_keys():
 def get_url_lines(url):
     global cache
     # print("========= CACHE KEYS ==========\n", get_chache_keys())
-    if url in cache: 
+    if url in cache:
         # print("from cache: ", url)
         return cache[url]
 
-    diskcache = CACHE_DIR+url.replace('/','_').replace(':','_')
+    diskcache = CACHE_DIR + url.replace('/', '_').replace(':', '_')
 
     print("not in cache: ", url)
     # if False and os.path.isfile(diskcache):
     if os.path.isfile(diskcache):
         try:
-            result = open(diskcache,"r",encoding='iso8859_15').read()
-            result = result.split("\n");
+            result = open(diskcache, "r", encoding='iso8859_15').read()
+            result = result.split("\n")
             print("from DISK cache: ", diskcache)
             cache[url] = result
 
@@ -212,7 +256,6 @@ def get_url_lines(url):
         except Exception as e:
             print(str(e))
             print("error reading filecache: ", diskcache)
-            
 
     try:
         req = urlopen(url)
@@ -239,38 +282,36 @@ def get_url_lines(url):
 
     try:
         # open(diskcache,"w").write("\n".join(lines));
-        open(diskcache,"w",encoding='iso8859_15').write("\n".join(lines));
+        open(diskcache, "w", encoding='iso8859_15').write("\n".join(lines))
     except Exception as e:
         print(str(e))
-        print("XXXXXXXXXXXXXXXXXXXXXXXX Could no write cache: \n",diskcache)
+        print("XXXXXXXXXXXXXXXXXXXXXXXX Could no write cache: \n", diskcache)
 
-    
-    
     return lines
 
 
 def get_url_lines_as_string(url):
     global cache
     cachename = "lines_" + url
-    diskcache = CACHE_DIR+cachename.replace('/','_').replace(':','_')
+    diskcache = CACHE_DIR + cachename.replace('/', '_').replace(':', '_')
     # print("========= CACHE KEYS ==========\n", get_chache_keys())
     # print(cachename + "\n")
-    #print(cache) # chache does not work in forkingMix
+    # print(cache) # chache does not work in forkingMix
     if cachename in cache:
         # print("from cache: ", cachename)
         return cache[cachename]
 
     # print("not in cache: ", cachename)
     # return "File not found: " + url
-    
+
     if os.path.isfile(diskcache):
         try:
-            result = open(diskcache,"r").read()
+            result = open(diskcache, "r").read()
             cache[cachename] = result
             return result
         except:
             print("error reading filecache: ", diskcache)
-            
+
     # print("not in filecache: ", diskcache)
 
     try:
@@ -297,16 +338,16 @@ def get_url_lines_as_string(url):
 
     result = result.strip("\n")
     cache[cachename] = result
-    
+
     try:
-        open(diskcache,"w").write(result)
+        open(diskcache, "w").write(result)
     except:
-        print("Could no write cache: ",diskcache)
-    
+        print("Could no write cache: ", diskcache)
+
     # print(cache)
     return result
 
-    
+
 def do_escape(s):
     line = html.escape(s)
     # line = line.replace("{","&#123;") # because otherwise problems with angular {{, no need if used inside ng-non-bindable
@@ -315,6 +356,7 @@ def do_escape(s):
 
 
 class FileParams:
+
     def __init__(self, query, nr, url, **defs):
         self.url = get_param(query, "file" + nr, "")  # defs.get('file',""))
         self.start = do_matcher(get_param(query, "start" + nr, "").replace("\\\\", "\\"))
@@ -337,12 +379,14 @@ class FileParams:
         self.reps = []
 
         repNr = ""
-        if nr: repNr = nr + "."
+        if nr:
+            repNr = nr + "."
 
         for i in range(1, 10):
             rep = do_matcher(
                 get_param(query, "replace" + repNr + str(i), ""))  # replace.1.1 tyyliin replace1 on siis replace.0.1
-            if not rep: break
+            if not rep:
+                break
             byc = get_param_by(query, "byCode" + repNr + str(i), "")
             self.reps.append({"by": rep, "bc": byc})
 
@@ -353,19 +397,21 @@ class FileParams:
             self.breaksBefore = []
             self.breaksAfter = []
             defAfter = -1
-            for i in range(0, self.breakCount+1):
+            for i in range(0, self.breakCount + 1):
                 brkdef = ""
                 if i >= self.breakCount:
                     brkdef = "!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                     defAfter = 0
-                self.breaksBegin.append(do_matcher(get_param(query, "breakBegin" + repNr + str(i), "").replace("\\\\", "\\")))
+                self.breaksBegin.append(do_matcher(get_param(query, "breakBegin" +
+                                                             repNr + str(i), "").replace("\\\\", "\\")))
                 self.breaks.append(do_matcher(get_param(query, "break" + repNr + str(i), brkdef).replace("\\\\", "\\")))
                 self.breaksBeforeBegin.append(int(get_param(query, "breakBeforeBegin" + repNr + str(i), 0)))
                 self.breaksBefore.append(int(get_param(query, "breakBefore" + repNr + str(i), 0)))
                 self.breaksAfter.append(int(get_param(query, "breakAfter" + repNr + str(i), defAfter)))
-                if defAfter < 0: defAfter = 0
-                else: defAfter = -1
-
+                if defAfter < 0:
+                    defAfter = 0
+                else:
+                    defAfter = -1
 
         usercode = get_json_param(query.jso, "input" + nr, "usercode", None)
         # if ( query.jso != None and query.jso.has_key("input") and query.jso["input"].has_key("usercode") ):
@@ -373,10 +419,12 @@ class FileParams:
             self.by = usercode
         else:
             usercode = get_json_param(query.jso, "state" + nr, "usercode", None)
-            if usercode: self.by = usercode
+            if usercode:
+                self.by = usercode
 
         u = get_param(query, "url" + nr, "")
-        if u and not self.url: self.url = url
+        if u and not self.url:
+            self.url = url
         # if self.url: print("url: " + self.url + " " + self.linefmt + "\n")
 
     def get_file(self, escape_html=False):
@@ -385,11 +433,13 @@ class FileParams:
             return self.scan_needed_lines(self.prorgam.split("\n"), escape_html)
         if not self.url:
             # print("SELF.BY:", self.by.encode());
-            if not self.by: return ""
-            return self.by # self.by.replace("\\n", "\n")
+            if not self.by:
+                return ""
+            return self.by  # self.by.replace("\\n", "\n")
 
         lines = get_url_lines(self.url)
-        if not lines: return "File not found " + self.url
+        if not lines:
+            return "File not found " + self.url
 
         return self.scan_needed_lines(lines, escape_html)
 
@@ -399,11 +449,13 @@ class FileParams:
             return self.prorgam.split("\n")
         if not self.url:
             # print("SELF.BY:", self.by.encode());
-            if not self.by: return [];
-            return [] # self.by.replace("\\n", "\n")
+            if not self.by:
+                return []
+            return []  # self.by.replace("\\n", "\n")
 
         lines = get_url_lines(self.url)
-        if not lines: return ["File not found " + self.url];
+        if not lines:
+            return ["File not found " + self.url]
 
         return lines
 
@@ -413,8 +465,10 @@ class FileParams:
         n2 = n1
         n1 = scan_lines(lines, n, n1, self.start_scan, self.start_scan_dir)
         n1 += self.startn
-        if n1 < 0: n1 = 0
-        if n2 < n1: n2 = n1  # if n1 went forward
+        if n1 < 0:
+            n1 = 0
+        if n2 < n1:
+            n2 = n1  # if n1 went forward
 
         if self.end:
             n2 = scan_lines(lines, n, n2, self.end, 1)
@@ -422,11 +476,12 @@ class FileParams:
         else:
             n2 = n - 1
         n2 += self.endn
-        if n2 >= n: n2 = n - 1
+        if n2 >= n:
+            n2 = n - 1
         return n1, n2
 
     def scan_needed_lines(self, lines, escape_html=False):
-        (n1,n2) = self.scan_needed_range(lines)
+        (n1, n2) = self.scan_needed_range(lines)
         ni = 0
 
         result = ""
@@ -442,54 +497,63 @@ class FileParams:
             line = lines[i]
             # if enc or True: line = line.decode('UTF8')
             # else: line = str(line)
-            if check(self.replace, line): line = replace_by  # + "\n"
+            if check(self.replace, line):
+                line = replace_by  # + "\n"
             for r in self.reps:
-                if check(r["by"], line): line = r["bc"]  # + "\n"
+                if check(r["by"], line):
+                    line = r["bc"]  # + "\n"
 
-            if escape_html: line = html.escape(line)
+            if escape_html:
+                line = html.escape(line)
             ln = self.linefmt.format(i + 1)
             result += ln + line + "\n"
-            if i + 1 >= self.lastn: break
+            if i + 1 >= self.lastn:
+                break
             ni += 1
-            if ni >= self.maxn: break
+            if ni >= self.maxn:
+                break
 
         return result
-
 
     def join_lines(self, lines, n1, n2, escape_html):
         result = ""
         n = len(lines)
-        if n1 < 0: n1 = 0
-        if n2 >= n: n2 = n -1
+        if n1 < 0:
+            n1 = 0
+        if n2 >= n:
+            n2 = n - 1
         for i in range(n1, n2 + 1):
             line = lines[i]
-            #for r in self.reps:
+            # for r in self.reps:
             #    if check(r["by"], line): line = r["bc"]  # + "\n"
 
-            if escape_html: line = html.escape(line)
+            if escape_html:
+                line = html.escape(line)
             ln = self.linefmt.format(i + 1)
             result += ln + line + "\n"
-            if i + 1 >= self.lastn: break
+            if i + 1 >= self.lastn:
+                break
 
         return result
 
-
-
     def get_include(self, escapeHTML=False):
-        if not self.include: return ""
+        if not self.include:
+            return ""
         data = self.include.replace("\\n", "\n")
-        if escapeHTML: data = html.escape(data)
+        if escapeHTML:
+            data = html.escape(data)
         return data
-
 
     def scan_line_parts_range(self, part, n0, lines):
         n = len(lines)
-        n1 = scan_lines(lines, n, n0+self.breaksBeforeBegin[part], self.breaksBegin[part], 1)
+        n1 = scan_lines(lines, n, n0 + self.breaksBeforeBegin[part], self.breaksBegin[part], 1)
         n2 = n1
         # n1 = scan_lines(lines, n, n1, self.start_scan, self.start_scan_dir)
         n1 += self.breaksBefore[part]
-        if n1 < 0: n1 = 0
-        if n2 < n1: n2 = n1  # if n1 went forward
+        if n1 < 0:
+            n1 = 0
+        if n2 < n1:
+            n2 = n1  # if n1 went forward
 
         if self.breaks[part]:
             n2 = scan_lines(lines, n, n2, self.breaks[part], 1)
@@ -497,8 +561,10 @@ class FileParams:
         else:
             n2 = n - 1
         n2 += self.breaksAfter[part]
-        if n2 >= n: n2 = n - 1
+        if n2 >= n:
+            n2 = n - 1
         return n1, n2
+
 
 def get_params(self):
     result = QueryClass()
@@ -520,40 +586,44 @@ def get_file_to_output(query, show_html):
             p = FileParams(query, "." + str(i), u)
             s += p.get_file(show_html)
             s += p.get_include(show_html)
-            if p.url: u = p.url
+            if p.url:
+                u = p.url
         return s
     except Exception as e:
         return str(e)
 
+
 def get_file_parts_to_output(query, show_html):
     p0 = FileParams(query, "", "")
-    parts = [];
+    parts = []
     n2 = -1
     lines = p0.get_raw_lines(show_html)
     j = 0
-    part0 = "";
-    s = get_param(query,"byCode","")
-    if s: part0 = s
+    part0 = ""
+    s = get_param(query, "byCode", "")
+    if s:
+        part0 = s
     s = usercode = get_json_param(query.jso, "input", "usercode", None)
-    if s: part0 = s
-    p0.reps.insert(0,{"by": "", "bc": part0});
-    for i in range(0,p0.breakCount+1):
-        n1, n2 = p0.scan_line_parts_range(i,n2+1,lines)
-        part = p0.join_lines(lines,n1,n2,show_html)
+    if s:
+        part0 = s
+    p0.reps.insert(0, {"by": "", "bc": part0})
+    for i in range(0, p0.breakCount + 1):
+        n1, n2 = p0.scan_line_parts_range(i, n2 + 1, lines)
+        part = p0.join_lines(lines, n1, n2, show_html)
         if i % 2 != 0:
             if j < len(p0.reps) and p0.reps[j] and p0.reps[j]["bc"]:
                 part = p0.reps[j]["bc"]
-            #else:
+            # else:
             #    p0.reps[j]["bc"] = part
             j += 1
         parts.append(part)
     return parts
 
 
-def join_file_parts(p0,parts):
+def join_file_parts(p0, parts):
     s = ""
-    for i in range(0,len(parts)):
-        s = s + parts[i];
+    for i in range(0, len(parts)):
+        s = s + parts[i]
 
     return s
 
@@ -597,7 +667,8 @@ def get_query_from_json(jso):
                 else:
                     result.query[f] = [str(result.jso[field][f])]
         else:
-            if field != "state" and field != "input": result.query[field] = [str(result.jso[field])]
+            if field != "state" and field != "input":
+                result.query[field] = [str(result.jso[field])]
     # print(jso)
     return result
 
@@ -611,8 +682,10 @@ def post_params(self):
     # print(self.headers)
     content_length = int(self.headers['Content-Length'])
     content_type = "application/json"
-    if 'Content-Type' in self.headers: content_type = self.headers['Content-Type']
-    if 'content-cype' in self.headers: content_type = self.headers['content-type']
+    if 'Content-Type' in self.headers:
+        content_type = self.headers['Content-Type']
+    if 'content-cype' in self.headers:
+        content_type = self.headers['content-type']
     '''
     form = cgi.FieldStorage(
         fp=self.rfile,
@@ -635,7 +708,8 @@ def post_params(self):
     # pp = pprint.PrettyPrinter(indent=4)
     # pp.pprint(result.query)
 
-    if len(u) == 0: return result
+    if len(u) == 0:
+        return result
     if content_type.find("json") < 0:  # ei JSON
         # print("POSTPARAMS============")
         q = parse_qs(urlparse('k/?' + u).query, keep_blank_values=True)
@@ -684,7 +758,8 @@ def query_params_to_attribute(query, leave_away):
 def query_params_to_map(query):
     result = {}
     for field in query.keys():
-        if not field.startswith("-"): result[field] = query[field][0]
+        if not field.startswith("-"):
+            result[field] = query[field][0]
 
     return result
 
@@ -693,14 +768,16 @@ def query_params_to_map_check_parts(query):
     result = query_params_to_map(query.query)
 
     # Replace all byCode by fileparts if exists
-    if int(get_param(query,"breakCount",0)) > 0:
-        parts = get_file_parts_to_output(query,False)
-        if not "byCode" in result and parts[1]:  result["byCode"] = parts[1]
+    if int(get_param(query, "breakCount", 0)) > 0:
+        parts = get_file_parts_to_output(query, False)
+        if not "byCode" in result and parts[1]:
+            result["byCode"] = parts[1]
         j = 1
-        for i in range(3,len(parts)):
+        for i in range(3, len(parts)):
             if i % 2 != 0:
                 byn = "byCode" + str(j)
-                if not byn in result and parts[i]:  result[byn] = parts[i]
+                if not byn in result and parts[i]:
+                    result[byn] = parts[i]
                 j += 1
     return result
 
@@ -758,7 +835,8 @@ def file_to_string_replace_attribute(name, what_to_replace, query):
 
 def string_to_string_replace_attribute(line, what_to_replace, query):
     leave_away = None
-    if "##USERCODE##" in line: leave_away = "byCode"
+    if "##USERCODE##" in line:
+        leave_away = "byCode"
     params = query_params_to_attribute(query.query, leave_away)
     line = line.replace(what_to_replace, params)
     by = get_param_by(query, "byCode", "")
@@ -785,18 +863,20 @@ def clean(s):
 
 
 attrs = {
-        '*': ['id', 'class'],
-        'a': ['href']
+    '*': ['id', 'class'],
+    'a': ['href']
 }
 tags = ['a', 'p', 'em', 'strong', 'tt', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'i', 'b', 'code']
 
 
 def get_heading(query, key, def_elem):
-    if not query: return ""
+    if not query:
+        return ""
     # return "kana"
     h = get_param(query, key, None)
     # print("h=",h)
-    if not h: return ""
+    if not h:
+        return ""
     h = str(h)
     return "<" + def_elem + ">" + h + "</" + def_elem + ">\n"
 
@@ -824,14 +904,16 @@ def get_heading(query, key, def_elem):
 def get_surrounding_headers2(query):
     result = get_heading(query, "header", "h4")
     stem = allow(get_param(query, "stem", None))
-    if stem: result += '<p class="stem" >' + stem + '</p>'
+    if stem:
+        result += '<p class="stem" >' + stem + '</p>'
     return result, get_heading(query, "footer", 'p class="plgfooter"')
 
 
 def get_surrounding_headers(query, inside):
     result = get_heading(query, "header", "h4")
     stem = allow(get_param(query, "stem", None))
-    if stem: result += '<p class="stem" >' + stem + '</p>\n'
+    if stem:
+        result += '<p class="stem" >' + stem + '</p>\n'
     result += inside + '\n'
     result += get_heading(query, "footer", 'p class="plgfooter"')
     return result
@@ -851,28 +933,31 @@ def do_headers(self, content_type):
     self.send_header('Content-type', content_type)
     self.end_headers()
 
-    
-# Etsii paketin ja luokan nimen tiedostosta    
+
+# Etsii paketin ja luokan nimen tiedostosta
 def find_java_package(s):
     p = ""
     c = ""
     r = re.search("package\s*([\s\.a-zA-Z0-9_]+)", s, flags=re.M)
-    if r: p = re.sub(r"\s*", "", r.group(1))
+    if r:
+        p = re.sub(r"\s*", "", r.group(1))
     r = re.search("public\s*class\s*([a-zA-Z0-9_]+)", s, flags=re.M)
-    if r: c = r.group(1)
+    if r:
+        c = r.group(1)
     else:
         r = re.search("public\s*interface\s*([a-zA-Z0-9_]+)", s, flags=re.M)
-        if r: c = r.group(1)
+        if r:
+            c = r.group(1)
 
     return p, c
 
 
-#Palauttaa intin joka löytyy jonon alusta    
+# Palauttaa intin joka löytyy jonon alusta
 def getint(s):
     i = 0
     s = s.strip(" ")
     while i < len(s):
-        if "0123456789".find(s[i:i+1]) < 0:
+        if "0123456789".find(s[i:i + 1]) < 0:
             if i == 0:
                 return 0
             return int(s[0:i])
@@ -890,114 +975,125 @@ def hash_user_dir(user_id):
     return bytes.decode(binascii.hexlify(dk))
 
 
-# Korvataan sisällössä scriptit    
-def replace_scripts(s,scripts,placeholder):
+# Korvataan sisällössä scriptit
+def replace_scripts(s, scripts, placeholder):
     sc = ""
     if scripts != "":
         scs = scripts.split(",")
         for s1 in scs:
-            sc += '<script src="'+s1+'"></script>\n'
-    return s.replace(placeholder,sc)    
-    
-    
+            sc += '<script src="' + s1 + '"></script>\n'
+    return s.replace(placeholder, sc)
+
+
 def get_templates(dirname: str) -> object:
-    """
-    Find all templates from dirname.  Each template file should include
+    """Find all templates from dirname.  Each template file should include.
+
     template text - first line
     template explanation - second line
     template content - rest of lines
     :param dirname: the directory name where to find template files
     :return: list of template items, one item is file: text: explanation
+
     """
     result = []
     for filename in os.listdir(dirname):
-        f = open(dirname+"/"+filename, encoding="utf-8-sig").readlines()
-        template = {"file": filename, "text": f[0].strip(),"expl": f[1].strip() }
+        f = open(dirname + "/" + filename, encoding="utf-8-sig").readlines()
+        template = {"file": filename, "text": f[0].strip(), "expl": f[1].strip()}
         result.append(template)
 
     return result
 
 
 def get_all_templates(dirname: str) -> object:
-    """
-    Find list of all templates from dirname.  Dir should include
-    file tabs.txt where there is one line for every tab needed for TIM editor.
-    Then there should be directories 0, 1, ... for each corresponding
-    tab-line.  So if tehre is two lines in tabs.txt tehre is directories 0 and 1
-    for first and second tab.
+    """Find list of all templates from dirname.  Dir should include file tabs.txt where there is one line for every tab
+    needed for TIM editor. Then there should be directories 0, 1, ... for each corresponding tab-line.  So if tehre is
+    two lines in tabs.txt tehre is directories 0 and 1 for first and second tab.
+
     :param dirname: the directory name where to find template list file and sub directories for templates
     :return: dict with list of lif to template items (templates) and texts (text)
+
     """
     templates = []
     texts = []
     try:
-        texts = open(dirname+"/tabs.txt", encoding="utf-8-sig").read().splitlines();
+        texts = open(dirname + "/tabs.txt", encoding="utf-8-sig").read().splitlines()
         for i in range(0, len(texts)):
-            templates.append(get_templates(dirname+"/"+str(i)))
+            templates.append(get_templates(dirname + "/" + str(i)))
     except Exception as e:
         print(e)
         return {}
     return {'templates': templates, 'text': texts}
 
 
-def get_template(dirname: str, idx:str, filename: str) -> str:
-    """
-    Returns the template file from line 2 to end of file
+def get_template(dirname: str, idx: str, filename: str) -> str:
+    """Returns the template file from line 2 to end of file.
+
     :param dirname: from directory (be sure this is valid)
     :param idx: index for the template  (only numbers allowed)
     :param filename: from file (validity of this is checked)
     :return: lines starting from line 2.
+
     """
     try:
-        fname = re.sub(r"[^ A-ZÅÄÖa-zåäö_0-9]","",filename)
-        if not fname: fname = "0"
-        tidx = re.sub(r"[^0-9]","",idx)
-        f = open(dirname+"/"+tidx+"/"+fname, encoding="utf-8-sig").readlines()
+        fname = re.sub(r"[^ A-ZÅÄÖa-zåäö_0-9]", "", filename)
+        if not fname:
+            fname = "0"
+        tidx = re.sub(r"[^0-9]", "", idx)
+        f = open(dirname + "/" + tidx + "/" + fname, encoding="utf-8-sig").readlines()
     except Exception as e:
         return str(e)
     return "".join(f[2:])
 
-    
-def join_dict(a: dict,b: dict):
-    """
-    Joins two dict and returns a new one
+
+def join_dict(a: dict, b: dict):
+    """Joins two dict and returns a new one.
+
     :param a: first dict to join
     :param b: next dict to join
     :return: "a+b"
+
     """
     result = a.copy()
     result.update(b)
     return result
 
-    
-LAZYSTART="<!--lazy "
-LAZYEND =" lazy-->"
+
+LAZYSTART = "<!--lazy "
+LAZYEND = " lazy-->"
 NOLAZY = "<!--nolazy-->"
 NEVERLAZY = "NEVERLAZY"
- 
- 
+
+
 def is_lazy(query):
     caller_lazy = get_param(query, "doLazy", NEVERLAZY)
     # print("caller_lazy=",caller_lazy)
-    if caller_lazy == NEVERLAZY: return False
+    if caller_lazy == NEVERLAZY:
+        return False
     do_lazy = caller_lazy
-    if str(do_lazy).lower() == "true":  do_lazy = True
-    if str(do_lazy).lower() == "false": do_lazy = False
+    if str(do_lazy).lower() == "true":
+        do_lazy = True
+    if str(do_lazy).lower() == "false":
+        do_lazy = False
     lazy = get_param(query, "lazy", "")
-    if str(lazy).lower() == "true":  do_lazy = True
-    if str(lazy).lower() == "false": do_lazy = False
+    if str(lazy).lower() == "true":
+        do_lazy = True
+    if str(lazy).lower() == "false":
+        do_lazy = False
     # print("do_lazy=",do_lazy)
-    return do_lazy  
-    
-    
+    return do_lazy
+
+
 def is_user_lazy(query):
     caller_lazy = get_param(query, "doLazy", NEVERLAZY)
     # print("caller_lazy=",caller_lazy)
-    if caller_lazy == NEVERLAZY: return False
+    if caller_lazy == NEVERLAZY:
+        return False
     do_lazy = False
-    if str(caller_lazy).lower() == "false": return False
+    if str(caller_lazy).lower() == "false":
+        return False
     lazy = get_param(query, "lazy", "")
-    if str(lazy).lower() == "true":  do_lazy = True
+    if str(lazy).lower() == "true":
+        do_lazy = True
     # print("do_lazy=",do_lazy)
     return do_lazy
 
@@ -1007,64 +1103,73 @@ def add_lazy(plugin_html: str) -> str:
 
 
 def make_lazy(plugin_html: str, query, htmlfunc) -> str:
-    """
-    Makes plugin string to lazy
+    """Makes plugin string to lazy.
+
     :param plugin_html: ready html for the plugin
-    :param query: query params where lazy options can be read 
+    :param query: query params where lazy options can be read
     :param htmlfunc: function to generate the lazy version of plugin html
     :return true if lazy plugin is needed
+
     """
-    if not is_lazy(query): return plugin_html
+    if not is_lazy(query):
+        return plugin_html
     lazy_html = htmlfunc(query)
     lazy_plugin_html = LAZYSTART + plugin_html + LAZYEND + lazy_html
     return lazy_plugin_html
-    
-    
+
+
 def replace_template_params(query, template: str, cond_itemname: str, itemnames=None) -> str:
-    """
-    Replaces all occurances of itemnames and cond_item_name in template by their value in query
-    if  cond_itemname exists in query. 
-    :param query: query params where items can be read 
+    """Replaces all occurances of itemnames and cond_item_name in template by their value in query if  cond_itemname
+    exists in query.
+
+    :param query: query params where items can be read
     :param template: string that may include items like {{userword}} that are replaced
     :param cond_itemname: name for the item that decides if the template is non empty.  None means no condition
     :param itemnames: list of other item names that are replaced by their value in Query
     :return true if lazy plugin is needed
+
     """
-    items = [] 
+    items = []
     if cond_itemname:
-        item = get_param(query,cond_itemname, "")
-        if not item: return ""
+        item = get_param(query, cond_itemname, "")
+        if not item:
+            return ""
         items = [cond_itemname]
-     
-    if itemnames: items += itemnames
+
+    if itemnames:
+        items += itemnames
     result = template
-       
+
     for name in items:
-        n,d,dummy = (name+"::").split(":",2)
+        n, d, dummy = (name + "::").split(":", 2)
         item = str(get_param(query, n, d))
-        result = result.replace("{{"+n+"}}", item)
-        
-    return result    
-        
+        result = result.replace("{{" + n + "}}", item)
+
+    return result
+
 
 def replace_template_param(query, template: str, cond_itemname: str, default="") -> str:
-    """
-    Replaces all occurances of itemnames and cond_item_name in template by their value in query
-    if  cond_itemname exists in query.
+    """Replaces all occurances of itemnames and cond_item_name in template by their value in query if  cond_itemname
+    exists in query.
+
     :param query: query params where items can be read
     :param template: string that may include items like {{userword}} that are replaced
     :param cond_itemname: name for the item that decides if the template is non empty.  None means no condition
     :param default: value to be used if item is default or no item at all, if defult=="", return "" if used
     :return replaced template or ""
+
     """
     items = []
-    if not cond_itemname: return ""
+    if not cond_itemname:
+        return ""
     item = get_param(query, cond_itemname, "default")
-    if item == "default": item = default
-    if item == "": return ""
-    if not item: return ""
+    if item == "default":
+        item = default
+    if item == "":
+        return ""
+    if not item:
+        return ""
 
-    result = template.replace("{{"+cond_itemname+"}}", str(item))
+    result = template.replace("{{" + cond_itemname + "}}", str(item))
 
     return result
-

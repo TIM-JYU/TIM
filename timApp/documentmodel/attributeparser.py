@@ -5,6 +5,7 @@ class AttributeParser:
     :type string: str
     :type current_pos: int
     """
+
     def __init__(self, string=''):
         self.str = string
         self.current_pos = 0

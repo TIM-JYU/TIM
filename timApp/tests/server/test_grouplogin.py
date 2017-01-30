@@ -3,6 +3,7 @@ from tests.server.timroutetest import TimRouteTest
 
 
 class GroupLoginTest(TimRouteTest):
+
     def test_grouplogin(self):
         resp = self.login_test1(force=True)
         uid1 = resp['current_user']['id']

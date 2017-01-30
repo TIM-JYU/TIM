@@ -23,18 +23,22 @@ def gamify(initial_data):
 
 
 def convert_to_json(md_data):
-    """Converts the YAML paragraph in gamification document to JSON
+    """Converts the YAML paragraph in gamification document to JSON.
+
     :param md_data = the data read from paragraph in YAML
     :returns: same data in JSON
+
     """
-    temp = yaml.load(md_data[3:len(md_data) - 3]) # TODO: does not work if used other separtor than 3 `
+    temp = yaml.load(md_data[3:len(md_data) - 3])  # TODO: does not work if used other separtor than 3 `
     return json.loads(json.dumps(temp))
 
 
 def get_doc_data(json_to_check):
     """Parses json to find and link appropriate data into lecture and demo documents.
+
     :param json_to_check = Checked documents in JSON
     :returns: Arrays of lecture and demo documents
+
     """
     if json_to_check is None:
         raise GamificationException('JSON is None')
@@ -46,8 +50,9 @@ def get_doc_data(json_to_check):
     # Configure data of lecture documents
     lectures = []
     for path in lecture_paths:
-        p = path.get('path',None)
-        if not p: continue
+        p = path.get('path', None)
+        if not p:
+            continue
         if p.startswith('http'):
             doc = path.get('shortname', 'doc')
             temp_dict = dict()
@@ -62,7 +67,7 @@ def get_doc_data(json_to_check):
                 temp_dict = dict()
                 temp_dict['id'] = lecture.id
                 temp_dict['name'] = doc
-                temp_dict['link'] = request.url_root+'view/' + lecture.path
+                temp_dict['link'] = request.url_root + 'view/' + lecture.path
                 lectures.append(temp_dict)
 
     # Configure data of demo documents
@@ -76,29 +81,30 @@ def get_doc_data(json_to_check):
             temp_dict = dict()
             temp_dict['id'] = demo.id
             temp_dict['name'] = doc
-            temp_dict['link'] = request.url_root+'view/' + demo.path
+            temp_dict['link'] = request.url_root + 'view/' + demo.path
             if doc_max_points is None:
                 doc_set = demo.document.get_settings()
                 doc_max_points = doc_set.max_points() or default_max
             if doc_max_points is not None:
                 temp_dict['maxPoints'] = doc_max_points
-            temp_dict['gotPoints'] = get_points_for_doc(demo) # TODO: must pick all docs at once
+            temp_dict['gotPoints'] = get_points_for_doc(demo)  # TODO: must pick all docs at once
             demos.append(temp_dict)
 
     return lectures, demos
 
 
 def get_points_for_doc(d):
-    """
-    Finds the current users point information for a specific document
+    """Finds the current users point information for a specific document.
+
     :param d The document as a DocEntry
     :returns: The current users points for the document
+
     """
     document = d.document
     timdb = get_timdb()
     user_points = 0
     task_id_list = (pluginControl.find_task_ids(document.get_paragraphs()))
-    
+
     users_task_info = timdb.answers.get_users_for_tasks(task_id_list[0], [common.get_current_user_id()])
 
     for entrys in users_task_info:

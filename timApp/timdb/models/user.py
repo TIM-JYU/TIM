@@ -71,7 +71,8 @@ class User(db.Model):
             (BlockAccess.type == AccessType.owner.value)
         ).with_entities(Folder).all()  # type: List[Folder]
         if len(folders) >= 2:
-            raise TimDbException('Found multiple personal folders for user {}: {}'.format(self.name, [f.name for f in folders]))
+            raise TimDbException('Found multiple personal folders for user {}: {}'.format(
+                self.name, [f.name for f in folders]))
         if not folders:
             return Folder.create('users/' + self.derive_personal_folder_name(),
                                  self.get_personal_group().id,

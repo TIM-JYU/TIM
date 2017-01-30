@@ -14,6 +14,7 @@ def insert_block(description: Optional[str], owner_group_id: Optional[int], bloc
     :param owner_group_id: The owner group of the block.
     :param block_type: The type of the block.
     :returns: The id of the block.
+
     """
     b = Block(description=description, type_id=block_type)
     if owner_group_id is not None:

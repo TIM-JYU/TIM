@@ -40,26 +40,26 @@ def is_inside(type, size, angle, center, point):
 class Rectangle:
 
     # Create rectangle
-    def __init__(self,size,angle,center):
+    def __init__(self, size, angle, center):
         self.size = size
         # Corners
-        self.cornertopright = [center[0]+size[0]/2,center[1] - size[1]/2]
-        self.cornertopleft = [center[0] - size[0] /2, center[1] - size[1] /2]
-        self.cornerbottomright = [center[0] + size[0] /2, center[1] + size[1] /2]
-        self.cornerbottomleft = [center[0] - size[0] /2, center[1] + size[1] /2]
+        self.cornertopright = [center[0] + size[0] / 2, center[1] - size[1] / 2]
+        self.cornertopleft = [center[0] - size[0] / 2, center[1] - size[1] / 2]
+        self.cornerbottomright = [center[0] + size[0] / 2, center[1] + size[1] / 2]
+        self.cornerbottomleft = [center[0] - size[0] / 2, center[1] + size[1] / 2]
         # Center of the rectangle, cosines and sines of the angles.
         self.center = center
         self.sina = math.sin(-math.radians(angle))
         self.cosa = math.cos(-math.radians(angle))
 
     # Check if point is inside this rectangle
-    def is_inside(self,point):
+    def is_inside(self, point):
         # Rotate point
-        rotatedx= self.cosa *(point[0]-self.center[0])-self.sina*(point[1]-self.center[1])
-        rotatedy=self.cosa*(point[1]-self.center[1]) + self.sina*(point[0]-self.center[0])
+        rotatedx = self.cosa * (point[0] - self.center[0]) - self.sina * (point[1] - self.center[1])
+        rotatedy = self.cosa * (point[1] - self.center[1]) + self.sina * (point[0] - self.center[0])
         # Do the check on whether the point is inside the rectangle
         if (rotatedx + self.center[0] >= self.cornertopleft[0] and rotatedx + self.center[0] <= self.cornertopright[0]
-        and rotatedy + self.center[1] >= self.cornertopleft[1] and rotatedy + self.center[1] <= self.cornerbottomright[1]):
+                and rotatedy + self.center[1] >= self.cornertopleft[1] and rotatedy + self.center[1] <= self.cornerbottomright[1]):
             return True
         return False
 
@@ -68,7 +68,7 @@ class Rectangle:
 class Ellipse:
 
     # Initialize object
-    def __init__(self,size,angle,center):
+    def __init__(self, size, angle, center):
         # height, width, center and angle of the ellipse
         self.size = size
         self.angle = angle
@@ -78,10 +78,10 @@ class Ellipse:
         self.cosa = math.cos(-math.radians(angle))
 
     # Check if point is inside this ellipse.
-    def is_inside(self,point):
+    def is_inside(self, point):
         rotatedx = self.cosa * (point[0] - self.center[0]) - self.sina * (point[1] - self.center[1])
-        rotatedy = self.cosa * (point[1]-self.center[1]) + self.sina * (point[0] - self.center[0])
+        rotatedy = self.cosa * (point[1] - self.center[1]) + self.sina * (point[0] - self.center[0])
 
-        if ((math.pow(rotatedx, 2) / math.pow(self.size[0]/2, 2)) +(math.pow(rotatedy, 2) / math.pow(self.size[1]/2, 2))) <= 1.0:
+        if ((math.pow(rotatedx, 2) / math.pow(self.size[0] / 2, 2)) + (math.pow(rotatedy, 2) / math.pow(self.size[1] / 2, 2))) <= 1.0:
             return True
         return False

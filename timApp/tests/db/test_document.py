@@ -1,7 +1,7 @@
 """Unit tests for Document class.
 
-Run from parent directory with command:
-python3 -m unittest dumboclient filemodehelper documentmodel/test_document.py
+Run from parent directory with command: python3 -m unittest dumboclient filemodehelper documentmodel/test_document.py
+
 """
 
 import random
@@ -17,6 +17,7 @@ from timdb.models.docentry import DocEntry
 
 
 class DocumentTest(TimDbTest):
+
     def init_testdoc(self):
         try:
             DocumentTest.init_testdoc.counter += 1
@@ -191,7 +192,7 @@ class DocumentTest(TimDbTest):
     def test_document_remove(self):
         free = Document.get_next_free_id()
         db = self.get_db()
-        docs = [self.init_testdoc() for i in range(1,5)]
+        docs = [self.init_testdoc() for i in range(1, 5)]
 
         self.assertLess(free, Document.get_next_free_id())
 
@@ -249,7 +250,8 @@ class DocumentTest(TimDbTest):
                                        ' testmacro: testvalue\n'
                                        ' year: "2015"\n'
                                        '```', attrs={'settings': ''})
-        macro_par = d.add_paragraph('this is %%testmacro%% and year is %%year%% and user is %%username%% and %%nonexistent%%')
+        macro_par = d.add_paragraph(
+            'this is %%testmacro%% and year is %%year%% and user is %%username%% and %%nonexistent%%')
         macro_par = d.get_paragraph(macro_par.get_id())  # Put the paragraph in cache
         self.assertDictEqual({'macros': {'testmacro': 'testvalue', 'year': '2015'},
                               'macro_delimiter': '%%'}, d.get_settings().get_dict())
@@ -267,7 +269,8 @@ class DocumentTest(TimDbTest):
                            new_attrs={'settings': ''})
 
         macro_par = d.get_paragraph(macro_par.get_id())
-        self.assertEqual('<p>this is anothervalue and year is 2016 and user is %%username%% and</p>', macro_par.get_html())
+        self.assertEqual('<p>this is anothervalue and year is 2016 and user is %%username%% and</p>',
+                         macro_par.get_html())
 
     def test_import(self):
         timdb = self.get_db()

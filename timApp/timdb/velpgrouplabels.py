@@ -1,7 +1,6 @@
-"""
-The module contains the database functions related to labels that are used in velp groups.
-This includes adding, modifying and deleting velp group labels. The module also retrieves
-the velp group labels from the database. The module is not yet used in production.
+"""The module contains the database functions related to labels that are used in velp groups. This includes adding,
+modifying and deleting velp group labels. The module also retrieves the velp group labels from the database. The module
+is not yet used in production.
 
 :authors: Joonas Lattu, Petteri Palojärvi
 :copyright: 2016 Timber project members
@@ -14,13 +13,14 @@ from timdb.velp_models import VelpGroupLabel
 
 
 class VelpGroupLabels(TimDbBase):
+
     def create_velp_group_label(self, language_id: str, content: str) -> int:
-        """
-        Creates a new label
+        """Creates a new label.
 
         :param language_id: Language chosen
         :param content: Label content
         :return: id of the new label.
+
         """
 
         vgl = VelpGroupLabel(language_id=language_id,
@@ -30,12 +30,12 @@ class VelpGroupLabels(TimDbBase):
         return vgl.id
 
     def add_translation(self, label_id: int, language_id: str, content: str):
-        """
-        Adds new translation to an existing label
+        """Adds new translation to an existing label.
 
         :param label_id: Label id
         :param language_id: Language chosen
         :param content: New translation
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -47,12 +47,12 @@ class VelpGroupLabels(TimDbBase):
         self.db.commit()
 
     def update_velp_group_label(self, label_id: int, language_id: str, content: str):
-        """
-        Updates content of label in specific language
+        """Updates content of label in specific language.
 
         :param label_id: Label id
         :param language_id: Language chosen
         :param content: Updated content
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -64,12 +64,12 @@ class VelpGroupLabels(TimDbBase):
         self.db.commit()
 
     def get_velp_group_labels(self, velp_id: int, language_id: str):
-        """
-        Gets information of labels for one velp in specific language
+        """Gets information of labels for one velp in specific language.
 
         :param velp_id: ID of velp
         :param language_id: Language chosen
         :return: List of labels associated with velp as a dictionary
+
         """
         cursor = self.db.cursor()
         # todo get label content also. return something.
@@ -83,10 +83,10 @@ class VelpGroupLabels(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     def delete_velp_group_label(self, label_id):
-        """
-        Deletes label (use with extreme caution)
+        """Deletes label (use with extreme caution)
 
         :param label_id: Label ID
+
         """
         cursor = self.db.cursor()
         cursor.execute("""

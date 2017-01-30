@@ -1,8 +1,6 @@
 """Add a unique constraint to useraccount.name column.
 
-Revision ID: 5adee46df88b
-Revises: 504a7d9779b9
-Create Date: 2016-11-07 16:00:57.562777
+Revision ID: 5adee46df88b Revises: 504a7d9779b9 Create Date: 2016-11-07 16:00:57.562777
 
 """
 

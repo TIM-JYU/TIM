@@ -1,8 +1,6 @@
 """Add duration_from and duration_to columns to blockaccess.
 
-Revision ID: f85eec396435
-Revises: c1cdbcbc3450
-Create Date: 2017-01-16 09:38:25.369459
+Revision ID: f85eec396435 Revises: c1cdbcbc3450 Create Date: 2017-01-16 09:38:25.369459
 
 """
 

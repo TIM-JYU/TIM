@@ -1,5 +1,4 @@
-"""
-Defines the persistent data models used by TIM.
+"""Defines the persistent data models used by TIM.
 
 Each model MUST have 'tim_main' as the __bind_key__ attribute.
 
@@ -9,6 +8,7 @@ name is class name in lowercase.
 Keep the model classes in alphabetical order.
 
 Use Flask-Migrate for database migrations. See <http://flask-migrate.readthedocs.io/en/latest/>.
+
 """
 import datetime
 from datetime import timezone

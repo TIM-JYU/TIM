@@ -1,7 +1,7 @@
 """Unit tests for testing paragraph referencing.
 
-Run from parent directory with command:
-python3 -m unittest dumboclient filemodehelper documentmodel/test_references.py
+Run from parent directory with command: python3 -m unittest dumboclient filemodehelper documentmodel/test_references.py
+
 """
 
 import unittest
@@ -15,6 +15,7 @@ from timdb.timdbexception import TimDbException
 
 
 class RefTest(TimDbTest):
+
     def doc_create(self, db: TimDb, doc_name):
         doc = DocEntry.find_by_path(doc_name)
         if doc is not None:
@@ -31,7 +32,6 @@ class RefTest(TimDbTest):
 
     def assert_dict_issubset(self, a, b):
         self.assertTrue(self.dict_issubset(a, b), "{} is not a subset of {}".format(a, b))
-
 
     def init_testdb(self):
         db = self.get_db()
@@ -60,7 +60,6 @@ class RefTest(TimDbTest):
         self.assertEqual(self.src_par.get_attrs(), rendered_pars[0].get_attrs())
         self.assertEqual(self.src_par.get_properties(), rendered_pars[0].get_properties())
 
-
     def test_translation(self):
         db = self.init_testdb()
 
@@ -79,7 +78,6 @@ class RefTest(TimDbTest):
         self.assertEqual(self.dict_merge(self.src_par.get_properties(), ref_par.get_properties()),
                          rendered_pars[0].get_properties())
 
-
     def test_circular(self):
         db = self.init_testdb()
 
@@ -94,7 +92,6 @@ class RefTest(TimDbTest):
 
         self.assertRaises(TimDbException, ref_par.get_referenced_pars)
         self.assertRaises(TimDbException, self.src_par.get_referenced_pars)
-
 
     def test_transitive(self):
         db = self.init_testdb()
@@ -134,7 +131,6 @@ class RefTest(TimDbTest):
         rendered_pars = ref_par2.get_referenced_pars()
         self.assert_dict_issubset(expected_attrs, rendered_pars[0].get_attrs())
 
-
     def test_editparagraph_cite(self):
         db = self.init_testdb()
 
@@ -148,15 +144,14 @@ class RefTest(TimDbTest):
 
         ref_md = ref_par.get_exported_markdown()
         ref_blocks = [DocParagraph.create(doc=ref_par.doc, md=par['md'], attrs=par.get('attrs'))
-              for par in DocumentParser(ref_md).validate_structure(
-                  is_whole_document=False).get_blocks()]
+                      for par in DocumentParser(ref_md).validate_structure(
+            is_whole_document=False).get_blocks()]
 
         self.assertEqual(1, len(ref_blocks))
         self.assertEqual('', ref_blocks[0].get_markdown())
         self.assertEqual(str(self.src_doc.doc_id), str(ref_blocks[0].get_attr('rd')))
         self.assertEqual(self.src_par.get_id(), ref_blocks[0].get_attr('rp'))
         self.assertEqual(self.src_par.get_hash(), ref_blocks[0].get_attr('rt'))
-
 
     def test_editparagraph_citearea(self):
         db = self.init_testdb()
@@ -183,7 +178,6 @@ class RefTest(TimDbTest):
 
         # todo: test the contents of the rendered area
 
-
     def test_editparagraph_translate(self):
         db = self.init_testdb()
 
@@ -197,8 +191,8 @@ class RefTest(TimDbTest):
 
         ref_md = empty_refpar.get_exported_markdown()
         ref_blocks = [DocParagraph.create(doc=empty_refpar.doc, md=par['md'], attrs=par.get('attrs'))
-              for par in DocumentParser(ref_md).validate_structure(
-                  is_whole_document=False).get_blocks()]
+                      for par in DocumentParser(ref_md).validate_structure(
+            is_whole_document=False).get_blocks()]
 
         self.assertEqual(1, len(ref_blocks))
         self.assertEqual(self.src_par.get_markdown(), ref_blocks[0].get_markdown())
@@ -206,7 +200,6 @@ class RefTest(TimDbTest):
         self.assertEqual(self.src_par.get_id(), ref_blocks[0].get_attr('rp'))
         self.assertEqual(self.src_par.get_hash(), ref_blocks[0].get_attr('rt'))
         self.assertEqual("tr", ref_blocks[0].get_attr('r'))
-
 
         ref_attrs = {'foo': 'fffoooo', 'bar': 'baaaa'}
         ref_par = self.ref_doc.add_ref_paragraph(self.src_par, "translation", attrs=ref_attrs)
@@ -216,8 +209,8 @@ class RefTest(TimDbTest):
 
         ref_md = ref_par.get_exported_markdown()
         ref_blocks = [DocParagraph.create(doc=ref_par.doc, md=par['md'], attrs=par.get('attrs'))
-              for par in DocumentParser(ref_md).validate_structure(
-                  is_whole_document=False).get_blocks()]
+                      for par in DocumentParser(ref_md).validate_structure(
+            is_whole_document=False).get_blocks()]
 
         self.assertEqual(1, len(ref_blocks))
         self.assertEqual(ref_par.get_markdown(), ref_blocks[0].get_markdown())
@@ -225,7 +218,6 @@ class RefTest(TimDbTest):
         self.assertEqual(self.src_par.get_id(), ref_blocks[0].get_attr('rp'))
         self.assertEqual(self.src_par.get_hash(), ref_blocks[0].get_attr('rt'))
         self.assertEqual("tr", ref_blocks[0].get_attr('r'))
-
 
     def test_editparagraph_translatearea(self):
         db = self.init_testdb()
@@ -248,7 +240,8 @@ class RefTest(TimDbTest):
         ref_md = ref_par.get_exported_markdown()
 
         src_docid = str(self.src_doc.doc_id)
-        self.assertRegex(ref_md, '^#- *\\{(((ra="testarea")|(rd="' + src_docid + '")|(r="tr")) ?){3}\\}\ntranslation\n+$')
+        self.assertRegex(
+            ref_md, '^#- *\\{(((ra="testarea")|(rd="' + src_docid + '")|(r="tr")) ?){3}\\}\ntranslation\n+$')
 
         ref_par = self.ref_doc.modify_paragraph(ref_par.get_id(), '')
         ref_md = ref_par.get_exported_markdown()

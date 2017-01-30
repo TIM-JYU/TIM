@@ -34,7 +34,7 @@ def is_safe_url(url):
     host_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, url))
     return test_url.scheme in ['http', 'https'] and \
-           host_url.netloc == test_url.netloc
+        host_url.netloc == test_url.netloc
 
 
 def safe_redirect(url, **values):
@@ -62,10 +62,11 @@ def to_json_str(jsondata):
 
 
 def set_no_cache_headers(response: Response) -> Response:
-    """
-    Sets headers for the response that should prevent any caching of the result.
+    """Sets headers for the response that should prevent any caching of the result.
+
     :param response: Response to be modified.
     :return: We also return the modified object for convenience.
+
     """
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     return response
@@ -76,14 +77,15 @@ def okJsonResponse():
 
 
 def get_document_as_current_user(doc_id: int) -> Document:
-    """
-    Returns the Document object having the current user group as the modifier group ip.
+    """Returns the Document object having the current user group as the modifier group ip.
 
     :param doc_id: The numeric id.
     :return: The Document object.
+
     """
 
     return Document(doc_id, modifier_group_id=get_current_user_group())
+
 
 def verify_document_version(doc_id, version):
     timdb = get_timdb()
@@ -140,7 +142,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                                                                       load_states=load_plugin_states)
     #req_json = request.get_json()
 
-    #if req_json is not None and 'ref-id' in req_json and req_json['ref-id'] != '':
+    # if req_json is not None and 'ref-id' in req_json and req_json['ref-id'] != '':
     #    ref_doc_id = req_json.get('ref-doc-id')
     #    ref_id = req_json.get('ref-id')
     #    html_pars = [par for par in html_pars if par['doc_id'] == ref_doc_id and par['id'] == ref_id]
@@ -224,6 +226,7 @@ def getdatetime(s: str, default_val = None):
 
 def process_areas(html_pars: List[Dict]) -> List[Dict]:
     class Area:
+
         def __init__(self, index, attrs):
             self.index = index
             self.attrs = attrs
@@ -386,10 +389,10 @@ def get_user_settings():
 
 
 def get_preferences():
-    """
-    Gets the preferences of the current user.
+    """Gets the preferences of the current user.
 
     :return: A dictionary of the user preferences.
+
     """
     prefs = {}
     if logged_in():

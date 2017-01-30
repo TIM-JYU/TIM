@@ -2,6 +2,7 @@ from tests.server.timroutetest import TimRouteTest
 
 
 class SearchTest(TimRouteTest):
+
     def test_search(self):
         self.login_test1()
         text_to_search = 'Text to search'

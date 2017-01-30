@@ -35,6 +35,7 @@ def update_document(doc_id):
 
     :param doc_id: The id of the document to be modified.
     :return: A JSON object containing the versions of the document.
+
     """
     timdb = get_timdb()
     if not timdb.documents.exists(doc_id):
@@ -172,7 +173,7 @@ def rename_task_ids():
 
         # todo: include diffs in the message
         notify_doc_owner(doc_id, '[user_name] has edited your document [doc_name]',
-                        '[user_name] has edited your document as whole: [doc_url]', setting="doc_modify",
+                         '[user_name] has edited your document as whole: [doc_url]', setting="doc_modify",
                          group_id=get_group_id(), group_subject=get_group_subject())
 
         return jsonResponse({'versions': chg, 'fulltext': doc.export_markdown(), 'duplicates': duplicates})
@@ -182,12 +183,13 @@ def delete_key(d, key):
     if key in d:
         del d[key]
 
+
 def question_convert_js_to_yaml(md):
     # save question. How to pick up question see lecture.py, get_question_data_from_document
     markup = json.loads(md)
     question = markup["json"]["title"]
     question = question.replace('"', '').replace("'", '')
-    taskid = question.replace(" ","") # TODO: make better conversion to ID
+    taskid = question.replace(" ", "")  # TODO: make better conversion to ID
     oldid = markup.get('taskId')
     if not oldid:
         markup['taskId'] = taskid
@@ -197,8 +199,9 @@ def question_convert_js_to_yaml(md):
     delete_key(markup, "question")  # old attribute
     delete_key(markup, "taskId")
     delete_key(markup, "qst")
-    mdyaml = yaml.dump(markup) # spoils ä and so on..
-    mdyaml = mdyaml.replace("\\xC4","Ä").replace("\\xD6","Ö").replace("\\xC5","Å").replace("\\xE4","ä").replace("\\xF6","ö").replace("\\xE5","å")
+    mdyaml = yaml.dump(markup)  # spoils ä and so on..
+    mdyaml = mdyaml.replace("\\xC4", "Ä").replace("\\xD6", "Ö").replace(
+        "\\xC5", "Å").replace("\\xE4", "ä").replace("\\xF6", "ö").replace("\\xE5", "å")
     prefix = ' '
     if qst:
         prefix = ' d'  # like document question
@@ -208,10 +211,10 @@ def question_convert_js_to_yaml(md):
 
 @edit_page.route("/postParagraphQ/", methods=['POST'])
 def modify_paragraph_q():
-    """
-    Route for modifying a question editor paragraph in a document.
+    """Route for modifying a question editor paragraph in a document.
 
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
+
     """
     doc_id, md, par_id, par_next_id = verify_json_params('docId', 'text', 'par', 'par_next')
     # abort(400, 'Not yet: ' + par_id)
@@ -223,10 +226,10 @@ def modify_paragraph_q():
 
 @edit_page.route("/postParagraph/", methods=['POST'])
 def modify_paragraph():
-    """
-    Route for modifying a paragraph in a document.
+    """Route for modifying a paragraph in a document.
 
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
+
     """
     doc_id, md, par_id, par_next_id = verify_json_params('docId', 'text', 'par', 'par_next')
     return modify_paragraph_common(doc_id, md, par_id, par_next_id)
@@ -317,10 +320,10 @@ See the changes here:
 ==MODIFIED==\n
 {1}\n
 """.format(original_md, updated_md, version_before[0], version_before[1],
-           version_after[0], version_after[1]), setting="doc_modify", par_id=par_id,
-           group_id=get_group_id(), group_subject=get_group_subject())
+                         version_after[0], version_after[1]), setting="doc_modify", par_id=par_id,
+        group_id=get_group_id(), group_subject=get_group_subject())
 
-    doc.plugin_md = True # force md calc
+    doc.plugin_md = True  # force md calc
     return par_response(pars,
                         doc,
                         original_par,
@@ -335,6 +338,7 @@ def preview_paragraphs(doc_id):
 
     :param doc_id: The id of the document in which the preview will be rendered.
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
+
     """
     text, = verify_json_params('text')
     rjson = request.get_json()
@@ -352,7 +356,7 @@ def preview_paragraphs(doc_id):
         else:
             context_par = doc.get_last_par()
         try:
-            doc.plugin_md = True # for md calc
+            doc.plugin_md = True  # for md calc
             blocks = get_pars_from_editor_text(doc, text, break_on_elements=editing_area)
             doc.insert_temporary_pars(blocks, context_par)
             return par_response(blocks, doc, preview=True, context_par=context_par)
@@ -478,10 +482,10 @@ def get_next_available_task_id(attrs, old_pars, duplicates, par_id):
             if task_id[i] in "0123456789":
                 i -= 1
             else:
-                text_part = task_id[:i+1]
+                text_part = task_id[:i + 1]
                 task_id_body = text_part
                 if i < len(task_id) - 1:
-                    task_id_number = int(task_id[(i+1):])
+                    task_id_number = int(task_id[(i + 1):])
                 break
         if not task_id_body:
             task_id_body = task_id
@@ -564,6 +568,7 @@ def mark_pars_as_read_if_chosen(pars, doc):
     :type pars: list[DocParagraph]
     :param pars: The paragraphs to be marked as read
     :param doc: The document to which the paragraphs belong.
+
     """
     mark_read = request.get_json().get('tags', {}).get('markread')
     timdb = get_timdb()
@@ -606,6 +611,7 @@ def add_paragraph():
     """Route for adding a new paragraph to a document.
 
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
+
     """
     md, doc_id, par_next_id = verify_json_params('text', 'docId', 'par_next')
     return add_paragraph_common(md, doc_id, par_next_id)
@@ -659,6 +665,7 @@ def delete_paragraph(doc_id):
 
     :param doc_id: The id of the document.
     :return: A JSON object containing the version of the new document.
+
     """
     timdb = get_timdb()
     verify_edit_access(doc_id)
@@ -682,9 +689,10 @@ def delete_paragraph(doc_id):
 
 @edit_page.route("/getUpdatedPars/<int:doc_id>")
 def get_updated_pars(doc_id):
-    """
-    Gets updated paragraphs that were changed e.g. as the result of adding headings or modifying macros.
+    """Gets updated paragraphs that were changed e.g. as the result of adding headings or modifying macros.
+
     :param doc_id: The document id.
+
     """
     verify_view_access(doc_id)
     return par_response([], Document(doc_id), update_cache=True)
@@ -708,7 +716,7 @@ def name_area(doc_id, area_name):
         area_attrs['collapse'] = 'true' if options.get('collapse') else 'false'
         if 'title' in options:
             hlevel = options.get('hlevel', 0)
-            if ( hlevel ):
+            if (hlevel):
                 area_title = ''.join(['#' for _ in range(0, hlevel)]) + ' ' + options['title']
             else:
                 after_title = '\n' + options['title']

@@ -8,7 +8,7 @@ Serving from local port 5000
 
 import binascii
 import sys
-sys.path.insert(0, '/py') # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
+sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
 # yaml templates and other methods imported from here.
 from http_params import *
@@ -24,37 +24,36 @@ PORT = 5000
 PROGDIR = "."
 
 
-
 def get_lazy_imagex_html(query: QueryParams) -> str:
-    """
-    Returns the lazy version of html before the real template is given by javascript.
-    :param query: query params where lazy options can be read 
+    """Returns the lazy version of html before the real template is given by javascript.
+
+    :param query: query params where lazy options can be read
     :return: lazy version of imagex-plugins html
+
     """
     s = '<div class="csRunDiv no-popup-menu">'
-    s += replace_template_params(query, "<h4>{{header}}</h4>","header")
-    s += replace_template_params(query, '<p class="stem" >{{stem}}</p>',"stem")
+    s += replace_template_params(query, "<h4>{{header}}</h4>", "header")
+    s += replace_template_params(query, '<p class="stem" >{{stem}}</p>', "stem")
     s += '</div>'
-    return s              
-    
+    return s
+
 
 class ImagexServer(tim_server.TimServer):
-    """
-    Class for imagex server that can handle the TIM routes
-    """
+    """Class for imagex server that can handle the TIM routes."""
+
     def get_html(self, query: QueryParams) -> str:
         #print("--QUERYHTML--" + str(query))
-        """
-        Return the html for this query. Params are dumbed as hexstring to avoid problems
-        with html input and so on.
+        """Return the html for this query. Params are dumbed as hexstring to avoid problems with html input and so on.
+
         :param query: get or put params
         :return : html string for this markup
+
         """
-        #print("--Query--"+ query.dump() + "--Query--" ) # uncomment to see query
-        #Get user id from session
+        # print("--Query--"+ query.dump() + "--Query--" ) # uncomment to see query
+        # Get user id from session
         user_id = query.get_param("user_id", "--")
-        preview = query.get_param("preview",False)
-        targets = {"targets":query.get_param("-targets",{})}
+        preview = query.get_param("preview", False)
+        targets = {"targets": query.get_param("-targets", {})}
         query2 = ""
 
         if is_review(query):
@@ -67,15 +66,13 @@ class ImagexServer(tim_server.TimServer):
         # Check if this is in preview. If it is set targets as visible. and query2 is used instead of query.
         if preview:
             jso2 = query.to_json(accept_nonhyphen)
-            jso2['markup'].update(targets) #+= targets
+            jso2['markup'].update(targets)  # += targets
             print("--..--" + str(jso2))
             jso2['markup']['preview'] = True
             if jso2['markup']['targets'] == {}:
                 jso2['markup'].update({"targets": query.get_param("targets", {})})
                 print("jso" + str(jso2))
             query2 = QueryParams(jso2)
-
-
 
         # do the next if Anonymoys is not allowed to use plugins
         if user_id == "Anonymous":
@@ -97,45 +94,44 @@ class ImagexServer(tim_server.TimServer):
 
         # print(attrs) # uncomment this to look what is in outgoing js
 
-        if query.get_param("nohex", False): # as a default do hex
+        if query.get_param("nohex", False):  # as a default do hex
             attrs = "xxxJSONxxx" + attrs
         else:  # this is on by default, but for debug can be put off to see the json better
-            hx = 'xxxHEXJSONxxx'+binascii.hexlify(attrs.encode("UTF8")).decode()
+            hx = 'xxxHEXJSONxxx' + binascii.hexlify(attrs.encode("UTF8")).decode()
             attrs = hx
         s = '<' + runner + '>' + attrs + '</' + runner + '>'
 
-        #Put query2 into s if it exists, otherwise send query.
+        # Put query2 into s if it exists, otherwise send query.
         if query2:
             s = make_lazy(s, query2, get_lazy_imagex_html)
         else:
             s = make_lazy(s, query, get_lazy_imagex_html)
         return s
 
-
     # Creates accurate state for answer, ie. changes the object positions.
     def create_state_imagex(self, markup, drags):
-        dict = {"objects":drags}
+        dict = {"objects": drags}
         return dict
 
-    #gets reqs
+    # gets reqs
     def get_reqs_result(self) -> dict:
         """
         :return: reqs result as json
         """
-        #Get templates for plugin
+        # Get templates for plugin
         templs = get_all_templates('templates')
         #print("--templates--" + str(templs))
-        ret = {"js": ["/static/scripts/timHelper.js","/static/scripts/imagex.js","/static/scripts/bower_components/angular-bootstrap-colorpicker/js/bootstrap-colorpicker-module.min.js"], "angularModule": ["imagexApp","colorpicker.module"],#["/static/scripts/timHelper.js","js/imagex.js"], "angularModule": ["imagexApp"],
-                       "css": ["static/css/imagex.css","/static/scripts/bower_components/angular-bootstrap-colorpicker/css/colorpicker.css"], "multihtml": True}
+        ret = {"js": ["/static/scripts/timHelper.js", "/static/scripts/imagex.js", "/static/scripts/bower_components/angular-bootstrap-colorpicker/js/bootstrap-colorpicker-module.min.js"], "angularModule": ["imagexApp", "colorpicker.module"],  # ["/static/scripts/timHelper.js","js/imagex.js"], "angularModule": ["imagexApp"],
+               "css": ["static/css/imagex.css", "/static/scripts/bower_components/angular-bootstrap-colorpicker/css/colorpicker.css"], "multihtml": True}
         # Add templates to reqs.
         ret.update(templs)
         return ret
 
+    def gettargetattr(self, prevtarget, defaults, attr, default):
+        """Get attr for target.
 
-    def gettargetattr(self,prevtarget,defaults,attr,default):
-        """
-        Get attr for target. First checked from default, then from
-        the previous target. if neither is found return default.
+        First checked from default, then from the previous target. if neither is found return default.
+
         """
         if str(attr) in defaults:
             return defaults[str(attr)]
@@ -143,17 +139,16 @@ class ImagexServer(tim_server.TimServer):
             return prevtarget[str(attr)]
         return default
 
-
     def do_answer(self, query: QueryParams):
-        """
-        Do answer route.
-        Check if images are dragged to correct targets. Award points on whether they are or arent.
+        """Do answer route. Check if images are dragged to correct targets. Award points on whether they are or arent.
+
         :param query: post and get params
         :return: nothing
+
         """
 
         #print("--QUERYANSWER--" + str(query))
-        #Setup for answers
+        # Setup for answers
         do_headers(self, "application/json")
         result = {}
         web = {}
@@ -169,7 +164,8 @@ class ImagexServer(tim_server.TimServer):
         def get_value_def(value, key, default_value, keep_emtpy_as_none = False):
             keys = key.split(".")
             ret = default_value
-            if len(keys) < 1: return ret
+            if len(keys) < 1:
+                return ret
 
             k_last = keys.pop()
 
@@ -178,19 +174,25 @@ class ImagexServer(tim_server.TimServer):
             d = defaults
             # Loop v and p to same level
             for k in keys:
-                if not k in p: p[k] = {}; # if not on p, add
-                p = p[k] # for next round
-                if v and k in v: v = v[k]
-                else: v = None
-                if d and k in d: d = d[k]
-                else: d = None
+                if not k in p:
+                    p[k] = {}  # if not on p, add
+                p = p[k]  # for next round
+                if v and k in v:
+                    v = v[k]
+                else:
+                    v = None
+                if d and k in d:
+                    d = d[k]
+                else:
+                    d = None
 
-            k = k_last;
+            k = k_last
             if v and k in v:
                 if v[k] and (not keep_emtpy_as_none or v[k] != ""):
                     ret = v[k]
                     p[k] = ret
-                else: p[k] = None;
+                else:
+                    p[k] = None
                 return ret
 
             if p and (k in p) and p[k] != None:
@@ -199,37 +201,37 @@ class ImagexServer(tim_server.TimServer):
                 return d[k]
             return ret
 
-
         if True:
             #print("--state--" + str(query.get_param("state",None)))
-            #Student points
+            # Student points
             points = 0
-            #get default values for targets. If values arent told for targets get them from here or from previous
+            # get default values for targets. If values arent told for targets get them from here or from previous
             # target.
-            #If all tries have been used just return.
+            # If all tries have been used just return.
             max_tries = int(query.get_param("max_tries", 1000000))
             tries = int(query.get_json_param("state", "tries", 0))
-            prevfinalanswergiven = query.get_json_param("state","finalanswergiven",False)
+            prevfinalanswergiven = query.get_json_param("state", "finalanswergiven", False)
             print("prevfinalanswergiven =", prevfinalanswergiven)
             finalanswergiven = False
-            if prevfinalanswergiven:  finalanswergiven = True
+            if prevfinalanswergiven:
+                finalanswergiven = True
 
-            #Targets dict
+            # Targets dict
             try:
-                targets = list(query.get_param("targets",None))
+                targets = list(query.get_param("targets", None))
             except:
                 targets = []
             drags = query.get_json_param("input", "drags", None)
             gottenpoints = {}
             gottenpointsobj = {}
-            #For tracking indexes
-            #Uncomment to see student answers
+            # For tracking indexes
+            # Uncomment to see student answers
             #print("---drags---" + str(drags))
-            #No points are awarded if all tries have been given or the final answer has been given to the student.
+            # No points are awarded if all tries have been given or the final answer has been given to the student.
             tnr = 0
             if targets != None:
                 for target in targets:
-                    #Find object name from user input.
+                    # Find object name from user input.
                     target['points'] = get_value_def(target, "points", {})
                     target['type'] = get_value_def(target, "type", "rectangle")
                     target['a'] = get_value_def(target, "a", 0)
@@ -237,21 +239,22 @@ class ImagexServer(tim_server.TimServer):
                     target['position'] = get_value_def(target, "position", [0, 0])
                     target['max'] = get_value_def(target, "max", 100000)
                     target['snapOffset'] = get_value_def(target, "snapOffset", [0, 0])
-                    target['n'] = 0;
+                    target['n'] = 0
                     tnr += 1
                     print(target)
                     if tries < max_tries:  # and finalanswergiven == False:
                         for selectkey in target['points'].keys():
                             for drag in drags:
                                 if drag['id'] == selectkey:
-                                    #Check if needed values exist for target. If they dont, read them from defaults
-                                    #or first target. # TODO: NOT FROM FIRST!!!
+                                    # Check if needed values exist for target. If they dont, read them from defaults
+                                    # or first target. # TODO: NOT FROM FIRST!!!
                                     # Check if image is inside target, award points.
                                     if target["n"] < target["max"] and \
-                                          is_inside(target['type'],target['size'],-target['a'],target['position'],drag["position"]):
-                                        target["n"] += 1;
+                                            is_inside(target['type'], target['size'], -target['a'], target['position'], drag["position"]):
+                                        target["n"] += 1
                                         drag["td"] = "trg" + str(tnr)
-                                        if "id" in target: drag["tid"] = target["id"]
+                                        if "id" in target:
+                                            drag["tid"] = target["id"]
                                         pts = (target['points'][selectkey])
                                         drag["points"] = pts
                                         points += pts
@@ -261,8 +264,8 @@ class ImagexServer(tim_server.TimServer):
 
             answer = {}
             # Check if getting finalanswer from excercise is allowed and if client asked for it.
-            finalanswer = query.get_param("finalanswer",False)
-            finalanswerquery = query.get_json_param("input","finalanswerquery", False)
+            finalanswer = query.get_param("finalanswer", False)
+            finalanswerquery = query.get_json_param("input", "finalanswerquery", False)
             tries = tries + 1
 
             if tries >= max_tries and (finalanswer == False or finalanswerquery == False):
@@ -276,10 +279,9 @@ class ImagexServer(tim_server.TimServer):
                 self.wout(sresult)
                 return
 
-
             if finalanswer and finalanswerquery:
                 print("--final answer--")
-                #Set tries to be max_tries so that this cannot be exploited.
+                # Set tries to be max_tries so that this cannot be exploited.
                 tries = max_tries
                 obj = {}
                 answertable = []
@@ -287,8 +289,9 @@ class ImagexServer(tim_server.TimServer):
                     for key in target['points'].keys():
                         if target['points'][key] > 0:
                             obj['id'] = key
-                            obj['position'] = [target['position'][0] + target['snapOffset'][0], target['position'][1] + target['snapOffset'][1] ];
-                            #Empty dict between loops.
+                            obj['position'] = [target['position'][0] + target['snapOffset']
+                                               [0], target['position'][1] + target['snapOffset'][1]]
+                            # Empty dict between loops.
                     answertable.append(obj)
                     obj = {}
                     ##
@@ -310,7 +313,7 @@ class ImagexServer(tim_server.TimServer):
                 # result["save"] = save
                 #sresult = json.dumps(result)
                 # Write results to site.
-                #self.wout(sresult)
+                # self.wout(sresult)
                 # return
 
             userAnswer = {}
@@ -326,11 +329,13 @@ class ImagexServer(tim_server.TimServer):
             # if len(answer) != 0:
             #    userAnswer['correctanswer'] = answer
 
-            #Save user input and points to markup
+            # Save user input and points to markup
             tim_info = {"points": points}
             save = {"userAnswer": userAnswer}
-            if freeHandData: save['freeHandData'] = freeHandData #{"drags":drags,"tries":tries}
-            if finalanswergiven: save["finalanswergiven"] = True
+            if freeHandData:
+                save['freeHandData'] = freeHandData  # {"drags":drags,"tries":tries}
+            if finalanswergiven:
+                save["finalanswergiven"] = True
             result["save"] = save
             if not prevfinalanswergiven:
                 out = "saved"
@@ -338,7 +343,7 @@ class ImagexServer(tim_server.TimServer):
                 tim_info["notValid"] = True
                 out = "saved but not valid"
             result["tim_info"] = tim_info
-        #Print exception and error.
+        # Print exception and error.
 
         try:
             print("joo")
@@ -346,7 +351,7 @@ class ImagexServer(tim_server.TimServer):
             err = str(e)
             print("---Virhe---")
             print(err)
-        #Send stuff over to tim.
+        # Send stuff over to tim.
         out = out[0:20000]
         web["tries"] = tries
         web["result"] = out
@@ -354,10 +359,9 @@ class ImagexServer(tim_server.TimServer):
         web["answer"] = answer
         print(web)
         sresult = json.dumps(result)
-        #Write results to site.
+        # Write results to site.
         self.wout(sresult)
 
-#Start plugin.
+# Start plugin.
 if __name__ == '__main__':
-    tim_server.start_server(ImagexServer,'imagex')
-
+    tim_server.start_server(ImagexServer, 'imagex')

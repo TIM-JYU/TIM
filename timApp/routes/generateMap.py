@@ -43,8 +43,8 @@ def generate_map():
 
     # Indexes for lectures and demos so correct information can be sent to layers in a loop.
     # Starts at -abs(len - number of demos/lectures) so that excess layers can be removed.
-    lectureindex = -abs(len(lecturejson)-lecturesinmap)
-    demoindex = -abs(len(demojson)-demosinmap)
+    lectureindex = -abs(len(lecturejson) - lecturesinmap)
+    demoindex = -abs(len(demojson) - demosinmap)
     # Index for iterating over the layers.
     layerindex = 0
     # Table of layers to be removed due to them not being needed.
@@ -54,7 +54,7 @@ def generate_map():
     for layer in map['layers']:
         if layer['name'][0:1] == 'l':
             # Attach properties and create buildings if there are still lectures to be added.
-            if len(lecturejson) -1 >= lectureindex and lectureindex >= 0:
+            if len(lecturejson) - 1 >= lectureindex and lectureindex >= 0:
                 points = 1
                 maxpoints = 1
                 title = lecturejson[len(lecturejson) - lectureindex - 1]['name']
@@ -75,7 +75,7 @@ def generate_map():
             lectureindex += 1
         if layer['name'][0:1] == 'd':
             # Attach properties and create buildings if there are still demos to be added.
-            if len(demojson)-1 >= demoindex and demoindex >= 0:
+            if len(demojson) - 1 >= demoindex and demoindex >= 0:
                 points = demojson[len(demojson) - demoindex - 1]['gotPoints']
                 maxpoints = demojson[len(demojson) - demoindex - 1]['maxPoints']
                 demoproperties = {
@@ -120,23 +120,23 @@ def create_lecture_layers(layers, layerid, points, maxpoints, mapwidth, properti
     # Lets not divide by zero.
     if maxpoints == 0:
         maxpoints = 1
-    if float(points/maxpoints) > 0:
+    if float(points / maxpoints) > 0:
         layers.insert(layerid + 1, deepcopy(layers[layerid]))
-        layers[layerid+1]['name'] = layers[layerid+1]['name'] +"b1"
-        layers[layerid + 1]['data'] = make_build_blocks(layers[layerid+1]['data'], 0)
+        layers[layerid + 1]['name'] = layers[layerid + 1]['name'] + "b1"
+        layers[layerid + 1]['data'] = make_build_blocks(layers[layerid + 1]['data'], 0)
         layers[layerid + 1]['properties'] = properties
-    if float(points/maxpoints) > 0.5:
+    if float(points / maxpoints) > 0.5:
         layers.insert(layerid + 2, deepcopy(layers[layerid]))
         layers[layerid + 2]['name'] = layers[layerid + 2]['name'] + "b2"
-        layers[layerid + 2]['data'] = make_build_blocks(layers[layerid+2]['data'], 3)
+        layers[layerid + 2]['data'] = make_build_blocks(layers[layerid + 2]['data'], 3)
         layers[layerid + 2]['properties'] = properties
     # Delete unused keys, create offset for roof.
     deltable = []
-    if float(points/maxpoints) > 0:
+    if float(points / maxpoints) > 0:
         for key in layers[layerid + 2]['data'].keys():
             deltable.append(key)
 
-    if float(points/maxpoints) > 0.5:
+    if float(points / maxpoints) > 0.5:
         for key in deltable:
             layers[layerid + 2]['data'][str(int(key) - mapwidth)] = layers[layerid + 2]['data'][key]
             del layers[layerid + 2]['data'][key]
@@ -156,11 +156,11 @@ def create_demo_layers(layers, layerid, points, maxpoints, mapwidth, properties)
     if maxpoints <= 0:
         maxpoints = 1
     max_tiles = 12
-    totaltiles = max_tiles*points/maxpoints;
+    totaltiles = max_tiles * points / maxpoints
     if totaltiles > max_tiles:
         totaltiles = max_tiles
     totaltiles = round(totaltiles)
-    floors = totaltiles//3 + 1
+    floors = totaltiles // 3 + 1
     tiles = totaltiles % 3
     # index used to track progress of loop
     floorindex = 0
@@ -177,7 +177,8 @@ def create_demo_layers(layers, layerid, points, maxpoints, mapwidth, properties)
             for key in layers[layerid + 1 + floorindex]['data'].keys():
                 deltable.append(key)
             for key in deltable:
-                layers[layerid + 1 + floorindex]['data'][str(int(key) - mapwidth*floorindex)] = layers[layerid + 1 + floorindex]['data'][key]
+                layers[layerid + 1 + floorindex]['data'][str(int(key) - mapwidth * floorindex)] = layers[
+                    layerid + 1 + floorindex]['data'][key]
                 del layers[layerid + 1 + floorindex]['data'][key]
         floorindex += 1
         # Remove extra tiles if this is the last run of the loop.
@@ -212,11 +213,11 @@ def make_build_blocks(dict, floor):
 def select_map(lectures, demos):
     map = "static/map_files/d"
     # If there are more than twice as many demos as there are lectures select map based on lectures
-    if 2*demos < lectures:
+    if 2 * demos < lectures:
         if lectures % 2 == 0:
-            map += str(int(lectures/2)) + ".json"
+            map += str(int(lectures / 2)) + ".json"
         if lectures % 2 == 1:
-            map += str(int(int(lectures/2) + 1)) + ".json"
+            map += str(int(int(lectures / 2) + 1)) + ".json"
         # Otherwise select map based on demos.
     else:
         map += str(demos) + ".json"

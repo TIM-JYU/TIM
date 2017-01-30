@@ -1,5 +1,4 @@
-"""
-The module contains the database functions related to annotations. This includes adding, modifiying and deleting
+"""The module contains the database functions related to annotations. This includes adding, modifiying and deleting
 annotations as well as adding comments to the annotations. The module also retrieves the annotations from the database.
 
 :authors: Joonas Lattu, Petteri Palojärvi
@@ -17,18 +16,17 @@ from utils import date_to_relative
 
 
 class Annotations(TimDbBase):
-    """
-    Used as an interface to query the database about annotations.
-    """
+    """Used as an interface to query the database about annotations."""
 
     @unique
     class AnnotationVisibility(Enum):
-        """Enum for storing the visibility
+        """Enum for storing the visibility.
 
-            - myself = 1
-            - owner = 2
-            - teacher = 3
-            - everyone = 4
+        - myself = 1
+        - owner = 2
+        - teacher = 3
+        - everyone = 4
+
         """
         myself = 1
         owner = 2
@@ -66,6 +64,7 @@ class Annotations(TimDbBase):
         :param color: Color as hex string.
         :param answer_id: ID of answer if annotation is located within one.
         :return: ID of the new, just added annotation.
+
         """
 
         a = Annotation(velp_version_id=velp_version_id,
@@ -104,6 +103,7 @@ class Annotations(TimDbBase):
         :param points: Points given, overrides velp's default and can be null
         :param icon_id: Icon id, can be null
         :param color: Color as hex, can be null
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -124,6 +124,7 @@ class Annotations(TimDbBase):
 
         :param annotation_id: ID of annotation
         :return: A list of dictionaries with the fields of individual annotations. List is empty if nothing is found and has several rows if there are duplicate ids(not good).
+
         """
         cursor = self.db.cursor()
         cursor.execute("""
@@ -139,6 +140,7 @@ class Annotations(TimDbBase):
         :param annotation_id: Id of annotation
         :param valid_until: Time when annotation will be invalidated
         :return:
+
         """
         cursor = self.db.cursor()
 
@@ -169,6 +171,7 @@ class Annotations(TimDbBase):
         :param commenter_id: ID of commenter
         :param content: Text of comment
         :return: ID of the new comment.
+
         """
 
         ac = AnnotationComment(annotation_id=annotation_id,
@@ -190,6 +193,7 @@ class Annotations(TimDbBase):
         :param user_has_owner: Boolean for owner access
         :param document_id: ID of document
         :return: List of dictionaries containing annotations with comments
+
         """
 
         annotations = self.get_annotations_in_document(user_id, user_has_see_answers, user_has_teacher, user_has_owner,
@@ -249,6 +253,7 @@ class Annotations(TimDbBase):
         :param user_has_owner: whether user is document owner or not.
         :param document_id: The relevant document.
         :return: List of dictionaries, each dictionary representing a single annotation.
+
         """
         # Todo choose velp language. Have fun.
         language_id = 'FI'
@@ -307,13 +312,13 @@ class Annotations(TimDbBase):
                         AND annotation.document_id = %s AND (
                           annotation.annotator_id = %s OR (
                             """ + check_annotation_access_right_sql +
-                            """ AND (%s OR UserAnswer.user_id = %s OR UserAnswer.user_id ISNULL)
+                       """ AND (%s OR UserAnswer.user_id = %s OR UserAnswer.user_id ISNULL)
                           )
                         )
                       ORDER BY depth_start DESC, node_start DESC, offset_start DESC
                       """, [user_id, language_id, document_id, user_id] + annotation_access_levels +
-                            [user_has_see_answers, user_id]
-                      )
+                       [user_has_see_answers, user_id]
+                       )
 
         results = self.resultAsDictionary(cursor)
 
@@ -345,6 +350,7 @@ class Annotations(TimDbBase):
 
         :param annotation_ids: List of annotation IDs
         :return: List of dictionaries containing annotation comment data
+
         """
         if not annotation_ids:
             return []

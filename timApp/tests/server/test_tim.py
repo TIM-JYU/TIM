@@ -16,6 +16,7 @@ link_selector = CSSSelector('a')
 
 
 class TimTest(TimRouteTest):
+
     def test_activities(self):
         timdb = self.get_db()
 
@@ -46,10 +47,14 @@ class TimTest(TimRouteTest):
                 'item_title': 'document ' + n
             }, expect_contains={'id': doc_id_list[idx], 'path': doc_names[idx]})
             doc_ids.add(doc_id_list[idx])
-        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id, 'Anonymous users', 'view'), {'type': 'always'}, expect_content=self.ok_resp)
-        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[1], 'Logged-in users', 'view'), {'type': 'always'}, expect_content=self.ok_resp)
-        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[2], 'testuser2', 'view'), {'type': 'always'}, expect_content=self.ok_resp)
-        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id_list[3], 'testuser2', 'edit'), {'type': 'always'}, expect_content=self.ok_resp)
+        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id, 'Anonymous users', 'view'),
+                      {'type': 'always'}, expect_content=self.ok_resp)
+        self.json_put(
+            '/permissions/add/{}/{}/{}'.format(doc_id_list[1], 'Logged-in users', 'view'), {'type': 'always'}, expect_content=self.ok_resp)
+        self.json_put(
+            '/permissions/add/{}/{}/{}'.format(doc_id_list[2], 'testuser2', 'view'), {'type': 'always'}, expect_content=self.ok_resp)
+        self.json_put(
+            '/permissions/add/{}/{}/{}'.format(doc_id_list[3], 'testuser2', 'edit'), {'type': 'always'}, expect_content=self.ok_resp)
         doc = Document(doc_id)
         doc.add_paragraph('Hello')
         pars = doc.get_paragraphs()
@@ -84,7 +89,8 @@ class TimTest(TimRouteTest):
         self.post_par(doc, edit_text, first_id, expect_contains=par_html, json_key='texts')
         par2_text = 'new par'
         par2_html = md_to_html(par2_text)
-        self.post_par(doc, edit_text + '#-\n' + par2_text, first_id, expect_contains=[par_html, par2_html], json_key='texts')
+        self.post_par(doc, edit_text + '#-\n' + par2_text, first_id,
+                      expect_contains=[par_html, par2_html], json_key='texts')
         pars = Document(doc_id).get_paragraphs()
         self.assertEqual(2, len(pars))
         second_par_id = pars[1].get_id()
@@ -127,11 +133,12 @@ class TimTest(TimRouteTest):
         self.get('/note/{}'.format(test2_note_id), expect_contains=comment_of_test2, json_key='text')
         teacher_right_docs = {doc_id_list[3]}
         for i in teacher_right_docs:
-            self.json_put('/permissions/add/{}/{}/{}'.format(i, 'testuser2', 'teacher'), {'type': 'always'}, expect_content=self.ok_resp)
+            self.json_put('/permissions/add/{}/{}/{}'.format(i, 'testuser2', 'teacher'),
+                          {'type': 'always'}, expect_content=self.ok_resp)
 
         self.json_post('/deleteNote', {'id': test2_note_id,
-                                                                 'docId': doc_id,
-                                                                 'par': first_id})
+                                       'docId': doc_id,
+                                       'par': first_id})
         ug = timdb.users.get_personal_usergroup_by_id(self.current_user_id())
         notes = timdb.notes.get_notes(ug, Document(doc_id), include_public=True)
         self.assertEqual(1, len(notes))
@@ -149,11 +156,13 @@ class TimTest(TimRouteTest):
         for view_id in viewable_docs - teacher_right_docs:
             self.get('/view/' + str(view_id))
             self.get('/teacher/' + str(view_id), expect_status=302)
-            self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2', 'teacher'), {'type': 'always'}, expect_status=403)
+            self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2',
+                                                             'teacher'), {'type': 'always'}, expect_status=403)
         for view_id in teacher_right_docs:
             self.get('/view/' + str(view_id))
             self.get('/teacher/' + str(view_id))
-            self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2', 'teacher'), {'type': 'always'}, expect_status=403)
+            self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2',
+                                                             'teacher'), {'type': 'always'}, expect_status=403)
 
     def test_macro_doc(self):
         self.login_test1()
@@ -230,8 +239,10 @@ header: %%username%% and %%realname%%
         self.assertIn('Syntax error in template:', syntax_errors[0].text)
 
     def test_windows_eol(self):
-        """
-        Windows-style EOLs should work with Dumbo. If this test fails, try to recompile Dumbo.
+        """Windows-style EOLs should work with Dumbo.
+
+        If this test fails, try to recompile Dumbo.
+
         """
         self.login_test1()
         md_table = """---\r\n|a|\r\n|-|"""
@@ -253,7 +264,6 @@ header: %%username%% and %%realname%%
     def test_document_intermediate_folders(self):
         self.login_test1()
         self.create_doc('users/test-user-1/a/b/c')
-
 
     def test_hide_links(self):
         self.login_test1()

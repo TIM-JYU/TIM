@@ -15,11 +15,14 @@ class SplitterException(Exception):
 class ValidationException(Exception):
     pass
 
+
 class ValidationWarning(ValidationException):
     pass
 
+
 class AttributesAtEndOfCodeBlockException(ValidationException):
     pass
+
 
 class DocReader:
     """
@@ -57,6 +60,7 @@ class DocumentParser:
     :type _blocks: list[dict]
     :type _doc_text: str
     :type _last_setting: tuple
+
     """
 
     def __init__(self, doc_text=''):
@@ -94,12 +98,13 @@ class DocumentParser:
             if r['type'] == 'code':
                 md = r['md']
                 try:
-                    last_line = md[md.rindex('\n')+1:]
+                    last_line = md[md.rindex('\n') + 1:]
                     num_ticks = count_chars(md, '`')
-                    if last_line.startswith('`'*num_ticks):
+                    if last_line.startswith('`' * num_ticks):
                         attrs, start_index = AttributeParser(last_line).get_attributes()
                         if start_index is not None:
-                            raise AttributesAtEndOfCodeBlockException('The end of code block contains attributes: {}'.format(attrs))
+                            raise AttributesAtEndOfCodeBlockException(
+                                'The end of code block contains attributes: {}'.format(attrs))
                 except ValueError:
                     pass
             curr_id = r.get('id')
@@ -118,7 +123,7 @@ class DocumentParser:
                     #print('Duplicate task id: ' + task_id)
                     #raise ValidationException('Duplicate task id: ' + task_id)
                     pass
-                #found_tasks.add(task_id)
+                # found_tasks.add(task_id)
             area = attrs.get('area')
             if area:
                 if area in found_areas:
@@ -134,7 +139,7 @@ class DocumentParser:
                 if area_end in classed_areas:
                     if area_end != classed_areas[-1]:
                         raise ValidationWarning('Classed areas cannot overlap ("{}" and "{}")'
-                                                  .format(classed_areas[-1], area_end))
+                                                .format(classed_areas[-1], area_end))
                     classed_areas.pop()
                 if is_whole_document:
                     if area_end not in found_areas:
@@ -253,7 +258,7 @@ class DocumentParser:
             single_mark = code_block_marker[0]
             last_line_code_chars = count_chars(block_lines[-1], single_mark)
             if last_line_code_chars > 0 or len(line) == 0:
-                block_lines[-1] = single_mark*(len(code_block_marker) - last_line_code_chars) + block_lines[-1]
+                block_lines[-1] = single_mark * (len(code_block_marker) - last_line_code_chars) + block_lines[-1]
             else:
                 block_lines.append(code_block_marker)
 

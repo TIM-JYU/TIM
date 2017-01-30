@@ -234,12 +234,11 @@ def restart_server():
 
 @app.route('/resetcss')
 def reset_css():
-    """
-    Removes CSS cache directories and thereby forces SASS to regenerate them the next time
-    they are needed.
+    """Removes CSS cache directories and thereby forces SASS to regenerate them the next time they are needed.
 
     Requires admin privilege.
     :return: okJsonResponse
+
     """
     verify_admin()
     assets_dir = os.path.join('static', '.webassets-cache')
@@ -476,8 +475,6 @@ def echo_request(filename):
         yield 'Headers:\n\n'
         yield from (k + ": " + v + "\n" for k, v in request.headers.items())
     return Response(stream_with_context(generate()), mimetype='text/plain')
-
-
 
 
 @app.route("/index/<int:doc_id>")

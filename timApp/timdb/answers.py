@@ -13,6 +13,7 @@ from timdb.timdbbase import TimDbBase
 
 
 class Answers(TimDbBase):
+
     def save_answer(self,
                     user_ids: List[int],
                     task_id: str,
@@ -21,9 +22,8 @@ class Answers(TimDbBase):
                     tags: Optional[List[str]]=None,
                     valid: bool=True,
                     points_given_by=None):
-        """
-        Saves an answer to the database.
-        
+        """Saves an answer to the database.
+
         :param points_given_by: The usergroup id who gave the points, or None if they were given by a plugin.
         :param tags: Tags for the answer.
         :param valid: Whether the answer is considered valid (e.g. sent before deadline, etc.)
@@ -31,6 +31,7 @@ class Answers(TimDbBase):
         :param task_id: The id of the task.
         :param content: The content of the answer.
         :param points: Points for the task.
+
         """
         if tags is None:
             tags = []
@@ -62,10 +63,11 @@ class Answers(TimDbBase):
 
     def get_answers(self, user_id: int, task_id: str, get_collaborators: bool=True) -> List[dict]:
         """Gets the answers of a user in a task, ordered descending by submission time.
-        
+
         :param get_collaborators: Whether collaborators for each answer should be fetched.
         :param user_id: The id of the user.
         :param task_id: The id of the task.
+
         """
 
         cursor = self.db.cursor()
@@ -123,7 +125,7 @@ class Answers(TimDbBase):
                         hide_names: bool,
                         age: str,
                         valid: str,
-                        printname:bool,
+                        printname: bool,
                         sort: str,
                         print_opt: str,
                         period_from: datetime,
@@ -140,8 +142,9 @@ class Answers(TimDbBase):
         :param valid: 0, 1 or all
         :param printname: True = put user full name as first in every task
         :param print_opt: all = header and answers, header=only header, answers=only answers, korppi=korppi form
+
         """
-        counts =  "count(a.answered_on)"
+        counts = "count(a.answered_on)"
         groups = "group by a.task_id, u.id"
         print_header = print_opt == "all" or print_opt == "header"
         print_answers = print_opt == "all" or print_opt == "answers"
@@ -186,10 +189,12 @@ ORDER BY {}, a.answered_on
         for row in c.fetchall():
             cnt += 1
             points = str(row[5])
-            if points == "None": points = ""
+            if points == "None":
+                points = ""
             n = str(int(row[4]))
             name = row[0]
-            if hide_names: name = "user" + str(cnt)
+            if hide_names:
+                name = "user" + str(cnt)
             header = name + "; " + row[1] + "; " + str(row[3]) + "; " + n + "; " + points
             # print(separator + header)
             line = json.loads(row[2])
@@ -202,33 +207,35 @@ ORDER BY {}, a.answered_on
                         answ = ""
 
             res = ""
-            if printname and not hide_names: header = str(row[6]) + "; " + header
-            if print_header: res = header
-            if print_answers: res += "\n" + answ
+            if printname and not hide_names:
+                header = str(row[6]) + "; " + header
+            if print_header:
+                res = header
+            if print_answers:
+                res += "\n" + answ
             if print_opt == "korppi":
                 res = name + ";"
                 taskid = row[1]
                 i = taskid.find(".")
                 if i >= 0:
-                    taskid = taskid[i+1:]
+                    taskid = taskid[i + 1:]
                 res += taskid + ";" + answ.replace("\n", "\\n")
 
             result.append(res)
         return result
 
-
     def check_if_plugin_has_answers(self, task_id: 'str') -> 'int':
-        """
-        Checks if there are answers to the plugin
+        """Checks if there are answers to the plugin.
+
         :param task_id: The task id of plugin ín format doc_id.par_id
         :return: 0 if not found, 1 if answers exist
+
         """
         cursor = self.db.cursor()
         cursor.execute("""SELECT EXISTS(SELECT 1 FROM Answer WHERE task_id = %s LIMIT 1)""", [task_id])
         result = cursor.fetchone()
         real_result = result[0]
         return real_result
-
 
     def get_common_answers(self, user_ids: List[int], task_id: str) -> List[dict]:
         common_answers_ids = None
@@ -265,7 +272,7 @@ ORDER BY {}, a.answered_on
         if not task_ids:
             return []
         cursor = self.db.cursor()
-        task_id_template = ','.join(['%s']*len(task_ids))
+        task_id_template = ','.join(['%s'] * len(task_ids))
         if user_ids is None:
             user_ids = []
             user_restrict_sql = ''
@@ -317,17 +324,19 @@ ORDER BY {}, a.answered_on
                            user_ids: Optional[List[int]]=None,
                            flatten: bool=False):
         """Computes the point sum from given tasks accoring to the given point rule.
+
         :param points_rule: The points rule.
         :param task_ids: The list of task ids to consider.
         :param user_ids: The list of users for which to compute the sum.
         :param flatten: Whether to return the result as a list of dicts (True) or as a deep dict (False).
         :return: The computed result.
+
         """
         if not points_rule:
             return self.get_users_for_tasks(task_ids, user_ids)
         tasks_users = self.get_users_for_tasks(task_ids, user_ids, group_by_user=False)
         rule = PointSumRule(points_rule)
-        result = defaultdict(lambda:defaultdict(lambda:defaultdict(lambda:defaultdict(list))))
+        result = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
         for tu in tasks_users:
             for group in rule.find_groups(tu['task_id']):
                 result[tu['id']]['groups'][group]['tasks'].append(tu)
@@ -338,9 +347,11 @@ ORDER BY {}, a.answered_on
                 group['task_sum'] = 0
                 group['velp_sum'] = 0
                 if PointType.task in rule.groups[groupname].point_types:
-                    group['task_sum'] = round(sum(t['task_points'] for t in group['tasks'] if t['task_points'] is not None), 2)
+                    group['task_sum'] = round(sum(t['task_points']
+                                                  for t in group['tasks'] if t['task_points'] is not None), 2)
                 if PointType.velp in rule.groups[groupname].point_types:
-                    group['velp_sum'] = round(sum(t['velp_points'] for t in group['tasks'] if t['velp_points'] is not None), 2)
+                    group['velp_sum'] = round(sum(t['velp_points']
+                                                  for t in group['tasks'] if t['velp_points'] is not None), 2)
                 group['velped_task_count'] = sum(1 for t in group['tasks'] if t['velped_task_count'] > 0)
                 group['total_sum'] = group['task_sum'] + group['velp_sum']
                 groupsums.append((group['task_sum'], group['velp_sum'], group['total_sum']))
@@ -378,8 +389,9 @@ ORDER BY {}, a.answered_on
 
     def getAnswersForGroup(self, user_ids: List[int], task_id: str) -> List[dict]:
         """Gets the answers of the users in a task, ordered descending by submission time.
-           All users in the list `user_ids` must be associated with the answer.
-        
+
+        All users in the list `user_ids` must be associated with the answer.
+
         """
 
         cursor = self.db.cursor()
@@ -395,6 +407,7 @@ ORDER BY {}, a.answered_on
 
         :param answer_id: The id of the answer.
         :return: The user ids.
+
         """
         c = self.db.cursor()
         c.execute("""SELECT user_id FROM UserAnswer
@@ -407,7 +420,6 @@ ORDER BY {}, a.answered_on
             WHERE id = %s""", [answer_id])
         result = self.resultAsDictionary(c)
         return result[0]['task_id'] if len(result) > 0 else None
-
 
     def get_users_by_taskid(self, task_id: str):
         c = self.db.cursor()
@@ -422,8 +434,10 @@ ORDER BY {}, a.answered_on
 
     def get_answer(self, answer_id: int) -> Optional[dict]:
         """Gets data for a single answer.
-        The field 'cnt' is the 1-based index of the answer for the user (or the set of collaborators) for the task.
-        So cnt for the first answer is always 1.
+
+        The field 'cnt' is the 1-based index of the answer for the user (or the set of collaborators) for the task. So
+        cnt for the first answer is always 1.
+
         """
         cursor = self.db.cursor()
         cursor.execute("""SELECT id, task_id, content, points,

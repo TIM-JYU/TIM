@@ -7,8 +7,7 @@ from utils import count_chars
 
 
 class DocumentWriter:
-    """Converts a sequence of document blocks to text.
-    """
+    """Converts a sequence of document blocks to text."""
 
     def __init__(self, pars, export_hashes=False, export_ids=True):
         """Initializes a DocumentWriter object.
@@ -16,6 +15,7 @@ class DocumentWriter:
         :param export_hashes: Whether to include hash attributes in the exported markdown.
         :param export_ids: Whether to include id attributes in the exported markdown.
         :param pars: A sequence of paragraphs representing the document.
+
         """
         self.pars = pars
         self.ignored_attrs = ['md', 'type', 'html', 'links', 'doc_id', 'props', 'h']
@@ -28,6 +28,7 @@ class DocumentWriter:
         """Gets the full text for the document.
 
         :return: The full text of the document.
+
         """
         if options is None:
             options = DocumentParserOptions()
@@ -42,7 +43,7 @@ class DocumentWriter:
                 for b in blocks:
                     if b['type'] == 'code':
                         num_ticks = count_chars(b['md'], '`') + 1
-                text += '`'*num_ticks + ' {' + self.attrs_to_str(atomized) + '}\n' + p['md'] + '\n' + '`'*num_ticks
+                text += '`' * num_ticks + ' {' + self.attrs_to_str(atomized) + '}\n' + p['md'] + '\n' + '`' * num_ticks
             else:
                 attrs_str = self.attrs_to_str(p)
                 if not attrs_str:

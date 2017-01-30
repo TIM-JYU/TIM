@@ -8,6 +8,7 @@ THEME_DIR = 'static/css'
 
 
 class Theme:
+
     def __init__(self, filename: str):
         self.filename = secure_filename(filename)
         self.description = 'No description.'

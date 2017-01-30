@@ -101,7 +101,7 @@ def edit_note():
 === MODIFIED ===\n
 {}\n
 """.format(prev_note_text, note_text), setting="comment_modify", par_id=par_id,
-                     group_id=get_group_id(), group_subject=get_group_subject())
+        group_id=get_group_id(), group_subject=get_group_subject())
 
     doc = Document(doc_id)
     return par_response([doc.get_paragraph(par_id)],

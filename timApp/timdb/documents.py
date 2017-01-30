@@ -32,12 +32,13 @@ class Documents(TimDbBase):
                       prev_par_id: Optional[str]=None,
                       attrs: Optional[dict]=None, properties: Optional[dict]=None) -> Tuple[List[DocParagraph], Document]:
         """Adds a new markdown block to the specified document.
-        
+
         :param attrs: The attributes for the paragraph.
         :param doc: The id of the document.
         :param content: The content of the block.
         :param prev_par_id: The id of the previous paragraph. None if this paragraph should become the last.
         :returns: A list of the added blocks.
+
         """
 
         assert doc.exists(), 'document does not exist: %r' % doc.doc_id
@@ -52,8 +53,8 @@ class Documents(TimDbBase):
                         path: Optional[str]=None,
                         title: Optional[str]=None,
                         ref_attribs: Optional[Dict[str, str]] = None) -> Document:
-        """Creates a citation document with the specified name. Each paragraph of the citation document
-        references the paragraph in the original document.
+        """Creates a citation document with the specified name. Each paragraph of the citation document references the
+        paragraph in the original document.
 
         :param title: The document title.
         :param original_doc: The original document to be cited.
@@ -61,6 +62,7 @@ class Documents(TimDbBase):
         :param owner_group_id: The id of the owner group.
         :param ref_attribs: Reference attributes to be used globally.
         :returns: The newly created document object.
+
         """
 
         if not original_doc.exists():
@@ -94,8 +96,9 @@ class Documents(TimDbBase):
 
     def delete(self, document_id: int):
         """Deletes the specified document.
-        
+
         :param document_id: The id of the document to be deleted.
+
         """
 
         assert self.exists(document_id), 'document does not exist: %d' % document_id
@@ -109,10 +112,12 @@ class Documents(TimDbBase):
         Document.remove(document_id)
 
     def recover_db(self, usergroup_id: int, folder: str = None) -> int:
-        """Recreates database entries for documents that already exist on the disk
+        """Recreates database entries for documents that already exist on the disk.
+
         :param usergroup_id Owner for recovered documents
         :param folder Folder in which the recovered documents are placed
         :returns Number of recovered documents.
+
         """
         doc_dir = Document.get_documents_dir(self.files_root_path)
         if not os.path.exists(doc_dir):
@@ -130,13 +135,13 @@ class Documents(TimDbBase):
                     doc_name = "Recovered document " + str(doc_id)
                     cursor.execute("""INSERT INTO Block (id, type_id, description, created, UserGroup_id)
                                       VALUES (%s, %s, %s, CURRENT_TIMESTAMP, %s)""",
-                                           [doc_id, blocktypes.DOCUMENT, doc_name, usergroup_id])
+                                   [doc_id, blocktypes.DOCUMENT, doc_name, usergroup_id])
                     recovered += 1
                     doc_path = doc_name if not folder else folder + '/' + doc_name
                     cursor.execute('SELECT EXISTS(SELECT id FROM DocEntry WHERE id = %s)', [doc_id])
                     if not cursor.fetchone()[0]:
                         cursor.execute('INSERT INTO DocEntry (id, name, public) VALUES (%s, %s, TRUE)',
-                                           [doc_id, doc_path])
+                                       [doc_id, doc_path])
 
             except ValueError:
                 pass
@@ -148,9 +153,10 @@ class Documents(TimDbBase):
 
     def delete_paragraph(self, doc: Document, par_id: str) -> Document:
         """Deletes a paragraph from a document.
-        
+
         :param doc: The id of the document from which to delete the paragraph.
         :param par_id: The id of the paragraph in the document that should be deleted.
+
         """
 
         doc.delete_paragraph(par_id)
@@ -159,9 +165,10 @@ class Documents(TimDbBase):
 
     def exists(self, document_id: int) -> bool:
         """Checks whether a document with the specified id exists.
-        
+
         :param document_id: The id of the document.
         :returns: True if the documents exists, false otherwise.
+
         """
 
         return self.blockExists(document_id, blocktypes.DOCUMENT)
@@ -178,6 +185,7 @@ class Documents(TimDbBase):
                Must be non-empty if supplied.
         :param include_nonpublic: Whether to include non-public document names or not.
         :returns: A list of DocEntry objects.
+
         """
 
         q = DocEntry.query
@@ -195,15 +203,16 @@ class Documents(TimDbBase):
         return q.all()
 
     def get_documents_in_folder(self, folder_pathname: str,
-                                      include_nonpublic: bool = False,
-                                      filter_ids: Optional[Iterable[int]]=None) -> List[DocEntry]:
-        """Gets all the documents in a folder
+                                include_nonpublic: bool = False,
+                                filter_ids: Optional[Iterable[int]]=None) -> List[DocEntry]:
+        """Gets all the documents in a folder.
 
         :param filter_ids: An optional iterable of document ids for filtering the documents.
                Must be non-empty if supplied.
         :param folder_pathname: path to be searched for documents without ending '/'
         :param include_nonpublic: Whether to include non-public document names or not.
         :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
+
         """
         return self.get_documents(include_nonpublic=include_nonpublic,
                                   filter_folder=folder_pathname,
@@ -220,6 +229,7 @@ class Documents(TimDbBase):
         :param path: The path for the document.
         :param owner_group_id: The owner group of the document.
         :returns: The created document object.
+
         """
         with open(document_file, 'r', encoding='utf-8') as f:
             content = f.read()  # todo: use a stream instead
@@ -236,12 +246,13 @@ class Documents(TimDbBase):
                          new_content: str, new_attrs: Optional[dict]=None,
                          new_properties: Optional[dict]=None) -> Tuple[List[DocParagraph], Document]:
         """Modifies a paragraph in a document.
-        
+
         :param new_attrs: The attributes for the paragraph.
         :param doc: The document.
         :param par_id: The id of the paragraph to be modified.
         :param new_content: The new content of the paragraph.
         :returns: The paragraphs and the new document as a tuple.
+
         """
 
         assert self.exists(doc.doc_id), 'document does not exist: ' + str(doc.doc_id)
@@ -253,12 +264,13 @@ class Documents(TimDbBase):
     def update_document(self, doc: Document, new_content: str, original_content: str=None,
                         strict_validation=True) -> Document:
         """Updates a document.
-        
+
         :param doc: The id of the document to be updated.
         :param new_content: The new content of the document.
         :param original_content: The original content of the document.
         :param strict_validation: Whether to use stricter validation rules for areas etc.
         :returns: The id of the new document.
+
         """
 
         assert self.exists(doc.doc_id), 'document does not exist: ' + str(doc)
@@ -269,10 +281,11 @@ class Documents(TimDbBase):
         return doc
 
     def trim_markdown(self, text: str):
-        """Trims the specified text. Don't trim spaces from left side because they may indicate a code block
+        """Trims the specified text. Don't trim spaces from left side because they may indicate a code block.
 
         :param text: The text to be trimmed.
         :return: The trimmed text.
+
         """
         return text.rstrip().strip('\r\n')
 

@@ -29,6 +29,7 @@ FOLDER_DEFAULT_RIGHT_NAME = 'DefaultFolderRights'
 
 
 class NoSuchUserException(TimDbException):
+
     def __init__(self, user_id):
         super().__init__('No such user: {}'.format(user_id))
         self.user_id = user_id
@@ -44,7 +45,9 @@ class Users(TimDbBase):
 
     def create_special_usergroups(self) -> int:
         """Creates an anonymous user and a usergroup for it.
+
         The user id and its associated usergroup id is 0.
+
         """
 
         # Please keep these local and refer to the groups with their names instead.
@@ -81,12 +84,13 @@ class Users(TimDbBase):
     def create_user(self, name: str, real_name: str, email: str, password: str = '',
                     commit: bool = True) -> User:
         """Creates a new user with the specified name.
-        
+
         :param email: The email address of the user.
         :param name: The name of the user to be created.
         :param real_name: The real name of the user.
         :param password: The password for the user (not used on Korppi login).
         :returns: The id of the newly created user.
+
         """
 
         hash = self.hash_password(password) if password != '' else ''
@@ -100,9 +104,11 @@ class Users(TimDbBase):
 
     def create_anonymous_user(self, name: str, real_name: str, commit: bool = True) -> User:
         """Creates a new anonymous user.
+
         :param name: The name of the user to be created.
         :param real_name: The real name of the user.
         :returns: The id of the newly created user.
+
         """
 
         next_id = self.get_next_anonymous_user_id()
@@ -133,6 +139,7 @@ class Users(TimDbBase):
         :param real_name: The real name of the user.
         :param email: The email of the user.
         :param password: The password of the user.
+
         """
 
         cursor = self.db.cursor()
@@ -155,12 +162,12 @@ class Users(TimDbBase):
         if commit:
             self.db.commit()
 
-
     def create_usergroup(self, name: str, commit: bool = True) -> UserGroup:
         """Creates a new user group.
-        
+
         :param name: The name of the user group.
         :returns: The id of the created user group.
+
         """
 
         ug = UserGroup(name=name)
@@ -174,9 +181,10 @@ class Users(TimDbBase):
 
     def add_user_to_group(self, group_id: int, user_id: int, commit: bool = True):
         """Adds a user to a usergroup.
-        
+
         :param group_id: The id of the group.
         :param user_id: The id of the user.
+
         """
         ugm = UserGroupMember(usergroup_id=group_id, user_id=user_id)
         db.session.add(ugm)
@@ -198,20 +206,23 @@ class Users(TimDbBase):
 
     def create_potential_user(self, email: str, password: str, commit: bool = True):
         """Creates a potential user with the specified email and password.
-        
+
         :param email: The email address of the user.
         :param password: The password of the user.
+
         """
         cursor = self.db.cursor()
         hash = self.hash_password(password)
-        cursor.execute('INSERT INTO NewUser (email, pass, created) VALUES (%s, %s, CURRENT_TIMESTAMP) ON CONFLICT (email) DO UPDATE SET pass = EXCLUDED.pass', [email, hash])
+        cursor.execute(
+            'INSERT INTO NewUser (email, pass, created) VALUES (%s, %s, CURRENT_TIMESTAMP) ON CONFLICT (email) DO UPDATE SET pass = EXCLUDED.pass', [email, hash])
         if commit:
             self.db.commit()
 
     def delete_potential_user(self, email: str, commit: bool = True):
         """Deletes a potential user.
-        
+
         :param email: The email address of the user.
+
         """
         cursor = self.db.cursor()
         cursor.execute('DELETE FROM NewUser WHERE email=%s', [email])
@@ -220,10 +231,11 @@ class Users(TimDbBase):
 
     def test_potential_user(self, email: str, password: str) -> bool:
         """Tests if a potential user matches to email and password.
-        
+
         :param email: Email address.
         :param password: Password.
         :returns: Boolean.
+
         """
 
         cursor = self.db.cursor()
@@ -233,10 +245,11 @@ class Users(TimDbBase):
 
     def test_user(self, email: str, password: str) -> bool:
         """Tests if a potential user matches to email and password.
-        
+
         :param email: Email address.
         :param password: Password.
         :returns: Boolean.
+
         """
 
         cursor = self.db.cursor()
@@ -319,29 +332,33 @@ class Users(TimDbBase):
 
     def get_owner_group(self, block_id: int) -> UserGroup:
         """Returns the owner group of the specified block.
-        
+
         :param block_id: The id of the block.
+
         """
         return self.session.query(Block).filter_by(id = block_id).one().owner
 
     def get_user(self, user_id: int, include_authdata=False) -> Optional[dict]:
         """Gets the user with the specified id.
-        
+
         :param include_authdata: Whether to include authentication-related fields in the result. Default False.
         :param user_id: The user id.
         :returns: A dict object representing the user. Columns: id, name.
+
         """
         authtemplate = ', yubikey, pass' if include_authdata else ''
         cursor = self.db.cursor()
-        cursor.execute('SELECT id, name, real_name, email {} FROM UserAccount WHERE id = %s'.format(authtemplate), [user_id])
+        cursor.execute('SELECT id, name, real_name, email {} FROM UserAccount WHERE id = %s'.format(
+            authtemplate), [user_id])
         result = self.resultAsDictionary(cursor)
         return result[0] if len(result) > 0 else None
 
     def get_user_id_by_name(self, name: str) -> Optional[int]:
         """Gets the id of the specified username.
-        
+
         :param name: The name of the user.
         :returns: The id of the user or None if the user does not exist.
+
         """
 
         cursor = self.db.cursor()
@@ -354,14 +371,16 @@ class Users(TimDbBase):
 
         :param name: The name of the user.
         :returns: The user information or None if the user does not exist.
+
         """
         return self.session.query(User).filter_by(name=name).first()
 
     def get_user_by_email(self, email: str) -> Optional[dict]:
         """Gets the data of the specified user email address.
-        
+
         :param email: Email address.
         :returns: The user data.
+
         """
 
         cursor = self.db.cursor()
@@ -370,10 +389,11 @@ class Users(TimDbBase):
         return result[0] if len(result) > 0 else None
 
     def group_exists(self, group_name: str) -> bool:
-        """Checks if the group with the specified name exists
+        """Checks if the group with the specified name exists.
 
         :param group_name: The name of the group.
         :returns: Boolean.
+
         """
 
         cursor = self.db.cursor()
@@ -382,8 +402,10 @@ class Users(TimDbBase):
 
     def get_user_group_name(self, group_id: int) -> Optional[str]:
         """Gets the user group name.
+
         :param group_id: The id of the group.
         :returns: The name of the group.
+
         """
         cursor = self.db.cursor()
         cursor.execute('SELECT name FROM UserGroup WHERE id = %s', [group_id])
@@ -392,8 +414,9 @@ class Users(TimDbBase):
 
     def get_usergroups_by_name(self, name: str):
         """Gets the usergroups that have the specified name.
-        
+
         :param name: The name of the usergroup to be retrieved.
+
         """
 
         cursor = self.db.cursor()
@@ -418,6 +441,7 @@ class Users(TimDbBase):
         """Gets the personal user group for the user.
 
         :param user: The user object.
+
         """
         if user is None:
             raise TimDbException("No such user")
@@ -439,9 +463,10 @@ class Users(TimDbBase):
 
     def get_user_groups(self, user_id: int) -> List[dict]:
         """Gets the user groups of a user.
-        
+
         :param user_id: The id of the user.
         :returns: The user groups that the user belongs to.
+
         """
 
         cursor = self.db.cursor()
@@ -460,6 +485,7 @@ class Users(TimDbBase):
 
         :param user_id: The id of the user.
         :returns: The user groups that the user belongs to.
+
         """
         groups = self.get_user_groups(user_id)
         for group in groups:
@@ -467,7 +493,7 @@ class Users(TimDbBase):
                 group['name'] = group['name'][:max_group_len]
         return groups
 
-    def get_users_in_group(self, group_id: int, limit:int=1000) -> List[dict]:
+    def get_users_in_group(self, group_id: int, limit: int=1000) -> List[dict]:
         cursor = self.db.cursor()
         cursor.execute("""SELECT UserGroupMember.User_id as id, UserAccount.real_name as name, UserAccount.email as email
                           FROM UserGroupMember
@@ -502,7 +528,7 @@ class Users(TimDbBase):
                      duration: Optional[timedelta]=None,
                      commit: bool=True) -> BlockAccess:
         """Grants access to a group for a block.
-        
+
         :param duration_from: The optional start time for duration unlock.
         :param duration_to: The optional end time for duration unlock.
         :param accessible_from: The optional start time for the permission.
@@ -513,6 +539,7 @@ class Users(TimDbBase):
         :param block_id: The id of the block for which to grant view access.
         :param access_type: The kind of access. Possible values are listed in accesstype table.
         :return: The BlockAccess object.
+
         """
 
         if accessible_from is None and duration is None:
@@ -536,18 +563,20 @@ class Users(TimDbBase):
 
     def grant_view_access(self, group_id: int, block_id: int):
         """Grants view access to a group for a block.
-        
+
         :param group_id: The group id to which to grant view access.
         :param block_id: The id of the block for which to grant view access.
+
         """
 
         self.grant_access(group_id, block_id, 'view')
 
     def grant_edit_access(self, group_id: int, block_id: int):
         """Grants edit access to a group for a block.
-        
+
         :param group_id: The group id to which to grant view access.
         :param block_id: The id of the block for which to grant view access.
+
         """
 
         self.grant_access(group_id, block_id, 'edit')
@@ -585,6 +614,7 @@ class Users(TimDbBase):
         :param user_id: The user id to check.
         :param block_id: The block id to check.
         :returns: True if the user with id 'user_id' has view access to the block 'block_id', false otherwise.
+
         """
         return self.has_access(user_id,
                                block_id,
@@ -601,6 +631,7 @@ class Users(TimDbBase):
         :param user_id: The user id to check.
         :param block_id: The block id to check.
         :returns: True if the user with id 'user_id' has teacher access to the block 'block_id', false otherwise.
+
         """
         return self.has_access(user_id, block_id, self.get_manage_access_id(), self.get_teacher_access_id(),
                                self.get_owner_access_id())
@@ -611,18 +642,20 @@ class Users(TimDbBase):
         :param user_id: The user id to check.
         :param block_id: The block id to check.
         :returns: True if the user with id 'user_id' has manage access to the block 'block_id', false otherwise.
+
         """
         return self.has_access(user_id, block_id, self.get_manage_access_id(),
                                self.get_owner_access_id())
 
     def has_access(self, user_id: int, block_id: int, *access_ids) -> bool:
         """Returns whether the user has any of the specific kind of access types to the specified block.
-        
+
         :param user_id: The user id to check.
         :param block_id: The block id to check.
         :param access_ids: List of access type ids to be checked.
         :returns: True if the user with id 'user_id' has a specific kind of access to the block 'block_id',
                   false otherwise.
+
         """
 
         if self.has_admin_access(user_id):
@@ -686,10 +719,11 @@ class Users(TimDbBase):
 
     def has_edit_access(self, user_id: int, block_id: int) -> bool:
         """Returns whether the user has edit access to the specified block.
-        
+
         :param user_id:
         :param block_id:
         :returns: True if the user with id 'user_id' has edit access to the block 'block_id', false otherwise.
+
         """
 
         return self.has_access(user_id, block_id, self.get_edit_access_id(), self.get_manage_access_id(),
@@ -704,10 +738,11 @@ class Users(TimDbBase):
 
     def user_is_owner(self, user_id: int, block_id: int) -> bool:
         """Returns whether the user belongs to the owners of the specified block.
-        
+
         :param user_id:
         :param block_id:
         :returns: True if the user with 'user_id' belongs to the owner group of the block 'block_id'.
+
         """
         return self.has_access(user_id, block_id, self.get_owner_access_id())
 
@@ -716,6 +751,7 @@ class Users(TimDbBase):
 
         :param user_id: The id of the user.
         :returns: The user preferences as a string.
+
         """
         cursor = self.db.cursor()
         cursor.execute("""SELECT prefs FROM UserAccount WHERE id = %s""", [user_id])
@@ -729,6 +765,7 @@ class Users(TimDbBase):
 
         :param user_id: The id of the user.
         :param prefs: The preferences to set.
+
         """
         cursor = self.db.cursor()
         cursor.execute("""UPDATE UserAccount SET prefs = %s WHERE id = %s""", [prefs, user_id])
@@ -760,9 +797,11 @@ class Users(TimDbBase):
 
     def remove_membership(self, uid: int, gid: int, commit: bool=True) -> int:
         """Removes membership of a user from a group.
+
         :param uid: The user id.
         :param gid: The group id.
         :returns: The number of affected rows (0 or 1).
+
         """
         c = self.db.cursor()
         c.execute("""DELETE FROM UserGroupMember WHERE User_id = %s and UserGroup_id = %s""", [uid, gid])
@@ -777,7 +816,7 @@ class Users(TimDbBase):
                                is_admin: bool=False,
                                commit: bool=True):
         user = self.create_user(name, real_name or name, email or name + '@example.com', password=password or '',
-                                   commit=False)
+                                commit=False)
         group = self.create_usergroup(name, commit=False)
         self.add_user_to_group(group.id, user.id, commit=False)
         if is_admin:

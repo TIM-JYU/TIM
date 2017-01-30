@@ -13,7 +13,9 @@ from tests.server.timroutetest import TimRouteTest
 #   /<int:doc_id>/create_velp_group
 #   /<int:doc_id>/create_default_velp_group
 
+
 class VelpTest(TimRouteTest):
+
     def test_velp(self):
         db = self.get_db()
         self.login_test1()
@@ -24,7 +26,7 @@ class VelpTest(TimRouteTest):
         test_doc3 = '{}/test3'.format(deeper_folder)
         root_velp_group_folder = "velp-groups"
         user_velp_group_folder = "{}/velp-groups".format(user_folder)   # users/testuser1/velp groups
-        deep_velp_group_folder = "{}/velp-groups".format(deeper_folder) # users/testuser1/test/velp groups
+        deep_velp_group_folder = "{}/velp-groups".format(deeper_folder)  # users/testuser1/test/velp groups
         Folder.create(user_folder, 7)
         Folder.create(deeper_folder, 7)
         Folder.create(root_velp_group_folder, 7)
@@ -53,7 +55,7 @@ class VelpTest(TimRouteTest):
 
         # Create new velp group (after default group) so we should have 2 for document in total
         j = self.json_post('/{}/create_velp_group'.format(str(doc1_id)),
-                              {'name': "velp group for doc 1", "target_type": 1})
+                           {'name': "velp group for doc 1", "target_type": 1})
         self.assertEqual("velp group for doc 1", j['name'])
         resp = self.get('/{}/get_velp_groups'.format(str(doc1_id)))
         self.assertEqual(len(resp), 2)
@@ -99,31 +101,31 @@ class VelpTest(TimRouteTest):
         self.assertEqual(len(resp), 0)
 
         # Add new velp to doc1 default velp group and check velps for that document after
-        test_data = {'content':'test velp 1', 'velp_groups':[default_group_id], 'language_id':'FI'}
+        test_data = {'content': 'test velp 1', 'velp_groups': [default_group_id], 'language_id': 'FI'}
         velp_id = self.json_post('/add_velp', test_data)
-        self.assertEqual(velp_id, 1) # Added velp's id is 1 as it was the first ever velp added
+        self.assertEqual(velp_id, 1)  # Added velp's id is 1 as it was the first ever velp added
         resp = self.get('/{}/get_velps'.format(str(doc1_id)))
         self.assertEqual(len(resp), 1)
         self.assertEqual(resp[0]['content'], "test velp 1")
 
         # Change just added velp's content
-        test_data = {'content':'Is Zorg now', 'velp_groups':[default_group_id], 'language_id':'FI', 'id':1}
+        test_data = {'content': 'Is Zorg now', 'velp_groups': [default_group_id], 'language_id': 'FI', 'id': 1}
         self.json_post('/{}/update_velp'.format(str(doc1_id)), test_data)
         resp = self.get('/{}/get_velps'.format(str(doc1_id)))
         self.assertEqual(resp[0]['content'], "Is Zorg now")
 
         # Next add velp label, attach it to a velp
-        label_id = self.json_post('/add_velp_label', {'content':'test label'})['id']
-        test_data = {'content':'Is Zorg now', 'velp_groups':[default_group_id], 'language_id':'FI', 'id':velp_id,
-                    'labels':[label_id]}
+        label_id = self.json_post('/add_velp_label', {'content': 'test label'})['id']
+        test_data = {'content': 'Is Zorg now', 'velp_groups': [default_group_id], 'language_id': 'FI', 'id': velp_id,
+                     'labels': [label_id]}
         self.json_post('/{}/update_velp'.format(str(doc1_id)), test_data)
         resp = self.get('/{}/get_velp_labels'.format(str(doc1_id)))
         self.assertEqual(resp[0]['content'], 'test label')
 
         # Add a new velp label and update previous one
-        self.json_post('/add_velp_label', {'content':'test label intensifies'})
-        self.json_post('/update_velp_label', {'id':label_id, 'content':'Zorg label'})
+        self.json_post('/add_velp_label', {'content': 'test label intensifies'})
+        self.json_post('/update_velp_label', {'id': label_id, 'content': 'Zorg label'})
         resp = self.get('/{}/get_velp_labels'.format(str(doc1_id)))
         self.assertNotEqual(resp[0]['content'], 'test label')
         self.assertEqual(len(resp), 1)  # Added velp label wasn't added to any velp and thus it can't be found
-                                        # when searching velp labels for doc1
+        # when searching velp labels for doc1

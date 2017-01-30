@@ -11,6 +11,7 @@ comment_selector = CSSSelector('div.notes > div.note')
 
 
 class CommentTest(TimRouteTest):
+
     def test_comments(self):
         self.login_test1()
         d = self.create_doc(initial_par='test').document

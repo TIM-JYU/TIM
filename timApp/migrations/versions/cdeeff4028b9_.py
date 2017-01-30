@@ -1,8 +1,6 @@
 """Drop translation.doc_title column.
 
-Revision ID: cdeeff4028b9
-Revises: 70a159e42ba6
-Create Date: 2016-12-14 15:00:33.269003
+Revision ID: cdeeff4028b9 Revises: 70a159e42ba6 Create Date: 2016-12-14 15:00:33.269003
 
 """
 

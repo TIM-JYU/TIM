@@ -2,10 +2,11 @@ from timdb.tim_models import db
 
 
 class GamificationDocumentType(db.Model):
-    """
-    Created by TIMG
-    This class represents the GamificationDocumentType database table, that differentiates documents for gamification
-    point purposes. Currently only two types exist (Lectures = 1, Demos = 2).
+    """Created by TIMG This class represents the GamificationDocumentType database table, that differentiates documents
+    for gamification point purposes.
+
+    Currently only two types exist (Lectures = 1, Demos = 2).
+
     """
     __bind_key__ = 'tim_main'
     __tablename__ = 'gamificationdocumenttype'

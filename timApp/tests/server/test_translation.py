@@ -3,6 +3,7 @@ from tests.server.timroutetest import TimRouteTest
 
 
 class TranslationTest(TimRouteTest):
+
     def test_translation_create(self):
         self.login_test1()
         doc = self.create_doc()

@@ -4,6 +4,7 @@ from tests.server.timroutetest import TimRouteTest
 
 
 class RedirectTest(TimRouteTest):
+
     def test_redirect(self):
         self.login_test1()
         personal_folder = self.current_user.get_personal_folder().path

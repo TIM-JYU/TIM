@@ -56,12 +56,12 @@ def points_to_float(points: Union[str, float]):
 
 @answers.route("/<plugintype>/<task_id_ext>/answer/", methods=['PUT'])
 def post_answer(plugintype: str, task_id_ext: str):
-    """
-    Saves the answer submitted by user for a plugin in the database.
+    """Saves the answer submitted by user for a plugin in the database.
 
     :param plugintype: The type of the plugin, e.g. csPlugin.
     :param task_id_ext: The extended task id of the form "22.palidrome.par_id".
     :return: JSON
+
     """
     timdb = get_timdb()
     doc_id, task_id_name, par_id = Plugin.parse_task_id(task_id_ext)
@@ -120,7 +120,8 @@ def post_answer(plugintype: str, task_id_ext: str):
             # The initial upload entry was created in /pluginUpload route, so we need to check that the owner matches
             # what the browser is saying. Additionally, we'll associate the answer with the uploaded file later
             # in this route.
-            block = Block.query.filter((Block.description == trimmed_file) & (Block.type_id == blocktypes.UPLOAD)).first()
+            block = Block.query.filter((Block.description == trimmed_file) &
+                                       (Block.type_id == blocktypes.UPLOAD)).first()
             if block is None:
                 abort(400, 'Non-existent upload: {}'.format(trimmed_file))
             verify_view_access(block.id, message="You don't have permission to touch this file.")
@@ -169,7 +170,8 @@ def post_answer(plugintype: str, task_id_ext: str):
     result = {'web': jsonresp['web']}
 
     def addReply(obj, key):
-        if key not in plugin.values: return
+        if key not in plugin.values:
+            return
         textToAdd = plugin.values[key]
         obj[key] = textToAdd
 
@@ -336,7 +338,7 @@ def get_all_answers_as_list(task_ids: List[str]):
     printname = name_opt == 'both'
 
     period_from = datetime.min.replace(tzinfo=timezone.utc)
-    
+
     # TODO: The key will be wrong when getting answers to a document that has only one task
     since_last_key = task_ids[0]
     if len(task_ids) > 1:
@@ -403,9 +405,9 @@ def get_all_answers(task_id):
 def get_state():
     timdb = get_timdb()
     d_id, par_id, user_id, answer_id = unpack_args('doc_id',
-                                                'par_id',
-                                                'user_id',
-                                                'answer_id', types=[int, str, int, int])
+                                                   'par_id',
+                                                   'user_id',
+                                                   'answer_id', types=[int, str, int, int])
     plugin_params = {}
     review = get_option(request, 'review', False)
     if review:
@@ -421,7 +423,7 @@ def get_state():
     if user is None:
         abort(400, 'Non-existent user')
 
-    doc.plugin_md = True # force for plugin attribute markdown calculation
+    doc.plugin_md = True  # force for plugin attribute markdown calculation
 
     texts, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                   [block],

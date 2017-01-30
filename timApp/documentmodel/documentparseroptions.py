@@ -1,4 +1,5 @@
 class DocumentParserOptions:
+
     def __init__(self, break_on_empty_line=False,
                  break_on_code_block=True,
                  break_on_header=True,

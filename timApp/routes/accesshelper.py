@@ -65,8 +65,9 @@ def verify_seeanswers_access(block_id, require=True, message=None, check_duratio
 
 
 class ItemLockedException(Exception):
-    """The exception that is raised (in /view route) when a user attempts to access an item
-    for which he has a duration access that has not yet begun."""
+    """The exception that is raised (in /view route) when a user attempts to access an item for which he has a duration
+    access that has not yet begun."""
+
     def __init__(self, access: BlockAccess):
         self.access = access  # type: BlockAccess
 
@@ -232,9 +233,9 @@ def get_par_from_request(doc: Document, par_id=None, task_id_name=None):
 def get_orig_doc_and_par_id_from_request():
     ref_from = ((request.get_json() or {}).get('ref_from') or {})
     doc_id = ref_from.get('docId', get_option(request, 'ref_from_doc_id',
-                                         default=None, cast=int))
+                                              default=None, cast=int))
     par_id = ref_from.get('par', get_option(request, 'ref_from_par_id',
-                                       default=None))
+                                            default=None))
     return doc_id, par_id
 
 

@@ -1,8 +1,6 @@
 """Add default_comment column to velpcontent table.
 
-Revision ID: 209fc28604ba
-Revises: 70a159e42ba6
-Create Date: 2016-12-21 08:58:18.215477
+Revision ID: 209fc28604ba Revises: 70a159e42ba6 Create Date: 2016-12-21 08:58:18.215477
 
 """
 

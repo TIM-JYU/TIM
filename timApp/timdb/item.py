@@ -4,6 +4,7 @@ from utils import split_location, date_to_relative
 
 
 class Item:
+
     @property
     def block(self):
         # Relationships are not loaded when constructing an object with __init__.

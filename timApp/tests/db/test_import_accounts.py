@@ -6,6 +6,7 @@ from tests.db.timdbtest import TimDbTest
 
 
 class AccountImportTest(TimDbTest):
+
     def test_import_accounts(self):
         num_accounts = 100
         accounts = [(name + '@example.com', name, name + 'uname') for name in

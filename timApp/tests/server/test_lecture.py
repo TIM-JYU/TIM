@@ -7,6 +7,7 @@ from tests.server.timroutetest import TimRouteTest
 
 
 class LectureTest(TimRouteTest):
+
     def test_lecture(self):
         self.login_test1()
         doc = self.create_doc(initial_par='testing lecture')
