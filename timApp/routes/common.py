@@ -367,7 +367,6 @@ def validate_item(item_path, item_type):
         abort(400, 'The {} path has invalid characters. Only letters, numbers, underscores and dashes are allowed.'.format(item_type))
 
     timdb = get_timdb()
-    username = get_current_user_name()
     if DocEntry.find_by_path(item_path, try_translation=True) is not None or timdb.folders.get_folder_id(item_path) is not None:
         abort(403, 'Item with a same name already exists.')
 
