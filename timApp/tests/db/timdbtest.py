@@ -1,6 +1,7 @@
 import glob
 import os
 import unittest
+from typing import Union, List
 
 import sqlalchemy.exc
 
@@ -60,12 +61,16 @@ class TimDbTest(unittest.TestCase):
         db.session.remove()
         self.db.close()
 
-    def init_doc(self, doc: Document, from_file, initial_par, settings):
+    def init_doc(self, doc: Document, from_file, initial_par: Union[str, List[str]], settings):
         if from_file is not None:
             with open(from_file, encoding='utf-8') as f:
                 doc.add_text(f.read())
         elif initial_par is not None:
-            doc.add_text(initial_par)
+            if isinstance(initial_par, str):
+                doc.add_text(initial_par)
+            elif isinstance(initial_par, list):
+                for p in initial_par:
+                    doc.add_text(p)
         if settings is not None:
             doc.set_settings(settings)
 

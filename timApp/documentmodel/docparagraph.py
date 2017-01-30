@@ -109,6 +109,10 @@ class DocParagraph:
     def __hash__(self):
         return hash(tuple(sorted(self.__dict__.items())))
 
+    @staticmethod
+    def help_par():
+        return DocParagraph.create(doc=None, par_id='HELP_PAR')
+
     @classmethod
     def create(cls,
                doc,

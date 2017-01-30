@@ -65,9 +65,9 @@ def paste_from_clipboard(doc_id):
     if as_ref and meta.get('disable_ref'):
         abort(400, 'The contents of the clipboard cannot be pasted as a reference.')
 
-    if par_before != '' and par_after == '':
+    if par_before and not par_after:
         pars = clip.paste_before(doc, par_before, as_ref)
-    elif par_before == '' and par_after != '':
+    elif not par_before and par_after:
         pars = clip.paste_after(doc, par_after, as_ref)
     else:
         return abort(400, 'Missing required parameter in request: par_before or par_after (not both)')

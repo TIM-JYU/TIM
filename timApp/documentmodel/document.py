@@ -479,8 +479,8 @@ class Document:
                         f.write(line)
 
     def insert_paragraph(self, text: str,
-                         insert_before_id: Optional[str] = '',
-                         insert_after_id: Optional[str] = '',
+                         insert_before_id: Optional[str] = None,
+                         insert_after_id: Optional[str] = None,
                          attrs: Optional[dict]=None, properties: Optional[dict]=None,
                          par_id: Optional[str]=None) -> DocParagraph:
         """
@@ -492,9 +492,6 @@ class Document:
         :param insert_after_id: Id of the paragraph to insert after, or None if first.
         :return: The inserted paragraph object.
         """
-        if insert_before_id == '' and insert_after_id == '':
-            raise TimDbException('insert_paragraph: missing argument insert_before_id or insert_after_id')
-
         p = DocParagraph.create(
             doc=self,
             par_id=par_id,
@@ -506,20 +503,21 @@ class Document:
         return self.insert_paragraph_obj(p, insert_before_id=insert_before_id, insert_after_id=insert_after_id)
 
     def insert_paragraph_obj(self, p: DocParagraph,
-                             insert_before_id: Optional[str] = '',
-                             insert_after_id: Optional[str] = '') -> DocParagraph:
+                             insert_before_id: Optional[str] = None,
+                             insert_after_id: Optional[str] = None) -> DocParagraph:
 
-        if insert_before_id == '' and insert_after_id == '':
-            raise TimDbException('insert_paragraph_obj: missing argument insert_before_id or insert_after_id')
+        if not insert_before_id and not insert_after_id:
+            return self.add_paragraph_obj(p)
 
-        if insert_before_id is None:
+        if 'HELP_PAR' in (insert_after_id, insert_before_id):
             return self.add_paragraph_obj(p)
 
         p.add_link(self.doc_id)
         p.set_latest()
         old_ver = self.get_version()
         new_ver = self.__increment_version('Inserted', p.get_id(), increment_major=True,
-                                           op_params={'before_id': insert_before_id})
+                                           op_params={'before_id': insert_before_id} if insert_before_id else {
+                                               'after_id': insert_after_id})
         self.__update_metadata([p], old_ver, new_ver)
 
         new_line = p.get_id() + '/' + p.get_hash() + '\n'
