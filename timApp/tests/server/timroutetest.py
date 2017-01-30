@@ -177,7 +177,7 @@ class TimRouteTest(TimDbTest):
             headers = []
         headers.append(('X-Requested-With', 'XMLHttpRequest'))
         resp = self.client.open(url, method=method, headers=headers, **kwargs)
-        self.assertEqual(expect_status, resp.status_code)
+        self.assertEqual(expect_status, resp.status_code, msg=resp.get_data(as_text=True))
         if resp.status_code == 302 and expect_content is not None:
             self.assertEqual(expect_content, resp.location.lstrip('http://localhost/'))
         resp_data = resp.get_data(as_text=True)
