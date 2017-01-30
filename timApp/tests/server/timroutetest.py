@@ -456,7 +456,7 @@ class TimRouteTest(TimDbTest):
 
     def create_doc(self, path: Optional[str] = None,
                    from_file: Optional[str] = None,
-                   initial_par: Optional[str] = None,
+                   initial_par: Optional[Union[str, List[str]]]=None,
                    settings: Optional[Dict] = None,
                    copy_from: Optional[int] = None,
                    cite: Optional[int] = None,
