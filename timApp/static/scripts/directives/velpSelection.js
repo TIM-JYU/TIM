@@ -62,7 +62,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
     var doc_id = $scope.docId;
     var default_velp_group = {id: -1, name: "No access to default group", edit_access: false, show: true, default: true}; // TODO Use route to add this information
-    var default_personal_velp_group = {id: -2, name: "Personal default"};
+    var default_personal_velp_group = {id: -2, name: "Personal-default"};
 
     var velpOrderingKey = "velpOrdering_" + doc_id;
     var velpLabelsKey = "velpLabels_" + doc_id;

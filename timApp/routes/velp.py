@@ -100,7 +100,7 @@ def get_default_personal_velp_group():
     if default_group is not None:
         return set_no_cache_headers(jsonResponse(default_group))
     else:
-        group_name = "Personal default"
+        group_name = "Personal-default"
         new_group_path = personal_velp_group_path + "/" + group_name
         group = DocEntry.find_by_path(new_group_path)
         if group:
