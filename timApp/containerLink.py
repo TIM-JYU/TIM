@@ -17,8 +17,6 @@ SVNPLUGIN_NAME = 'showfile'
 HASKELLPLUGIN_NAME = 'haskellplugins2'
 PALIPLUGIN_NAME = 'pali'
 IMAGEXPLUGIN_NAME = 'imagex'
-
-
 TIM_HOST = app.config['TIM_HOST']
 
 if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'nginx':
@@ -38,8 +36,6 @@ if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'n
         "mcq": {"host": TIM_HOST + ":57000/"},
         "mmcq": {"host": TIM_HOST + ":58000/"},
         "uploader": {"host": app.config['UPLOADER_NGINX_URL']},
-        #"mcq":           {"host": "http://ciao.it.jyu.fi:41941"},
-        #"mmcq":          {"host": "http://ciao.it.jyu.fi:41940"},
         "shortNote": {"host": TIM_HOST + ":59000/"},
         "graphviz": {"host": TIM_HOST + ":60000/", "browser": False},
         "pali": {"host": TIM_HOST + ":61000/"},
@@ -149,7 +145,7 @@ def dict_to_dumbo(pm):
         pm[mkey] = remove_p(v[0])
 
 
-def convert_md(plugin_data):
+def convert_md_old(plugin_data):
     # return
     if type(plugin_data) is dict:
         dict_to_dumbo(plugin_data)
@@ -157,6 +153,16 @@ def convert_md(plugin_data):
     for p in plugin_data:
         pm = p["markup"]
         dict_to_dumbo(pm)
+
+
+def convert_md(plugin_data):
+    if isinstance(plugin_data, dict):
+        plugin_data['markup'] = call_dumbo(plugin_data['markup'], '/mdkeys')
+    elif isinstance(plugin_data, list):
+        markups = [p['markup'] for p in plugin_data]
+        html_markups = call_dumbo(markups, '/mdkeys')
+        for p, h in zip(plugin_data, html_markups):
+            p['markup'] = h
 
 
 def is_plugin_md(doc):

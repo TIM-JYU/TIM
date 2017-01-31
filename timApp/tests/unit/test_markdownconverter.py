@@ -47,6 +47,15 @@ class MarkdownConverterTest(unittest.TestCase):
                          msg='If this test fails, you probably do not have up-to-date Dumbo. '
                              'Run ./pull_all.sh to update.')
 
+    def test_markup_md_conversion(self):
+        self.assertEqual({'test1': 'value1', 'test2': '<em>value2</em>'}, dumboclient.call_dumbo(
+            {'test1': 'value1', 'test2': 'md:*value2*'}, path='/mdkeys'))
+        self.assertEqual(
+            [{'test1': 'value1', 'test2': '<em>value2</em>'}, {'test3': 'value3', 'test4': '<strong>value4</strong>'}],
+            dumboclient.call_dumbo(
+                [{'test1': 'value1', 'test2': 'md:*value2*'}, {'test3': 'value3', 'test4': 'md:**value4**'}],
+                path='/mdkeys'))
+
     def tearDown(self):
         self.d.kill()
 

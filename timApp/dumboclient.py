@@ -3,7 +3,7 @@ import json
 import os
 import subprocess
 from subprocess import DEVNULL, STDOUT
-from typing import List
+from typing import List, Union, Dict
 
 import requests
 import time
@@ -12,11 +12,10 @@ DUMBO_URL = 'http://127.0.0.1:8000'
 DUMBO_PATH = os.path.join("..", "Ephemeral", "Dumbo", "dist", "build", "Dumbo")
 
 
-def launch_dumbo():
+def launch_dumbo() -> subprocess.Popen:
     """Launches Dumbo.
 
     :return: The process object that represents the Dumbo process.
-    :rtype: subprocess.Popen
 
     """
     path = DUMBO_PATH
@@ -28,16 +27,21 @@ def launch_dumbo():
     return p
 
 
-def call_dumbo(md_blocks: List[str]) -> List[str]:
-    """Calls Dumbo for converting the given list of markdown texts to HTML.
+def call_dumbo(data: Union[List[str], Dict, List[Dict]], path='') -> Union[List[str], Dict, List[Dict]]:
+    """Calls Dumbo for converting the given markdown to HTML.
 
-    :type md_blocks: list[str]
-    :rtype: list[str]
-    :param md_blocks: A list of markdown blocks to be converted.
+    :param data: The data to be converted.
+    :param path: The path of the request. Valid paths are: '', '/', '/mdkeys' and '/markdown' (same as '/' and '').
+     If path is '/mdkeys', data is expected to be a Dict or List[Dict]. Any dict value that begins with 'md:' is
+       interpreted as Pandoc markdown and is converted to HTML. Otherwise the value is unchanged.
+       The return value format will be the same as input.
+     Otherwise, data is expected to be a List[str]. Each string is interpreted as Pandoc markdown and is converted to
+     HTML. The return value format will be the same as input.
 
     """
     try:
-        r = requests.post(url=DUMBO_URL, data=json.dumps(md_blocks))
+        r = requests.post(url=DUMBO_URL + path, data=json.dumps(data))
+        r.encoding = 'utf-8'
     except requests.ConnectionError:
         raise Exception('Failed to connect to Dumbo')
     if r.status_code != 200:
