@@ -9,14 +9,12 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
 import qualified Data.Set as Set
 import Control.Lens hiding ((.=))
-import qualified Data.Yaml as YAML
 import Snap.Core
 import Data.Aeson
 import Data.Aeson.Lens
 import Snap.Http.Server
 import Text.Blaze.Html.Renderer.Text
 import Text.TeXMath.Readers.TeX.Macros
-import qualified Data.ByteString.Lazy as LBS
 import Control.Applicative
 
 convert :: String -> T.Text -> Either String LT.Text
@@ -61,23 +59,23 @@ htmlOpts =
 main :: IO ()
 main =
   quickHttpServe $
-  route [("yaml", method POST yaml), ("markdown", method POST markd)] <|>
+  route [("mdkeys", method POST mdkeys), ("markdown", method POST markd)] <|>
   ifTop (method POST markd)
   where
-    yamlRule (String str)
+    mdRule (String str)
       | "MD:" `T.isPrefixOf` str =
         either
           (String . T.pack)
           (String . LT.toStrict)
           (convertBlock id (T.drop 3 str))
-    yamlRule x = x
-    yaml = do
-      bdy <- (YAML.decode . LBS.toStrict) `fmap` readRequestBody 1000000000 -- Allow up to gigabyte at once..
-      writeBS . YAML.encode $
+    mdRule x = x
+    mdkeys = do
+      bdy <- decode `fmap` readRequestBody 1000000000 -- Allow up to gigabyte at once..
+      writeLBS . encode $
         case bdy of
           Nothing ->
-            YAML.object ["error" .= ("Could not decode input" :: T.Text)]
-          Just val -> transform yamlRule val
+            object ["error" .= ("Could not decode input" :: T.Text)]
+          Just val -> transform mdRule val
     markd = do
       bdy <- decode `fmap` readRequestBody 1000000000 -- Allow up to gigabyte at once..
       writeLBS $
