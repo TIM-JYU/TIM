@@ -35,6 +35,7 @@ executable Dumbo
       , vector
       , unordered-containers
       , lens
+      , yaml
       , lens-aeson
       , texmath
   -- hs-source-dirs:      
