@@ -56,6 +56,14 @@ htmlOpts =
     PDC.pandocExtensions `Set.union` Set.singleton PDC_Opt.Ext_latex_macros
   }
 
+stripSome :: (T.Text -> T.Text -> Maybe T.Text) -> T.Text -> T.Text -> T.Text
+stripSome f piece str = case f piece str of
+                          Nothing -> str
+                          Just s -> s
+
+stripP :: T.Text -> T.Text
+stripP = stripSome T.stripSuffix "</p>" . stripSome T.stripPrefix "<p>"
+
 main :: IO ()
 main =
   quickHttpServe $
@@ -63,10 +71,10 @@ main =
   ifTop (method POST markd)
   where
     mdRule (String str)
-      | "MD:" `T.isPrefixOf` str =
+      | "md:" `T.isPrefixOf` str =
         either
-          (String . T.pack)
-          (String . LT.toStrict)
+          (String . stripP  . T.pack)
+          (String . stripP . LT.toStrict)
           (convertBlock id (T.drop 3 str))
     mdRule x = x
     mdkeys = do
