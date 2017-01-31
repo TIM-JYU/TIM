@@ -529,13 +529,9 @@ class Document:
         self.__update_metadata([p], old_ver, new_ver)
 
         new_line = p.get_id() + '/' + p.get_hash() + '\n'
-        line = None
         with open(self.get_version_path(old_ver), 'r') as f_src:
             with open(self.get_version_path(new_ver), 'w') as f:
                 while True:
-                    if line is None and insert_before_id is None:
-                        f.write(new_line)
-
                     line = f_src.readline()
                     if not line:
                         return p
