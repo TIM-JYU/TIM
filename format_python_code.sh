@@ -1,6 +1,6 @@
 #!/bin/bash
 
-findcmd1="find . -not \\( -path modules -prune \\) -name \*.py"
+findcmd1="find . -not \\( -path ./modules/cs/simcir/check -prune \\) -name \*.py"
 findexec1="-exec echo 'Formatting {}...' \;"
 
 findexec2="-exec docformatter --wrap-summaries 120 --wrap-descriptions 120 --in-place '{}' \;"
