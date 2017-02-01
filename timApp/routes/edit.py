@@ -4,14 +4,12 @@ from flask import Blueprint, render_template
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
-from documentmodel.documentparser import DocumentParser, ValidationException, ValidationWarning
-from documentmodel.documentparseroptions import DocumentParserOptions
+from documentmodel.documentparser import ValidationException, ValidationWarning
 from markdownconverter import md_to_html
-from routes.accesshelper import verify_edit_access, verify_view_access, has_manage_access, get_rights, has_view_access
+from routes.accesshelper import verify_edit_access, verify_view_access, get_rights, has_view_access
 from routes.notify import notify_doc_owner
 from routes.sessioninfo import get_current_user_object
 from timdb.bookmarks import Bookmarks
-from timdb.models.docentry import DocEntry
 from timdb.timdbexception import TimDbException
 from utils import get_error_html
 from .common import *
@@ -84,8 +82,7 @@ def update_document(doc_id):
                     timdb.documents.modify_paragraph(doc=d,
                                                      par_id=old_pars[i].get_id(),
                                                      new_content=old_pars[i].get_markdown(),
-                                                     new_attrs=editor_pars[i].get_attrs(),
-                                                     new_properties=old_pars[i].get_properties())
+                                                     new_attrs=editor_pars[i].get_attrs())
             i += 1
         doc = get_document_as_current_user(doc_id)
         duplicates = check_duplicates(doc.get_paragraphs(), doc, timdb)
@@ -150,8 +147,7 @@ def rename_task_ids():
             [par], _ = timdb.documents.modify_paragraph(doc=doc,
                                                         par_id=duplicate[2],
                                                         new_content=original_par.get_markdown(),
-                                                        new_attrs=attrs,
-                                                        new_properties=original_par.get_properties())
+                                                        new_attrs=attrs)
             pars.append(par)
             # Update old pars
             for old_par in old_pars:
@@ -269,39 +265,17 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
         original_md = doc.export_section(par_id, par_id)
         pars = []
 
-        separate_pars = DocumentParser(md).get_blocks()
-        is_multi_block = len(separate_pars) > 1
-        has_headers = None
-        if is_multi_block:
-            new_par_ids = []
-            for separate_par in separate_pars:
-                if separate_par['type'] == 'header':
-                    has_headers = True
-                    break
-
         if editor_pars[0].is_different_from(original_par):
-            properties = {}
-            if is_multi_block:
-                properties['multi_block'] = True
-            if has_headers:
-                properties['has_headers'] = has_headers
             [par], _ = timdb.documents.modify_paragraph(doc=doc,
                                                         par_id=par_id,
                                                         new_content=editor_pars[0].get_markdown(),
-                                                        new_attrs=editor_pars[0].get_attrs(),
-                                                        new_properties=properties)
+                                                        new_attrs=editor_pars[0].get_attrs())
             pars.append(par)
         else:
             # If the first paragraph was not modified at all, append the original one
             pars.append(original_par)
         for p in editor_pars[1:]:
-            properties = {}
-            if is_multi_block:
-                properties['multi_block'] = True
-            if has_headers:
-                properties['has_headers'] = has_headers
-            [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs(),
-                                                     properties=properties)
+            [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs())
             pars.append(par)
             new_par_ids.append(par.get_id())
 
@@ -593,8 +567,7 @@ def cancel_save_paragraphs():
         timdb.documents.modify_paragraph(doc=doc,
                                          par_id=par_id,
                                          new_content=original_par.get('md'),
-                                         new_attrs=original_par.get('attrs'),
-                                         new_properties=original_par.get('props'))
+                                         new_attrs=original_par.get('attrs'))
 
     return jsonResponse({"status": "cancel"})
 
@@ -629,23 +602,9 @@ def add_paragraph_common(md, doc_id, par_next_id):
     editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
     pars = []
-    separate_pars = DocumentParser(md).get_blocks()
-    is_multi_block = len(separate_pars) > 1
-    has_headers = None
     new_par_ids = []
-    if is_multi_block:
-        for separate_par in separate_pars:
-            if separate_par['type'] == 'header':
-                has_headers = True
-                break
     for p in editor_pars:
-        properties = {}
-        if is_multi_block:
-            properties['multi_block'] = True
-        if has_headers:
-            properties['has_headers'] = has_headers
-        [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs(),
-                                                 properties=properties)
+        [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs())
         pars.append(par)
         new_par_ids.append(par.get_id())
     mark_pars_as_read_if_chosen(pars, doc)

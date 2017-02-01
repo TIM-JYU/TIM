@@ -30,7 +30,7 @@ class Documents(TimDbBase):
     def add_paragraph(self, doc: Document,
                       content: str,
                       prev_par_id: Optional[str]=None,
-                      attrs: Optional[dict]=None, properties: Optional[dict]=None) -> Tuple[List[DocParagraph], Document]:
+                      attrs: Optional[dict]=None) -> Tuple[List[DocParagraph], Document]:
         """Adds a new markdown block to the specified document.
 
         :param attrs: The attributes for the paragraph.
@@ -43,7 +43,7 @@ class Documents(TimDbBase):
 
         assert doc.exists(), 'document does not exist: %r' % doc.doc_id
         content = self.trim_markdown(content)
-        par = doc.insert_paragraph(content, insert_before_id=prev_par_id, attrs=attrs, properties=properties)
+        par = doc.insert_paragraph(content, insert_before_id=prev_par_id, attrs=attrs)
         self.update_last_modified(doc)
         return [par], doc
 
@@ -243,8 +243,7 @@ class Documents(TimDbBase):
         return doc
 
     def modify_paragraph(self, doc: Document, par_id: str,
-                         new_content: str, new_attrs: Optional[dict]=None,
-                         new_properties: Optional[dict]=None) -> Tuple[List[DocParagraph], Document]:
+                         new_content: str, new_attrs: Optional[dict]=None) -> Tuple[List[DocParagraph], Document]:
         """Modifies a paragraph in a document.
 
         :param new_attrs: The attributes for the paragraph.
@@ -257,7 +256,7 @@ class Documents(TimDbBase):
 
         assert self.exists(doc.doc_id), 'document does not exist: ' + str(doc.doc_id)
         new_content = self.trim_markdown(new_content)
-        par = doc.modify_paragraph(par_id, new_content, new_attrs, new_properties)
+        par = doc.modify_paragraph(par_id, new_content, new_attrs)
         self.update_last_modified(doc)
         return [par], doc
 

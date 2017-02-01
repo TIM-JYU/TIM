@@ -388,7 +388,7 @@ class Document:
         :return: The same paragraph object, or None if could not add.
 
         """
-        p.add_link(self.doc_id)
+        p.store()
         p.set_latest()
         old_ver = self.get_version()
         new_ver = self.__increment_version('Added', p.get_id(), increment_major=True)
@@ -406,8 +406,7 @@ class Document:
             self,
             text: str,
             par_id: Optional[str]=None,
-            attrs: Optional[dict]=None,
-            properties: Optional[dict]=None
+            attrs: Optional[dict]=None
     ) -> DocParagraph:
         """Appends a new paragraph into the document.
 
@@ -422,13 +421,12 @@ class Document:
             par_id=par_id,
             md=text,
             attrs=attrs,
-            props=properties,
             files_root=self.files_root
         )
         return self.add_paragraph_obj(p)
 
     def add_ref_paragraph(self, src_par: DocParagraph, text: Optional[str] = None,
-                          attrs: Optional[dict] = None, properties: Optional[dict] = None) -> DocParagraph:
+                          attrs: Optional[dict] = None) -> DocParagraph:
 
         ref_attrs = {} if attrs is None else attrs.copy()
         ref_attrs['rp'] = src_par.get_id()
@@ -442,10 +440,10 @@ class Document:
         else:
             text = ''
 
-        return self.add_paragraph(text, attrs=ref_attrs, properties=properties)
+        return self.add_paragraph(text, attrs=ref_attrs)
 
     def add_area_ref_paragraph(self, src_doc: 'Document', src_area_name: str, text: Optional[str] = None,
-                               attrs: Optional[dict] = None, properties: Optional[dict] = None) -> DocParagraph:
+                               attrs: Optional[dict] = None) -> DocParagraph:
 
         ref_attrs = {} if attrs is None else attrs.copy()
         ref_attrs['ra'] = src_area_name
@@ -458,7 +456,7 @@ class Document:
         else:
             text = ''
 
-        return self.add_paragraph(text, attrs=ref_attrs, properties=properties)
+        return self.add_paragraph(text, attrs=ref_attrs)
 
     def delete_paragraph(self, par_id: str):
         """Removes a paragraph from the document.
@@ -480,15 +478,14 @@ class Document:
                     if not line:
                         return
                     if line.startswith(par_id):
-                        p = DocParagraph.get_latest(self, par_id, files_root=self.files_root)
-                        p.remove_link(self.doc_id)
+                        pass
                     else:
                         f.write(line)
 
     def insert_paragraph(self, text: str,
                          insert_before_id: Optional[str] = None,
                          insert_after_id: Optional[str] = None,
-                         attrs: Optional[dict]=None, properties: Optional[dict]=None,
+                         attrs: Optional[dict]=None,
                          par_id: Optional[str]=None) -> DocParagraph:
         """Inserts a paragraph before a given paragraph id.
 
@@ -505,7 +502,6 @@ class Document:
             par_id=par_id,
             md=text,
             attrs=attrs,
-            props=properties,
             files_root=self.files_root
         )
         return self.insert_paragraph_obj(p, insert_before_id=insert_before_id, insert_after_id=insert_after_id)
@@ -520,7 +516,7 @@ class Document:
         if 'HELP_PAR' in (insert_after_id, insert_before_id):
             return self.add_paragraph_obj(p)
 
-        p.add_link(self.doc_id)
+        p.store()
         p.set_latest()
         old_ver = self.get_version()
         new_ver = self.__increment_version('Inserted', p.get_id(), increment_major=True,
@@ -542,29 +538,24 @@ class Document:
                     if insert_after_id and line.startswith(insert_after_id):
                         f.write(new_line)
 
-    def modify_paragraph(self, par_id: str, new_text: str, new_attrs: Optional[dict]=None,
-                         new_properties: Optional[dict]=None) -> DocParagraph:
+    def modify_paragraph(self, par_id: str, new_text: str, new_attrs: Optional[dict]=None) -> DocParagraph:
         """Modifies the text of the given paragraph.
 
         :param par_id: Paragraph id.
         :param new_text: New text.
         :param new_attrs: New attributes.
-        :param new_properties: New properties.
         :return: The new paragraph object.
 
         """
 
         if new_attrs is None:
             new_attrs = self.get_paragraph(par_id).get_attrs()
-        if new_properties is None:
-            new_properties = self.get_paragraph(par_id).get_properties()
 
         p = DocParagraph.create(
             md=new_text,
             doc=self,
             par_id=par_id,
             attrs=new_attrs,
-            props=new_properties,
             files_root=self.files_root
         )
         return self.modify_paragraph_obj(par_id, p)
@@ -574,10 +565,9 @@ class Document:
             raise KeyError('No paragraph {} in document {} version {}'.format(par_id, self.doc_id, self.get_version()))
 
         p_src = DocParagraph.get_latest(self, par_id, files_root=self.files_root)
-        p_src.remove_link(self.doc_id)
         p.set_id(par_id)
         new_hash = p.get_hash()
-        p.add_link(self.doc_id)
+        p.store()
         p.set_latest()
         old_ver = self.get_version()
         old_hash = p_src.get_hash()
