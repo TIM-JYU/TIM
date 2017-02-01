@@ -2,6 +2,7 @@ from tests.server.timroutetest import TimRouteTest
 
 
 class AreaTest(TimRouteTest):
+
     def test_name_area(self):
         self.login_test1()
         d = self.create_doc(initial_par='test')
