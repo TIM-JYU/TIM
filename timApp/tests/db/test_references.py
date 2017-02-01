@@ -38,8 +38,7 @@ class RefTest(TimDbTest):
         self.src_doc = self.doc_create(db, "original")
         self.ref_doc = self.doc_create(db, "referencing")
 
-        self.src_par = self.src_doc.add_paragraph("testpar", attrs={"a": "1", "b": "2"},
-                                                  properties={"p_a": "a", "p_b": "b"})
+        self.src_par = self.src_doc.add_paragraph("testpar", attrs={"a": "1", "b": "2"})
         self.assertEqual(1, len(self.src_doc))
         self.assertEqual(self.src_par.get_id(), self.src_doc.get_paragraphs()[0].get_id())
         return db
@@ -58,7 +57,6 @@ class RefTest(TimDbTest):
         self.assertEqual(self.src_par.get_markdown(), rendered_pars[0].get_markdown())
         self.assertEqual(self.src_par.get_html(), rendered_pars[0].get_html())
         self.assertEqual(self.src_par.get_attrs(), rendered_pars[0].get_attrs())
-        self.assertEqual(self.src_par.get_properties(), rendered_pars[0].get_properties())
 
     def test_translation(self):
         db = self.init_testdb()
@@ -75,8 +73,6 @@ class RefTest(TimDbTest):
         self.assertEqual(ref_par.get_markdown(), rendered_pars[0].get_markdown())
         self.assertEqual(ref_par.get_html(), rendered_pars[0].get_html())
         self.assertEqual(self.dict_merge(self.src_par.get_attrs(), ref_attrs), rendered_pars[0].get_attrs())
-        self.assertEqual(self.dict_merge(self.src_par.get_properties(), ref_par.get_properties()),
-                         rendered_pars[0].get_properties())
 
     def test_circular(self):
         db = self.init_testdb()
@@ -116,7 +112,6 @@ class RefTest(TimDbTest):
         self.assertEqual(self.src_par.get_markdown(), rendered_pars[0].get_markdown())
         self.assertEqual(self.src_par.get_html(), rendered_pars[0].get_html())
         self.assertEqual(self.src_par.get_attrs(), rendered_pars[0].get_attrs())
-        self.assertEqual(self.src_par.get_properties(), rendered_pars[0].get_properties())
 
         # Declare some new attributes
         ref_par1.set_attr('foo', 'fffooo')

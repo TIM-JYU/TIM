@@ -644,30 +644,40 @@ def muotoile_lauseke(lauseke):
         # muokkaillaan lauseketta, yhdistetään operaatioihin termit ja muutetaan järjestystä
         while (len(t) > 1):
             j = 0
+            #print(len(t))
             while j < len(t):
                 # Käsitellään NOT:it ilman sulkeita
+                #print(str(j))
                 if j+1 < len(t) and t[j] == 'NOT' and t[j + 1] != '(':
                     t[j], t[j + 1] = t[j] + '(', t[j + 1] + ')'
                     t[j:j + 2] = [''.join(t[j:j + 2])]
-                    # print('0. t[j]: ' + t[j])
+                    #print('0. j, t[j]: ' + str(j) + ', ' + t[j])
                 # yhdistetään ( -sulkeet sitä edeltävään loogiseen NOT operaatioon
                 if j+1 < len(t) and t[j] == 'NOT' and t[j+1] == '(':
                     t[j:j+2] = [''.join(t[j:j+2])] # x[3:6] = [''.join(x[3:6])]
-                    #print('1. t[j]: ' + t[j])
+                    #print('1. j, t[j]: ' + str(j) + ', ' + t[j])
+                    #print(len(t))
+                    #print(t)
                 # esim. 'NOT(', 'B2', ')' # Yhdistetään NOT sen sisällä olevaan lausekkeeseen
                 elif j+2 < len(t) and t[j] == 'NOT(' and t[j+2] == ')':
                     t[j:j+3] = [''.join(t[j:j+3])]
-                    #print('2. t[j]: ' + t[j])
+                    #print('2. j, t[j]: ' + str(j) + ', ' + t[j])
+                # esim. A AND B tai A XOR B
+                elif len(t) == 3 and j == 0 and t[j+1] in komponentit:
+                    t[j], t[j+1], t[j+2] = t[j+1]+'(', t[j+0]+',', t[j+2]+')'
+                    t[j:j+3] = [''.join(t[j:j+3])]
+                    #print('23. j, t[j]: ' + str(j) + ', ' + t[j])
+                # esim. 'NOT(', 'A', 'AND', 'B', ')' # Yhdistetään NOT sen sisällä olevaan lausekkeeseen
                 # esim. 'NOT(', '...', 'XOR', '...', ')' # Yhdistetään NOT:n sisällä oleva lauseke
-                elif j+5 < len(t) and t[j] == 'NOT(' and t[j+4] == ')' and t[j+2] in komponentit:
+                elif j+4 < len(t) and t[j] == 'NOT(' and t[j+4] == ')' and t[j+2] in komponentit:
                     t[j+1], t[j+2], t[j+3] = t[j+2]+'(', t[j+1]+',', t[j+3]+')'
                     t[j:j+5] = [''.join(t[j:j+5])]
-                    #print('3. t[j]: ' + t[j])
+                    #print('3. j, t[j]: ' + str(j) + ', ' + t[j])
                 # esim. '(', '...', ')', 'AND', '(', '...', ')'
                 elif j-3 >= 0 and j+3 < len(t) and t[j] in komponentit and t[j-1] == ')' and t[j+3] == ')' and t[j-3] == '(' and t[j+1] == '(':
                     t[j-3], t[j-2], t[j-1], t[j], t[j+1] = t[j], t[j-3], t[j-2], ',', ''
                     t[j-3:j+4] = [''.join(t[j-3:j+4])]
-                    #print('4. t[j-3]: ' + t[j-3])
+                    #print('4. j-3, t[j-3]: ' + str(j-3) + ', ' + t[j-3])
                     j = j-3
                 # esim. '...', 'AND', '(', '...', ')'
                 elif j-1 >= 0 and j+3 < len(t) and t[j] in komponentit  and t[j+3] == ')' and t[j+1] == '(' and t[j-1] != ')':

@@ -166,7 +166,7 @@ class Clipboard:
                 # We need to reverse the sequence because we're inserting before, not after
                 new_par_id = par['id'] if not doc.has_paragraph(par['id']) else random_id()
                 new_par = doc.insert_paragraph(par['md'], insert_before_id=par_before, par_id=new_par_id,
-                                               attrs=par.get('attrs'), properties=par.get('properties'))
+                                               attrs=par.get('attrs'))
                 doc_pars = [new_par] + doc_pars
                 par_before = new_par.get_id()
 

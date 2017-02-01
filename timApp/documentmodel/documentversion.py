@@ -81,8 +81,7 @@ class DocumentVersion(Document):
             self,
             text: str,
             par_id: Optional[str]=None,
-            attrs: Optional[dict]=None,
-            properties: Optional[dict]=None
+            attrs: Optional[dict]=None
     ) -> DocParagraph:
         assert False, "Called DocumentVersion.add_paragraph"
 
@@ -94,11 +93,11 @@ class DocumentVersion(Document):
 
     def insert_paragraph(self, text: str,
                          insert_before_id: Optional[str],
-                         attrs: Optional[dict]=None, properties: Optional[dict]=None,
+                         attrs: Optional[dict]=None,
                          par_id: Optional[str]=None) -> DocParagraph:
         assert False, "Called DocumentVersion.delete_paragraph"
 
-    def modify_paragraph(self, par_id: str, new_text: str, new_attrs: Optional[dict]=None, new_properties: Optional[dict]=None) -> DocParagraph:
+    def modify_paragraph(self, par_id: str, new_text: str, new_attrs: Optional[dict]=None) -> DocParagraph:
         assert False, "Called DocumentVersion.modify_paragraph"
 
     def update_section(self, text: str, par_id_first: str, par_id_last: str) -> Tuple[str, str]:
