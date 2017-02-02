@@ -575,7 +575,7 @@ class Document:
                                            op_params={'old_hash': old_hash, 'new_hash': new_hash})
         self.__update_metadata([p], old_ver, new_ver)
 
-        old_line = '{}/{}\n'.format(par_id, old_hash)
+        old_line_start = '{}/'.format(par_id)
         old_line_legacy = '{}\n'.format(par_id)
         new_line = '{}/{}\n'.format(par_id, new_hash)
         with open(self.get_version_path(old_ver), 'r') as f_src:
@@ -584,7 +584,7 @@ class Document:
                     line = f_src.readline()
                     if not line:
                         return p
-                    if line == old_line or line == old_line_legacy:
+                    if line.startswith(old_line_start) or line == old_line_legacy:
                         f.write(new_line)
                     else:
                         f.write(line)

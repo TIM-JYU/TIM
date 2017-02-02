@@ -677,6 +677,15 @@ class DocParagraph:
         """
         return self.__data['attrs'].get(attr_name, default_value)
 
+    def set_markdown(self, new_md: str):
+        """Sets markdown for this paragraph.
+
+        :param new_md: The new markdown.
+
+        """
+        self.__data['md'] = new_md
+        self.__data['t'] = hashfunc(new_md, self.get_attrs())
+
     def set_attr(self, attr_name: str, attr_val: Any):
         """Sets the value of the specified attribute.
 

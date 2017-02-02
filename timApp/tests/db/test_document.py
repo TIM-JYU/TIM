@@ -336,6 +336,32 @@ class DocumentTest(TimDbTest):
         d.update('', d.export_markdown())
         self.assertEqual('', d.export_markdown())
 
+    def test_unsync_work(self):
+        d = self.init_testdoc()
+        p = d.add_paragraph('test')
+        old_hash = p.get_hash()
+        p.set_markdown('test2')
+        p.save()
+        d.clear_mem_cache()
+        pars = d.get_paragraphs()
+        self.assertEqual('test2', pars[0].get_markdown())
+
+        # Simulate the situation where the latest document version has incorrect version of the paragraph
+        # So the hash line in paragraph list is different from where the 'current' symlink points
+        path = d.get_version_path()
+        with open(path, 'w') as f:
+            f.write('{}/{}'.format(p.get_id(), old_hash))
+
+        d.clear_mem_cache()
+        pars = d.get_paragraphs()
+        self.assertEqual('test', pars[0].get_markdown())
+
+        p.set_markdown('test3')
+        p.save()
+        d.clear_mem_cache()
+        pars = d.get_paragraphs()
+        self.assertEqual('test3', pars[0].get_markdown())
+
 
 if __name__ == '__main__':
     unittest.main()
