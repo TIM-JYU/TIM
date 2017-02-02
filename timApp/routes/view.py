@@ -379,10 +379,10 @@ def get_items(folder: str):
     docs = timdb.documents.get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
                                          search_recursively=False,
                                          filter_folder=folder)
-    docs.sort(key=lambda d: d.short_name.lower())
+    docs.sort(key=lambda d: d.title.lower())
     folders = timdb.folders.get_folders(root_path=folder,
                                         filter_ids=get_viewable_blocks_or_none_if_admin())
-    folders.sort(key=lambda d: d.name.lower())
+    folders.sort(key=lambda d: d.title.lower())
     items = folders + docs
     return items
 
