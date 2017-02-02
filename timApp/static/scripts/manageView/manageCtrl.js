@@ -29,7 +29,8 @@ PermApp.controller("PermCtrl", [
 
         sc.getAliases = function() {
             $http.get('/alias/' + sc.item.id, {
-            }).success(function (data, status, headers, config) {
+            }).then(function (response) {
+                var data = response.data;
                 if (sc.aliases.length > 0 &&
                     data.length > 0 &&
                     data[0].path !== sc.aliases[0].path)
@@ -37,8 +38,10 @@ PermApp.controller("PermCtrl", [
                         $window.location.replace('/manage/' + data[0].path);
                 else
                     sc.aliases = data;
-
-            }).error(function (data, status, headers, config) {
+                // mark the form pristine; otherwise it will complain about required field unnecessarily
+                sc.newAliasForm.$setPristine();
+                sc.newAlias = {location: sc.item.location};
+            }, function (data, status, headers, config) {
                 $window.alert("Error loading aliases: " + data.error);
             });
 
@@ -154,8 +157,6 @@ PermApp.controller("PermCtrl", [
             }).error(function (data, status, headers, config) {
                 $window.alert(data.error);
             });
-
-            sc.newAlias = {location: sc.oldFolderName};
         };
 
         sc.removeAlias = function(alias) {

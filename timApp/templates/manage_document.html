@@ -13,7 +13,7 @@
         <div class="form-group" ng-repeat="alias in aliases">
             <ng-form name="innerForm">
                 <div class="col-md-1">
-                    <button title="Remove this alias" class="btn btn-danger btn-sm" ng-click="removeAlias(alias)">
+                    <button type="button" title="Remove this alias" class="btn btn-danger btn-sm" ng-click="removeAlias(alias)">
                         <span class="glyphicon glyphicon-remove"></span>
                     </button>
                 </div>
@@ -41,7 +41,7 @@
                     <tim-error-message for="innerForm.aliasName"></tim-error-message>
                 </div>
                 <div class="col-md-1">
-                    <button class="timButton btn-sm" ng-click="updateAlias(alias, $first)"
+                    <button type="button" class="timButton btn-sm" ng-click="updateAlias(alias, $first)"
                             ng-disabled="!aliasChanged(alias) || innerForm.$invalid"><span class="glyphicon glyphicon-ok"></span>
                     </button>
                 </div>
@@ -73,7 +73,7 @@
                 <tim-error-message for="newAliasForm.newAliasName"></tim-error-message>
             </div>
             <div class="col-md-1">
-                <button class="timButton btn-sm" ng-click="addAlias(newAlias)" ng-disabled="newAliasForm.$invalid">
+                <button type="button" class="timButton btn-sm" ng-click="addAlias(newAlias)" ng-disabled="newAliasForm.$invalid">
                     <span class="glyphicon glyphicon-plus"></span>
                 </button>
             </div>
