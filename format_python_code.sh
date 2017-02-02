@@ -1,6 +1,14 @@
 #!/bin/bash
 
-findcmd1="find . -not \\( -path ./modules/cs/simcir/check -prune \\) -name \*.py"
+# To format all Python files, run without parameters.
+# To format specific file(s), use: ./format_python_code.sh filename
+
+name='\*.py'
+if [ $# -eq 1 ]; then
+ name="\*$1\*.py"
+fi
+
+findcmd1="find . -not \\( -path ./modules/cs/simcir/check -prune \\) -name $name"
 findexec1="-exec echo 'Formatting {}...' \;"
 
 findexec2="-exec docformatter --wrap-summaries 120 --wrap-descriptions 120 --in-place '{}' \;"
