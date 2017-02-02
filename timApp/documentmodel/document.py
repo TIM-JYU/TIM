@@ -588,7 +588,6 @@ class Document:
                         f.write(new_line)
                     else:
                         f.write(line)
-        return p
 
     def parwise_diff(self, other_doc: 'Document', check_html: bool=False):
         if self.get_version() == other_doc.get_version():
