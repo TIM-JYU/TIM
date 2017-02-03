@@ -24,13 +24,15 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
             area_start = sc.getParId($par);
             area_end = sc.getLastParId($pars);
             url = '/postParagraph/';
-
+            options.showDelete = true;
         } else {
             // TODO: Use same route (postParagraph) for both cases, determine logic based on given parameters
             if (par_id === "HELP_PAR" || $pars.hasClass("new")) {
                 url = '/newParagraph/';
+                options.showDelete = false;
             } else {
                 url = '/postParagraph/';
+                options.showDelete = true;
             }
 
             area_start = options.area ? sc.getParId(sc.selection.start) : null;
@@ -150,7 +152,7 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
             });
         }
         else if (pars.length === 1) {
-            sc.toggleParEditor($(pars[0]), {showDelete: true, area: false});
+            sc.toggleParEditor($(pars[0]), {area: false});
         }
         else {
             var start = pars[0];
@@ -158,7 +160,7 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
             sc.selection.start = $(start);
             sc.selection.end = $(end);
             $(pars).addClass('selected');
-            sc.toggleParEditor($(pars), {showDelete: true, area: true});
+            sc.toggleParEditor($(pars), {area: true});
             $(pars).removeClass('selected');
             sc.cancelArea();
         }
@@ -166,12 +168,12 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
 
     sc.showEditWindow = function (e, $par) {
         $(".par.new").remove();
-        sc.toggleParEditor($par, {showDelete: true, area: false});
+        sc.toggleParEditor($par, {area: false});
     };
 
     sc.beginAreaEditing = function (e, $par) {
         $(".par.new").remove();
-        sc.toggleParEditor($par, {showDelete: true, area: true});
+        sc.toggleParEditor($par, {area: true});
     };
 
     sc.createNewPar = function () {
@@ -205,13 +207,13 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
     sc.showAddParagraphAbove = function (e, $par) {
         var $newpar = sc.createNewPar();
         $par.before($newpar);
-        sc.toggleParEditor($newpar, {showDelete: false, area: false});
+        sc.toggleParEditor($newpar, {area: false});
     };
 
     sc.showAddParagraphBelow = function (e, $par) {
         var $newpar = sc.createNewPar();
         $par.after($newpar);
-        sc.toggleParEditor($newpar, {showDelete: false, area: false});
+        sc.toggleParEditor($newpar, {area: false});
     };
 
     sc.addSavedParToDom = function (data, extraData) {
