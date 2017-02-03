@@ -631,10 +631,15 @@ def delete_paragraph(doc_id):
     area_start, area_end = verify_json_params('area_start', 'area_end', require=False)
     doc = get_document_as_current_user(doc_id)
     if area_end and area_start:
+        for p in (area_start, area_end):
+            if not doc.has_paragraph(p):
+                abort(400, 'Paragraph {} does not exist'.format(p))
         text = doc.export_section(area_start, area_end)
         doc.delete_section(area_start, area_end)
     else:
         par_id, = verify_json_params('par')
+        if not doc.has_paragraph(par_id):
+            abort(400, 'Paragraph {} does not exist'.format(par_id))
         text = doc.export_section(par_id, par_id)
         timdb.documents.delete_paragraph(doc, par_id)
 
