@@ -184,5 +184,5 @@ class DocSettings:
     def live_updates(self, default=None):
         return self.__dict.get(self.live_updates_key, default)
 
-    def plugin_md(self, default=None):
+    def plugin_md(self, default=True):
         return self.__dict.get(self.plugin_md_key, default)

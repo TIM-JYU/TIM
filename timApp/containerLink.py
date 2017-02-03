@@ -4,6 +4,7 @@ from functools import lru_cache
 
 import requests
 
+from documentmodel.document import Document
 from documentmodel.timjsonencoder import TimJsonEncoder
 from dumboclient import call_dumbo
 from plugin import PluginException
@@ -81,9 +82,9 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None, params=N
         raise PluginException("Read timeout occurred when calling {}.".format(plugin))
 
 
-def call_plugin_html(doc, plugin, plugin_data, params=None):
+def call_plugin_html(doc: Document, plugin, plugin_data, params=None):
     plugin_data.update(params or {})
-    if is_plugin_md(doc):
+    if doc.get_settings().plugin_md():
         convert_md(plugin_data)
     plugin_data = json.dumps(plugin_data,
                              cls=TimJsonEncoder)
@@ -165,22 +166,12 @@ def convert_md(plugin_data):
             p['markup'] = h
 
 
-def is_plugin_md(doc):
-    if not doc:
-        return False
-    if hasattr(doc, 'settings') and doc.settings.plugin_md():
-        return True
-    if not hasattr(doc, 'plugin_md'):
-        return False
-    return doc.plugin_md
-
-
-def call_plugin_multihtml(doc, plugin, plugin_data, params=None):
+def call_plugin_multihtml(doc: Document, plugin, plugin_data, params=None):
     if params is not None:
         for p in plugin_data:
             p.update(params)
 
-    if is_plugin_md(doc):
+    if doc.get_settings().plugin_md():
         convert_md(plugin_data)
 
     return call_plugin_generic(plugin,
