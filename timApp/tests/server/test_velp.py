@@ -17,7 +17,6 @@ from tests.server.timroutetest import TimRouteTest
 class VelpTest(TimRouteTest):
 
     def test_velp(self):
-        db = self.get_db()
         self.login_test1()
         user_folder = self.current_user.get_personal_folder().path   # users/testuser1
         deeper_folder = '{}/test'.format(user_folder)          # users/testuser1/test
