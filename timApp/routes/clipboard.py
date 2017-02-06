@@ -1,11 +1,19 @@
 """Routes for the clipboard."""
 
 from flask import Blueprint
+from flask import abort
 
+from accesshelper import verify_logged_in
+from accesshelper import verify_view_access, verify_edit_access
+from common import verify_doc_exists, get_document_as_current_user
+from dbaccess import get_timdb
 from documentmodel.clipboard import Clipboard
-from routes.accesshelper import verify_logged_in, verify_view_access, verify_edit_access
+from documentmodel.docparagraph import DocParagraph
+from documentmodel.document import Document
+from requesthelper import verify_json_params
+from responsehelper import json_response, ok_response
 from routes.edit import par_response
-from .common import *
+from sessioninfo import get_current_user_id
 
 clipboard = Blueprint('clipboard',
                       __name__,
@@ -26,7 +34,7 @@ def cut_to_clipboard(doc_id, from_par, to_par):
     pars = clip.cut_pars(doc, from_par, to_par, area_name)
     timdb.documents.update_last_modified(doc)
 
-    return jsonResponse({'doc_ver': doc.get_version(), 'pars': [{'id': p.get_id()} for p in pars]})
+    return json_response({'doc_ver': doc.get_version(), 'pars': [{'id': p.get_id()} for p in pars]})
 
 
 @clipboard.route('/clipboard/copy/<int:doc_id>/<from_par>/<to_par>', methods=['POST'])
@@ -43,7 +51,7 @@ def copy_to_clipboard(doc_id, from_par, to_par):
     clip = Clipboard(timdb.files_root_path).get(get_current_user_id())
     clip.copy_pars(doc, from_par, to_par, area_name, ref_doc)
 
-    return okJsonResponse()
+    return ok_response()
 
 
 @clipboard.route('/clipboard/paste/<int:doc_id>', methods=['POST'])
@@ -105,13 +113,13 @@ def delete_from_source(doc_id):
     clip = Clipboard(timdb.files_root_path).get(get_current_user_id())
     pars = clip.read(as_ref=True, force_parrefs=True)
     if not pars:
-        return jsonResponse({'doc_ver': doc.get_version(), 'pars': []})
+        return json_response({'doc_ver': doc.get_version(), 'pars': []})
 
     my_pars = [{'id': p['attrs']['rp']} for p in pars if p['attrs']['rd'] == str(doc_id)]
     clip.delete_from_source()
     clip.clear()
 
-    return jsonResponse({'doc_ver': doc.get_version(), 'pars': my_pars})
+    return json_response({'doc_ver': doc.get_version(), 'pars': my_pars})
 
 
 @clipboard.route('/clipboard', methods=['GET'])
@@ -138,4 +146,4 @@ def get_clipboard_status():
     timdb = get_timdb()
     clip = Clipboard(timdb.files_root_path).get(get_current_user_id())
     status = clip.read_metadata()
-    return jsonResponse(status)
+    return json_response(status)

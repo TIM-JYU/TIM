@@ -1,6 +1,6 @@
 from datetime import timedelta, datetime, timezone
 
-from routes.filters import humanize_datetime
+from filters import humanize_datetime
 from tests.server.timroutetest import TimRouteTest
 from timdb.accesstype import AccessType
 from timdb.models.docentry import DocEntry

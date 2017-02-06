@@ -13,7 +13,7 @@ from alembic.script import ScriptDirectory
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
-from routes.logger import log_info, enable_loggers, log_error
+from logger import log_info, enable_loggers, log_error
 from sql.migrate_to_postgre import perform_migration
 from tim_app import app
 from timdb import tempdb_models

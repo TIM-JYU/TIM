@@ -1,21 +1,13 @@
 """Routes for qst (question) plugin."""
-from flask import Blueprint, render_template
 import binascii
-import routes.lecture
+import json
 
-from routes.lecture import *
+from flask import Blueprint
+from flask import Response
+from flask import request
 
-from options import get_option
-from routes.accesshelper import verify_manage_access, verify_ownership, get_rights, verify_view_access, \
-    has_manage_access
-from timdb.blocktypes import from_str
-from timdb.models.docentry import DocEntry
-from timdb.models.folder import Folder
-from timdb.models.usergroup import UserGroup
-from flask.helpers import send_file
-
-
-from .common import *
+from responsehelper import json_response
+from routes.lecture import create_points_table, calculate_points_from_json_answer
 
 qst_plugin = Blueprint('qst_plugin',
                        __name__,
@@ -35,7 +27,7 @@ def qst_reqs():
         "multihtml": True,
     }
 
-    return jsonResponse(reqs)
+    return json_response(reqs)
 
 
 @qst_plugin.route("/qst/answer/", methods=["PUT"])
@@ -58,7 +50,7 @@ def qst_answer():
 
     save = answers
     web = {'result': "Vastattu", 'markup': markup, 'show_result': result, 'state': save}
-    return jsonResponse({'save': save, 'web': web, "tim_info": tim_info})
+    return json_response({'save': save, 'web': web, "tim_info": tim_info})
 
 
 @qst_plugin.route("/qst/multihtml/", methods=["POST"])
@@ -67,7 +59,7 @@ def qst_multihtml():
     multi = []
     for jso in jsondata:
         multi.append(qst_get_html(jso))
-    return jsonResponse(multi)
+    return json_response(multi)
 
 
 @qst_plugin.route("/qst/html/", methods=["POST"])

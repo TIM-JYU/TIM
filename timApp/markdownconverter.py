@@ -10,6 +10,7 @@ from htmlSanitize import sanitize_html
 from utils import get_error_html
 
 
+# noinspection PyUnusedLocal
 def has_macros(text, macros, macro_delimiter=None):
     return macro_delimiter is not None
 
@@ -225,7 +226,7 @@ def change_class(text_containing_html_tag: str, text_content: str, new_class: st
         else:
             text_content = '<span class="' + new_class + '">' + text_content + '</span>'
     # If there is an error we do nothing but return the original text
-    except ValueError as e:
+    except ValueError:
         pass
     return [text_containing_html_tag, text_content]
 

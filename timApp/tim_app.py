@@ -14,8 +14,8 @@ from flask_migrate import Migrate
 from sqlalchemy.sql.ddl import CreateTable
 
 from documentmodel.timjsonencoder import TimJsonEncoder
-from routes.filters import map_format, timdate, humanize_timedelta, humanize_datetime
-from routes.logger import setup_logging, log_info, log_warning
+from filters import map_format, timdate, humanize_timedelta, humanize_datetime
+from logger import setup_logging, log_info, log_warning
 # noinspection PyUnresolvedReferences
 from timdb.tim_models import db
 

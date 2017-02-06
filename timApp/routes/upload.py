@@ -9,16 +9,16 @@ from flask import Blueprint, request, send_file
 from flask import abort
 from werkzeug.utils import secure_filename
 
-from plugin import Plugin
-from routes.accesshelper import verify_view_access, verify_seeanswers_access, verify_task_access, \
+from accesshelper import verify_view_access, verify_seeanswers_access, verify_task_access, \
     grant_access_to_session_users
-from routes.common import jsonResponse, validate_item_and_create, \
-    validate_uploaded_document_content
-from routes.dbaccess import get_timdb
-from routes.sessioninfo import get_current_user_name, get_current_user_group, logged_in
+from dbaccess import get_timdb
+from plugin import Plugin
+from responsehelper import json_response
+from validation import validate_item_and_create, validate_uploaded_document_content
+from sessioninfo import get_current_user_name, get_current_user_group, logged_in
 from timdb.accesstype import AccessType
-from timdb.models.block import Block
 from timdb.blocktypes import blocktypes
+from timdb.models.block import Block
 
 upload = Blueprint('upload',
                    __name__,
@@ -74,6 +74,7 @@ def get_upload(relfilename: str):
     return send_file(f, mimetype=mt, add_etags=False)
 
 
+# noinspection PyUnusedLocal
 @upload.route('/pluginUpload/<int:doc_id>/<task_id>/<user_id>/', methods=['POST'])
 def pluginupload_file2(doc_id: int, task_id: str, user_id):
     return pluginupload_file(doc_id, task_id)
@@ -97,7 +98,7 @@ def pluginupload_file(doc_id: int, task_id: str):
     p = os.path.join(timdb.uploads.blocks_path, relfilename)
     mt = get_mimetype(p)
     relfilename = os.path.join('/uploads', relfilename)
-    return jsonResponse({"file": relfilename, "type": mt, "block": answerupload.block.id})
+    return json_response({"file": relfilename, "type": mt, "block": answerupload.block.id})
 
 
 @upload.route('/upload/', methods=['POST'])
@@ -118,7 +119,7 @@ def upload_file():
     validate_item_and_create(path, 'document', get_current_user_group())
 
     doc = timdb.documents.import_document(content, path, get_current_user_group())
-    return jsonResponse({'id': doc.doc_id})
+    return json_response({'id': doc.doc_id})
 
 
 def try_upload_image(image_file):
@@ -130,7 +131,7 @@ def try_upload_image(image_file):
                                                       secure_filename(image_file.filename),
                                                       get_current_user_group())
         timdb.users.grant_view_access(0, img_id)  # So far everyone can see all images
-        return jsonResponse({"file": str(img_id) + '/' + img_filename})
+        return json_response({"file": str(img_id) + '/' + img_filename})
     else:
         abort(400, 'Invalid image type')
 
@@ -144,13 +145,13 @@ def upload_image_or_file(image_file):
                                                       secure_filename(image_file.filename),
                                                       get_current_user_group())
         timdb.users.grant_view_access(timdb.users.get_anon_group_id(), img_id)  # So far everyone can see all images
-        return jsonResponse({"image": str(img_id) + '/' + img_filename})
+        return json_response({"image": str(img_id) + '/' + img_filename})
     else:
         file_id, file_filename = timdb.files.saveFile(content,
                                                       secure_filename(image_file.filename),
                                                       get_current_user_group())
         timdb.users.grant_view_access(timdb.users.get_anon_group_id(), file_id)  # So far everyone can see all files
-        return jsonResponse({"file": str(file_id) + '/' + file_filename})
+        return json_response({"file": str(file_id) + '/' + file_filename})
 
 
 @upload.route('/files/<int:file_id>/<file_filename>')

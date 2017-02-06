@@ -1,17 +1,19 @@
-from routes.common import *
+"""
+Tested routes from velp.py:
+  /<int:doc_id>/get_default_velp_group
+  /<int:doc_id>/get_velps
+  /<int:doc_id>/get_velp_groups
+  /<int:doc_id>/get_velp_labels
+  /add_velp
+  /<int:doc_id>/update_velp
+  /add_velp_label
+  /update_velp_label
+  /<int:doc_id>/create_velp_group
+  /<int:doc_id>/create_default_velp_group
+"""
 from tests.server.timroutetest import TimRouteTest
-
-# Tested routes from velp.py
-#   /<int:doc_id>/get_default_velp_group
-#   /<int:doc_id>/get_velps
-#   /<int:doc_id>/get_velp_groups
-#   /<int:doc_id>/get_velp_labels
-#   /add_velp
-#   /<int:doc_id>/update_velp
-#   /add_velp_label
-#   /update_velp_label
-#   /<int:doc_id>/create_velp_group
-#   /<int:doc_id>/create_default_velp_group
+from timdb.models.docentry import DocEntry
+from timdb.models.folder import Folder
 
 
 class VelpTest(TimRouteTest):

@@ -1,22 +1,36 @@
 """Routes for document view."""
 import time
 import traceback
-from typing import Tuple, Union, Optional
+from typing import Tuple, Union, Optional, List
 
 from flask import Blueprint, render_template
+from flask import abort
+from flask import current_app
+from flask import flash
+from flask import redirect
+from flask import request
+from flask import session
 
+import pluginControl
 import routes.lecture
+from accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
+    get_rights, get_viewable_blocks_or_none_if_admin, can_write_to_folder, has_edit_access
+from common import get_user_settings, save_last_page, has_special_chars, post_process_pars, \
+    hide_names_in_teacher, is_considered_unpublished
+from dbaccess import get_timdb
+from documentmodel.docparagraph import DocParagraph
 from documentmodel.docsettings import DocSettings
-from documentmodel.document import get_index_from_html_list, dereference_pars
+from documentmodel.document import get_index_from_html_list, dereference_pars, Document
 from htmlSanitize import sanitize_html
-from options import get_option
-from routes.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
-    get_rights, get_viewable_blocks_or_none_if_admin
-from routes.logger import log_error
-from routes.sessioninfo import get_current_user_object
+from logger import log_error
+from requesthelper import get_option
+from responsehelper import json_response
+from sessioninfo import get_current_user_object, get_current_user_id, logged_in
+from timdb.models.docentry import DocEntry
+from timdb.models.folder import Folder
+from timdb.models.user import User
 from timdb.timdbexception import TimDbException
 from utils import remove_path_special_chars
-from .common import *
 
 Range = Tuple[int, int]
 
@@ -120,12 +134,12 @@ def par_info(doc_id, par_id):
     if par_name is not None:
         info['par_name'] = par_name
 
-    return jsonResponse(info)
+    return json_response(info)
 
 
 @view_page.route("/getItems")
 def items_route():
-    return jsonResponse(get_items(request.args.get('folder', '')))
+    return json_response(get_items(request.args.get('folder', '')))
 
 
 @view_page.route("/view/")
@@ -313,7 +327,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
         do_lazy = get_option(request, "lazy", doc_settings.lazy(
             default=plugin_count >= current_app.config['PLUGIN_COUNT_LAZY_LIMIT']))
 
-    texts, jsPaths, cssPaths, modules = post_process_pars(doc,
+    texts, js_paths, css_paths, modules = post_process_pars(doc,
                                                           xs,
                                                           current_list_user or current_user,
                                                           sanitize=False,
@@ -345,8 +359,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
                            headers=index,
                            plugin_users=user_list,
                            version=doc.get_version(),
-                           js=jsPaths,
-                           cssFiles=cssPaths,
+                           js=js_paths,
+                           cssFiles=css_paths,
                            jsMods=modules,
                            doc_css=doc_css,
                            start_index=start_index,
@@ -414,5 +428,5 @@ def check_updated_pars(doc_id, major, minor):
                                'js': js_paths,
                                'css': css_paths,
                                'angularModule': modules}
-    return jsonResponse({'diff': diffs,
+    return json_response({'diff': diffs,
                          'version': d.get_version()})

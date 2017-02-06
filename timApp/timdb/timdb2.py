@@ -3,7 +3,7 @@ import os
 import time
 from time import sleep
 
-from routes.logger import log_info, log_debug, log_error, log_warning
+from logger import log_info, log_debug, log_error, log_warning
 from timdb.annotations import Annotations
 from timdb.answers import Answers
 from timdb.documents import Documents
@@ -21,7 +21,6 @@ from timdb.uploads import Uploads
 from timdb.users import Users
 from timdb.velpgroups import VelpGroups
 from timdb.velps import Velps
-
 
 num = 0
 

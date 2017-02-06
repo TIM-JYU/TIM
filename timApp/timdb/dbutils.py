@@ -33,7 +33,7 @@ def insert_block(description: Optional[str], owner_group_id: Optional[int], bloc
 
 def copy_default_rights(item_id: int, item_type, commit=True):
     # TODO: Should not need to import anything from routes
-    from routes.dbaccess import get_timdb
+    from dbaccess import get_timdb
     timdb = get_timdb()
     default_rights = []
     folder = Block.query.get(item_id).parent

@@ -3,41 +3,51 @@
 import http.client
 import imghdr
 import io
+import os
+import re
 import shutil
 import time
 import traceback
+from datetime import datetime
 from datetime import timezone
 
 import werkzeug.exceptions as ex
 from flask import Blueprint
-from flask import g
+from flask import Response
+from flask import g, abort, flash
+from flask import redirect
 from flask import render_template
+from flask import request
+from flask import session
 from flask import stream_with_context
-from flask.helpers import send_file
+from flask.helpers import send_file, url_for
 from flask_assets import Environment
-from sqlalchemy.exc import IntegrityError
 from markupsafe import Markup
+from sqlalchemy.exc import IntegrityError
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
 import containerLink
 from ReverseProxied import ReverseProxied
-from documentmodel.documentversion import DocumentVersion
-from plugin import PluginException
-from routes.accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
+from accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
     has_view_access, has_manage_access, grant_access_to_session_users, ItemLockedException, \
-    get_viewable_blocks_or_none_if_admin
+    get_viewable_blocks_or_none_if_admin, has_ownership
+from cache import cache
+from common import get_preferences, verify_doc_exists
+from dbaccess import get_timdb
+from documentmodel.document import Document
+from documentmodel.documentversion import DocumentVersion
+from logger import log_info, log_error, log_debug
+from plugin import PluginException
+from requesthelper import verify_json_params
+from responsehelper import safe_redirect, json_response, ok_response
 from routes.annotation import annotations
 from routes.answer import answers
 from routes.bookmarks import bookmarks
-from routes.cache import cache
 from routes.clipboard import clipboard
-from routes.common import *
-from routes.dbaccess import get_timdb
 from routes.edit import edit_page
 from routes.generateMap import generateMap
 from routes.groups import groups
-from routes.lecture import getTempDb, user_in_lecture, lecture_routes
-from routes.logger import log_info, log_error, log_debug
+from routes.lecture import get_tempdb, user_in_lecture, lecture_routes
 from routes.login import login_page, logout
 from routes.manage import manage_page
 from routes.notes import notes
@@ -45,21 +55,23 @@ from routes.notify import notify, send_email
 from routes.qst import qst_plugin
 from routes.readings import readings
 from routes.search import search_routes
-from routes.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
-    get_current_user_name, get_current_user_group, logged_in
 from routes.settings import settings_page
 from routes.upload import upload
 from routes.velp import velps
 from routes.view import view_page
+from sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
+    get_current_user_name, get_current_user_group, logged_in
 from tim_app import app
 from timdb.blocktypes import from_str, blocktypes
 from timdb.bookmarks import Bookmarks
 from timdb.dbutils import copy_default_rights
 from timdb.models.docentry import DocEntry
-from timdb.models.translation import Translation
-from timdb.tim_models import db
 from timdb.models.folder import Folder
+from timdb.models.translation import Translation
+from timdb.models.user import User
+from timdb.tim_models import db
 from timdb.users import NoSuchUserException, DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME
+from validation import validate_item_and_create
 
 cache.init_app(app)
 
@@ -105,7 +117,7 @@ def error_generic(error, code):
                                code=code,
                                status=http.client.responses[code]), code
     else:
-        return jsonResponse({'error': error.description}, code)
+        return json_response({'error': error.description}, code)
 
 
 @app.context_processor
@@ -134,6 +146,7 @@ def bad_request(error):
     return error_generic(error, 400)
 
 
+# noinspection PyClassHasNoInit
 class Forbidden(ex.HTTPException):
     code = 403
     description = "Sorry, you don't have permission to view this resource."
@@ -237,7 +250,7 @@ def reset_css():
     """Removes CSS cache directories and thereby forces SASS to regenerate them the next time they are needed.
 
     Requires admin privilege.
-    :return: okJsonResponse
+    :return: ok_response
 
     """
     verify_admin()
@@ -247,7 +260,7 @@ def reset_css():
     gen_dir = os.path.join('static', app.config['SASS_GEN_PATH'])
     if os.path.exists(gen_dir):
         shutil.rmtree(gen_dir)
-    return okJsonResponse()
+    return ok_response()
 
 
 @app.route('/download/<int:doc_id>')
@@ -295,11 +308,11 @@ def get_templates():
     current_path = request.args.get('item_path', '')
     timdb = get_timdb()
     templates = []
-    d = DocEntry.find_by_path(current_path, try_translation=True)
-    if not d:
+    doc = DocEntry.find_by_path(current_path, try_translation=True)
+    if not doc:
         abort(404)
-    verify_edit_access(d.id)
-    current_path = d.parent.path
+    verify_edit_access(doc.id)
+    current_path = doc.parent.path
 
     while True:
         for t in timdb.documents.get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
@@ -311,7 +324,7 @@ def get_templates():
             break
         current_path, _ = timdb.folders.split_location(current_path)
     templates.sort(key=lambda d: d.short_name.lower())
-    return jsonResponse(templates)
+    return json_response(templates)
 
 
 def create_item(item_path, item_type_str, item_title, create_function, owner_group_id):
@@ -357,7 +370,7 @@ def create_document():
     if copied_content:
         item.document.update(copied_content, item.document.export_markdown())
 
-    return jsonResponse(item)
+    return json_response(item)
 
 
 @app.route("/translations/<int:doc_id>", methods=["GET"])
@@ -369,7 +382,7 @@ def get_translations(doc_id):
     if not has_view_access(doc_id):
         abort(403, 'Permission denied')
 
-    return jsonResponse(DocEntry.find_by_id(doc_id, try_translation=True).translations)
+    return json_response(DocEntry.find_by_id(doc_id, try_translation=True).translations)
 
 
 def valid_language_id(lang_id):
@@ -400,11 +413,12 @@ def create_translation(tr_doc_id, language):
 
     src_doc = Document(doc_id)
     cite_doc = timdb.documents.create_citation(src_doc, get_current_user_group())
+    # noinspection PyArgumentList
     tr = Translation(doc_id=cite_doc.id, src_docid=src_doc.doc_id, lang_id=language)
     tr.title = title
     db.session.add(tr)
     db.session.commit()
-    return jsonResponse(tr)
+    return json_response(tr)
 
 
 @app.route("/translation/<int:doc_id>", methods=["POST"])
@@ -423,10 +437,10 @@ def update_translation(doc_id):
         db.session.commit()
     except IntegrityError:
         abort(403, 'This language already exists.')
-    return okJsonResponse()
+    return ok_response()
 
 
-def create_citation_doc(docid, path, title):
+def create_citation_doc(doc_id, doc_path, doc_title):
     params, = verify_json_params('params', require=False)
 
     # Filter for allowed reference parameters
@@ -437,14 +451,14 @@ def create_citation_doc(docid, path, title):
         params = {'r': 'c'}
 
     timdb = get_timdb()
-    verify_edit_access(docid)
+    verify_edit_access(doc_id)
 
-    src_doc = Document(docid)
+    src_doc = Document(doc_id)
 
     def factory(path, group, title):
         return timdb.documents.create_citation(src_doc, group, path, title, params)
-    item = create_item(path, 'document', title, factory, get_current_user_group())
-    return jsonResponse(item)
+    item = create_item(doc_path, 'document', doc_title, factory, get_current_user_group())
+    return json_response(item)
 
 
 @app.route("/getBlock/<int:doc_id>/<par_id>")
@@ -453,10 +467,10 @@ def get_block(doc_id, par_id):
     area_start = request.args.get('area_start')
     area_end = request.args.get('area_end')
     if area_start and area_end:
-        return jsonResponse({"text": Document(doc_id).export_section(area_start, area_end)})
+        return json_response({"text": Document(doc_id).export_section(area_start, area_end)})
     else:
         par = Document(doc_id).get_paragraph(par_id)
-        return jsonResponse({"text": par.get_exported_markdown()})
+        return json_response({"text": par.get_exported_markdown()})
 
 
 @app.route("/<plugin>/<path:filename>")
@@ -468,6 +482,7 @@ def plugin_call(plugin, filename):
         abort(404)
 
 
+# noinspection PyUnusedLocal
 @app.route("/echoRequest/<path:filename>")
 def echo_request(filename):
     def generate():
@@ -482,7 +497,7 @@ def get_index(doc_id):
     verify_view_access(doc_id)
     index = Document(doc_id).get_index()
     if not index:
-        return jsonResponse({'empty': True})
+        return json_response({'empty': True})
     else:
         return render_template('content.html',
                                headers=index)
@@ -504,7 +519,7 @@ def set_session_setting(setting, value):
             session['settings'] = {}
         session['settings'][setting] = value
         session.modified = True
-        return jsonResponse(session['settings'])
+        return json_response(session['settings'])
     except (NameError, KeyError):
         abort(404)
 
@@ -513,7 +528,7 @@ def set_session_setting(setting, value):
 def get_server_time():
     t2 = int(time.time() * 1000)
     t1 = int(request.args.get('t1'))
-    return jsonResponse({'t1': t1, 't2': t2, 't3': int(time.time() * 1000)})
+    return json_response({'t1': t1, 't2': t2, 't3': int(time.time() * 1000)})
 
 
 @app.route("/")
@@ -537,13 +552,13 @@ def getslidestatus():
     if 'doc_id' not in request.args:
         abort(404, "Missing doc id")
     doc_id = int(request.args['doc_id'])
-    tempdb = getTempDb()
+    tempdb = get_tempdb()
     status = tempdb.slidestatuses.get_status(doc_id)
     if status:
         status = status.status
     else:
         status = None
-    return jsonResponse(status)
+    return json_response(status)
 
 
 @app.route("/setslidestatus")
@@ -553,9 +568,9 @@ def setslidestatus():
     doc_id = int(request.args['doc_id'])
     verify_manage_access(doc_id)
     status = request.args['status']
-    tempdb = getTempDb()
+    tempdb = get_tempdb()
     tempdb.slidestatuses.update_or_add_status(doc_id, status)
-    return jsonResponse("")
+    return json_response("")
 
 
 @app.before_request
@@ -609,6 +624,7 @@ def del_g(response):
     return response
 
 
+# noinspection PyUnusedLocal
 @app.teardown_appcontext
 def close_db(e):
     if not app.config['TESTING'] and hasattr(g, 'timdb'):

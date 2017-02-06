@@ -7,12 +7,18 @@ as well as adding comments to the annotations. The module also retrieves the ann
 
 """
 
-from flask import Blueprint
-
-from routes.accesshelper import verify_logged_in
-from timdb.annotations import Annotations
-from .common import *
 import re
+from typing import Dict
+
+from flask import Blueprint
+from flask import abort
+from flask import request
+
+from accesshelper import verify_logged_in
+from dbaccess import get_timdb
+from responsehelper import json_response, ok_response
+from sessioninfo import get_current_user_id
+from timdb.annotations import Annotations
 
 annotations = Blueprint('annotations',
                         __name__,
@@ -108,7 +114,7 @@ def add_annotation() -> Dict:
     #     comment_data = dict(content=default_comment, annotation_id=new_id)
     #     add_comment_helper(comment_data)
 
-    return jsonResponse({"id": new_id, "annotator_name": annotator_name})
+    return json_response({"id": new_id, "annotator_name": annotator_name})
 
 
 @annotations.route("/update_annotation", methods=['POST'])
@@ -124,7 +130,7 @@ def update_annotation():
         - points: number of points
         - doc_id: document ID.
 
-    :return: okJsonResponse()
+    :return: ok_response()
 
     """
     verify_logged_in()
@@ -151,7 +157,7 @@ def update_annotation():
     if visible_to:
         try:
             visible_to = Annotations.AnnotationVisibility(visible_to)
-        except ValueError as e:
+        except ValueError:
             return abort(400, "Visibility should be 1, 2, 3 or 4.")
         new_values['visible_to'] = visible_to
 
@@ -169,7 +175,7 @@ def update_annotation():
     timdb.annotations.update_annotation(new_values['id'], new_values['velp_version_id'],
                                         new_values['visible_to'], new_values['points'], new_values['icon_id'],
                                         new_values['color'])
-    return okJsonResponse()
+    return ok_response()
 
 
 def is_hex_string(color: str) -> bool:
@@ -193,7 +199,7 @@ def invalidate_annotation():
     Required key(s):
         - annotation_id: annotation ID
 
-    :return: okJsonResponse()
+    :return: ok_response()
 
     """
     json_data = request.get_json()
@@ -213,7 +219,7 @@ def invalidate_annotation():
     # TODO: Add option to choose when annotation gets invalidated
     timdb.annotations.invalidate_annotation(annotation_id)
 
-    return okJsonResponse()
+    return ok_response()
 
 
 @annotations.route("/add_annotation_comment", methods=['POST'])
@@ -244,7 +250,7 @@ def add_comment_helper(json_data) -> Dict:
     commenter_id = get_current_user_id()
     timdb.annotations.add_comment(annotation_id, commenter_id, content)
     # TODO notice with email to annotator if commenter is not itself
-    return jsonResponse(timdb.users.get_user(commenter_id))
+    return json_response(timdb.users.get_user(commenter_id))
 
 
 @annotations.route("/<int:doc_id>/get_annotations", methods=['GET'])
@@ -267,6 +273,6 @@ def get_annotations(doc_id: int):
 
     results = timdb.annotations.get_annotations_with_comments_in_document(get_current_user_id(), user_has_see_answers,
                                                                           user_has_teacher, user_has_owner, doc_id)
-    response = jsonResponse(results)
+    response = json_response(results)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     return response

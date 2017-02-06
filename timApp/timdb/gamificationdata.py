@@ -1,11 +1,13 @@
 # Collection of gamification functions
-from timdb.models.docentry import DocEntry
-import yaml
 import json
+
+import yaml
 from flask import request
+
+import common
 import pluginControl
-from routes.dbaccess import get_timdb
-from routes import common
+from dbaccess import get_timdb
+from timdb.models.docentry import DocEntry
 
 
 def gamify(initial_data):

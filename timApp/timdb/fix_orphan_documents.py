@@ -1,7 +1,7 @@
 """Finds all documents that do not have a DocEntry and creates a DocEntry for them under 'orphans' directory."""
 from typing import List
 
-from routes.dbaccess import get_timdb
+from dbaccess import get_timdb
 from tim_app import app
 from timdb.models.block import Block
 from timdb.models.docentry import DocEntry

@@ -1,79 +1,30 @@
 """Common functions for use with routes."""
 import json
 import os
-import re
 from collections import defaultdict
 from datetime import datetime
 from typing import List, Dict
-from urllib.parse import urlparse, urljoin
 
 import dateutil.parser
-import magic
 import pytz
-from bs4 import UnicodeDammit
-from flask import current_app, session, abort, Response, request, redirect, url_for, flash
+from flask import current_app, session, abort, request, flash
 
 import pluginControl
+from accesshelper import has_ownership, has_edit_access
+from dbaccess import get_timdb
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
-from documentmodel.timjsonencoder import TimJsonEncoder
 from markdownconverter import expand_macros, create_environment
-from routes.accesshelper import has_ownership, can_write_to_folder, has_edit_access
-from routes.dbaccess import get_timdb
-from routes.sessioninfo import get_session_usergroup_ids, get_current_user_id, get_current_user_name, \
-    get_current_user_group, logged_in
+from sessioninfo import get_session_usergroup_ids, get_current_user_id, get_current_user_group, logged_in
 from theme import Theme
-from timdb.invalidreferenceexception import InvalidReferenceException
-from timdb.models.docentry import DocEntry
-from timdb.models.folder import Folder
 from timdb.models.user import User
 from utils import generate_theme_scss, get_combined_css_filename, ThemeNotFoundException
-
-
-def is_safe_url(url):
-    host_url = urlparse(request.host_url)
-    test_url = urlparse(urljoin(request.host_url, url))
-    return test_url.scheme in ['http', 'https'] and \
-        host_url.netloc == test_url.netloc
-
-
-def safe_redirect(url, **values):
-    if is_safe_url(url):
-        return redirect(url, **values)
-    return redirect(url_for('indexPage'))
 
 
 def verify_doc_exists(doc_id, message="Sorry, the document does not exist."):
     timdb = get_timdb()
     if not timdb.documents.exists(doc_id):
         abort(404, message)
-
-
-def jsonResponse(jsondata, status_code=200):
-    response = Response(to_json_str(jsondata), mimetype='application/json')
-    response.status_code = status_code
-    return response
-
-
-def to_json_str(jsondata):
-    return json.dumps(jsondata,
-                      separators=(',', ':'),
-                      cls=TimJsonEncoder)
-
-
-def set_no_cache_headers(response: Response) -> Response:
-    """Sets headers for the response that should prevent any caching of the result.
-
-    :param response: Response to be modified.
-    :return: We also return the modified object for convenience.
-
-    """
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
-    return response
-
-
-def okJsonResponse():
-    return jsonResponse({'status': 'ok'})
 
 
 def get_document_as_current_user(doc_id: int) -> Document:
@@ -85,45 +36,6 @@ def get_document_as_current_user(doc_id: int) -> Document:
     """
 
     return Document(doc_id, modifier_group_id=get_current_user_group())
-
-
-def verify_document_version(doc_id, version):
-    timdb = get_timdb()
-    latest = Document(doc_id).get_version()
-    if version != latest:
-        abort(400, 'The document version you edited is no longer the latest version. '
-                   'Please refresh the page and try again.')
-
-
-def verify_json_params(*args, require=True, default=None):
-    """
-
-    :type args: list[str]
-    :rtype: tuple[str]
-    """
-    result = ()
-    json_params = request.get_json() or []
-    for arg in args:
-        if arg in json_params:
-            val = json_params[arg]
-        elif not require:
-            val = default
-        else:
-            abort(400, 'Missing required parameter in request: {}'.format(arg))
-            return ()
-
-        result += (val,)
-    return result
-
-
-def unpack_args(*args, types):
-    result = ()
-    json_params = request.args
-    for idx, arg in enumerate(args):
-        if arg not in json_params:
-            abort(400, 'Missing required parameter in request: {}'.format(arg))
-        result = result + (types[idx](json_params[arg]),)
-    return result
 
 
 def hide_names_in_teacher(doc_id):
@@ -339,49 +251,8 @@ def process_areas(html_pars: List[Dict]) -> List[Dict]:
     return new_pars
 
 
-def get_referenced_pars_from_req(par):
-    if par.is_reference():
-        try:
-            return [ref_par for ref_par in par.get_referenced_pars(set_html=False, tr_get_one=False)]
-        except InvalidReferenceException as e:
-            abort(404, str(e))
-    else:
-        return [par]
-
-
 def has_special_chars(item_path):
     return set(item_path.lower()) - set('abcdefghijklmnopqrstuvwxyz0123456789/-_')
-
-
-def validate_item(item_path, item_type):
-    if not logged_in():
-        abort(403, 'You have to be logged in to perform this action.'.format(item_type))
-
-    if item_path is None:
-        abort(400, 'item_name was None')
-
-    if not all(part for part in item_path.split('/')):
-        abort(400, 'The {} path cannot have empty parts.'.format(item_type))
-
-    if re.match('^(\d)*$', item_path) is not None:
-        abort(400, 'The {} path can not be a number to avoid confusion with document id.'.format(item_type))
-
-    if has_special_chars(item_path):
-        abort(400, 'The {} path has invalid characters. Only letters, numbers, underscores and dashes are allowed.'.format(item_type))
-
-    timdb = get_timdb()
-    if DocEntry.find_by_path(item_path, try_translation=True) is not None or timdb.folders.get_folder_id(item_path) is not None:
-        abort(403, 'Item with a same name already exists.')
-
-    if not can_write_to_folder(item_path):
-        abort(403, 'You cannot create {}s in this folder.'.format(item_type))
-
-
-def validate_item_and_create(item_name, item_type, owner_group_id):
-    timdb = get_timdb()
-    validate_item(item_name, item_type)
-    item_path, _ = timdb.folders.split_location(item_name)
-    Folder.create(item_path, owner_group_id, apply_default_rights=True)
 
 
 def get_user_settings():
@@ -436,19 +307,3 @@ def is_considered_unpublished(doc_id):
     timdb = get_timdb()
     owner = timdb.users.get_owner_group(doc_id)
     return has_ownership(doc_id) and (not owner or not owner.is_large()) and len(timdb.users.get_rights_holders(doc_id)) <= 1
-
-
-def validate_uploaded_document_content(file_content):
-    raw = file_content.read()
-    mime = magic.Magic(mime=True)
-    mimetype = mime.from_buffer(raw)
-    if mimetype not in current_app.config['ALLOWED_DOCUMENT_UPLOAD_MIMETYPES']:
-        abort(400, 'Only markdown files are allowed. This file appears to be {}.'.format(mimetype))
-
-    # UnicodeDammit gives incorrect results if the encoding is UTF-8 without BOM,
-    # so try the built-in function first.
-    try:
-        content = raw.decode('utf-8')
-    except UnicodeDecodeError:
-        content = UnicodeDammit(raw).unicode_markup
-    return content

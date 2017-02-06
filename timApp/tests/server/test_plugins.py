@@ -10,7 +10,7 @@ from lxml import html
 
 from documentmodel.pointsumrule import PointSumRule, PointType
 from plugin import Plugin
-from routes.sessioninfo import get_current_user_object
+from sessioninfo import get_current_user_object
 from tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME
 from tests.server.timroutetest import TimRouteTest
 from timdb.tim_models import db

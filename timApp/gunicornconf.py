@@ -14,5 +14,6 @@ limit_request_line = 0
 timeout = 600
 
 
+# noinspection PyUnusedLocal
 def pre_request(worker, req):
     timdb2.worker_pid = worker.pid

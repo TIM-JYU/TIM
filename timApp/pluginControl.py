@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 """Functions for dealing with plugin paragraphs."""
 import json
-import yaml
-
+from collections import OrderedDict
 from typing import List, Tuple, Optional
 
-from timdb.models.user import User
-from timtiming import taketime
-from timdb import gamificationdata
-
-from collections import OrderedDict
+import yaml
+from flask import render_template
 
 from containerLink import call_plugin_html, call_plugin_multihtml, PLUGINS
 from containerLink import get_plugin_needs_browser
@@ -17,10 +13,10 @@ from containerLink import get_plugin_tim_url
 from containerLink import plugin_reqs
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import dereference_pars, Document
-from plugin import PluginException, parse_plugin_values, Plugin
+from plugin import PluginException, Plugin
+from timdb import gamificationdata
+from timdb.models.user import User
 from utils import get_error_html
-from flask import render_template
-
 
 LAZYSTART = "<!--lazy "
 LAZYEND = " lazy-->"
@@ -31,6 +27,7 @@ NEVERLAZY = "NEVERLAZY"
 def get_error_html_plugin(plugin_name, message, response=None):
     """
 
+    :param response:
     :type message: str
     :type plugin_name: str
     """

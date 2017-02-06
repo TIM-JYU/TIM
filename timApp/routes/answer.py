@@ -1,22 +1,34 @@
 """Answer-related routes."""
-from datetime import timezone, timedelta
-from typing import Union
+import json
+from datetime import timezone, timedelta, datetime
+from typing import Union, List
 
 import dateutil.parser
+import dateutil.relativedelta
 from flask import Blueprint
+from flask import Response
+from flask import abort
+from flask import request
 
 import containerLink
-from options import get_option
+import pluginControl
+from accesshelper import verify_logged_in
+from accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, has_teacher_access, \
+    verify_view_access, get_par_from_request
+from common import hide_names_in_teacher
+from dbaccess import get_timdb
+from documentmodel.document import Document
 from plugin import Plugin, PluginException
-from routes.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, has_teacher_access, \
-    verify_view_access, verify_logged_in, get_par_from_request
-from routes.sessioninfo import get_current_user_object, get_session_users
+from requesthelper import verify_json_params, unpack_args, get_option
+from responsehelper import json_response, ok_response
+from sessioninfo import get_current_user_id, logged_in
+from sessioninfo import get_current_user_object, get_session_users, get_current_user_group
 from timdb.accesstype import AccessType
 from timdb.blocktypes import blocktypes
 from timdb.models.block import Block
+from timdb.models.user import User
 from timdb.tim_models import AnswerUpload, Answer, db
 from timdb.timdbexception import TimDbException
-from .common import *
 
 answers = Blueprint('answers',
                     __name__,
@@ -43,7 +55,7 @@ def save_points(answer_id, user_id):
         abort(400, str(e))
     a.last_points_modifier = get_current_user_group()
     db.session.commit()
-    return okJsonResponse()
+    return ok_response()
 
 
 def points_to_float(points: Union[str, float]):
@@ -80,7 +92,7 @@ def post_answer(plugintype: str, task_id_ext: str):
         # and not part of the document.
         return abort(400, str(e))
     if 'input' not in request.get_json():
-        return jsonResponse({'error': 'The key "input" was not found from the request.'}, 400)
+        return json_response({'error': 'The key "input" was not found from the request.'}, 400)
     answerdata = request.get_json()['input']
 
     answer_browser_data = request.get_json().get('abData', {})
@@ -156,28 +168,28 @@ def post_answer(plugintype: str, task_id_ext: str):
                         'taskID': task_id,
                         'info': info}
 
+    plugin_response = containerLink.call_plugin_answer(plugintype, answer_call_data)
     try:
-        plugin_response = containerLink.call_plugin_answer(plugintype, answer_call_data)
         jsonresp = json.loads(plugin_response)
     except ValueError:
-        return jsonResponse({'error': 'The plugin response was not a valid JSON string. The response was: ' +
-                                      plugin_response}, 400)
+        return json_response({'error': 'The plugin response was not a valid JSON string. The response was: ' +
+                                       plugin_response}, 400)
     except PluginException:
-        return jsonResponse({'error': 'The plugin response took too long'}, 400)
+        return json_response({'error': 'The plugin response took too long'}, 400)
 
     if 'web' not in jsonresp:
-        return jsonResponse({'error': 'The key "web" is missing in plugin response.'}, 400)
+        return json_response({'error': 'The key "web" is missing in plugin response.'}, 400)
     result = {'web': jsonresp['web']}
 
-    def addReply(obj, key):
+    def add_reply(obj, key):
         if key not in plugin.values:
             return
-        textToAdd = plugin.values[key]
-        obj[key] = textToAdd
+        text_to_add = plugin.values[key]
+        obj[key] = text_to_add
 
-    addReply(result['web'], '-replyImage')
-    addReply(result['web'], '-replyMD')
-    addReply(result['web'], '-replyHTML')
+    add_reply(result['web'], '-replyImage')
+    add_reply(result['web'], '-replyMD')
+    add_reply(result['web'], '-replyHTML')
     if 'save' in jsonresp:
         save_object = jsonresp['save']
         tags = []
@@ -234,7 +246,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             upload.answer_id = result['savedNew']
             db.session.commit()
 
-    return jsonResponse(result)
+    return json_response(result)
 
 
 def get_hidden_name(user_id):
@@ -258,7 +270,7 @@ def get_task_info(task_id):
                 'deadline': plugin.deadline(),
                 'starttime': plugin.starttime(),
                 'answerLimit': plugin.answer_limit()}
-    return jsonResponse(tim_vars)
+    return json_response(tim_vars)
 
 
 @answers.route("/answers/<task_id>/<user_id>")
@@ -286,7 +298,7 @@ def get_answers(task_id, user_id):
             for c in answer['collaborators']:
                 if should_hide_name(doc_id, c['user_id']):
                     c['real_name'] = get_hidden_name(c['user_id'])
-    return jsonResponse(user_answers)
+    return json_response(user_answers)
 
 
 @answers.route("/allDocumentAnswersPlain/<int:doc_id>")
@@ -398,7 +410,7 @@ def get_all_answers_as_list(task_ids: List[str]):
 @answers.route("/allAnswers/<task_id>")
 def get_all_answers(task_id):
     all_answers = get_all_answers_as_list(task_id)
-    return jsonResponse(all_answers)
+    return json_response(all_answers)
 
 
 @answers.route("/getState")
@@ -436,7 +448,7 @@ def get_state():
                                                     plugin_params=plugin_params,
                                                     wrap_in_div=False) if review else ([None], None, None, None)
 
-    return jsonResponse({'html': texts[0]['html'], 'reviewHtml': reviewhtml['html'] if review else None})
+    return json_response({'html': texts[0]['html'], 'reviewHtml': reviewhtml['html'] if review else None})
 
 
 def verify_answer_access(answer_id, user_id, require_teacher_if_not_own=False):
@@ -473,4 +485,4 @@ def get_task_users(task_id):
             if should_hide_name(doc_id, user['id']):
                 user['name'] = '-'
                 user['real_name'] = get_hidden_name(user['id'])
-    return jsonResponse(users)
+    return json_response(users)

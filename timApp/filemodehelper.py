@@ -1,6 +1,7 @@
 import os
 
 
+# noinspection PyUnusedLocal
 def change_permission_and_retry(func, path, exc_info):
     import stat
 

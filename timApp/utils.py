@@ -5,6 +5,8 @@ import shutil
 from datetime import datetime, timezone
 
 import yaml
+import yaml.parser
+import yaml.scanner
 from typing import List, Optional, Tuple
 from yaml import CLoader
 
@@ -86,6 +88,7 @@ def correct_yaml(text):
     pm = re.compile("^( *)[^ :]+:[ ]*\|[ ]*[^ ]+[ ]*$")  # program: ||| or  program: |!!!
     multiline = False
     end_str = ''
+    indent = None
     for line in lines:
         line = line.rstrip()
         if p.match(line) and not multiline:
@@ -142,11 +145,12 @@ def count_chars(md, char):
     return num_ticks
 
 
-def get_error_html(message, response=None):
+def get_error_html(message: str, response: Optional[str]=None):
     """Wraps an error message in an HTML element with class 'error'.
 
+    :param response: The plugin response string.
     :param message: The message to be displayed in the error.
-
+    :return: The sanitized error message HTML.
     """
 
     return sanitize_html('<div class="error">{}{}</div>'.format(str(message),

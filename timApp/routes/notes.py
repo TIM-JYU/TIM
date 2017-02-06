@@ -1,11 +1,16 @@
 from flask import Blueprint
+from flask import abort
+from flask import request
 
-from routes.accesshelper import verify_comment_right, verify_logged_in, verify_view_access
-from routes.common import *
-from routes.dbaccess import get_timdb
+from accesshelper import verify_comment_right, verify_logged_in
+from accesshelper import verify_view_access
+from dbaccess import get_timdb
+from documentmodel.document import Document
+from requesthelper import get_referenced_pars_from_req
+from responsehelper import json_response
 from routes.edit import par_response
 from routes.notify import notify_doc_owner
-from routes.sessioninfo import get_current_user_id, get_current_user_group
+from sessioninfo import get_current_user_id, get_current_user_group
 
 notes = Blueprint('notes',
                   __name__,
@@ -36,7 +41,7 @@ def get_note(note_id):
     note['tags'] = {}
     for tag in KNOWN_TAGS:
         note['tags'][tag] = tag in tags
-    return jsonResponse({'text': note['content'], 'extraData': note})
+    return json_response({'text': note['content'], 'extraData': note})
 
 
 @notes.route("/postNote", methods=['POST'])

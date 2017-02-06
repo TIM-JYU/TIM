@@ -1,20 +1,32 @@
 """Routes for login view."""
 import codecs
+import os
 import random
+import re
 import string
+from typing import Dict
 
 import requests
 import requests.exceptions
 from flask import Blueprint, render_template
+from flask import abort
+from flask import flash
+from flask import redirect
+from flask import request
+from flask import session
+from flask import url_for
 from yubico_client import Yubico
 from yubico_client.yubico_exceptions import YubicoError
 
-from options import get_option
-from routes.accesshelper import verify_logged_in, verify_admin
+from accesshelper import verify_logged_in, verify_admin
+from dbaccess import get_timdb
+from logger import log_error
+from requesthelper import verify_json_params, get_option
+from responsehelper import safe_redirect, json_response, ok_response
 from routes.notify import send_email
-from routes.sessioninfo import get_current_user, get_other_users, get_session_users_ids, get_other_users_as_list
-from .common import *
-from .logger import log_error
+from sessioninfo import get_current_user, get_other_users, get_session_users_ids, get_other_users_as_list
+from sessioninfo import get_current_user_id, logged_in
+from timdb.models.user import User
 
 login_page = Blueprint('login_page',
                        __name__,
@@ -31,7 +43,7 @@ def get_real_name(email):
 
 
 def is_valid_email(email):
-    return re.match('^[\w\.-]+@([\w-]+\.)+[\w-]+$', email) is not None
+    return re.match('^[\w.-]+@([\w-]+\.)+[\w-]+$', email) is not None
 
 
 @login_page.route("/logout", methods=['POST'])
@@ -54,7 +66,7 @@ def logout():
         session.pop('other_users', None)
         session.pop('adding_user', None)
         session['user_name'] = 'Anonymous'
-    return jsonResponse(dict(current_user=get_current_user(), other_users=get_other_users_as_list()))
+    return json_response(dict(current_user=get_current_user(), other_users=get_other_users_as_list()))
 
 
 @login_page.route("/login")
@@ -217,15 +229,15 @@ def alt_signup_after():
     timdb = get_timdb()
 
     if not timdb.users.test_potential_user(email, oldpass):
-        return jsonResponse({'message': 'Authentication failure'}, 403)
+        return json_response({'message': 'Authentication failure'}, 403)
 
     user_data = timdb.users.get_user_by_email(email)
     if user_data is not None:
         # User with this email already exists
         user_id = user_data['id']
-        nameId = timdb.users.get_user_id_by_name(username)
+        name_id = timdb.users.get_user_id_by_name(username)
 
-        if nameId is not None and nameId != user_id:
+        if name_id is not None and name_id != user_id:
             flash('User name already exists. Please try another one.', 'loginmsg')
             return finish_login(ready=False)
 
@@ -272,7 +284,7 @@ def alt_login():
         # Registered user
         user = timdb.users.get_user_by_email(email)
         # Check if the users' group exists
-        if (len(timdb.users.get_usergroups_by_name(user['name'])) == 0):
+        if len(timdb.users.get_usergroups_by_name(user['name'])) == 0:
             gid = timdb.users.create_usergroup(user['name']).id
             timdb.users.add_user_to_group(gid, user['id'])
         set_user_to_session(user)
@@ -297,13 +309,6 @@ def alt_login():
     return finish_login(ready=False)
 
 
-@login_page.route("/testuser")
-@login_page.route("/testuser/<path:anything>")
-def testuser(anything=None):
-    flash("Testuser route has been removed; please sign up using email.")
-    return redirect(url_for('view_page.index_page'))
-
-
 def save_came_from():
     came_from = request.args.get('came_from') or request.form.get('came_from')
     if came_from:
@@ -325,7 +330,7 @@ def finish_login(ready=True):
     if not request.is_xhr:
         return safe_redirect(came_from + anchor)
     else:
-        return jsonResponse(dict(current_user=get_current_user(), other_users=get_other_users_as_list()))
+        return json_response(dict(current_user=get_current_user(), other_users=get_other_users_as_list()))
 
 
 @login_page.route("/quickLogin/<username>")
@@ -380,7 +385,7 @@ def yubi_register(otp):
         abort(403, 'Authentication failed')
 
     timdb.users.update_user_field(get_current_user_id(), 'yubikey', otp[:12])
-    return okJsonResponse()
+    return ok_response()
 
 
 @login_page.route("/yubi_login/<username>/<otp>")

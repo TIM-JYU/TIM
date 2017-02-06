@@ -1,18 +1,30 @@
 """Routes for editing a document."""
+import json
+from typing import List
+
 import yaml
 from flask import Blueprint, render_template
+from flask import abort
+from flask import current_app
+from flask import request
 
+from accesshelper import verify_edit_access, verify_view_access, get_rights, has_view_access
+from common import get_document_as_current_user, post_process_pars, \
+    verify_doc_exists
+from dbaccess import get_timdb
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from documentmodel.documentparser import ValidationException, ValidationWarning
 from markdownconverter import md_to_html
-from routes.accesshelper import verify_edit_access, verify_view_access, get_rights, has_view_access
+from requesthelper import verify_json_params
+from responsehelper import json_response, ok_response
 from routes.notify import notify_doc_owner
-from routes.sessioninfo import get_current_user_object
+from sessioninfo import get_current_user_object, get_current_user_id, logged_in, get_current_user_group
 from timdb.bookmarks import Bookmarks
+from timdb.models.docentry import DocEntry
 from timdb.timdbexception import TimDbException
 from utils import get_error_html
-from .common import *
+from validation import validate_uploaded_document_content
 
 edit_page = Blueprint('edit_page',
                       __name__,
@@ -66,7 +78,7 @@ def update_document(doc_id):
     if original is None:
         abort(400, 'Missing parameter: original')
     if content is None:
-        return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
+        return json_response({'message': 'Failed to convert the file to UTF-8.'}, 400)
     doc = get_document_as_current_user(doc_id)
     ver_before = doc.get_version()
     try:
@@ -88,7 +100,7 @@ def update_document(doc_id):
         duplicates = check_duplicates(doc.get_paragraphs(), doc, timdb)
 
     except ValidationWarning as e:
-        return jsonResponse({'error': str(e), 'is_warning': True}, status_code=400)
+        return json_response({'error': str(e), 'is_warning': True}, status_code=400)
     except (TimDbException, ValidationException) as e:
         return abort(400, str(e))
     chg = d.get_changelog()
@@ -104,7 +116,7 @@ See the changes here:
                      setting="doc_modify",
                      group_id=get_group_id(), group_subject=get_group_subject())
 
-    return jsonResponse({'versions': chg, 'fulltext': d.export_markdown(), 'duplicates': duplicates})
+    return json_response({'versions': chg, 'fulltext': d.export_markdown(), 'duplicates': duplicates})
 
 
 @edit_page.route("/postNewTaskNames/", methods=['POST'])
@@ -172,7 +184,7 @@ def rename_task_ids():
                          '[user_name] has edited your document as whole: [doc_url]', setting="doc_modify",
                          group_id=get_group_id(), group_subject=get_group_subject())
 
-        return jsonResponse({'versions': chg, 'fulltext': doc.export_markdown(), 'duplicates': duplicates})
+        return json_response({'versions': chg, 'fulltext': doc.export_markdown(), 'duplicates': duplicates})
 
 
 def delete_key(d, key):
@@ -337,7 +349,7 @@ def preview_paragraphs(doc_id):
             blocks = [DocParagraph.create(doc=doc, md='', html=err_html)]
             return par_response(blocks, doc, preview=True)
     else:
-        return jsonResponse({'texts': md_to_html(text), 'js': [], 'css': []})
+        return json_response({'texts': md_to_html(text), 'js': [], 'css': []})
 
 
 def par_response(pars,
@@ -376,10 +388,10 @@ def par_response(pars,
 
     changed_pars, _, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=preview)
 
-    return jsonResponse({'texts': render_template('paragraphs.html',
-                                                  text=pars,
-                                                  item={'rights': get_rights(doc.doc_id)},
-                                                  preview=preview),
+    return json_response({'texts': render_template('paragraphs.html',
+                                                   text=pars,
+                                                   item={'rights': get_rights(doc.doc_id)},
+                                                   preview=preview),
                          'js': js_paths,
                          'css': css_paths,
                          'angularModule': modules,  # not used in JS at all, maybe not needed at all
@@ -387,11 +399,11 @@ def par_response(pars,
                                                                    text=[p],
                                                                    item={'rights': get_rights(doc.doc_id)}) for p in
                                           changed_pars},
-                         'version': doc.get_version(),
-                         'duplicates': duplicates,
-                         'original_par': original_par,
-                         'new_par_ids': new_par_ids
-                         })
+                          'version': doc.get_version(),
+                          'duplicates': duplicates,
+                          'original_par': original_par,
+                          'new_par_ids': new_par_ids
+                          })
 
 
 def get_pars_from_editor_text(doc: Document, text: str,
@@ -567,11 +579,11 @@ def cancel_save_paragraphs():
                                          new_content=original_par.get('md'),
                                          new_attrs=original_par.get('attrs'))
 
-    return jsonResponse({"status": "cancel"})
+    return json_response({"status": "cancel"})
 
 
 @edit_page.route("/newParagraphQ/", methods=["POST"])
-def add_paragraphQ():
+def add_paragraph_q():
     md, doc_id, par_next_id = verify_json_params('text', 'docId', 'par_next')
     md = question_convert_js_to_yaml(md)
     return add_paragraph_common(md, doc_id, par_next_id)
@@ -678,7 +690,7 @@ def name_area(doc_id, area_name):
         area_attrs['collapse'] = 'true' if options.get('collapse') else 'false'
         if 'title' in options:
             hlevel = options.get('hlevel', 0)
-            if (hlevel):
+            if hlevel:
                 area_title = ''.join(['#' for _ in range(0, hlevel)]) + ' ' + options['title']
             else:
                 after_title = '\n' + options['title']
@@ -694,7 +706,7 @@ def name_area(doc_id, area_name):
     doc.insert_paragraph(area_title + after_title, insert_before_id=area_start, attrs=area_attrs)
     doc.insert_paragraph('', insert_after_id=area_end, attrs={'area_end': area_name})
 
-    return okJsonResponse()
+    return ok_response()
 
 
 @edit_page.route("/unwrap_area/<int:doc_id>/<area_name>", methods=["POST"])
@@ -715,4 +727,4 @@ def unwrap_area(doc_id, area_name):
     except TimDbException as e:
         abort(400, str(e))
 
-    return okJsonResponse()
+    return ok_response()

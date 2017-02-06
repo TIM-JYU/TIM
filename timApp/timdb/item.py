@@ -34,7 +34,7 @@ class Item:
 
     @property
     def rights(self):
-        from routes.accesshelper import get_rights
+        from accesshelper import get_rights
         return get_rights(self.id)
 
     @property

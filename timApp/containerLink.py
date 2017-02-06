@@ -7,8 +7,8 @@ import requests
 from documentmodel.document import Document
 from documentmodel.timjsonencoder import TimJsonEncoder
 from dumboclient import call_dumbo
+from logger import log_info, log_warning
 from plugin import PluginException
-from routes.logger import log_info, log_warning
 from tim_app import app
 
 TIM_URL = ""
@@ -105,15 +105,15 @@ def remove_p(s):
     return rs[:-4]
 
 
-def list_to_dumbo(list):
+def list_to_dumbo(markup_list):
     i = 0
-    for val in list:
+    for val in markup_list:
         ic = i
         i += 1
         if type(val) is dict:
             dict_to_dumbo(val)
             continue
-        if type(val) is list:
+        if type(val) is markup_list:
             list_to_dumbo(val)
             continue
         if not type(val) is str:
@@ -123,7 +123,7 @@ def list_to_dumbo(list):
 
         v = [val[3:]]
         v = call_dumbo(v)
-        list[ic] = remove_p(v[0])
+        markup_list[ic] = remove_p(v[0])
 
 
 def dict_to_dumbo(pm):

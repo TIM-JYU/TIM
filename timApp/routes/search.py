@@ -1,18 +1,25 @@
 """Routes for searching."""
 from flask import Blueprint, render_template
+from flask import abort
+from flask import request
 
-from options import get_option
-from routes.accesshelper import verify_logged_in
-from routes.sessioninfo import get_current_user_object
+import pluginControl
+from accesshelper import verify_logged_in
+from cache import cache
+from common import post_process_pars, get_user_settings
+from dbaccess import get_timdb
+from documentmodel.docparagraph import DocParagraph
+from requesthelper import get_option
+from sessioninfo import get_current_user_object, get_current_user_id, logged_in, get_current_user_group
+from timdb.models.docentry import DocEntry
 from timdb.tim_models import BlockAccess
-from .cache import cache
-from .common import *
 
 search_routes = Blueprint('search',
                           __name__,
                           url_prefix='/search')
 
 
+# noinspection PyUnusedLocal
 def make_cache_key(*args, **kwargs):
     path = request.path
     return (str(get_current_user_id()) + path).encode('utf-8')

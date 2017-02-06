@@ -1,3 +1,4 @@
+import json
 import os
 import shelve
 from collections import defaultdict
@@ -6,13 +7,13 @@ from copy import copy
 from documentmodel.documentparser import DocumentParser
 from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
+from documentmodel.randutils import random_id, hashfunc
 from htmlSanitize import sanitize_html
 from markdownconverter import par_list_to_html_list, expand_macros
 from timdb.invalidreferenceexception import InvalidReferenceException
 from timdb.timdbexception import TimDbException
 from typing import Optional, Dict, List, Tuple, Any
 from utils import count_chars, get_error_html
-from .randutils import *
 
 
 class DocParagraph:
@@ -436,7 +437,7 @@ class DocParagraph:
 
     @classmethod
     def preload_htmls(cls, pars: List['DocParagraph'], settings,
-                      clear_cache: bool = False, context_par: Optional['DocParagraph'] = None, persist: bool = True):
+                      clear_cache: bool = False, context_par: Optional['DocParagraph'] = None, persist: Optional[bool] = True):
         """Loads the HTML for each paragraph in the given list.
 
         :param context_par: The context paragraph. Required only for previewing for now.

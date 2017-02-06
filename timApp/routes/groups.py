@@ -1,8 +1,8 @@
 from flask import Blueprint, abort
 
-from routes.common import jsonResponse, okJsonResponse
-from routes.dbaccess import get_timdb
-from routes.accesshelper import verify_admin
+from accesshelper import verify_admin
+from dbaccess import get_timdb
+from responsehelper import json_response, ok_response
 from timdb.special_group_names import SPECIAL_GROUPS
 
 groups = Blueprint('groups',
@@ -27,7 +27,7 @@ def show_members(groupname):
     if not timdb.users.group_exists(groupname):
         abort(404, 'Usergroup does not exist.')
     members = timdb.users.get_users_for_group(groupname, order=True)
-    return jsonResponse(members)
+    return json_response(members)
 
 
 @groups.route('/create/<groupname>')
@@ -61,7 +61,7 @@ def create_group(groupname):
     if not has_digits or not has_letters or has_non_alnum:
         abort(400, 'Usergroup must contain at least one digit and one letter and must be alphanumeric.')
     timdb.users.create_usergroup(groupname)
-    return okJsonResponse()
+    return ok_response()
 
 
 @groups.route('/addmember/<groupname>/<usernames>')
@@ -87,7 +87,7 @@ def add_member(usernames, groupname):
             timdb.users.add_user_to_group(gid, uid, commit=False)
             added.append(name)
     timdb.commit()
-    return jsonResponse({'already_belongs': already, 'added': added, 'not_exist': not_exist})
+    return json_response({'already_belongs': already, 'added': added, 'not_exist': not_exist})
 
 
 @groups.route('/removemember/<groupname>/<usernames>')
@@ -112,7 +112,7 @@ def remove_member(usernames, groupname):
         else:
             removed.append(name)
     timdb.commit()
-    return jsonResponse({'removed': removed, 'does_not_belong': does_not_belong, 'not_exist': not_exist})
+    return json_response({'removed': removed, 'does_not_belong': does_not_belong, 'not_exist': not_exist})
 
 
 def get_usernames(usernames):

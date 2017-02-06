@@ -4,13 +4,11 @@ import signal
 import subprocess
 import sys
 
-import tim
-
 import dumboclient
 import initdb2
+import tim
 from bower_helper import scripts_path, copy_bower_libs_if_needed
-from routes.logger import log_info
-
+from logger import log_info
 from utils import pycharm_running
 
 

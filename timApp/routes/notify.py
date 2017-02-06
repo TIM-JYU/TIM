@@ -1,16 +1,19 @@
 import http.client
+import os
 import socket
 from typing import Optional
 
 from flask import Blueprint
+from flask import request
 
+from accesshelper import verify_logged_in
+from dbaccess import get_timdb
 from decorators import async
-from routes.accesshelper import verify_logged_in
-from routes.common import *
-from routes.dbaccess import get_timdb
-from routes.logger import log_info, log_error
-from routes.sessioninfo import get_current_user, get_current_user_id, get_current_user_name
+from logger import log_info, log_error
+from responsehelper import json_response, ok_response
+from sessioninfo import get_current_user, get_current_user_id, get_current_user_name
 from tim_app import app
+from timdb.models.docentry import DocEntry
 
 FUNNEL_HOST = "funnel"
 FUNNEL_PORT = 80
@@ -25,7 +28,7 @@ def get_notify_settings(doc_id):
     verify_logged_in()
     timdb = get_timdb()
     settings = timdb.documents.get_notify_settings(get_current_user_id(), doc_id)
-    return jsonResponse(settings)
+    return json_response(settings)
 
 
 @notify.route('/notify/<int:doc_id>', methods=['POST'])
@@ -34,7 +37,7 @@ def set_notify_settings(doc_id):
     jsondata = request.get_json()
     timdb = get_timdb()
     timdb.documents.set_notify_settings(get_current_user_id(), doc_id, jsondata)
-    return okJsonResponse()
+    return ok_response()
 
 
 @async

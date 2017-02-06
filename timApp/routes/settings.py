@@ -1,10 +1,13 @@
 """Routes for settings view."""
 from flask import Blueprint, render_template
+from flask import abort
+from flask import request
 from jinja2 import TemplateNotFound
 
-from routes.accesshelper import verify_logged_in
+from accesshelper import verify_logged_in
+from common import update_preferences, get_preferences
+from responsehelper import json_response
 from theme import get_available_themes
-from .common import *
 
 settings_page = Blueprint('settings_page',
                           __name__,
@@ -30,9 +33,9 @@ def show():
 def save_settings():
     update_preferences(request.get_json())
     show()  # Regenerate CSS
-    return jsonResponse(get_preferences())
+    return json_response(get_preferences())
 
 
 @settings_page.route('/get/<name>')
 def get_setting(name):
-    return jsonResponse({name: get_preferences().get(name)})
+    return json_response({name: get_preferences().get(name)})

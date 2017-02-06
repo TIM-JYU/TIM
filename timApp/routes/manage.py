@@ -1,20 +1,31 @@
 """Routes for manage view."""
-from datetime import timezone
+from datetime import timezone, datetime
 
+import dateutil.parser
 from flask import Blueprint, render_template
+from flask import abort
+from flask import flash
 from flask import g
+from flask import redirect
+from flask import request
 from isodate import Duration
 from isodate import parse_duration
 
-from options import get_option
-from routes.accesshelper import verify_manage_access, verify_ownership, verify_view_access
-from routes.sessioninfo import get_current_user_object
+from accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, can_write_to_folder
+from common import has_special_chars
+from dbaccess import get_timdb
+from requesthelper import verify_json_params, get_option
+from responsehelper import json_response, ok_response
+from sessioninfo import get_current_user_id, get_current_user_group
+from sessioninfo import get_current_user_object
 from timdb.blocktypes import from_str
 from timdb.item import Item
+from timdb.models.docentry import DocEntry
+from timdb.models.folder import Folder
 from timdb.models.usergroup import UserGroup
 from timdb.tim_models import db
 from utils import remove_path_special_chars
-from .common import *
+from validation import validate_item
 
 manage_page = Blueprint('manage_page',
                         __name__,
@@ -63,7 +74,7 @@ def manage(path):
 def get_changelog(doc_id, length):
     verify_manage_access(doc_id)
     doc = DocEntry.find_by_id(doc_id, try_translation=True)
-    return jsonResponse({'versions': doc.get_changelog_with_names(length)})
+    return json_response({'versions': doc.get_changelog_with_names(length)})
 
 
 @manage_page.route("/permissions/add/<int:item_id>/<group_name>/<perm_type>", methods=["PUT"])
@@ -89,7 +100,7 @@ def add_permission(item_id, group_name, perm_type):
     except KeyError:
         abort(400, 'Invalid permission type.')
     check_ownership_loss(is_owner, item_id, perm_type)
-    return okJsonResponse()
+    return ok_response()
 
 
 @manage_page.route("/permissions/remove/<int:item_id>/<int:group_id>/<perm_type>", methods=["PUT"])
@@ -101,7 +112,7 @@ def remove_permission(item_id, group_id, perm_type):
     except KeyError:
         abort(400, 'Unknown permission type')
     check_ownership_loss(had_ownership, item_id, perm_type)
-    return okJsonResponse()
+    return ok_response()
 
 
 def check_ownership_loss(had_ownership, item_id, perm_type):
@@ -117,7 +128,7 @@ def check_ownership_loss(had_ownership, item_id, perm_type):
 @manage_page.route("/alias/<int:doc_id>", methods=["GET"])
 def get_doc_names(doc_id):
     verify_manage_access(doc_id)
-    return jsonResponse(DocEntry.find_by_id(doc_id, try_translation=True).aliases)
+    return json_response(DocEntry.find_by_id(doc_id, try_translation=True).aliases)
 
 
 @manage_page.route("/alias/<int:doc_id>/<path:new_alias>", methods=["PUT"])
@@ -137,9 +148,9 @@ def add_alias(doc_id, new_alias):
 
     parent_folder, _ = timdb.folders.split_location(new_alias)
     Folder.create(parent_folder, get_current_user_group())
-    alias = d.add_alias(new_alias, is_public)
+    d.add_alias(new_alias, is_public)
     db.session.commit()
-    return okJsonResponse()
+    return ok_response()
 
 
 @manage_page.route("/alias/<path:alias>", methods=["POST"])
@@ -171,7 +182,7 @@ def change_alias(alias):
     doc.name = new_alias
     doc.public = is_public
     db.session.commit()
-    return okJsonResponse()
+    return ok_response()
 
 
 @manage_page.route("/alias/<path:alias>", methods=["DELETE"])
@@ -195,7 +206,7 @@ def remove_alias(alias):
 
     db.session.delete(doc)
     db.session.commit()
-    return okJsonResponse()
+    return ok_response()
 
 
 @manage_page.route("/rename/<int:doc_id>", methods=["PUT"])
@@ -225,7 +236,7 @@ def rename_folder(doc_id):
     validate_item(new_name, 'folder')
 
     timdb.folders.rename(doc_id, new_name)
-    return jsonResponse({'new_name': new_name})
+    return json_response({'new_name': new_name})
 
 
 @manage_page.route("/permissions/get/<int:doc_id>")
@@ -233,7 +244,7 @@ def get_permissions(doc_id):
     timdb = get_timdb()
     verify_manage_access(doc_id)
     grouprights = timdb.users.get_rights_holders(doc_id)
-    return jsonResponse({'grouprights': grouprights, 'accesstypes': timdb.users.get_access_types()})
+    return json_response({'grouprights': grouprights, 'accesstypes': timdb.users.get_access_types()})
 
 
 @manage_page.route("/defaultPermissions/<object_type>/get/<int:folder_id>")
@@ -241,7 +252,7 @@ def get_default_document_permissions(folder_id, object_type):
     timdb = get_timdb()
     verify_manage_access(folder_id)
     grouprights = timdb.users.get_default_rights_holders(folder_id, from_str(object_type))
-    return jsonResponse({'grouprights': grouprights})
+    return json_response({'grouprights': grouprights})
 
 
 @manage_page.route("/defaultPermissions/<object_type>/add/<int:folder_id>/<group_name>/<perm_type>", methods=["PUT"])
@@ -257,7 +268,7 @@ def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
                                      duration_from=dur_from,
                                      duration_to=dur_to,
                                      duration=duration)
-    return okJsonResponse()
+    return ok_response()
 
 
 @manage_page.route("/defaultPermissions/<object_type>/remove/<int:folder_id>/<int:group_id>/<perm_type>", methods=["PUT"])
@@ -265,7 +276,7 @@ def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
     verify_manage_access(folder_id)
     timdb = get_timdb()
     timdb.users.remove_default_access(group_id, folder_id, perm_type, from_str(object_type))
-    return okJsonResponse()
+    return ok_response()
 
 
 def verify_and_get_params(item_id, group_name, perm_type):
@@ -339,7 +350,7 @@ def delete_document(doc_id):
                'Please contact TIM administrators if you really want to delete this document. '
                'You can hide this document from others by removing all permissions.')
     timdb.documents.delete(doc_id)
-    return okJsonResponse()
+    return ok_response()
 
 
 @manage_page.route("/folders/<int:doc_id>", methods=["DELETE"])
@@ -352,7 +363,7 @@ def delete_folder(doc_id):
         return abort(403, "The folder is not empty. Only empty folders can be deleted.")
 
     timdb.folders.delete(doc_id)
-    return okJsonResponse()
+    return ok_response()
 
 
 @manage_page.route("/changeTitle/<int:item_id>", methods=["PUT"])
@@ -362,4 +373,4 @@ def change_title(item_id):
     new_title, = verify_json_params('new_title')
     item.title = new_title
     db.session.commit()
-    return okJsonResponse()
+    return ok_response()

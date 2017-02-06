@@ -32,7 +32,7 @@ class Block(db.Model):
             return folder.parent
 
     def is_unpublished(self):
-        from routes.accesshelper import has_ownership
+        from accesshelper import has_ownership
         return has_ownership(self.id) is not None and (not self.owner or not self.owner.is_large()) and self.accesses.count() <= 1
 
     @property

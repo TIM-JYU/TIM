@@ -2,9 +2,10 @@ from flask import Blueprint
 from flask import current_app
 from flask import g
 
-from routes.accesshelper import verify_logged_in
-from routes.common import jsonResponse, verify_json_params
-from routes.sessioninfo import get_current_user_object
+from accesshelper import verify_logged_in
+from requesthelper import verify_json_params
+from responsehelper import json_response
+from sessioninfo import get_current_user_object
 from timdb.bookmarks import Bookmarks
 from timdb.models.docentry import DocEntry
 
@@ -69,6 +70,7 @@ def mark_last_read(doc_id):
     return get_bookmarks()
 
 
+# noinspection PyUnusedLocal
 @bookmarks.route('/get')
 @bookmarks.route('/get/<int:user_id>')
 def get_bookmarks(user_id=None):
@@ -78,4 +80,4 @@ def get_bookmarks(user_id=None):
 
     """
 
-    return jsonResponse(g.bookmarks.as_dict())
+    return json_response(g.bookmarks.as_dict())

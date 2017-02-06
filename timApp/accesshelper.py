@@ -7,10 +7,10 @@ from sqlalchemy import inspect
 from werkzeug.exceptions import abort
 
 import documentmodel.document
+from dbaccess import get_timdb
 from documentmodel.document import Document
 from options import get_option
-from routes.dbaccess import get_timdb
-from routes.sessioninfo import get_current_user_id, logged_in, get_current_user_name, get_other_users_as_list, \
+from sessioninfo import get_current_user_id, logged_in, get_other_users_as_list, \
     get_current_user_group, get_current_user_object
 from timdb.accesstype import AccessType
 from timdb.models.usergroup import UserGroup

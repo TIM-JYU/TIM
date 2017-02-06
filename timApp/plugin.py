@@ -1,8 +1,6 @@
 from copy import deepcopy
-
-from typing import Tuple, Optional, Union, Iterable
-
 from datetime import datetime, timezone
+from typing import Tuple, Optional, Union, Iterable, Dict
 
 import yaml
 
@@ -68,7 +66,7 @@ class Plugin:
                                           macros=doc.get_settings().get_macros_with_user_specific(user),
                                           macro_delimiter=doc.get_settings().get_macro_delimiter())
         if 'error' in plugin_data:
-            if type(plugin_data) is str:
+            if isinstance(plugin_data, str):
                 raise PluginException(plugin_data + ' Task id: ' + task_id_name)
             raise PluginException(plugin_data['error'] + ' Task id: ' + task_id_name)
         p = Plugin(task_id_name, plugin_data['markup'], par.get_attrs()['plugin'], par=par)
@@ -148,7 +146,7 @@ class Plugin:
 
     def get_info(self, users: Iterable[User], old_answers: int, look_answer: bool = False, valid: bool = True):
         user_ids = ';'.join([u.name for u in users])
-        from routes.sessioninfo import get_current_user_name
+        from sessioninfo import get_current_user_name
         return {
             # number of earlier answers
             # TODO: this is None when browsing answers with answer browser; should determine the number of answers
@@ -187,15 +185,18 @@ class PluginException(Exception):
     pass
 
 
-def parse_plugin_values(par,
+def parse_plugin_values(par: DocParagraph,
                         global_attrs=None,
                         macros=None,
-                        macro_delimiter=None):
+                        macro_delimiter=None) -> Dict:
     """
+    Parses the markup values for a plugin paragraph, taking document attributes and macros into account.
 
-    :type par: DocParagraph
-    :return:
-    :rtype: dict
+    :param par: The plugin paragraph.
+    :param global_attrs: Global (Document) attributes.
+    :param macros: Document macros.
+    :param macro_delimiter: Document macro delimiter.
+    :return: The parsed markup values.
     """
     try:
         # We get the yaml str by removing the first and last lines of the paragraph markup

@@ -13,12 +13,12 @@ from lxml import html
 
 import tim
 from documentmodel.document import Document
+from documentmodel.timjsonencoder import TimJsonEncoder
 from routes.login import log_in_as_anonymous
 from tests.db.timdbtest import TimDbTest
 from timdb.models.docentry import DocEntry
 from timdb.models.user import User
 from timdb.models.usergroup import UserGroup
-from timdb.tim_models import db
 
 
 def load_json(resp: Response):
@@ -300,7 +300,7 @@ class TimRouteTest(TimDbTest):
         """
         return self.request(url,
                             method=method,
-                            data=json.dumps(json_data, cls=tim.TimJsonEncoder),
+                            data=json.dumps(json_data, cls=TimJsonEncoder),
                             content_type='application/json',
                             as_tree=as_tree,
                             expect_status=expect_status,

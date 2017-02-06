@@ -2,12 +2,12 @@ from flask import Blueprint, abort
 from flask import current_app
 from sqlalchemy.exc import IntegrityError
 
+from accesshelper import verify_read_marking_right
+from dbaccess import get_timdb
 from documentmodel.document import Document
-from routes.accesshelper import verify_read_marking_right
-from routes.common import jsonResponse, \
-    get_referenced_pars_from_req, okJsonResponse, verify_json_params
-from routes.dbaccess import get_timdb
-from routes.sessioninfo import get_session_usergroup_ids, get_current_user_group
+from requesthelper import verify_json_params, get_referenced_pars_from_req
+from responsehelper import json_response, ok_response
+from sessioninfo import get_session_usergroup_ids, get_current_user_group
 from timdb.readparagraphtype import ReadParagraphType
 from timdb.tim_models import ReadParagraph
 from timdb.timdbexception import TimDbException
@@ -23,8 +23,8 @@ def get_read_paragraphs(doc_id):
     timdb = get_timdb()
     doc = Document(doc_id)
     # TODO: Get the intersection of read markings of all session users
-    readings = timdb.readings.get_readings(get_current_user_group(), doc)
-    return jsonResponse(readings)
+    result = timdb.readings.get_readings(get_current_user_group(), doc)
+    return json_response(result)
 
 
 @readings.route("/unread/<int:doc_id>/<par_id>", methods=['PUT'])
@@ -37,7 +37,7 @@ def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
     paragraph_type = ReadParagraphType(read_type) if read_type is not None else ReadParagraphType.click_red
     if current_app.config['DISABLE_AUTOMATIC_READINGS'] and paragraph_type in (ReadParagraphType.on_screen,
                                                                                ReadParagraphType.hover_par):
-        return okJsonResponse()
+        return ok_response()
     verify_read_marking_right(doc_id)
     timdb = get_timdb()
 
@@ -65,7 +65,7 @@ def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
         timdb.commit()
     except IntegrityError:
         abort(400, 'Paragraph was already marked read')
-    return okJsonResponse()
+    return ok_response()
 
 
 @readings.route("/read/<int:doc_id>", methods=['PUT'])
@@ -76,4 +76,4 @@ def mark_all_read(doc_id):
     for group_id in get_session_usergroup_ids():
         timdb.readings.mark_all_read(group_id, doc, commit=False)
     timdb.commit()
-    return okJsonResponse()
+    return ok_response()

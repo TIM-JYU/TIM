@@ -3,17 +3,18 @@
 Each model MUST have 'tempdb' as the __bind_key__ attribute.
 
 """
-from sqlalchemy.orm import scoped_session
 from typing import Optional
 
-from routes.logger import log_info
-from timdb.runningquestion import RunningQuestions
-from timdb.useractivity import UserActivity
+from sqlalchemy.orm import scoped_session
+
+from logger import log_info
 from timdb.newanswers import NewAnswers
+from timdb.runningquestion import RunningQuestions
 from timdb.showpoints import ShowPoints
 from timdb.slidestatus import SlideStatuses
 from timdb.temp_info_for_user import TempInfoUserQuestion
 from timdb.tim_models import db
+from timdb.useractivity import UserActivity
 
 
 class Runningquestion(db.Model):

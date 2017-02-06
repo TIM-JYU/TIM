@@ -1,12 +1,11 @@
 import argparse
 import os
-
 import sqlite3
 from typing import Optional, Dict
 
 import psycopg2
 
-from routes.logger import log_info
+from logger import log_info
 
 
 def perform_migration(sqlite_path: str, postgre_path: str):
