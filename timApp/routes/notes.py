@@ -26,6 +26,8 @@ def get_group_subject() -> str:
 def get_note(note_id):
     timdb = get_timdb()
     note = timdb.notes.get_note(note_id)
+    if not note:
+        abort(404)
     if not (timdb.notes.has_edit_access(get_current_user_group(), note_id) or timdb.users.user_is_owner(get_current_user_id(),
                                                                                                         note['doc_id'])):
         abort(403)

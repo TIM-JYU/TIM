@@ -168,7 +168,7 @@ class Notes(TimDbBase):
                   'WHERE id = %s', [note_id])
         result = self.resultAsDictionary(c)
 
-        return self.process_notes(result)[0]
+        return self.process_notes(result)[0] if result else None
 
     def process_notes(self, result: List[dict]) -> List[dict]:
         c = self.db.cursor()

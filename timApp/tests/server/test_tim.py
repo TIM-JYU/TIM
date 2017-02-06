@@ -289,5 +289,9 @@ header: %%username%% and %%realname%%
         links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
         self.assertGreater(len(links), 0)
 
+    def test_nonexistent_note(self):
+        self.get('/note/999', expect_status=404)
+
+
 if __name__ == '__main__':
     unittest.main()
