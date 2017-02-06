@@ -18,7 +18,7 @@ def get_current_user_object() -> User:
     return g.user
 
 
-def get_other_users() -> Dict[int, Dict[str, str]]:
+def get_other_users() -> Dict[str, Dict[str, str]]:
     return session.get('other_users', {})
 
 

@@ -38,6 +38,7 @@ def get_document_as_current_user(doc_id: int) -> Document:
     return Document(doc_id, modifier_group_id=get_current_user_group())
 
 
+# noinspection PyUnusedLocal
 def hide_names_in_teacher(doc_id):
     return False
 
@@ -139,9 +140,9 @@ def getdatetime(s: str, default_val = None):
 def process_areas(html_pars: List[Dict]) -> List[Dict]:
     class Area:
 
-        def __init__(self, index, attrs):
+        def __init__(self, index, area_attrs):
             self.index = index
-            self.attrs = attrs
+            self.attrs = area_attrs
 
     now = pytz.utc.localize(datetime.now())
     min_time = pytz.utc.localize(datetime.min)
@@ -241,6 +242,8 @@ def process_areas(html_pars: List[Dict]) -> List[Dict]:
                     endtime = getdatetime(a.attrs.get('endtime'), default_val=max_time)
                     access &= starttime <= now < endtime
                     if not access and a.attrs.get('alttext') is not None:
+                        # TODO
+                        # noinspection PyUnusedLocal
                         alttext = a.attrs.get('alttext')
 
             if access:
