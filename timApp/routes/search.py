@@ -2,8 +2,8 @@
 from flask import Blueprint, render_template
 
 from options import get_option
+from routes.accesshelper import verify_logged_in
 from routes.sessioninfo import get_current_user_object
-from timdb.models.docentry import DocEntry
 from timdb.tim_models import BlockAccess
 from .cache import cache
 from .common import *
@@ -21,6 +21,7 @@ def make_cache_key(*args, **kwargs):
 @search_routes.route('/<query>')
 @cache.cached(key_prefix=make_cache_key)
 def search(query):
+    verify_logged_in()
     if len(query.strip()) < 3:
         abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
     timdb = get_timdb()
@@ -57,6 +58,8 @@ def search(query):
         if len(all_texts) > 500:
             break
     for t in all_texts:
+        if not t.get('attrs'):
+            t['attrs'] = {}
         t['attrs']['rl'] = 'force'
         t['ref_doc_id'] = t['doc_id']
         t['ref_id'] = t['id']
