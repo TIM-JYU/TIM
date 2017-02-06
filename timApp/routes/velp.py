@@ -40,6 +40,8 @@ def get_default_velp_group(doc_id: int):
     user_id = get_current_user_id()
 
     doc = DocEntry.find_by_id(doc_id)
+    if not doc:
+        abort(404)
     full_path = doc.path
     doc_path, doc_name = timdb.documents.split_location(full_path)
     edit_access = False
@@ -810,6 +812,8 @@ def get_velp_groups_from_tree(document_id: int):
     doc_id = int(document_id)
     timdb = get_timdb()
     doc = DocEntry.find_by_id(doc_id)
+    if not doc:
+        abort(404)
     full_path = doc.path
     doc_path, doc_name = timdb.documents.split_location(full_path)
     velp_group_folder = "velp-groups"

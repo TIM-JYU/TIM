@@ -128,3 +128,7 @@ class VelpTest(TimRouteTest):
         self.assertNotEqual(resp[0]['content'], 'test label')
         self.assertEqual(len(resp), 1)  # Added velp label wasn't added to any velp and thus it can't be found
         # when searching velp labels for doc1
+
+    def test_nonexistent_group(self):
+        self.get('/999/get_velp_groups', expect_status=404)
+        self.get('/999/get_default_velp_group', expect_status=404)
