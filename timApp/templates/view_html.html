@@ -193,15 +193,18 @@
                 <a id="showSlidesLink" href="/show_slide/{{ item.path }}">Show slides only</a>
             </div>
         {% else %}
-            {% if velp_mode or teacher_mode %}
-                <div ng-controller="ReviewController">
-                    {% include 'velp_view.html' %}
+            <div ng-controller="ReviewController">
+                <div id="pars" {% if velp_mode or teacher_mode %}ng-click="selectText($event)"{% endif %}>
+                    {% include 'paragraphs.html' %}
+                    <div class="addBottomContainer hidden-print" ng-show="item.rights.editable"
+                         ng-class="{'height-35': editing}">
+                        <button class="addBottom timButton">Add paragraph</button>
+                    </div>
                 </div>
-            {% else %}
-                <div ng-controller="ReviewController">
-                    {% include 'view_content.html' %}
-                </div>
-            {% endif %}
+                {% if velp_mode or teacher_mode %}
+                    <velp-selection id="velpMenu"></velp-selection>
+                {% endif %}
+            </div>
             {% if not text %}
                 <bootstrap-panel title="Review document permissions" show-close="true">
                     <p>These are the current permissions for this document; please modify if needed.

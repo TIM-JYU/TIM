@@ -35,6 +35,7 @@ class DocEntry(db.Model, DocInfo):
         if tr:
             tr.lang_id = value
         else:
+            # noinspection PyArgumentList
             tr = Translation(src_docid=self.id, doc_id=self.id, lang_id=value)
             db.session.add(tr)
 
@@ -42,13 +43,14 @@ class DocEntry(db.Model, DocInfo):
     def translations(self) -> List['Translation']:
         trs = Translation.find_by_docentry(self)
         if not any(tr.doc_id == self.id for tr in trs):
+            # noinspection PyArgumentList
             tr = Translation(src_docid=self.id, doc_id=self.id, lang_id='')
             tr.docentry = self
             trs.append(tr)
         return trs
 
     @staticmethod
-    def find_all_by_id(doc_id: int):
+    def find_all_by_id(doc_id: int) -> List['DocEntry']:
         return DocEntry.query.filter_by(id=doc_id).all()
 
     @staticmethod
@@ -83,12 +85,17 @@ class DocEntry(db.Model, DocInfo):
 
     @staticmethod
     def get_dummy(title):
+        # noinspection PyArgumentList
         return DocEntry(id=-1, name=title)
 
     @staticmethod
-    def create(path: Optional[str], owner_group_id: int, title: Optional[str]=None, from_file=None, initial_par=None, settings=None, is_gamified: bool = False) -> 'DocEntry':
+    def create(path: Optional[str], owner_group_id: int, title: Optional[str]=None, from_file=None, initial_par=None,
+               settings=None, is_gamified: bool = False) -> 'DocEntry':
         """Creates a new document with the specified name.
 
+        :param from_file: If provided, loads the document content from a file.
+        :param initial_par: The initial paragraph for the document.
+        :param settings: The settings for the document.
         :param title: The document title.
         :param path: The path of the document to be created (can be None). If None, no DocEntry is actually added
          to the database; only Block and Document objects are created.
@@ -105,6 +112,7 @@ class DocEntry(db.Model, DocInfo):
         document = Document(document_id, modifier_group_id=owner_group_id)
         document.create()
 
+        # noinspection PyArgumentList
         docentry = DocEntry(id=document_id, name=path, public=True)
         if path is not None:
             db.session.add(docentry)

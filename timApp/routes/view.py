@@ -70,11 +70,6 @@ def show_slide(doc_name):
     return html
 
 
-@view_page.route("/view_content/<path:doc_name>")
-def view_document_content(doc_name):
-    return view(doc_name, 'view_content.html')
-
-
 @view_page.route("/view/<path:doc_name>")
 @view_page.route("/view_html/<path:doc_name>")
 @view_page.route("/doc/<path:doc_name>")

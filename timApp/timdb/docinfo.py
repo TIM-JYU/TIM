@@ -6,6 +6,19 @@ from timdb.tim_models import db
 
 class DocInfo(Item):
     """A base class for DocEntry and Translation."""
+
+    @property
+    def path(self):
+        raise NotImplementedError
+
+    @property
+    def path_without_lang(self):
+        raise NotImplementedError
+
+    @property
+    def id(self):
+        raise NotImplementedError
+
     @property
     def src_docid(self):
         """Returns the source document id in case of a translation or the document id itself otherwise."""
@@ -50,6 +63,7 @@ class DocInfo(Item):
 
     def add_alias(self, new_name, is_public):
         from timdb.models.docentry import DocEntry
+        # noinspection PyArgumentList
         d = DocEntry(id=self.src_docid, name=new_name, public=is_public)
         db.session.add(d)
 

@@ -53,13 +53,6 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                                                                       do_lazy=do_lazy,
                                                                       edit_window=edit_window,
                                                                       load_states=load_plugin_states)
-    #req_json = request.get_json()
-
-    # if req_json is not None and 'ref-id' in req_json and req_json['ref-id'] != '':
-    #    ref_doc_id = req_json.get('ref-doc-id')
-    #    ref_id = req_json.get('ref-id')
-    #    html_pars = [par for par in html_pars if par['doc_id'] == ref_doc_id and par['id'] == ref_id]
-
     settings = doc.get_settings()
     user_macros = settings.get_user_specific_macros(user)
     delimiter = settings.get_macro_delimiter()
