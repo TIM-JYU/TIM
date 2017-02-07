@@ -388,14 +388,14 @@ def par_response(pars,
 
     changed_pars, _, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=preview)
 
-    return json_response({'texts': render_template('paragraphs.html',
+    return json_response({'texts': render_template('partials/paragraphs.html',
                                                    text=pars,
                                                    item={'rights': get_rights(doc.doc_id)},
                                                    preview=preview),
                          'js': js_paths,
                          'css': css_paths,
                          'angularModule': modules,  # not used in JS at all, maybe not needed at all
-                         'changed_pars': {p['id']: render_template('paragraphs.html',
+                         'changed_pars': {p['id']: render_template('partials/paragraphs.html',
                                                                    text=[p],
                                                                    item={'rights': get_rights(doc.doc_id)}) for p in
                                           changed_pars},

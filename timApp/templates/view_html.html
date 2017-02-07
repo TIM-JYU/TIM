@@ -87,7 +87,7 @@
     <link property="sagecell-root" href="//sagecell.sagemath.org/"/>
 
     {% block viewhtml_customcss %}
-        {% include 'doc_customcss.html' %}
+        {% include 'partials/doc_customcss.html' %}
     {% endblock %}
 
     <script>
@@ -195,7 +195,7 @@
         {% else %}
             <div ng-controller="ReviewController">
                 <div id="pars" {% if velp_mode or teacher_mode %}ng-click="selectText($event)"{% endif %}>
-                    {% include 'paragraphs.html' %}
+                    {% include 'partials/paragraphs.html' %}
                     <div class="addBottomContainer hidden-print" ng-show="item.rights.editable"
                          ng-class="{'height-35': editing}">
                         <button class="addBottom timButton">Add paragraph</button>

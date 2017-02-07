@@ -416,7 +416,7 @@ def check_updated_pars(doc_id, major, minor):
                                                                    diff['content'],
                                                                    get_current_user_object(),
                                                                    edit_window=False)
-            diff['content'] = {'texts': render_template('paragraphs.html',
+            diff['content'] = {'texts': render_template('partials/paragraphs.html',
                                                         text=pars,
                                                         item={'rights': rights},
                                                         preview=False),

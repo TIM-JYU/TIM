@@ -499,7 +499,7 @@ def get_index(doc_id):
     if not index:
         return json_response({'empty': True})
     else:
-        return render_template('content.html',
+        return render_template('partials/content.html',
                                headers=index)
 
 

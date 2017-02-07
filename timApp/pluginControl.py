@@ -114,7 +114,7 @@ def pluginify(doc: Document,
             md = block.get_markdown()
             try:
                 gamified_data = gamificationdata.gamify(md)
-                html_pars[idx]['html'] = render_template('gamification_map.html', gamified_data=gamified_data)
+                html_pars[idx]['html'] = render_template('partials/gamification_map.html', gamified_data=gamified_data)
             except yaml.parser.ParserError as e:
                 html_pars[idx]['html'] = '<div class="error"><p>Gamification error:</p><pre>' + \
                                          str(e) + \

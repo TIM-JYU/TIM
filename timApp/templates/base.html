@@ -171,7 +171,16 @@
         <![endif]-->
 
         {% if lecture_assets %}
-            {% include 'lecture_head.html' %}
+            <script src="{{ url_for('static', filename='scripts/lectureController.js') }}"></script>
+            <script src="{{ url_for('static', filename='scripts/controllers/answerToQuestionController.js') }}"></script>
+            <script src="{{ url_for('static', filename='scripts/directives/popUpDialog.js') }}"></script>
+            <script src="{{ url_for('static', filename='scripts/smallMenuCtrl.js') }}"></script>
+            <script src="{{ url_for('bower.static', filename='Chart.js/Chart.min.js') }}"></script>
+            <script src="{{ url_for('static', filename='scripts/controllers/showStatisticsToQuestionController.js') }}"></script>
+            <script src="{{ url_for('static', filename='scripts/directives/showChartDirective.js') }}"></script>
+            <script src="{{ url_for('static', filename='scripts/createLectureCtrl.js') }}"></script>
+            <script src="{{ url_for('static', filename='scripts/controllers/questionPreviewController.js') }}"></script>
+            <script src="{{ url_for('static', filename='scripts/controllers/questionController.js') }}"></script>
         {% endif %}
         <title>{% block title %}{% endblock %} - TIM</title>
     {% endblock %}
@@ -208,7 +217,7 @@
                             col-xs-{{ col_1_xs }}
                             col-sm-{{ col_1_sm }}">
                     <div class="left-fixed-side">
-                        {% include 'side_menu.html' %}
+                        {% include 'partials/side_menu.html' %}
                     </div>
                 </div>
                 <div class="col-lg-{{ col_2_lg }}
@@ -282,7 +291,7 @@
                                     col-sm-{{ col_m_sm }} col-sm-offset-{{ (12 - col_m_sm) // 2 }}">
                             <div class="material">
                                 {% if lecture_assets %}
-                                    {% include 'lectureinfo_menu.html' %}
+                                    {% include 'partials/lectureinfo_menu.html' %}
                                 {% endif %}
                                 {% block content %}{% endblock %}
                             </div>
