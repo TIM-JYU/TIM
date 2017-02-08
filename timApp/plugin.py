@@ -33,8 +33,13 @@ class Plugin:
 
     @staticmethod
     def get_date(d):
-        if type(d) is str:
-            d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
+        if isinstance(d, str):
+            try:
+                d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                raise PluginException('Invalid date format: {}'.format(d))
+            if d.tzinfo is None:
+                d = d.replace(tzinfo=timezone.utc)
         return d
 
     @staticmethod

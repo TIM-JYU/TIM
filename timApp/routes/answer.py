@@ -149,7 +149,10 @@ def post_answer(plugintype: str, task_id_ext: str):
     user_objs = [User.query.get(uid) for uid in users]
 
     old_answers = timdb.answers.get_common_answers(users, task_id)
-    valid, _ = plugin.is_answer_valid(len(old_answers), {})
+    try:
+        valid, _ = plugin.is_answer_valid(len(old_answers), {})
+    except PluginException as e:
+        return abort(400, str(e))
     info = plugin.get_info(user_objs, len(old_answers), look_answer=is_teacher and not save_teacher, valid=valid)
 
     # Get the newest answer (state). Only for logged in users.

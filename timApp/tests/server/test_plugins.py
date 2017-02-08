@@ -595,3 +595,31 @@ class PluginTest(TimRouteTest):
         d = self.create_doc(from_file='example_docs/programming_examples.md').document
         tasks = d.get_tasks()
         self.assertEqual(27, len(list(tasks)))
+
+    def test_interval(self):
+        self.login_test1()
+        d = self.create_doc(from_file='example_docs/mmcq_example.md')
+        p = Plugin.from_paragraph(d.document.get_paragraphs()[0])
+        p.set_value('answerLimit', None)
+
+        p.set_value('starttime', '2000-01-01 00:00:00')
+        p.set_value('deadline',  '2100-01-01 00:00:00')
+        p.save()
+        resp = self.post_answer(p.type, p.full_task_id, [])
+        self.assertNotIn('error', resp)
+
+        p.set_value('starttime', '2099-01-01 00:00:00')
+        p.save()
+        resp = self.post_answer(p.type, p.full_task_id, [])
+        self.assertEqual(resp['error'], 'You cannot submit answers yet.')
+
+        p.set_value('starttime', '2000-01-01 00:00:00')
+        p.set_value('deadline', '2000-01-02 00:00:00')
+        p.save()
+        resp = self.post_answer(p.type, p.full_task_id, [])
+        self.assertEqual(resp['error'], 'The deadline for submitting answers has passed.')
+
+        p.set_value('starttime', 'asdasd')
+        p.save()
+        err = self.post_answer(p.type, p.full_task_id, [], expect_status=400)
+        self.assertDictEqual({'error': 'Invalid date format: asdasd'}, err)
