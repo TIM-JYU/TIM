@@ -3,7 +3,6 @@ import logging
 import os
 
 import sys
-from logging.handlers import RotatingFileHandler
 
 tim_logger = logging.getLogger('tim')
 tim_logger.setLevel(logging.DEBUG)
@@ -26,7 +25,7 @@ def setup_logging(app):
             os.mkdir(app.config['LOG_DIR'])
         except FileExistsError:
             pass
-    file_handler = RotatingFileHandler(app.config['LOG_PATH'], maxBytes=1024 * 1024 * 100, backupCount=1000)
+    file_handler = logging.FileHandler(app.config['LOG_PATH'])
     file_handler.setLevel(app.config['LOG_LEVEL'])
     file_handler.setFormatter(formatter)
     global tim_logger
