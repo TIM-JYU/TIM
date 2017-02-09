@@ -57,38 +57,32 @@ timApp.defineAreas = function (sc, http, q, $injector, $compile, $window, $docum
         return false;
     };
 
-    sc.onClick(".areacollapse", function ($this, e) {
-        if ($(e.target).hasClass('areareadline'))
+    sc.onClick(".areaexpand, .areacollapse", function ($this, e) {
+        if ($(e.target).hasClass('areareadline') ||
+            $(e.target).hasClass('readline') ||
+            $(e.target).hasClass('editline'))
             return;
-
-        $this.removeClass("areacollapse");
+        var expanding = true;
+        var newClass = 'areacollapse';
+        if ($this.hasClass('areacollapse')) {
+            expanding = false;
+            newClass = 'areaexpand';
+        }
+        $this.removeClass("areaexpand areacollapse");
         var area_name = $this.attr('data-area');
-        sc.getArea(area_name).addClass("collapsed");
-        $('.areawidget_' + area_name).addClass("collapsed");
-        $this.addClass("disabledexpand");
+        var toggle = $this.children('.areatoggle');
+        toggle.attr('class', '');
+        if (expanding) {
+            sc.getArea(area_name).removeClass("collapsed");
+            $('.areawidget_' + area_name).removeClass("collapsed");
+            toggle.attr('class', 'areatoggle glyphicon glyphicon-minus');
+        } else {
+            sc.getArea(area_name).addClass("collapsed");
+            $('.areawidget_' + area_name).addClass("collapsed");
+            toggle.attr('class', 'areatoggle glyphicon glyphicon-plus');
+        }
 
-        // Set expandable after a timeout to avoid expanding right after collapse
-        $window.setTimeout(function () {
-            $this.removeClass("disabledexpand");
-            $this.addClass("areaexpand");
-        }, 200);
-    });
-
-    sc.onClick(".areaexpand", function ($this, e) {
-        if ($(e.target).hasClass('areareadline'))
-            return;
-
-        $this.removeClass("areaexpand");
-        var area_name = $this.attr('data-area');
-        sc.getArea(area_name).removeClass("collapsed");
-        $('.areawidget_' + area_name).removeClass("collapsed");
-        $this.addClass("disabledcollapse");
-
-        // Set collapsible after a timeout to avoid collapsing right after expand
-        $window.setTimeout(function () {
-            $this.removeClass("disabledcollapse");
-            $this.addClass("areacollapse");
-        }, 200);
+        $this.addClass(newClass);
     });
 
     sc.showAreaOptionsWindow = function (e, $area, $pars, coords) {

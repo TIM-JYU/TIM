@@ -513,61 +513,21 @@ button.showMap {
 }
 
 .area {
+    // required for correct positioning of area edit line
     position: relative;
 }
 
-.areacollapse, .areaexpand, .disabledcollapse, .disabledexpand {
+.areacollapse, .areaexpand {
     cursor: pointer;
-    position: relative;
 }
 
-.areatitle {
-    /*
-    padding-left: 10px;
-    display: inline;
-    */
-    p {
-        display: inline;
+.areaexpand, .areacollapse {
+    & > .glyphicon {
+        position: absolute;
+        font-size: large;
+        left: -$editline-width - 0.5em;
+        color: $areacollapse-color;
     }
-
-    h1 {
-       @include h1-base();
-    }
-    h1, h2, h3, h4, h5, h6 {
-        display: inline;
-        vertical-align: middle;
-    }
-}
-
-.areaexpand, .disabledexpand, .areacollapse, .disabledcollapse {
-    left: -1.5em;
-    margin-right: -4em;
-    margin-bottom: 1em;
-
-    @media (max-width: $screen-sm + 6) {
-        left: -1em;
-        margin-right: -1em;
-    }
-    @media (max-width: $screen-xs-max) {
-        left: 0.8em;
-        margin-right: -0.8em;
-    }
-}
-
-.areacollapse::before, .areaexpand::before {
-    color: $areacollapse-color;
-}
-
-.disabledcollapse::before, .disabledexpand::before {
-    color: #ccc;
-}
-
-.areacollapse::before, .disabledcollapse::before {
-    content: "[-]";
-}
-
-.areaexpand::before, .disabledexpand::before {
-    content: "[+]";
 }
 
 .areapartline::before {

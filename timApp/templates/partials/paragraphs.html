@@ -91,7 +91,12 @@
              t="{{ t.t }}"
              attrs="{{ t.attrs_str }}"
              data-area="{{ t.collapse_area }}">
-            <span class="areatitle">{{ t.html|safe }}</span>
+            {% if 'areaexpand' in t.collapse_class %}
+                <i class="areatoggle glyphicon glyphicon-plus"></i>
+            {% else %}
+                <i class="areatoggle glyphicon glyphicon-minus"></i>
+            {% endif %}
+            <p class="areatitle">{{ t.html|safe }}</p>
             <div class="readline {{ t.status|join(' ')|trim }}" title="Click to mark this area as read"></div>
            {{ editline|safe }}
         </div>
