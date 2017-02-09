@@ -119,16 +119,16 @@ class PluginTest(TimRouteTest):
                                    'par_id': par_id,
                                    'doc_id': doc.doc_id})
         self.assertDictEqual({'html': "<div id='" + task_id_ext + "' data-plugin='/mmcq'><mmcq "
-                                                                  "data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;button&quot;:null,&quot;onTry&quot;:null,&quot;header&quot;:null,&quot;stem&quot;:&quot;&lt;p&gt;Answer "
+                                                                  "data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;falseText&quot;:null,&quot;button&quot;:null,&quot;wrongText&quot;:null,&quot;onTry&quot;:null,&quot;header&quot;:null,&quot;stem&quot;:&quot;Answer "
                                                                   'yes or no to the following '
-                                                                  'questions.&lt;/p&gt;&quot;,&quot;headerText&quot;:null,&quot;choices&quot;:[{&quot;text&quot;:&quot;&lt;p&gt;&lt;span '
+                                                                  'questions.&quot;,&quot;headerText&quot;:null,&quot;choices&quot;:[{&quot;text&quot;:&quot;&lt;span '
                                                                   'class=\\&quot;math '
-                                                                  'inline\\&quot;&gt;\\\\(2^2=4\\\\)&lt;/span&gt;&lt;/p&gt;&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;&lt;p&gt;This '
-                                                                  'is true.&lt;/p&gt;&quot;},{&quot;text&quot;:&quot;&lt;p&gt;All '
+                                                                  'inline\\&quot;&gt;\\\\(2^2=4\\\\)&lt;/span&gt;&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;This '
+                                                                  'is true.&quot;},{&quot;text&quot;:&quot;All '
                                                                   'cats are '
-                                                                  'black.&lt;/p&gt;&quot;,&quot;correct&quot;:false,&quot;reason&quot;:&quot;&lt;p&gt;No '
-                                                                  'way.&lt;/p&gt;&quot;},{&quot;text&quot;:&quot;&lt;p&gt;Guess.&lt;/p&gt;&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;&lt;p&gt;No '
-                                                                  "reason.&lt;/p&gt;&quot;}],&quot;buttonText&quot;:null}}'></mmcq></div>",
+                                                                  'black.&quot;,&quot;correct&quot;:false,&quot;reason&quot;:&quot;No '
+                                                                  'way.&quot;},{&quot;text&quot;:&quot;Guess.&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;No '
+                                                                  "reason.&quot;}],&quot;trueText&quot;:null,&quot;buttonText&quot;:null,&quot;correctText&quot;:null}}'></mmcq></div>",
                               'reviewHtml': None}, j)
 
         timdb = self.get_db()
