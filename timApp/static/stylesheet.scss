@@ -87,13 +87,6 @@ a .glyphicon {
     line-height: 1.3;
 }
 
-// fixes mcq and mmcq style when specifying custom button text
-.mmcq, .mcq {
-    button p {
-        margin: 0;
-    }
-}
-
 // all document-related styles under .paragraphs selector!
 .paragraphs, .slides {
 //.paragraphs {
@@ -150,6 +143,17 @@ a .glyphicon {
             @include heading-base($heading-outdent*0.6);
             margin-top: 2em;
             margin-bottom: 0.5cm;
+        }
+        .mcq, .mmcq {
+            text-align: center;
+
+            .stem {
+                text-align: left;
+            }
+
+            button {
+                @extend .timButton;
+            }
         }
     }
 
@@ -216,19 +220,6 @@ a .glyphicon {
 
     .answerBrowser {
         text-align: left;
-    }
-
-
-    .mcq {
-        text-align: center;
-
-        span {
-            text-align: left;
-        }
-
-        button {
-            @extend .timButton;
-        }
     }
 
     p.plgfooter {
@@ -978,10 +969,6 @@ input[type="file"] {
     position: absolute;
     left: 105%;
     width: 400px;
-}
-
-.mcq {
-    /* padding-left: 2em; */
 }
 
 .sagecell_editor {
