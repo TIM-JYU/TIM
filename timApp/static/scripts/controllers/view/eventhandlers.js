@@ -43,7 +43,10 @@ timApp.defineEventHandlers = function (sc, http, q, $injector, $compile, $window
         $document.on('touchcancel', className, function (e) {
             downEvent = null;
         });
-        $document.on('mouseup touchend', className, function (e) {
+        // it is wrong to register both events at the same time; see https://stackoverflow.com/questions/8503453
+        var isIOS = ((/iphone|ipad/gi).test(navigator.appVersion));
+        var eventName = isIOS ? "touchend" : "mouseup";
+        $document.on(eventName, className, function (e) {
             if (downEvent !== null) {
                 if (func($(this), downEvent)) {
                     //e.preventDefault();
