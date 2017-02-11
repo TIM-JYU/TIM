@@ -530,14 +530,16 @@ button.showMap {
 
 .areacollapse, .areaexpand {
     cursor: pointer;
+    padding-left: 1.5em;
 }
 
 .areaexpand, .areacollapse {
     & > .glyphicon {
         position: absolute;
         font-size: large;
-        left: -$editline-width - 0.5em;
+        left:  0em;     /* -$editline-width - 0.5em; */
         color: $areacollapse-color;
+        z-index: 5; /* to be top of editline */
     }
 }
 
