@@ -93,6 +93,28 @@ ConsolePWD.getPWD = function(scope) {
 var csJSTypes = ["js", "glowscript", "vpython"];
 
 // =================================================================================================================
+// Known upload files
+
+var uploadFileTypes = {};
+uploadFileTypes.show = ["pdf"];
+
+uploadFileTypes.is = function(types, file) {
+    if (!file) return false;
+    file = file.toLowerCase();
+    for (var i=0; i< types.length; i++)
+       if ( file.endsWith(types[i])) return true;
+    return false;
+}
+
+uploadFileTypes.name = function(file) {
+    return file.split('\\').pop().split('/').pop();
+}
+
+function resizeIframe(obj) {
+  obj.style.height = obj.contentWindow.document.body.scrollHeight + 'px';
+}
+
+// =================================================================================================================
 // Things for known languages
 
 var languageTypes = {};
@@ -1016,18 +1038,45 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         if ( !file || !type ) return;
         $scope.uploadedFile = file;
         $scope.uploadedType = type;
-            var html = '<p class="smalllink"><a href="' + file +'">' + file + '</a> (' + type + ')</p>';
+        var name = uploadFileTypes.name(file);
+        var html = '<p class="smalllink"><a href="' + file +'" title="'+ type +'">' + name + '</a></p>'; // (' + type + ')</p>';
         if (type.indexOf("image") == 0) {
             html += '<img src="'+$scope.uploadedFile+'"/>';
             $scope.uploadresult = $sce.trustAsHtml(html);
-        } else {
+            return;
+        }
+        if (type.indexOf("video") == 0) {
+            html += '<video src="'+$scope.uploadedFile+'" controls/>';
+            $scope.uploadresult = $sce.trustAsHtml(html);
+            return;
+        }
+        if (type.indexOf("audio") == 0) {
+            html += '<audio src="'+$scope.uploadedFile+'" controls/>';
+            $scope.uploadresult = $sce.trustAsHtml(html);
+            return;
+        }
+        if ( type.indexOf("text") == 0 ) {
             html += '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:900px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;"  width:1200px>';
-            html += '<iframe width="700" height="900"  src="' + file +'" target="csdocument" allowfullscreen/>';
+            html += '<iframe  width="800" src="' + file +'" target="csdocument" allowfullscreen  onload="resizeIframe(this)" />';
+            html += '</div>';
+			$scope.uploadresult = $sce.trustAsHtml(html);
+			return;
+
+        }
+
+        if ( uploadFileTypes.is(uploadFileTypes.show, file)) {
+            html += '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:1200px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;"  width:1200px>';
+            html += '<iframe width="800" height="900"  src="' + file +'" target="csdocument" allowfullscreen onload="resizeIframe(this)" />';
             //html += '<embed  width="800" height="16000"  src="' + file +'" />';
             //html += '<object width="800" height="600"   data="' + file +'" type="' + type +'"  ></object>';
             html += '</div>';
 			$scope.uploadresult = $sce.trustAsHtml(html);
+			return;
         }
+
+        var html = '<p></p><p>Ladattu: <a href="' + file +'" title="'+ type +'">' + name + '</a></p>';
+        $scope.uploadresult = $sce.trustAsHtml(html);
+        return;
     }
     
 

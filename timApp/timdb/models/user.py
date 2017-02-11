@@ -50,7 +50,10 @@ class User(db.Model):
         raise TimDbException('Personal usergroup for user {} was not found!'.format(self.name))
 
     def derive_personal_folder_name(self):
-        basename = remove_path_special_chars(self.real_name).lower()
+        real_name = self.real_name
+        if not real_name:
+            real_name = "anonymous"
+        basename = remove_path_special_chars(real_name).lower()
         index = ''
         while Folder.find_by_path('users/' + basename + index):
             index = str(int(index or 1) + 1)

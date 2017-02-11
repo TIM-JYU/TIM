@@ -123,7 +123,7 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin
 
 
 def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8",
-         extra="", ulimit=None, noX11=False, savestate=""):
+         extra="", ulimit=None, noX11=False, savestate="", dockercontainer="timimages/cs3"):
     """Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed to fullfill the
     run inside docker.
 
@@ -138,6 +138,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     :param code: which coding schema to use ("utf-8" is default)
     :param extra: extra command used for the run
     :param savastate: to which file to save te state of shell
+    :param dockercontainer: what container to run, container needs user with name agent
     :return: error code, stdout text, stderr text
 
     """
@@ -162,7 +163,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
         source = 'source '
     # tehdään komentojono jossa suuntaukset
     cmnds = "#!/bin/bash\n" + ulimit + "\n" + extra + source + cmnds + \
-        " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
+            " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
     # cmnds = "#!/bin/bash\n" + ulimit + "\n" + extra + cmnds + " 1>" + "~/" +
     # stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
     print("============")
@@ -185,7 +186,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
              "/tmp/uhome/" + udir + "/:/home/agent/",
              # dargs = ["/cs/docker-run-timeout.sh", "10s", "-v", "/opt/cs:/cs/:ro", "-v", "/tmp/uhome/" + udir + ":/home/agent/",
              # "-w", "/home/agent", "ubuntu", "/cs/rcmd.sh", urndname + ".sh"]
-             "-w", "/home/agent", "timimages/cs3", "/cs/rcmd.sh", urndname + ".sh", str(noX11), str(savestate)]
+             "-w", "/home/agent", dockercontainer, "/cs/rcmd.sh", urndname + ".sh", str(noX11), str(savestate)]
     print(dargs)
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
     try:
@@ -442,11 +443,12 @@ def get_html(ttype, query):
         if type(code) != type(''):
             print("Ei ollut string: ", code, jso)
             code = '' + str(code)
-         # ebycode = html.escape(code)
+            # ebycode = html.escape(code)
         ebycode = code.replace("</pre>", "< /pre>")  # prevent pre ending too early
         if tiny:
-            lazy_visible = '<div class="lazyVisible csRunDiv csTinyDiv no-popup-menu" >' + get_tiny_surrounding_headers(query,
-                                                                                                                        '' + ebycode + '') + '</div>'
+            lazy_visible = '<div class="lazyVisible csRunDiv csTinyDiv no-popup-menu" >' + get_tiny_surrounding_headers(
+                query,
+                '' + ebycode + '') + '</div>'
         else:
             lazy_visible = '<div class="lazyVisible csRunDiv no-popup-menu" >' + get_surrounding_headers(query,
                                                                                                          '<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre" ng-non-bindable><pre>' + ebycode + '</pre></div>') + '</div>'
@@ -585,7 +587,7 @@ def check_code(out, err, compiler_output, ttype):
     return out, err
 
 
-def check_fullprogram(query, cut_errors = False):
+def check_fullprogram(query, cut_errors=False):
     # Try to find fullprogram or fullfile attribute and if found,
     # do program, bycode and replace attributes from that
     query.cut_errors = get_param_table(query, "cutErrors")
@@ -748,7 +750,6 @@ def get_imgsource(query):
 
 
 class TIMServer(http.server.BaseHTTPRequestHandler):
-
     def __init__(self, request, client_address, _server):
         # print(request,client_address)
         super().__init__(request, client_address, _server)
@@ -884,8 +885,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         '''
         if self.path.find('/login') >= 0:
             username = check_korppi_user(self,"tim")
-            if not username: return 
-            
+            if not username: return
+
             self.send_response(200)
             content_type = 'text/plain'
             self.send_header('Content-type', content_type)
@@ -1040,6 +1041,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             noX11 = get_json_param(query.jso, "markup", "noX11", False)
             extra_files = get_json_param(query.jso, "markup", "extrafiles", None)
+            dockercontainer = get_json_param(query.jso, "markup", "dockercontainer", "timimages/cs3")
             if not extra_files:
                 extra_files = get_json_param(query.jso, "markup", "-extrafiles", None)
 
@@ -1367,7 +1369,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     # pngname = "/csimages/%s.png" % basename
                     pngname = "/csimages/%s.png" % rndname
 
-                # print("TYYPPI = " + ttype + " nimi = " + csfname + " class = " + javaclassname)
+                    # print("TYYPPI = " + ttype + " nimi = " + csfname + " class = " + javaclassname)
 
             if "jcomtest" in ttype:
                 # ComTest test cases
@@ -1501,8 +1503,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         nunit = "/usr/lib/mono/gac/nunit.framework/" + frms[0] + "/nunit.framework.dll"
                     jypeliref = "/r:System.Numerics /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing"
                     cmdline = (
-                        "java -jar /cs/java/cs/ComTest.jar nunit %s && mcs /out:%s /target:library " + jypeliref + " /reference:%s %s %s") % (
-                        csfname, testdll, nunit, csfname, testcs)
+                                  "java -jar /cs/java/cs/ComTest.jar nunit %s && mcs /out:%s /target:library " + jypeliref + " /reference:%s %s %s") % (
+                                  csfname, testdll, nunit, csfname, testcs)
                 elif ttype == "jcomtest":
                     cmdline = "java comtest.ComTest %s && javac %s %s" % (csfname, csfname, testcs)
                 elif ttype == "junit":
@@ -1650,7 +1652,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 code, out, err, pwd = (0, "", ("Compiled " + filename), "")
             elif ttype == "jypeli":
                 code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                           uargs=userargs, ulimit="ulimit -f 80000", noX11=noX11)
+                                           uargs=userargs, ulimit="ulimit -f 10000", noX11=noX11)
                 if type('') != type(out):
                     out = out.decode()
                 if type('') != type(err):
@@ -1939,7 +1941,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         # code, out, err = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
                         code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=timeout, env=env, stdin=stdin,
                                                    uargs=userargs,
-                                                   extra=extra, noX11=noX11, savestate=savestate)
+                                                   extra=extra, noX11=noX11, savestate=savestate,
+                                                   dockercontainer=dockercontainer)
                         print(pwd)
                     except OSError as e:
                         print(e)
@@ -2012,6 +2015,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "swift":
                     print("swift: ", exename)
                     code, out, err, pwd = run2(["swift", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
+                                               ulimit="ulimit -f 80000 -t 10 -s 600",
                                                uargs=userargs, noX11=noX11)
                     if imgsource and pngname:
                         image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
@@ -2040,7 +2044,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
                 elif ttype == "octave":
                     print("octave: ", exename)
-                    code, out, err, pwd = run2(["octave", "--no-window-system", "--no-gui", "-qf", pure_exename], cwd=prgpath, timeout=20, env=env,
+                    code, out, err, pwd = run2(["octave", "--no-window-system", "--no-gui", "-qf", pure_exename],
+                                               cwd=prgpath, timeout=20, env=env,
                                                stdin=stdin,
                                                uargs=userargs, ulimit="ulimit -f 80000", noX11=True)
                     if err:
@@ -2217,10 +2222,12 @@ if __debug__:
     class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
         """Handle requests in a separate thread."""
 
+
     print("Debug mode/ThreadingMixIn")
 else:
     class ThreadedHTTPServer(socketserver.ForkingMixIn, http.server.HTTPServer):
         """Handle requests in a separate thread."""
+
 
     print("Normal mode/ForkingMixIn")
 
