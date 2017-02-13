@@ -1669,9 +1669,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 wait_file(imgsource)
                 # statinfo = os.stat(imgsource)
                 # print("bmpsize: ", statinfo.st_size)
+                # kuva noin: -rw-rw-rw-+ 1 agent agent 1536122 Feb 13 21:00 output.bmp
                 run(["convert", "-flip", imgsource, pngname], cwd=prgpath, timeout=20)
                 # print(imgsource, pngname)
-                #remove(imgsource)
+                remove(imgsource)
                 # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/cs/%s.png\n" % (basename))
                 print("*** Screenshot: https://tim.it.jyu.fi/csimages/cs/%s\n" % pure_pngname)
                 # TODO: clean up screenshot directory
