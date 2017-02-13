@@ -42,7 +42,8 @@ if ! [  -z "$savestate"  ]; then
     cd $PWD # ei tässä kun kaikki eivät kestä muutosta, mutta ilman tätä ei aloita edellisestä hakemistosta
 fi
 
-ulimit -f 80000 # -t 1 -v 2000 -s 100 -u 10
+ulimit -f 200000 # -t 1 -v 2000 -s 100 -u 10
+
 source ~/$cmd
 
 if ! [  -z "$savestate"  ]; then

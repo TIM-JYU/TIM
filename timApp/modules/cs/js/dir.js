@@ -96,7 +96,7 @@ var csJSTypes = ["js", "glowscript", "vpython"];
 // Known upload files
 
 var uploadFileTypes = {};
-uploadFileTypes.show = ["pdf"];
+uploadFileTypes.show = ["pdf","xml"];
 
 uploadFileTypes.is = function(types, file) {
     if (!file) return false;

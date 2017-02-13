@@ -895,6 +895,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             return
         '''
 
+        is_test = ""
+
         is_template = self.path.find('/template') >= 0
         is_fullhtml = self.path.find('/fullhtml') >= 0
         is_gethtml = self.path.find('/gethtml') >= 0
@@ -1652,7 +1654,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 code, out, err, pwd = (0, "", ("Compiled " + filename), "")
             elif ttype == "jypeli":
                 code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                           uargs=userargs, ulimit="ulimit -f 10000", noX11=noX11)
+                                           uargs=userargs, ulimit="ulimit -f 80000", noX11=noX11)
                 if type('') != type(out):
                     out = out.decode()
                 if type('') != type(err):
@@ -1669,7 +1671,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 # print("bmpsize: ", statinfo.st_size)
                 run(["convert", "-flip", imgsource, pngname], cwd=prgpath, timeout=20)
                 # print(imgsource, pngname)
-                remove(imgsource)
+                #remove(imgsource)
                 # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/cs/%s.png\n" % (basename))
                 print("*** Screenshot: https://tim.it.jyu.fi/csimages/cs/%s\n" % pure_pngname)
                 # TODO: clean up screenshot directory
