@@ -79,7 +79,7 @@ class User(db.Model):
         if not folders:
             return Folder.create('users/' + self.derive_personal_folder_name(),
                                  self.get_personal_group().id,
-                                 title="{}'s folder".format(self.real_name),
+                                 title="{}".format(self.real_name),
                                  apply_default_rights=True)
         return folders[0]
 

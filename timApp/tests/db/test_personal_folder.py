@@ -18,9 +18,9 @@ class PersonalFolderTest(TimRouteTest):
             f3 = user3.get_personal_folder()
             self.assertEqual('weird-name3', f3.name)
             self.assertEqual('weird-name3', f3.name)
-            self.assertEqual("Weird Name?'s folder", f1.title)
-            self.assertEqual("Weird Name??'s folder", f2.title)
-            self.assertEqual("Weird ?Name's folder", f3.title)
+            self.assertEqual("Weird Name?", f1.title)
+            self.assertEqual("Weird Name??", f2.title)
+            self.assertEqual("Weird ?Name", f3.title)
 
     def test_anon_personal_folder(self):
         """Make sure personal folders aren't created for each anonymous request."""
