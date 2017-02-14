@@ -11,6 +11,7 @@ import traceback
 from datetime import datetime
 from datetime import timezone
 
+import pprint
 import werkzeug.exceptions as ex
 from flask import Blueprint
 from flask import Response
@@ -162,7 +163,7 @@ def forbidden(error):
 
 @app.errorhandler(500)
 def internal_error(error):
-    log_error(get_request_message(500))
+    log_error(get_request_message(500, include_body=True))
     error.description = Markup('Something went wrong with the server, sorry. '
                                'TIM developers have been notified about this. '
                                'If the problem persists, please send email to <a href="mailto:{0}">{0}</a>.'
@@ -176,7 +177,7 @@ Exception happened on {} at {}
 {}
 """.format(datetime.now(tz=timezone.utc),
            request.url,
-           get_request_message(500),
+           get_request_message(500, include_body=True),
            tb).strip()
     send_email(rcpt=app.config['ERROR_EMAIL'],
                subject='{}: Error at {} ({})'.format(app.config['TIM_HOST'], request.path, get_current_user_name()),
@@ -588,12 +589,15 @@ def log_request(response):
     return response
 
 
-def get_request_message(status_code=None):
-    return '{} [{}]: {} {} {}'.format(get_current_user_name(),
-                                      request.headers.get('X-Forwarded-For') or request.remote_addr,
-                                      request.method,
-                                      request.full_path if request.query_string else request.path,
-                                      status_code or '').strip()
+def get_request_message(status_code=None, include_body=False):
+    msg = '{} [{}]: {} {} {}'.format(get_current_user_name(),
+                                     request.headers.get('X-Forwarded-For') or request.remote_addr,
+                                     request.method,
+                                     request.full_path if request.query_string else request.path,
+                                     status_code or '').strip()
+    if not include_body or request.method not in ('POST', 'PUT', 'DELETE'):
+        return msg
+    return '{}\n\n{}'.format(msg, pprint.pformat(request.get_json(silent=True) or request.get_data(as_text=True)))
 
 
 @app.after_request
