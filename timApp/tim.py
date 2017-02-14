@@ -187,7 +187,7 @@ Exception happened on {} at {}
     return error_generic(error, 500)
 
 
-@app.route('/exception')
+@app.route('/exception', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def throw_ex():
     verify_admin()
     raise Exception('This route throws an exception intentionally for testing purposes.')
