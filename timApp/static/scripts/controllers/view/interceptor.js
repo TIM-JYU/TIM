@@ -49,6 +49,22 @@ var timApp = angular.module('timApp').config(['$httpProvider', function ($httpPr
                         });
                     }
                     return response;
+                },
+                'responseError': function (response) {
+                    if (re.test(response.config.url)) {
+                        var match = re.exec(response.config.url);
+                        var taskIdFull = match[1];
+                        var parts = taskIdFull.split('.');
+                        var docId = parseInt(parts[0], 10);
+                        var taskName = parts[1];
+                        var taskId = docId + '.' + taskName;
+                        $rootScope.$broadcast('answerSaved', {
+                            taskId: taskId,
+                            savedNew: false,
+                            error: response.data.error
+                        });
+                    }
+                    return $q.reject();
                 }
             };
         }
