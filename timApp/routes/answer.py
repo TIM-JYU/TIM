@@ -258,7 +258,7 @@ def get_hidden_name(user_id):
 
 def should_hide_name(doc_id, user_id):
     timdb = get_timdb()
-    return not timdb.users.has_teacher_access(user_id, doc_id) and user_id != get_current_user_id()
+    return not has_teacher_access(user_id, doc_id) and user_id != get_current_user_id()
 
 
 @answers.route("/taskinfo/<task_id>")

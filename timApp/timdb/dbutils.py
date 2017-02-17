@@ -6,7 +6,8 @@ from timdb.models.block import Block
 from timdb.tim_models import db, BlockAccess
 
 
-def insert_block(description: Optional[str], owner_group_id: Optional[int], block_type: int, commit: bool = True) -> Block:
+def insert_block(description: Optional[str], owner_group_id: Optional[int], block_type: int,
+                 commit: bool = True) -> Block:
     """Inserts a block to database.
 
     :param commit: Whether to commit the change.
@@ -34,6 +35,7 @@ def insert_block(description: Optional[str], owner_group_id: Optional[int], bloc
 def copy_default_rights(item_id: int, item_type, commit=True):
     # TODO: Should not need to import anything from routes
     from dbaccess import get_timdb
+    from timdb.userutils import grant_access
     timdb = get_timdb()
     default_rights = []
     folder = Block.query.get(item_id).parent
@@ -41,12 +43,12 @@ def copy_default_rights(item_id: int, item_type, commit=True):
         default_rights += timdb.users.get_default_rights_holders(folder.id, item_type)
         folder = folder.parent
     for d in default_rights:
-        timdb.users.grant_access(d['gid'],
-                                 item_id,
-                                 d['access_name'],
-                                 commit=commit,
-                                 accessible_from=d['accessible_from'],
-                                 accessible_to=d['accessible_to'],
-                                 duration_from=d['duration_from'],
-                                 duration_to=d['duration_to'],
-                                 duration=d['duration'])
+        grant_access(d['gid'],
+                     item_id,
+                     d['access_name'],
+                     commit=commit,
+                     accessible_from=d['accessible_from'],
+                     accessible_to=d['accessible_to'],
+                     duration_from=d['duration_from'],
+                     duration_to=d['duration_to'],
+                     duration=d['duration'])

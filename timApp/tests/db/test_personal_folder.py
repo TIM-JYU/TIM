@@ -1,16 +1,16 @@
 from tests.server.timroutetest import TimRouteTest
 from tim_app import app
 from timdb.models.folder import Folder
+from timdb.models.user import User
 
 
 class PersonalFolderTest(TimRouteTest):
 
     def test_personal_folder_name(self):
         with app.test_request_context():
-            db = self.get_db()
-            user, group = db.users.create_user_with_group('weirdname?', 'Weird Name?', 'weird@example.com')
-            user2, group2 = db.users.create_user_with_group('weirdname??', 'Weird Name??', 'weird2@example.com')
-            user3, group3 = db.users.create_user_with_group('weird?name', 'Weird ?Name', 'weird3@example.com')
+            user, group = User.create_with_group('weirdname?', 'Weird Name?', 'weird@example.com')
+            user2, group2 = User.create_with_group('weirdname??', 'Weird Name??', 'weird2@example.com')
+            user3, group3 = User.create_with_group('weird?name', 'Weird ?Name', 'weird3@example.com')
             f1 = user.get_personal_folder()
             self.assertEqual('weird-name', f1.name)
             f2 = user2.get_personal_folder()

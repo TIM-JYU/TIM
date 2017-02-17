@@ -10,52 +10,56 @@
 {% endblock %}
 {% block content %}
     <div ng-controller="PermCtrl" class="manage">
-        <div class="panel panel-default">
-            <div class="panel-heading">{{ obj_name|capitalize }} permissions</div>
-            <div class="panel-body">
-                <uib-tabset>
-                    <uib-tab heading="Rights for this {{ obj_name }}">
-                        <rights-editor
-                                item-id="item.id"
-                                url-root="permissions"
-                                access-types="accessTypes">
-                        </rights-editor>
-                    </uib-tab>
-                    <uib-tab ng-if="item.isFolder" heading="Default rights for new documents">
-                        <rights-editor
-                                item-id="item.id"
-                                url-root="defaultPermissions/document"
-                                access-types="accessTypes">
-                        </rights-editor>
-                    </uib-tab>
-                    <uib-tab ng-if="item.isFolder" heading="Default rights for new folders">
-                        <rights-editor
-                                item-id="item.id"
-                                url-root="defaultPermissions/folder"
-                                access-types="accessTypes">
-                        </rights-editor>
-                    </uib-tab>
-                </uib-tabset>
+        {% if item.rights.manage %}
+            <div class="panel panel-default">
+                <div class="panel-heading">{{ obj_name|capitalize }} permissions</div>
+                <div class="panel-body">
+                    <uib-tabset>
+                        <uib-tab heading="Rights for this {{ obj_name }}">
+                            <rights-editor
+                                    item-id="item.id"
+                                    url-root="permissions"
+                                    access-types="accessTypes">
+                            </rights-editor>
+                        </uib-tab>
+                        <uib-tab ng-if="item.isFolder" heading="Default rights for new documents">
+                            <rights-editor
+                                    item-id="item.id"
+                                    url-root="defaultPermissions/document"
+                                    access-types="accessTypes">
+                            </rights-editor>
+                        </uib-tab>
+                        <uib-tab ng-if="item.isFolder" heading="Default rights for new folders">
+                            <rights-editor
+                                    item-id="item.id"
+                                    url-root="defaultPermissions/folder"
+                                    access-types="accessTypes">
+                            </rights-editor>
+                        </uib-tab>
+                    </uib-tabset>
+                </div>
             </div>
-        </div>
-        <div class="panel panel-default">
-            <div class="panel-heading">{{ obj_name|capitalize }} title</div>
-            <div class="panel-body">
-                <form>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <input class="form-control" id="newTitle" type="text" ng-model="newTitle">
-                            <span class="input-group-btn">
+        {% endif %}
+        {% if item.rights.edit %}
+            <div class="panel panel-default">
+                <div class="panel-heading">{{ obj_name|capitalize }} title</div>
+                <div class="panel-body">
+                    <form>
+                        <div class="form-group">
+                            <div class="input-group">
+                                <input class="form-control" id="newTitle" type="text" ng-model="newTitle">
+                                <span class="input-group-btn">
                             <button ng-click="changeTitle(newTitle)" class="timButton"
                                     ng-disabled="newTitle === item.title">
                             Update
                         </button>
                         </span>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
-        </div>
+        {% endif %}
         {% block managecontent %}{% endblock %}
     </div>
 {% endblock %}

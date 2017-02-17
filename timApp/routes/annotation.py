@@ -14,7 +14,7 @@ from flask import Blueprint
 from flask import abort
 from flask import request
 
-from accesshelper import verify_logged_in
+from accesshelper import verify_logged_in, has_view_access, has_seeanswers_access, has_teacher_access, has_ownership
 from dbaccess import get_timdb
 from responsehelper import json_response, ok_response
 from sessioninfo import get_current_user_id
@@ -165,7 +165,7 @@ def update_annotation():
         return abort(400, "Color should be a hex string, e.g. '#FFFFFF'.")
     new_values['color'] = color
 
-    if timdb.users.has_teacher_access(user_id, doc_id):
+    if has_teacher_access(user_id, doc_id):
         new_values['points'] = points
     else:
         if points is None:
@@ -262,14 +262,13 @@ def get_annotations(doc_id: int):
 
     """
     timdb = get_timdb()
-    user_id = get_current_user_id()
     if not timdb.documents.exists(doc_id):
         return abort(404, "No such document.")
-    if not timdb.users.has_view_access(user_id, doc_id):
+    if not has_view_access(doc_id):
         return abort(403, "View access required.")
-    user_has_see_answers = timdb.users.has_seeanswers_access(user_id, doc_id)
-    user_has_teacher = timdb.users.has_teacher_access(user_id, doc_id)
-    user_has_owner = timdb.users.user_is_owner(user_id, doc_id)
+    user_has_see_answers = bool(has_seeanswers_access(doc_id))
+    user_has_teacher = bool(has_teacher_access(doc_id))
+    user_has_owner = bool(has_ownership(doc_id))
 
     results = timdb.annotations.get_annotations_with_comments_in_document(get_current_user_id(), user_has_see_answers,
                                                                           user_has_teacher, user_has_owner, doc_id)

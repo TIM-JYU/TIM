@@ -13,6 +13,7 @@ from requesthelper import get_option
 from sessioninfo import get_current_user_object, get_current_user_id, logged_in, get_current_user_group
 from timdb.models.docentry import DocEntry
 from timdb.tim_models import BlockAccess
+from timdb.userutils import get_viewable_blocks
 
 search_routes = Blueprint('search',
                           __name__,
@@ -32,7 +33,7 @@ def search(query):
     if len(query.strip()) < 3:
         abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
     timdb = get_timdb()
-    viewable = timdb.users.get_viewable_blocks(get_current_user_id())
+    viewable = get_viewable_blocks(get_current_user_id())
     docs = timdb.documents.get_documents(filter_ids=viewable)
     current_user = get_current_user_object()
     all_texts = []

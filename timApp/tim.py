@@ -31,9 +31,9 @@ import containerLink
 from ReverseProxied import ReverseProxied
 from accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
     has_view_access, has_manage_access, grant_access_to_session_users, ItemLockedException, \
-    get_viewable_blocks_or_none_if_admin, has_ownership
+    get_viewable_blocks_or_none_if_admin
 from cache import cache
-from common import get_preferences, verify_doc_exists
+from common import get_preferences
 from dbaccess import get_timdb
 from documentmodel.document import Document
 from documentmodel.documentversion import DocumentVersion
@@ -71,7 +71,7 @@ from timdb.models.folder import Folder
 from timdb.models.translation import Translation
 from timdb.models.user import User
 from timdb.tim_models import db
-from timdb.users import NoSuchUserException, DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME
+from timdb.userutils import DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME, NoSuchUserException
 from validation import validate_item_and_create
 
 cache.init_app(app)
@@ -266,7 +266,6 @@ def reset_css():
 
 @app.route('/download/<int:doc_id>')
 def download_document(doc_id):
-    verify_doc_exists(doc_id)
     verify_edit_access(doc_id, "Sorry, you don't have permission to download this document.")
     return Response(Document(doc_id).export_markdown(), mimetype="text/plain")
 
@@ -380,8 +379,7 @@ def get_translations(doc_id):
 
     if not timdb.documents.exists(doc_id):
         abort(404, 'Document not found')
-    if not has_view_access(doc_id):
-        abort(403, 'Permission denied')
+    verify_manage_access(doc_id)
 
     return json_response(DocEntry.find_by_id(doc_id, try_translation=True).translations)
 
@@ -408,9 +406,7 @@ def create_translation(tr_doc_id, language):
         abort(404, 'Invalid language identifier')
     if doc.has_translation(language):
         abort(403, 'Translation for this language already exists')
-    if not has_manage_access(doc_id):
-        # todo: check for translation right
-        abort(403, 'You have to be logged in to create a translation')
+    verify_manage_access(doc_id)
 
     src_doc = Document(doc_id)
     cite_doc = timdb.documents.create_citation(src_doc, get_current_user_group())
@@ -430,8 +426,8 @@ def update_translation(doc_id):
     doc = DocEntry.find_by_id(doc_id, try_translation=True)
     if not doc:
         abort(404, 'Source document does not exist')
-    if not has_ownership(doc.src_docid) and not has_ownership(doc.id):
-        abort(403, "You need ownership of either this or the translated document")
+    if not has_manage_access(doc.src_docid) and not has_manage_access(doc.id):
+        abort(403, "You need manage access of either this or the translated document")
     doc.lang_id = lang_id
     doc.title = doc_title
     try:

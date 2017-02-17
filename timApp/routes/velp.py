@@ -15,11 +15,12 @@ from flask import Blueprint
 from flask import abort
 from flask import request
 
-from accesshelper import verify_logged_in
+from accesshelper import verify_logged_in, has_edit_access, has_manage_access
 from dbaccess import get_timdb
 from responsehelper import json_response, set_no_cache_headers, ok_response
 from sessioninfo import get_current_user_object, get_current_user_id, get_current_user_group
 from timdb.models.docentry import DocEntry
+from timdb.userutils import get_viewable_blocks, grant_access
 
 velps = Blueprint('velps',
                   __name__,
@@ -49,7 +50,7 @@ def get_default_velp_group(doc_id: int):
     full_path = doc.path
     doc_path, doc_name = timdb.documents.split_location(full_path)
     edit_access = False
-    if timdb.users.has_edit_access(user_id, doc_id):
+    if has_edit_access(doc_id):
         edit_access = True
     else:
         return set_no_cache_headers(
@@ -58,7 +59,7 @@ def get_default_velp_group(doc_id: int):
     # Check if document's path contains velp groups folder and if it does, make document its own default velp group.
     # This default document declaration isn't saved to database (else eventually all velp groups might be defaults).
     if "velp-groups/" in full_path:
-        if timdb.users.has_edit_access(user_id, doc_id):
+        if has_edit_access(doc_id):
             edit_access = True
         else:
             return set_no_cache_headers(
@@ -81,7 +82,7 @@ def get_default_velp_group(doc_id: int):
         velp_groups.append(v.id)
     default_group = timdb.velp_groups.check_velp_group_ids_for_default_group(velp_groups)
     if default_group is not None:
-        default_group["edit_access"] = timdb.users.has_edit_access(user_id, default_group['id'])
+        default_group["edit_access"] = has_edit_access(default_group['id'])
         return set_no_cache_headers(json_response(default_group))
 
     response = json_response({"id": -1, "name": doc_name + "_default", "edit_access": edit_access})
@@ -162,15 +163,16 @@ def get_velp_groups(doc_id: int):
 
     """
     timdb = get_timdb()
-    user_id = get_current_user_id()
+    user = get_current_user_object()
+    user_id = user.id
 
     velp_groups = get_velp_groups_from_tree(doc_id)
     timdb.velp_groups.add_groups_to_document(({'id': v.id} for v in velp_groups), doc_id, user_id)
 
-    user_groups = timdb.users.get_user_groups(user_id)
+    user_groups = user.get_groups().all()
     user_group_list = []
     for group in user_groups:
-        user_group_list.append(group['id'])
+        user_group_list.append(group.id)
     imported_groups = timdb.velp_groups.get_groups_from_imported_table(user_group_list, doc_id)
     timdb.velp_groups.add_groups_to_document(imported_groups, doc_id, user_id)
 
@@ -181,7 +183,7 @@ def get_velp_groups(doc_id: int):
 
     # SQLite uses 1/0 instead of True/False, change them to True/False for JavaScript side
     for group in all_velp_groups:
-        group['edit_access'] = timdb.users.has_edit_access(user_id, group['id'])
+        group['edit_access'] = has_edit_access(group['id'])
 
     response = json_response(all_velp_groups)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
@@ -293,7 +295,7 @@ def add_velp() -> int:
 
     # Check where user has edit rights and only add new velp to those
     for group in velp_groups:
-        if timdb.users.has_edit_access(current_user_id, group):
+        if has_edit_access(group):
             can_add_velp = True
             velp_groups_rights.append(group)
         else:
@@ -367,7 +369,7 @@ def update_velp(doc_id: int):
 
     # Check that user has edit access to velp via any velp group in database
     for group in all_velp_groups:
-        if timdb.users.has_edit_access(user_id, group['id']):
+        if has_edit_access(group['id']):
             edit_access = True
             break
     if not edit_access:
@@ -381,13 +383,13 @@ def update_velp(doc_id: int):
     # Add all velp group ids user has edit access to in a document to a remove list
     doc_groups = timdb.velp_groups.get_groups_from_document_table(doc_id, user_id)
     for group in doc_groups:
-        if timdb.users.has_edit_access(user_id, group['id']):
+        if has_edit_access(group['id']):
             groups_to_remove.append(group['id'])
             edit_access = True
 
     # Check that user has edit access to velp groups in given velp group list and add them to an add list
     for group in velp_groups:
-        if timdb.users.has_edit_access(user_id, group):
+        if has_edit_access(group):
             edit_access = True
             groups_to_add.append(group)
 
@@ -507,7 +509,7 @@ def change_selection(doc_id: int):
         except KeyError as e:
             return abort(400, "Missing data: " + e.args[0])
         timdb.velp_groups.change_selection(doc_id, velp_group_id, target_type, target_id, user_id, selection)
-    elif selection_type == "default" and timdb.users.has_manage_access(user_id, doc_id):
+    elif selection_type == "default" and has_manage_access(doc_id):
         try:
             selection = json_data['default']
         except KeyError as e:
@@ -547,7 +549,7 @@ def change_all_selections(doc_id: int):
     timdb = get_timdb()
     if selection_type == "show":
         timdb.velp_groups.change_all_target_area_selections(doc_id, target_type, target_id, user_id, selection)
-    elif selection_type == "default" and timdb.users.has_manage_access(user_id, doc_id):
+    elif selection_type == "default" and has_manage_access(doc_id):
         timdb.velp_groups.change_all_target_area_default_selections(doc_id, target_type, target_id, user_id, selection)
 
     response = ok_response()
@@ -581,7 +583,7 @@ def change_default_selection(doc_id: int):
     verify_logged_in()
     user_id = get_current_user_id()
     timdb = get_timdb()
-    if timdb.users.has_manage_access(user_id, doc_id):
+    if has_manage_access(doc_id):
         timdb.velp_groups.change_default_selection(doc_id, velp_group_id, target_type, target_id, selection)
 
     response = ok_response()
@@ -688,7 +690,7 @@ def create_velp_group(doc_id: int) -> Dict:
         else:
             return abort(400, "Unknown velp group target type.")
 
-        if not timdb.users.has_edit_access(user_id, target_id):
+        if not has_edit_access(target_id):
             return abort(403, "Edit access is required.")
 
         # Gives path to either velp groups or velp groups/document name folder
@@ -705,7 +707,7 @@ def create_velp_group(doc_id: int) -> Dict:
                 # TODO once someone implements a grant_access that takes access ids instead of strings, change to that
                 # function.
                 if not right['access_name'] == 'view':
-                    timdb.users.grant_access(right['gid'], velp_group_id, right['access_name'])
+                    grant_access(right['gid'], velp_group_id, right['access_name'])
         else:
             return abort(400, "Velp group with same name and location exists already.")
 
@@ -752,7 +754,7 @@ def create_default_velp_group(doc_id: int):
     #     print("User is not owner of current document")
     #     return abort(403, "User is not owner of current document")
 
-    if not timdb.users.has_edit_access(user_id, doc_id):
+    if not has_edit_access(doc_id):
         return abort(403, "User has no edit access to current document")
 
     velps_folder_path = timdb.folders.check_velp_group_folder_path(doc_path, user_group_id, doc_name)
@@ -769,7 +771,7 @@ def create_default_velp_group(doc_id: int):
             # TODO once someone implements a grant_access that takes access ids instead of strings, change to that
             # function.
             if not right['access_name'] == 'view':
-                timdb.users.grant_access(right['gid'], velp_group_id, right['access_name'])
+                grant_access(right['gid'], velp_group_id, right['access_name'])
 
     else:
         default = DocEntry.find_by_path(new_group_path)
@@ -830,7 +832,7 @@ def get_velp_groups_from_tree(document_id: int):
     # owner_group_id = 3  # TODO: Choose owner group correctly, now uses All Korppi users
 
     velp_groups = []  # type: List[DocEntry]
-    viewable = timdb.users.get_viewable_blocks(get_current_user_id())
+    viewable = get_viewable_blocks(get_current_user_id())
 
     # Velp groups for areas, plugins etc
     folders = timdb.folders.get_folders(doc_velp_path)

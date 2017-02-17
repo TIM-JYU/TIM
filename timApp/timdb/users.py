@@ -1,49 +1,22 @@
-import hashlib
 import re
-from datetime import datetime, timedelta, timezone
-from typing import Optional, List, Dict
+from typing import Optional, List
 
-from sqlalchemy import func
-
-from timdb.blocktypes import blocktypes, BlockType
+from timdb.blocktypes import BlockType
+from timdb.models.block import Block
+from timdb.models.user import User
+from timdb.models.usergroup import UserGroup
 from timdb.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
     LOGGED_IN_USERNAME, ADMIN_GROUPNAME
-from timdb.models.usergroup import UserGroup
-from timdb.models.user import User
-from timdb.models.folder import Folder
-from timdb.models.block import Block
-from timdb.tim_models import BlockAccess, UserGroupMember, db
 from timdb.timdbbase import TimDbBase
 from timdb.timdbexception import TimDbException
-
-# These will be cached in memory to reduce amount of db load
-ANON_USER_ID = None
-LOGGED_USER_ID = None
-ANON_GROUP_ID = None
-LOGGED_GROUP_ID = None
-ADMIN_GROUP_ID = None
-KORPPI_GROUP_ID = None
-
-DOC_DEFAULT_RIGHT_NAME = 'DefaultDocumentRights'
-FOLDER_DEFAULT_RIGHT_NAME = 'DefaultFolderRights'
-
-
-class NoSuchUserException(TimDbException):
-
-    def __init__(self, user_id):
-        super().__init__('No such user: {}'.format(user_id))
-        self.user_id = user_id
+from timdb.userutils import NoSuchUserException, get_anon_group_id, \
+    get_anon_user_id, get_access_type_id, get_default_right_document, hash_password
 
 
 class Users(TimDbBase):
     """Handles saving and retrieving user-related information to/from the database."""
 
-    access_type_map = {}
-
-    default_right_paths = {blocktypes.DOCUMENT: 'Templates/{}'.format(DOC_DEFAULT_RIGHT_NAME),
-                           blocktypes.FOLDER: 'Templates/{}'.format(FOLDER_DEFAULT_RIGHT_NAME)}
-
-    def create_special_usergroups(self) -> int:
+    def create_special_usergroups(self):
         """Creates an anonymous user and a usergroup for it.
 
         The user id and its associated usergroup id is 0.
@@ -79,28 +52,6 @@ class Users(TimDbBase):
         cursor.execute("SELECT setval('usergroup_id_seq', %s)", (max_ug_id,))
 
         self.db.commit()
-        return 0
-
-    def create_user(self, name: str, real_name: str, email: str, password: str = '',
-                    commit: bool = True) -> User:
-        """Creates a new user with the specified name.
-
-        :param email: The email address of the user.
-        :param name: The name of the user to be created.
-        :param real_name: The real name of the user.
-        :param password: The password for the user (not used on Korppi login).
-        :returns: The id of the newly created user.
-
-        """
-
-        hash = self.hash_password(password) if password != '' else ''
-        user = User(name=name, real_name=real_name, email=email, pass_=hash)
-        self.session.add(user)
-        self.session.flush()
-        if commit:
-            self.session.commit()
-        assert user.id != 0
-        return user
 
     def create_anonymous_user(self, name: str, real_name: str, commit: bool = True) -> User:
         """Creates a new anonymous user.
@@ -114,11 +65,9 @@ class Users(TimDbBase):
         next_id = self.get_next_anonymous_user_id()
         u = User(id=next_id, name=name + str(abs(next_id)), real_name=real_name)
         self.session.add(u)
-        self.session.flush()
+        u.groups.append(UserGroup.get_anonymous_group())
         if commit:
             self.session.commit()
-        user_id = u.id
-        self.add_user_to_group(self.get_anon_group_id(), user_id)
         return u
 
     def get_next_anonymous_user_id(self) -> int:
@@ -143,7 +92,7 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        pass_hash = self.hash_password(password) if password != '' else ''
+        pass_hash = hash_password(password) if password != '' else ''
         cursor.execute('UPDATE UserAccount SET name = %s, real_name = %s, email = %s, pass = %s WHERE id = %s',
                        [name, real_name, email, pass_hash, user_id])
         if commit:
@@ -152,7 +101,7 @@ class Users(TimDbBase):
     def update_user_field(self, user_id: int, field_name: str, field_value: str, commit: bool = True):
         cursor = self.db.cursor()
         if field_name == 'pass':
-            field_value = self.hash_password(field_value)
+            field_value = hash_password(field_value)
 
         # No sql injection or other funny business
         if re.match('^[a-zA-Z_-]+$', field_name) is None:
@@ -162,48 +111,6 @@ class Users(TimDbBase):
         if commit:
             self.db.commit()
 
-    def create_usergroup(self, name: str, commit: bool = True) -> UserGroup:
-        """Creates a new user group.
-
-        :param name: The name of the user group.
-        :returns: The id of the created user group.
-
-        """
-
-        ug = UserGroup(name=name)
-        self.session.add(ug)
-        self.session.flush()
-        group_id = ug.id
-        assert group_id is not None and group_id != 0, 'group_id was None'
-        if commit:
-            self.session.commit()
-        return ug
-
-    def add_user_to_group(self, group_id: int, user_id: int, commit: bool = True):
-        """Adds a user to a usergroup.
-
-        :param group_id: The id of the group.
-        :param user_id: The id of the user.
-
-        """
-        ugm = UserGroupMember(usergroup_id=group_id, user_id=user_id)
-        db.session.add(ugm)
-        if commit:
-            db.session.commit()
-
-    def add_user_to_named_group(self, group_name: str, user_id: int, commit: bool = True):
-        group_id = self.get_usergroup_by_name(group_name)
-        if group_id is not None:
-            self.add_user_to_group(group_id, user_id, commit)
-        else:
-            print("Could not add user {} to group {}".format(user_id, group_name))
-
-    def add_user_to_korppi_group(self, user_id: int, commit: bool = True):
-        self.add_user_to_named_group(KORPPI_GROUPNAME, user_id, commit)
-
-    def addUserToAdmins(self, user_id: int, commit: bool = True):
-        self.add_user_to_named_group(ADMIN_GROUPNAME, user_id, commit)
-
     def create_potential_user(self, email: str, password: str, commit: bool = True):
         """Creates a potential user with the specified email and password.
 
@@ -212,9 +119,10 @@ class Users(TimDbBase):
 
         """
         cursor = self.db.cursor()
-        hash = self.hash_password(password)
+        hash = hash_password(password)
         cursor.execute(
-            'INSERT INTO NewUser (email, pass, created) VALUES (%s, %s, CURRENT_TIMESTAMP) ON CONFLICT (email) DO UPDATE SET pass = EXCLUDED.pass', [email, hash])
+            'INSERT INTO NewUser (email, pass, created) VALUES (%s, %s, CURRENT_TIMESTAMP) ON CONFLICT (email) DO UPDATE SET pass = EXCLUDED.pass',
+            [email, hash])
         if commit:
             self.db.commit()
 
@@ -239,7 +147,7 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        hash = self.hash_password(password)
+        hash = hash_password(password)
         cursor.execute('SELECT email FROM NewUser WHERE email=%s AND pass=%s', [email, hash])
         return cursor.fetchone() is not None
 
@@ -253,12 +161,9 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        hash = self.hash_password(password)
+        hash = hash_password(password)
         cursor.execute('SELECT email FROM UserAccount WHERE email=%s AND pass=%s', [email, hash])
         return cursor.fetchone() is not None
-
-    def hash_password(self, password: str) -> str:
-        return hashlib.sha256(password.encode()).hexdigest()
 
     def get_rights_holders(self, block_id: int):
         cursor = self.db.cursor()
@@ -283,52 +188,14 @@ class Users(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     def get_default_rights_holders(self, folder_id: int, object_type: BlockType):
-        doc = self.get_default_right_document(folder_id, object_type)
+        doc = get_default_right_document(folder_id, object_type)
         if doc is None:
             return []
         return self.get_rights_holders(doc.id)
 
-    def grant_default_access(self, group_ids: List[int],
-                             folder_id: int,
-                             access_type: str,
-                             object_type: BlockType,
-                             accessible_from: Optional[datetime]=None,
-                             accessible_to: Optional[datetime]=None,
-                             duration_from: Optional[datetime] = None,
-                             duration_to: Optional[datetime] = None,
-                             duration: Optional[timedelta]=None) -> List[BlockAccess]:
-        doc = self.get_default_right_document(folder_id, object_type, create_if_not_exist=True)
-        accesses = []
-        for group_id in group_ids:
-            accesses.append(self.grant_access(group_id,
-                                              doc.id,
-                                              access_type,
-                                              commit=False,
-                                              accessible_from=accessible_from,
-                                              accessible_to=accessible_to,
-                                              duration_from=duration_from,
-                                              duration_to=duration_to,
-                                              duration=duration))
-        db.session.commit()
-        return accesses
-
     def remove_default_access(self, group_id: int, folder_id: int, access_type: str, object_type: BlockType):
-        doc = self.get_default_right_document(folder_id, object_type, create_if_not_exist=True)
+        doc = get_default_right_document(folder_id, object_type, create_if_not_exist=True)
         self.remove_access(group_id, doc.id, access_type)
-
-    def get_default_right_document(self, folder_id, object_type: BlockType, create_if_not_exist=False):
-        folder = Folder.get_by_id(folder_id)
-        if folder is None:
-            raise TimDbException('Non-existent folder')
-        right_doc_path = self.default_right_paths.get(object_type)
-        if right_doc_path is None:
-            raise TimDbException('Unsupported object type: {}'.format(object_type))
-
-        # we don't want to have an owner in the default rights by default
-        doc = folder.get_document(right_doc_path,
-                                  create_if_not_exist=create_if_not_exist,
-                                  creator_group_id=None)
-        return doc
 
     def get_owner_group(self, block_id: int) -> UserGroup:
         """Returns the owner group of the specified block.
@@ -336,7 +203,7 @@ class Users(TimDbBase):
         :param block_id: The id of the block.
 
         """
-        return self.session.query(Block).filter_by(id = block_id).one().owner
+        return self.session.query(Block).filter_by(id=block_id).one().owner
 
     def get_user(self, user_id: int, include_authdata=False) -> Optional[dict]:
         """Gets the user with the specified id.
@@ -352,53 +219,6 @@ class Users(TimDbBase):
             authtemplate), [user_id])
         result = self.resultAsDictionary(cursor)
         return result[0] if len(result) > 0 else None
-
-    def get_user_id_by_name(self, name: str) -> Optional[int]:
-        """Gets the id of the specified username.
-
-        :param name: The name of the user.
-        :returns: The id of the user or None if the user does not exist.
-
-        """
-
-        cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM UserAccount WHERE id >= 0 AND name = %s', [name])
-        result = cursor.fetchone()
-        return result[0] if result is not None else None
-
-    def get_user_by_name(self, name: str) -> Optional[User]:
-        """Gets the user information of the specified username.
-
-        :param name: The name of the user.
-        :returns: The user information or None if the user does not exist.
-
-        """
-        return self.session.query(User).filter_by(name=name).first()
-
-    def get_user_by_email(self, email: str) -> Optional[dict]:
-        """Gets the data of the specified user email address.
-
-        :param email: Email address.
-        :returns: The user data.
-
-        """
-
-        cursor = self.db.cursor()
-        cursor.execute('SELECT id, name, real_name, email FROM UserAccount WHERE email = %s', [email])
-        result = self.resultAsDictionary(cursor)
-        return result[0] if len(result) > 0 else None
-
-    def group_exists(self, group_name: str) -> bool:
-        """Checks if the group with the specified name exists.
-
-        :param group_name: The name of the group.
-        :returns: Boolean.
-
-        """
-
-        cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM UserGroup WHERE name = %s', [group_name])
-        return cursor.fetchone() is not None
 
     def get_user_group_name(self, group_id: int) -> Optional[str]:
         """Gets the user group name.
@@ -423,20 +243,6 @@ class Users(TimDbBase):
         cursor.execute('SELECT id FROM UserGroup WHERE name = %s', [name])
         return self.resultAsDictionary(cursor)
 
-    def get_usergroup_by_name(self, name: str) -> Optional[int]:
-        cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM UserGroup WHERE name = %s', [name])
-        groups = cursor.fetchall()
-
-        if groups is None or len(groups) == 0:
-            print("DEBUG: No such named group: " + name)
-            return None
-        elif len(groups) > 1:
-            print("DEBUG: Too many named groups: {} ({})".format(name, groups))
-            return None
-
-        return groups[0][0]
-
     def get_personal_usergroup(self, user: dict) -> int:
         """Gets the personal user group for the user.
 
@@ -447,8 +253,8 @@ class Users(TimDbBase):
             raise TimDbException("No such user")
 
         # For anonymous users, we return the group of anonymous users
-        if user['id'] < 0 or user['id'] == self.get_anon_user_id():
-            return self.get_anon_group_id()
+        if user['id'] < 0 or user['id'] == get_anon_user_id():
+            return get_anon_group_id()
 
         userName = user['name']
         groups = self.get_usergroups_by_name(userName)
@@ -461,39 +267,7 @@ class Users(TimDbBase):
 
         raise TimDbException('Personal usergroup for user {} was not found!'.format(userName))
 
-    def get_user_groups(self, user_id: int) -> List[dict]:
-        """Gets the user groups of a user.
-
-        :param user_id: The id of the user.
-        :returns: The user groups that the user belongs to.
-
-        """
-
-        cursor = self.db.cursor()
-        if self.has_admin_access(user_id):
-            # Admin is part of every user group
-            cursor.execute("""SELECT id, name FROM UserGroup ORDER BY id ASC""")
-        else:
-            cursor.execute("""SELECT id, name FROM UserGroup WHERE id IN
-                              (SELECT UserGroup_id FROM UserGroupMember WHERE User_id = %s)
-                              ORDER BY id ASC""", [user_id])
-
-        return self.resultAsDictionary(cursor)
-
-    def get_usergroups_printable(self, user_id: int, max_group_len: int = 32) -> List[dict]:
-        """Gets the user groups of a user, truncating the group names.
-
-        :param user_id: The id of the user.
-        :returns: The user groups that the user belongs to.
-
-        """
-        groups = self.get_user_groups(user_id)
-        for group in groups:
-            if len(group['name']) > max_group_len:
-                group['name'] = group['name'][:max_group_len]
-        return groups
-
-    def get_users_in_group(self, group_id: int, limit: int=1000) -> List[dict]:
+    def get_users_in_group(self, group_id: int, limit: int = 1000) -> List[dict]:
         cursor = self.db.cursor()
         cursor.execute("""SELECT UserGroupMember.User_id as id, UserAccount.real_name as name, UserAccount.email as email
                           FROM UserGroupMember
@@ -511,240 +285,11 @@ class Users(TimDbBase):
                        """, [user_id, usergroup_name])
         return len(cursor.fetchall()) > 0
 
-    def is_user_id_in_group_id(self, user_id: int, usergroup_id: int) -> bool:
-        c = self.db.cursor()
-        c.execute("""SELECT User_id FROM UserGroupMember
-                           WHERE User_id = %s AND UserGroup_id = %s""", (user_id, usergroup_id))
-        return c.fetchone() is not None
-
-    def grant_access(self,
-                     group_id: int,
-                     block_id: int,
-                     access_type: str,
-                     accessible_from: Optional[datetime]=None,
-                     accessible_to: Optional[datetime]=None,
-                     duration_from: Optional[datetime] = None,
-                     duration_to: Optional[datetime] = None,
-                     duration: Optional[timedelta]=None,
-                     commit: bool=True) -> BlockAccess:
-        """Grants access to a group for a block.
-
-        :param duration_from: The optional start time for duration unlock.
-        :param duration_to: The optional end time for duration unlock.
-        :param accessible_from: The optional start time for the permission.
-        :param accessible_to: The optional end time for the permission.
-        :param duration: The optional duration for the permission.
-        :param commit: Whether to commit changes immediately.
-        :param group_id: The group id to which to grant view access.
-        :param block_id: The id of the block for which to grant view access.
-        :param access_type: The kind of access. Possible values are listed in accesstype table.
-        :return: The BlockAccess object.
-
-        """
-
-        if accessible_from is None and duration is None:
-            # the delta is to ease testing; the clocks of container and PostgreSQL are not perfectly in sync
-            accessible_from = datetime.now(tz=timezone.utc) - timedelta(milliseconds=50)
-
-        access_id = self.get_access_type_id(access_type)
-        assert access_id is not None
-        ba = BlockAccess(block_id=block_id,
-                         usergroup_id=group_id,
-                         type=access_id,
-                         accessible_from=accessible_from,
-                         accessible_to=accessible_to,
-                         duration_from=duration_from,
-                         duration_to=duration_to,
-                         duration=duration)
-        db.session.merge(ba)
-        if commit:
-            db.session.commit()
-        return ba
-
-    def grant_view_access(self, group_id: int, block_id: int):
-        """Grants view access to a group for a block.
-
-        :param group_id: The group id to which to grant view access.
-        :param block_id: The id of the block for which to grant view access.
-
-        """
-
-        self.grant_access(group_id, block_id, 'view')
-
-    def grant_edit_access(self, group_id: int, block_id: int):
-        """Grants edit access to a group for a block.
-
-        :param group_id: The group id to which to grant view access.
-        :param block_id: The id of the block for which to grant view access.
-
-        """
-
-        self.grant_access(group_id, block_id, 'edit')
-
-    def get_view_access_id(self) -> int:
-        return self.get_access_type_id('view')
-
     def remove_access(self, group_id: int, block_id: int, access_type: str):
         cursor = self.db.cursor()
         cursor.execute("DELETE FROM BlockAccess WHERE UserGroup_id = %s AND Block_id = %s AND type = %s",
-                       [group_id, block_id, self.get_access_type_id(access_type)])
+                       [group_id, block_id, get_access_type_id(access_type)])
         self.db.commit()
-
-    def get_edit_access_id(self) -> int:
-        return self.get_access_type_id('edit')
-
-    def get_teacher_access_id(self) -> int:
-        return self.get_access_type_id('teacher')
-
-    def get_manage_access_id(self) -> int:
-        return self.get_access_type_id('manage')
-
-    def get_seeanswers_access_id(self) -> int:
-        return self.get_access_type_id('see answers')
-
-    def get_owner_access_id(self) -> int:
-        return self.get_access_type_id('owner')
-
-    def has_admin_access(self, user_id: int) -> bool:
-        return self.is_user_id_in_group_id(user_id, self.get_admin_group_id())
-
-    def has_view_access(self, user_id: int, block_id: int) -> bool:
-        """Returns whether the user has view access to the specified block.
-
-        :param user_id: The user id to check.
-        :param block_id: The block id to check.
-        :returns: True if the user with id 'user_id' has view access to the block 'block_id', false otherwise.
-
-        """
-        return self.has_access(user_id,
-                               block_id,
-                               self.get_view_access_id(),
-                               self.get_edit_access_id(),
-                               self.get_manage_access_id(),
-                               self.get_teacher_access_id(),
-                               self.get_seeanswers_access_id(),
-                               self.get_owner_access_id())
-
-    def has_teacher_access(self, user_id: int, block_id: int) -> bool:
-        """Returns whether the user has teacher access to the specified block.
-
-        :param user_id: The user id to check.
-        :param block_id: The block id to check.
-        :returns: True if the user with id 'user_id' has teacher access to the block 'block_id', false otherwise.
-
-        """
-        return self.has_access(user_id, block_id, self.get_manage_access_id(), self.get_teacher_access_id(),
-                               self.get_owner_access_id())
-
-    def has_manage_access(self, user_id: int, block_id: int) -> bool:
-        """Returns whether the user has manage access to the specified block.
-
-        :param user_id: The user id to check.
-        :param block_id: The block id to check.
-        :returns: True if the user with id 'user_id' has manage access to the block 'block_id', false otherwise.
-
-        """
-        return self.has_access(user_id, block_id, self.get_manage_access_id(),
-                               self.get_owner_access_id())
-
-    def has_access(self, user_id: int, block_id: int, *access_ids) -> bool:
-        """Returns whether the user has any of the specific kind of access types to the specified block.
-
-        :param user_id: The user id to check.
-        :param block_id: The block id to check.
-        :param access_ids: List of access type ids to be checked.
-        :returns: True if the user with id 'user_id' has a specific kind of access to the block 'block_id',
-                  false otherwise.
-
-        """
-
-        if self.has_admin_access(user_id):
-            return True
-
-        user_ids = [user_id, self.get_anon_user_id()]
-        if user_id > 0:
-            user_ids.append(self.get_logged_user_id())
-        q = self.prepare_access_query(list(access_ids), user_ids).filter_by(block_id=block_id)
-        return db.session.query(q.exists()).scalar()
-
-    def get_accessible_blocks(self, user_id: int, access_types: List[int]) -> Dict[int, BlockAccess]:
-        if self.has_admin_access(user_id):
-            return {row.block_id: row for row in BlockAccess.query.all()}
-        user_ids = [user_id, self.get_anon_user_id()]
-        if user_id > 0:
-            user_ids.append(self.get_logged_user_id())
-        q = self.prepare_access_query(access_types, user_ids)
-        return {row.block_id: row for row in q.all()}
-
-    @staticmethod
-    def prepare_access_query(access_types, user_ids):
-        user_query = db.session.query(UserGroupMember.usergroup_id).filter(UserGroupMember.user_id.in_(user_ids))
-        q = BlockAccess.query.filter(
-            BlockAccess.usergroup_id.in_(user_query)
-            & BlockAccess.type.in_(access_types)
-            & (func.current_timestamp().between(BlockAccess.accessible_from, func.coalesce(BlockAccess.accessible_to,
-                                                                                           'infinity'))))
-        return q
-
-    def get_owned_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
-        return self.get_accessible_blocks(user_id, [self.get_owner_access_id()])
-
-    def get_manageable_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
-        return self.get_accessible_blocks(user_id, [self.get_manage_access_id(),
-                                                    self.get_owner_access_id()])
-
-    def get_teachable_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
-        return self.get_accessible_blocks(user_id, [self.get_teacher_access_id(),
-                                                    self.get_manage_access_id(),
-                                                    self.get_owner_access_id()])
-
-    def get_see_answers_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
-        return self.get_accessible_blocks(user_id, [self.get_seeanswers_access_id(),
-                                                    self.get_teacher_access_id(),
-                                                    self.get_manage_access_id(),
-                                                    self.get_owner_access_id()])
-
-    def get_editable_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
-        return self.get_accessible_blocks(user_id, [self.get_edit_access_id(),
-                                                    self.get_manage_access_id(),
-                                                    self.get_owner_access_id()])
-
-    def get_viewable_blocks(self, user_id: int) -> Dict[int, BlockAccess]:
-        return self.get_accessible_blocks(user_id, [self.get_view_access_id(),
-                                                    self.get_edit_access_id(),
-                                                    self.get_manage_access_id(),
-                                                    self.get_teacher_access_id(),
-                                                    self.get_seeanswers_access_id(),
-                                                    self.get_owner_access_id()])
-
-    def has_edit_access(self, user_id: int, block_id: int) -> bool:
-        """Returns whether the user has edit access to the specified block.
-
-        :param user_id:
-        :param block_id:
-        :returns: True if the user with id 'user_id' has edit access to the block 'block_id', false otherwise.
-
-        """
-
-        return self.has_access(user_id, block_id, self.get_edit_access_id(), self.get_manage_access_id(),
-                               self.get_owner_access_id())
-
-    def has_seeanswers_access(self, uid: int, block_id: int) -> bool:
-        return self.has_access(uid, block_id,
-                               self.get_seeanswers_access_id(),
-                               self.get_manage_access_id(),
-                               self.get_teacher_access_id(),
-                               self.get_owner_access_id())
-
-    def user_is_owner(self, user_id: int, block_id: int) -> bool:
-        """Returns whether the user belongs to the owners of the specified block.
-
-        :param user_id:
-        :param block_id:
-        :returns: True if the user with 'user_id' belongs to the owner group of the block 'block_id'.
-
-        """
-        return self.has_access(user_id, block_id, self.get_owner_access_id())
 
     def get_preferences(self, user_id: int) -> str:
         """Gets the preferences of a user.
@@ -781,96 +326,5 @@ class Users(TimDbBase):
             WHERE UserGroup.name = %s{}""".format(order_sql), [usergroup_name])
         return self.resultAsDictionary(c)
 
-    def get_access_type_id(self, access_type):
-        if not self.access_type_map:
-            c = self.db.cursor()
-            c.execute("""SELECT id, name FROM AccessType""")
-            result = c.fetchall()
-            for row in result:
-                self.access_type_map[row[1]] = row[0]
-        return self.access_type_map[access_type]
-
-    def get_access_types(self):
-        c = self.db.cursor()
-        c.execute("""SELECT id, name FROM AccessType""")
-        return self.resultAsDictionary(c)
-
-    def remove_membership(self, uid: int, gid: int, commit: bool=True) -> int:
-        """Removes membership of a user from a group.
-
-        :param uid: The user id.
-        :param gid: The group id.
-        :returns: The number of affected rows (0 or 1).
-
-        """
-        c = self.db.cursor()
-        c.execute("""DELETE FROM UserGroupMember WHERE User_id = %s and UserGroup_id = %s""", [uid, gid])
-        if commit:
-            self.db.commit()
-        return c.rowcount
-
-    def create_user_with_group(self, name: str,
-                               real_name: Optional[str]=None,
-                               email: Optional[str]=None,
-                               password: Optional[str]=None,
-                               is_admin: bool=False,
-                               commit: bool=True):
-        user = self.create_user(name, real_name or name, email or name + '@example.com', password=password or '',
-                                commit=False)
-        group = self.create_usergroup(name, commit=False)
-        self.add_user_to_group(group.id, user.id, commit=False)
-        if is_admin:
-            self.addUserToAdmins(user.id, commit=False)
-        if commit:
-            db.session.commit()
-        return user, group
-
     def get_personal_usergroup_by_id(self, user_id: int) -> Optional[int]:
         return self.get_personal_usergroup(self.get_user(user_id))
-
-    def get_anon_user_id(self) -> int:
-        global ANON_USER_ID
-        if ANON_USER_ID is not None:
-            return ANON_USER_ID
-        ANON_USER_ID = self.get_user_id_by_name(ANONYMOUS_USERNAME)
-        return ANON_USER_ID
-
-    def get_logged_user_id(self) -> int:
-        global LOGGED_USER_ID
-        if LOGGED_USER_ID is not None:
-            return LOGGED_USER_ID
-        LOGGED_USER_ID = self.get_user_id_by_name(LOGGED_IN_USERNAME)
-        return LOGGED_USER_ID
-
-    def get_anon_group_id(self) -> int:
-        global ANON_GROUP_ID
-        if ANON_GROUP_ID is not None:
-            return ANON_GROUP_ID
-        ANON_GROUP_ID = self.get_usergroup_by_name(ANONYMOUS_GROUPNAME)
-        return ANON_GROUP_ID
-
-    def get_logged_group_id(self) -> int:
-        global LOGGED_GROUP_ID
-        if LOGGED_GROUP_ID is not None:
-            return LOGGED_GROUP_ID
-        LOGGED_GROUP_ID = self.get_usergroup_by_name(LOGGED_IN_GROUPNAME)
-        return LOGGED_GROUP_ID
-
-    def get_admin_group_id(self) -> int:
-        global ADMIN_GROUP_ID
-        if ADMIN_GROUP_ID is not None:
-            return ADMIN_GROUP_ID
-        ADMIN_GROUP_ID = self.get_usergroup_by_name(ADMIN_GROUPNAME)
-        return ADMIN_GROUP_ID
-
-    def get_korppi_group_id(self) -> int:
-        global KORPPI_GROUP_ID
-        if KORPPI_GROUP_ID is not None:
-            return KORPPI_GROUP_ID
-        KORPPI_GROUP_ID = self.get_usergroup_by_name(KORPPI_GROUPNAME)
-        return KORPPI_GROUP_ID
-
-    def set_usergroup_name(self, group_id: int, user_name: str):
-        c = self.db.cursor()
-        c.execute("""UPDATE UserGroup SET name = %s WHERE id = %s""", (user_name, group_id))
-        self.db.commit()

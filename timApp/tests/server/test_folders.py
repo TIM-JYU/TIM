@@ -1,5 +1,6 @@
 from tests.db.timdbtest import TEST_USER_2_ID
 from tests.server.timroutetest import TimRouteTest
+from timdb.userutils import grant_access, grant_view_access, get_anon_group_id
 
 
 class FolderTest(TimRouteTest):
@@ -14,15 +15,14 @@ class FolderTest(TimRouteTest):
         self.login_test2()
         self.get('/manage/{}'.format(f['path']), expect_status=403)
         db = self.get_db()
-        db.users.grant_access(db.users.get_personal_usergroup_by_id(TEST_USER_2_ID), f['id'], 'manage')
+        grant_access(db.users.get_personal_usergroup_by_id(TEST_USER_2_ID), f['id'], 'manage')
         self.get('/manage/{}'.format(f['path']))
 
     def test_folder_delete(self):
         self.login_test1()
         to_delete = self.get_personal_folder_path('delete')
         f = self.create_folder(to_delete)
-        timdb = self.get_db()
-        timdb.users.grant_view_access(timdb.users.get_anon_group_id(), f['id'])
+        grant_view_access(get_anon_group_id(), f['id'])
         self.delete('/folders/{}'.format(f['id']), expect_content=self.ok_resp)
 
     def test_intermediate_folders(self):
@@ -32,7 +32,6 @@ class FolderTest(TimRouteTest):
 
     def test_folders(self):
         self.login_test1()
-        db = self.get_db()
         user_folder = self.current_user.get_personal_folder().path
         fname = self.get_personal_folder_path('testing')
 
@@ -50,7 +49,7 @@ class FolderTest(TimRouteTest):
         # Create another folder and give access to anonymous users
         fname2 = self.get_personal_folder_path('testing2')
         f3 = self.create_folder(fname2)
-        db.users.grant_access(db.users.get_anon_group_id(), f3['id'], 'view')
+        grant_access(get_anon_group_id(), f3['id'], 'view')
         self.maxDiff = None
         self.get('/getItems', query_string={'folder': user_folder},
                  expect_content=[{'name': 'testing1',

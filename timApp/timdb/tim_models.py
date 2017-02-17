@@ -195,16 +195,6 @@ class NewUser(db.Model):
     created = db.Column(db.DateTime(timezone=True), nullable=False)
 
 
-class Notification(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'notification'
-    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), primary_key=True)  # NOTE Added foreign key
-    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
-    email_doc_modify = db.Column(db.Boolean, nullable=False, default=False)
-    email_comment_add = db.Column(db.Boolean, nullable=False, default=False)
-    email_comment_modify = db.Column(db.Boolean, nullable=False, default=False)
-
-
 class Question(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'question'
@@ -243,6 +233,13 @@ class UserGroupMember(db.Model):
     __tablename__ = 'usergroupmember'
     usergroup_id = db.Column(db.Integer, db.ForeignKey('usergroup.id'), primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), primary_key=True)
+
+
+# UserGroupMember = db.Table('usergroupmember',
+#                            db.Column('usergroup_id', db.Integer, db.ForeignKey('usergroup.id'), primary_key=True),
+#                            db.Column('user_id', db.Integer, db.ForeignKey('useraccount.id'), primary_key=True),
+#                            info={'bind_key': 'tim_main'}
+#                            )
 
 
 class UserNotes(db.Model):

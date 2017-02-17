@@ -1,6 +1,7 @@
 {% extends 'manage.html' %}
 {% set obj_name = 'folder' %}
 {% block managecontent %}
+    {% if item.rights.manage %}
     <div class="panel panel-default">
         <div class="panel-heading">Short name and location</div>
         <div class="panel-body">
@@ -34,7 +35,11 @@
             </form>
         </div>
     </div>
-    <div class="margin">
-        <button class="btn btn-danger" ng-click="deleteFolder(item.id)">Delete folder</button>
+    <div class="panel panel-default">
+        <div class="panel-heading">Other actions</div>
+        <div class="panel-body">
+            <button class="btn btn-danger" ng-click="deleteFolder(item.id)">Delete folder</button>
+        </div>
     </div>
+    {% endif %}
 {% endblock %}

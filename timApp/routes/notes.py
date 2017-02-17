@@ -2,15 +2,17 @@ from flask import Blueprint
 from flask import abort
 from flask import request
 
-from accesshelper import verify_comment_right, verify_logged_in
+from accesshelper import verify_comment_right, verify_logged_in, has_ownership
 from accesshelper import verify_view_access
 from dbaccess import get_timdb
 from documentmodel.document import Document
 from requesthelper import get_referenced_pars_from_req
 from responsehelper import json_response
 from routes.edit import par_response
-from routes.notify import notify_doc_owner
-from sessioninfo import get_current_user_id, get_current_user_group
+from routes.notify import notify_doc_watchers
+from sessioninfo import get_current_user_group
+from timdb.models.docentry import DocEntry
+from timdb.models.notification import NotificationType
 
 notes = Blueprint('notes',
                   __name__,
@@ -19,22 +21,13 @@ notes = Blueprint('notes',
 KNOWN_TAGS = ['difficult', 'unclear']
 
 
-def get_group_id() -> str:
-    return "notes_[doc_id]"
-
-
-def get_group_subject() -> str:
-    return "Your document [doc_name] has new notes"
-
-
 @notes.route("/note/<int:note_id>")
 def get_note(note_id):
     timdb = get_timdb()
     note = timdb.notes.get_note(note_id)
     if not note:
         abort(404)
-    if not (timdb.notes.has_edit_access(get_current_user_group(), note_id) or timdb.users.user_is_owner(get_current_user_id(),
-                                                                                                        note['doc_id'])):
+    if not (timdb.notes.has_edit_access(get_current_user_group(), note_id) or has_ownership(note['doc_id'])):
         abort(403)
     note.pop('usergroup_id')
     tags = note['tags']
@@ -56,6 +49,7 @@ def post_note():
             tags.append(tag)
     doc_id = jsondata['docId']
     par_id = jsondata['par']
+    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
     verify_comment_right(doc_id)
     doc = Document(doc_id)
     par = doc.get_paragraph(par_id)
@@ -70,11 +64,10 @@ def post_note():
     timdb.notes.add_note(group_id, Document(par.get_doc_id()), par, note_text, access, tags)
 
     if access == "everyone":
-        notify_doc_owner(doc_id, '[user_name] has posted a note on your document [doc_name]',
-                         '[user_name] has posted the following note on your document [doc_url]\n\n{}'.format(note_text),
-                         setting="comment_add", par_id=par_id,
-                         group_id=get_group_id(), group_subject=get_group_subject())
-
+        notify_doc_watchers(docentry,
+                            note_text,
+                            NotificationType.CommentAdded,
+                            par)
     return par_response([doc.get_paragraph(par_id)],
                         doc)
 
@@ -85,10 +78,12 @@ def edit_note():
     jsondata = request.get_json()
     group_id = get_current_user_group()
     doc_id = int(jsondata['docId'])
-    verify_view_access(doc_id, get_current_user_group())
+    verify_view_access(doc_id)
     note_text = jsondata['text']
     access = jsondata['access']
     par_id = jsondata['par']
+    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
+    par = docentry.document.get_paragraph(par_id)
     note_id = int(jsondata['id'])
     sent_tags = jsondata.get('tags', {})
     tags = []
@@ -96,20 +91,15 @@ def edit_note():
         if sent_tags.get(tag):
             tags.append(tag)
     timdb = get_timdb()
-    if not (timdb.notes.has_edit_access(group_id, note_id) or timdb.users.user_is_owner(get_current_user_id(), doc_id)):
+    if not (timdb.notes.has_edit_access(group_id, note_id) or has_ownership(doc_id)):
         abort(403, "Sorry, you don't have permission to edit this note.")
-    prev_note_text = timdb.notes.get_note(note_id)['content']
     timdb.notes.modify_note(note_id, note_text, access, tags)
 
-    notify_doc_owner(doc_id, '[user_name] has edited a note on your document [doc_name]',
-                     """[user_name] has edited the following note on your document [doc_url]\n
-=== ORIGINAL ===\n
-{}\n\n
-=== MODIFIED ===\n
-{}\n
-""".format(prev_note_text, note_text), setting="comment_modify", par_id=par_id,
-        group_id=get_group_id(), group_subject=get_group_subject())
-
+    if access == "everyone":
+        notify_doc_watchers(docentry,
+                            note_text,
+                            NotificationType.CommentModified,
+                            par)
     doc = Document(doc_id)
     return par_response([doc.get_paragraph(par_id)],
                         doc)
@@ -123,7 +113,7 @@ def delete_note():
     note_id = int(jsondata['id'])
     paragraph_id = jsondata['par']
     timdb = get_timdb()
-    if not (timdb.notes.has_edit_access(group_id, note_id) or timdb.users.user_is_owner(get_current_user_id(), doc_id)):
+    if not (timdb.notes.has_edit_access(group_id, note_id) or has_ownership(doc_id)):
         abort(403, "Sorry, you don't have permission to remove this note.")
     timdb.notes.delete_note(note_id)
     doc = Document(doc_id)

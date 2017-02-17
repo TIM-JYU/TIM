@@ -16,8 +16,6 @@ from timdb.timdbbase import TimDbBase
 from timdb.blocktypes import blocktypes
 from timdb.timdbexception import TimDbException
 
-NOTIFICATION_TYPES = ['email_doc_modify', 'email_comment_add', 'email_comment_modify']
-
 
 class Documents(TimDbBase):
     """Represents a collection of Document objects."""
@@ -294,34 +292,3 @@ class Documents(TimDbBase):
                        [blocktypes.DOCUMENT, doc.doc_id])
         if commit:
             self.db.commit()
-
-    def get_notify_settings(self, user_id: int, doc_id: int) -> dict:
-        cursor = self.db.cursor()
-        fieldnames = ', '.join(NOTIFICATION_TYPES)
-        query = 'SELECT {} FROM Notification WHERE user_id = %s AND doc_id = %s'.format(fieldnames)
-        cursor.execute(query, [user_id, doc_id])
-
-        results = self.resultAsDictionary(cursor)
-        if len(results) == 0:
-            return {k: False for k in NOTIFICATION_TYPES}
-
-        return {key: bool(results[0][key]) for key in results[0]}
-
-    def set_notify_settings(self, user_id: int, doc_id: int, settings: dict):
-        keys = NOTIFICATION_TYPES
-        cursor = self.db.cursor()
-        cursor.execute('SELECT EXISTS(SELECT user_id FROM Notification WHERE user_id = %s AND doc_id = %s)',
-                       [user_id, doc_id])
-        row_exists = cursor.fetchone()[0]
-
-        if row_exists:
-            update_statement = 'UPDATE Notification SET ' \
-                               + ', '.join(['{}={}'.format(k, settings[k]) for k in keys]) \
-                               + ' WHERE user_id = %s AND doc_id = %s'
-            cursor.execute(update_statement, [user_id, doc_id])
-        else:
-            insert_statement = 'INSERT INTO Notification (user_id, doc_id, {}) VALUES (%s, %s, {})'.format(
-                ', '.join(keys), ', '.join(['%s' for _ in range(len(keys))]))
-            cursor.execute(insert_statement, [user_id, doc_id] + [settings[k] for k in keys])
-
-        self.db.commit()

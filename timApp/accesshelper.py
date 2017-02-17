@@ -7,6 +7,8 @@ from sqlalchemy import inspect
 from werkzeug.exceptions import abort
 
 import documentmodel.document
+import timdb
+import timdb.userutils
 from dbaccess import get_timdb
 from documentmodel.document import Document
 from requesthelper import get_option
@@ -17,6 +19,7 @@ from timdb.models.usergroup import UserGroup
 from timdb.tim_models import db, BlockAccess
 from timdb.timdb2 import TimDb
 from timdb.timdbexception import TimDbException
+from timdb.userutils import get_access_type_id, grant_access
 
 
 def verify_admin():
@@ -83,11 +86,11 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
     if check_duration:
         timdb = get_timdb()
         ba = BlockAccess.query.filter_by(block_id=block_id,
-                                         type=timdb.users.get_access_type_id(access_type),
+                                         type=get_access_type_id(access_type),
                                          usergroup_id=get_current_user_group()).first()  # type: BlockAccess
         if ba is None:
             ba_group = BlockAccess.query.filter_by(block_id=block_id,
-                                                   type=timdb.users.get_access_type_id(access_type)).filter(
+                                                   type=get_access_type_id(access_type)).filter(
                 BlockAccess.usergroup_id.in_(get_current_user_object().get_groups().with_entities(UserGroup.id))
             ).first()  # type: BlockAccess
             if ba_group is not None:
@@ -206,7 +209,7 @@ def can_write_to_folder(folder_name):
 
         folder, _ = timdb.folders.split_location(folder)
 
-    return timdb.users.has_admin_access(get_current_user_id())
+    return get_current_user_object().is_admin
 
 
 def get_par_from_request(doc: Document, par_id=None, task_id_name=None):
@@ -259,7 +262,7 @@ def verify_task_access(doc_id, task_id_name, access_type):
 
 def grant_access_to_session_users(timdb: TimDb, block_id: int):
     for u in get_other_users_as_list():
-        timdb.users.grant_access(timdb.users.get_personal_usergroup_by_id(u['id']),
+        grant_access(timdb.users.get_personal_usergroup_by_id(u['id']),
                                  block_id,
                                  'manage',
                                  commit=False)
@@ -268,15 +271,13 @@ def grant_access_to_session_users(timdb: TimDb, block_id: int):
 
 def get_owned_blocks():
     if not hasattr(g, 'owned'):
-        timdb = get_timdb()
-        g.owned = timdb.users.get_owned_blocks(get_current_user_id())
+        g.owned = timdb.userutils.get_owned_blocks(get_current_user_id())
     return g.owned
 
 
 def get_editable_blocks():
     if not hasattr(g, 'editable'):
-        timdb = get_timdb()
-        g.editable = timdb.users.get_editable_blocks(get_current_user_id())
+        g.editable = timdb.userutils.get_editable_blocks(get_current_user_id())
     return g.editable
 
 
@@ -288,27 +289,23 @@ def get_viewable_blocks_or_none_if_admin():
 
 def get_viewable_blocks():
     if not hasattr(g, 'viewable'):
-        timdb = get_timdb()
-        g.viewable = timdb.users.get_viewable_blocks(get_current_user_id())
+        g.viewable = timdb.userutils.get_viewable_blocks(get_current_user_id())
     return g.viewable
 
 
 def get_manageable_blocks():
     if not hasattr(g, 'manageable'):
-        timdb = get_timdb()
-        g.manageable = timdb.users.get_manageable_blocks(get_current_user_id())
+        g.manageable = timdb.userutils.get_manageable_blocks(get_current_user_id())
     return g.manageable
 
 
 def get_teachable_blocks():
     if not hasattr(g, 'teachable'):
-        timdb = get_timdb()
-        g.teachable = timdb.users.get_teachable_blocks(get_current_user_id())
+        g.teachable = timdb.userutils.get_teachable_blocks(get_current_user_id())
     return g.teachable
 
 
 def get_see_answers_blocks():
     if not hasattr(g, 'see_answers'):
-        timdb = get_timdb()
-        g.see_answers = timdb.users.get_see_answers_blocks(get_current_user_id())
+        g.see_answers = timdb.userutils.get_see_answers_blocks(get_current_user_id())
     return g.see_answers

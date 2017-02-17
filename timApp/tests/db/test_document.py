@@ -14,6 +14,7 @@ from documentmodel.exceptions import DocExistsError
 from documentmodel.randutils import random_paragraph
 from tests.db.timdbtest import TimDbTest
 from timdb.models.docentry import DocEntry
+from timdb.userutils import get_anon_group_id
 
 
 class DocumentTest(TimDbTest):
@@ -23,8 +24,7 @@ class DocumentTest(TimDbTest):
             DocumentTest.init_testdoc.counter += 1
         except AttributeError:
             DocumentTest.init_testdoc.counter = 12345
-        db = self.get_db()
-        d = DocEntry.create(str(DocumentTest.init_testdoc.counter), db.users.get_anon_group_id()).document
+        d = DocEntry.create(str(DocumentTest.init_testdoc.counter), get_anon_group_id()).document
         return d
 
     def add_pars(self, d, num_docs):
@@ -276,7 +276,7 @@ class DocumentTest(TimDbTest):
         timdb = self.get_db()
         timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
                                                   'Multiple choice plugin example',
-                                                  timdb.users.get_anon_group_id())
+                                                  get_anon_group_id())
 
     def test_parwise_diff(self):
         d = self.init_testdoc()

@@ -8,6 +8,7 @@ from documentmodel.clipboard import Clipboard
 from documentmodel.randutils import random_id, hashfunc
 from tests.db.timdbtest import TimDbTest
 from timdb.models.docentry import DocEntry
+from timdb.userutils import get_anon_group_id
 
 
 class ClipboardTest(TimDbTest):
@@ -64,7 +65,7 @@ class ClipboardTest(TimDbTest):
 
     def test_copy(self):
         db = self.get_db()
-        doc = DocEntry.create('Lähdedokumentti', db.users.get_anon_group_id()).document
+        doc = DocEntry.create('Lähdedokumentti', get_anon_group_id()).document
 
         pars = [doc.add_paragraph('Kappale {}'.format(i), attrs={'kappale': str(i)}) for i in range(0, 10)]
 
@@ -84,7 +85,7 @@ class ClipboardTest(TimDbTest):
         clip.write(pars)
 
         db = self.get_db()
-        doc = DocEntry.create('Kohdedokumentti', db.users.get_anon_group_id()).document
+        doc = DocEntry.create('Kohdedokumentti', get_anon_group_id()).document
         dest_pars = [doc.add_paragraph('Kohdekappale {}'.format(i), attrs={'kkappale': str(i)}) for i in range(0, 10)]
 
         ver_before = doc.get_version()

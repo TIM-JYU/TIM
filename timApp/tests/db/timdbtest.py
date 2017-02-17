@@ -10,6 +10,8 @@ import initdb2
 from documentmodel.document import Document
 from filemodehelper import change_permission_and_retry
 from tim_app import app
+from timdb.models.docentry import DocEntry
+from timdb.models.user import User
 from timdb.tim_models import db
 from timdb.timdb2 import TimDb
 from utils import del_content
@@ -19,6 +21,7 @@ class TimDbTest(unittest.TestCase):
     test_files_path = '/tmp/doctest_files'
     db_path = app.config['DATABASE']
     dumbo = None
+    i = 0
 
     def get_db(self):
         return self.db
@@ -61,6 +64,11 @@ class TimDbTest(unittest.TestCase):
         db.session.remove()
         self.db.close()
 
+    def create_doc(self, from_file=None, initial_par: Union[str, List[str]]=None, settings=None):
+        d = DocEntry.create('test{}'.format(TimDbTest.i), 0, 'test', from_file=from_file, initial_par=initial_par,
+                            settings=settings)
+        return d
+
     def init_doc(self, doc: Document, from_file, initial_par: Union[str, List[str]], settings):
         if from_file is not None:
             with open(from_file, encoding='utf-8') as f:
@@ -73,6 +81,18 @@ class TimDbTest(unittest.TestCase):
                     doc.add_text(p)
         if settings is not None:
             doc.set_settings(settings)
+
+    @property
+    def test_user_1(self):
+        return User.get_by_name('testuser1')
+
+    @property
+    def test_user_2(self):
+        return User.get_by_name('testuser2')
+
+    @property
+    def test_user_3(self):
+        return User.get_by_name('testuser3')
 
     def get_test_user_1_group_id(self):
         return self.db.users.get_personal_usergroup_by_id(TEST_USER_1_ID)

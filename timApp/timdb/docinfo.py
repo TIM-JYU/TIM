@@ -1,5 +1,10 @@
+from typing import List
+
+from flask import current_app
+
 from documentmodel.document import Document
 from timdb.item import Item
+from timdb.models.notification import NotificationType, Notification
 from timdb.models.usergroup import UserGroup
 from timdb.tim_models import db
 
@@ -20,6 +25,10 @@ class DocInfo(Item):
         raise NotImplementedError
 
     @property
+    def url(self):
+        return current_app.config['TIM_HOST'] + '/' + self.path
+
+    @property
     def src_docid(self):
         """Returns the source document id in case of a translation or the document id itself otherwise."""
         return self.id
@@ -33,6 +42,11 @@ class DocInfo(Item):
     def document(self):
         """Returns the corresponding Document object."""
         return Document(self.id)
+
+    @property
+    def document_as_current_user(self):
+        from sessioninfo import get_current_user_group
+        return Document(self.id, modifier_group_id=get_current_user_group())
 
     @property
     def last_modified(self):
@@ -54,6 +68,18 @@ class DocInfo(Item):
         for ver in changelog:
             ver['group'] = UserGroup.query.get(ver.pop('group_id')).name
         return changelog
+
+    def get_notifications(self, notify_type: NotificationType) -> List[Notification]:
+        q = Notification.query.filter_by(doc_id=self.id)
+        if notify_type == NotificationType.CommentModified:
+            q = q.filter_by(email_comment_modify=True)
+        elif notify_type == NotificationType.CommentAdded:
+            q = q.filter_by(email_comment_add=True)
+        elif notify_type == NotificationType.DocModified:
+            q = q.filter_by(email_doc_modify=True)
+        else:
+            assert False, 'Unknown NotificationType'
+        return q.all()
 
     def has_translation(self, lang_id):
         for t in self.translations:

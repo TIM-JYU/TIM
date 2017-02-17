@@ -1,4 +1,7 @@
 from tests.server.timroutetest import TimRouteTest
+from timdb.models.user import User
+from timdb.models.usergroup import UserGroup
+from timdb.tim_models import db
 
 
 class GroupTest(TimRouteTest):
@@ -6,8 +9,9 @@ class GroupTest(TimRouteTest):
                            'be alphanumeric.'}
 
     def test_groups(self):
-        db = self.get_db()
-        db.users.addUserToAdmins(db.users.get_user_by_name('testuser3').id)
+        timdb = self.get_db()
+        User.get_by_name('testuser3').groups.append(UserGroup.get_admin_group())
+        db.session.commit()
         self.login_test3()
 
         names = ['t' + str(i) for i in range(1, 5)]
@@ -16,7 +20,7 @@ class GroupTest(TimRouteTest):
         t3 = names[2]
         t4 = names[3]
         t5 = 't5'
-        uids = [db.users.create_user_with_group(name)[0].id for name in names]
+        uids = [User.create_with_group(name)[0].id for name in names]
         self.get('/groups/show/testgroup1', expect_status=404,
                  expect_content={'error': 'Usergroup does not exist.'})
         self.get('/groups/create/testgroup1', expect_content=self.ok_resp)

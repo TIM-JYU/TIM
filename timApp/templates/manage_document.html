@@ -1,156 +1,169 @@
 {% extends "manage.html" %}
 {% set obj_name = 'document' %}
 {% block managecontent %}
+    {% if item.rights.manage %}
     <div class="panel panel-default">
         <div class="panel-heading">Short names</div>
-<div class="panel-body">
-    <form class="form-horizontal" name="aliasForm">
-        <div class="row">
-            <div class="col-md-1"></div>
-            <div class="col-md-5">Visible in index, location</div>
-            <div class="col-md-5">Short name</div>
-        </div>
-        <div class="form-group" ng-repeat="alias in aliases">
-            <ng-form name="innerForm">
-                <div class="col-md-1">
-                    <button type="button" title="Remove this alias" class="btn btn-danger btn-sm" ng-click="removeAlias(alias)">
-                        <span class="glyphicon glyphicon-remove"></span>
-                    </button>
+        <div class="panel-body">
+            <form class="form-horizontal" name="aliasForm">
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-5">Visible in index, location</div>
+                    <div class="col-md-5">Short name</div>
                 </div>
-                <div class="col-md-5">
-                    <div class="input-group input-group-sm" tim-error-state data-for="innerForm.aliasLoc">
+                <div class="form-group" ng-repeat="alias in aliases">
+                    <ng-form name="innerForm">
+                        <div class="col-md-1">
+                            <button type="button" title="Remove this alias" class="btn btn-danger btn-sm"
+                                    ng-click="removeAlias(alias)">
+                                <span class="glyphicon glyphicon-remove"></span>
+                            </button>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="input-group input-group-sm" tim-error-state data-for="innerForm.aliasLoc">
                         <span ng-click="aliasPublicClicked(alias)" class="input-group-addon">
                        <input type="checkbox" ng-checked="alias.public">
                        </span>
-                        <input class="form-control" name="aliasLoc" tim-location type="text"
-                               ng-model="alias.location"/>
-                        <span class="input-group-btn">
+                                <input class="form-control" name="aliasLoc" tim-location type="text"
+                                       ng-model="alias.location"/>
+                                <span class="input-group-btn">
                     <a class="timButton" href="{{ '/view/{{alias.location | escape}}' }}">View</a>
                     </span>
-                    </div>
-                    <tim-error-message for="innerForm.aliasLoc"></tim-error-message>
-                </div>
-                <div class="col-md-5">
-                    <div class="input-group input-group-sm" tim-error-state data-for="innerForm.aliasName">
-                        <input class="form-control" required name="aliasName" type="text" tim-short-name ng-model="alias.name"
-                               placeholder="Short name"/>
-                        <span class="input-group-btn">
+                            </div>
+                            <tim-error-message for="innerForm.aliasLoc"></tim-error-message>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="input-group input-group-sm" tim-error-state data-for="innerForm.aliasName">
+                                <input class="form-control" required name="aliasName" type="text" tim-short-name
+                                       ng-model="alias.name"
+                                       placeholder="Short name"/>
+                                <span class="input-group-btn">
                     <a class="timButton" href="{{ '/view/{{alias.path | escape}}' }}">View</a>
                             </span>
-                    </div>
-                    <tim-error-message for="innerForm.aliasName"></tim-error-message>
+                            </div>
+                            <tim-error-message for="innerForm.aliasName"></tim-error-message>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="timButton btn-sm" ng-click="updateAlias(alias, $first)"
+                                    ng-disabled="!aliasChanged(alias) || innerForm.$invalid"><span
+                                    class="glyphicon glyphicon-ok"></span>
+                            </button>
+                        </div>
+                    </ng-form>
                 </div>
-                <div class="col-md-1">
-                    <button type="button" class="timButton btn-sm" ng-click="updateAlias(alias, $first)"
-                            ng-disabled="!aliasChanged(alias) || innerForm.$invalid"><span class="glyphicon glyphicon-ok"></span>
-                    </button>
-                </div>
-            </ng-form>
-        </div>
-        <div class="form-group">
-            <ng-form name="newAliasForm">
-            <div class="col-md-1"></div>
-            <div class="col-md-5">
-                <div class="input-group input-group-sm" tim-error-state data-for="newAliasForm.newAliasLoc">
+                <div class="form-group">
+                    <ng-form name="newAliasForm">
+                        <div class="col-md-1"></div>
+                        <div class="col-md-5">
+                            <div class="input-group input-group-sm" tim-error-state data-for="newAliasForm.newAliasLoc">
                         <span ng-click="aliasPublicClicked(newAlias)" class="input-group-addon">
                        <input type="checkbox" ng-checked="newAlias.public">
                        </span>
-                    <input class="form-control" name="newAliasLoc" tim-location type="text"
-                           ng-model="newAlias.location"/>
-                    <span class="input-group-btn">
+                                <input class="form-control" name="newAliasLoc" tim-location type="text"
+                                       ng-model="newAlias.location"/>
+                                <span class="input-group-btn">
                     <a class="timButton" href="{{ '/view/{{newAlias.location | escape}}' }}">View</a>
                     </span>
+                            </div>
+                            <tim-error-message for="newAliasForm.newAliasLoc"></tim-error-message>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="input-group input-group-sm" tim-error-state
+                                 data-for="newAliasForm.newAliasName">
+                                <input class="form-control" required name="newAliasName" tim-short-name type="text"
+                                       ng-model="newAlias.name"
+                                       placeholder="Enter new short name"/>
+                                <span class="input-group-btn"><a class="timButton" disabled>View</a></span>
+                            </div>
+                            <tim-error-message for="newAliasForm.newAliasName"></tim-error-message>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="timButton btn-sm" ng-click="addAlias(newAlias)"
+                                    ng-disabled="newAliasForm.$invalid">
+                                <span class="glyphicon glyphicon-plus"></span>
+                            </button>
+                        </div>
+                    </ng-form>
                 </div>
-                <tim-error-message for="newAliasForm.newAliasLoc"></tim-error-message>
-            </div>
-            <div class="col-md-5">
-                <div class="input-group input-group-sm" tim-error-state data-for="newAliasForm.newAliasName">
-                    <input class="form-control" required name="newAliasName" tim-short-name type="text"
-                           ng-model="newAlias.name"
-                           placeholder="Enter new short name"/>
-                    <span class="input-group-btn"><a class="timButton" disabled>View</a></span>
-                </div>
-                <tim-error-message for="newAliasForm.newAliasName"></tim-error-message>
-            </div>
-            <div class="col-md-1">
-                <button type="button" class="timButton btn-sm" ng-click="addAlias(newAlias)" ng-disabled="newAliasForm.$invalid">
-                    <span class="glyphicon glyphicon-plus"></span>
-                </button>
-            </div>
-            </ng-form>
+            </form>
         </div>
-    </form>
-</div>
     </div>
-
+    {% endif %}
+    {% if item.rights.manage %}
     <div class="panel panel-default">
         <div class="panel-heading">
-            Translations and copies (see <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#translations">help in Finnish</a>)
+            Translations and copies (see <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#translations">help in
+            Finnish</a>)
         </div>
-<div class="panel-body">
-    <table class="table">
-            <tr>
-                <th>Language</th>
-                <th>Title</th>
-                <th>Maintainer</th>
-                <th>Document id</th>
-                <th>Actions</th>
-            </tr>
-            <tr ng-repeat="tr in translations">
-                <td><input type="text" class="form-control" ng-model="tr.lang_id" placeholder="Language"/></td>
-                <td><input type="text" class="form-control" ng-model="tr.title" placeholder="Title"/></td>
-                <td>{{ '{{tr.owner.name}}' }}</td>
-                <td>{{ '{{tr.id}}' }}</td>
-                <td>
-                    <button class="timButton" ng-click="updateTranslation(tr)" ng-disabled="!trChanged(tr)">Update</button>
-                </td>
-            </tr>
-        </table>
-        <span>
+        <div class="panel-body">
+            <table class="table">
+                <tr>
+                    <th>Language</th>
+                    <th>Title</th>
+                    <th>Maintainer</th>
+                    <th>Document id</th>
+                    <th>Actions</th>
+                </tr>
+                <tr ng-repeat="tr in translations">
+                    <td><input type="text" class="form-control" ng-model="tr.lang_id" placeholder="Language"/></td>
+                    <td><input type="text" class="form-control" ng-model="tr.title" placeholder="Title"/></td>
+                    <td>{{ '{{tr.owner.name}}' }}</td>
+                    <td>{{ '{{tr.id}}' }}</td>
+                    <td>
+                        <button class="timButton" ng-click="updateTranslation(tr)" ng-disabled="!trChanged(tr)">Update
+                        </button>
+                    </td>
+                </tr>
+            </table>
+            <span>
     </span>
 
-    <uib-tabset active="-1">
-        <uib-tab heading="Create a translation">
-            <div class="form-group"><label for="translationTitle">Title:</label>
-                <input id="translationTitle" class="form-control" type="text" ng-model="newTranslation.title"/></div>
-            <div class="form-group"><label for="translationName">Language:</label>
-                <input id="translationName" class="form-control" type="text" ng-model="newTranslation.language"
-                       placeholder="Short language identifier, e.g. fi or en"/></div>
-            <button ng-disabled="!newTranslation.language || !newTranslation.title" class="timButton" ng-click="createTranslation()">Create</button>
-        </uib-tab>
-        <uib-tab heading="Create a cited copy">
-            <create-item item-type="document" item-location="{{ '{{ item.location }}' }}" params="citeParams"></create-item>
-        </uib-tab>
-        <uib-tab heading="Create a copy">
-            <create-item item-type="document" item-location="{{ '{{ item.location }}' }}" params="copyParams"></create-item>
-        </uib-tab>
-    </uib-tabset>
+            <uib-tabset active="-1">
+                <uib-tab heading="Create a translation">
+                    <div class="form-group"><label for="translationTitle">Title:</label>
+                        <input id="translationTitle" class="form-control" type="text" ng-model="newTranslation.title"/>
+                    </div>
+                    <div class="form-group"><label for="translationName">Language:</label>
+                        <input id="translationName" class="form-control" type="text" ng-model="newTranslation.language"
+                               placeholder="Short language identifier, e.g. fi or en"/></div>
+                    <button ng-disabled="!newTranslation.language || !newTranslation.title" class="timButton"
+                            ng-click="createTranslation()">Create
+                    </button>
+                </uib-tab>
+                <uib-tab heading="Create a cited copy">
+                    <create-item item-type="document" item-location="{{ '{{ item.location }}' }}"
+                                 params="citeParams"></create-item>
+                </uib-tab>
+                <uib-tab heading="Create a copy">
+                    <create-item item-type="document" item-location="{{ '{{ item.location }}' }}"
+                                 params="copyParams"></create-item>
+                </uib-tab>
+            </uib-tabset>
+        </div>
     </div>
-    </div>
-
-    {% if item.rights['owner'] %}
+    {% endif %}
     <div class="panel panel-default">
         <div class="panel-heading">Notifications</div>
         <div class="panel-body">
             <form>
                 <p>Send me email on</p>
                 <div class="checkbox"><label>
-                    <input type="checkbox" ng-model="emailDocModify"
+                    <input type="checkbox" ng-model="notifySettings.email_doc_modify"
                            ng-click="notifyChanged()"/>Document modifications
                 </label></div>
                 <div class="checkbox"><label>
-                    <input type="checkbox" ng-model="emailCommentAdd"
+                    <input type="checkbox" ng-model="notifySettings.email_comment_add"
                            ng-click="notifyChanged()"/>New comments
                 </label></div>
                 <div class="checkbox"><label>
-                    <input type="checkbox" ng-model="emailCommentModify"
+                    <input type="checkbox" ng-model="notifySettings.email_comment_modify"
                            ng-click="notifyChanged()"/>Edited comments
                 </label></div>
             </form>
         </div>
     </div>
-    {% endif %}
 
+    {% if item.rights.editable %}
     <div class="panel panel-default">
         <div class="panel-heading">Upload a new version for this document</div>
         <div class="panel-body">
@@ -161,12 +174,14 @@
             </div>
             <form name="uploadForm">
                 <div class="input-group">
-                    <input class="form-control" type="file" name="file" ng-model="file" ngf-pattern="'.md,.markdown,.txt'" ngf-select="updateDocument($file)">
+                    <input class="form-control" type="file" name="file" ng-model="file"
+                           ngf-pattern="'.md,.markdown,.txt'" ngf-select="updateDocument($file)">
                     <span class="input-group-btn">
                     <button class="timButton" id="reset" type="reset" value="Reset">Clear</button>
                     </span>
                 </div>
-                <span ng-show="file.progress >= 0 && file.progress < 100" ng-bind="'Uploading... ' + file.progress + '%'">
+                <span ng-show="file.progress >= 0 && file.progress < 100"
+                      ng-bind="'Uploading... ' + file.progress + '%'">
                 </span>
                 <span ng-show="file.result">Done!</span>
             </form>
@@ -176,42 +191,49 @@
     <div class="panel panel-default">
         <div class="panel-heading">Edit the full document</div>
         <div class="panel-body">
-    <form id="fullDocumentEditor">
-        <div id="documentEditorDiv">
-            <textarea id="doctext" class="form-control" ng-model="fulltext" rows="50" ng-hide="renameFormShowing"></textarea>
-            <button id="documentEditorSaveButton" class="timButton" ng-disabled="(item.fulltext === fulltext) || saving" ng-click="saveDocument()" ng-hide="renameFormShowing">Save</button>
-            <span ng-show="saving">Saving...</span>
-        </div>
-        <div id="tracWikiDiv" ng-hide="renameFormShowing">
-            <label>Import TracWiki <input type="checkbox" ng-model="showTracWiki"></label>
-            <div ng-hide="!showTracWiki">
-                <p>Write the wiki root address to replace "wiki:" from URL's and then copy paste
-                    TracWiki page below and then press "Convert TracWiki" button to get the text converted
-                    above as MarkDown. Then you can edit the MarkDown before pressing Save.
-                    You may need to add extra empty lines before lists.</p>
-                <div class="form-group"><label for="wikiRoot">Wiki root: </label>
-                    <input id="wikiRoot" class="form-control" ng-model="wikiRoot" size="50"
-                           value="https://trac.cc.jyu.fi/projects/ohj2/wiki/"/></div>
-                <div class="form-group"><label for="tracWikiText">
-                    TracWiki content:</label>
-                    <textarea rows="50" id="tracWikiText" class="form-control" ng-model="tracWikiText"></textarea></div>
+            <form id="fullDocumentEditor">
+                <div id="documentEditorDiv">
+                    <textarea id="doctext" class="form-control" ng-model="fulltext" rows="50"
+                              ng-hide="renameFormShowing"></textarea>
+                    <button id="documentEditorSaveButton" class="timButton"
+                            ng-disabled="(item.fulltext === fulltext) || saving" ng-click="saveDocument()"
+                            ng-hide="renameFormShowing">Save
+                    </button>
+                    <span ng-show="saving">Saving...</span>
+                </div>
+                <div id="tracWikiDiv" ng-hide="renameFormShowing">
+                    <label>Import TracWiki <input type="checkbox" ng-model="showTracWiki"></label>
+                    <div ng-hide="!showTracWiki">
+                        <p>Write the wiki root address to replace "wiki:" from URL's and then copy paste
+                            TracWiki page below and then press "Convert TracWiki" button to get the text converted
+                            above as MarkDown. Then you can edit the MarkDown before pressing Save.
+                            You may need to add extra empty lines before lists.</p>
+                        <div class="form-group"><label for="wikiRoot">Wiki root: </label>
+                            <input id="wikiRoot" class="form-control" ng-model="wikiRoot" size="50"
+                                   value="https://trac.cc.jyu.fi/projects/ohj2/wiki/"/></div>
+                        <div class="form-group"><label for="tracWikiText">
+                            TracWiki content:</label>
+                            <textarea rows="50" id="tracWikiText" class="form-control"
+                                      ng-model="tracWikiText"></textarea></div>
 
-                <button class="timButton" ng-click="convertDocument(item)">Convert TracWiki</button>
-            </div>
-        </div>
-    </form>
+                        <button class="timButton" ng-click="convertDocument(item)">Convert TracWiki</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
+    {% endif %}
 
     <div class="panel panel-default">
         <div class="panel-heading">Other actions</div>
         <div class="panel-body">
-            <a class="timButton" href="/download/{{ '{{ item.id }}' }}">Download document markdown</a>
+            <a ng-show="item.rights.editable" class="timButton" href="/download/{{ '{{ item.id }}' }}">Download document markdown</a>
             <button class="timButton" ng-click="markAllAsRead()">Mark document as read</button>
-            <button class="btn btn-danger" ng-click="deleteDocument(item.id)">Delete document</button>
-            <span ng-show="readUpdating">Loading...</span>
+            <button ng-show="item.rights.owner" class="btn btn-danger" ng-click="deleteDocument(item.id)">Delete document</button>
+            <span ng-show="readUpdating">Marking document as read...</span>
         </div>
     </div>
+    {% if item.rights.editable %}
     {% raw %}
     <div class="panel panel-default">
         <div class="panel-heading">Document version history</div>
@@ -240,8 +262,11 @@
             </table>
             <p ng-show="hasMoreChangelog">Showing {{ item.versions.length }} latest entries.</p>
             <p ng-show="!hasMoreChangelog">Showing all {{ item.versions.length }} entries.</p>
-            <button ng-disabled="changelogLoading" class="timButton" ng-show="hasMoreChangelog" ng-click="showMoreChangelog()">Show more entries</button>
+            <button ng-disabled="changelogLoading" class="timButton" ng-show="hasMoreChangelog"
+                    ng-click="showMoreChangelog()">Show more entries
+            </button>
         </div>
     </div>
     {% endraw %}
+    {% endif %}
 {% endblock %}

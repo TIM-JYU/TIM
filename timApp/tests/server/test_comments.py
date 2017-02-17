@@ -6,6 +6,7 @@ from lxml.html import HtmlElement
 
 from documentmodel.docparagraph import DocParagraph
 from tests.server.timroutetest import TimRouteTest
+from timdb.userutils import get_anon_group_id, grant_view_access
 
 comment_selector = CSSSelector('div.notes > div.note')
 
@@ -27,8 +28,7 @@ class CommentTest(TimRouteTest):
         self.assertEqual(2, len(comments))
         self.assertEqual(comment1, comments[0].find('p').text_content())
         self.assertEqual(comment_private, comments[1].find('p').text_content())
-        timdb = self.get_db()
-        timdb.users.grant_view_access(timdb.users.get_anon_group_id(), d.doc_id)
+        grant_view_access(get_anon_group_id(), d.doc_id)
 
         self.login_anonymous()
         comments = self.post_comment(comment2, par)

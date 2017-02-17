@@ -14,6 +14,7 @@ from sessioninfo import get_current_user_object
 from tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME
 from tests.server.timroutetest import TimRouteTest
 from timdb.tim_models import db
+from timdb.userutils import grant_view_access, grant_access, get_anon_group_id, get_anon_user_id
 from timdb.velp_models import Annotation
 
 
@@ -132,7 +133,7 @@ class PluginTest(TimRouteTest):
                               'reviewHtml': None}, j)
 
         timdb = self.get_db()
-        timdb.users.grant_access(timdb.users.get_anon_group_id(), doc.doc_id, 'view')
+        grant_access(get_anon_group_id(), doc.doc_id, 'view')
 
         tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True, query_string={'lazy': False})
         plugs = tree.findall(mmcq_xpath)
@@ -156,7 +157,7 @@ class PluginTest(TimRouteTest):
         resp = self.post_answer(plugin_type, task_id, [True, False, False])
         self.check_ok_answer(resp)
 
-        anon_id = timdb.users.get_anon_user_id()
+        anon_id = get_anon_user_id()
         anon_answers = timdb.answers.get_answers(anon_id, task_id)
 
         self.assertListEqual([{'collaborators': [{'real_name': 'Anonymous user', 'email': None, 'user_id': anon_id}],
@@ -235,7 +236,7 @@ class PluginTest(TimRouteTest):
 
         # until he is granted a permission
         ug = db.users.get_personal_usergroup_by_id(self.current_user_id())
-        db.users.grant_view_access(ug, doc.doc_id)
+        grant_view_access(ug, doc.doc_id)
 
         # but he still cannot see the file
         resp = self.post_answer('csPlugin', task_id, user_input, expect_status=403,
@@ -243,7 +244,7 @@ class PluginTest(TimRouteTest):
         self.get(ur['file'], expect_status=403, expect_content=self.permission_error)
 
         # until the 'see answers' right is granted for the document
-        db.users.grant_access(ug, doc.doc_id, 'see answers')
+        grant_access(ug, doc.doc_id, 'see answers')
         self.get(ur['file'], expect_content=file_content)
 
     def do_plugin_upload(self, doc, file_content, filename, task_id, task_name, expect_version=1):
@@ -307,7 +308,7 @@ class PluginTest(TimRouteTest):
         self.post_answer(plugin_type, task_id, [True, True, False])
         self.post_answer(plugin_type, task_id2, [True, False])
         timdb = self.get_db()
-        timdb.users.grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id)
+        grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id)
         self.login_test2()
         self.post_answer(plugin_type, task_id, [True, True, True])
         self.post_answer(plugin_type, task_id2, [False, False])
@@ -381,7 +382,7 @@ class PluginTest(TimRouteTest):
         self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, self.permission_error)
         self.check_save_points(TEST_USER_2_ID, answer_id, 1, 403, self.permission_error)
         timdb = self.get_db()
-        timdb.users.grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id)
+        grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id)
         self.post_answer(plugin_type, task_id, [True, False, False])
         answer_list = self.get_task_answers(task_id)
         answer_id2 = answer_list[0]['id']
@@ -397,9 +398,9 @@ class PluginTest(TimRouteTest):
         self.check_save_points(TEST_USER_2_ID, answer_id2, None, 400, point_format_error)
         self.check_save_points(TEST_USER_2_ID, answer_id2, '', 400, point_format_error)
 
-        timdb.users.grant_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id, 'see answers')
+        grant_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id, 'see answers')
         self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, self.permission_error)
-        timdb.users.grant_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id, 'teacher')
+        grant_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), doc.doc_id, 'teacher')
         self.check_save_points(TEST_USER_1_ID, answer_id, 1, 200, self.ok_resp)
 
     def test_point_sum_rule(self):
@@ -424,7 +425,7 @@ class PluginTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc(from_file='example_docs/mmcq_example.md').document
         timdb = self.get_db()
-        timdb.users.grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), d.doc_id)
+        grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), d.doc_id)
         task_ids = ['{}.{}-{}'.format(d.doc_id, a, b) for a, b in product(('t1', 't2', 't3'), ('a', 'b', 'c'))]
         answers = [
             [True, False, True],    # U1: 3 p + 3 v =  6, U2: 0 p + 3 v = 3

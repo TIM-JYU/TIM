@@ -1,19 +1,24 @@
 import http.client
-import os
 import socket
 from typing import Optional
 
 from flask import Blueprint
 from flask import request
 
-from accesshelper import verify_logged_in
+from accesshelper import verify_logged_in, verify_view_access
 from dbaccess import get_timdb
 from decorators import async
+from documentmodel.docparagraph import DocParagraph
 from logger import log_info, log_error
+from requesthelper import verify_json_params
 from responsehelper import json_response, ok_response
-from sessioninfo import get_current_user, get_current_user_id, get_current_user_name
+from sessioninfo import get_current_user_id, get_current_user_object
 from tim_app import app
+from timdb.docinfo import DocInfo
 from timdb.models.docentry import DocEntry
+from timdb.models.notification import NotificationType
+from timdb.models.user import User
+from timdb.tim_models import db
 
 FUNNEL_HOST = "funnel"
 FUNNEL_PORT = 80
@@ -22,27 +27,38 @@ notify = Blueprint('notify',
                    __name__,
                    url_prefix='')
 
+sent_mails_in_testing = []
+
 
 @notify.route('/notify/<int:doc_id>', methods=['GET'])
 def get_notify_settings(doc_id):
     verify_logged_in()
-    timdb = get_timdb()
-    settings = timdb.documents.get_notify_settings(get_current_user_id(), doc_id)
-    return json_response(settings)
+    verify_view_access(doc_id)
+    return json_response(
+        get_current_user_object().get_notify_settings(DocEntry.find_by_id(doc_id, try_translation=True)))
 
 
 @notify.route('/notify/<int:doc_id>', methods=['POST'])
 def set_notify_settings(doc_id):
     verify_logged_in()
-    jsondata = request.get_json()
-    timdb = get_timdb()
-    timdb.documents.set_notify_settings(get_current_user_id(), doc_id, jsondata)
+    verify_view_access(doc_id)
+    comment_modify, comment_add, doc_modify = verify_json_params('email_comment_modify', 'email_comment_add',
+                                                                 'email_doc_modify')
+    get_current_user_object().set_notify_settings(DocEntry.find_by_id(doc_id, try_translation=True),
+                                                  comment_modify=comment_modify,
+                                                  comment_add=comment_add,
+                                                  doc_modify=doc_modify)
+    db.session.commit()
     return ok_response()
 
 
 @async
 def send_email(rcpt: str, subject: str, msg: str, mail_from: Optional[str] = None, reply_to: Optional[str] = None,
                group_id: Optional[str] = None, group_subject: Optional[str] = None):
+    if app.config['TESTING']:
+        sent_mails_in_testing.append(locals())
+        return
+
     with app.app_context():
         conn = None
         try:
@@ -78,40 +94,47 @@ def send_email(rcpt: str, subject: str, msg: str, mail_from: Optional[str] = Non
                 conn.close()
 
 
-def replace_macros(msg: str, doc_id: int, par_id: Optional[str]) -> str:
-    new_msg = msg
-    if '[user_name]' in msg:
-        new_msg = new_msg.replace('[user_name]', get_current_user_name())
-    if '[doc_name]' in msg or '[doc_url]' in msg:
-        doc_name = DocEntry.find_by_id(doc_id, try_translation=True).path
-        par_part = '' if par_id is None else '#' + par_id
-        doc_url = '{}/view/{}{}'.format(os.environ.get("TIM_HOST", "http://localhost"), doc_name.replace(' ', '%20'),
-                                        par_part)
-        new_msg = new_msg.replace('[doc_name]', doc_name).replace('[doc_url]', doc_url)
-    if '[doc_id]' in msg:
-        new_msg = new_msg.replace('[doc_id]', str(doc_id))
-    if '[base_url]' in msg:
-        new_msg = new_msg.replace('[base_url]', os.environ.get("TIM_HOST", "http://localhost"))
+def notify_doc_watchers(doc: DocInfo,
+                        content_msg: str,
+                        notify_type: NotificationType,
+                        par: Optional[DocParagraph] = None):
+    me = get_current_user_object()
+    if notify_type == NotificationType.DocModified:
+        subject = 'Someone edited the document {}'.format(doc.title)
+        subject_full = '{} edited the document {}'.format(me.pretty_full_name, doc.title)
+        group_subject = 'The document {} has been modified'.format(doc.title)
+        group_id = 'docmodify_{}'.format(doc.id)
+    elif notify_type == NotificationType.CommentAdded:
+        subject = 'Someone posted a comment to the document {}'.format(doc.title)
+        subject_full = '{} posted a comment to the document {}'.format(me.pretty_full_name, doc.title)
+        group_subject = 'The document {} has new notes'.format(doc.title)
+        group_id = 'notes_{}'.format(doc.id)
+    elif notify_type == NotificationType.CommentModified:
+        subject = 'Someone edited a comment in the document {}'.format(doc.title)
+        subject_full = '{} edited a comment in the document {}'.format(me.pretty_full_name, doc.title)
+        group_subject = 'The document {} has new notes'.format(doc.title)
+        group_id = 'notes_{}'.format(doc.id)
+    else:
+        assert False, 'Unknown NotificationType'
+    msg = 'Link to the {}: {}{}'.format('paragraph' if par else 'document',
+                                        doc.url,
+                                        '#' + par.get_id() if par else '')
 
-    return new_msg
+    full_msg = msg + '\n\n' + content_msg
 
+    for note in doc.get_notifications(notify_type):
+        user = note.user  # type: User
+        if user.id == me.id or not user.email:
+            continue
 
-def notify_doc_owner(doc_id, subject, msg, setting=None, par_id=None, group_id=None, group_subject=None):
-    timdb = get_timdb()
-    me = get_current_user()
-    owner_group = timdb.documents.get_owner(doc_id)
-    macro_subject = replace_macros(subject, doc_id, par_id)
-    macro_msg = replace_macros(msg, doc_id, par_id)
-
-    macro_grpid = replace_macros(group_id, doc_id, par_id) if group_id else None
-    macro_grpsubj = replace_macros(group_subject, doc_id, par_id) if group_subject else None
-
-    for user in timdb.users.get_users_in_group(owner_group):
-        if user['id'] != me['id'] and user['email']:
-            if setting is not None:
-                settings = timdb.documents.get_notify_settings(user['id'], doc_id)
-                if not settings['email_' + setting]:
-                    continue
-
-            send_email(user['email'], macro_subject, macro_msg, mail_from=me['email'],
-                       group_id=macro_grpid, group_subject=macro_grpsubj)
+        # If a document was modified and the user doesn't have edit access to it, we must not send the source md
+        send_full_msg = notify_type != NotificationType.DocModified or user.has_edit_access(doc.id)
+        send_full_subject = user.has_teacher_access(doc.id)
+        # Poster identity should be hidden unless the user has teacher access to the document
+        mail_from = me.email if user.has_teacher_access(
+            doc.id) else 'no-reply@tim.jyu.fi'
+        send_email(user.email,
+                   subject_full if send_full_subject else subject,
+                   full_msg if send_full_msg else msg,
+                   mail_from=mail_from,
+                   group_id=group_id, group_subject=group_subject)

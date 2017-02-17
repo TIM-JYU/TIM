@@ -15,9 +15,10 @@ from dbaccess import get_timdb
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from markdownconverter import expand_macros, create_environment
-from sessioninfo import get_session_usergroup_ids, get_current_user_id, get_current_user_group, logged_in
+from sessioninfo import get_session_usergroup_ids, get_current_user_id, logged_in
 from theme import Theme
 from timdb.models.user import User
+from timdb.userutils import get_anon_group_id
 from utils import generate_theme_scss, get_combined_css_filename, ThemeNotFoundException
 
 
@@ -25,17 +26,6 @@ def verify_doc_exists(doc_id, message="Sorry, the document does not exist."):
     timdb = get_timdb()
     if not timdb.documents.exists(doc_id):
         abort(404, message)
-
-
-def get_document_as_current_user(doc_id: int) -> Document:
-    """Returns the Document object having the current user group as the modifier group ip.
-
-    :param doc_id: The numeric id.
-    :return: The Document object.
-
-    """
-
-    return Document(doc_id, modifier_group_id=get_current_user_group())
 
 
 # noinspection PyUnusedLocal
@@ -87,7 +77,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
         p['status'] = set()
         p['notes'] = []
 
-    group = user.get_personal_group().id if user is not None else timdb.users.get_anon_group_id()
+    group = user.get_personal_group().id if user is not None else get_anon_group_id()
     if user is not None:
         readings = timdb.readings.get_common_readings(get_session_usergroup_ids(), doc)
         for r in readings:
@@ -102,7 +92,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                         p['status'].add(r.type.class_str() + '-modified')
 
     notes = timdb.notes.get_notes(group, doc)
-    is_owner = timdb.users.user_is_owner(get_current_user_id(), doc.doc_id)
+    is_owner = has_ownership(doc.doc_id)
     # Close database here because we won't need it for a while
     timdb.close()
 

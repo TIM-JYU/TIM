@@ -1,8 +1,12 @@
+from typing import Tuple, List
+
 from flask import Blueprint, abort
 
 from accesshelper import verify_admin
 from dbaccess import get_timdb
 from responsehelper import json_response, ok_response
+from timdb.models.user import User
+from timdb.models.usergroup import UserGroup
 from timdb.special_group_names import SPECIAL_GROUPS
 
 groups = Blueprint('groups',
@@ -10,21 +14,19 @@ groups = Blueprint('groups',
                    url_prefix='/groups')
 
 
-def get_uid_gid(groupname, usernames):
-    timdb = get_timdb()
-
-    uids = [timdb.users.get_user_id_by_name(u) for u in usernames]
-    gid = timdb.users.get_usergroup_by_name(groupname)
-    if gid is None:
+def get_uid_gid(groupname, usernames) -> Tuple[UserGroup, List[User]]:
+    users = User.query.filter(User.name.in_(usernames)).all()
+    group = UserGroup.query.filter_by(name=groupname).first()
+    if group is None:
         abort(404, 'Usergroup does not exist.')
-    return gid, uids
+    return group, users
 
 
 @groups.route('/show/<groupname>')
 def show_members(groupname):
     verify_admin()
     timdb = get_timdb()
-    if not timdb.users.group_exists(groupname):
+    if not UserGroup.get_by_name(groupname):
         abort(404, 'Usergroup does not exist.')
     members = timdb.users.get_users_for_group(groupname, order=True)
     return json_response(members)
@@ -49,7 +51,7 @@ def create_group(groupname):
     """
     verify_admin()
     timdb = get_timdb()
-    if timdb.users.group_exists(groupname):
+    if UserGroup.get_by_name(groupname):
         abort(400, 'Usergroup already exists.')
     has_digits = False
     has_letters = False
@@ -60,7 +62,7 @@ def create_group(groupname):
         has_non_alnum = has_non_alnum or not (c.isalnum() or c.isspace())
     if not has_digits or not has_letters or has_non_alnum:
         abort(400, 'Usergroup must contain at least one digit and one letter and must be alphanumeric.')
-    timdb.users.create_usergroup(groupname)
+    UserGroup.create(groupname)
     return ok_response()
 
 
@@ -71,23 +73,18 @@ def add_member(usernames, groupname):
         abort(400, 'Cannot add members to special groups.')
     timdb = get_timdb()
     usernames = get_usernames(usernames)
-    gid, uids = get_uid_gid(groupname, usernames)
-    users = timdb.users.get_users_for_group(groupname)
-    ids = set(u['id'] for u in users)
-    already = []
+    group, users = get_uid_gid(groupname, usernames)
+    existing_usernames = set(u.name for u in users)
+    existing_ids = set(u.id for u in group.users)
+    already_exists = set(u.name for u in group.users)
+    not_exist = [name for name in usernames if name not in existing_usernames]
     added = []
-    not_exist = []
-    for uid, name in zip(uids, usernames):
-        if uid is None:
-            not_exist.append(name)
-            continue
-        if uid in ids:
-            already.append(name)
-        else:
-            timdb.users.add_user_to_group(gid, uid, commit=False)
-            added.append(name)
+    for u in users:
+        if u.id not in existing_ids:
+            u.groups.append(group)
+            added.append(u.name)
     timdb.commit()
-    return json_response({'already_belongs': already, 'added': added, 'not_exist': not_exist})
+    return json_response({'already_belongs': sorted(list(already_exists)), 'added': added, 'not_exist': not_exist})
 
 
 @groups.route('/removemember/<groupname>/<usernames>')
@@ -97,20 +94,19 @@ def remove_member(usernames, groupname):
         abort(400, 'Cannot remove members from special groups.')
     timdb = get_timdb()
     usernames = get_usernames(usernames)
-    gid, uids = get_uid_gid(groupname, usernames)
+    group, users = get_uid_gid(groupname, usernames)
+    existing_usernames = set(u.name for u in users)
+    existing_ids = set(u.id for u in group.users)
+    already_exists = set(u.name for u in group.users)
+    not_exist = [name for name in usernames if name not in existing_usernames]
     removed = []
     does_not_belong = []
-    not_exist = []
-    for uid, name in zip(uids, usernames):
-        if uid is None:
-            not_exist.append(name)
+    for u in users:
+        if u.id not in existing_ids:
+            does_not_belong.append(u.name)
             continue
-        count = timdb.users.remove_membership(uid, gid, commit=False)
-        assert count <= 1
-        if count == 0:
-            does_not_belong.append(name)
-        else:
-            removed.append(name)
+        u.groups.remove(group)
+        removed.append(u.name)
     timdb.commit()
     return json_response({'removed': removed, 'does_not_belong': does_not_belong, 'not_exist': not_exist})
 

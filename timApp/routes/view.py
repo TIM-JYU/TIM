@@ -333,7 +333,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     if hide_names_in_teacher(doc_id):
         for user in user_list:
-            if not timdb.users.user_is_owner(user['id'], doc_id)\
+            if not user_is_owner(user['id'], doc_id)\
                and user['id'] != get_current_user_id():
                 user['name'] = '-'
                 user['real_name'] = 'Someone {}'.format(user['id'])

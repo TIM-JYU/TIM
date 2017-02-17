@@ -2,13 +2,18 @@ import io
 
 from documentmodel.document import Document
 from tests.server.timroutetest import TimRouteTest
+from timdb.models.user import User
+from timdb.models.usergroup import UserGroup
+from timdb.tim_models import db
+from timdb.userutils import grant_access
 
 
 class UploadTest(TimRouteTest):
 
     def test_upload_permissions(self):
-        db = self.get_db()
-        db.users.addUserToAdmins(db.users.get_user_by_name('testuser3').id)
+        timdb = self.get_db()
+        User.get_by_name('testuser3').groups.append(UserGroup.get_admin_group())
+        db.session.commit()
         self.login_test1()
         j = self.post('/upload/',
                       data={'folder': self.current_user.get_personal_folder().path,
@@ -37,10 +42,10 @@ class UploadTest(TimRouteTest):
                         'file': (io.BytesIO(b'test file'), 'test.md')},
                   expect_status=403,
                   expect_content={'error': 'You cannot create documents in this folder.'})
-        test1_group = db.users.get_personal_usergroup_by_id(self.current_user_id())
+        test1_group = timdb.users.get_personal_usergroup_by_id(self.current_user_id())
         self.login_test3()
         j = self.create_folder(fname)
-        db.users.grant_access(test1_group, j['id'], 'edit')
+        grant_access(test1_group, j['id'], 'edit')
 
         self.login_test1()
         self.post('/upload/',

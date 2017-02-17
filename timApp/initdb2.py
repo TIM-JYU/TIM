@@ -18,8 +18,10 @@ from sql.migrate_to_postgre import perform_migration
 from tim_app import app
 from timdb import tempdb_models
 from timdb.models.docentry import DocEntry
+from timdb.models.user import User
 from timdb.tim_models import AccessType, db
 from timdb.timdb2 import TimDb
+from timdb.userutils import get_admin_group_id, get_anon_group_id
 
 
 def check_db_version(_, context: MigrationContext):
@@ -84,15 +86,15 @@ def initialize_database(create_docs=True):
         sess.commit()
 
         timdb.users.create_special_usergroups()
-        anon_group = timdb.users.get_anon_group_id()
-        timdb.users.create_user_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
-        timdb.users.create_user_with_group('tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi', is_admin=True)
+        anon_group = get_anon_group_id()
+        User.create_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
+        User.create_with_group('tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi', is_admin=True)
         for i in range(1, 4):
-            timdb.users.create_user_with_group('testuser{}'.format(i),
+            User.create_with_group('testuser{}'.format(i),
                                                'Test user {}'.format(i),
                                                'test{}@example.com'.format(i),
                                                password='test{}pass'.format(i))
-        recovered_docs = timdb.documents.recover_db(timdb.users.get_admin_group_id())
+        recovered_docs = timdb.documents.recover_db(get_admin_group_id())
 
         if recovered_docs > 0:
             print('Recovered {} documents from documents directory.'.format(recovered_docs))

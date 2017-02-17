@@ -19,8 +19,8 @@ class AnswerTest(TimDbTest):
     def test_summary(self):
         self.maxDiff = None
         db = self.get_db()
-        user1 = db.users.get_user_by_name('testuser1')
-        user2 = db.users.get_user_by_name('testuser2')
+        user1 = User.get_by_name('testuser1')
+        user2 = User.get_by_name('testuser2')
         task_id1 = '1.test'
         task_id2 = '1.test2'
         self.check_user(db, user1, task_id1, task_id2)

@@ -6,7 +6,9 @@ from tests.server.timroutetest import TimRouteTest
 from timdb.blocktypes import from_str, blocktypes
 from timdb.models.docentry import DocEntry
 from timdb.models.folder import Folder
+from timdb.models.usergroup import UserGroup
 from timdb.special_group_names import KORPPI_GROUPNAME
+from timdb.userutils import get_anon_group_id, grant_default_access, default_right_paths
 
 
 class DefaultRightTest(TimRouteTest):
@@ -19,18 +21,18 @@ class DefaultRightTest(TimRouteTest):
         folder = docentry.parent
 
         users_folder = Folder.find_by_path('users')
-        timdb.users.grant_default_access([timdb.users.get_korppi_group_id()], users_folder.id, 'view',
-                                         blocktypes.DOCUMENT)
+        grant_default_access([UserGroup.get_korppi_group().id], users_folder.id, 'view',
+                             blocktypes.DOCUMENT)
 
         # Make sure an exception won't be thrown if trying to add a right again
-        acs = timdb.users.grant_default_access([timdb.users.get_korppi_group_id()], users_folder.id, 'view',
-                                               blocktypes.DOCUMENT)
+        acs = grant_default_access([UserGroup.get_korppi_group().id], users_folder.id, 'view',
+                                   blocktypes.DOCUMENT)
         for obj_type_str in ('document', 'folder'):
             obj_type = from_str(obj_type_str)
             def_rights = timdb.users.get_default_rights_holders(folder.id, obj_type)
             self.assertListEqual([], def_rights)
 
-            rights_doc = folder.get_document(timdb.users.default_right_paths[obj_type])
+            rights_doc = folder.get_document(default_right_paths[obj_type])
             self.assertIsNone(rights_doc)
 
             self.json_put(
@@ -69,14 +71,14 @@ class DefaultRightTest(TimRouteTest):
             for d in default_rights:
                 d['accessible_from'] = parser.parse(d['accessible_from'])
                 d['accessible_to'] = parser.parse(d['accessible_to']) if d['accessible_to'] else None
-            rights_doc = folder.get_document(timdb.users.default_right_paths[obj_type])
+            rights_doc = folder.get_document(default_right_paths[obj_type])
             self.assertIsNotNone(rights_doc)
 
             if obj_type == blocktypes.DOCUMENT:
                 new_doc = self.create_doc().document
                 new_item_rights = timdb.users.get_rights_holders(new_doc.doc_id)
                 default_rights.append(
-                    {'gid': timdb.users.get_korppi_group_id(),
+                    {'gid': UserGroup.get_korppi_group().id,
                      'name': KORPPI_GROUPNAME,
                      'access_type': 1,
                      'fullname': None,
@@ -98,6 +100,6 @@ class DefaultRightTest(TimRouteTest):
                                  sorted(new_item_rights, key=itemgetter('gid', 'access_type')))
             self.json_put('/defaultPermissions/{}/remove/{}/{}/{}'
                           .format(obj_type_str, folder.id,
-                                  timdb.users.get_anon_group_id(),
+                                  get_anon_group_id(),
                                   'view'),
                           expect_content=self.ok_resp)

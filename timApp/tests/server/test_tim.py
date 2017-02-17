@@ -2,7 +2,6 @@
 import re
 import unittest
 
-from flask import session
 from lxml.cssselect import CSSSelector
 
 from documentmodel.document import Document
@@ -11,6 +10,7 @@ from plugin import Plugin
 from tests.db.timdbtest import TEST_USER_2_ID, TEST_USER_1_ID, TEST_USER_1_NAME
 from tests.server.timroutetest import TimRouteTest
 from timdb.models.user import User
+from timdb.userutils import get_anon_group_id, grant_view_access
 
 link_selector = CSSSelector('a')
 
@@ -201,7 +201,7 @@ type: cs
 header: %%username%% and %%realname%%
 ```
         """)
-        timdb.users.grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), d.id)
+        grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), d.id)
 
         pars = self.get('/view/{}'.format(d.id), as_tree=True).cssselect('.parContent')
         self.assertEqual('Username is testuser1 and real name is Test user 1',
@@ -268,8 +268,7 @@ header: %%username%% and %%realname%%
     def test_hide_links(self):
         self.login_test1()
         doc = self.create_doc()
-        timdb = self.get_db()
-        timdb.users.grant_view_access(timdb.users.get_anon_group_id(), doc.id)
+        grant_view_access(get_anon_group_id(), doc.id)
         links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
         self.assertGreater(len(links), 0)
 

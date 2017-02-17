@@ -130,7 +130,7 @@ def try_upload_image(image_file):
         img_id, img_filename = timdb.images.saveImage(content,
                                                       secure_filename(image_file.filename),
                                                       get_current_user_group())
-        timdb.users.grant_view_access(0, img_id)  # So far everyone can see all images
+        grant_view_access(0, img_id)  # So far everyone can see all images
         return json_response({"file": str(img_id) + '/' + img_filename})
     else:
         abort(400, 'Invalid image type')
@@ -144,13 +144,13 @@ def upload_image_or_file(image_file):
         img_id, img_filename = timdb.images.saveImage(content,
                                                       secure_filename(image_file.filename),
                                                       get_current_user_group())
-        timdb.users.grant_view_access(timdb.users.get_anon_group_id(), img_id)  # So far everyone can see all images
+        grant_view_access(get_anon_group_id(), img_id)  # So far everyone can see all images
         return json_response({"image": str(img_id) + '/' + img_filename})
     else:
         file_id, file_filename = timdb.files.saveFile(content,
                                                       secure_filename(image_file.filename),
                                                       get_current_user_group())
-        timdb.users.grant_view_access(timdb.users.get_anon_group_id(), file_id)  # So far everyone can see all files
+        grant_view_access(get_anon_group_id(), file_id)  # So far everyone can see all files
         return json_response({"file": str(file_id) + '/' + file_filename})
 
 

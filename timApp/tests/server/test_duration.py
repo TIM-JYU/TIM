@@ -5,6 +5,8 @@ from tests.server.timroutetest import TimRouteTest
 from timdb.accesstype import AccessType
 from timdb.models.docentry import DocEntry
 from timdb.tim_models import db, BlockAccess
+from timdb.userutils import get_logged_group_id, get_access_type_id
+from timdb.userutils import grant_access
 
 
 class DurationTest(TimRouteTest):
@@ -20,7 +22,7 @@ class DurationTest(TimRouteTest):
         d = self.create_doc()
         doc_id = d.id
         self.login_test2()
-        self.db.users.grant_access(self.get_test_user_2_group_id(), doc_id, 'view', duration=timedelta(days=1))
+        grant_access(self.get_test_user_2_group_id(), doc_id, 'view', duration=timedelta(days=1))
         d = DocEntry.find_by_id(doc_id)
         self.get('/view/' + d.path,
                  expect_status=403,
@@ -30,7 +32,7 @@ class DurationTest(TimRouteTest):
                  expect_contains=self.unlock_success)
         self.get('/view/' + d.path)
         ba = BlockAccess.query.filter_by(usergroup_id=self.get_test_user_2_group_id(), block_id=doc_id,
-                                         type=self.db.users.get_access_type_id('view')).one()
+                                         type=get_access_type_id('view')).one()
         ba.accessible_to -= timedelta(days=2)
         db.session.commit()
         self.get('/view/' + d.path, expect_status=403,
@@ -43,7 +45,7 @@ class DurationTest(TimRouteTest):
         self.login_test2()
         delta = timedelta(minutes=3)
         now_plus_minute = datetime.now(tz=timezone.utc) + delta
-        self.db.users.grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
+        grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
                                    duration=timedelta(days=1),
                                    duration_from=now_plus_minute)
         d = DocEntry.find_by_id(doc_id)
@@ -59,7 +61,7 @@ class DurationTest(TimRouteTest):
                  json_key='error',
                  expect_contains=[err_msg_too_early])
 
-        self.db.users.grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
+        grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
                                    duration=timedelta(days=1),
                                    duration_to=now)
         self.get('/view/' + d.path,
@@ -71,7 +73,7 @@ class DurationTest(TimRouteTest):
                  json_key='error',
                  expect_contains=[err_msg_too_late])
 
-        self.db.users.grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
+        grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
                                    duration=timedelta(days=1),
                                    duration_from=now)
         self.get('/view/' + d.path,
@@ -82,7 +84,7 @@ class DurationTest(TimRouteTest):
                  expect_contains=self.unlock_success)
         self.get('/view/' + d.path)
         ba = BlockAccess.query.filter_by(usergroup_id=self.get_test_user_2_group_id(), block_id=doc_id,
-                                         type=self.db.users.get_access_type_id('view')).one()
+                                         type=get_access_type_id('view')).one()
         ba.accessible_to -= timedelta(days=2)
         db.session.commit()
         self.get('/view/' + d.path, expect_status=403,
@@ -98,9 +100,9 @@ class DurationTest(TimRouteTest):
         self.login_test2()
         duration = timedelta(days=1)
         now = datetime.now(tz=timezone.utc)
-        access = self.db.users.grant_access(self.db.users.get_logged_group_id(), doc_id, 'view',
-                                            duration=duration,
-                                            duration_to=now + duration)
+        access = grant_access(get_logged_group_id(), doc_id, 'view',
+                              duration=duration,
+                              duration_to=now + duration)
         accesses = self.current_group().accesses.filter_by(type=AccessType.view.value).all()
         self.assertEqual(0, len(accesses))
         d = DocEntry.find_by_id(doc_id)
@@ -143,7 +145,7 @@ class DurationTest(TimRouteTest):
         d = self.create_doc()
         doc_id = d.id
         self.login_test2()
-        self.db.users.grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
+        grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
                                    duration=timedelta(days=0))
         self.get('/view/' + d.path,
                  expect_status=403,

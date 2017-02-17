@@ -10,7 +10,7 @@ from flask import current_app
 from flask import request
 from flask import session
 
-from accesshelper import verify_ownership
+from accesshelper import verify_ownership, has_edit_access
 from common import has_ownership, \
     get_user_settings
 from dbaccess import get_timdb
@@ -414,7 +414,7 @@ def add_question():
     answer = request.args.get('answer')
     doc_id = int(request.args.get('doc_id'))
     timdb = get_timdb()
-    if not timdb.users.has_edit_access(get_current_user_id(), doc_id):
+    if not has_edit_access(doc_id):
         abort(403)
     par_id = request.args.get('par_id')
     points = request.args.get('points')

@@ -12,6 +12,7 @@ from tests.db.timdbtest import TimDbTest
 from timdb.models.docentry import DocEntry
 from timdb.timdb2 import TimDb
 from timdb.timdbexception import TimDbException
+from timdb.userutils import get_anon_group_id
 
 
 class RefTest(TimDbTest):
@@ -20,7 +21,7 @@ class RefTest(TimDbTest):
         doc = DocEntry.find_by_path(doc_name)
         if doc is not None:
             db.documents.delete(doc.id)
-        return DocEntry.create(doc_name, owner_group_id=db.users.get_anon_group_id()).document
+        return DocEntry.create(doc_name, owner_group_id=get_anon_group_id()).document
 
     def dict_merge(self, a, b):
         c = a.copy()

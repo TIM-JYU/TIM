@@ -2,6 +2,7 @@ import csv
 import sys
 
 from tim_app import app
+from timdb.models.user import User
 from timdb.timdb2 import TimDb
 
 
@@ -14,12 +15,12 @@ def import_accounts(file, password):
             if len(row) != 3:
                 raise Exception('All rows must have 3 fields, found a row with {} fields: {}'.format(len(row), row))
             name = row[2] or row[0]
-            if timdb.users.get_user_by_name(name) is None:
-                timdb.users.create_user_with_group(name=name,
-                                                   real_name=row[1],
-                                                   email=row[0],
-                                                   password=password,
-                                                   commit=False)
+            if User.get_by_name(name) is None:
+                User.create_with_group(name=name,
+                                       real_name=row[1],
+                                       email=row[0],
+                                       password=password,
+                                       commit=False)
             else:
                 existing.append(name)
     timdb.commit()

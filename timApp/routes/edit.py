@@ -1,6 +1,6 @@
 """Routes for editing a document."""
 import json
-from typing import List
+from typing import List, Tuple
 
 import yaml
 from flask import Blueprint, render_template
@@ -9,8 +9,7 @@ from flask import current_app
 from flask import request
 
 from accesshelper import verify_edit_access, verify_view_access, get_rights, has_view_access
-from common import get_document_as_current_user, post_process_pars, \
-    verify_doc_exists
+from common import post_process_pars
 from dbaccess import get_timdb
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
@@ -18,10 +17,12 @@ from documentmodel.documentparser import ValidationException, ValidationWarning
 from markdownconverter import md_to_html
 from requesthelper import verify_json_params
 from responsehelper import json_response, ok_response
-from routes.notify import notify_doc_owner
+from routes.notify import notify_doc_watchers
 from sessioninfo import get_current_user_object, get_current_user_id, logged_in, get_current_user_group
 from timdb.bookmarks import Bookmarks
+from timdb.docinfo import DocInfo
 from timdb.models.docentry import DocEntry
+from timdb.models.notification import NotificationType
 from timdb.timdbexception import TimDbException
 from utils import get_error_html
 from validation import validate_uploaded_document_content
@@ -29,14 +30,6 @@ from validation import validate_uploaded_document_content
 edit_page = Blueprint('edit_page',
                       __name__,
                       url_prefix='')  # TODO: Better URL prefix.
-
-
-def get_group_id() -> str:
-    return "docmodify_[doc_id]"
-
-
-def get_group_subject() -> str:
-    return "Your document [doc_name] has been modified"
 
 
 @edit_page.route('/update/<int:doc_id>', methods=['POST'])
@@ -48,10 +41,10 @@ def update_document(doc_id):
 
     """
     timdb = get_timdb()
-    if not timdb.documents.exists(doc_id):
+    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
+    if not docentry:
         abort(404)
-    if not timdb.users.has_edit_access(get_current_user_id(), doc_id):
-        abort(403)
+    verify_edit_access(doc_id)
     if 'file' in request.files:
         file = request.files['file']
         content = validate_uploaded_document_content(file)
@@ -79,7 +72,7 @@ def update_document(doc_id):
         abort(400, 'Missing parameter: original')
     if content is None:
         return json_response({'message': 'Failed to convert the file to UTF-8.'}, 400)
-    doc = get_document_as_current_user(doc_id)
+    doc = docentry.document_as_current_user
     ver_before = doc.get_version()
     try:
         # To verify view rights for possible referenced paragraphs, we call this first:
@@ -96,27 +89,31 @@ def update_document(doc_id):
                                                      new_content=old_pars[i].get_markdown(),
                                                      new_attrs=editor_pars[i].get_attrs())
             i += 1
-        doc = get_document_as_current_user(doc_id)
-        duplicates = check_duplicates(doc.get_paragraphs(), doc, timdb)
-
     except ValidationWarning as e:
         return json_response({'error': str(e), 'is_warning': True}, status_code=400)
     except (TimDbException, ValidationException) as e:
         return abort(400, str(e))
-    chg = d.get_changelog()
-    ver_after = d.get_version()
+    pars = doc.get_paragraphs()
+    return manage_response(docentry, pars, timdb, ver_before)
+
+
+def manage_response(docentry: DocInfo, pars: List[DocParagraph], timdb, ver_before: Tuple[int, int]):
+    doc = docentry.document_as_current_user
+    duplicates = check_duplicates(pars, doc, timdb)
+    chg = doc.get_changelog()
     for ver in chg:
         ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
+    notify_doc_watchers(docentry,
+                        get_diff_link(docentry, ver_before),
+                        NotificationType.DocModified)
+    return json_response({'versions': chg, 'fulltext': doc.export_markdown(), 'duplicates': duplicates})
 
-    # todo: include diffs in the message
-    notify_doc_owner(doc_id, '[user_name] has edited your document [doc_name]',
-                     """[user_name] has edited your document as whole: [doc_url]\n\n
-See the changes here:
-[base_url]/diff/[doc_id]/{0}/{1}/{2}/{3}\n\n""".format(ver_before[0], ver_before[1], ver_after[0], ver_after[1]),
-                     setting="doc_modify",
-                     group_id=get_group_id(), group_subject=get_group_subject())
 
-    return json_response({'versions': chg, 'fulltext': d.export_markdown(), 'duplicates': duplicates})
+def get_diff_link(docentry: DocInfo, ver_before):
+    ver_after = docentry.document.get_version()
+    return """Link to changes: {}/diff/{}/{}/{}/{}/{}\n\n""".format(current_app.config['TIM_HOST'], docentry.id,
+                                                                ver_before[0], ver_before[1],
+                                                                ver_after[0], ver_after[1])
 
 
 @edit_page.route("/postNewTaskNames/", methods=['POST'])
@@ -125,7 +122,11 @@ def rename_task_ids():
     doc_id, duplicates = verify_json_params('docId', 'duplicates')
     manage_view = verify_json_params('manageView', require=False, default=False)
     verify_edit_access(doc_id)
-    doc = get_document_as_current_user(doc_id)
+    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
+    if not docentry:
+        abort(404)
+    doc = docentry.document_as_current_user
+    ver_before = doc.get_version()
     pars = []
     old_pars = doc.get_paragraphs()
 
@@ -173,18 +174,7 @@ def rename_task_ids():
                             doc,
                             update_cache=current_app.config['IMMEDIATE_PRELOAD'])
     else:
-        doc = get_document_as_current_user(doc_id)
-        duplicates = check_duplicates(pars, doc, timdb)
-        chg = doc.get_changelog()
-        for ver in chg:
-            ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
-
-        # todo: include diffs in the message
-        notify_doc_owner(doc_id, '[user_name] has edited your document [doc_name]',
-                         '[user_name] has edited your document as whole: [doc_url]', setting="doc_modify",
-                         group_id=get_group_id(), group_subject=get_group_subject())
-
-        return json_response({'versions': chg, 'fulltext': doc.export_markdown(), 'duplicates': duplicates})
+        return manage_response(docentry, pars, timdb, ver_before)
 
 
 def delete_key(d, key):
@@ -245,9 +235,12 @@ def modify_paragraph():
 
 def modify_paragraph_common(doc_id, md, par_id, par_next_id):
     timdb = get_timdb()
+    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
+    if not docentry:
+        abort(404)
     verify_edit_access(doc_id)
 
-    doc = get_document_as_current_user(doc_id)
+    doc = docentry.document_as_current_user
     if not doc.has_paragraph(par_id):
         abort(400, 'Paragraph not found: ' + par_id)
 
@@ -266,15 +259,12 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
 
     if editing_area:
         try:
-            original_md = doc.export_section(area_start, area_end)
             new_start, new_end = doc.update_section(md, area_start, area_end)
-            updated_md = doc.export_section(new_start, new_end)
             pars = doc.get_section(new_start, new_end)
         except (ValidationException, TimDbException) as e:
             return abort(400, str(e))
     else:
         original_par = doc.get_paragraph(par_id)
-        original_md = doc.export_section(par_id, par_id)
         pars = []
 
         if editor_pars[0].is_different_from(original_par):
@@ -291,24 +281,12 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
             pars.append(par)
             new_par_ids.append(par.get_id())
 
-        updated_md = doc.export_section(pars[0].get_id(), pars[len(pars) - 1].get_id())
-
     mark_pars_as_read_if_chosen(pars, doc)
 
-    version_after = doc.get_version()
-    notify_doc_owner(doc_id,
-                     '[user_name] has edited your document [doc_name]',
-                     """[user_name] has changed a paragraph in your document [doc_url]\n\n
-See the changes here:
-[base_url]/diff/[doc_id]/{2}/{3}/{4}/{5}\n\n
-== ORIGINAL ==\n
-{0}\n\n
-==MODIFIED==\n
-{1}\n
-""".format(original_md, updated_md, version_before[0], version_before[1],
-                         version_after[0], version_after[1]), setting="doc_modify", par_id=par_id,
-        group_id=get_group_id(), group_subject=get_group_subject())
-
+    notify_doc_watchers(docentry,
+                        get_diff_link(docentry, version_before),
+                        NotificationType.DocModified,
+                        par=pars[0] if pars else None)
     return par_response(pars,
                         doc,
                         original_par,
@@ -392,13 +370,13 @@ def par_response(pars,
                                                    text=pars,
                                                    item={'rights': get_rights(doc.doc_id)},
                                                    preview=preview),
-                         'js': js_paths,
-                         'css': css_paths,
-                         'angularModule': modules,  # not used in JS at all, maybe not needed at all
-                         'changed_pars': {p['id']: render_template('partials/paragraphs.html',
-                                                                   text=[p],
-                                                                   item={'rights': get_rights(doc.doc_id)}) for p in
-                                          changed_pars},
+                          'js': js_paths,
+                          'css': css_paths,
+                          'angularModule': modules,  # not used in JS at all, maybe not needed at all
+                          'changed_pars': {p['id']: render_template('partials/paragraphs.html',
+                                                                    text=[p],
+                                                                    item={'rights': get_rights(doc.doc_id)}) for p in
+                                           changed_pars},
                           'version': doc.get_version(),
                           'duplicates': duplicates,
                           'original_par': original_par,
@@ -418,7 +396,7 @@ def get_pars_from_editor_text(doc: Document, text: str,
             except (ValueError, TypeError):
                 continue
             if not skip_access_check and timdb.documents.exists(refdoc)\
-                    and not timdb.users.has_view_access(get_current_user_id(), refdoc):
+                    and not has_view_access(refdoc):
                 raise ValidationException("You don't have view access to document {}".format(refdoc))
     return blocks
 
@@ -565,8 +543,11 @@ def mark_pars_as_read_if_chosen(pars, doc):
 def cancel_save_paragraphs():
     timdb = get_timdb()
     doc_id, original_par, new_pars, par_id = verify_json_params('docId', 'originalPar', 'newPars', 'parId')
+    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
+    if not docentry:
+        abort(404)
     verify_edit_access(doc_id)
-    doc = get_document_as_current_user(doc_id)
+    doc = docentry.document_as_current_user
     if len(new_pars) > 0:
         for new_par in new_pars:
             if not doc.has_paragraph(new_par):
@@ -603,7 +584,11 @@ def add_paragraph():
 def add_paragraph_common(md, doc_id, par_next_id):
     timdb = get_timdb()
     verify_edit_access(doc_id)
-    doc = get_document_as_current_user(doc_id)
+    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
+    if not docentry:
+        abort(404)
+    doc = docentry.document_as_current_user
+    version_before = doc.get_version()
     try:
         editor_pars = get_pars_from_editor_text(doc, md)
     except ValidationException as e:
@@ -619,12 +604,11 @@ def add_paragraph_common(md, doc_id, par_next_id):
         new_par_ids.append(par.get_id())
     mark_pars_as_read_if_chosen(pars, doc)
 
-    notify_doc_owner(doc_id,
-                     '[user_name] has edited your document [doc_name]',
-                     '[user_name] has added a new paragraph on your document [doc_url]\n\n{}'.format(md),
-                     setting="doc_modify", par_id=pars[0].get_id() if len(pars) > 0 else None,
-                     group_id=get_group_id(), group_subject="Your document [doc_name] has been modified")
-
+    if pars:
+        notify_doc_watchers(docentry,
+                            get_diff_link(docentry, version_before) + 'Paragraph was added:\n\n' + md,
+                            NotificationType.DocModified,
+                            par=pars[0])
     return par_response(pars, doc, None, new_par_ids, update_cache=current_app.config['IMMEDIATE_PRELOAD'], edited=True)
 
 
@@ -637,27 +621,27 @@ def delete_paragraph(doc_id):
 
     """
     timdb = get_timdb()
+    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
+    if not docentry:
+        abort(404)
     verify_edit_access(doc_id)
     area_start, area_end = verify_json_params('area_start', 'area_end', require=False)
-    doc = get_document_as_current_user(doc_id)
+    doc = docentry.document_as_current_user
+    version_before = doc.get_version()
     if area_end and area_start:
         for p in (area_start, area_end):
             if not doc.has_paragraph(p):
                 abort(400, 'Paragraph {} does not exist'.format(p))
-        text = doc.export_section(area_start, area_end)
         doc.delete_section(area_start, area_end)
     else:
         par_id, = verify_json_params('par')
         if not doc.has_paragraph(par_id):
             abort(400, 'Paragraph {} does not exist'.format(par_id))
-        text = doc.export_section(par_id, par_id)
         timdb.documents.delete_paragraph(doc, par_id)
 
-    notify_doc_owner(doc_id, '[user_name] has edited your document [doc_name]',
-                     '[user_name] has deleted the following paragraph(s) from your document [doc_url]\n\n{}'.format(
-                         text), setting="doc_modify",
-                     group_id=get_group_id(), group_subject=get_group_subject())
-
+    notify_doc_watchers(docentry,
+                        get_diff_link(docentry, version_before),
+                        NotificationType.DocModified)
     return par_response([], doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'], edited=True)
 
 
@@ -677,12 +661,14 @@ def name_area(doc_id, area_name):
     area_start, area_end = verify_json_params('area_start', 'area_end', require=True)
     (options,) = verify_json_params('options', require=True)
 
-    verify_doc_exists(doc_id)
+    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
+    if not docentry:
+        abort(404)
     verify_edit_access(doc_id)
     if not area_name or ' ' in area_name or '´' in area_name:
         abort(400, 'Invalid area name')
 
-    doc = get_document_as_current_user(doc_id)
+    doc = docentry.document_as_current_user
     area_attrs = {'area': area_name}
     area_title = ''
     after_title = ''
@@ -711,13 +697,15 @@ def name_area(doc_id, area_name):
 
 @edit_page.route("/unwrap_area/<int:doc_id>/<area_name>", methods=["POST"])
 def unwrap_area(doc_id, area_name):
-    verify_doc_exists(doc_id)
+    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
+    if not docentry:
+        abort(404)
     verify_edit_access(doc_id)
     if not area_name or ' ' in area_name or '´' in area_name:
         abort(400, 'Invalid area name')
 
     try:
-        doc = get_document_as_current_user(doc_id)
+        doc = docentry.document_as_current_user
         area_pars = doc.get_named_section(area_name)
 
         # Remove the starting and ending paragraphs of the area

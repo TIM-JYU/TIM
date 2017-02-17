@@ -4,7 +4,6 @@ import os
 import random
 import re
 import string
-from typing import Dict
 
 import requests
 import requests.exceptions
@@ -27,6 +26,9 @@ from routes.notify import send_email
 from sessioninfo import get_current_user, get_other_users, get_session_users_ids, get_other_users_as_list
 from sessioninfo import get_current_user_id, logged_in
 from timdb.models.user import User
+from timdb.models.usergroup import UserGroup
+from timdb.tim_models import db
+from timdb.timdbexception import TimDbException
 
 login_page = Blueprint('login_page',
                        __name__,
@@ -118,53 +120,47 @@ def login_with_korppi():
     email = pieces[2]
 
     timdb = get_timdb()
-    user_id = timdb.users.get_user_id_by_name(user_name)
+    user = User.query.filter_by(name=user_name).first()  # type: User
 
-    if user_id is None:
+    if user is None:
         # Try email
-        user = timdb.users.get_user_by_email(email)
+        user = User.query.filter_by(email=email).first()  # type: User
         if user is not None:
             # An email user signs in using Korppi for the first time. We update the user's username and personal
             # usergroup.
-            user_id = user['id']
-            group_id = timdb.users.get_personal_usergroup(user)
-            timdb.users.update_user(user_id, user_name, real_name, email)
-            timdb.users.add_user_to_korppi_group(user_id)
-            timdb.users.set_usergroup_name(group_id, user_name)
+            user.update_info(name=user_name, real_name=real_name, email=email)
+            personal_group = user.get_personal_group()
+            personal_group.name = user_name
+            user.groups.append(UserGroup.get_korppi_group())
         else:
-            uid = timdb.users.create_user(user_name, real_name, email).id
-            gid = timdb.users.create_usergroup(user_name).id
-            timdb.users.add_user_to_group(gid, uid)
-            timdb.users.add_user_to_korppi_group(uid)
-            user_id = uid
+            u, _ = create_user_with_group(user_name, real_name, email, commit=False)
+            u.groups.append(UserGroup.get_korppi_group())
     else:
         if real_name:
-            timdb.users.update_user(user_id, user_name, real_name, email)
+            user.update_info(name=user_name, real_name=real_name, email=email)
 
-    user = {'id': user_id, 'name': user_name, 'real_name': real_name, 'email': email}
-
+    db.session.commit()
     set_user_to_session(user)
-
     return finish_login()
 
 
-def set_user_to_session(user: Dict):
+def set_user_to_session(user: User):
     adding = session.get('adding_user')
     session.pop('appcookie', None)
     session.pop('altlogin', None)
     session.pop('adding_user', None)
     if adding:
-        if user['id'] in get_session_users_ids():
-            flash('{} is already logged in.'.format(user['real_name']))
+        if user.id in get_session_users_ids():
+            flash('{} is already logged in.'.format(user.real_name))
             return
         other_users = session.get('other_users', dict())
-        other_users[str(user['id'])] = user
+        other_users[str(user.id)] = user.basic_info_dict
         session['other_users'] = other_users
     else:
-        session['user_id'] = user['id']
-        session['user_name'] = user['name']
-        session['real_name'] = user['real_name']
-        session['email'] = user['email']
+        session['user_id'] = user.id
+        session['user_name'] = user.name
+        session['real_name'] = user.real_name
+        session['email'] = user.email
         session.pop('other_users', None)
 
 
@@ -231,20 +227,20 @@ def alt_signup_after():
     if not timdb.users.test_potential_user(email, oldpass):
         return json_response({'message': 'Authentication failure'}, 403)
 
-    user_data = timdb.users.get_user_by_email(email)
-    if user_data is not None:
+    user = User.get_by_email(email)
+    if user is not None:
         # User with this email already exists
-        user_id = user_data['id']
-        name_id = timdb.users.get_user_id_by_name(username)
+        user_id = user.id
+        u2 = User.get_by_name(username)
 
-        if name_id is not None and name_id != user_id:
+        if u2 is not None and u2.id != user_id:
             flash('User name already exists. Please try another one.', 'loginmsg')
             return finish_login(ready=False)
 
         # Use the existing user name; don't replace it with email
-        username = user_data['name']
+        username = user.name
     else:
-        if timdb.users.get_user_id_by_name(username) is not None:
+        if User.get_by_name(username) is not None:
             flash('User name already exists. Please try another one.', 'loginmsg')
             return finish_login(ready=False)
 
@@ -257,10 +253,9 @@ def alt_signup_after():
         return finish_login(ready=False)
 
     if user_id == 0:
-        user_id = timdb.users.create_user(username, real_name, email, password=password).id
-        gid = timdb.users.create_usergroup(username).id
-        timdb.users.add_user_to_group(gid, user_id)
+        user_id = create_user_with_group(username, real_name, email, password=password).id
     else:
+        user.update_info(username, real_name, email)
         timdb.users.update_user(user_id, username, real_name, email, password=password)
 
     timdb.users.delete_potential_user(email)
@@ -282,11 +277,14 @@ def alt_login():
 
     if timdb.users.test_user(email, password):
         # Registered user
-        user = timdb.users.get_user_by_email(email)
+        user = User.query.filter_by(email=email).first()
         # Check if the users' group exists
-        if len(timdb.users.get_usergroups_by_name(user['name'])) == 0:
-            gid = timdb.users.create_usergroup(user['name']).id
-            timdb.users.add_user_to_group(gid, user['id'])
+        try:
+            user.get_personal_group()
+        except TimDbException:
+            ug = UserGroup(name=user.name)
+            user.groups.append(ug)
+            db.session.commit()
         set_user_to_session(user)
         return finish_login()
 
@@ -342,7 +340,7 @@ def quick_login(username):
     """
     timdb = get_timdb()
     verify_admin()
-    user = timdb.users.get_user_id_by_name(username)
+    user = get_user_id_by_name(username)
     if user is None:
         abort(404, 'User not found.')
     user = timdb.users.get_user(user)
@@ -392,7 +390,7 @@ def yubi_register(otp):
 def yubi_login(username, otp):
     # Log in using an YubiKey (see http://www.yubico.com)
     timdb = get_timdb()
-    user = timdb.users.get_user_id_by_name(username)
+    user = get_user_id_by_name(username)
     if user is None:
         abort(404, 'User not found.')
     user = timdb.users.get_user(user, include_authdata=True)

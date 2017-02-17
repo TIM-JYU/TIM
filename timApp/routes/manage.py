@@ -4,26 +4,27 @@ from datetime import timezone, datetime
 import dateutil.parser
 from flask import Blueprint, render_template
 from flask import abort
-from flask import flash
 from flask import g
 from flask import redirect
 from flask import request
 from isodate import Duration
 from isodate import parse_duration
 
-from accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, can_write_to_folder
+from accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, can_write_to_folder, \
+    verify_edit_access, has_manage_access
 from common import has_special_chars
 from dbaccess import get_timdb
 from requesthelper import verify_json_params, get_option
 from responsehelper import json_response, ok_response
-from sessioninfo import get_current_user_id, get_current_user_group
+from sessioninfo import get_current_user_group
 from sessioninfo import get_current_user_object
 from timdb.blocktypes import from_str
 from timdb.item import Item
 from timdb.models.docentry import DocEntry
 from timdb.models.folder import Folder
 from timdb.models.usergroup import UserGroup
-from timdb.tim_models import db
+from timdb.tim_models import db, AccessType
+from timdb.userutils import grant_access, grant_default_access
 from utils import remove_path_special_chars
 from validation import validate_item
 
@@ -49,12 +50,9 @@ def manage(path):
     else:
         block_id = doc.id
 
-    if not verify_manage_access(block_id, require=False, check_duration=True):
-        verify_view_access(block_id)
-        flash("Did someone give you a wrong link? Showing normal view instead of manage view.")
-        return redirect('/view/' + path)
+    verify_view_access(block_id)
 
-    access_types = timdb.users.get_access_types()
+    access_types = AccessType.query.all()
 
     if is_folder:
         item = folder
@@ -87,7 +85,7 @@ def add_permission(item_id, group_name, perm_type):
     timdb = get_timdb()
     try:
         for group_id in group_ids:
-            timdb.users.grant_access(group_id,
+            grant_access(group_id,
                                      item_id,
                                      perm_type,
                                      accessible_from=acc_from,
@@ -121,7 +119,7 @@ def check_ownership_loss(had_ownership, item_id, perm_type):
         delattr(g, 'owned')
     if had_ownership and not has_ownership(item_id):
         timdb = get_timdb()
-        timdb.users.grant_access(get_current_user_group(), item_id, perm_type)
+        grant_access(get_current_user_group(), item_id, perm_type)
         abort(403, 'You cannot remove ownership from yourself.')
 
 
@@ -220,7 +218,7 @@ def rename_folder(doc_id):
     if not timdb.folders.exists(doc_id):
         return abort(404, 'The folder does not exist!')
 
-    if not timdb.users.has_manage_access(get_current_user_id(), doc_id):
+    if not has_manage_access(doc_id):
         return abort(403, "You don't have permission to rename this object.")
 
     parent, _ = timdb.folders.split_location(new_name)
@@ -244,7 +242,7 @@ def get_permissions(doc_id):
     timdb = get_timdb()
     verify_manage_access(doc_id)
     grouprights = timdb.users.get_rights_holders(doc_id)
-    return json_response({'grouprights': grouprights, 'accesstypes': timdb.users.get_access_types()})
+    return json_response({'grouprights': grouprights, 'accesstypes': AccessType.query.all()})
 
 
 @manage_page.route("/defaultPermissions/<object_type>/get/<int:folder_id>")
@@ -258,8 +256,7 @@ def get_default_document_permissions(folder_id, object_type):
 @manage_page.route("/defaultPermissions/<object_type>/add/<int:folder_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
     _, group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(folder_id, group_name, perm_type)
-    timdb = get_timdb()
-    timdb.users.grant_default_access(group_ids,
+    grant_default_access(group_ids,
                                      folder_id,
                                      perm_type,
                                      from_str(object_type),
@@ -368,7 +365,7 @@ def delete_folder(doc_id):
 
 @manage_page.route("/changeTitle/<int:item_id>", methods=["PUT"])
 def change_title(item_id):
-    verify_manage_access(item_id)
+    verify_edit_access(item_id)
     item = Item.find_by_id(item_id)
     new_title, = verify_json_params('new_title')
     item.title = new_title

@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 import yaml
 import yaml.parser
 import yaml.scanner
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 from yaml import CLoader
 
 from htmlSanitize import sanitize_html
@@ -145,7 +145,7 @@ def count_chars(md, char):
     return num_ticks
 
 
-def get_error_html(message: str, response: Optional[str]=None):
+def get_error_html(message: Union[str, Exception], response: Optional[str]=None):
     """Wraps an error message in an HTML element with class 'error'.
 
     :param response: The plugin response string.

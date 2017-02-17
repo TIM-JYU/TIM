@@ -4,6 +4,7 @@ from selenium.webdriver.support import expected_conditions as ec
 
 from tests.browser.browsertest import BrowserTest
 from timdb.models.docentry import DocEntry
+from timdb.userutils import get_admin_group_id
 
 
 class AnswerBrowserTest(BrowserTest):
@@ -17,7 +18,7 @@ class AnswerBrowserTest(BrowserTest):
         db = self.get_db()
 
         # even if the original document is not accessible, browsing answers should work in the other document
-        db.users.set_owner(d.id, db.users.get_admin_group_id())
+        db.users.set_owner(d.id, get_admin_group_id())
         self.check_reference_answerbrowser_ok(d2)
 
     def check_reference_answerbrowser_ok(self, d: DocEntry):

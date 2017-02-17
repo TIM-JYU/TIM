@@ -1,17 +1,22 @@
 import json
+from datetime import datetime, timedelta
 
-from typing import Dict
+from typing import Dict, Optional
 from typing import List
 
 from sqlalchemy.orm import Query
 
 from documentmodel.timjsonencoder import TimJsonEncoder
 from timdb.accesstype import AccessType
+from timdb.docinfo import DocInfo
+from timdb.models.notification import Notification
 from timdb.tim_models import db, UserGroupMember, BlockAccess
 from timdb.models.folder import Folder
 from timdb.models.usergroup import UserGroup
 from timdb.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME
 from timdb.timdbexception import TimDbException
+from timdb.userutils import hash_password, has_view_access, has_edit_access, has_manage_access, has_teacher_access, \
+    has_seeanswers_access, user_is_owner, get_viewable_blocks, get_accessible_blocks, grant_access
 from utils import remove_path_special_chars
 
 
@@ -37,6 +42,75 @@ class User(db.Model):
                 (UserGroupMember.user_id == self.id) & (UserGroup.name == 'Administrators'))
             self._is_admin = db.session.query(q.exists()).scalar()
         return self._is_admin
+
+    @property
+    def is_email_user(self):
+        """Returns whether the user signed up via email."""
+        return '@' in self.name
+
+    @property
+    def pretty_full_name(self):
+        """Returns the user's full name in the form "Firstname Lastname"."""
+
+        # Email users can type their name themselves and usually the first name is typed first
+        # and no secondary names are given, so we return the real name as is.
+        if self.is_email_user:
+            return self.real_name
+
+        # In case of a Korppi user, the last name is always the first.
+        names = self.real_name.split(' ')
+        if len(names) > 1:
+            return names[1] + ' ' + names[0]
+
+        # In case there is only one name for a Korppi user, return the name as is.
+        return self.real_name
+
+    @staticmethod
+    def create(name: str, real_name: str, email: str, password: str = '',
+               commit: bool = True) -> 'User':
+        """Creates a new user with the specified name.
+
+        :param email: The email address of the user.
+        :param name: The name of the user to be created.
+        :param real_name: The real name of the user.
+        :param password: The password for the user (not used on Korppi login).
+        :returns: The id of the newly created user.
+
+        """
+
+        p_hash = hash_password(password) if password != '' else ''
+        user = User(name=name, real_name=real_name, email=email, pass_=p_hash)
+        db.session.add(user)
+        db.session.flush()
+        if commit:
+            db.session.commit()
+        assert user.id != 0
+        return user
+
+    @staticmethod
+    def create_with_group(name: str,
+                          real_name: Optional[str] = None,
+                          email: Optional[str] = None,
+                          password: Optional[str] = None,
+                          is_admin: bool = False,
+                          commit: bool = True):
+        user = User.create(name, real_name or name, email or name + '@example.com', password=password or '',
+                           commit=False)
+        group = UserGroup.create(name, commit=False)
+        user.groups.append(group)
+        if is_admin:
+            user.groups.append(UserGroup.get_admin_group())
+        if commit:
+            db.session.commit()
+        return user, group
+
+    @staticmethod
+    def get_by_name(name: str) -> Optional['User']:
+        return User.query.filter_by(name=name).first()
+
+    @staticmethod
+    def get_by_email(email: str) -> Optional['User']:
+        return User.query.filter_by(email=email).first()
 
     def get_personal_group(self) -> UserGroup:
         if self.id < 0 or self.name == ANONYMOUS_USERNAME:
@@ -99,11 +173,80 @@ class User(db.Model):
             UserGroup.query.filter(UserGroup.name.in_(special_groups))
         )
 
-    def to_json(self):
+    def update_info(self, name: str, real_name: str, email: str):
+        self.name = name
+        self.real_name = real_name
+        self.email = email
+
+    def has_view_access(self, block_id: int) -> bool:
+        return has_view_access(self.id, block_id)
+
+    def has_edit_access(self, block_id: int) -> bool:
+        return has_edit_access(self.id, block_id)
+
+    def has_manage_access(self, block_id: int) -> bool:
+        return has_manage_access(self.id, block_id)
+
+    def has_teacher_access(self, block_id: int) -> bool:
+        return has_teacher_access(self.id, block_id)
+
+    def has_seeanswers_access(self, block_id: int) -> bool:
+        return has_seeanswers_access(self.id, block_id)
+
+    def has_ownership(self, block_id: int) -> bool:
+        return user_is_owner(self.id, block_id)
+
+    def grant_access(self, block_id: int,
+                     access_type: str,
+                     accessible_from: Optional[datetime] = None,
+                     accessible_to: Optional[datetime] = None,
+                     duration_from: Optional[datetime] = None,
+                     duration_to: Optional[datetime] = None,
+                     duration: Optional[timedelta] = None,
+                     commit: bool = True):
+        return grant_access(group_id=self.get_personal_group().id,
+                            block_id=block_id,
+                            access_type=access_type,
+                            accessible_from=accessible_from,
+                            accessible_to=accessible_to,
+                            duration_from=duration_from,
+                            duration_to=duration_to,
+                            duration=duration,
+                            commit=commit)
+
+    def get_viewable_blocks(self) -> Dict[int, BlockAccess]:
+        return get_viewable_blocks(self.id)
+
+    def get_accessible_blocks(self, access_types: List[int]) -> Dict[int, BlockAccess]:
+        return get_accessible_blocks(self.id, access_types)
+
+    def get_notify_settings(self, doc: DocInfo):
+        n = self.notifications.filter_by(doc_id=doc.id).first()
+        if not n:
+            n = Notification(doc_id=doc.id,
+                             user_id=self.id,
+                             email_doc_modify=False,
+                             email_comment_add=False,
+                             email_comment_modify=False
+                             )
+            db.session.add(n)
+        return n
+
+    def set_notify_settings(self, doc: DocInfo, doc_modify: bool, comment_add: bool, comment_modify: bool):
+        n = self.get_notify_settings(doc)
+        n.email_comment_add = comment_add
+        n.email_doc_modify = doc_modify
+        n.email_comment_modify = comment_modify
+
+    @property
+    def basic_info_dict(self):
         return {'id': self.id,
                 'name': self.name,
                 'real_name': self.real_name,
-                'email': self.email,
+                'email': self.email}
+
+    def to_json(self):
+        return {**self.basic_info_dict,
                 'group': self.get_personal_group(),
                 'folder': self.get_personal_folder()
                 }

@@ -445,7 +445,7 @@ class TimRouteTest(TimDbTest):
         if self.client.application.got_first_request:
             if not force and not add:
                 database = self.get_db()
-                u = database.users.get_user_by_name(username)
+                u = User.get_by_name(username)
                 # if not flask.has_request_context():
                 #     print('creating request context')
                 #     tim.app.test_request_context().__enter__()

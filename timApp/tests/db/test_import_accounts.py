@@ -3,6 +3,7 @@ import os
 
 from import_accounts import import_accounts
 from tests.db.timdbtest import TimDbTest
+from timdb.models.user import User
 
 
 class AccountImportTest(TimDbTest):
@@ -29,12 +30,11 @@ class AccountImportTest(TimDbTest):
                 w.writerow(a)
         existing = import_accounts(csv_path, 'testpass')
         self.assertSetEqual(set(expected_existing), set(existing))
-        db = self.get_db()
         for a in accounts:
-            u = db.users.get_user_by_email(a[0])
-            self.assertEqual(a[1], u['real_name'])
-            self.assertEqual(a[0], u['email'])
+            u = User.get_by_email(a[0])
+            self.assertEqual(a[1], u.real_name)
+            self.assertEqual(a[0], u.email)
             if username_is_email:
-                self.assertEqual(a[0], u['name'])
+                self.assertEqual(a[0], u.name)
             else:
-                self.assertEqual(a[2], u['name'])
+                self.assertEqual(a[2], u.name)
