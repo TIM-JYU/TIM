@@ -129,12 +129,13 @@ def notify_doc_watchers(doc: DocInfo,
 
         # If a document was modified and the user doesn't have edit access to it, we must not send the source md
         send_full_msg = notify_type != NotificationType.DocModified or user.has_edit_access(doc.id)
-        send_full_subject = user.has_teacher_access(doc.id)
+
         # Poster identity should be hidden unless the user has teacher access to the document
-        mail_from = me.email if user.has_teacher_access(
-            doc.id) else 'no-reply@tim.jyu.fi'
+        send_full_subject = user.has_teacher_access(doc.id)
+        reply_to = me.email if user.has_teacher_access(doc.id) else None
         send_email(user.email,
                    subject_full if send_full_subject else subject,
                    full_msg if send_full_msg else msg,
-                   mail_from=mail_from,
+                   mail_from='tim@jyu.fi',
+                   reply_to=reply_to,
                    group_id=group_id, group_subject=group_subject)

@@ -284,7 +284,7 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
     mark_pars_as_read_if_chosen(pars, doc)
 
     notify_doc_watchers(docentry,
-                        get_diff_link(docentry, version_before),
+                        get_diff_link(docentry, version_before) + 'Paragraph was edited:\n\n' + md,
                         NotificationType.DocModified,
                         par=pars[0] if pars else None)
     return par_response(pars,
@@ -632,15 +632,17 @@ def delete_paragraph(doc_id):
         for p in (area_start, area_end):
             if not doc.has_paragraph(p):
                 abort(400, 'Paragraph {} does not exist'.format(p))
+        md = doc.export_section(area_start, area_end)
         doc.delete_section(area_start, area_end)
     else:
         par_id, = verify_json_params('par')
         if not doc.has_paragraph(par_id):
             abort(400, 'Paragraph {} does not exist'.format(par_id))
+        md = doc.get_paragraph(par_id).get_markdown()
         timdb.documents.delete_paragraph(doc, par_id)
 
     notify_doc_watchers(docentry,
-                        get_diff_link(docentry, version_before),
+                        get_diff_link(docentry, version_before) + 'Paragraph was deleted:\n\n' + md,
                         NotificationType.DocModified)
     return par_response([], doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'], edited=True)
 

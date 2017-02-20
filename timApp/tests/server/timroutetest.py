@@ -344,6 +344,12 @@ class TimRouteTest(TimDbTest):
             "par_next": next_id
         }, **kwargs)
 
+    def delete_par(self, doc: Document, par_id: str, **kwargs):
+        doc.clear_mem_cache()
+        return self.json_post('/deleteParagraph/{}'.format(doc.doc_id), {
+            "par": par_id,
+        }, **kwargs)
+
     def post_answer(self, plugin_type, task_id, user_input,
                     save_teacher=False, teacher=False, user_id=None, answer_id=None, ref_from=None, **kwargs):
         return self.json_put('/{}/{}/answer/'.format(plugin_type, task_id),
