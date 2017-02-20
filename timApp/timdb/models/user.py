@@ -173,10 +173,12 @@ class User(db.Model):
             UserGroup.query.filter(UserGroup.name.in_(special_groups))
         )
 
-    def update_info(self, name: str, real_name: str, email: str):
+    def update_info(self, name: str, real_name: str, email: str, password: Optional[str]=None):
         self.name = name
         self.real_name = real_name
         self.email = email
+        if password:
+            self.pass_ = hash_password(password)
 
     def has_view_access(self, block_id: int) -> bool:
         return has_view_access(self.id, block_id)

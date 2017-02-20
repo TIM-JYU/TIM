@@ -144,6 +144,7 @@ class TimRouteTest(TimDbTest):
                 expect_xpath: Optional[str] = None,
                 json_key: Optional[str] = None,
                 headers: Optional[List[Tuple[str, str]]] = None,
+                xhr=True,
                 **kwargs) -> Union[Response, str, Dict]:
         """Performs a request.
 
@@ -174,7 +175,8 @@ class TimRouteTest(TimDbTest):
         """
         if headers is None:
             headers = []
-        headers.append(('X-Requested-With', 'XMLHttpRequest'))
+        if xhr:
+            headers.append(('X-Requested-With', 'XMLHttpRequest'))
         resp = self.client.open(url, method=method, headers=headers, **kwargs)
         self.assertEqual(expect_status, resp.status_code, msg=resp.get_data(as_text=True))
         if resp.status_code == 302 and expect_content is not None:
@@ -381,7 +383,11 @@ class TimRouteTest(TimDbTest):
         :return: The name of the current user.
 
         """
-        return session['user_id']
+        return session.get('user_id')
+
+    @property
+    def is_logged_in(self):
+        return self.current_user_id() is not None
 
     @property
     def current_user(self) -> User:

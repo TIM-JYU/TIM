@@ -79,38 +79,6 @@ class Users(TimDbBase):
         user_id = min(self.resultAsDictionary(cursor)[0]['next_id'], 0)
         return user_id - 1
 
-    def update_user(self, user_id: int, name: str, real_name: str, email: str, password: str = '',
-                    commit: bool = True):
-        """Updates user information.
-
-        :param user_id: The id of the user to be updated.
-        :param name: The username of the user.
-        :param real_name: The real name of the user.
-        :param email: The email of the user.
-        :param password: The password of the user.
-
-        """
-
-        cursor = self.db.cursor()
-        pass_hash = hash_password(password) if password != '' else ''
-        cursor.execute('UPDATE UserAccount SET name = %s, real_name = %s, email = %s, pass = %s WHERE id = %s',
-                       [name, real_name, email, pass_hash, user_id])
-        if commit:
-            self.db.commit()
-
-    def update_user_field(self, user_id: int, field_name: str, field_value: str, commit: bool = True):
-        cursor = self.db.cursor()
-        if field_name == 'pass':
-            field_value = hash_password(field_value)
-
-        # No sql injection or other funny business
-        if re.match('^[a-zA-Z_-]+$', field_name) is None:
-            raise TimDbException('update_user_field: passed field name ' + field_name)
-
-        cursor.execute('UPDATE UserAccount SET {} = %s WHERE id = %s'.format(field_name), [field_value, user_id])
-        if commit:
-            self.db.commit()
-
     def create_potential_user(self, email: str, password: str, commit: bool = True):
         """Creates a potential user with the specified email and password.
 

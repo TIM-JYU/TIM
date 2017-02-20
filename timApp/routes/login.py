@@ -9,6 +9,7 @@ import requests
 import requests.exceptions
 from flask import Blueprint, render_template
 from flask import abort
+from flask import current_app
 from flask import flash
 from flask import redirect
 from flask import request
@@ -23,7 +24,8 @@ from logger import log_error
 from requesthelper import verify_json_params, get_option
 from responsehelper import safe_redirect, json_response, ok_response
 from routes.notify import send_email
-from sessioninfo import get_current_user, get_other_users, get_session_users_ids, get_other_users_as_list
+from sessioninfo import get_current_user, get_other_users, get_session_users_ids, get_other_users_as_list, \
+    get_current_user_object
 from sessioninfo import get_current_user_id, logged_in
 from timdb.models.user import User
 from timdb.models.usergroup import UserGroup
@@ -102,7 +104,7 @@ def login_with_korppi():
     if not session.get('appcookie'):
         random_hex = codecs.encode(os.urandom(24), 'hex').decode('utf-8')
         session['appcookie'] = random_hex
-    url = "https://korppi.jyu.fi/kotka/interface/allowRemoteLogin.jsp"
+    url = current_app.config['KORPPI_AUTHORIZE_URL']
     korppi_down_text = 'Korppi seems to be down, so login is currently not possible. Try again later.'
     try:
         r = requests.get(url, params={'request': session['appcookie']}, verify=True)
@@ -119,7 +121,6 @@ def login_with_korppi():
     real_name = pieces[1]
     email = pieces[2]
 
-    timdb = get_timdb()
     user = User.query.filter_by(name=user_name).first()  # type: User
 
     if user is None:
@@ -133,8 +134,8 @@ def login_with_korppi():
             personal_group.name = user_name
             user.groups.append(UserGroup.get_korppi_group())
         else:
-            u, _ = create_user_with_group(user_name, real_name, email, commit=False)
-            u.groups.append(UserGroup.get_korppi_group())
+            user, _ = User.create_with_group(user_name, real_name, email, commit=False)
+            user.groups.append(UserGroup.get_korppi_group())
     else:
         if real_name:
             user.update_info(name=user_name, real_name=real_name, email=email)
@@ -182,6 +183,10 @@ def signup_with_email():
     return safe_redirect(session.get('came_from', '/'))
 
 
+"""Sent passwords are stored here when running tests."""
+test_pws = []
+
+
 @login_page.route("/altsignup", methods=['POST'])
 def alt_signup():
     # Before password verification
@@ -203,6 +208,8 @@ def alt_signup():
 
     try:
         send_email(email, 'Your new TIM password', 'Your password is {}'.format(password))
+        if current_app.config['TESTING']:
+            test_pws.append(password)
         flash("A password has been sent to you. Please check your email.")
     except Exception as e:
         log_error('Could not send login email (user: {}, password: {}, exception: {})'.format(email, password, str(e)))
@@ -225,7 +232,8 @@ def alt_signup_after():
     timdb = get_timdb()
 
     if not timdb.users.test_potential_user(email, oldpass):
-        return json_response({'message': 'Authentication failure'}, 403)
+        flash('The temporary password you provided is wrong. Please re-check your email to see the password.')
+        return finish_login(ready=False)
 
     user = User.get_by_email(email)
     if user is not None:
@@ -252,11 +260,14 @@ def alt_signup_after():
         flash('A password should contain at least six characters.', 'loginmsg')
         return finish_login(ready=False)
 
-    if user_id == 0:
-        user_id = create_user_with_group(username, real_name, email, password=password).id
+    if not user:
+        flash('Registration succeeded!')
+        user, _ = User.create_with_group(username, real_name, email, password=password)
+        user_id = user.id
     else:
-        user.update_info(username, real_name, email)
-        timdb.users.update_user(user_id, username, real_name, email, password=password)
+        flash('Your information was updated successfully.')
+        user.update_info(username, real_name, email, password=password)
+        db.session.commit()
 
     timdb.users.delete_potential_user(email)
 
@@ -338,16 +349,14 @@ def quick_login(username):
     For developer use only.
 
     """
-    timdb = get_timdb()
     verify_admin()
-    user = get_user_id_by_name(username)
+    user = User.get_by_name(username)
     if user is None:
         abort(404, 'User not found.')
-    user = timdb.users.get_user(user)
-    session['user_id'] = user['id']
-    session['user_name'] = user['name']
-    session['real_name'] = user['real_name']
-    session['email'] = user['email']
+    session['user_id'] = user.id
+    session['user_name'] = user.name
+    session['real_name'] = user.real_name
+    session['email'] = user.email
     flash("Logged in as: {}".format(username))
     return redirect(url_for('view_page.index_page'))
 
@@ -368,9 +377,8 @@ def get_yubico_client():
 
 @login_page.route("/yubi_reg/<otp>")
 def yubi_register(otp):
-    # For registering a new YubiKey for a user
+    """For registering a new YubiKey for a user"""
     verify_logged_in()
-    timdb = get_timdb()
 
     client = get_yubico_client()
     if not client:
@@ -382,20 +390,19 @@ def yubi_register(otp):
     except YubicoError:
         abort(403, 'Authentication failed')
 
-    timdb.users.update_user_field(get_current_user_id(), 'yubikey', otp[:12])
+    get_current_user_object().yubikey = otp[:12]
+    db.session.commit()
     return ok_response()
 
 
 @login_page.route("/yubi_login/<username>/<otp>")
 def yubi_login(username, otp):
-    # Log in using an YubiKey (see http://www.yubico.com)
-    timdb = get_timdb()
-    user = get_user_id_by_name(username)
+    """Log in using an YubiKey (see http://www.yubico.com)."""
+    user = User.get_by_name(username)
     if user is None:
         abort(404, 'User not found.')
-    user = timdb.users.get_user(user, include_authdata=True)
 
-    user_pubid = user.get('yubikey')
+    user_pubid = user.yubikey
     if user_pubid is None or len(user_pubid) != 12:
         abort(403, 'YubiKey login is not enabled for this account.')
     if len(otp) != 44 or otp[:12] != user_pubid:
@@ -411,10 +418,10 @@ def yubi_login(username, otp):
     except YubicoError:
         abort(403, 'Authentication failed')
 
-    session['user_id'] = user['id']
-    session['user_name'] = user['name']
-    session['real_name'] = user['real_name']
-    session['email'] = user['email']
+    session['user_id'] = user.id
+    session['user_name'] = user.name
+    session['real_name'] = user.real_name
+    session['email'] = user.email
     flash("Logged in as: {}".format(username))
     return redirect(url_for('view_page.index_page'))
 
