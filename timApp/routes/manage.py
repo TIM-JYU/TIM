@@ -278,7 +278,7 @@ def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
 
 def verify_and_get_params(item_id, group_name, perm_type):
     is_owner = verify_permission_edit_access(item_id, perm_type)
-    groups = UserGroup.query.filter(UserGroup.name.in_(group_name.split(';'))).all()
+    groups = UserGroup.query.filter(UserGroup.name.in_([name.strip() for name in group_name.split(';')])).all()
     if len(groups) == 0:
         abort(404, 'No user group with this name was found.')
     group_ids = [group.id for group in groups]

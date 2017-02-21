@@ -26,3 +26,12 @@ class PermissionTest(TimRouteTest):
         self.json_put('/permissions/add/{}/{}/{}'.format(f.id, 'testuser2', 'owner'), {},
                       expect_status=403,
                       expect_content={'error': 'You cannot add owners to your personal folder.'})
+
+    def test_trim_whitespace(self):
+        self.login_test1()
+        f = self.current_user.get_personal_folder()
+        self.json_put('/permissions/add/{}/{}/{}'.format(f.id, 'testuser2  ; testuser3 ', 'view'),
+                      {'from': datetime.now(tz=timezone.utc),
+                       'type': 'always'})
+        self.assertTrue(self.test_user_2.has_view_access(f.id))
+        self.assertTrue(self.test_user_3.has_view_access(f.id))
