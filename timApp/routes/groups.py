@@ -112,6 +112,6 @@ def remove_member(usernames, groupname):
 
 
 def get_usernames(usernames):
-    usernames = list(set(usernames.split(',')))
+    usernames = list(set([name.strip() for name in usernames.split(',')]))
     usernames.sort()
     return usernames

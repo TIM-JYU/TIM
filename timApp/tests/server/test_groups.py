@@ -9,10 +9,7 @@ class GroupTest(TimRouteTest):
                            'be alphanumeric.'}
 
     def test_groups(self):
-        timdb = self.get_db()
-        User.get_by_name('testuser3').groups.append(UserGroup.get_admin_group())
-        db.session.commit()
-        self.login_test3()
+        self.init_admin()
 
         names = ['t' + str(i) for i in range(1, 5)]
         t1 = names[0]
@@ -46,9 +43,23 @@ class GroupTest(TimRouteTest):
                  expect_content={'removed': [t2, t4], 'does_not_belong': [t1, t3], 'not_exist': [t5]})
         self.get('/groups/show/testgroup1', expect_content=[])
 
+    def init_admin(self):
+        u = User.get_by_name('testuser3')
+        admin_group = UserGroup.get_admin_group()
+        if u not in admin_group.users:
+            u.groups.append(admin_group)
+            db.session.commit()
+        self.login_test3()
+
     def test_invalid_groups(self):
         self.get('/groups/create/testgroup', expect_status=400, expect_content=self.error_resp)
         self.get('/groups/create/1', expect_status=400, expect_content=self.error_resp)
         self.get('/groups/create/a1@a', expect_status=400, expect_content=self.error_resp)
         self.get('/groups/create/ok ok', expect_status=400, expect_content=self.error_resp)
         self.get('/groups/create/test x1', expect_content=self.ok_resp)
+
+    def test_groups_trim(self):
+        self.init_admin()
+        self.get('/groups/create/testing1', expect_content=self.ok_resp)
+        self.get('/groups/addmember/testing1/testuser1 ,testuser2  ',
+                 expect_content={'added': ['testuser1', 'testuser2'], 'already_belongs': [], 'not_exist': []})
