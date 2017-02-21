@@ -124,7 +124,7 @@ def notify_doc_watchers(doc: DocInfo,
 
     for note in doc.get_notifications(notify_type):
         user = note.user  # type: User
-        if user.id == me.id or not user.email:
+        if user.id == me.id or not user.email or not user.has_view_access(doc.id):
             continue
 
         # If a document was modified and the user doesn't have edit access to it, we must not send the source md

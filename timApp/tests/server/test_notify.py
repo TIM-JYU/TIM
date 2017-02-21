@@ -1,8 +1,13 @@
 from routes.notify import sent_mails_in_testing
 from tests.server.timroutetest import TimRouteTest
+from timdb.tim_models import db
 
 
 class NotifyTest(TimRouteTest):
+    def setUp(self):
+        super().setUp()
+        sent_mails_in_testing.clear()
+
     def test_notify(self):
         self.login_test1()
         d = self.create_doc()
@@ -20,18 +25,7 @@ class NotifyTest(TimRouteTest):
         self.json_post('/notify/{}'.format(d.id), new_settings)
 
     def test_notify_email(self):
-        self.login_test1()
-        d = self.create_doc()
-        title = d.title
-        url = d.url
-        self.test_user_2.grant_access(d.id, 'view')
-        self.new_par(d.document, 'test')
-        self.assertEqual([], sent_mails_in_testing)
-        self.login_test2()
-        self.update_notify_settings(d, {'email_comment_add': True, 'email_comment_modify': False,
-                                        'email_doc_modify': True})
-        self.login_test1()
-        self.new_par(d.document, 'test')
+        d, title, url = self.prepare_doc()
 
         self.assertEqual(1, len(sent_mails_in_testing))
         par_id = d.document.get_paragraphs()[1].get_id()
@@ -118,3 +112,26 @@ class NotifyTest(TimRouteTest):
                           'rcpt': self.test_user_2.email,
                           'reply_to': self.test_user_1.email,
                           'subject': 'user Test edited the document {}'.format(title)}, sent_mails_in_testing[-1])
+
+    def test_revoke_view_no_email(self):
+        d, title, url = self.prepare_doc()
+        self.assertEqual(1, len(sent_mails_in_testing))
+        self.test_user_2.remove_access(d.id, 'view')
+        db.session.commit()
+        self.new_par(d.document, 'test')
+        self.assertEqual(1, len(sent_mails_in_testing))
+
+    def prepare_doc(self):
+        self.login_test1()
+        d = self.create_doc()
+        title = d.title
+        url = d.url
+        self.test_user_2.grant_access(d.id, 'view')
+        self.new_par(d.document, 'test')
+        self.assertEqual([], sent_mails_in_testing)
+        self.login_test2()
+        self.update_notify_settings(d, {'email_comment_add': True, 'email_comment_modify': False,
+                                        'email_doc_modify': True})
+        self.login_test1()
+        self.new_par(d.document, 'test')
+        return d, title, url

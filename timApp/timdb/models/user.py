@@ -16,7 +16,7 @@ from timdb.models.usergroup import UserGroup
 from timdb.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME
 from timdb.timdbexception import TimDbException
 from timdb.userutils import hash_password, has_view_access, has_edit_access, has_manage_access, has_teacher_access, \
-    has_seeanswers_access, user_is_owner, get_viewable_blocks, get_accessible_blocks, grant_access
+    has_seeanswers_access, user_is_owner, get_viewable_blocks, get_accessible_blocks, grant_access, get_access_type_id
 from utils import remove_path_special_chars
 
 
@@ -215,6 +215,11 @@ class User(db.Model):
                             duration_to=duration_to,
                             duration=duration,
                             commit=commit)
+
+    def remove_access(self, block_id: int, access_type: str):
+        BlockAccess.query.filter_by(block_id=block_id,
+                                    usergroup_id=self.get_personal_group().id,
+                                    type=get_access_type_id(access_type)).delete()
 
     def get_viewable_blocks(self) -> Dict[int, BlockAccess]:
         return get_viewable_blocks(self.id)
