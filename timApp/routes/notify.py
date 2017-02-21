@@ -3,6 +3,7 @@ import socket
 from typing import Optional
 
 from flask import Blueprint
+from flask import abort
 from flask import request
 
 from accesshelper import verify_logged_in, verify_view_access
@@ -34,8 +35,11 @@ sent_mails_in_testing = []
 def get_notify_settings(doc_id):
     verify_logged_in()
     verify_view_access(doc_id)
+    d = DocEntry.find_by_id(doc_id, try_translation=True)
+    if not d:
+        abort(404)
     return json_response(
-        get_current_user_object().get_notify_settings(DocEntry.find_by_id(doc_id, try_translation=True)))
+        get_current_user_object().get_notify_settings(d))
 
 
 @notify.route('/notify/<int:doc_id>', methods=['POST'])

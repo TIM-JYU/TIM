@@ -532,7 +532,6 @@ text = '\n'.join(a)
         sc.newAlias = {location: sc.newFolderName};
         sc.copyParams = {copy: sc.item.id};
         sc.citeParams = {cite: sc.item.id};
-        sc.getNotifySettings();
         sc.translations = [];
         sc.newTranslation = {};
 
@@ -542,6 +541,7 @@ text = '\n'.join(a)
             sc.oldName = sc.newName;
             sc.oldFolderName = sc.newFolderName;
         } else {
+            sc.getNotifySettings();
             sc.item.fulltext = sc.item.fulltext.trim();
             sc.fulltext = sc.item.fulltext;
             if (sc.item.rights.manage) {
