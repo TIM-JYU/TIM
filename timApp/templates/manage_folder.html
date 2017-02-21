@@ -41,5 +41,7 @@
             <button class="btn btn-danger" ng-click="deleteFolder(item.id)">Delete folder</button>
         </div>
     </div>
+    {% elif not item.rights.editable %}
+        There is currently nothing to manage here.
     {% endif %}
 {% endblock %}
