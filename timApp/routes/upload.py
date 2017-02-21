@@ -14,6 +14,7 @@ from accesshelper import verify_view_access, verify_seeanswers_access, verify_ta
 from dbaccess import get_timdb
 from plugin import Plugin
 from responsehelper import json_response
+from timdb.userutils import grant_view_access, get_anon_group_id
 from validation import validate_item_and_create, validate_uploaded_document_content
 from sessioninfo import get_current_user_name, get_current_user_group, logged_in
 from timdb.accesstype import AccessType
