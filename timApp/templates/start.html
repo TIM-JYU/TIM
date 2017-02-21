@@ -41,7 +41,7 @@
                                          show-close="true"
                                          close-fn="cancelCreate()">
                             <create-item item-title="My document"
-                                         item-location="users/{{ session.user_name }}"
+                                         item-location="{{ current_user.get_personal_folder().path }}"
                                          item-type="document">
                             </create-item>
                         </bootstrap-panel>
