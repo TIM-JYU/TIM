@@ -30,6 +30,7 @@ from timdb.models.docentry import DocEntry
 from timdb.models.folder import Folder
 from timdb.models.user import User
 from timdb.timdbexception import TimDbException
+from timdb.userutils import user_is_owner
 from utils import remove_path_special_chars
 
 Range = Tuple[int, int]
