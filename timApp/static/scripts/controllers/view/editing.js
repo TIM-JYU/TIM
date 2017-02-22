@@ -136,16 +136,19 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
             if (recursiveCall) {
                 throw 'Faulty recursion stopped, there should be a settings paragraph already';
             }
-            var par_next = sc.getParId($(".par:first"));
+            var $first = $(".par:first");
+            var par_next = sc.getParId($first);
             if (par_next === "HELP_PAR") {
                 par_next = null;
             }
+            $first.before(sc.createNewPar());
+            var parToReplace = "NEW_PAR";
             http.post('/newParagraph/', {
                 "text": '``` {settings=""}\nexample:\n```',
                 "docId": sc.docId,
                 "par_next": par_next
             }).success(function (data, status, headers, config) {
-                sc.addSavedParToDom(data, {par: par_next});
+                sc.addSavedParToDom(data, {par: parToReplace});
                 sc.editSettingsPars(true);
             }).error(function (data, status, headers, config) {
                 $window.alert(data.error);
