@@ -2,6 +2,7 @@ from tests.server.timroutetest import TimRouteTest
 from tim_app import app
 from timdb.models.folder import Folder
 from timdb.models.user import User
+from timdb.tim_models import db
 
 
 class PersonalFolderTest(TimRouteTest):
@@ -30,3 +31,14 @@ class PersonalFolderTest(TimRouteTest):
         self.get('/')
         folders_after = Folder.query.filter_by(location='users').all()
         self.assertEqual(len(folders), len(folders_after))
+
+    def test_no_multiple_personal_folders(self):
+        self.login_test3()
+        self.test_user_3.make_admin()
+        db.session.commit()
+        for t in ('document', 'folder'):
+            self.json_post('/createItem', {
+                'item_path': 'users/testing',
+                'item_type': t,
+                'item_title': 'document '}, expect_status=403
+                           )

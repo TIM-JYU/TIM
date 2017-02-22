@@ -199,6 +199,10 @@ def can_write_to_folder(folder_name):
     timdb = get_timdb()
     user_folder = get_current_user_object().get_personal_folder().path
     folder = folder_name
+    # not even admins are allowed to create new items in 'users' folder
+    if folder == 'users':
+        return False
+
     while folder != '':
         if folder == user_folder:
             return True

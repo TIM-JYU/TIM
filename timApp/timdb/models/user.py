@@ -112,6 +112,9 @@ class User(db.Model):
     def get_by_email(email: str) -> Optional['User']:
         return User.query.filter_by(email=email).first()
 
+    def make_admin(self):
+        self.groups.append(UserGroup.get_admin_group())
+
     def get_personal_group(self) -> UserGroup:
         if self.id < 0 or self.name == ANONYMOUS_USERNAME:
             return UserGroup.query.filter_by(name=ANONYMOUS_GROUPNAME).first()
