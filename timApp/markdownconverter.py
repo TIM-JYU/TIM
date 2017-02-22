@@ -155,8 +155,8 @@ def make_slide_fragments(html_text: str) -> str:
                     fragments[index], "§§", change_classes_to_fragment)
             else:
                 # Make a new fragment area if start and end found
-                fragments[index] = '<div class="fragment"><p>' + fragments[index]
-                fragments[index] = fragments[index].replace("§&gt;", "</div>", 1)
+                fragments[index] = '</p><div class="fragment"><p>' + fragments[index]
+                fragments[index] = fragments[index].replace("§&gt;", "</p></div><p>", 1)
                 # Look for inner fragments
                 fragments[index] = check_and_edit_html_if_surrounded_with(
                     fragments[index], "§§", change_classes_to_fragment)
