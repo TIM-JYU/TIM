@@ -1987,6 +1987,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     print("sql: ", exename)
                     code, out, err, pwd = run2(["sqlite3", dbname], cwd=prgpath, timeout=timeout, env=env, stdin=stdin,
                                                uargs=userargs, noX11=noX11)
+                    if not out:
+                        empty_result = get_param(query, "emptyResult", "No result")
+                        out = empty_result
                 elif ttype == "psql":
                     print("psql: ", exename)
                     code, out, err, pwd = run2(["psql", "-h", dbname, "-U", "$psqluser"], cwd=prgpath, timeout=10,
