@@ -26,7 +26,7 @@ class DocInfo(Item):
 
     @property
     def url(self):
-        return current_app.config['TIM_HOST'] + '/' + self.path
+        return current_app.config['TIM_HOST'] + '/view/' + self.path
 
     @property
     def src_docid(self):
