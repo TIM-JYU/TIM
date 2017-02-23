@@ -12,7 +12,6 @@ MIRToolbox/
 pg_backup/
 .stack-work/
 /variables.sh
-/timApp/.hypothesis/
 /timApp/static/gen/
 /timApp/static/testgen/
 /timApp/modules/cs/test/a.b
@@ -21,19 +20,10 @@ pg_backup/
 /timApp/modules/cs/images/html
 /timApp/modules/cs/images/cs/
 /timApp/modules/cs/java/cs/ComTest.jar
-/docs/YPJ-palkat_1.8.2014_ja_1.8.2015.xlsx
 /converters/demopisteet/*.csv
 tim_secret.py
 yubi.key
 /timApp/modules/pali/log/log.txt
-/timApp/doctest_files/
 /timApp/modules/Haskell/PluginConstructionKit/
 /timApp/tim_files/
 /tim_logs/
-/converters/csPluginAnswers/tim.db
-/timApp/modules/cs/120
-/converters/csPluginAnswers/tim - Shortcut.lnk
-/docs/~$ducation2016hankehaku.docx
-/docs/historia.docx
-/postgresql
-/timApp/modules/imagex/fileParams3.py
