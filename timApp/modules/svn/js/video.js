@@ -7,10 +7,11 @@ if (angular.isDefined(window.videoApp)) {
 
 
 var videoApp = angular.module('videoApp', ['ngSanitize']);
-videoApp.directive('videoRunner',['$sanitize', function ($sanitize) {	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('video'); }]);
-videoApp.directive('smallVideoRunner',['$sanitize', function ($sanitize) {	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('smallvideo'); }]);
+videoApp.directive('videoRunner',['$sanitize', function ($sanitize) {	timHelper.sanitize = $sanitize; videoApp.sanitize = $sanitize; return videoApp.directiveFunction('video'); }]);
+videoApp.directive('smallVideoRunner',['$sanitize', function ($sanitize) {	timHelper.sanitize = $sanitize; videoApp.sanitize = $sanitize; return videoApp.directiveFunction('smallvideo'); }]);
 videoApp.directive('listVideoRunner',['$sanitize', function ($sanitize) {
-	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('listvideo');
+   timHelper.sanitize = $sanitize;
+   videoApp.sanitize = $sanitize; return videoApp.directiveFunction('listvideo');
 }]);
 
 // redefine csApp.sanitize and csApp.compile if needed
@@ -18,34 +19,10 @@ if (angular.isDefined(window.videoAppSanitize) ) {
     videoApp.sanitize = videoAppSanitize;
 }
 
-  
+var TESTWITHOUTPLUGINS = true && false;
+
 videoApp.nr = 0;
  
-videoApp.getHeading = function(a,key,$scope,deftype) {
-	if ( !a ) return "";
-	var h = a[key];
-	if ( !h ) return "";
-	// if ( h.toLowerCase().indexOf("script") >= 0 ) return "";
-	var st = h.split("!!"); // h4 class="h3" width="23"!!Tehtava 1
-	var elem = deftype;
-	var val = st[0];
-	var attributes = "";
-	if ( st.length >= 2 ) { elem = st[0]; val = st[1]; }
-	var i = elem.indexOf(' ');
-	var ea = [elem];
-	if ( i >= 0 ) ea = [elem.substring(0,i),elem.substring(i)];
-	// var ea = elem.split(" ",2);
-	if ( ea.length > 1 ) { elem = ea[0]; attributes = " " + ea[1] + " "; }
-	// if ( elem.toLowerCase().indexOf("script") >= 0 ) return "";
-	// attributes = "";  // ei laiteta näitä niin on vähän turvallisempi
-	try {
-	  val = decodeURIComponent(escape(val))
-	} catch(err) {}
-    var html = "<" + elem + attributes + ">" + val + "</" + elem + ">";
-	html = videoApp.sanitize(html);
-	return html;
-};
-
 videoApp.muunna = function(value) {
   if ( !value ) return value;
 //  var s = "0 0 0 " + value.replace(/,/g," ").replace(/\//g," ").replace(/;/g," ").replace(/\./g," ").replace(/:/g," ");
@@ -72,7 +49,7 @@ videoApp.directiveTemplateVideo = function(t) {
    if ( t == "smallvideo" ) return '<div class="smallVideoRunDiv ng-cloak" ng-cloak>' +
 				  '<p>Here comes header</p>' +
 				  '<p>' +
-                  '{{stem}} ' + 
+                  '<span class="stem" ng-bind-html="stem"></span> ' +
                   '<a ng-if="videoname" class="videoname" ng-click="showVideo()">' +
                   '<span ng-if="videoicon"><img ng-src="{{videoicon}}" alt="Click here to show" /> </span>' +
                   '{{videoname}} {{duration}} {{span}}</a> ' +
@@ -85,7 +62,7 @@ videoApp.directiveTemplateVideo = function(t) {
 				  '</div>';
    if ( t == "listvideo" ) return '<div class="listVideoRunDiv ng-cloak" ng-cloak>' +
 				  '<p>Here comes header</p>' +
-				  '<ul><li>{{stem}} '+
+				  '<ul><li><span class="stem" ng-bind-html="stem"></span> '+
                   '<a ng-if="videoname" class="videoname" ng-click="showVideo()">'+
                   '<span ng-if="videoicon"><img ng-src="{{videoicon}}" alt="Click here to show" /> </span>' +
                   '{{videoname}}{{startt}} {{duration}} {{span}}</a> '+
@@ -98,7 +75,7 @@ videoApp.directiveTemplateVideo = function(t) {
 				  '</div>';
    return '<div class="videoRunDiv ng-cloak" ng-cloak>' +
 				  '<p>Here comes header</p>' +
-				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
+				  '<p ng-if="stem" class="stem" ng-bind-html="stem"></p>' +
 				  '<div ><p></p></div>' + 
 				  //'<p ng-if="!videoOn" class="pluginHide"><a ng-click="showVideo()">Click here to show the video</a></p>' +
                   '<div class="no-popup-menu">' +
@@ -123,14 +100,6 @@ videoApp.time2String = function(t) {
   return h + m + s;
 };
 
-videoApp.set = function(scope,attrs,name,def) {
-    scope[name] = def;
-    if ( attrs && attrs[name] ) scope[name] = attrs[name];
-    if ( scope.attrs && scope.attrs[name] ) scope[name] = scope.attrs[name];
-    if ( scope[name] == "None" ) scope[name] = "";
-    return scope[name];
-};
-
 
 videoApp.isYoutube = function(file) {
     if ( !file ) return false;
@@ -142,20 +111,20 @@ videoApp.isYoutube = function(file) {
 videoApp.directiveFunction = function(t) {
 	return {
 		link: function (scope, element, attrs) {
-            videoApp.set(scope,attrs,"file");
-            videoApp.set(scope,attrs,"width");
-            videoApp.set(scope,attrs,"height");
-            videoApp.set(scope,attrs,"videoname");
-            videoApp.set(scope,attrs,"doctext");
-            videoApp.set(scope,attrs,"doclink");
-            videoApp.set(scope,attrs,"hidetext","hide video");
-            videoApp.set(scope,attrs,"videoicon","/csimages/video_small.png");
-            videoApp.set(scope,attrs,"docicon","/csimages/book.png");
-			videoApp.set(scope,attrs,"open",false);
+            timHelper.set(scope,attrs,".file");
+            timHelper.set(scope,attrs,".width");
+            timHelper.set(scope,attrs,".height");
+            timHelper.set(scope,attrs,".videoname");
+            timHelper.set(scope,attrs,".doctext");
+            timHelper.set(scope,attrs,".doclink");
+            timHelper.set(scope,attrs,".hidetext","hide video");
+            timHelper.set(scope,attrs,".videoicon","/csimages/video_small.png");
+            timHelper.set(scope,attrs,".docicon","/csimages/book.png");
+			timHelper.set(scope,attrs,".open",false);
             if ( scope.videoicon == "False" ) scope.videoicon = "";
             if ( scope.docicon == "False" ) scope.docicon = "";
-			scope.start = videoApp.muunna(attrs.start);
-			scope.end = videoApp.muunna(attrs.end);
+			scope.start = videoApp.muunna(scope.attrs.start);
+			scope.end = videoApp.muunna(scope.attrs.end);
             scope.duration = videoApp.time2String(scope.end - scope.start);
             if ( scope.duration != "" ) scope.duration = "(" + scope.duration + ") ";
             scope.limits = "(" + videoApp.time2String(scope.start) + "-" + videoApp.time2String(scope.end) + ")";
@@ -163,14 +132,14 @@ videoApp.directiveFunction = function(t) {
             scope.span = "";
             scope.startt = videoApp.time2String(scope.start);
             if ( scope.startt ) scope.startt = ", " + scope.startt;
-			if ( attrs.stem ) scope.stem = attrs.stem;
-			if ( attrs.iframe ) scope.iframe = true;
+			if ( scope.attrs.stem ) scope.stem = scope.attrs.stem;
+			if ( scope.attrs.iframe ) scope.iframe = true;
             if ( videoApp.isYoutube(scope.file) )  scope.iframe = true; // youtube must be in iframe
 			scope.videoHtml = element[0].childNodes[2];
-			var head = videoApp.getHeading(attrs,"header",scope,"h4");
+			var head = timHelper.getHeading(scope,attrs,".header","h4");
 			element[0].childNodes[0].outerHTML = head;
 			var n = element[0].childNodes.length;
-			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = videoApp.getHeading(attrs,"footer",scope,'p class="plgfooter"');
+			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = timHelper.getHeading(scope,attrs,".footer",'p class="plgfooter"');
             scope.getPrevZoom();
             if ( scope.open ) scope.showVideo();
 		},		
@@ -195,11 +164,7 @@ videoApp.ifIs = function(value,name) {
 };
 		
 videoApp.Controller = function($scope,$http,$transclude) {
-	$scope.byCode ="";
-	$transclude(function(clone, scope) {
-		if ( clone[0] )
-			$scope.byCode = clone[0].textContent;
-	});
+    $transclude(function(clone,scope) { timHelper.initAttributes(clone,$scope);  });
 	$scope.header = "";
 	$scope.rows = 5;
 	$scope.errors = [];

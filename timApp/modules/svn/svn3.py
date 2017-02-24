@@ -183,7 +183,7 @@ def small_video_html(query):
 
 def list_video_html(query):
     s = '<div class="listVideoRunDiv">'
-    s += replace_template_param(query, '<p>{{header}}</p>', "header")
+    s += replace_template_param(query, '<h4>{{header}}</h4>', "header")
     s += '<ul><li>' + small__and_list_html(query, "{{startt}} {{duration}}") + '</li></ul>'
     s += replace_template_param(query, '<div ><p></p></div><p class="plgfooter">{{footer}}</p>', "footer")
     s += '</div>'
@@ -216,22 +216,29 @@ def get_video_html(self, query):
 
     """
     iframe = get_param(query, "iframe", False) or True
+    js = query_params_to_map_check_parts(query)
+    jso = json.dumps(js)
+    hx = binascii.hexlify(jso.encode("UTF8"))
+
     video_type = get_param(query, "type", "icon")
     # print ("iframe " + iframe + " url: " + url)
     video_app = True
     if video_type == "small":
-        s = string_to_string_replace_attribute(
-            '<small-video-runner \n##QUERYPARAMS##\n></small-video-runner>', "##QUERYPARAMS##", query)
+        # s = string_to_string_replace_attribute(
+        #     '<small-video-runner \n##QUERYPARAMS##\n></small-video-runner>', "##QUERYPARAMS##", query)
+        s = '<small-video-runner>xxxHEXJSONxxx' + hx.decode() + '</list-video-runner>'
         s = make_lazy(s, query, small_video_html)
         return s
     if video_type == "list":
-        s = string_to_string_replace_attribute(
-            '<list-video-runner \n##QUERYPARAMS##\n></list-video-runner>', "##QUERYPARAMS##", query)
+        #  s = string_to_string_replace_attribute(
+        #     '<list-video-runner \n##QUERYPARAMS##\n></list-video-runner>', "##QUERYPARAMS##", query)
+        s = '<list-video-runner>xxxHEXJSONxxx' + hx.decode() + '</list-video-runner>'
         s = make_lazy(s, query, list_video_html)
         return s
     if video_app:
-        s = string_to_string_replace_attribute(
-            '<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
+        # s = string_to_string_replace_attribute(
+        #    '<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
+        s = '<video-runner>xxxHEXJSONxxx' + hx.decode() + '</list-video-runner>'
         s = make_lazy(s, query, video_html)
         return s
 
@@ -367,7 +374,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
         if is_reqs:
             result_json = join_dict({"multihtml": True}, get_all_templates(tempdir))
             if is_video:
-                result_json.update({"js": ["/svn/video/js/video.js"], "angularModule": ["videoApp"]})
+                result_json.update({"js": ["/static/scripts/timHelper.js", "/svn/video/js/video.js"], "angularModule": ["videoApp"]})
             result_str = json.dumps(result_json)
             self.wout(result_str)
             return

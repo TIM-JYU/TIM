@@ -1,4 +1,5 @@
 # -*- coding:utf-8 -*-
+from multiprocessing import resource_sharer
 from urllib.request import urlopen
 import re
 import html
@@ -72,7 +73,30 @@ def get_param(query, key, default):
     value = query.get_query[key][0]
     if value == 'undefined':
         return dvalue
+    if value == 'False':
+        value = False
+    if value == 'false':
+        value = False
     return value
+
+
+def get_param_table(query, key):
+    value = get_param(query, key, None)
+    if not value:
+        return None
+    if not isinstance(value, list):
+        # or (len(number_rule) >= 1 and isinstance(number_rule[0], float)):
+        # number_rule = [number_rule]
+        return [value]
+    return value
+
+
+def get_2_items(js, key1, key2, def1=None, def2=None):
+    if not isinstance(js, dict):
+        return js, def2
+    value1 = js.get(key1, def1)
+    value2 = js.get(key2, def2)
+    return value1, value2
 
 
 def handle_by(byc):
@@ -145,6 +169,17 @@ def check(matcher, line):
         return False
     match = matcher.search(line)
     return match
+
+
+def get_json_eparam(jso, key1, key2, default):
+    # escaped param
+    result = get_json_param(jso, key1, key2, default)
+    if (result == None):
+        return None
+    if type(result) != type(''):
+        # print("Ei ollut string: ", result, jso)
+        result = '' + str(result)
+    return html.escape(result)
 
 
 def get_json_param(jso, key1, key2, default):
@@ -348,6 +383,17 @@ def get_url_lines_as_string(url):
     return result
 
 
+def replace_random(query, s):
+    if not hasattr(query, 'randomcheck'):
+        return s
+    result = s
+    try:
+        result = result.replace('RANDOMCHECK', query.randomcheck)
+    except Exception as e:
+        pass
+    return result
+
+
 def do_escape(s):
     line = html.escape(s)
     # line = line.replace("{","&#123;") # because otherwise problems with angular {{, no need if used inside ng-non-bindable
@@ -372,8 +418,8 @@ class FileParams:
         self.lastn = int(get_param(query, "lastn" + nr, "1000000"))
         self.include = get_param(query, "include" + nr, "")
         self.replace = do_matcher(get_param(query, "replace" + nr, ""))
-        self.by = get_param_by(query, "by" + nr, "")
-        self.prorgam = get_param_by(query, "program" + nr, "")
+        self.by = replace_random(query, get_param_by(query, "by" + nr, ""))
+        self.prorgam = replace_random(query, get_param_by(query, "program" + nr, ""))
         self.breakCount = int(get_param(query, "breakCount" + nr, "0"))
 
         self.reps = []
@@ -387,7 +433,7 @@ class FileParams:
                 get_param(query, "replace" + repNr + str(i), ""))  # replace.1.1 tyyliin replace1 on siis replace.0.1
             if not rep:
                 break
-            byc = get_param_by(query, "byCode" + repNr + str(i), "")
+            byc = replace_random(query, get_param_by(query, "byCode" + repNr + str(i), ""))
             self.reps.append({"by": rep, "bc": byc})
 
         if self.breakCount:
@@ -848,9 +894,10 @@ def string_to_string_replace_attribute(line, what_to_replace, query):
 
 
 def allow(s):
-    tags = ['em', 'strong', 'tt', 'a', 'b', 'code', 'i', 'kbd']
+    tags = ['em', 'strong', 'tt', 'a', 'b', 'code', 'i', 'kbd', 'span']
     attrs = {
-        'a': ['href']
+        'a': ['href'],
+        'span': ['class']
     }
     return bleach.clean(s, tags, attrs)
 
@@ -909,6 +956,15 @@ def get_surrounding_headers2(query):
     return result, get_heading(query, "footer", 'p class="plgfooter"')
 
 
+def get_tiny_surrounding_headers(query, inside):
+    result = get_heading(query, "header", "h4")
+    stem = allow(get_param(query, "stem", None))
+    if stem:
+        result += '<span class="stem" >' + stem + "</span>"
+    result += '<span class="csTinyText" >' + inside + '</span>\n'
+    return result
+
+
 def get_surrounding_headers(query, inside):
     result = get_heading(query, "header", "h4")
     stem = allow(get_param(query, "stem", None))
@@ -950,6 +1006,17 @@ def find_java_package(s):
             c = r.group(1)
 
     return p, c
+
+
+# Etsii C# luokan nimen tiedostosta
+def find_cs_class(s):
+    p = ""
+    c = "Peli"
+    r = re.search("public\s*class\s*([a-zA-Z0-9_]+)", s, flags=re.M)
+    if r:
+        c = r.group(1)
+
+    return c
 
 
 # Palauttaa intin joka löytyy jonon alusta
@@ -1065,6 +1132,7 @@ NEVERLAZY = "NEVERLAZY"
 
 
 def is_lazy(query):
+    # print(query)
     caller_lazy = get_param(query, "doLazy", NEVERLAZY)
     # print("caller_lazy=",caller_lazy)
     if caller_lazy == NEVERLAZY:
@@ -1172,4 +1240,10 @@ def replace_template_param(query, template: str, cond_itemname: str, default="")
 
     result = template.replace("{{" + cond_itemname + "}}", str(item))
 
+    return result
+
+
+def is_review(query):
+    # print(query)
+    result = get_param(query, "review", False)
     return result

@@ -894,9 +894,10 @@ def string_to_string_replace_attribute(line, what_to_replace, query):
 
 
 def allow(s):
-    tags = ['em', 'strong', 'tt', 'a', 'b', 'code', 'i', 'kbd']
+    tags = ['em', 'strong', 'tt', 'a', 'b', 'code', 'i', 'kbd', 'span']
     attrs = {
-        'a': ['href']
+        'a': ['href'],
+        'span': ['class']
     }
     return bleach.clean(s, tags, attrs)
 
