@@ -19,12 +19,8 @@
         To create a new document or a folder, log in.
     {% endif %}
     {% if found_item %}
-        <br>
-        <br>
         <a href="/view/{{ found_item.path }}">To the first existing item ({{ found_item.title }}) in your search.</a>
     {% else %}
-        <br>
-        <br>
         <a href="{{ url_for('view_page.index_page') }}">To the index.</a>
     {% endif %}
 {% endblock %}
