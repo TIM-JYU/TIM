@@ -150,6 +150,7 @@ docker run \
  ${SSHD_FLAGS} \
  -p ${TIM_PORT}:5000 \
  -v ${PWD}:/service \
+ -v ${LOG_DIR}:/service/tim_logs \
  ${DAEMON_FLAG} -t -i \
  timimages/tim:$(./get_latest_date.sh) \
  /bin/bash -c "cd /service/timApp && source /service/scripts/_initenv.sh ; $LAUNCH_COMMAND $END_SHELL"
