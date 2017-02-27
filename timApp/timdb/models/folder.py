@@ -1,7 +1,9 @@
+from typing import List, Iterable
 from typing import Optional
 
 from timdb.item import Item
-from timdb.tim_models import db
+from timdb.models.block import Block
+from timdb.tim_models import db, BlockAccess
 from timdb.blocktypes import blocktypes
 from timdb.dbutils import insert_block, copy_default_rights
 from timdb.models.docentry import DocEntry
@@ -22,6 +24,7 @@ class Folder(db.Model, Item):
 
     @staticmethod
     def get_root() -> 'Folder':
+        # noinspection PyArgumentList
         return Folder(id=ROOT_FOLDER_ID, name='', location='')
 
     @staticmethod
@@ -34,6 +37,8 @@ class Folder(db.Model, Item):
 
     @staticmethod
     def find_by_path(path, fallback_to_id=False) -> Optional['Folder']:
+        if path == '':
+            return Folder.get_root()
         parent_loc, name = split_location(path)
         f = Folder.find_by_location(parent_loc, name)
         if f is None and fallback_to_id:
@@ -43,8 +48,81 @@ class Folder(db.Model, Item):
                 return None
         return f
 
+    @staticmethod
+    def find_first_existing(path: str) -> Optional['Folder']:
+        """Finds the first existing folder for the given path.
+
+        For example, if the folders
+
+        a
+        a/b
+
+        exist, then:
+
+        if path is a/b/c, returns a/b
+        if path is a/b, returns a
+        if path is a, returns the root folder
+        if path is empty, returns None
+
+        """
+        while path:
+            path, _ = split_location(path)
+            d = Folder.find_by_path(path)
+            if d:
+                return d
+        return None
+
+    @staticmethod
+    def get_all_in_path(root_path: str = '', filter_ids: Optional[Iterable[int]]=None) -> List['Folder']:
+        """Gets all the folders under a path.
+
+        :param root_path: Restricts the search to a specific folder.
+        :param filter_ids: An optional iterable of document ids for filtering the folders.
+               Must be non-empty if supplied.
+        :return: A list of Folder objects.
+
+        """
+        q = Folder.query.filter_by(location=root_path)
+        if filter_ids:
+            q = q.filter(Folder.id.in_(filter_ids))
+        return q.all()
+
     def is_root(self) -> bool:
         return self.id == -1
+
+    def delete(self):
+        assert self.is_empty
+        db.session.delete(self)
+        BlockAccess.query.filter_by(block_id=self.id).delete()
+        Block.query.filter_by(type_id=blocktypes.FOLDER, id=self.id).delete()
+
+    def rename(self, new_path: str) -> None:
+        """Renames the folder, updating all the documents within.
+
+        :param new_path: The new name for the folder.
+
+        """
+
+        old_name = self.path
+        self.path = new_path
+
+        # Rename contents
+        docs_in_folder = DocEntry.query.filter(DocEntry.name.like(old_name + '/%')).all()  # type: List[DocEntry]
+        for d in docs_in_folder:
+            d.name = d.name.replace(old_name, new_path, 1)
+
+        folders_in_folder = Folder.query.filter(
+            (Folder.location == old_name) | (Folder.location.like(old_name + '/%'))).all()
+        for f in folders_in_folder:
+            f.location = f.location.replace(old_name, new_path, 1)
+
+    @property
+    def is_empty(self):
+        q = Folder.query.filter_by(location=self.path)
+        if db.session.query(q.exists()).scalar():
+            return False
+        q = DocEntry.query.filter(DocEntry.name.like(self.path + '/%'))
+        return not db.session.query(q.exists()).scalar()
 
     @property
     def parent(self) -> Optional['Folder']:
@@ -55,6 +133,13 @@ class Folder(db.Model, Item):
     @property
     def path(self):
         return self.get_full_path()
+
+    # noinspection PyMethodOverriding
+    @path.setter
+    def path(self, new_path: str):
+        loc, name = split_location(new_path)
+        self.location = loc
+        self.name = name
 
     @property
     def path_without_lang(self):
@@ -112,6 +197,7 @@ class Folder(db.Model, Item):
 
         block_id = insert_block(title or rel_name, owner_group_id, blocktypes.FOLDER, commit=False).id
 
+        # noinspection PyArgumentList
         f = Folder(id=block_id, name=rel_name, location=rel_path)
         db.session.add(f)
 

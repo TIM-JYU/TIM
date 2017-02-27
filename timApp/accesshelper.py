@@ -9,7 +9,6 @@ from werkzeug.exceptions import abort
 import documentmodel.document
 import timdb
 import timdb.userutils
-from dbaccess import get_timdb
 from documentmodel.document import Document
 from requesthelper import get_option
 from sessioninfo import get_current_user_id, logged_in, get_other_users_as_list, \
@@ -27,12 +26,12 @@ def verify_admin():
         abort(403, 'This action requires administrative rights.')
 
 
-def verify_edit_access(block_id, require=True, message=None, check_duration=False):
+def verify_edit_access(block_id: int, require=True, message=None, check_duration=False):
     return abort_if_not_access_and_required(has_edit_access(block_id), block_id, 'edit', require, message,
                                             check_duration)
 
 
-def verify_manage_access(block_id, require=True, message=None, check_duration=False):
+def verify_manage_access(block_id: int, require=True, message=None, check_duration=False):
     return abort_if_not_access_and_required(has_manage_access(block_id), block_id, 'manage', require, message,
                                             check_duration)
 
@@ -84,7 +83,6 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
     if access_obj:
         return access_obj
     if check_duration:
-        timdb = get_timdb()
         ba = BlockAccess.query.filter_by(block_id=block_id,
                                          type=get_access_type_id(access_type),
                                          usergroup_id=get_current_user_group()).first()  # type: BlockAccess
@@ -193,27 +191,6 @@ def has_ownership(block_id):
 def verify_ownership(block_id):
     if not has_ownership(block_id):
         abort(403, "Sorry, you don't have permission to view this resource.")
-
-
-def can_write_to_folder(folder_name):
-    timdb = get_timdb()
-    user_folder = get_current_user_object().get_personal_folder().path
-    folder = folder_name
-    # not even admins are allowed to create new items in 'users' folder
-    if folder == 'users':
-        return False
-
-    while folder != '':
-        if folder == user_folder:
-            return True
-
-        folder_id = timdb.folders.get_folder_id(folder)
-        if folder_id is not None:
-            return has_edit_access(folder_id)
-
-        folder, _ = timdb.folders.split_location(folder)
-
-    return get_current_user_object().is_admin
 
 
 def get_par_from_request(doc: Document, par_id=None, task_id_name=None):

@@ -20,6 +20,7 @@ from dbaccess import get_timdb
 from responsehelper import json_response, set_no_cache_headers, ok_response
 from sessioninfo import get_current_user_object, get_current_user_id, get_current_user_group
 from timdb.models.docentry import DocEntry
+from timdb.models.folder import Folder
 from timdb.userutils import get_viewable_blocks, grant_access
 
 velps = Blueprint('velps',
@@ -673,7 +674,7 @@ def create_velp_group(doc_id: int) -> Dict:
     # Create a new velp group / document in users/username/velp groups folder
     if target_type == 0:
         user = get_current_user_object()
-        user_velp_path = timdb.folders.check_personal_velp_folder(user, user_group_id)
+        user_velp_path = timdb.folders.check_personal_velp_folder(user)
         new_group_path = user_velp_path + "/" + velp_group_name
         group_exists = DocEntry.find_by_path(new_group_path)
         if group_exists is None:
@@ -683,7 +684,7 @@ def create_velp_group(doc_id: int) -> Dict:
 
     else:
         if target_type == 2:
-            target_id = timdb.folders.get_folder_id(doc_path)
+            target_id = Folder.find_by_path(doc_path).id
             doc_name = ""
         elif target_type == 1:
             target_id = doc_id
@@ -835,7 +836,7 @@ def get_velp_groups_from_tree(document_id: int):
     viewable = get_viewable_blocks(get_current_user_id())
 
     # Velp groups for areas, plugins etc
-    folders = timdb.folders.get_folders(doc_velp_path)
+    folders = Folder.get_all_in_path(doc_velp_path)
     for path in folders:
         full_path = path.get_full_path()
         velp_groups += get_folder_velp_groups(timdb, full_path, viewable)

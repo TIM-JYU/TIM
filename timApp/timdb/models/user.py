@@ -4,9 +4,13 @@ from datetime import datetime, timedelta
 from typing import Dict, Optional
 from typing import List
 
+import os
+
+from flask import current_app
 from sqlalchemy.orm import Query
 
 from documentmodel.timjsonencoder import TimJsonEncoder
+from theme import Theme
 from timdb.accesstype import AccessType
 from timdb.docinfo import DocInfo
 from timdb.models.notification import Notification
@@ -17,7 +21,7 @@ from timdb.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, L
 from timdb.timdbexception import TimDbException
 from timdb.userutils import hash_password, has_view_access, has_edit_access, has_manage_access, has_teacher_access, \
     has_seeanswers_access, user_is_owner, get_viewable_blocks, get_accessible_blocks, grant_access, get_access_type_id
-from utils import remove_path_special_chars
+from utils import remove_path_special_chars, generate_theme_scss, ThemeNotFoundException, get_combined_css_filename
 
 
 class User(db.Model):
@@ -161,9 +165,30 @@ class User(db.Model):
         return folders[0]
 
     def get_prefs(self) -> Dict:
-        return json.loads(self.prefs)
+        prefs = json.loads(self.prefs or '{}')
+        if not prefs.get('css_files'):
+            prefs['css_files'] = {}
+        if not prefs.get('custom_css'):
+            prefs['custom_css'] = ''
+        css_file_list = [css for css, v in prefs['css_files'].items() if v]
+        css_file_list.sort()
+        theme_list = [Theme(f) for f in css_file_list]
+        try:
+            generate_theme_scss(theme_list, os.path.join('static', current_app.config['SASS_GEN_PATH']))
+        except ThemeNotFoundException:
+            self.set_prefs(prefs)
+            return self.get_prefs()
+        prefs['css_combined'] = get_combined_css_filename(theme_list)
+        return prefs
 
-    def set_prefs(self, prefs):
+    def set_prefs(self, prefs: Dict):
+        css_files = prefs.get('css_files', {})
+        existing_css_files = {}
+        for k, v in css_files.items():
+            t = Theme(k)
+            if t.exists() and v:
+                existing_css_files[t.filename] = True
+        prefs['css_files'] = existing_css_files
         self.prefs = json.dumps(prefs, cls=TimJsonEncoder)
 
     def get_groups(self) -> Query:
@@ -200,6 +225,12 @@ class User(db.Model):
 
     def has_ownership(self, block_id: int) -> bool:
         return user_is_owner(self.id, block_id)
+
+    def can_write_to_folder(self, f: Folder):
+        # not even admins are allowed to create new items in 'users' folder
+        if f.path == 'users':
+            return False
+        return self.has_edit_access(f.id)
 
     def grant_access(self, block_id: int,
                      access_type: str,

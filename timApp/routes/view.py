@@ -14,7 +14,7 @@ from flask import session
 import pluginControl
 import routes.lecture
 from accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
-    get_rights, get_viewable_blocks_or_none_if_admin, can_write_to_folder, has_edit_access
+    get_rights, get_viewable_blocks_or_none_if_admin, has_edit_access
 from common import get_user_settings, save_last_page, has_special_chars, post_process_pars, \
     hide_names_in_teacher, is_considered_unpublished
 from dbaccess import get_timdb
@@ -154,7 +154,7 @@ def parse_range(start_index: Union[int, str, None], end_index: Union[int, str, N
     return int(start_index), int(end_index)
 
 
-def try_return_folder(doc_name):
+def try_return_folder(item_name):
     timdb = get_timdb()
     user = get_current_user_id()
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
@@ -163,30 +163,18 @@ def try_return_folder(doc_name):
 
     settings = get_user_settings()
 
-    item_name = doc_name.rstrip('/')
-    block_id = timdb.folders.get_folder_id(item_name)
+    f = Folder.find_by_path(item_name, fallback_to_id=True)
 
-    if block_id is None:
-        while block_id is None:
-            item_name, _ = timdb.folders.split_location(item_name)
-            block_id = timdb.folders.get_folder_id(item_name)
-
-        found_item = None
-        if verify_view_access(block_id, require=False):
-            found_item = item_name
-
-        can_create_new = can_write_to_folder(item_name) and timdb.folders.get_folder_id(item_name) is not None
-
+    if f is None:
+        f = Folder.find_first_existing(item_name)
         return render_template('create_new.html',
-                               can_create_new=can_create_new,
                                in_lecture=is_in_lecture,
                                settings=settings,
-                               newItem=doc_name,
-                               foundItem=found_item), 404
-    verify_view_access(block_id)
-    folder = Folder.get_by_id(block_id)
+                               new_item=item_name,
+                               found_item=f), 404
+    verify_view_access(f.id)
     return render_template('index.html',
-                           item=folder,
+                           item=f,
                            items=get_items(item_name),
                            in_lecture=is_in_lecture,
                            settings=settings)
@@ -324,11 +312,11 @@ def view(item_path, template_name, usergroup=None, route="view"):
             default=plugin_count >= current_app.config['PLUGIN_COUNT_LAZY_LIMIT']))
 
     texts, js_paths, css_paths, modules = post_process_pars(doc,
-                                                          xs,
-                                                          current_list_user or current_user,
-                                                          sanitize=False,
-                                                          do_lazy=do_lazy,
-                                                          load_plugin_states=not hide_answers)
+                                                            xs,
+                                                            current_list_user or current_user,
+                                                            sanitize=False,
+                                                            do_lazy=do_lazy,
+                                                            load_plugin_states=not hide_answers)
 
     index = get_index_from_html_list(t['html'] for t in texts)
 
@@ -390,8 +378,8 @@ def get_items(folder: str):
                                          search_recursively=False,
                                          filter_folder=folder)
     docs.sort(key=lambda d: d.title.lower())
-    folders = timdb.folders.get_folders(root_path=folder,
-                                        filter_ids=get_viewable_blocks_or_none_if_admin())
+    folders = Folder.get_all_in_path(root_path=folder,
+                                     filter_ids=get_viewable_blocks_or_none_if_admin())
     folders.sort(key=lambda d: d.title.lower())
     items = folders + docs
     return items

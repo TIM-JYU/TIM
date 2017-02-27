@@ -33,7 +33,6 @@ from accesshelper import verify_admin, verify_edit_access, verify_manage_access,
     has_view_access, has_manage_access, grant_access_to_session_users, ItemLockedException, \
     get_viewable_blocks_or_none_if_admin
 from cache import cache
-from common import get_preferences
 from dbaccess import get_timdb
 from documentmodel.document import Document
 from documentmodel.documentversion import DocumentVersion
@@ -124,7 +123,7 @@ def error_generic(error, code):
 @app.context_processor
 def inject_custom_css() -> dict:
     """Injects the user prefs variable to all templates."""
-    prefs = get_preferences()
+    prefs = get_current_user_object().get_prefs()
     return dict(prefs=prefs)
 
 
@@ -199,7 +198,7 @@ def item_locked(error):
     is_folder = False
     if not item:
         is_folder = True
-        item = Folder.find_by_id(error.access.block_id)
+        item = Folder.get_by_id(error.access.block_id)
     if not item:
         abort(404)
     return render_template('duration_unlock.html',

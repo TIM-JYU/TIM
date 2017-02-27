@@ -3,13 +3,13 @@
 {% block content %}
     <p class="errormsg">{{ message or 'The requested page does not exist.' }}</p>
     {% if session.user_id %}
-        {% if can_create_new %}
+        {% if current_user.can_write_to_folder(found_item) %}
             <bootstrap-panel title="Create a new document here">
-                <create-item item-type="document" full-path="{{ newItem }}"></create-item>
+                <create-item item-type="document" full-path="{{ new_item }}"></create-item>
             </bootstrap-panel>
 {#
             <bootstrap-panel title="Create a new folder here">
-                <create-item item-type="folder" full-path="{{ newItem }}"></create-item>
+                <create-item item-type="folder" full-path="{{ new_item }}"></create-item>
             </bootstrap-panel>
 #}
         {% else %}
@@ -18,10 +18,10 @@
     {% else %}
         To create a new document or a folder, log in.
     {% endif %}
-    {% if foundItem %}
+    {% if found_item %}
         <br>
         <br>
-        <a href="/view/{{ foundItem }}">To the first existing item ({{ foundItem }}) in your search.</a>
+        <a href="/view/{{ found_item.path }}">To the first existing item ({{ found_item.title }}) in your search.</a>
     {% else %}
         <br>
         <br>

@@ -1,13 +1,11 @@
 """Common functions for use with routes."""
-import json
-import os
 from collections import defaultdict
 from datetime import datetime
 from typing import List, Dict
 
 import dateutil.parser
 import pytz
-from flask import current_app, session, abort, request, flash
+from flask import session, abort, request, flash
 
 import pluginControl
 from accesshelper import has_ownership, has_edit_access
@@ -15,11 +13,9 @@ from dbaccess import get_timdb
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from markdownconverter import expand_macros, create_environment
-from sessioninfo import get_session_usergroup_ids, get_current_user_id, logged_in
-from theme import Theme
+from sessioninfo import get_session_usergroup_ids
 from timdb.models.user import User
 from timdb.userutils import get_anon_group_id
-from utils import generate_theme_scss, get_combined_css_filename, ThemeNotFoundException
 
 
 def verify_doc_exists(doc_id, message="Sorry, the document does not exist."):
@@ -243,46 +239,6 @@ def has_special_chars(item_path):
 
 def get_user_settings():
     return session.get('settings', {})
-
-
-def get_preferences():
-    """Gets the preferences of the current user.
-
-    :return: A dictionary of the user preferences.
-
-    """
-    prefs = {}
-    if logged_in():
-        timdb = get_timdb()
-        prefs = timdb.users.get_preferences(get_current_user_id())
-        prefs = json.loads(prefs) if prefs is not None else {}
-    if not prefs:
-        prefs['css_files'] = {}
-        prefs['custom_css'] = ''
-    css_file_list = [css for css, v in prefs['css_files'].items() if v]
-    css_file_list.sort()
-    theme_list = [Theme(f) for f in css_file_list]
-    try:
-        generate_theme_scss(theme_list, os.path.join('static', current_app.config['SASS_GEN_PATH']))
-    except ThemeNotFoundException as e:
-        flash('TIM was updated and some theme files (such as {}) are no longer available. '
-              'See the settings page for the available themes.'.format(e))
-        update_preferences(prefs)
-        return get_preferences()
-    prefs['css_combined'] = get_combined_css_filename(theme_list)
-    return prefs
-
-
-def update_preferences(prefs):
-    timdb = get_timdb()
-    css_files = prefs.get('css_files', {})
-    existing_css_files = {}
-    for k, v in css_files.items():
-        t = Theme(k)
-        if t.exists() and v:
-            existing_css_files[t.filename] = True
-    prefs['css_files'] = existing_css_files
-    timdb.users.set_preferences(get_current_user_id(), json.dumps(prefs))
 
 
 def save_last_page():

@@ -10,8 +10,7 @@ from flask import request
 from isodate import Duration
 from isodate import parse_duration
 
-from accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, can_write_to_folder, \
-    verify_edit_access, has_manage_access
+from accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, verify_edit_access
 from common import has_special_chars
 from dbaccess import get_timdb
 from requesthelper import verify_json_params, get_option
@@ -37,7 +36,6 @@ manage_page = Blueprint('manage_page',
 def manage(path):
     if has_special_chars(path):
         return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
-    timdb = get_timdb()
     is_folder = False
     doc = DocEntry.find_by_path(path, fallback_to_id=True, try_translation=True)
     folder = None
@@ -86,14 +84,14 @@ def add_permission(item_id, group_name, perm_type):
     try:
         for group_id in group_ids:
             grant_access(group_id,
-                                     item_id,
-                                     perm_type,
-                                     accessible_from=acc_from,
-                                     accessible_to=acc_to,
-                                     duration_from=dur_from,
-                                     duration_to=dur_to,
-                                     duration=duration,
-                                     commit=False)
+                         item_id,
+                         perm_type,
+                         accessible_from=acc_from,
+                         accessible_to=acc_to,
+                         duration_from=dur_from,
+                         duration_to=dur_to,
+                         duration=duration,
+                         commit=False)
         timdb.commit()
     except KeyError:
         abort(400, 'Invalid permission type.')
@@ -118,7 +116,6 @@ def check_ownership_loss(had_ownership, item_id, perm_type):
     if hasattr(g, 'owned'):
         delattr(g, 'owned')
     if had_ownership and not has_ownership(item_id):
-        timdb = get_timdb()
         grant_access(get_current_user_group(), item_id, perm_type)
         abort(403, 'You cannot remove ownership from yourself.')
 
@@ -165,15 +162,15 @@ def change_alias(alias):
     verify_manage_access(doc.id)
 
     new_parent, _ = timdb.folders.split_location(new_alias)
-
+    f = Folder.find_first_existing(new_alias)
     if alias != new_alias:
-        if DocEntry.find_by_path(new_alias, try_translation=True) is not None or timdb.folders.get_folder_id(new_alias) is not None:
+        if DocEntry.find_by_path(new_alias, try_translation=True) is not None or Folder.find_by_path(new_alias) is not None:
             return abort(403, 'Item with a same name already exists.')
-        parent, _ = timdb.folders.split_location(alias)
-        if not can_write_to_folder(parent):
+        f = Folder.find_first_existing(alias)
+        if not get_current_user_object().can_write_to_folder(f):
             return abort(403, "You don't have permission to write to the source folder.")
 
-    if not can_write_to_folder(new_parent):
+    if not get_current_user_object().can_write_to_folder(f):
         return abort(403, "You don't have permission to write to the destination folder.")
 
     Folder.create(new_parent, get_current_user_group())
@@ -185,7 +182,6 @@ def change_alias(alias):
 
 @manage_page.route("/alias/<path:alias>", methods=["DELETE"])
 def remove_alias(alias):
-    timdb = get_timdb()
     alias = alias.strip('/')
 
     doc = DocEntry.find_by_path(alias)
@@ -197,9 +193,8 @@ def remove_alias(alias):
     if len(doc.aliases) <= 1:
         return abort(403, "You can't delete the only name the document has.")
 
-    parent_folder, _ = timdb.folders.split_location(alias)
-
-    if not can_write_to_folder(parent_folder):
+    f = Folder.find_first_existing(alias)
+    if not get_current_user_object().can_write_to_folder(f):
         return abort(403, "You don't have permission to write to that folder.")
 
     db.session.delete(doc)
@@ -207,33 +202,33 @@ def remove_alias(alias):
     return ok_response()
 
 
-@manage_page.route("/rename/<int:doc_id>", methods=["PUT"])
-def rename_folder(doc_id):
+@manage_page.route("/rename/<int:item_id>", methods=["PUT"])
+def rename_folder(item_id):
     timdb = get_timdb()
     new_name = request.get_json()['new_name'].strip('/')
 
-    if timdb.documents.exists(doc_id):
+    if timdb.documents.exists(item_id):
         return abort(403, 'Rename route is no longer supported for documents.')
 
-    if not timdb.folders.exists(doc_id):
+    f = Folder.get_by_id(item_id)
+    if not f:
         return abort(404, 'The folder does not exist!')
-
-    if not has_manage_access(doc_id):
-        return abort(403, "You don't have permission to rename this object.")
+    verify_manage_access(item_id)
 
     parent, _ = timdb.folders.split_location(new_name)
-    parent_id = timdb.folders.get_folder_id(parent)
+    parent_f = Folder.find_by_path(parent)
 
-    if parent_id is None:
+    if parent_f is None:
         # Maybe do a recursive create with permission checks here later?
         return abort(403, "The location does not exist.")
 
-    if parent_id == doc_id:
+    if parent_f.id == item_id:
         return abort(403, "A folder cannot contain itself.")
 
     validate_item(new_name, 'folder')
 
-    timdb.folders.rename(doc_id, new_name)
+    f.rename(new_name)
+    db.session.commit()
     return json_response({'new_name': new_name})
 
 
@@ -257,14 +252,14 @@ def get_default_document_permissions(folder_id, object_type):
 def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
     _, group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(folder_id, group_name, perm_type)
     grant_default_access(group_ids,
-                                     folder_id,
-                                     perm_type,
-                                     from_str(object_type),
-                                     accessible_from=acc_from,
-                                     accessible_to=acc_to,
-                                     duration_from=dur_from,
-                                     duration_to=dur_to,
-                                     duration=duration)
+                         folder_id,
+                         perm_type,
+                         from_str(object_type),
+                         accessible_from=acc_from,
+                         accessible_to=acc_to,
+                         duration_from=dur_from,
+                         duration_to=dur_to,
+                         duration=duration)
     return ok_response()
 
 
@@ -352,14 +347,15 @@ def delete_document(doc_id):
 
 @manage_page.route("/folders/<int:doc_id>", methods=["DELETE"])
 def delete_folder(doc_id):
-    timdb = get_timdb()
-    if not timdb.folders.exists(doc_id):
+    f = Folder.get_by_id(doc_id)
+    if not f:
         return abort(404, 'Folder does not exist.')
     verify_ownership(doc_id)
-    if not timdb.folders.is_empty(doc_id):
+    if not f.is_empty:
         return abort(403, "The folder is not empty. Only empty folders can be deleted.")
 
-    timdb.folders.delete(doc_id)
+    f.delete()
+    db.session.commit()
     return ok_response()
 
 

@@ -5,10 +5,9 @@ from bs4 import UnicodeDammit
 from flask import current_app
 from werkzeug.exceptions import abort
 
-from accesshelper import can_write_to_folder
 from common import has_special_chars
 from dbaccess import get_timdb
-from sessioninfo import logged_in
+from sessioninfo import logged_in, get_current_user_object
 from timdb.models.docentry import DocEntry
 from timdb.models.folder import Folder
 
@@ -18,7 +17,7 @@ def validate_item(item_path, item_type):
         abort(403, 'You have to be logged in to perform this action.'.format(item_type))
 
     if item_path is None:
-        abort(400, 'item_name was None')
+        abort(400, 'item_path was None')
 
     if not all(part for part in item_path.split('/')):
         abort(400, 'The {} path cannot have empty parts.'.format(item_type))
@@ -29,11 +28,13 @@ def validate_item(item_path, item_type):
     if has_special_chars(item_path):
         abort(400, 'The {} path has invalid characters. Only letters, numbers, underscores and dashes are allowed.'.format(item_type))
 
-    timdb = get_timdb()
-    if DocEntry.find_by_path(item_path, try_translation=True) is not None or timdb.folders.get_folder_id(item_path) is not None:
+    if DocEntry.find_by_path(item_path, try_translation=True) is not None or Folder.find_by_path(item_path) is not None:
         abort(403, 'Item with a same name already exists.')
 
-    if not can_write_to_folder(item_path):
+    f = Folder.find_first_existing(item_path)
+    if not f:
+        abort(403)
+    if not get_current_user_object().can_write_to_folder(f):
         abort(403, 'You cannot create {}s in this folder.'.format(item_type))
 
 

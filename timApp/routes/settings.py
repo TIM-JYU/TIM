@@ -5,8 +5,8 @@ from flask import request
 from jinja2 import TemplateNotFound
 
 from accesshelper import verify_logged_in
-from common import update_preferences, get_preferences
 from responsehelper import json_response
+from sessioninfo import get_current_user_object
 from theme import get_available_themes
 
 settings_page = Blueprint('settings_page',
@@ -31,11 +31,11 @@ def show():
 
 @settings_page.route('/save', methods=['POST'])
 def save_settings():
-    update_preferences(request.get_json())
+    get_current_user_object().set_prefs(request.get_json())
     show()  # Regenerate CSS
-    return json_response(get_preferences())
+    return json_response(get_current_user_object().get_prefs())
 
 
 @settings_page.route('/get/<name>')
 def get_setting(name):
-    return json_response({name: get_preferences().get(name)})
+    return json_response({name: get_current_user_object().get_prefs().get(name)})

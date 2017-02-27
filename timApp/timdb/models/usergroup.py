@@ -1,3 +1,5 @@
+from typing import List
+
 from timdb.tim_models import db, UserGroupMember
 from timdb.special_group_names import ANONYMOUS_GROUPNAME, LARGE_GROUPS, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
     ADMIN_GROUPNAME
@@ -12,13 +14,13 @@ class UserGroup(db.Model):
     users = db.relationship('User', secondary=UserGroupMember.__table__,
                             backref=db.backref('groups', lazy='dynamic'))
 
-    def is_anonymous(self):
+    def is_anonymous(self) -> bool:
         return self.name == ANONYMOUS_GROUPNAME
 
-    def is_large(self):
+    def is_large(self) -> bool:
         return self.name in LARGE_GROUPS
 
-    def __json__(self):
+    def __json__(self) -> List[str]:
         return ['id', 'name']
 
     @staticmethod
@@ -44,17 +46,17 @@ class UserGroup(db.Model):
         return UserGroup.query.filter_by(name=name).first()
 
     @staticmethod
-    def get_anonymous_group():
+    def get_anonymous_group() -> 'UserGroup':
         return UserGroup.query.filter_by(name=ANONYMOUS_GROUPNAME).one()
 
     @staticmethod
-    def get_admin_group():
+    def get_admin_group() -> 'UserGroup':
         return UserGroup.query.filter_by(name=ADMIN_GROUPNAME).one()
 
     @staticmethod
-    def get_korppi_group():
+    def get_korppi_group() -> 'UserGroup':
         return UserGroup.query.filter_by(name=KORPPI_GROUPNAME).one()
 
     @staticmethod
-    def get_logged_in_group():
+    def get_logged_in_group() -> 'UserGroup':
         return UserGroup.query.filter_by(name=LOGGED_IN_GROUPNAME).one()
