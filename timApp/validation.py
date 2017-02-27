@@ -10,6 +10,7 @@ from dbaccess import get_timdb
 from sessioninfo import logged_in, get_current_user_object
 from timdb.models.docentry import DocEntry
 from timdb.models.folder import Folder
+from timdb.timdbexception import TimDbException
 
 
 def validate_item(item_path, item_type):
@@ -42,7 +43,10 @@ def validate_item_and_create(item_name, item_type, owner_group_id):
     timdb = get_timdb()
     validate_item(item_name, item_type)
     item_path, _ = timdb.folders.split_location(item_name)
-    Folder.create(item_path, owner_group_id, apply_default_rights=True)
+    try:
+        Folder.create(item_path, owner_group_id, apply_default_rights=True)
+    except TimDbException as e:
+        abort(403, str(e))
 
 
 def validate_uploaded_document_content(file_content):

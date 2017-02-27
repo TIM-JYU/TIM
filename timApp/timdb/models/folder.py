@@ -186,6 +186,10 @@ class Folder(db.Model, Item):
 
         path = path.strip('/')
 
+        if DocEntry.find_by_path(path):
+            db.session.rollback()
+            raise TimDbException('A document already exists at path {}'.format(path))
+
         # Root folder is special case
         if not path:
             return Folder.get_root()

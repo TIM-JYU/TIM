@@ -108,6 +108,11 @@ class DocEntry(db.Model, DocInfo):
         if path is not None and '\0' in path:
             raise TimDbException('Document name cannot contain null characters.')
 
+        if isinstance(path, str):
+            location, _ = split_location(path)
+            from timdb.models.folder import Folder
+            Folder.create(location, owner_group_id=owner_group_id, commit=False)
+
         document_id = insert_block(title or path, owner_group_id, blocktypes.DOCUMENT, commit=False).id
         document = Document(document_id, modifier_group_id=owner_group_id)
         document.create()
@@ -115,6 +120,10 @@ class DocEntry(db.Model, DocInfo):
         # noinspection PyArgumentList
         docentry = DocEntry(id=document_id, name=path, public=True)
         if path is not None:
+            from timdb.models.folder import Folder
+            if Folder.find_by_path(path):
+                db.session.rollback()
+                raise TimDbException('A folder already exists at path {}'.format(path))
             db.session.add(docentry)
 
         if from_file is not None:
