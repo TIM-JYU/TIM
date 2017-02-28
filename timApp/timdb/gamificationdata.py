@@ -4,9 +4,9 @@ import json
 import yaml
 from flask import request
 
-import common
 import pluginControl
 from dbaccess import get_timdb
+from sessioninfo import get_current_user_id
 from timdb.models.docentry import DocEntry
 
 
@@ -107,7 +107,7 @@ def get_points_for_doc(d):
     user_points = 0
     task_id_list = (pluginControl.find_task_ids(document.get_paragraphs()))
 
-    users_task_info = timdb.answers.get_users_for_tasks(task_id_list[0], [common.get_current_user_id()])
+    users_task_info = timdb.answers.get_users_for_tasks(task_id_list[0], [get_current_user_id()])
 
     for entrys in users_task_info:
         if entrys['total_points'] is not None:
