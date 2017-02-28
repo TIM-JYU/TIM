@@ -111,6 +111,11 @@ run apt-get install --no-install-recommends -y npm \
  && bower --allow-root --force install angular-timer#~1.3 \
  && apt-get purge -y --auto-remove npm
 
+# Update the below date whenever Bower packages are upgraded, added or removed.
+# Otherwise TIM might not re-copy the Bower libs because it only inspects the top-level directory file names
+# in bower_components.
+run touch /bower_components/2017-02-28.stamp
+
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
 run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js
 
