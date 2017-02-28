@@ -262,7 +262,7 @@ def reset_css():
     gen_dir = os.path.join('static', app.config['SASS_GEN_PATH'])
     if os.path.exists(gen_dir):
         shutil.rmtree(gen_dir)
-    return ok_response()
+    return safe_redirect(url_for('start_page'))
 
 
 @app.route('/download/<int:doc_id>')
