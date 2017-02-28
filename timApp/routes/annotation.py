@@ -165,7 +165,7 @@ def update_annotation():
         return abort(400, "Color should be a hex string, e.g. '#FFFFFF'.")
     new_values['color'] = color
 
-    if has_teacher_access(user_id, doc_id):
+    if has_teacher_access(doc_id):
         new_values['points'] = points
     else:
         if points is None:
