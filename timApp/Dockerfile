@@ -79,33 +79,34 @@ run mkdir /service
 run useradd -M agent
 run chown -R agent /service
 
-# angular-timer depends on humanize-duration version 2.8 but it appears to work fine with 3.10, so we force the install
+# angular-timer depends on humanize-duration version 2.8 but it appears to work fine with 3.10, so we force the install.
+# Due to https://github.com/angular-ui/ui-grid/issues/5926, we install version 4.0.1 of angular-ui-grid and not 4.0.2.
 run apt-get install --no-install-recommends -y npm \
  && npm install -g bower \
  && npm install uglify-js -g \
  && ln -s /usr/bin/nodejs /usr/bin/node \
- && bower --allow-root install angular#~1.4 \
+ && bower --allow-root install angular#~1.5 \
  && bower --allow-root install angular-ui-ace#36844ff7c0e0d9445bc8e31514d7f0f59cb8b048 \
- && bower --allow-root install ng-file-upload#~11.0 \
+ && bower --allow-root install ng-file-upload#~12.2 \
  && bower --allow-root install jquery#~2.1 \
  && bower --allow-root install moment#~2.17 \
- && bower --allow-root install angular-sanitize#~1.4 \
+ && bower --allow-root install angular-sanitize#~1.5 \
  && bower --allow-root install bootstrap#~3.3 \
  && bower --allow-root install jquery-ui#~1.11 \
  && bower --allow-root install katex#~0.6 \
  && bower --allow-root install rangyinputs \
  && bower --allow-root install ngstorage#~0.3 \
  && bower --allow-root install chartjs#~1.0 \
- && bower --allow-root install oclazyload#~1.0 \
+ && bower --allow-root install oclazyload#~1.1 \
  && bower --allow-root install bootstrap-sass#~3.3 \
- && bower --allow-root install angular-bootstrap#~2.1 \
- && bower --allow-root install angular-animate#~1.4 \
- && bower --allow-root install angular-touch#~1.4 \
- && bower --allow-root install angular-ui-grid#~3.2 \
+ && bower --allow-root install angular-bootstrap#~2.5 \
+ && bower --allow-root install angular-animate#~1.5 \
+ && bower --allow-root install angular-touch#~1.5 \
+ && bower --allow-root install angular-ui-grid#4.0.1 \
  && bower --allow-root install angular-bootstrap-colorpicker#~3.0 \
  && bower --allow-root install eonasdan-bootstrap-datetimepicker#latest \
  && bower --allow-root install angular-eonasdan-datetimepicker#~0.3 \
- && bower --allow-root install angular-messages#~1.4 \
+ && bower --allow-root install angular-messages#~1.5 \
  && bower --allow-root install humanize-duration#~3.10 \
  && bower --allow-root --force install angular-timer#~1.3 \
  && apt-get purge -y --auto-remove npm
