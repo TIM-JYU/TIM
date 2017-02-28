@@ -310,10 +310,10 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
     };
 
     $scope.isVelpCustomColor = function () {
-        if ($scope.velp.color !== null)
+        if ($scope.velp.color)
             return $scope.velp.color.length === 7; // hex colors are 7 characters long
         return false;
-    }
+    };
 
     var copyLabelToEditLabel = function (label) {
         for (var key in label){
