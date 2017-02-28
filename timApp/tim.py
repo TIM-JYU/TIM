@@ -46,6 +46,7 @@ from routes.bookmarks import bookmarks
 from routes.clipboard import clipboard
 from routes.edit import edit_page
 from routes.generateMap import generateMap
+from routes.global_notification import global_notification
 from routes.groups import groups
 from routes.lecture import get_tempdb, user_in_lecture, lecture_routes
 from routes.login import login_page, logout
@@ -97,6 +98,7 @@ app.register_blueprint(lecture_routes)
 app.register_blueprint(clipboard)
 app.register_blueprint(notify)
 app.register_blueprint(bookmarks)
+app.register_blueprint(global_notification)
 app.register_blueprint(Blueprint('bower',
                                  __name__,
                                  static_folder='static/scripts/bower_components',

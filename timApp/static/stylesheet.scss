@@ -24,6 +24,12 @@ a .glyphicon {
     background-image: url("/static/images/unpublished.svg");
 }
 
+.global-notification {
+    p {
+        display: inline-block;
+    }
+}
+
 .siteheader {
     @include clearfix;
     height: 43px;

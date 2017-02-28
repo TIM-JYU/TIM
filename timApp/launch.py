@@ -9,6 +9,7 @@ import initdb2
 import tim
 from bower_helper import scripts_path, copy_bower_libs_if_needed
 from logger import log_info
+from tim_app import app
 from utils import pycharm_running
 
 
@@ -33,6 +34,10 @@ if __name__ == '__main__':
             dumbo_started = True
         initdb2.initialize_database()
         initdb2.initialize_temp_database()
+        try:
+            os.remove(app.config['GLOBAL_NOTIFICATION_FILE'])
+        except FileNotFoundError:
+            pass
         if len(sys.argv) <= 1:
             log_info('Starting without gunicorn.')
             tim.start_app()
