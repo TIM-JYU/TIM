@@ -16,7 +16,7 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
         var mobile = touch && (window.screen.width < 1200);
         var url;
         var par_id = sc.getParId($par);
-        var par_next_id = sc.getParId($par.next());
+        var par_next_id = sc.getParId(sc.getNextPar($par));
         if (par_next_id === "HELP_PAR")
             par_next_id = null;
 
