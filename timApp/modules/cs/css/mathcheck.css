@@ -1,20 +1,23 @@
-p.err { color: red }
-p.warn { color: fuchsia }
-p.set { color: blue }
-p.errbox { color: white; background: black; border: solid red }
-p.proven { color: #0C0 }
-p.unimp { color: gray; font-size: small }
-p.green { color: #0A0 }
-table.err { color: red }
-table.warn { color: fuchsia }
-td.right { text-align: right }
-span.err { color: red }
-span.warn { color: fuchsia }
-span.comment { color: maroon }
-span.proven { color: #0C0 }
-span.debug { color: gray }
-span.hides { color: teal }
+.type-mathcheck p.err { color: red }
+.type-mathcheck p.warn { color: fuchsia }
+.type-mathcheck p.set { color: blue }
+.type-mathcheck p.errbox { color: white; background: black; border: solid red }
+.type-mathcheck p.proven { color: #0C0 }
+.type-mathcheck p.unimp { color: gray; font-size: small }
+.type-mathcheck p.green { color: #0A0 }
+.type-mathcheck table.err { color: red }
+.type-mathcheck table.warn { color: fuchsia }
+.type-mathcheck td.right { text-align: right }
+.type-mathcheck span.err { color: red }
+.type-mathcheck span.warn { color: fuchsia }
+.type-mathcheck span.comment { color: maroon }
+.type-mathcheck span.proven { color: #0C0 }
+.type-mathcheck span.debug { color: gray }
+.type-mathcheck span.hides { color: teal }
 .csRunDiv.type-mathcheck {
     padding-top: 0.5em;
 }
-
+.type-mathcheck .htmlresult {
+    text-align: left;
+    padding-left: 0.5em;
+}
