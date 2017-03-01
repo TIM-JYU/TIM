@@ -1,0 +1,8 @@
+g++ -ansi -W -Wall -pedantic -O3 mathcheck.cc -o mathcheck.out
+chmod o-wr mathcheck.out
+chmod g-w mathcheck.out
+chmod a+x mathcheck.out
+g++ -ansi -W -Wall -pedantic -O3 -Dsubhtml mathcheck.cc -o mathcheck_subhtml.out
+chmod o-wr mathcheck_subhtml.out
+chmod g-w mathcheck_subhtml.out
+chmod a+x mathcheck_subhtml.out

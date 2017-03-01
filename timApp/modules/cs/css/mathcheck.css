@@ -1,0 +1,16 @@
+p.err { color: red }
+p.warn { color: fuchsia }
+p.set { color: blue }
+p.errbox { color: white; background: black; border: solid red }
+p.proven { color: #0C0 }
+p.unimp { color: gray; font-size: small }
+p.green { color: #0A0 }
+table.err { color: red }
+table.warn { color: fuchsia }
+td.right { text-align: right }
+span.err { color: red }
+span.warn { color: fuchsia }
+span.comment { color: maroon }
+span.proven { color: #0C0 }
+span.debug { color: gray }
+span.hides { color: teal }

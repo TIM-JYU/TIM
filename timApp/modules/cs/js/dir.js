@@ -119,8 +119,8 @@ function resizeIframe(obj) {
 
 var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","vpython","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","glowscript","sage","simcir","xml","r", "octave","lua", "swift"];
-languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","javascript","python","json","xml","r","octave","lua","swift"];
+languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","vpython","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","glowscript","sage","simcir","xml","r", "octave","lua", "swift","mathcheck"];
+languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","javascript","python","json","xml","r","octave","lua","swift","java"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
@@ -490,6 +490,7 @@ csApp.directiveFunction = function(t,isInput) {
             scope.plugin = element.parent().attr("data-plugin");
             scope.taskId  = element.parent().attr("id");
             scope.isFirst = true;
+            scope.element = element;
             if ( scope.$parent.$$prevSibling ) scope.isFirst = false;
             csApp.set(scope,attrs,"lang","fi");
             var english = scope.lang=="en"; 
@@ -526,7 +527,9 @@ csApp.directiveFunction = function(t,isInput) {
             
 
             scope.isText = rt == "text" || rt == "xml" || rt == "css";
-            scope.isSage = languageTypes.getRunType(scope.type,false) == "sage";
+            var rtype = languageTypes.getRunType(scope.type,false);
+            scope.isSage =  rtype == "sage";
+            scope.isMathCheck = rtype == "mathcheck";
             scope.isSimcir = t === "simcir";
             scope.tiny = scope.type.indexOf("tiny") >= 0;
             var isArgs = scope.type.indexOf("args") >= 0;
@@ -712,6 +715,8 @@ csApp.directiveFunction = function(t,isInput) {
             }
             
             scope.changeCodeLink();
+            scope.processPluginMath();
+
             csLogTime(scope.taskId);
             
             scope.showUploaded(scope.attrs.uploadedFile,scope.attrs.uploadedType);
@@ -786,6 +791,24 @@ function insertAtCaret(txtarea,text) {
     }
     txtarea.scrollTop = scrollPos;
 }
+
+var mathcheckLoaded = false;
+
+function lataaMathcheck(scope, readyFunction) {
+    if ( mathcheckLoaded ) { readyFunction(scope); return; }
+    var mathcheckLoading = $.ajax({
+        dataType: "script",
+        cache: true,
+        url: "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_HTMLorMML"
+        // url: "https://cosmos.mat.uam.es:8888/static/embedded_sagecell.js"
+    });
+    mathcheckLoading.done(function() {
+        mathcheckLoaded = true;
+        readyFunction(scope)
+    });
+    return mathcheckLoading;
+}
+
 
 var sageLoaded = false;
 
@@ -946,6 +969,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 	$scope.wavURL = "";
 	$scope.byCode ="";
 	$scope.attrs = {};
+	$scope.timeout = $timeout;
     $scope.svgImageSnippet = function() {
         var s = $sce.trustAsHtml($scope.htmlresult); 
         return s;
@@ -1033,6 +1057,16 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             })
         }
     };
+
+
+    $scope.processPluginMath = function() {
+        if ( !$scope.isMathCheck ) return;
+        lataaMathcheck($scope, function(sc) {
+            $scope.timeout(function () {
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub, $scope.element[0]]);
+            },  300);
+        });
+    }
     
     $scope.showUploaded = function(file,type) {
         if ( !file || !type ) return;
@@ -1381,6 +1415,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 				else   
 				   $scope.error = data.web.error;
 			}
+			$scope.processPluginMath();
 
 		}).error(function(data, status) {
             $scope.isRunning = false;

@@ -1,0 +1,5 @@
+g++ -ansi -W -Wall -pedantic -O3 draw_make_font.cc -o draw_make_font.out
+./draw_make_font.out <draw_font.txt >draw_font_def.cc
+g++ -ansi -W -Wall -pedantic -O3 draw_test.cc -o draw_test.out
+./draw_test.out >draw_test.html
+

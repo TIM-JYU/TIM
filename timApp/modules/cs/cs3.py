@@ -972,12 +972,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             result_json = {"js": ["/cs/js/dir.js",
                                   "/static/scripts/jquery.ui.touch-punch.min.js",
                                   "/cs/cs-parsons/csparsons.js",
+                                  # "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_HTMLorMML",  # will be loaded by JS lazily
                                   # "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
                                   # "https://sagecell.sagemath.org/static/embedded_sagecell.js", # will be loaded by JS lazily
                                   ],
                            # "/cs/js/embedded_sagecell.js"],
                            "angularModule": ["csApp", "csConsoleApp"],
-                           "css": ["/cs/css/cs.css"], "multihtml": True}
+                           "css": ["/cs/css/cs.css",
+                                   "/cs/css/mathcheck.css"
+                                   ], "multihtml": True}
             if is_parsons:
                 result_json = {"js": ["/cs/js/dir.js",
                                       # "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
@@ -1160,6 +1163,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if ttype == "scala":
                 csfname = "/tmp/%s/%s.scala" % (basename, filename)
                 fileext = "scala"
+
+            if ttype == "mathcheck":
+                csfname = "/tmp/%s/%s.txt" % (basename, filename)
+                fileext = "txt"
 
             if ttype == "fs":
                 csfname = "/tmp/%s/%s.fs" % (basename, filename)
@@ -1515,6 +1522,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     cmdline = "javac -Xlint:all -cp %s %s" % (classpath, javaname)
                 elif ttype == "scala":
                     cmdline = "scalac %s" % (csfname)
+                elif ttype == "mathcheck":
+                    cmdline = ""
                 elif ttype == "cc":
                     cmdline = "gcc -Wall %s %s -o %s -lm" % (opt, csfname, exename)
                 elif ttype == "c++":
@@ -1927,6 +1936,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     print("scala: ", classname)
                     # code, out, err = run2(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
                     code, out, err, pwd = run2(["scala", classname], cwd=prgpath, timeout=10,
+                                               env=env, stdin=stdin, ulimit="ulimit -f 10000",
+                                               uargs=userargs, noX11=noX11)
+                elif ttype == "mathcheck":
+                    stdin = "%s.txt" % filename
+                    print("mathcheck: ", stdin)
+                    # code, out, err = run2(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
+                    code, out, err, pwd = run2(["/cs/mathcheck/mathcheck_subhtml.out"], cwd=prgpath, timeout=10,
                                                env=env, stdin=stdin, ulimit="ulimit -f 10000",
                                                uargs=userargs, noX11=noX11)
                 elif ttype == "shell":

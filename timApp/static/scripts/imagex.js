@@ -191,7 +191,7 @@ imagexApp.directiveTemplate = function () {
     if ( imagexApp.TESTWITHOUTPLUGINS ) return '';
     return '<div class="csRunDiv no-popup-menu">' +
         '<p>Header comes here</p>' +
-	    '<p ng-if="stem" class="stem" >{{stem}}</p>' +
+	    '<p ng-if="stem" class="stem" ng-bind-html="stem"></p>' +
         '<div>'+
             '<canvas id="canvas" tabindex="1" width={{canvaswidth}} height={{canvasheight}} no-popup-menu ></canvas>'+
             '<div class="content">'+
