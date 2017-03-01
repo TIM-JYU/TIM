@@ -6,7 +6,7 @@ timApp.defineParHelpers = function (sc, http, q, $injector, $compile, $window, $
     "use strict";
 
     sc.getParId = function ($par) {
-        if ($par.length === 0 || !$par.hasClass('par')) {
+        if ($par === null || $par.length === 0 || !$par.hasClass('par')) {
             return null;
         }
         return $par.attr("id");
@@ -69,6 +69,23 @@ timApp.defineParHelpers = function (sc, http, q, $injector, $compile, $window, $
 
     sc.getLastParId = function ($par_or_area) {
         return sc.getParId(sc.getLastPar($par_or_area));
+    };
+
+    sc.getNextPar = function ($par) {
+        var $next = $par.next();
+        if ($next.hasClass('par')) {
+            return $next;
+        }
+        if ($next.hasClass('area')) {
+            var $content = $next.children('.areaContent');
+            if ($content.length > 0) {
+                var $firstpar = $content.children('.par:first');
+                if ($firstpar.length > 0) {
+                    return $firstpar;
+                }
+            }
+        }
+        return null;
     };
 
     sc.getElementByParId = function (id) {
