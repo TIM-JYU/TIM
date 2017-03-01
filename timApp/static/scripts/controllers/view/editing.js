@@ -308,7 +308,11 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
                 {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.item.rights.editable},
                 {func: sc.addQuestionQst, desc: 'Add question above', show: sc.lectureMode && sc.item.rights.editable},
                 {func: sc.editQst, desc: 'Edit question', show: sc.lectureMode && sc.item.rights.editable},
-                {func: sc.addQuestion, desc: 'Create lecture question', show: sc.lectureMode && sc.item.rights.editable},
+                {
+                    func: sc.addQuestion,
+                    desc: 'Create lecture question',
+                    show: sc.lectureMode && sc.item.rights.editable
+                },
                 {
                     func: sc.startArea,
                     desc: 'Start selecting area',
