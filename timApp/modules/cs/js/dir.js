@@ -799,8 +799,7 @@ function lataaMathcheck(scope, readyFunction) {
     var mathcheckLoading = $.ajax({
         dataType: "script",
         cache: true,
-        url: "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_HTMLorMML"
-        // url: "https://cosmos.mat.uam.es:8888/static/embedded_sagecell.js"
+        url: "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_HTMLorMML"
     });
     mathcheckLoading.done(function() {
         mathcheckLoaded = true;
