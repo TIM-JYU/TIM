@@ -14,3 +14,7 @@ span.comment { color: maroon }
 span.proven { color: #0C0 }
 span.debug { color: gray }
 span.hides { color: teal }
+.csRunDiv.type-mathcheck {
+    padding-top: 0.5em;
+}
+

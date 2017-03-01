@@ -425,7 +425,7 @@ def get_html(ttype, query):
         return result
 
     r = runner + is_input
-    s = '<' + r + '>xxxJSONxxx' + jso + '</' + r + '>'
+    s = '<' + r + ' ng-cloak>xxxJSONxxx' + jso + '</' + r + '>'
     # print(s)
     lazy_visible = ""
     lazy_class = ""
@@ -458,7 +458,7 @@ def get_html(ttype, query):
 
     if ttype == "c1" or True:  # c1 oli testejä varten ettei sinä aikana rikota muita.
         hx = binascii.hexlify(jso.encode("UTF8"))
-        s = lazy_start + '<' + r + lazy_class + '>xxxHEXJSONxxx' + hx.decode() + '</' + r + '>' + lazy_end
+        s = lazy_start + '<' + r + lazy_class + ' ng-cloak>xxxHEXJSONxxx' + hx.decode() + '</' + r + '>' + lazy_end
         s += lazy_visible
     return s
 
@@ -1940,11 +1940,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                                uargs=userargs, noX11=noX11)
                 elif ttype == "mathcheck":
                     stdin = "%s.txt" % filename
+                    cmdline = "/cs/mathcheck/mathcheck_subhtml.out <%s" % csfname
                     print("mathcheck: ", stdin)
-                    # code, out, err = run2(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
-                    code, out, err, pwd = run2(["/cs/mathcheck/mathcheck_subhtml.out"], cwd=prgpath, timeout=10,
-                                               env=env, stdin=stdin, ulimit="ulimit -f 10000",
-                                               uargs=userargs, noX11=noX11)
+                    # code, out, err, pwd = run2(["/cs/mathcheck/mathcheck_subhtml.out"], cwd=prgpath, timeout=10,
+                    #                           env=env, stdin=stdin, ulimit="ulimit -f 10000",
+                    #                           uargs=userargs, noX11=noX11)
+                    out = check_output(["cd " + prgpath + " && " + cmdline], stderr=subprocess.STDOUT,
+                                                   shell=True)  # .decode("utf-8")
+                    code, err = (0, "".encode())
+
                 elif ttype == "shell":
                     print("shell: ", pure_exename)
                     try:
@@ -2048,7 +2052,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         remove(imgsource)
                         if image_ok:
                             web["image"] = "/csimages/cs/" + rndname + ".png"
-
 
                 elif ttype == "lua":
                     print("lua: ", exename)

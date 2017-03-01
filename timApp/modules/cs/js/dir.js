@@ -346,7 +346,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 			  '</div>';
     }
     
-	return  '<div class="csRunDiv " ng-cloak>' + 
+	return  '<div class="csRunDiv type-{{rtype}}" ng-cloak>' +
     
 				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>
@@ -527,9 +527,9 @@ csApp.directiveFunction = function(t,isInput) {
             
 
             scope.isText = rt == "text" || rt == "xml" || rt == "css";
-            var rtype = languageTypes.getRunType(scope.type,false);
-            scope.isSage =  rtype == "sage";
-            scope.isMathCheck = rtype == "mathcheck";
+            scope.rtype = rt;
+            scope.isSage =  rt == "sage";
+            scope.isMathCheck = rt == "mathcheck";
             scope.isSimcir = t === "simcir";
             scope.tiny = scope.type.indexOf("tiny") >= 0;
             var isArgs = scope.type.indexOf("args") >= 0;
@@ -1063,7 +1063,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         lataaMathcheck($scope, function(sc) {
             $scope.timeout(function () {
                 MathJax.Hub.Queue(["Typeset", MathJax.Hub, $scope.element[0]]);
-            },  300);
+            },  0);
         });
     }
     

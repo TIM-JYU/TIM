@@ -226,19 +226,19 @@ def get_video_html(self, query):
     if video_type == "small":
         # s = string_to_string_replace_attribute(
         #     '<small-video-runner \n##QUERYPARAMS##\n></small-video-runner>', "##QUERYPARAMS##", query)
-        s = '<small-video-runner>xxxHEXJSONxxx' + hx.decode() + '</list-video-runner>'
+        s = '<small-video-runner ng-cloak>xxxHEXJSONxxx' + hx.decode() + '</list-video-runner>'
         s = make_lazy(s, query, small_video_html)
         return s
     if video_type == "list":
         #  s = string_to_string_replace_attribute(
         #     '<list-video-runner \n##QUERYPARAMS##\n></list-video-runner>', "##QUERYPARAMS##", query)
-        s = '<list-video-runner>xxxHEXJSONxxx' + hx.decode() + '</list-video-runner>'
+        s = '<list-video-runner  ng-cloak>xxxHEXJSONxxx' + hx.decode() + '</list-video-runner>'
         s = make_lazy(s, query, list_video_html)
         return s
     if video_app:
         # s = string_to_string_replace_attribute(
         #    '<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
-        s = '<video-runner>xxxHEXJSONxxx' + hx.decode() + '</list-video-runner>'
+        s = '<video-runner ng-cloak>xxxHEXJSONxxx' + hx.decode() + '</list-video-runner>'
         s = make_lazy(s, query, video_html)
         return s
 
@@ -254,7 +254,7 @@ def get_video_html(self, query):
         return '<iframe class="showVideo" src="' + url + '" ' + w + h + 'autoplay="false" ></iframe>'
 
         #        result = '<video class="showVideo"  src="' + url + '" type="video/mp4" ' + w + h + 'autoplay="false" controls="" ></video>'
-    result = '<video class="showVideo"  src="' + url + '" type="video/mp4" ' + w + h + ' controls="" ></video>'
+    result = '<video class="showVideo" ng-cloak src="' + url + '" type="video/mp4" ' + w + h + ' controls="" ></video>'
     return result
 
 
