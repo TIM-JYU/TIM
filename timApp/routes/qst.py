@@ -88,5 +88,7 @@ def qst_get_html(jso):
     hx = 'xxxHEXJSONxxx' + binascii.hexlify(attrs.encode("UTF8")).decode()
     attrs = hx
     runner = 'qst-runner'
+    if markup.get('questionTitle',''):
+        runner = 'question-runner'
     s = '<' + runner + '>' + attrs + '</' + runner + '>'
     return s

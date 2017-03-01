@@ -40,6 +40,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
          * FILL WITH SUITABLE TEXT
          * @memberof module:questionPreviewController
          */
+        /*
         $scope.editQuestion = function () {
             $scope.close();
             $rootScope.$broadcast("editQuestion", {
@@ -49,6 +50,40 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
                 "markup": $scope.markup,
             });
         };
+        */
+
+    $scope.editQuestion = function () {
+        $scope.close();
+        var parId = $scope.questionParId;
+        var parNextId = $scope.questionParIdNext;
+        var docId = $scope.docId;
+        // $rootScope.$broadcast('toggleQuestion');
+        http({
+            url: '/getQuestionByParId',
+            method: 'GET',
+            params: {'par_id': parId, 'doc_id': docId, 'edit': true}
+        })
+            .success(function (data) {
+                if ( !data.markup ) return; // not a question
+                $scope.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
+                $scope.markup = data.markup;
+                // data.markup.qst = true;
+                $rootScope.$broadcast('changeQuestionTitle', {'title': $scope.json.title});
+                $rootScope.$broadcast('editQuestion', {
+                    'par_id': parId,
+                    'par_id_next': parNextId,
+                    'markup': data.markup
+                });
+
+            })
+
+            .error(function () {
+                $log.error("Could not get question.");
+            });
+
+        // $scope.par = $par;
+    };
+
 
         /**
          * FILL WITH SUITABLE TEXT

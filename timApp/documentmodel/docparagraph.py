@@ -958,6 +958,7 @@ class DocParagraph:
 
     def is_question(self) -> bool:
         """Returns whether this paragraph is a question paragraph."""
+        # preview = self.get("preview", False)
         return self.__is_question
 
     def is_setting(self) -> bool:

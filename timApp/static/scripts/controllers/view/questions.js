@@ -117,7 +117,7 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
         http({
             url: '/getQuestionByParId',
             method: 'GET',
-            params: {'par_id': parId, 'doc_id': sc.docId}
+            params: {'par_id': parId, 'doc_id': sc.docId, 'edit': true}
         })
             .success(function (data) {
                 if ( !data.markup ) return; // not a question

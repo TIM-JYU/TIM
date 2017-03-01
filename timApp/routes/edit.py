@@ -321,6 +321,11 @@ def preview_paragraphs(doc_id):
         try:
             blocks = get_pars_from_editor_text(doc, text, break_on_elements=editing_area)
             doc.insert_temporary_pars(blocks, context_par)
+            for par in blocks:
+                if par.is_question():
+                    par.set_attr('questionTitle', par.is_question())
+                    par.set_attr('question', False)
+                    par.set_attr('plugin','qst')
             return par_response(blocks, doc, preview=True, context_par=context_par)
         except Exception as e:
             err_html = get_error_html(e)

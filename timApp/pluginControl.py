@@ -122,9 +122,10 @@ def pluginify(doc: Document,
                                          md + \
                                          '</pre></div>'
 
-        if plugin_name and not block.is_question():
+        if plugin_name and not block.is_question():  # show also question in preview
             try:
                 plugin = Plugin.from_paragraph(block, user)
+                plugin.values['questionTitle'] = block.get_attr('questionTitle','')
             except PluginException as e:
                 html_pars[idx]['html'] = get_error_html_plugin(plugin_name, str(e))
                 continue

@@ -26,6 +26,7 @@ from tim_app import app
 from timdb.models.docentry import DocEntry
 from timdb.tempdb_models import TempDb
 from timdb.tim_models import db
+from containerLink import convert_md
 
 lecture_routes = Blueprint('lecture',
                            __name__,
@@ -1063,10 +1064,11 @@ def get_question_by_par_id():
         abort("400")
     doc_id = int(request.args.get('doc_id'))
     par_id = request.args.get('par_id')
+    edit = request.args.get('edit', False)
     verify_ownership(doc_id)
     # question_json, points, expl, markup = get_question_data_from_document(doc_id, par_id)
     # return json_response({"points": points, "questionjson": question_json, "expl": expl, "markup": markup})
-    markup = get_question_data_from_document(doc_id, par_id)
+    markup = get_question_data_from_document(doc_id, par_id, edit)
     return json_response({"markup": markup})
 
 
@@ -1269,7 +1271,14 @@ def user_in_lecture():
     return in_lecture
 
 
-def get_question_data_from_document(doc_id, par_id):
+def get_question_data_from_document(doc_id, par_id, edit=False):
+    '''
+    Get markup for question
+    :param doc_id: documtn id
+    :param par_id: paragraph id
+    :param edit: is purposu to edit data or show data
+    :return: markup for question
+    '''
     # pick up question from document, for saving question see edit.py question_convert_js_to_yam
     # par_id might be like 100.Ruksit.SpQA0NX2itOd  and one must cut the beginin
     i = par_id.rfind(".")
@@ -1277,7 +1286,10 @@ def get_question_data_from_document(doc_id, par_id):
         par_id = par_id[i + 1:]
     par = Document(doc_id).get_paragraph(par_id)
     question = parse_plugin_values(par)
-    markup = question.get('markup')
+    plugindata = {'markup': question.get('markup')}
+    if not edit:
+        convert_md(plugindata)
+    markup = plugindata.get('markup')
     markup["qst"] = not par.is_question()
     attrs = par.get_attrs()
     if attrs:

@@ -11,11 +11,21 @@ qstApp.directive('qstRunner',['$sanitize','$compile',
                       timHelper.sanitize = $sanitize;
                       qstApp.sanitize = $sanitize;
                       qstApp.compile = $compile1;
-                      return qstApp.directiveFunction(); }]
+                      return qstApp.directiveFunction(qstApp.directiveTemplate); }]
+);
+
+qstApp.directive('questionRunner',['$sanitize','$compile',
+                  function ($sanitize,$compile1) {"use strict";
+                      // Tätä kutsutaan yhden kerran kun plugin otetaan käyttöön
+                      timHelper.sanitize = $sanitize;
+                      qstApp.sanitize = $sanitize;
+                      qstApp.compile = $compile1;
+                      return qstApp.directiveFunction(qstApp.directiveTemplateQuestion); }]
 );
 
 
-qstApp.directiveFunction = function() {
+
+qstApp.directiveFunction = function(tf) {
 "use strict";
 // Koska tätä kutsutaan direktiivistä, tätä kutsutaan yhden kerran
     return {
@@ -30,7 +40,7 @@ qstApp.directiveFunction = function() {
 		*/
 		transclude: true,
 		replace: 'true',
-		template: qstApp.directiveTemplate()
+		template: tf, // qstApp.directiveTemplate()
 		// templateUrl: 'html/qstTempl.html'
 	};
 };
@@ -50,6 +60,20 @@ qstApp.directiveTemplate = function () {
                   '<a class="questionAddedNew" ng-show="qstScope.checkQstMode()"><span class="glyphicon glyphicon-question-sign" title="Ask question"></span></a>' +
                   '<span ng-show="result">{{result}}</span>' +
     		      '<p class="plgfooter">Here comes footer</p>' +
+              '</div>';
+};
+
+
+qstApp.directiveTemplateQuestion = function () {
+"use strict";
+// Koska tätä kutsutaan directiveFunction-metodista, tätä kutsutaan yhden kerran
+    if ( qstApp.TESTWITHOUTPLUGINS ) return '';
+	return  '<div class="csRunDiv qst no-popup-menu">' +
+				  // '<p ng-if="stem" class="stem" >{{stem}}</p>' +
+                  '<h4 ng-if="title"  ng-bind-html="title" ></h4>' +
+                  '<dynamic-answer-sheet  control="dynamicAnswerSheetControl"></dynamic-answer-sheet>' +
+				  // '<button class="timButton" ng-bind-html="button" ng-if="button"  ng-disabled="isRunning" ng-click="qstScope.saveText();">{{button}}</button>&nbsp&nbsp' +
+                  '<button class="timButton" ng-bind-html="button" ng-if="button"  ng-disabled="isRunning" ng-click="qstScope.saveText();"></button>&nbsp&nbsp' +
               '</div>';
 };
 
@@ -88,15 +112,18 @@ qstApp.initScope = function (scope, element, attrs) {
 
     // Etsitään kullekin attribuutille arvo joko scope.attrs tai attrs-parametrista. Jos ei ole, käytetään oletusta.
     timHelper.set(scope, attrs, "stem");
+    timHelper.set(scope, attrs, "questionTitle");
+    timHelper.set(scope, attrs, "markup.json.title");
     timHelper.set(scope, attrs, "user_id");
     timHelper.set(scope, attrs, "button", "Save");
     timHelper.set(scope, attrs, "resetText", "Reset");
     timHelper.setn(scope, "tid", attrs, ".taskID"); // vain kokeilu että "juuresta" ottaminen toimii
 
     // Otsikot.  Oletetaan että 1. elementti korvaatan header-otsikolla ja viimeinen footerilla
-    element[0].childNodes[0].outerHTML = timHelper.getHeading(scope, attrs, "header", "h4");
+    if ( !scope.questionTitle )
+        element[0].childNodes[0].outerHTML = timHelper.getHeading(scope, attrs, "header", "h4");
     var n = element[0].childNodes.length;
-    if (n > 1) element[0].childNodes[n - 1].outerHTML = timHelper.getHeading(scope, attrs, "footer", 'p class="plgfooter"');
+    if ( !scope.questionTitle ) if (n > 1) element[0].childNodes[n - 1].outerHTML = timHelper.getHeading(scope, attrs, "footer", 'p class="plgfooter"');
 
     // scope.stem = scope.attrs.markup.json.questionText;
     var markup = scope.attrs.markup;
