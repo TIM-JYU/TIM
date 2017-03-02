@@ -93,7 +93,7 @@ run apt-get install --no-install-recommends -y npm \
  && bower --allow-root install angular-sanitize#~1.5 \
  && bower --allow-root install bootstrap#~3.3 \
  && bower --allow-root install jquery-ui#~1.11 \
- && bower --allow-root install katex#~0.6 \
+ && bower --allow-root install katex#~0.7 \
  && bower --allow-root install rangyinputs \
  && bower --allow-root install ngstorage#~0.3 \
  && bower --allow-root install chartjs#~1.0 \
@@ -114,13 +114,13 @@ run apt-get install --no-install-recommends -y npm \
 # Update the below date whenever Bower packages are upgraded, added or removed.
 # Otherwise TIM might not re-copy the Bower libs because it only inspects the top-level directory file names
 # in bower_components.
-run touch /bower_components/2017-02-28.stamp
+run touch /bower_components/2017-03-02.stamp
 
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
 run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js
 
 # Force auto-render extension to throw exceptions instead of printing to console
-run sed -i 's/f instanceof katex\.ParseError/false/' /bower_components/KaTeX/dist/contrib/auto-render.min.js
+run sed -i 's/f instanceof katex\.ParseError/false/' /bower_components/katex/dist/contrib/auto-render.min.js
 
 run mkdir /var/run/sshd
 run echo 'root:test' | chpasswd
