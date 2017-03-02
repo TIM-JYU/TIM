@@ -2,8 +2,8 @@
 
 var timApp = angular.module('timApp');
 
-timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer', '$compile', '$ocLazyLoad', '$timeout',
-    function ($http, $window, $q, $httpParamSerializer, $compile, $ocLazyLoad, $timeout) {
+timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer', '$compile', '$ocLazyLoad', '$timeout', '$log',
+    function ($http, $window, $q, $httpParamSerializer, $compile, $ocLazyLoad, $timeout, $log) {
         "use strict";
         var parCompiler = {};
 
@@ -52,6 +52,7 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer',
                 $window.renderMathInElement(elem);
             }
             catch (e) {
+                $log.warn(e);
                 if (parCompiler.mathJaxLoaded) {
                     MathJax.Hub.Queue(["Typeset", MathJax.Hub, elem]);
                 } else {

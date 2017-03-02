@@ -46,8 +46,8 @@ class DurationTest(TimRouteTest):
         delta = timedelta(minutes=3)
         now_plus_minute = datetime.now(tz=timezone.utc) + delta
         grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
-                                   duration=timedelta(days=1),
-                                   duration_from=now_plus_minute)
+                     duration=timedelta(days=1),
+                     duration_from=now_plus_minute)
         d = DocEntry.find_by_id(doc_id)
         now = now_plus_minute - delta
         err_msg_too_early = 'You can unlock this item in {}.'.format(humanize_datetime(now_plus_minute))
@@ -62,8 +62,8 @@ class DurationTest(TimRouteTest):
                  expect_contains=[err_msg_too_early])
 
         grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
-                                   duration=timedelta(days=1),
-                                   duration_to=now)
+                     duration=timedelta(days=1),
+                     duration_to=now)
         self.get('/view/' + d.path,
                  expect_status=403,
                  json_key='error',
@@ -74,8 +74,8 @@ class DurationTest(TimRouteTest):
                  expect_contains=[err_msg_too_late])
 
         grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
-                                   duration=timedelta(days=1),
-                                   duration_from=now)
+                     duration=timedelta(days=1),
+                     duration_from=now)
         self.get('/view/' + d.path,
                  expect_status=403,
                  expect_contains=self.get_about_to_access_msg())
@@ -146,7 +146,7 @@ class DurationTest(TimRouteTest):
         doc_id = d.id
         self.login_test2()
         grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
-                                   duration=timedelta(days=0))
+                     duration=timedelta(days=0))
         self.get('/view/' + d.path,
                  expect_status=403,
                  expect_contains=self.get_about_to_access_msg('a moment'))
@@ -154,3 +154,17 @@ class DurationTest(TimRouteTest):
                  query_string={'unlock': 'true'},
                  expect_status=403,
                  expect_contains=[self.unlock_success, self.get_expired_msg(datetime.now(tz=timezone.utc))])
+
+    def test_access_future_and_expired(self):
+        self.login_test1()
+        d = self.create_doc()
+        doc_id = d.id
+        self.login_test3()
+        self.test_user_3.grant_access(doc_id, 'view', accessible_from=datetime.now(tz=timezone.utc) + timedelta(days=1))
+        self.get('/view/' + d.path,
+                 expect_status=403,
+                 expect_contains='You can access this item in 23 hours from now.')
+        self.test_user_3.grant_access(doc_id, 'view', accessible_to=datetime.now(tz=timezone.utc) - timedelta(days=1))
+        self.get('/view/' + d.path,
+                 expect_status=403,
+                 expect_contains='Your access to this item has expired a day ago.')
