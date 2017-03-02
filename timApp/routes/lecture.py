@@ -634,7 +634,7 @@ def get_running_lectures(doc_id=None):
     is_lecturer = False
     if doc_id:
         list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
-        is_lecturer = has_ownership(doc_id)
+        is_lecturer = bool(has_ownership(doc_id))
     current_lecture_codes = []
     future_lectures = []
     for lecture in list_of_lectures:
