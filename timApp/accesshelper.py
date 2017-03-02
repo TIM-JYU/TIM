@@ -149,7 +149,7 @@ def check_admin_access(block_id=None):
     curr_user = get_current_user_object()
     if curr_user.is_admin:
         return BlockAccess(block_id=block_id,
-                           accessible_from=datetime.min,
+                           accessible_from=datetime.min.replace(tzinfo=timezone.utc),
                            type=AccessType.owner.value,
                            usergroup_id=curr_user.get_personal_group().id)
     return None

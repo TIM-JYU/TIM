@@ -184,7 +184,7 @@ def get_velp_groups(doc_id: int):
 
     # SQLite uses 1/0 instead of True/False, change them to True/False for JavaScript side
     for group in all_velp_groups:
-        group['edit_access'] = has_edit_access(group['id'])
+        group['edit_access'] = bool(has_edit_access(group['id']))
 
     response = json_response(all_velp_groups)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
