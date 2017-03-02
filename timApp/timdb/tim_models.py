@@ -107,6 +107,14 @@ class BlockAccess(db.Model):
     usergroup = db.relationship('UserGroup', backref=db.backref('accesses', lazy='dynamic'))
 
     @property
+    def future(self):
+        return self.accessible_from is not None and datetime.datetime.now(tz=timezone.utc) < self.accessible_from
+
+    @property
+    def expired(self):
+        return self.accessible_to is not None and datetime.datetime.now(tz=timezone.utc) > self.accessible_to
+
+    @property
     def unlockable(self):
         return self.accessible_from is None and self.duration is not None and not self.duration_future and not self.duration_expired
 

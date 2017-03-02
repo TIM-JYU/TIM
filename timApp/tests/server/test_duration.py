@@ -154,3 +154,17 @@ class DurationTest(TimRouteTest):
                  query_string={'unlock': 'true'},
                  expect_status=403,
                  expect_contains=[self.unlock_success, self.get_expired_msg(datetime.now(tz=timezone.utc))])
+
+    def test_access_future_and_expired(self):
+        self.login_test1()
+        d = self.create_doc()
+        doc_id = d.id
+        self.login_test3()
+        self.test_user_3.grant_access(doc_id, 'view', accessible_from=datetime.now(tz=timezone.utc) + timedelta(days=1))
+        self.get('/view/' + d.path,
+                 expect_status=403,
+                 expect_contains='You can access this item in 23 hours from now.')
+        self.test_user_3.grant_access(doc_id, 'view', accessible_to=datetime.now(tz=timezone.utc) - timedelta(days=1))
+        self.get('/view/' + d.path,
+                 expect_status=403,
+                 expect_contains='Your access to this item has expired a day ago.')
