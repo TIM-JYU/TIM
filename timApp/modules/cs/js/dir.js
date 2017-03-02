@@ -981,7 +981,9 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 		try {
             var markJSON = "xxxJSONxxx";
             var markHex = "xxxHEXJSONxxx";
-            var s = clone[0].textContent;
+            var s = "";
+            for (var i=0; i< clone.length; i++)
+                 s += clone[i].textContent;
             var chex = s.indexOf(markHex) === 0;
             var cjson = s.indexOf(markJSON) === 0;
             if (!chex && !cjson) {
