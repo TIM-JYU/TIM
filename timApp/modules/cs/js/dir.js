@@ -978,19 +978,23 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 	$transclude(function(clone, scope) {
         if ( TESTWITHOUTPLUGINS ) return;
 		if ( !clone[0] ) return;
-		var markJSON = "xxxJSONxxx";
-		var markHex = "xxxHEXJSONxxx";
-		var s = clone[0].textContent;
-		var chex = s.indexOf(markHex) === 0;
-		var cjson = s.indexOf(markJSON) === 0;
-		if ( !chex && !cjson ) {
-		    $scope.byCode = s;
-		    return;
+		try {
+            var markJSON = "xxxJSONxxx";
+            var markHex = "xxxHEXJSONxxx";
+            var s = clone[0].textContent;
+            var chex = s.indexOf(markHex) === 0;
+            var cjson = s.indexOf(markJSON) === 0;
+            if (!chex && !cjson) {
+                $scope.byCode = s;
+                return;
+            }
+            if (cjson) s = s.substring(markJSON.length);
+            if (chex) s = csApp.Hex2Str(s.substring(markHex.length));
+            $scope.attrs = JSON.parse(s);
+            $scope.byCode = $scope.attrs.by || $scope.attrs.byCode;
+        } catch (err ) {
+		    console.log(err);
         }
-        if ( cjson ) s = s.substring(markJSON.length);
-        if ( chex ) s = csApp.Hex2Str(s.substring(markHex.length));
-        $scope.attrs = JSON.parse(s);
-	    $scope.byCode = $scope.attrs.by || $scope.attrs.byCode;
 	});
 	$scope.errors = [];
 	$scope.taunoOn = false;
