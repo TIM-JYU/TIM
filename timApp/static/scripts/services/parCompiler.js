@@ -41,33 +41,55 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer',
 
         parCompiler.processAllMath = function ($elem) {
             timLogTime("processAllMath start", "view");
+            var katexFailures = [];
             $elem.find('.math').each(function () {
-                parCompiler.processMath(this);
+                var result = parCompiler.processMath(this);
+                if (result !== null) {
+                    katexFailures.push(result);
+                }
             });
+            if (katexFailures.length > 0) {
+                parCompiler.processMathJax(katexFailures);
+            }
             timLogTime("processAllMath end", "view");
         };
 
-        parCompiler.processMath = function (elem) {
-            try {
-                $window.renderMathInElement(elem);
-            }
-            catch (e) {
-                $log.warn(e);
-                if (parCompiler.mathJaxLoaded) {
-                    MathJax.Hub.Queue(["Typeset", MathJax.Hub, elem]);
-                } else {
-                    if (parCompiler.mathJaxLoadDefer === null) {
-                        parCompiler.mathJaxLoadDefer = $.ajax({
-                            dataType: "script",
-                            cache: true,
-                            url: "//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
-                        });
-                    }
-                    parCompiler.mathJaxLoadDefer.done(function () {
-                        parCompiler.mathJaxLoaded = true;
-                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, elem]);
+        parCompiler.processMathJax = function (elements) {
+            if (parCompiler.mathJaxLoaded) {
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub, elements]);
+            } else {
+                if (parCompiler.mathJaxLoadDefer === null) {
+                    parCompiler.mathJaxLoadDefer = $.ajax({
+                        dataType: "script",
+                        cache: true,
+                        url: "//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
                     });
                 }
+                parCompiler.mathJaxLoadDefer.done(function () {
+                    parCompiler.mathJaxLoaded = true;
+                    MathJax.Hub.Queue(["Typeset", MathJax.Hub, elements]);
+                });
+            }
+        };
+
+        /**
+         * Processes the math for a single element.
+         *
+         * @param elem The HTML element to process.
+         * @param tryMathJax true to attempt to process using MathJax if KaTeX fails.
+         * @returns null if KaTeX processed the element successfully. Otherwise, the failed element.
+         */
+        parCompiler.processMath = function (elem, tryMathJax) {
+            try {
+                $window.renderMathInElement(elem);
+                return null;
+            }
+            catch (e) {
+                $log.warn(e.message);
+                if (tryMathJax) {
+                    parCompiler.processMathJax(elem);
+                }
+                return elem;
             }
         };
 
