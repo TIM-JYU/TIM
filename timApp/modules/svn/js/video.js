@@ -22,6 +22,7 @@ if (angular.isDefined(window.videoAppSanitize) ) {
 var TESTWITHOUTPLUGINS = true && false;
 
 videoApp.nr = 0;
+videoApp.videos = {};
  
 videoApp.muunna = function(value) {
   if ( !value ) return value;
@@ -120,6 +121,7 @@ videoApp.directiveFunction = function(t) {
             timHelper.set(scope,attrs,".hidetext","hide video");
             timHelper.set(scope,attrs,".videoicon","/csimages/video_small.png");
             timHelper.set(scope,attrs,".docicon","/csimages/book.png");
+            timHelper.set(scope,attrs,".followid");
 			timHelper.set(scope,attrs,".open",false);
             if ( scope.videoicon == "False" ) scope.videoicon = "";
             if ( scope.docicon == "False" ) scope.docicon = "";
@@ -163,12 +165,14 @@ videoApp.ifIs = function(value,name) {
 	return name+'="'+value+'" ';
 };
 		
-videoApp.Controller = function($scope,$http,$transclude) {
+videoApp.Controller = function($scope,$http,$transclude,$element) {
     $transclude(function(clone,scope) { timHelper.initAttributes(clone,$scope);  });
 	$scope.header = "";
 	$scope.rows = 5;
 	$scope.errors = [];
 	$scope.videoOn = false;
+    $scope.taskId = $element.parent().attr("id");
+
 	
 	$scope.runVideo = function() {
 		// $scope.viewCode = false;
@@ -263,6 +267,8 @@ videoApp.Controller = function($scope,$http,$transclude) {
 		$scope.videoOn = true;	
 		$scope.myvid = document.getElementById(vid);
 		if ( !$scope.myvid ) return;
+		if ( $scope.followid )
+		    videoApp.videos[$scope.followid] = $scope.myvid;
 		$scope.myvid.addEventListener('loadedmetadata', function() {
 			this.currentTime = $scope.start || 0;
 			}, false);
