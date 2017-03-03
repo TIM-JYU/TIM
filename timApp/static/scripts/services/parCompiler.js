@@ -43,7 +43,7 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer',
             timLogTime("processAllMath start", "view");
             var katexFailures = [];
             $elem.find('.math').each(function () {
-                var result = parCompiler.processMath(this);
+                var result = parCompiler.processMath(this, false);
                 if (result !== null) {
                     katexFailures.push(result);
                 }
