@@ -1197,10 +1197,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 imgsource = get_imgsource(query)
 
             if ttype == "octave":
-                csfname = "/tmp/%s/%s.oct" % (basename, filename)
+                csfname = "/tmp/%s/%s.m" % (basename, filename)
                 exename = csfname
-                pure_exename = "./%s.oct" % filename
-                fileext = "oct"
+                pure_exename = "./%s.m" % filename
+                fileext = "m"
                 pngname = "/csimages/%s.png" % rndname
                 imgsource = get_imgsource(query)
                 wavsource = get_param(query, "wavsource", "")
@@ -2074,12 +2074,26 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                                stdin=stdin,
                                                uargs=userargs, ulimit="ulimit -f 80000", noX11=True)
                     if err:
-                        print("err1: ", err)
                         err = err.decode("utf-8")
                         print("err1s: ", err)
-                        err = re.sub("^octave: unable to open X11 DISPLAY.*\n", "", err, flags=re.M)
-                        err = re.sub("^octave: disabling GUI features.*\n", "", err, flags=re.M)
-                        err = re.sub("^octave: X11 DISPLAY environment variable not set", "", err, flags=re.M)
+                        lin = err.splitlines()
+                        lout = []
+                        i = 0
+                        while i<len(lin):
+                            if (re.match("octave: unable to open X11 DISPLAY",lin[i]) or
+                                re.match("octave: disabling GUI features",lin[i]) or
+                                re.match("octave: X11 DISPLAY environment variable not set",lin[i])):
+                                i+=1
+                            elif re.match("warning: ft_",lin[i]):
+                                i+=1
+                                if i<len(lin) and re.match("warning: called from",lin[i]):
+                                    i+=1
+                                    while i<len(lin) and re.match("    ",lin[i]):
+                                        i+=1
+                            else:
+                                lout.append(lin[i])
+                                i+=1
+                        err = "\n".join(lout)
                         err = err.strip().encode("utf-8")
                         print("err2: ", err)
                     if imgsource and pngname:
