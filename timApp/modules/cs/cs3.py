@@ -2072,7 +2072,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     code, out, err, pwd = run2(["octave", "--no-window-system", "--no-gui", "-qf", pure_exename],
                                                cwd=prgpath, timeout=20, env=env,
                                                stdin=stdin,
-                                               uargs=userargs, ulimit="ulimit -f 80000", noX11=True)
+                                               uargs=userargs, ulimit="ulimit -f 80000", noX11=True,
+                                               dockercontainer=dockercontainer)
                     if err:
                         err = err.decode("utf-8")
                         print("err1s: ", err)
