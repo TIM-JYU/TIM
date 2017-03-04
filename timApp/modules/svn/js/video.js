@@ -122,6 +122,7 @@ videoApp.directiveFunction = function(t) {
             timHelper.set(scope,attrs,".videoicon","/csimages/video_small.png");
             timHelper.set(scope,attrs,".docicon","/csimages/book.png");
             timHelper.set(scope,attrs,".followid");
+            timHelper.set(scope,attrs,".autoplay", true);
 			timHelper.set(scope,attrs,".open",false);
             if ( scope.videoicon == "False" ) scope.videoicon = "";
             if ( scope.docicon == "False" ) scope.docicon = "";
@@ -260,8 +261,10 @@ videoApp.Controller = function($scope,$http,$transclude,$element) {
             if ( $scope.start ) {
                 t = "#t="+$scope.start; // iPad ei tottele 'loadedmetadata'
                 if ( $scope.end ) t += "," + $scope.end;
-            }    
-			$scope.videoHtml.innerHTML = '<video class="showVideo" id="'+vid+'" src="'+ $scope.file + t + '" type="video/mp4" controls autoplay="true" ' + w + h +'/>';
+            }
+            var autoplay = "";
+            if ( $scope.autoplay.toLowerCase() === "true" ) autoplay = "autoplay";
+			$scope.videoHtml.innerHTML = '<video class="showVideo" id="'+vid+'" src="'+ $scope.file + t + '" type="video/mp4" controls ' + autoplay +  ' '  + w + h +'/>';
         }    
         // IE ei tietenkään taas tottele t-attribuuttia...            
 		$scope.videoOn = true;	
