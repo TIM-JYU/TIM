@@ -1,10 +1,14 @@
-Project: The Incredible Material
+#Timantti-sovellusprojekti
 
-Samuel Uusi-Mäkelä sahauusi@student.jyu.fi
-Mika Lehtinen mikkalle@student.jyu.fi
-Ville Tirronen
-Vesa Lappalainen
-Tomi Karppinen
+## Projektiryhmä
+Marja Similä
+Miika Kujala
+Topi Latva-Salo
+Tuomas Porvali
 
+## Projektin tavoitteet
+
+* Kehittää TIM-järjestelmään tulostustoiminto
+* Kehittää järjestelmän import-toimintoa
 
 
