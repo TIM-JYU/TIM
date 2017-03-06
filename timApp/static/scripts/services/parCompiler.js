@@ -59,10 +59,12 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer',
                 MathJax.Hub.Queue(["Typeset", MathJax.Hub, elements]);
             } else {
                 if (parCompiler.mathJaxLoadDefer === null) {
+                    // HTML-CSS output does not work for MathJax in some mobile devices (e.g. Android Chrome, iPad),
+                    // so we use SVG. Other output formats have not been tested so far.
                     parCompiler.mathJaxLoadDefer = $.ajax({
                         dataType: "script",
                         cache: true,
-                        url: "//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+                        url: "//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_SVG"
                     });
                 }
                 parCompiler.mathJaxLoadDefer.done(function () {
