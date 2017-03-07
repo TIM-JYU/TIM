@@ -263,7 +263,7 @@ videoApp.Controller = function($scope,$http,$transclude,$element) {
                 if ( $scope.end ) t += "," + $scope.end;
             }
             var autoplay = "";
-            if ( $scope.autoplay.toLowerCase() === "true" ) autoplay = "autoplay";
+            if ( $scope.autoplay && $scope.autoplay.toLowerCase() === "true" ) autoplay = "autoplay";
 			$scope.videoHtml.innerHTML = '<video class="showVideo" id="'+vid+'" src="'+ $scope.file + t + '" type="video/mp4" controls ' + autoplay +  ' '  + w + h +'/>';
         }    
         // IE ei tietenkään taas tottele t-attribuuttia...            
