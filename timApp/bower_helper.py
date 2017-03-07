@@ -6,34 +6,41 @@ from filemodehelper import change_permission_and_retry
 
 scripts_path = os.path.join('static', 'scripts')
 bower_path = os.path.join(scripts_path, 'bower_components')
+node_modules_path = os.path.join(scripts_path, 'node_modules')
 bower_src = '/bower_components'
+node_modules_src = '/node_modules'
 
 
-def copy_bower_libs():
-    """Copies bower libraries from TIM's Docker image to static/scripts."""
-    if os.path.exists(bower_path):
-        shutil.rmtree(bower_path, onerror=change_permission_and_retry)
-    print('Copying bower libs to static/scripts...', end="")
+def copy_dir(src, dst):
+    """Copies a directory from TIM's Docker image to static/scripts."""
+    if os.path.exists(dst):
+        shutil.rmtree(dst, onerror=change_permission_and_retry)
+    print('Copying {} to {}...'.format(src, dst), end="")
     sys.stdout.flush()
-    shutil.copytree(bower_src, bower_path)
+    shutil.copytree(src, dst)
     print(' Done.')
 
 
-def copy_bower_libs_if_needed():
-    if not os.path.exists(bower_path):
-        if os.path.exists(bower_src):
-            copy_bower_libs()
+def copy_dir_if_needed(src, dst):
+    if not os.path.exists(dst):
+        if os.path.exists(src):
+            copy_dir(src, dst)
         else:
-            print('You may want to run inside docker first or copy bower libs to static/scripts if there are errors.')
-    elif os.path.exists(bower_src):
-        expected_files = set(os.listdir(bower_src))
-        actual_files = set(os.listdir(bower_path))
+            raise Exception('Source directory {} does not exist.'.format(src))
+    elif os.path.exists(src):
+        expected_files = set(os.listdir(src))
+        actual_files = set(os.listdir(dst))
         if actual_files != expected_files:
-            print('actual bower files differ from expected ones, copying bower libs again')
-            copy_bower_libs()
+            print('actual files ({}) differ from expected ones ({}), copying directory again'.format(src, dst))
+            copy_dir(src, dst)
     else:
-        print('Not running inside docker, skipping bower check.')
+        raise Exception('Source directory {} does not exist.'.format(src))
+
+
+def copy_dirs_if_needed():
+    copy_dir_if_needed(bower_src, bower_path)
+    copy_dir_if_needed(node_modules_src, node_modules_path)
 
 
 if __name__ == '__main__':
-    copy_bower_libs_if_needed()
+    copy_dirs_if_needed()

@@ -83,7 +83,8 @@ run chown -R agent /service
 # Due to https://github.com/angular-ui/ui-grid/issues/5926, we install version 4.0.1 of angular-ui-grid and not 4.0.2.
 run apt-get install --no-install-recommends -y npm \
  && npm install -g bower \
- && npm install uglify-js -g \
+ && npm install -g uglify-js \
+ && npm install -g typescript \
  && ln -s /usr/bin/nodejs /usr/bin/node \
  && bower --allow-root install angular#~1.5 \
  && bower --allow-root install angular-ui-ace#36844ff7c0e0d9445bc8e31514d7f0f59cb8b048 \
@@ -108,13 +109,38 @@ run apt-get install --no-install-recommends -y npm \
  && bower --allow-root install angular-eonasdan-datetimepicker#~0.3 \
  && bower --allow-root install angular-messages#~1.5 \
  && bower --allow-root install humanize-duration#~3.10 \
- && bower --allow-root --force install angular-timer#~1.3 \
- && apt-get purge -y --auto-remove npm
+ && bower --allow-root --force install angular-timer#~1.3
 
-# Update the below date whenever Bower packages are upgraded, added or removed.
+
+run npm install --save @types/angular@1.5
+run npm install --save @types/jquery
+run npm install --save @types/moment
+run npm install --save @types/angular-sanitize
+run npm install --save @types/bootstrap@3.3
+run npm install --save @types/jqueryui
+run npm install --save @types/katex
+run npm install --save @types/rangyinputs
+run npm install --save @types/ngstorage@0.3
+run npm install --save @types/chartjs
+run npm install --save @types/oclazyload
+run npm install --save @types/angular-ui-bootstrap
+run npm install --save @types/angular-animate@1.5
+run npm install --save @types/ui-grid
+run npm install --save @types/eonasdan-bootstrap-datetimepicker
+run npm install --save @types/mathjax
+#run npm install --save @types/angular-bootstrap-colorpicker@3.0
+#run npm install --save @types/angular-touch
+#run npm install --save @types/bootstrapsass
+#run npm install --save @types/angular-eonasdan-datetimepicker@0.3
+#run npm install --save @types/angular-messages@1.5
+#run npm install --save @types/humanize-duration@3.10
+#run npm install --save @types/angular-timer@1.3
+
+# The below date is updated whenever Bower packages are upgraded, added or removed.
 # Otherwise TIM might not re-copy the Bower libs because it only inspects the top-level directory file names
 # in bower_components.
-run touch /bower_components/2017-03-02.stamp
+run touch /bower_components/$(date -I).stamp
+run touch /node_modules/$(date -I).stamp
 
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
 run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js

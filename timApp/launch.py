@@ -7,7 +7,7 @@ import sys
 import dumboclient
 import initdb2
 import tim
-from bower_helper import scripts_path, copy_bower_libs_if_needed
+from bower_helper import scripts_path, copy_dirs_if_needed
 from logger import log_info
 from tim_app import app
 from utils import pycharm_running
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     if not os.path.exists(scripts_path):
         raise Exception('static/scripts directory does not seem to exist, '
                         'make sure the working directory is correct')
-    copy_bower_libs_if_needed()
+    copy_dirs_if_needed()
     dumbo_started = False
     d = None
     try:

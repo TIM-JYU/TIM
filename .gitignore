@@ -14,6 +14,7 @@ pg_backup/
 /variables.sh
 /timApp/static/gen/
 /timApp/static/testgen/
+/timApp/static/scripts/node_modules/
 /timApp/modules/cs/test/a.b
 /timApp/modules/cs/test/a.c
 /timApp/modules/cs/nohup.out
