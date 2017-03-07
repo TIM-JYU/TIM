@@ -1,4 +1,5 @@
 from tim_app import app
+from timdb.models.user import User
 from timdb.models.usergroup import UserGroup
 from timdb.tim_models import db
 from timdb.timdb2 import TimDb
@@ -7,7 +8,7 @@ from timdb.timdb2 import TimDb
 def query_admin():
     timdb = TimDb(app.config['FILES_PATH'])
     username = input("Username: ")
-    user = UserGroup.query.filter_by(name=username).first()
+    user = User.query.filter_by(name=username).first()
     if user is not None:
         if not user.is_admin:
             print('A user with this username already exists. Do you want to add this user to administrators?')
@@ -23,7 +24,7 @@ def query_admin():
         email = input("Email: ")
         password = input("Password: ")
 
-        create_user_with_group(email, realname, email, password, is_admin=True)
+        User.create_with_group(email, realname, email, password, is_admin=True)
 
         print('UserAccount ', email, " created")
         print('Use ', email, " and password you entered to login.")
