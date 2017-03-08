@@ -215,7 +215,7 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
                 if ( isNaN(nt) ) nr = (n) + "" + separator + "\r\n";
                 else {
                     n = nt;
-                    nrt = ""+n;
+                    var nrt = ""+n;
                     if ( questionTitle.length  > nrt.length )
                         separator = questionTitle[nrt.length];
                 }
