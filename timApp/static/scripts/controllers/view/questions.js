@@ -199,6 +199,7 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
 
     sc.processQuestions = function () {
         var questions = $('.questionPar');
+        var n = 1;
         if (sc.showQuestions()) {
             for (var i = 0; i < questions.length; i++) {
                 var $par = questions.eq(i);
@@ -208,11 +209,16 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
                 if (questionTitle.length > 10) {
                     questionTitle = questionTitle.substr(0, 10) + "\r\n...";
                 }
+                var nt = parseInt(questionTitle);
+                var nr = "";
+                if ( isNaN(nt) ) nr = (n) + ")\r\n";
+                else n = nt;
                 if (questionNumber[0] && questionNumber[0].innerHTML) {
                     if (sc.noQuestionAutoNumbering) {
                         questionNumber[0].innerHTML = questionTitle;
                     } else {
-                        questionNumber[0].innerHTML = (i + 1) + ")\r\n" + questionTitle;
+                        questionNumber[0].innerHTML = nr + questionTitle;
+                        n++;
                     }
                 }
             }
