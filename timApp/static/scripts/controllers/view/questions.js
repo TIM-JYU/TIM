@@ -215,9 +215,9 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
                 if ( isNaN(nt) ) nr = (n) + "" + separator + "\r\n";
                 else {
                     n = nt;
-                    nr = ""+n;
-                    if ( questionTitle.length  > nr.length )
-                        separator = questionTitle[nr.length];
+                    nrt = ""+n;
+                    if ( questionTitle.length  > nrt.length )
+                        separator = questionTitle[nrt.length];
                 }
                 if (questionNumber[0] && questionNumber[0].innerHTML) {
                     if (sc.noQuestionAutoNumbering) {
