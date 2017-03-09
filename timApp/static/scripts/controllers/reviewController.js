@@ -1,3 +1,4 @@
+/* globals angular, $ */
 /**
  * The controller handles the logic related to adding and removing annotations. It also handles the way how
  * the selected area is defined in the view. Requires `velpSelection` directive.
@@ -10,7 +11,6 @@
  * @copyright 2016 Timber project members
  */
 
-var angular, $;
 var timApp = angular.module('timApp');
 
 var UNDEFINED = "undefined";

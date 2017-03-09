@@ -1,3 +1,4 @@
+/* globals angular, item, lectureId, lectureCode, lectureStartTime, lectureEndTime, inLecture, $ */
 /**
  * Created by hajoviin on 11.5.2015.
  * Handles the controls of lecture info page.
@@ -11,8 +12,6 @@
  * @licence MIT
  * @copyright 2015 Timppa project authors
  */
-
-var angular, item, lectureId, lectureCode, lectureStartTime, lectureEndTime, inLecture, $;
 
 var timApp = angular.module('timApp');
 timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$window', '$log', function ($rootScope, $scope, $http, $window, $log) {

@@ -8,7 +8,7 @@ scripts_path = os.path.join('static', 'scripts')
 bower_path = os.path.join(scripts_path, 'bower_components')
 node_modules_path = os.path.join(scripts_path, 'node_modules')
 bower_src = '/bower_components'
-node_modules_src = '/node_modules'
+node_modules_src = '/tim_node_modules/node_modules'
 
 
 def copy_dir(src, dst):
@@ -38,7 +38,7 @@ def copy_dir_if_needed(src, dst):
 
 
 def copy_dirs_if_needed():
-    copy_dir_if_needed(bower_src, bower_path)
+    # copy_dir_if_needed(bower_src, bower_path)
     copy_dir_if_needed(node_modules_src, node_modules_path)
 
 

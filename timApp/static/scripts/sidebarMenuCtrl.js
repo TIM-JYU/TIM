@@ -1,3 +1,4 @@
+/* globals angular, $ */
 /**
  * FILL WITH SUITABLE TEXT
  * @module sidebarMenuCtrl
@@ -9,7 +10,6 @@
  * @licence MIT
  * @copyright 2015 Timppa project authors
  */
-var angular, $;
 var timApp = angular.module('timApp');
 
 timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$log',

@@ -1,4 +1,4 @@
-var angular, $;
+/* globals angular, $ */
 var PermApp = angular.module('timApp');
 
 PermApp.controller("PermCtrl", [

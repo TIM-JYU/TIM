@@ -81,40 +81,40 @@ run chown -R agent /service
 
 # angular-timer depends on humanize-duration version 2.8 but it appears to work fine with 3.10, so we force the install.
 # Due to https://github.com/angular-ui/ui-grid/issues/5926, we install version 4.0.1 of angular-ui-grid and not 4.0.2.
-run apt-get install --no-install-recommends -y npm \
- && npm install -g bower \
- && npm install -g uglify-js \
- && npm install -g typescript \
- && ln -s /usr/bin/nodejs /usr/bin/node \
- && bower --allow-root install angular#~1.5 \
- && bower --allow-root install angular-ui-ace#36844ff7c0e0d9445bc8e31514d7f0f59cb8b048 \
- && bower --allow-root install ng-file-upload#~12.2 \
- && bower --allow-root install jquery#~2.1 \
- && bower --allow-root install moment#~2.17 \
- && bower --allow-root install angular-sanitize#~1.5 \
- && bower --allow-root install bootstrap#~3.3 \
- && bower --allow-root install jquery-ui#~1.11 \
- && bower --allow-root install katex#~0.7 \
- && bower --allow-root install rangyinputs \
- && bower --allow-root install ngstorage#~0.3 \
- && bower --allow-root install chartjs#~1.0 \
- && bower --allow-root install oclazyload#~1.1 \
- && bower --allow-root install bootstrap-sass#~3.3 \
- && bower --allow-root install angular-bootstrap#~2.5 \
- && bower --allow-root install angular-animate#~1.5 \
- && bower --allow-root install angular-touch#~1.5 \
- && bower --allow-root install angular-ui-grid#4.0.1 \
- && bower --allow-root install angular-bootstrap-colorpicker#~3.0 \
- && bower --allow-root install eonasdan-bootstrap-datetimepicker#latest \
- && bower --allow-root install angular-eonasdan-datetimepicker#~0.3 \
- && bower --allow-root install angular-messages#~1.5 \
- && bower --allow-root install humanize-duration#~3.10 \
- && bower --allow-root --force install angular-timer#~1.3
-
+run apt-get install --no-install-recommends -y npm
+run ln -s /usr/bin/nodejs /usr/bin/node
+run npm install -g uglify-js
+run npm install -g typescript
+workdir /tim_node_modules
+run npm init -y
+run npm install --save angular@1.5
+run npm install --save angular-ui-ace@0.2
+run npm install --save ng-file-upload@12.2
+run npm install --save jquery@2.1
+run npm install --save moment@2.17
+run npm install --save angular-sanitize@1.5
+run npm install --save bootstrap@3.3
+run npm install --save jquery-ui@1.12
+run npm install --save katex@0.7
+run npm install --save https://github.com/jigargosar/rangyinputs.git
+run npm install --save ngstorage@0.3
+run npm install --save chart.js@1.0
+run npm install --save oclazyload@1.1
+run npm install --save bootstrap-sass@3.3
+run npm install --save angular-ui-bootstrap@2.5
+run npm install --save angular-animate@1.5
+run npm install --save angular-touch@1.5
+run npm install --save angular-ui-grid@4.0.1
+run npm install --save angular-bootstrap-colorpicker@3.0
+run npm install --save eonasdan-bootstrap-datetimepicker
+run npm install --save angular-eonasdan-datetimepicker@0.3
+run npm install --save angular-messages@1.5
+run npm install --save humanize-duration@3.10
+run npm install --save angular-timer@1.3
+run npm install --save requirejs
 
 run npm install --save @types/angular@1.5
 run npm install --save @types/jquery
-run npm install --save @types/moment
 run npm install --save @types/angular-sanitize
 run npm install --save @types/bootstrap@3.3
 run npm install --save @types/jqueryui
@@ -139,14 +139,17 @@ run npm install --save @types/mathjax
 # The below date is updated whenever Bower packages are upgraded, added or removed.
 # Otherwise TIM might not re-copy the Bower libs because it only inspects the top-level directory file names
 # in bower_components.
-run touch /bower_components/$(date -I).stamp
-run touch /node_modules/$(date -I).stamp
+run touch node_modules/$(date -I).stamp
+
+# the type files need a couple of patches
+run sed -i 's/declare var \$: JQueryStatic;/declare var $: JQueryStatic | any;/' node_modules/@types/jquery/index.d.ts
+run sed -i '1s/^/import * as angular from "angular";\n/' node_modules/@types/ngstorage/index.d.ts
 
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
-run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js
+run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' node_modules/angular-ui-ace/src/ui-ace.js
 
 # Force auto-render extension to throw exceptions instead of printing to console
-run sed -i 's/f instanceof katex\.ParseError/false/' /bower_components/katex/dist/contrib/auto-render.min.js
+run sed -i 's/f instanceof katex\.ParseError/false/' node_modules/katex/dist/contrib/auto-render.min.js
 
 run mkdir /var/run/sshd
 run echo 'root:test' | chpasswd

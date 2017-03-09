@@ -1,4 +1,4 @@
-var angular, $;
+/* globals angular, $ */
 var timApp = angular.module('timApp');
 
 /**

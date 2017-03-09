@@ -175,14 +175,14 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
 
             var handle = $("<div>", {class: "draghandle"});
             if (attr.click) {
-                var minimize = $("<img>", {
+                var minimizeElem = $("<img>", {
                     src: "/static/images/minimize-window-16.png",
                     class: 'titlebutton minimize'
                 });
-                minimize.on('click', function () {
+                minimizeElem.on('click', function () {
                     clickFn(scope)
                 });
-                handle.append(minimize);
+                handle.append(minimizeElem);
             }
             if (attr.close) {
                 var close = $("<img>", {src: "/static/images/close-window-16.png", class: 'titlebutton close'});
