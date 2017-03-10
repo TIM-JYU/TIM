@@ -19,17 +19,7 @@
         <link href="{{ url_for('static', filename='images/favicon.ico') }}" rel="shortcut icon" type="image/x-icon"/>
         <meta name="google-site-verification" content="GHYGje2NiYlQM66xyggsnzQht1OHSgtv_9baHbFIklU"/>
 
-        <script src="{{ url_for('bower.static', filename='requirejs/require.js') }}"></script>
-        <script>
-            requirejs.config({
-                baseUrl: '..',
-                paths: {
-                    tim: '../../build'
-                }
-            });
-        </script>
-        <script src="{{ url_for('static', filename='scripts/timTiming.js') }}"></script>
-        <script>timLogInit({{ request.query_string|string|tojson }});</script>
+        <script data-main="/static/scripts/build/main.js" src="/static/scripts/node_modules/requirejs/require.js"></script>
 
         {% block stylesheet %}
             {{ scss(config.SASS_GEN_PATH + '/' + prefs.css_combined) }}
@@ -44,90 +34,7 @@
             </style>
         {% endblock %}
 
-        <script src="{{ url_for('bower.static', filename='jquery/dist/jquery.min.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='jquery-ui/jquery-ui.min.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='angular/angular.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='angular-ui-bootstrap/dist/ui-bootstrap-tpls.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='ngstorage/ngStorage.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='katex/dist/katex.min.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='katex/dist/contrib/auto-render.min.js') }}"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-        <script src="{{ url_for('bower.static', filename='moment/min/moment-with-locales.min.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='angular-eonasdan-datetimepicker/dist/angular-eonasdan-datetimepicker.min.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='humanize-duration/humanize-duration.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='angular-timer/dist/assets/js/angular-timer-all.min.js') }}"></script>
-        {% block ngscripts %}
-            <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.min.js') }}"></script>
-            <script src="{{ url_for('bower.static', filename='angular-messages/angular-messages.min.js') }}"></script>
-        {% endblock %}
-
         <script>
-            var timApp = angular.module('timApp', [{% block ngmodules %}
-                'ngMessages', 'timer', 'ae-datetimepicker', 'ngSanitize', 'ui.bootstrap', {% endblock %}]);
-            // disable Angular URL manipulation when using ng-include; from http://stackoverflow.com/a/19825756
-            timApp.config(['$provide', function ($provide) {
-                $provide.decorator('$browser', ['$delegate', function ($delegate) {
-                    $delegate.onUrlChange = function () {
-                    };
-                    $delegate.url = function () {
-                        return "";
-                    };
-                    return $delegate;
-                }]);
-            }]);
-
-            // disable IE ajax request caching; from https://stackoverflow.com/a/19771501
-            timApp.config(['$httpProvider', function ($httpProvider) {
-                if (!$httpProvider.defaults.headers.get) {
-                    $httpProvider.defaults.headers.get = {};
-                }
-
-                $httpProvider.defaults.headers.get['If-Modified-Since'] = 'Mon, 26 Jul 1997 05:00:00 GMT';
-                $httpProvider.defaults.headers.get['Cache-Control'] = 'no-cache';
-                $httpProvider.defaults.headers.get['Pragma'] = 'no-cache';
-            }]);
-
-            // Filter to make string URL friendly
-            timApp.filter('escape', function () {
-                "use strict";
-                return function (str) {
-                    return encodeURIComponent(str).replace(/%2F/g, '/');
-                };
-            });
-
-            timApp.filter('timdate', function ($filter) {
-                var dateFilter = $filter('date');
-                return function (date) {
-                    return dateFilter(date, 'dd.MM.yyyy HH:mm:ss');
-                }
-            });
-
-            timApp.filter('timreldate', function ($filter) {
-                return function (date) {
-                    return moment(date).fromNow();
-                }
-            });
-
-            timApp.filter('timduration', function ($filter) {
-                return function (duration) {
-                    return moment.duration(duration).humanize();
-                }
-            });
-
-            timApp.filter('timpreciseduration', function ($filter) {
-                return function (duration) {
-                    return humanizeDuration(moment.duration(duration).asMilliseconds());
-                }
-            });
-
-            timApp.filter('timtim', function ($filter) {
-                var dateFilter = $filter('date');
-                return function (date) {
-                    return dateFilter(date, 'HH:mm:ss');
-                }
-            });
-
             var current_user = {{ current_user|tojson }};
             var other_users = {{ other_users|tojson }};
             var bookmarks = {{ bookmarks|tojson }};
@@ -162,43 +69,6 @@
                 skipStartupTypeset: true
             });
         </script>
-        <script src="{{ url_for('static', filename='scripts/draggable.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/resizable.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/sidebarMenuCtrl.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/services/userService.js') }}"></script>
-        {% assets filters="typescript", output="compiled.js",
-          "scripts/services/parCompiler.ts" %}
-            <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-        {% endassets %}
-        <script src="{{ url_for('static', filename='scripts/services/slugify.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/directives/focusMe.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/directives/loginMenu.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/directives/bootstrapPanel.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/directives/rightsEditor.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/directives/bookmarks.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/directives/createItem.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/directives/shortNameValidator.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/directives/formErrorMessage.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/directives/dynamicAnswerSheet.js') }}"></script>
-
-        <!-- HTML5 shiv and Respond.js for IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-        <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-        <![endif]-->
-
-        {% if lecture_assets %}
-            <script src="{{ url_for('static', filename='scripts/lectureController.js') }}"></script>
-            <script src="{{ url_for('static', filename='scripts/controllers/answerToQuestionController.js') }}"></script>
-            <script src="{{ url_for('static', filename='scripts/directives/popUpDialog.js') }}"></script>
-            <script src="{{ url_for('static', filename='scripts/smallMenuCtrl.js') }}"></script>
-            <script src="{{ url_for('bower.static', filename='Chart.js/Chart.min.js') }}"></script>
-            <script src="{{ url_for('static', filename='scripts/controllers/showStatisticsToQuestionController.js') }}"></script>
-            <script src="{{ url_for('static', filename='scripts/directives/showChartDirective.js') }}"></script>
-            <script src="{{ url_for('static', filename='scripts/createLectureCtrl.js') }}"></script>
-            <script src="{{ url_for('static', filename='scripts/controllers/questionPreviewController.js') }}"></script>
-            <script src="{{ url_for('static', filename='scripts/controllers/questionController.js') }}"></script>
-        {% endif %}
         <title>{% block title %}{% endblock %} - TIM</title>
     {% endblock %}
 </head>
@@ -343,7 +213,6 @@
             </div>
         </div>
     </footer>
-    <script>timLogTime("Document end", "base");</script>
 {% endblock %}
 <div class="device-xs visible-xs-block"></div>
 <div class="device-sm visible-sm-block"></div>

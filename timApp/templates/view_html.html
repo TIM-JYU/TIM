@@ -10,10 +10,6 @@
 {% block ngscripts %}
     {{ super() }}
     <link rel="stylesheet" href="{{ url_for('bower.static', filename='angular-ui-grid/ui-grid.min.css') }}">
-    <script src="{{ url_for('bower.static', filename='oclazyload/dist/ocLazyLoad.min.js') }}"></script>
-    {% if teacher_mode %}
-        <script src="{{ url_for('bower.static', filename='angular-ui-grid/ui-grid.js') }}"></script>
-    {% endif %}
 
     {% for script in js %}
         <script src=" {{ script }}"></script>
@@ -35,49 +31,6 @@
 
 {% block head %}
     {{ super() }}
-
-    <script src="{{ url_for('static', filename='scripts/marktree.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/editmode.js') }}"></script>
-
-    <script src="{{ url_for('static', filename='scripts/controllers/view/areas.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/controllers/view/clipboard.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/controllers/view/editing.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/controllers/view/eventhandlers.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/controllers/view/index.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/controllers/view/interceptor.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/controllers/view/math.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/controllers/view/notes.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/controllers/view/parhelpers.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/controllers/view/parmenu.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/controllers/view/questions.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/controllers/view/readings.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/controllers/view/refpopup.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/controllers/view/viewctrl.js') }}"></script>
-
-    <script src="{{ url_for('static', filename='scripts/pareditor.js') }}"></script>
-    <script src="{{ url_for('bower.static', filename='rangyinputs/rangyinputs-jquery.js') }}"></script>
-    <script src="{{ url_for('bower.static', filename='ace-builds/src-min-noconflict/ace.js') }}"></script>
-    <script src="{{ url_for('bower.static', filename='ace-builds/src-min-noconflict/ext-language_tools.js') }}"></script>
-    <script src="{{ url_for('bower.static', filename='angular-ui-ace/ui-ace.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/answerbrowser3.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/directives/popupMenu.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/directives/refPopup.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/directives/nameArea.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/controllers/allAnswersController.js') }}"></script>
-
-    {% if teacher_mode %}
-        <script src="{{ url_for('static', filename='scripts/userlistController.js') }}"></script>
-    {% endif %}
-
-    <!-- Timber project -->
-
-    <script src="{{ url_for('static', filename='scripts/controllers/reviewController.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/directives/annotation.js') }}"></script>
-    {% if velp_mode or teacher_mode %}
-    <script src="{{ url_for('static', filename='scripts/directives/velpSelection.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/directives/velpSummary.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/directives/velpWindow.js') }}"></script>
-    {% endif %}
 
     {% for cssFile in cssFiles %}
         <link rel="stylesheet" href="{{ cssFile }}">

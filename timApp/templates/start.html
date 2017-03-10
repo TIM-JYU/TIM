@@ -2,14 +2,6 @@
 {% block title %}Welcome{% endblock %}
 {% block head %}
     {{ super() }}
-
-    <script>
-        $('#loginTab').find('a').click(function (e) {
-            e.preventDefault();
-            $(this).tab('show');
-        })
-    </script>
-    <script src="{{ url_for('static', filename='scripts/controllers/startController.js') }}"></script>
 {% endblock %}
 
 {% block mainctrl %}ng-controller="StartCtrl"{% endblock %}

@@ -128,6 +128,7 @@ run npm install --save @types/angular-animate@1.5
 run npm install --save @types/ui-grid
 run npm install --save @types/eonasdan-bootstrap-datetimepicker
 run npm install --save @types/mathjax
+run npm install --save @types/requirejs
 #run npm install --save @types/angular-bootstrap-colorpicker@3.0
 #run npm install --save @types/angular-touch
 #run npm install --save @types/bootstrapsass

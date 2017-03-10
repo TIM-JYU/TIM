@@ -3,8 +3,6 @@
 {% block head %}
     {{ super() }}
 
-    <script src="{{ url_for('static', filename='scripts/controllers/lectureInfoController.js') }}"></script>
-
     <script>
         var lectureId = {{lectureId|tojson}};
         var lectureCode = {{lectureCode|tojson}};

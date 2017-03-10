@@ -1,26 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Login{% endblock %}
 {% block content %}
-    <script>
-        $(document).ready(function () {
-            var target_url = {{ url_for('login_page.login_with_korppi')|tojson }};
-            var separator = target_url.indexOf('?') >= 0 ? '&' : '?';
-            var came_from_raw = {{ (came_from or '')|tojson }};
-            var came_from = encodeURIComponent(came_from_raw.replace("#", "%23"));
-            var anchor_raw = {{ anchor|tojson if anchor else "window.location.hash.replace('#', '')"|safe }};
-            var anchor = encodeURIComponent(anchor_raw);
-            $("#anchor").val(anchor_raw);
-            window.korppiLogin = function () {
-                window.location.replace(target_url
-                + separator
-                + 'came_from='
-                + came_from
-                + '&anchor='
-                + anchor);
-            }
-        });
-    </script>
-
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3">
             <p class="text-center">
