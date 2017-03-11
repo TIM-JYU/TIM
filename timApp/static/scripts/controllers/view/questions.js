@@ -26,7 +26,7 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
                 sc.markup.json = JSON.parse(data.questionjson);
                 sc.markup.points = data.points;
                 sc.markup.expl = data.expl;
-                $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.title});
+                $rootScope.$broadcast('changeQuestionTitle', {'questionTitle': sc.json.questionTitle});
                 $rootScope.$broadcast("setPreviewJson", {
                     markup: sc.markup,
                     questionId: sc.qId,
@@ -68,7 +68,7 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
         })
             .success(function (data) {
                 sc.markup = data.markup;
-                $rootScope.$broadcast('changeQuestionTitle', {'title': sc.markup.json.title});
+                $rootScope.$broadcast('changeQuestionTitle', {'questionTitle': sc.markup.json.questionTitle});
                 $rootScope.$broadcast("setPreviewJson", {
                     markup: sc.markup,
                     questionParId: sc.questionParId,
@@ -124,7 +124,7 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
                 sc.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
                 sc.markup = data.markup;
                 // data.markup.qst = true;
-                $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.title});
+                $rootScope.$broadcast('changeQuestionTitle', {'questionTitle': sc.json.questionTitle});
                 $rootScope.$broadcast('editQuestion', {
                     'par_id': parId,
                     'par_id_next': parNextId,
@@ -206,7 +206,8 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
                 var $par = questions.eq(i);
                 var questionChildren = $par.children();
                 var questionNumber = questionChildren.find('.questionNumber');
-                var questionTitle = sc.getParAttributes($par).question;
+                // var questionTitle = sc.getParAttributes($par).question;
+                var questionTitle = questionNumber[0].innerHTML;
                 if (questionTitle.length > 10) {
                     questionTitle = questionTitle.substr(0, 10) + "\r\n...";
                 }

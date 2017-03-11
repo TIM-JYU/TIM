@@ -122,7 +122,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
                     for (var i = 0; i < questions.length; i++) {
                         var question = {
                             "questionId": questions[i].question_id,
-                            "questionTitle": (JSON.parse(questions[i].questionjson)).title
+                            "questionTitle": (JSON.parse(questions[i].questionjson)).questionTitle
                         };
                         $scope.lectureQuestions.push(question);
                     }
