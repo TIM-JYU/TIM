@@ -25,6 +25,7 @@ table.timppa {
     background: #d7e4ef;
 }
 
+
 .reveal .katex {
     font-family: "KaTeX_Main", Verdana, serif;
 }
@@ -252,4 +253,10 @@ progress {
         /* margin-top: 0.5em; */
         margin-bottom: 0.5em;
     }
+}
+
+h4.questionTitle {
+    padding-bottom: 0em !important;
+    padding-top: 0em !important;
+    font-size: 10pt;
 }

@@ -4,6 +4,8 @@ import shelve
 from collections import defaultdict
 from copy import copy
 
+import filelock
+
 from documentmodel.documentparser import DocumentParser
 from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
@@ -14,6 +16,7 @@ from timdb.invalidreferenceexception import InvalidReferenceException
 from timdb.timdbexception import TimDbException
 from typing import Optional, Dict, List, Tuple, Any
 from utils import count_chars, get_error_html
+from utils import parse_yaml
 
 
 class DocParagraph:
@@ -418,9 +421,17 @@ class DocParagraph:
         """
         question_title = self.is_question()
         if question_title:
+            par_md = self.get_markdown()
+            yaml_str = par_md[par_md.index('\n') + 1:par_md.rindex('\n')]
+            values = parse_yaml(yaml_str)
+            if type(values) is str:
+                return {'error': "YAML is malformed: " + values}
+            title = values.get("json",{}).get("questionTitle","")
+            if not title:  # compability for old
+                title = values.get("json",{}).get("title","question_title")
             return self.__set_html(sanitize_html(
                 '<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="{0}"></span></a>'
-                '<p class="questionNumber">{0}</p>'.format(question_title)))
+                '<p class="questionNumber">{0}</p>'.format(title)))
         if self.html is not None:
             return self.html
         if self.is_plugin():
@@ -478,20 +489,21 @@ class DocParagraph:
                         heading_cache[par.get_id()] = value
             unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
         else:
-            if clear_cache:
-                try:
-                    os.remove(macro_cache_file + '.db')
-                except FileNotFoundError:
-                    pass
-                try:
-                    os.remove(heading_cache_file + '.db')
-                except FileNotFoundError:
-                    pass
-            with shelve.open(macro_cache_file) as cache, \
-                    shelve.open(heading_cache_file) as heading_cache:
-                unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
-                for k, v in heading_cache.items():
-                    heading_cache[k] = v
+            with filelock.FileLock("/tmp/cache_lock_{}".format(doc_id_str)):
+                if clear_cache:
+                    try:
+                        os.remove(macro_cache_file + '.db')
+                    except FileNotFoundError:
+                        pass
+                    try:
+                        os.remove(heading_cache_file + '.db')
+                    except FileNotFoundError:
+                        pass
+                with shelve.open(macro_cache_file) as cache, \
+                        shelve.open(heading_cache_file) as heading_cache:
+                    unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
+                    for k, v in heading_cache.items():
+                        heading_cache[k] = v
 
         changed_pars = []
         if len(unloaded_pars) > 0:
