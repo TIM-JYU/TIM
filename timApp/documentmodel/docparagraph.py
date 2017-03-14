@@ -4,6 +4,8 @@ import shelve
 from collections import defaultdict
 from copy import copy
 
+import filelock
+
 from documentmodel.documentparser import DocumentParser
 from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
@@ -487,20 +489,21 @@ class DocParagraph:
                         heading_cache[par.get_id()] = value
             unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
         else:
-            if clear_cache:
-                try:
-                    os.remove(macro_cache_file + '.db')
-                except FileNotFoundError:
-                    pass
-                try:
-                    os.remove(heading_cache_file + '.db')
-                except FileNotFoundError:
-                    pass
-            with shelve.open(macro_cache_file) as cache, \
-                    shelve.open(heading_cache_file) as heading_cache:
-                unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
-                for k, v in heading_cache.items():
-                    heading_cache[k] = v
+            with filelock.FileLock("/tmp/cache_lock_{}".format(doc_id_str)):
+                if clear_cache:
+                    try:
+                        os.remove(macro_cache_file + '.db')
+                    except FileNotFoundError:
+                        pass
+                    try:
+                        os.remove(heading_cache_file + '.db')
+                    except FileNotFoundError:
+                        pass
+                with shelve.open(macro_cache_file) as cache, \
+                        shelve.open(heading_cache_file) as heading_cache:
+                    unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
+                    for k, v in heading_cache.items():
+                        heading_cache[k] = v
 
         changed_pars = []
         if len(unloaded_pars) > 0:
