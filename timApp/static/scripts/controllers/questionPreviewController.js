@@ -31,7 +31,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
             $scope.questionParIdNext = args.questionParIdNext;
             $scope.isLecturer = args.isLecturer;
             $scope.markup = args.markup;
-            $scope.questionTitle = args.markup.json.title;
+            $scope.questionTitle = args.markup.json.questionTitle;
             $scope.dynamicAnswerSheetControl.createAnswer($scope);
 
         });
@@ -68,7 +68,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
                 $scope.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
                 $scope.markup = data.markup;
                 // data.markup.qst = true;
-                $rootScope.$broadcast('changeQuestionTitle', {'title': $scope.json.title});
+                $rootScope.$broadcast('changeQuestionTitle', {'questionTitle': $scope.json.questionTitle});
                 $rootScope.$broadcast('editQuestion', {
                     'par_id': parId,
                     'par_id_next': parNextId,

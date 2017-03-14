@@ -356,7 +356,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
         });
 
         $scope.$on('changeQuestionTitle', function (event, data) {
-            $scope.questionTitle = data.title;
+            $scope.questionTitle = data.questionTitle;
         });
 
         $scope.$on('toggleQuestion', function (event, data) {
@@ -1141,7 +1141,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             if (answer.points) markup.points = answer.points;
             markup.userpoints = answer.userpoints;
 
-            $scope.questionTitle = showPoints + markup.json.title;
+            $scope.questionTitle = showPoints + markup.json.questionTitle;
             if (answer.result) {
                 $scope.current_question_id = false;
                 $scope.current_points_id = answer.askedId;

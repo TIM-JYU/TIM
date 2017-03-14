@@ -87,7 +87,7 @@ timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$w
                 var markup = JSON.parse(data.json);
                 if ( !markup.json ) markup = { json: markup}; // compability for old
                 markup.points = data.points;
-                $rootScope.$broadcast('changeQuestionTitle', {'title': markup.json.title});
+                $rootScope.$broadcast('changeQuestionTitle', {'questionTitle': markup.json.questionTitle});
                 $rootScope.$broadcast("editQuestion", {
                     "asked_id": asked_id,
                     "markup": markup

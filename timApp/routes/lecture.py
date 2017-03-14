@@ -14,19 +14,17 @@ from accesshelper import verify_ownership, has_edit_access
 from common import has_ownership, \
     get_user_settings
 from dbaccess import get_timdb
-from documentmodel.document import Document
 from documentmodel.randutils import hashfunc
 from requesthelper import get_option
-from plugin import parse_plugin_values
 from responsehelper import json_response
-from routes.edit import delete_key
 from routes.login import log_in_as_anonymous
+from routes.qst import get_question_data_from_document, delete_key, create_points_table, \
+    calculate_points_from_json_answer, calculate_points
 from sessioninfo import get_current_user_id, logged_in
 from tim_app import app
 from timdb.models.docentry import DocEntry
 from timdb.tempdb_models import TempDb
 from timdb.tim_models import db
-from containerLink import convert_md
 
 lecture_routes = Blueprint('lecture',
                            __name__,
@@ -1225,43 +1223,6 @@ def close_points():
     return json_response("")
 
 
-def create_points_table(points):
-    points_table = []
-    if points and points != '':
-        points_split = points.split('|')
-        for row in points_split:
-            row_points = row.split(';')
-            row_points_dict = {}
-            for col in row_points:
-                if col != '':
-                    col_points = col.split(':', 2)
-                    if len(col_points) == 1:
-                        row_points_dict[col_points[0]] = 1
-                    else:
-                        row_points_dict[col_points[0]] = float(col_points[1])
-            points_table.append(row_points_dict)
-    return points_table
-
-
-def calculate_points_from_json_answer(single_answers, points_table):
-    points = 0.0
-    for (oneAnswer, point_row) in zip(single_answers, points_table):
-        for oneLine in oneAnswer:
-            if oneLine in point_row:
-                points += point_row[oneLine]
-    return points
-
-
-def calculate_points(answer, points_table):
-    # single_answers = []
-    # all_answers = answer.split('|')
-    # for answer in all_answers:
-    #    single_answers.append(answer.split(','))
-
-    single_answers = json.loads(answer)
-    return calculate_points_from_json_answer(single_answers, points_table)
-
-
 def user_in_lecture():
     timdb = get_timdb()
     current_user = get_current_user_id()
@@ -1269,37 +1230,6 @@ def user_in_lecture():
     if in_lecture:
         in_lecture = check_if_lecture_is_running(lecture_id)
     return in_lecture
-
-
-def get_question_data_from_document(doc_id, par_id, edit=False):
-    '''
-    Get markup for question
-    :param doc_id: documtn id
-    :param par_id: paragraph id
-    :param edit: is purposu to edit data or show data
-    :return: markup for question
-    '''
-    # pick up question from document, for saving question see edit.py question_convert_js_to_yam
-    # par_id might be like 100.Ruksit.SpQA0NX2itOd  and one must cut the beginin
-    i = par_id.rfind(".")
-    if i >= 0:
-        par_id = par_id[i + 1:]
-    par = Document(doc_id).get_paragraph(par_id)
-    question = parse_plugin_values(par)
-    plugindata = {'markup': question.get('markup')}
-    if not edit:
-        convert_md(plugindata)
-    markup = plugindata.get('markup')
-    markup["qst"] = not par.is_question()
-    attrs = par.get_attrs()
-    if attrs:
-        markup["taskId"] = attrs.get("taskId", "")
-    # points = markup.get('points', '')
-    # jso# n = markup.get('json')
-    # expl = markup.get('expl', '')
-    # markup['json'] = {}
-    # return json, points, expl, markup
-    return markup
 
 
 def get_tempdb():

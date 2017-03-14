@@ -14,6 +14,7 @@ from timdb.invalidreferenceexception import InvalidReferenceException
 from timdb.timdbexception import TimDbException
 from typing import Optional, Dict, List, Tuple, Any
 from utils import count_chars, get_error_html
+from utils import parse_yaml
 
 
 class DocParagraph:
@@ -418,9 +419,17 @@ class DocParagraph:
         """
         question_title = self.is_question()
         if question_title:
+            par_md = self.get_markdown()
+            yaml_str = par_md[par_md.index('\n') + 1:par_md.rindex('\n')]
+            values = parse_yaml(yaml_str)
+            if type(values) is str:
+                return {'error': "YAML is malformed: " + values}
+            title = values.get("json",{}).get("questionTitle","")
+            if not title:  # compability for old
+                title = values.get("json",{}).get("title","question_title")
             return self.__set_html(sanitize_html(
                 '<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="{0}"></span></a>'
-                '<p class="questionNumber">{0}</p>'.format(question_title)))
+                '<p class="questionNumber">{0}</p>'.format(title)))
         if self.html is not None:
             return self.html
         if self.is_plugin():

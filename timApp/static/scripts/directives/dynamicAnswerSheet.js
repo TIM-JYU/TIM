@@ -96,20 +96,20 @@ function minimizeJson(json) {
 
     for (var i = 0; i < rows.length; i++) {
         var row = rows[i];
-        if ( row.id == i && (!row.type || row.type === "question") ) {
+        if ( row.id == i+1 && (!row.type || row.type === "question") ) {
             row = row.text; // { text: row.text};
         } else {
             allText = false;
         }
         rrows.push(row);
     }
-    rrows.push({}); // push empty object to force Python json yaml dump to put rows in separate lines. Remember to remove it
+   // rrows.push({}); // push empty object to force Python json yaml dump to put rows in separate lines. Remember to remove it
 
     // if ( allText ) rrows = rrows.join("\n"); // oletuksena menee samalle riville kaikki json text muunnoksessa.
 
     result.rows = rrows;
     result.questionText = json.questionText;
-    result.title = json.title;
+    result.questionTitle = json.questionTitle;
     result.questionType = json.questionType;
     result.answerFieldType = json.answerFieldType;
     result.matrixType = json.matrixType;
@@ -117,6 +117,13 @@ function minimizeJson(json) {
     return result;
 }
 
+
+function fixLineBreaks(s) {
+    var result = s.replace("<","&lt;");
+    result = result.replace(">","&gt;");
+    return result;
+    //return s.replace("\n","<br />");
+}
 
 function fixQuestionJson(json) {
     // fill all missing fields from question json, call before use json
@@ -144,7 +151,7 @@ function fixQuestionJson(json) {
 
         for (var i = 0; i < json.headers.length; i++) {
             var header = json.headers[i]
-            if (!header.text) header = {text: header.toString(), type: "header", id: i};
+            if (typeof(header.text) === 'undefined') header = {text: header.toString(), type: "header", id: i};
             if (!header.id) header.id = i;
             if (!header.type) header.type = "header";
             json.headers[i] = header;
@@ -169,6 +176,8 @@ function fixQuestionJson(json) {
         }
     }
 
+
+
     var ir = -1;
     var n = rows.length-1;
     if ( n >= 0 ) {
@@ -178,10 +187,10 @@ function fixQuestionJson(json) {
 
     for (var i = 0; i < rows.length; i++) {
         var row = rows[i];
-        if (!row.text) row = {text: row.toString(), type: "question"};
-        if (!row.text) continue;
+        if (typeof(row.text) === 'undefined') row = {text: row.toString(), type: "question"};
+        // if (!row.text) continue;
         ir++;
-        if (!row.id) row.id = ir;
+        if (!row.id) row.id = ir+1;
         if (!row.columns ) {
             row.columns = [{}];
             var nh = 0; if ( json.headers ) nh = json.headers.length;
@@ -265,7 +274,8 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     }));
                 }
                 var h5 = $('<h5>');
-                h5.append(json.questionText);
+                h5.append(fixLineBreaks(json.questionText));
+
                 htmlSheet.append(h5);
                 // htmlSheet.append($('<h5>', {text: json.questionText}));
                 if ( params.markup.userpoints !== undefined) {
@@ -279,7 +289,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 if (data.headers &&
                     data.headers.length > 0 && !(data.headers[0].text === "" && data.headers.length === 1)) {
                     var tr = $('<tr>', {class: 'answer-heading-row',});
-                    if (data.headers.length > 1) {
+                    if (data.headers.length > 0) {
                         tr.append($('<th>'));
                     }
                     angular.forEach(data.headers, function (header) {
@@ -298,11 +308,11 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     ir++;
                     var pointsRow = {};
                     if ( params.result && pointsTable.length > ir &&  pointsTable[ir] ) pointsRow = pointsTable[ir];
-
+                    var rtext = fixLineBreaks(row.text);
                     var tr = $('<tr>');
                     if (json.questionType === "matrix" || json.questionType === "true-false") {
                         var td = $('<td>');
-                        td.append(row.text);
+                        td.append(rtext);
                         tr.append(td);
                         //tr.append($('<td>', {text: row.text}));
                     }
@@ -335,13 +345,13 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                 });
                                 textArea.text(text);
                                 if (disabled !== '') textArea.attr('disabled', true);
-                                if (data.headers[0].text === "" && data.headers.length === 1 && data.rows.length === 1) {
+                                if (data.headers && data.headers.length === 1 && data.headers[0].text === "" && data.rows.length === 1) {
                                     textArea.attr('style', 'height:200px');
                                 }
                                 tr.append($('<td>', {class: 'answer-button'}).append($('<label>').append(textArea)));
                                 header++;
                             } else {
-                                // group = $scope.cg() + row.text.replace(/[^a-zA-Z0-9]/g, "");
+                                // group = $scope.cg() + rtext.replace(/[^a-zA-Z0-9]/g, "");
                                 var checked = false;
                                 if (answerTable && ir < answerTable.length ) {
                                     checked = (answerTable[ir].indexOf(value) >= 0);
@@ -401,7 +411,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                             var label = $('<label>');
                             var ispan = $('<span>', {class:colPtsClass});
                             ispan.append(input);
-                            label.append(ispan).append(" " + deletePar("" + row.text));
+                            label.append(ispan).append(" " + deletePar("" + rtext));
                             var td = $('<td>', {class: 'answer-button2'});
                             td.append(label);
                             if ( colTDPoints ) td.append(colTDPoints);
@@ -411,8 +421,12 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     // If showing question results, add question rows explanation
                     if ($scope.result && $scope.expl ) {
                         var expl = '';
-                        if ( ir.toString() in $scope.expl ) expl = $scope.expl[ir.toString()];
-                        tr.append($('<td>', {class: 'explanation', text: expl}));
+                        var ir1 = (ir+1).toString()
+                        if ( ir1 in $scope.expl ) expl = $scope.expl[ir1];
+                        var tde = $('<td>', {class: 'explanation'});
+                        tde.append(expl)
+                        // tr.append($('<td>', {class: 'explanation', text: expl}));
+                        tr.append(tde);
                     }
                     table.append(tr);
                 });
