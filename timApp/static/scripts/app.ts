@@ -6,17 +6,31 @@ import * as timer from 'angular-timer';
 import * as aedatetimepicker from 'angular-eonasdan-datetimepicker';
 import * as ngSanitize from 'angular-sanitize';
 import * as uibootstrap from 'angular-ui-bootstrap';
-import {markAsAngular1Module} from './angular-utils';
+import * as ngFileUpload from 'ng-file-upload';
+import * as ngStorage from 'ngstorage';
+import {markAsAngular1Module} from 'tim/angular-utils';
 
-markAsAngular1Module(ngMessages, timer, aedatetimepicker, ngSanitize, uibootstrap);
+markAsAngular1Module(ngMessages, timer, aedatetimepicker, ngSanitize, uibootstrap, ngFileUpload, ngStorage);
 
+// hack: expose moment in global scope because otherwise angular-eonasdan-datetimepicker cannot find it
+declare let window: any;
+window.moment = moment;
 
 // timApp's Angular modules:
 // base: 'ngMessages', 'timer', 'ae-datetimepicker', 'ngSanitize', 'ui.bootstrap'
 // item: 'ngFileUpload'
 // view_html: 'oc.lazyLoad', 'ui.ace', 'ngStorage' + plugin modules
 // teacher mode: 'ui.grid', 'ui.grid.cellNav', 'ui.grid.selection', 'ui.grid.exporter', 'ui.grid.autoResize'
-const timApp = angular.module('timApp', ['ngMessages', 'timer', 'ae-datetimepicker', 'ngSanitize', 'ui.bootstrap']);
+export const timApp = angular.module('timApp', [
+    'ngMessages',
+    'timer',
+    'ae-datetimepicker',
+    'ngSanitize',
+    'ui.bootstrap',
+    'ngFileUpload',
+    'ngStorage',
+    'oc.lazyLoad',
+]);
 // disable Angular URL manipulation when using ng-include; from http://stackoverflow.com/a/19825756
 timApp.config(['$provide', function ($provide) {
     $provide.decorator('$browser', ['$delegate', function ($delegate) {

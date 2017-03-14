@@ -1,8 +1,9 @@
 // TODO: save cursor postion when changing editor
 
-var angular, $, ace;
+define(['require', 'exports', 'tim/app', 'angular', 'jquery', 'ace/ace', 'ace/snippets'], function (require, exports, app, angular, $, ace) {
+
 var MENU_BUTTON_CLASS = 'menuButtons';
-var timApp = angular.module('timApp');
+var timApp = app.timApp;
 
 var currentEditorScope = null;
 var editorChangeValue = function(attributes, text) {
@@ -1961,3 +1962,4 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
             }
         };
     }]);
+});

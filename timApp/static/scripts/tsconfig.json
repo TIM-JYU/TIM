@@ -7,6 +7,12 @@
     "sourceMap": true,
     "outDir": "build",
     "allowJs": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "tim/*": [
+        "./*"
+      ]
+    }
   }
 }

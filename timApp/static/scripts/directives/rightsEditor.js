@@ -1,7 +1,6 @@
-/* globals angular, moment */
-var timApp = angular.module('timApp');
+define(['require', 'exports', 'tim/app', 'moment'], function (require, exports, app, moment) {
 
-timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window, $log, $http) {
+app.timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window, $log, $http) {
     "use strict";
     return {
         restrict: 'E',
@@ -229,3 +228,4 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
         }
     };
 }]);
+});

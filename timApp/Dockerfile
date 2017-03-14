@@ -95,7 +95,7 @@ run npm install --save jquery@2.1
 run npm install --save moment@2.17
 run npm install --save angular-sanitize@1.5
 run npm install --save bootstrap@3.3
-run npm install --save jquery-ui@1.12
+run npm install --save jquery-ui-dist@1.12
 run npm install --save katex@0.7
 run npm install --save https://github.com/jigargosar/rangyinputs.git
 run npm install --save ngstorage@0.3
@@ -112,6 +112,7 @@ run npm install --save angular-eonasdan-datetimepicker@0.3
 run npm install --save angular-messages@1.5
 run npm install --save humanize-duration@3.10
 run npm install --save angular-timer@1.3
+run npm install --save ace-builds@1.2
 run npm install --save requirejs
 
 run npm install --save @types/angular@1.5
@@ -129,6 +130,7 @@ run npm install --save @types/angular-animate@1.5
 run npm install --save @types/ui-grid
 run npm install --save @types/eonasdan-bootstrap-datetimepicker
 run npm install --save @types/mathjax
+run npm install --save @types/ace
 run npm install --save @types/requirejs
 #run npm install --save @types/angular-bootstrap-colorpicker@3.0
 #run npm install --save @types/angular-touch
@@ -138,9 +140,9 @@ run npm install --save @types/requirejs
 #run npm install --save @types/humanize-duration@3.10
 #run npm install --save @types/angular-timer@1.3
 
-# The below date is updated whenever Bower packages are upgraded, added or removed.
-# Otherwise TIM might not re-copy the Bower libs because it only inspects the top-level directory file names
-# in bower_components.
+# The below date is updated whenever node modules are upgraded, added or removed.
+# Otherwise TIM might not re-copy the libs because it only inspects the top-level directory file names
+# in node_modules.
 run touch node_modules/$(date -I).stamp
 
 # the type files need a couple of patches

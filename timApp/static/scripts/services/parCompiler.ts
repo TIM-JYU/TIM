@@ -1,20 +1,22 @@
 import * as angular from 'angular';
+import {timApp} from 'tim/app';
+import * as ocLazyLoad from 'oclazyload'
+import {markAsAngular1Module} from "tim/angular-utils";
+
+markAsAngular1Module(ocLazyLoad);
 
 declare const timLogTime: (message: string, id: string, level?: number) => void;
 
-const timApp = angular.module('timApp');
-
-
 timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer', '$compile', '$ocLazyLoad', '$timeout', '$log',
-    function ($http, $window, $q, $httpParamSerializer, $compile, $ocLazyLoad, $timeout, $log) {
+    ($http, $window, $q, $httpParamSerializer, $compile, $ocLazyLoad, $timeout, $log) => {
         class ParCompiler {
-            mathJaxLoaded: false;
+            mathJaxLoaded: boolean = false;
             mathJaxLoadDefer: JQueryXHR;
 
             compile(data, scope, callback) {
                 const simpleDirectiveUrl = '/mmcq/SimpleDirective.js';
-                const loadingFn = function () {
-                    $ocLazyLoad.load(data.js.concat(data.css)).then(function () {
+                const loadingFn = () => {
+                    $ocLazyLoad.load(data.js.concat(data.css)).then(() => {
                         const compiled = $compile(data.texts)(scope);
                         this.processAllMathDelayed(compiled);
                         callback(compiled);
@@ -34,8 +36,8 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer',
                 }
             }
 
-            processAllMathDelayed($elem, delay) {
-                $timeout(function () {
+            processAllMathDelayed($elem, delay?: number) {
+                $timeout(() => {
                     this.processAllMath($elem);
                 }, delay || 300);
             }
@@ -43,7 +45,7 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer',
             processAllMath($elem) {
                 timLogTime("processAllMath start", "view");
                 let katexFailures = [];
-                $elem.find('.math').each(function () {
+                $elem.find('.math').each(() => {
                     const result = this.processMath(this, false);
                     if (result !== null) {
                         katexFailures.push(result);
@@ -68,7 +70,7 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer',
                             url: "//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_SVG"
                         });
                     }
-                    this.mathJaxLoadDefer.done(function () {
+                    this.mathJaxLoadDefer.done(() => {
                         this.mathJaxLoaded = true;
                         MathJax.Hub.Queue(["Typeset", MathJax.Hub, elements]);
                     });
@@ -82,7 +84,7 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer',
              * @param tryMathJax true to attempt to process using MathJax if KaTeX fails.
              * @returns null if KaTeX processed the element successfully. Otherwise, the failed element.
              */
-            processMath(elem, tryMathJax) {
+            processMath(elem, tryMathJax: boolean) {
                 try {
                     $window.renderMathInElement(elem);
                     return null;

@@ -8,3 +8,4 @@ declare module 'angular-eonasdan-datetimepicker';
 declare module 'bootstrap-sass';
 declare module 'angular-touch';
 declare module 'angular-bootstrap-colorpicker';
+declare module 'ng-file-upload';
