@@ -9,3 +9,5 @@ declare module 'bootstrap-sass';
 declare module 'angular-touch';
 declare module 'angular-bootstrap-colorpicker';
 declare module 'ng-file-upload';
+// For some reason, importing ui-grid does not work ("cannot find name 'uiGrid'"), so we declare it manually.
+declare module 'ui-grid';

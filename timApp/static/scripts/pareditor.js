@@ -1,6 +1,6 @@
 // TODO: save cursor postion when changing editor
 
-define(['require', 'exports', 'tim/app', 'angular', 'jquery', 'ace/ace', 'ace/snippets'], function (require, exports, app, angular, $, ace) {
+define(['require', 'exports', 'tim/app', 'angular', 'jquery', 'ace/ace', 'ace/snippets', 'tim/draggable'], function (require, exports, app, angular, $, ace) {
 
 var MENU_BUTTON_CLASS = 'menuButtons';
 var timApp = app.timApp;
@@ -203,7 +203,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     editor.renderer.setPadding(10, 10, 10, 30);
                     editor.renderer.setScrollMargin(2, 2, 2, 40);
                     editor.renderer.setVScrollBarAlwaysVisible(true);
-                    editor.getSession().setMode("markdown");
+                    editor.getSession().setMode("ace/mode/markdown");
                     editor.getSession().setUseWrapMode(false);
                     editor.getSession().setWrapLimitRange(0, 79);
                     editor.setOptions({
@@ -1900,7 +1900,6 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                  */
                 $scope.changeEditor = function (newMode) {
                     var text = $scope.getEditorText();
-                    $scope.editorText = text;
                     var oldeditor;
                     if ($scope.isAce || newMode === "text") {
                         oldeditor = $('#ace_editor');
@@ -1915,13 +1914,11 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.setAceFunctions();
                         var neweditor = $("<div>", {
                             class: 'editor',
-                            id: 'ace_editor',
-                            'ng-model': 'editorText',
-                            'ui-ace': "{  useWrapMode: false,  onLoad: aceLoaded,  onChange: aceChanged }",
-                             onLoad: "aceLoaded"
+                            id: 'ace_editor'
                         });
-                        $('.editorContainer').append($compile(neweditor)($scope));
+                        $('.editorContainer').append(neweditor);
                         neweditor = ace.edit("ace_editor");
+                        $scope.aceLoaded(neweditor);
                         $scope.editor = neweditor;
                         $scope.editor.getSession().on('change', $scope.aceChanged);
                         neweditor.setBehavioursEnabled($scope.getLocalBool("acebehaviours"),false);

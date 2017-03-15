@@ -1,3 +1,6 @@
+*[ng-cloak] {
+    visibility: hidden;
+}
 
 html {
     position: relative; // required for sticky footer

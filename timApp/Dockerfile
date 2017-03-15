@@ -89,7 +89,6 @@ run npm install -g typescript
 workdir /tim_node_modules
 run npm init -y
 run npm install --save angular@1.5
-run npm install --save angular-ui-ace@0.2
 run npm install --save ng-file-upload@12.2
 run npm install --save jquery@2.1
 run npm install --save moment@2.17
@@ -112,7 +111,7 @@ run npm install --save angular-eonasdan-datetimepicker@0.3
 run npm install --save angular-messages@1.5
 run npm install --save humanize-duration@3.10
 run npm install --save angular-timer@1.3
-run npm install --save ace-builds@1.2
+run npm install --save https://github.com/ajaxorg/ace.git#v1.2.6
 run npm install --save requirejs
 
 run npm install --save @types/angular@1.5
@@ -148,9 +147,6 @@ run touch node_modules/$(date -I).stamp
 # the type files need a couple of patches
 run sed -i 's/declare var \$: JQueryStatic;/declare var $: JQueryStatic | any;/' node_modules/@types/jquery/index.d.ts
 run sed -i '1s/^/import * as angular from "angular";\n/' node_modules/@types/ngstorage/index.d.ts
-
-# We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
-run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' node_modules/angular-ui-ace/src/ui-ace.js
 
 # Force auto-render extension to throw exceptions instead of printing to console
 run sed -i 's/f instanceof katex\.ParseError/false/' node_modules/katex/dist/contrib/auto-render.min.js

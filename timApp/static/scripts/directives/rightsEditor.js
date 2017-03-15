@@ -1,4 +1,4 @@
-define(['require', 'exports', 'tim/app', 'moment'], function (require, exports, app, moment) {
+define(['require', 'exports', 'tim/app', 'moment', 'tim/directives/focusMe'], function (require, exports, app, moment) {
 
 app.timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window, $log, $http) {
     "use strict";
