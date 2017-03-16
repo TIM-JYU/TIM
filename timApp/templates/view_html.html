@@ -1,20 +1,4 @@
 {% extends "document.html" %}
-{% block ngmodules %}
-    {{ super() }}
-    {% if teacher_mode %}
-    {{ (['ui.grid', 'ui.grid.cellNav', 'ui.grid.selection', 'ui.grid.exporter', 'ui.grid.autoResize', 'oc.lazyLoad', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
-    {% else %}
-    {{ (['oc.lazyLoad', 'ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
-    {% endif %}
-{% endblock %}
-{% block ngscripts %}
-    {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('bower.static', filename='angular-ui-grid/ui-grid.min.css') }}">
-
-    {% for script in js %}
-        <script src=" {{ script }}"></script>
-    {% endfor %}
-{% endblock %}
 
 {% set teacher_mode = route in ("teacher", "answers") %}
 {% set velp_mode = route in ("teacher", "answers", "velp") %}

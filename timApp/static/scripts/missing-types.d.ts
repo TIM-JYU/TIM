@@ -11,3 +11,5 @@ declare module 'angular-bootstrap-colorpicker';
 declare module 'ng-file-upload';
 // For some reason, importing ui-grid does not work ("cannot find name 'uiGrid'"), so we declare it manually.
 declare module 'ui-grid';
+declare module 'tim/plugins';
+declare module 'katex-auto-render';

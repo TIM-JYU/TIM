@@ -190,6 +190,11 @@ def show_time(s):
     debug_time = now
 
 
+def get_module_ids(js_paths: List[str]):
+    for jsfile in js_paths:
+        yield jsfile.lstrip('/').rstrip('.js')
+
+
 def view(item_path, template_name, usergroup=None, route="view"):
     if has_special_chars(item_path):
         return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
@@ -346,6 +351,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                            js=js_paths,
                            cssFiles=css_paths,
                            jsMods=modules,
+                           jsModuleIds=get_module_ids(js_paths),
                            doc_css=doc_css,
                            start_index=start_index,
                            in_lecture=is_in_lecture,

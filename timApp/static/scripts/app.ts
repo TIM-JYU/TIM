@@ -9,6 +9,7 @@ import * as uibootstrap from 'angular-ui-bootstrap';
 import * as ngFileUpload from 'ng-file-upload';
 import * as ngStorage from 'ngstorage';
 import {markAsAngular1Module} from 'tim/angular-utils';
+import * as plugins from 'tim/plugins';
 import * as uiGrid from 'ui-grid';
 
 markAsAngular1Module(ngMessages, timer, aedatetimepicker, ngSanitize, uibootstrap, ngFileUpload, ngStorage, uiGrid);
@@ -36,7 +37,7 @@ export const timApp = angular.module('timApp', [
     'ui.grid.selection',
     'ui.grid.exporter',
     'ui.grid.autoResize',
-]);
+].concat(plugins.angularModules));
 // disable Angular URL manipulation when using ng-include; from http://stackoverflow.com/a/19825756
 timApp.config(['$provide', function ($provide) {
     $provide.decorator('$browser', ['$delegate', function ($delegate) {

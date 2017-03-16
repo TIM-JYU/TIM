@@ -20,10 +20,16 @@
         <meta name="google-site-verification" content="GHYGje2NiYlQM66xyggsnzQht1OHSgtv_9baHbFIklU"/>
 
         <script data-main="/static/scripts/build/main.js" src="/static/scripts/node_modules/requirejs/require.js"></script>
-
+        <script>
+            define("tim/plugins", [{{ (["exports"] + jsModuleIds|list)|map('map_format', "'%s'")|join(', ')|safe }}],
+                function (exports) {
+                    exports.angularModules = {{ (jsMods or [])|tojson }};
+                });
+        </script>
         {% block stylesheet %}
             {{ scss(config.SASS_GEN_PATH + '/' + prefs.css_combined) }}
         {% endblock %}
+        <link rel="stylesheet" href="{{ url_for('bower.static', filename='angular-ui-grid/ui-grid.min.css') }}">
         <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui-dist/jquery-ui.min.css') }}">
         <link rel="stylesheet"
               href="{{ url_for('bower.static', filename='eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css') }}">

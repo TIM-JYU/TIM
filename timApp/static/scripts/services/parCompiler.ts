@@ -1,6 +1,8 @@
 import * as angular from 'angular';
 import {timApp} from 'tim/app';
 import * as ocLazyLoad from 'oclazyload'
+import * as renderMathInElement from 'katex-auto-render';
+import * as katex from 'katex';
 import {markAsAngular1Module} from "tim/angular-utils";
 
 markAsAngular1Module(ocLazyLoad);
@@ -9,6 +11,7 @@ declare const timLogTime: (message: string, id: string, level?: number) => void;
 
 timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer', '$compile', '$ocLazyLoad', '$timeout', '$log',
     ($http, $window, $q, $httpParamSerializer, $compile, $ocLazyLoad, $timeout, $log) => {
+        $window.katex = katex; // otherwise auto-render extension cannot find KaTeX
         class ParCompiler {
             mathJaxLoaded: boolean = false;
             mathJaxLoadDefer: JQueryXHR;
@@ -36,17 +39,17 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer',
                 }
             }
 
-            processAllMathDelayed($elem, delay?: number) {
+            processAllMathDelayed($elem: JQuery, delay?: number) {
                 $timeout(() => {
                     this.processAllMath($elem);
                 }, delay || 300);
             }
 
-            processAllMath($elem) {
+            processAllMath($elem: JQuery) {
                 timLogTime("processAllMath start", "view");
                 let katexFailures = [];
-                $elem.find('.math').each(() => {
-                    const result = this.processMath(this, false);
+                $elem.find('.math').each((index, elem) => {
+                    const result = this.processMath(elem, false);
                     if (result !== null) {
                         katexFailures.push(result);
                     }
@@ -57,7 +60,7 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer',
                 timLogTime("processAllMath end", "view");
             }
 
-            processMathJax(elements) {
+            processMathJax(elements: Array<Element> | Element) {
                 if (this.mathJaxLoaded) {
                     MathJax.Hub.Queue(["Typeset", MathJax.Hub, elements]);
                 } else {
@@ -86,7 +89,7 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer',
              */
             processMath(elem, tryMathJax: boolean) {
                 try {
-                    $window.renderMathInElement(elem);
+                    renderMathInElement(elem);
                     return null;
                 }
                 catch (e) {
