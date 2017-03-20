@@ -439,7 +439,7 @@
 			'<div class="navigate-right"></div>' +
 			'<div class="navigate-up"></div>' +
 			'<div class="navigate-down"></div>' +
-            '<div class="fullscreen enabled"></div>'); //OMIA!!!
+            '<div class="fullscreen enabled"></div>'); // TIM mod (fullscreen added)
 
 		// Slide number
 		dom.slideNumber = createSingletonNode( dom.wrapper, 'div', 'slide-number', '' );
@@ -460,7 +460,7 @@
 		dom.controlsDown = toArray( document.querySelectorAll( '.navigate-down' ) );
 		dom.controlsPrev = toArray( document.querySelectorAll( '.navigate-prev' ) );
 		dom.controlsNext = toArray( document.querySelectorAll( '.navigate-next' ) );
-        dom.controlsFullScreen = toArray( document.querySelectorAll( '.fullscreen' ) ); //OMIA!!!
+        dom.controlsFullScreen = toArray( document.querySelectorAll( '.fullscreen' ) ); // TIM add
 
 		dom.statusDiv = createStatusDiv();
 	}
@@ -877,7 +877,7 @@
 
 		eventsAreBound = true;
 
-        //OMIA!!!
+        // TIM
         $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function(event) {
             // The event object doesn't carry information about the fullscreen state of the browser,
             // but it is possible to retrieve it through the fullscreen API
@@ -888,7 +888,7 @@
                 $('div.fullscreen').attr('class', 'fullscreenon enabled');
             }
         });
-        //OMIA!!!
+        // TIM end
 
 
 
@@ -959,7 +959,7 @@
 			dom.controlsDown.forEach( function( el ) { el.addEventListener( eventName, onNavigateDownClicked, false ); } );
 			dom.controlsPrev.forEach( function( el ) { el.addEventListener( eventName, onNavigatePrevClicked, false ); } );
 			dom.controlsNext.forEach( function( el ) { el.addEventListener( eventName, onNavigateNextClicked, false ); } );
-            dom.controlsFullScreen.forEach( function( el ) { el.addEventListener( eventName, onNavigateFullScreenClicked, false ); } ); //OMIA!!!
+            dom.controlsFullScreen.forEach( function( el ) { el.addEventListener( eventName, onNavigateFullScreenClicked, false ); } ); // TIM add
 		} );
 
 	}
@@ -1810,36 +1810,38 @@
 	 * @see http://fullscreen.spec.whatwg.org/
 	 * @see https://developer.mozilla.org/en-US/docs/DOM/Using_fullscreen_mode
 	 */
-	function enterFullscreen() {
-		var element = document.body;
+    function enterFullscreen() {
+        var element = document.body;
 
-	        if (!document.fullscreenElement &&    // alternative standard method
-		    !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {
-			// Check which implementation is available
-			var requestMethod = element.requestFullScreen ||
-				element.webkitRequestFullscreen ||
-				element.webkitRequestFullScreen ||
-				element.mozRequestFullScreen ||
-				element.msRequestFullscreen;
+        // TIM
+        if (!document.fullscreenElement &&    // alternative standard method
+            !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+        // TIM end
+            // Check which implementation is available
+            var requestMethod = element.requestFullScreen ||
+                element.webkitRequestFullscreen ||
+                element.webkitRequestFullScreen ||
+                element.mozRequestFullScreen ||
+                element.msRequestFullscreen;
 
-			if( requestMethod ) {
-			    requestMethod.apply( element );
-			}
-		    }
-	        else {
-		    if (document.exitFullscreen) {
-			document.exitFullscreen();
-		    } else if (document.msExitFullscreen) {
-			document.msExitFullscreen();
-		    } else if (document.mozCancelFullScreen) {
-			document.mozCancelFullScreen();
-		    } else if (document.webkitExitFullscreen) {
-			document.webkitExitFullscreen();
-		    }
-
-		}
-
-	}
+            if (requestMethod) {
+                requestMethod.apply(element);
+            }
+            // TIM
+        }
+        else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+            // TIM end
+        }
+    }
 
 	/**
 	 * Enters the paused mode which fades everything on screen to
@@ -2013,7 +2015,7 @@
 
 		// Show fragment, if specified
 		if( typeof f !== 'undefined' ) {
-			navigateFragment( f, undefined, o );
+			navigateFragment( f, undefined, o ); // TIM mod
 		}
 
 		// Dispatch an event if the slide changed
@@ -2075,11 +2077,11 @@
 
 		cueAutoSlide();
 
-		//OMIA!
+		// TIM
         if (o != 'remote' && is_owner) {
             updateSlideStatus(h, v, f);
-        };
-		//OMIA
+        }
+		// TIM end
 	}
 
 	/**
@@ -2262,12 +2264,11 @@
 			// Mark the current slide as present
 			slides[index].classList.add( 'present' );
 
+			// TIM
             // If slide is too big scale the slide so that whole
 		    // content is shown
 			//var slide = $('section.present')[0];
             var slide = slides[index];
-
-            //OMIA!!!!
 			var show = $('div.slides')[0];
 			var inner = $(slide).innerHeight();
 			var base = $(show).height();
@@ -2277,7 +2278,7 @@
                 $(slide).css('transform', 'scale(' + scale + ')');
                 $(slide).css('transform-origin', '50% 0');
 			}
-            //OMIA!!!!
+            // TIM end
 
 			slides[index].removeAttribute( 'hidden' );
 			slides[index].removeAttribute( 'aria-hidden' );
@@ -3232,7 +3233,7 @@
 	 * @return {Boolean} true if a change was made in any
 	 * fragments visibility as part of this call
 	 */
-	function navigateFragment( index, offset, origin ) {
+	function navigateFragment( index, offset, origin ) { // TIM mod (added origin parameter)
 
 		if( currentSlide && config.fragments ) {
 
@@ -3256,9 +3257,11 @@
 					index += offset;
 				}
 
+				// TIM
                 if (origin != 'remote' && is_owner) {
                     updateSlideStatus(indexh, indexv, index);
                 }
+                // TIM end
 
 				var fragmentsShown = [],
 					fragmentsHidden = [];
@@ -3276,7 +3279,7 @@
 						element.classList.remove( 'current-fragment' );
 
 						// Announce the fragments one by one to the Screen Reader
-						dom.statusDiv.textContent = element.textContent;
+						dom.statusDiv.textContent = element.textContent; // TIM mod (statusDiv.innerHTML -> statusDiv.textContent)
 
 						if( i === index ) {
 							element.classList.add( 'current-fragment' );
@@ -3901,7 +3904,7 @@
 	function onNavigateDownClicked( event ) { event.preventDefault(); onUserInput(); navigateDown(); }
 	function onNavigatePrevClicked( event ) { event.preventDefault(); onUserInput(); navigatePrev(); }
 	function onNavigateNextClicked( event ) { event.preventDefault(); onUserInput(); navigateNext(); }
-    function onNavigateFullScreenClicked( event ) { event.preventDefault(); onUserInput(); enterFullscreen(); } //OMIA!!!
+    function onNavigateFullScreenClicked( event ) { event.preventDefault(); onUserInput(); enterFullscreen(); } // TIM add
 
 	/**
 	 * Handler for the window level 'hashchange' event.
