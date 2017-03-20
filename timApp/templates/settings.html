@@ -7,9 +7,6 @@
     {{ super() }}
     <script>
         var settings = {{ prefs|tojson }};
-        function clearLocalStorage() {
-            window.localStorage.clear();
-        }
     </script>
 {% endblock %}
 {% block content %}
@@ -41,7 +38,7 @@
 
                     <button class="timButton" type="submit" ng-disabled="saving">Save custom CSS</button>
                     <span ng-show="saving">Saving...</span>
-                    <button class="timButton" onclick="clearLocalStorage();">Clear local settings storage</button>
+                    <button class="timButton" ng-click="clearLocalStorage()">Clear local settings storage</button>
                 </form>
             </div>
         </div>

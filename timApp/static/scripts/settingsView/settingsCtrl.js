@@ -20,6 +20,10 @@ settingsApp.controller('SettingsCtrl', ['$scope', '$http', function (sc, http) {
         $('link[rel="stylesheet"]').first().attr('href', '/static/gen/' + sc.settings.css_combined + '.css');
     };
 
+    sc.clearLocalStorage = function () {
+        window.localStorage.clear();
+    };
+
     $(".docEditor").change(function() {
         sc.style.innerHTML = sc.settings.custom_css;
     });
