@@ -11,13 +11,11 @@
  * @copyright 2015 Timppa project authors
  */
 
-var angular;
-
-var timApp = angular.module('timApp');
+define(['tim/app', 'angular', 'tim/utils', 'jquery'], function (app, angular, utils, $) {
 
 //TODO: Painike, josta voisi hakea kysymyksiä.
 //TODO: Button, to get questions and wall.
-timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScope', '$timeout',
+app.timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScope', '$timeout',
 
     function ($scope, http, $window, $rootScope, $timeout) {
         "use strict";
@@ -124,7 +122,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 params: {'doc_id': $scope.docId, 'buster': new Date().getTime()}
             })
                 .success(function (answer) {
-                    var lectureCode = GetURLParameter('lecture');
+                    var lectureCode = utils.GetURLParameter('lecture');
                     /*
                      Check if the lecture parameter is autojoin.
                      If it is and there is only one lecture going on in the document, join it automatically.
@@ -1305,3 +1303,4 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
     }
 ])
 ;
+});

@@ -13,3 +13,5 @@ declare module 'ng-file-upload';
 declare module 'ui-grid';
 declare module 'tim/plugins';
 declare module 'katex-auto-render';
+declare module 'reveal';
+declare module 'tim/show_slide_vars'

@@ -7,18 +7,21 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='scripts/reveal/css/reveal.min.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='scripts/reveal/css/theme/jyu.css') }}" id="theme">
+    {% if request.args['print-pdf'] %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='scripts/reveal/css/print/pdf.css') }}" />
+    {% endif %}
     {% include 'partials/doc_customcss.html' %}
     <script>
-        if (window.location.search.match(/print-pdf/gi)) {
-            var link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.type = 'text/css';
-            link.href = 'reveal.js/css/print/pdf.css';
-            document.getElementsByTagName('head')[0].appendChild(link);
-        }
-        var is_owner = item.rights.manage;
-        var pollInterval = 500;
+        define('tim/show_slide_vars', ['exports'], function (exports) {
+            exports.is_owner = item.rights.manage;
+            exports.background_url = {{ (slide_background_url or None)|tojson }};
+            exports.background_color = {{ (slide_background_color or None)|tojson }};
+        });
     </script>
+{% endblock %}
+
+{% block extramodules %}
+    {{ (["tim/slide"])|map('map_format', "'%s'")|join(', ')|safe }}
 {% endblock %}
 
 {% block body %}
@@ -54,141 +57,4 @@
             </section>
         </div>
     </div>
-
-    <script>
-        // Full list of configuration options available here:
-        // https://github.com/hakimel/reveal.js#configuration
-        Reveal.initialize({
-            fragments: true,
-            width: 1150,
-            controls: true,
-            progress: true,
-            history: true,
-            center: true,
-            // Flags if speaker notes should be visible to all viewers
-            showNotes: false,
-            viewDistance: 10,
-            theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
-            transition: Reveal.getQueryHash().transition || 'fade', // default/cube/page/concave/zoom/linear/fade/none
-
-            // Optional libraries used to extend on reveal.js
-            dependencies: [
-                {
-                    src: "{{ url_for('static', filename='scripts/reveal/lib/js/classList.js') }}",
-                    condition: function () {
-                        return !document.body.classList;
-                    }
-                },
-                {
-
-                    src: "{{ url_for('static', filename='scripts/reveal/plugin/zoom-js/zoom.js') }}",
-                    async: true,
-                    condition: function () {
-                        return !!document.body.classList;
-                    }
-                },
-                {
-                    src: "{{ url_for('static', filename='scripts/reveal/plugin/notes/notes.js') }}",
-                    async: true,
-                    condition: function () {
-                        return !!document.body.classList;
-                    }
-                }
-            ]
-        });
-
-        var pollTimeout;
-        var receiving = true;
-
-        var oldh = 0, oldv = 0;
-
-        function refresh() {
-            return; // TODO: think this so that things are paired
-            clearTimeout(pollTimeout);
-            $.ajax({
-                cache: false,
-                url: '/getslidestatus/',
-                data: {'doc_id': item.id},
-                dataType: 'json',
-                error: function (xhr, status, err) {
-                    console.log('error');
-                    pollTimeout = setTimeout(refresh, pollInterval);
-                },
-                success: function (data) {
-                    var oldstate = Reveal.getState();
-                    var oldh = 0, oldv = 0, newh = 0, newv = 0;
-                    if (oldstate.indexh !== undefined) oldh = oldstate.indexh;
-                    if (oldstate.indexv !== undefined) oldv = oldstate.indexv;
-                    data = JSON.parse(data);
-                    console.log(data);
-                    if (data !== null) {
-                        if (data.indexh !== undefined) newh = data.indexh;
-                        if (data.indexv !== undefined) newv = data.indexv;
-                        if ((newh != oldh || newv != oldv
-                            || data.indexf != oldstate.indexf) && receiving) {
-                            console.log('Change slide');
-                            Reveal.slide(newh, newv, data.indexf, 'remote');
-                        }
-                    }
-                    pollTimeout = setTimeout(refresh, pollInterval);
-                }
-            });
-        }
-
-        if (GetURLParameter('controls') === undefined && is_owner) pollTimeout = setTimeout(refresh, pollInterval);
-
-
-        function updateSlideStatus(h, v, f) {
-            if (GetURLParameter('controls') !== undefined) return;
-            receiving = false;
-            clearTimeout(pollTimeout);
-            $.ajax({
-                dataType: 'json',
-                url: '/setslidestatus',
-                data: {'doc_id': item.id, 'status': JSON.stringify({indexh: h, indexv: v, indexf: f})},
-                success: function (data) {
-                    pollTimeout = setTimeout(refresh, pollInterval);
-                    receiving = true;
-                },
-                error: function () {
-                    console.log('error');
-                    pollTimeout = setTimeout(refresh, pollInterval);
-                    receiving = true;
-                }
-            })
-        }
-
-        window.onload = function () {
-            document.onkeyup = function (evt) {
-                evt = evt || window.event;
-                if (evt.keyCode == 82) {
-                    pollTimeout = setTimeout(refresh, pollInterval);
-                }
-            };
-            setTimeout(function () {
-                Reveal.slide()
-            }, 2000);
-        };
-
-        {% if slide_background_url %}
-            var background_url = "{{ slide_background_url }}"
-            if (background_url == "none") {
-                $('.backgrounds').css('background-image', "None");
-                //document.body.style.backgroundImage = "None";
-            } else {
-                $('.backgrounds').css('background-image', "url('" + background_url + "')");
-                //document.body.style.backgroundImage = "url('" + background_url + "')";
-            }
-        {% endif %}
-
-        {% if slide_background_color %}
-            var background_color = "{{ slide_background_color }}"
-            if (background_color != "none") {
-                $('.backgrounds').css('background-color', background_color);
-                //document.body.style.backgroundColor = background_color;
-            }
-        {% endif %}
-
-
-    </script>
 {% endblock %}

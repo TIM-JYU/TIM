@@ -145,7 +145,6 @@ run npm install --save @types/requirejs
 run touch node_modules/$(date -I).stamp
 
 # the type files need a couple of patches
-run sed -i 's/declare var \$: JQueryStatic;/declare var $: JQueryStatic | any;/' node_modules/@types/jquery/index.d.ts
 run sed -i '1s/^/import * as angular from "angular";\n/' node_modules/@types/ngstorage/index.d.ts
 
 # Force auto-render extension to throw exceptions instead of printing to console

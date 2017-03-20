@@ -13,6 +13,7 @@ requirejs.config({
         'angular-timer': 'angular-timer/dist/angular-timer',
         'angular-ui-bootstrap': 'angular-ui-bootstrap/dist/ui-bootstrap-tpls',
         'eonasdan-bootstrap-datetimepicker': 'eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min',
+        'head': '/static/scripts/reveal/lib/js/head.min',
         'humanize-duration': 'humanize-duration/humanize-duration',
         'jquery': 'jquery/dist/jquery',
         'jqueryui': 'jquery-ui-dist/jquery-ui',
@@ -21,6 +22,7 @@ requirejs.config({
         'ng-file-upload': 'ng-file-upload/dist/ng-file-upload',
         'ngstorage': 'ngstorage/ngstorage',
         'oclazyload': 'oclazyload/dist/oclazyload',
+        'reveal': '/static/scripts/reveal/js/reveal',
         'ui-grid': 'angular-ui-grid/ui-grid',
 
         // plugin modules
@@ -45,10 +47,12 @@ requirejs.config({
         'angular-sanitize': {deps: ['angular']},
         'angular-timer': {deps: ['angular']},
         'angular-ui-bootstrap': {deps: ['angular']},
+        'head': {exports: 'head'},
         'jqueryui': {deps: ['jquery']},
         'katex-auto-render': {deps: ['katex']},
         'ng-file-upload': {deps: ['angular']},
         'oclazyload': {deps: ['angular']},
+        'ui-grid': {deps: ['angular']},
 
         // TIM modules
         'tim/answerbrowser3': {deps: ['tim/app', 'tim/timTiming']},
@@ -127,7 +131,6 @@ requirejs.config({
         'tim/directives/velpSummary': {deps: ['tim/app', 'tim/controllers/reviewController']},
         'tim/directives/velpWindow': {deps: ['tim/app']},
         'tim/draggable': {deps: ['tim/app']},
-        'tim/lectureController': {deps: ['tim/app', 'jquery']},
         'tim/manageView/manageCtrl': {deps: ['tim/app']},
         'tim/marktree': {exports: 'globals'},
         'tim/services/slugify': {deps: ['tim/app']},
@@ -170,6 +173,7 @@ requirejs([
     'tim/directives/popUpDialog',
     'tim/directives/rightsEditor',
     'tim/directives/velpSelection',
+    'tim/extramodules',
     'tim/lectureController',
     'tim/manageView/manageCtrl',
     'tim/parEditor',

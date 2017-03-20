@@ -8,8 +8,8 @@
 (function( root, factory ) {
 	if( typeof define === 'function' && define.amd ) {
 		// AMD. Register as an anonymous module.
-		define( function() {
-			root.Reveal = factory();
+		define(['head', 'jquery'], function(head, jQuery) {
+			root.Reveal = factory(head, jQuery);
 			return root.Reveal;
 		} );
 	} else if( typeof exports === 'object' ) {
@@ -19,7 +19,7 @@
 		// Browser globals.
 		root.Reveal = factory();
 	}
-}( this, function() {
+}( this, function(head, $) {
 
 	'use strict';
 
@@ -32,6 +32,11 @@
 
 		// Configurations defaults, can be overridden at initialization time
 		config = {
+
+			// TIM
+			isOwner: false,
+			updateSlideStatus: function (a, b, c) {},
+			// TIM end
 
 			// The "normal" size of the presentation, aspect ratio will be preserved
 			// when the presentation is scaled to fit different resolutions
@@ -2078,8 +2083,8 @@
 		cueAutoSlide();
 
 		// TIM
-        if (o != 'remote' && is_owner) {
-            updateSlideStatus(h, v, f);
+        if (o != 'remote' && config.isOwner) {
+            config.updateSlideStatus(h, v, f);
         }
 		// TIM end
 	}
@@ -3258,8 +3263,8 @@
 				}
 
 				// TIM
-                if (origin != 'remote' && is_owner) {
-                    updateSlideStatus(indexh, indexv, index);
+                if (origin != 'remote' && config.isOwner) {
+                    config.updateSlideStatus(indexh, indexv, index);
                 }
                 // TIM end
 
