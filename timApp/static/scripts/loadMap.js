@@ -1,4 +1,4 @@
-/* globals gamified_data, console, $ */
+define(['jquery'], function ($) {
 
 $(document).ready(function () {
     // Scale of the map
@@ -13,8 +13,15 @@ $(document).ready(function () {
     var json;
 
     // Get the div that will hold canvases
-    var container = $(".mapContainer")[0];
-    $(".mapContainer").css({
+    var $container = $(".mapContainer");
+
+    // don't try to do anything if there are no maps on the page
+    if ($container.length === 0) {
+        return;
+    }
+
+    var container = $container[0];
+    $container.css({
         "z-index": 0,
         "display": "none",
         "position": "relative"
@@ -69,7 +76,7 @@ $(document).ready(function () {
         type: "post",
         datatype : "application/json",
         contentType: "application/json",
-        data: JSON.stringify(gamified_data),
+        data: $container.attr('data-mapdata'),
         charset: 'utf-8',
         success: function (newJson) {
 
@@ -808,4 +815,5 @@ $(document).ready(function () {
             console.log("Request Failed: " + textStatus + ', ' + error);
         }
     });
+});
 });

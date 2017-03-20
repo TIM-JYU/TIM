@@ -175,6 +175,7 @@ requirejs([
     'tim/directives/velpSelection',
     'tim/extramodules',
     'tim/lectureController',
+    'tim/loadMap',
     'tim/manageView/manageCtrl',
     'tim/parEditor',
     'tim/settingsView/settingsCtrl',

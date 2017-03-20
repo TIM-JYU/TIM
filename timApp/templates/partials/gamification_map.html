@@ -2,9 +2,6 @@
 <!--<label class="showMap no-popup-menu">Show map <input type="checkbox"  onclick="showMap(this)" data-toggle="false"></input></label>-->
 
 <script>
-
-	var gamified_data = {{ gamified_data|tojson }};
-
     function showMap(button) {
         var map = $(".mapContainer")[0];
         var ui = $(".uiContainer")[0];
@@ -32,7 +29,7 @@
     </table>
 </div>
 
-<div class="mapContainer"> </div>
+<div class="mapContainer" data-mapdata='{{ gamified_data|tojson }}'> </div>
 
 <br>
 
