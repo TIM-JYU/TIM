@@ -134,6 +134,10 @@ run wget http://downloads.sourceforge.net/octave/optim-1.5.2.tar.gz
 run echo "pkg install optim-1.5.2.tar.gz" > octinst.m
 run octave octinst.m
 
+run wget http://downloads.sourceforge.net/octave/symbolic-2.5.0.tar.gz
+run echo "pkg install symbolic-2.5.0.tar.gz" > octinst.m
+run octave octinst.m
+
 # For packages see: https://octave.sourceforge.io/packages.php and remove ?download from the URL
 
 RUN  rm -rf /tmp/*

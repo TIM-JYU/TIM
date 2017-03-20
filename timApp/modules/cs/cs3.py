@@ -2069,6 +2069,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
                 elif ttype == "octave":
                     print("octave: ", exename)
+                    dockercontainer = get_json_param(query.jso, "markup", "dockercontainer", "timimages/octave")
                     code, out, err, pwd = run2(["octave", "--no-window-system", "--no-gui", "-qf", pure_exename],
                                                cwd=prgpath, timeout=20, env=env,
                                                stdin=stdin,
