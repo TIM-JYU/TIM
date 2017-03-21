@@ -69,34 +69,34 @@ timApp.filter('escape', function () {
     };
 });
 
-timApp.filter('timdate', function ($filter) {
+timApp.filter('timdate', ['$filter', function ($filter) {
     let dateFilter = $filter('date');
     return function (date) {
         return dateFilter(date, 'dd.MM.yyyy HH:mm:ss');
     }
-});
+}]);
 
-timApp.filter('timreldate', function ($filter) {
+timApp.filter('timreldate', ['$filter', function ($filter) {
     return function (date) {
         return moment(date).fromNow();
     }
-});
+}]);
 
-timApp.filter('timduration', function ($filter) {
+timApp.filter('timduration', ['$filter', function ($filter) {
     return function (duration) {
         return moment.duration(duration).humanize();
     }
-});
+}]);
 
-timApp.filter('timpreciseduration', function ($filter) {
+timApp.filter('timpreciseduration', ['$filter', function ($filter) {
     return function (duration) {
         return humanizeDuration(moment.duration(duration).asMilliseconds());
     }
-});
+}]);
 
-timApp.filter('timtim', function ($filter) {
+timApp.filter('timtim', ['$filter', function ($filter) {
     let dateFilter = $filter('date');
     return function (date) {
         return dateFilter(date, 'HH:mm:ss');
     }
-});
+}]);

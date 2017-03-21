@@ -16,5 +16,11 @@
         "./*"
       ]
     }
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "bower_components",
+    "build-optimized",
+    "build"
+  ]
 }

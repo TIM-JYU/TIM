@@ -18,7 +18,7 @@
 /** Directive for a single annotation.
  * @lends module:reviewController
  */
-timApp.directive("annotation",['$window', function ($window, $timeout) {
+timApp.directive("annotation",['$window', function ($window) {
     "use strict";
     var console = $window.console;
     return {

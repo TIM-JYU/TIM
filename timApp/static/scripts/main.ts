@@ -1,42 +1,42 @@
 requirejs.config({
-    baseUrl: '/static/scripts/node_modules',
+    baseUrl: '/static/scripts/build',
     paths: {
         // TIM modules
-        'tim': '/static/scripts/build',
+        'tim': '.',
 
         // 3rd party modules
-        'ace': 'ace/lib/ace',
-        'angular': 'angular/angular',
-        'angular-eonasdan-datetimepicker': 'angular-eonasdan-datetimepicker/dist/angular-eonasdan-datetimepicker',
-        'angular-messages': 'angular-messages/angular-messages',
-        'angular-sanitize': 'angular-sanitize/angular-sanitize',
-        'angular-timer': 'angular-timer/dist/angular-timer',
-        'angular-ui-bootstrap': 'angular-ui-bootstrap/dist/ui-bootstrap-tpls',
-        'eonasdan-bootstrap-datetimepicker': 'eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min',
-        'head': '/static/scripts/reveal/lib/js/head.min',
-        'humanize-duration': 'humanize-duration/humanize-duration',
-        'jquery': 'jquery/dist/jquery',
-        'jqueryui': 'jquery-ui-dist/jquery-ui',
-        'katex': 'katex/dist/katex.min',
-        'katex-auto-render': 'katex/dist/contrib/auto-render.min',
-        'ng-file-upload': 'ng-file-upload/dist/ng-file-upload',
-        'ngstorage': 'ngstorage/ngstorage',
-        'oclazyload': 'oclazyload/dist/oclazyload',
-        'reveal': '/static/scripts/reveal/js/reveal',
-        'ui-grid': 'angular-ui-grid/ui-grid',
+        'ace': '../node_modules/ace/lib/ace',
+        'angular': '../node_modules/angular/angular',
+        'angular-eonasdan-datetimepicker': '../node_modules/angular-eonasdan-datetimepicker/dist/angular-eonasdan-datetimepicker',
+        'angular-messages': '../node_modules/angular-messages/angular-messages',
+        'angular-sanitize': '../node_modules/angular-sanitize/angular-sanitize',
+        'angular-timer': '../node_modules/angular-timer/dist/angular-timer',
+        'angular-ui-bootstrap': '../node_modules/angular-ui-bootstrap/dist/ui-bootstrap-tpls',
+        'eonasdan-bootstrap-datetimepicker': '../node_modules/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min',
+        'head': 'reveal/lib/js/head.min',
+        'humanize-duration': '../node_modules/humanize-duration/humanize-duration',
+        'jquery': '../node_modules/jquery/dist/jquery',
+        'jqueryui': '../node_modules/jquery-ui-dist/jquery-ui',
+        'katex': '../node_modules/katex/dist/katex.min',
+        'katex-auto-render': '../node_modules/katex/dist/contrib/auto-render.min',
+        'ng-file-upload': '../node_modules/ng-file-upload/dist/ng-file-upload',
+        'ngstorage': '../node_modules/ngstorage/ngstorage',
+        'oclazyload': '../node_modules/oclazyload/dist/oclazyload',
+        'reveal': 'reveal/js/reveal',
+        'ui-grid': '../node_modules/angular-ui-grid/ui-grid',
 
         // plugin modules
         'cs': '/cs',
         'mcq': '/mcq',
         'mmcq': '/mmcq',
-        'static/scripts/imagex': '/static/scripts/build/imagex',
-        'static/scripts/jquery.ui.touch-punch.min': '/static/scripts/jquery.ui.touch-punch.min',
-        'static/scripts/timHelper': '/static/scripts/build/timHelper',
+        'static/scripts/imagex': 'imagex',
+        'static/scripts/jquery.ui.touch-punch.min': '../jquery.ui.touch-punch.min',
+        'static/scripts/timHelper': 'timHelper',
         'svn': '/svn',
     },
     packages: [{
         name: 'moment',
-        location: 'moment',
+        location: '../node_modules/moment',
         main: 'moment'
     }],
     shim: {
@@ -149,6 +149,7 @@ requirejs.config({
         'mmcq/script2': {deps: ['angular', 'mmcq/SimpleDirective']},
         'mmcq/SimpleDirective': {exports: 'globals'},
         'svn/video/js/video': {deps: ['angular']},
+        'static/scripts/imagex': {deps: ['angular', 'angular-sanitize']},
     }
 });
 
