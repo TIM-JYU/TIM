@@ -1,7 +1,6 @@
 """
 Routes for printing a document
 """
-import subprocess
 
 from flask import Blueprint
 from flask import abort
@@ -9,13 +8,15 @@ from flask import Response
 
 from accesshelper import verify_logged_in
 from timdb.models.docentry import DocEntry
+from pandocwriter import call_pandoc
 
-print = Blueprint('print',
+
+print_blueprint = Blueprint('print',
                    __name__,
                    url_prefix='/print')
 
 
-@print.route("/<path:doc_path>", methods=['GET'])
+@print_blueprint.route("/<path:doc_path>", methods=['GET'])
 def print_document(doc_path):
     # verify_logged_in()
 
@@ -47,7 +48,3 @@ def get_markdown(doc_path):
 
     # Return the response as plain text using the above generator.
     return generate_response()
-
-
-def call_pandoc(md):
-    return subprocess.check_output(["pandoc", "-t latex"])
