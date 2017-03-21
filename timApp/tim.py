@@ -55,6 +55,7 @@ from routes.notes import notes
 from routes.notify import notify, send_email
 from routes.qst import qst_plugin
 from routes.readings import readings
+from routes.print import print
 from routes.search import search_routes
 from routes.settings import settings_page
 from routes.upload import upload
@@ -99,6 +100,7 @@ app.register_blueprint(clipboard)
 app.register_blueprint(notify)
 app.register_blueprint(bookmarks)
 app.register_blueprint(global_notification)
+app.register_blueprint(print)
 app.register_blueprint(Blueprint('bower',
                                  __name__,
                                  static_folder='static/scripts/bower_components',
