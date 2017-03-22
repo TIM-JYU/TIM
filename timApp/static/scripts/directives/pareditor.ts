@@ -1,6 +1,6 @@
 // TODO: save cursor postion when changing editor
 
-define(['require', 'exports', 'tim/app', 'angular', 'jquery', 'ace/ace', 'ace/snippets', 'tim/draggable'], function (require, exports, app, angular, $, ace) {
+define(['require', 'exports', 'tim/app', 'angular', 'jquery', 'ace/ace', 'ace/snippets', 'tim/directives/draggable'], function (require, exports, app, angular, $, ace) {
 
 var MENU_BUTTON_CLASS = 'menuButtons';
 var timApp = app.timApp;

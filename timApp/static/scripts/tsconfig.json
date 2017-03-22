@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "amd",
     "noImplicitAny": false,
-    "noImplicitThis": true,
+    "noImplicitThis": false,
     "allowUnreachableCode": true,
     "removeComments": true,
     "preserveConstEnums": true,
