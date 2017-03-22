@@ -112,6 +112,7 @@ run npm install --save angular-messages@1.5
 run npm install --save humanize-duration@3.10
 run npm install --save angular-timer@1.3
 run npm install --save https://github.com/ajaxorg/ace.git#v1.2.6
+run npm install --save jquery-ui-touch-punch-c@1.1
 run npm install --save requirejs
 
 run npm install --save @types/angular@1.5
