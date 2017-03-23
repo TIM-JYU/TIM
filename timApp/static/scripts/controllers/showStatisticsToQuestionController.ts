@@ -17,7 +17,7 @@ markAsUsed(chart);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$http', function ($scope) {
+timApp.controller('ShowStatisticsToQuestionController', ['$scope', function ($scope) {
     "use strict";
     $scope.dynamicAnswerShowControl = {};
     $scope.canvas = "";

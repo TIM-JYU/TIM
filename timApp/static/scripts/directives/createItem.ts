@@ -25,7 +25,7 @@ timApp.directive("createItem", ['$window', '$log', '$http', 'Slugify', function 
 
         },
 
-        controller: function ($scope, $element, $attrs) {
+        controller: ['$scope', '$element', '$attrs', function ($scope, $element, $attrs) {
             var sc = $scope;
 
             sc.automaticShortName = true;
@@ -68,6 +68,6 @@ timApp.directive("createItem", ['$window', '$log', '$http', 'Slugify', function 
             sc.nameChanged = function () {
                 sc.automaticShortName = (sc.itemName || []).length === 0;
             };
-        }
+        }]
     };
 }]);

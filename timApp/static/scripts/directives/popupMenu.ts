@@ -40,7 +40,7 @@ timApp.directive('popupMenu', ['$http', '$window', '$filter', function ($http, $
             $scope.halfColClass = $scope.storageAttribute ? 'col-xs-5' : 'col-xs-6';
         },
 
-        controller: function ($scope, $element) {
+        controller: ['$scope', '$element', function ($scope, $element) {
             $scope.$watchGroup(['getLatestActions()'], function (newValues, oldValues, scope) {
                 // Update the menu if its items are changed
                 $scope.actions = newValues[0];
@@ -110,6 +110,6 @@ timApp.directive('popupMenu', ['$http', '$window', '$filter', function ($http, $
             $scope.$watch('model.editState', $scope.watchEditMode);
 
             $element.css('position', 'absolute'); // IE needs this
-        }
+        }]
     };
 }]);

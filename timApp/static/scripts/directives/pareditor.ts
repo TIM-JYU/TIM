@@ -41,7 +41,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 isAce: '@',
                 initialTextUrl: '@'
             },
-            controller: function ($scope) {
+            controller: ['$scope', function ($scope) {
                 var tag = $scope.options.localSaveTag || "";
                 var storage = $window.localStorage;
                 $scope.lstag = tag;
@@ -489,7 +489,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 /* Add citation info to help tab */
                 document.getElementById('helpCite').setAttribute('value', '#- {rd="' + $scope.extraData.docId + '" rl="no" rp="' + $scope.extraData.par +'"}');
 
-            },
+            }],
             link: function ($scope, $element, $attrs) {
 
                 $scope.$storage = $localStorage;

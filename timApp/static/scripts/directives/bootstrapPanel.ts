@@ -15,13 +15,13 @@ timApp.directive("bootstrapPanel", ['$window', '$log', '$http', function ($windo
 
         },
 
-        controller: function ($scope, $element, $attrs) {
+        controller: ['$scope', '$element', '$attrs', function ($scope, $element, $attrs) {
             var sc = $scope;
 
             sc.close = function () {
                 $element.addClass('ng-hide');
                 sc.closeFn();
             };
-        }
+        }]
     };
 }]);

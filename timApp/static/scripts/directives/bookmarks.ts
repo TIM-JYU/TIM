@@ -19,7 +19,7 @@ timApp.directive("bookmarks", ['$window', '$log', '$http', '$uibModal', '$timeou
 
         },
 
-        controller: function ($scope, $element, $attrs) {
+        controller: ['$scope', '$element', '$attrs', function ($scope, $element, $attrs) {
             var sc = $scope;
             if ($window.bookmarks && !sc.data) {
                 sc.data = angular.copy($window.bookmarks);
@@ -175,7 +175,7 @@ timApp.directive("bookmarks", ['$window', '$log', '$http', '$uibModal', '$timeou
                     $window.alert("Could not fetch bookmarks.");
                 });
             }
-        }
+        }]
     };
 }]);
 

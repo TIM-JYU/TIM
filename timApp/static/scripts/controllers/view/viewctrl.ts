@@ -16,12 +16,13 @@ import {defineParMenu} from "tim/controllers/view/parmenu";
 import {defineQuestions} from "tim/controllers/view/questions";
 import {defineReadings} from "tim/controllers/view/readings";
 import {defineRefPopup} from "tim/controllers/view/refpopup";
+import * as interceptor from "tim/controllers/view/interceptor";
 import * as parCompiler from "tim/services/parCompiler";
 import * as popupMenu from "tim/directives/popupMenu";
 import $ = require("jquery");
 import {markAsUsed} from "tim/angular-utils";
 
-markAsUsed(ngStorage, parCompiler, popupMenu);
+markAsUsed(ngStorage, parCompiler, popupMenu, interceptor);
 
 timApp.controller("ViewCtrl", [
     '$scope',

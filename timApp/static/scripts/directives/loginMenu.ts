@@ -6,7 +6,7 @@ timApp.directive('loginMenu', ['Users', '$http', '$httpParamSerializer', functio
         restrict: 'E',
         scope: {},
         templateUrl: '/static/templates/loginMenu.html',
-        controller: function ($scope, $element) {
+        controller: ['$scope', '$element', function ($scope, $element) {
             $scope.getCurrentUser = () => Users.getCurrent();
             $scope.getSessionUsers = () => Users.getSessionUsers();
             $scope.form = {};
@@ -50,6 +50,6 @@ timApp.directive('loginMenu', ['Users', '$http', '$httpParamSerializer', functio
                     $scope.logout($scope.getCurrentUser());
                 }
             };
-        }
+        }]
     };
 }]);

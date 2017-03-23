@@ -93,7 +93,8 @@ export function Hex2Str(s) {
   return result;
 }
 
-const sanitizeService: any = angular.element(document).injector().get('$sanitize');
+// sanitizeService will be injected after Angular bootstrap; see main.ts
+export let sanitizeService: any;
 
 export function sanitize(s) {
     return sanitizeService(s);

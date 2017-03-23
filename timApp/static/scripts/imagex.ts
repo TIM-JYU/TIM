@@ -27,7 +27,7 @@ imagexApp.directiveFunction = function() {
     // Koska tata kutsutaan direktiivista, tata kutsutaan yhden kerran
     return {
         scope: {},
-        controller: imagexApp.Controller,
+        controller: ['$scope', '$http', '$transclude', '$sce', '$interval', imagexApp.Controller],
         link: imagexApp.initScope,
         restrict: 'AE',
         /*

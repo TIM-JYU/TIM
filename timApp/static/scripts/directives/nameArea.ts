@@ -31,7 +31,7 @@ timApp.directive('nameArea', ['$http', '$window', '$filter', function ($http, $w
             });
         },
 
-        controller: function ($scope, $element) {
+        controller: ['$scope', '$element', function ($scope, $element) {
             $scope.closePopup = function () {
                 $scope.$destroy();
                 $element.remove();
@@ -83,6 +83,6 @@ timApp.directive('nameArea', ['$http', '$window', '$filter', function ($http, $w
             $element.css('position', 'absolute'); // IE needs this
 
             $('#areaname').focus();
-        }
+        }]
     };
 }]);

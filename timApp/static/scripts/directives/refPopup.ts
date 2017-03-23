@@ -20,7 +20,7 @@ timApp.directive('refPopup', ['$window', '$filter', '$http', function ($window, 
             }
         },
 
-        controller: function ($scope, $element) {
+        controller: ['$scope', '$element', function ($scope, $element) {
             $scope.closePopup = function () {
                 $scope.$destroy();
                 $element.remove();
@@ -56,6 +56,6 @@ timApp.directive('refPopup', ['$window', '$filter', '$http', function ($window, 
 
             $scope.loaded = true;
             $element.css('position', 'absolute'); // IE needs this
-        }
+        }]
     };
 }]);

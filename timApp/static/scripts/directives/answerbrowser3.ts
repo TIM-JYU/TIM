@@ -53,7 +53,7 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
                 taskId: '@'
             },
 
-            controller: function ($scope) {
+            controller: ['$scope', function ($scope) {
                 timLogTime("answerbrowserlazy ctrl function", "answ", 1);
                 $scope.compiled = false;
 
@@ -88,7 +88,7 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
                         loadPlugin(origHtml, $par, $compile, $scope, $timeout);
                     }
                 };
-            },
+            }],
             
             link: function ($scope, $element, $attrs) {
                 timLogTime("answerbrowserlazy link function","answ",1);
@@ -109,8 +109,8 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
             scope: {
                 taskId: '@'
             },
-            controller: function ($scope) {
-            },
+            controller: ['$scope', function ($scope) {
+            }],
             link: function ($scope, $element, $attrs) {
                 $scope.element = $element.parents('.par');
                 $scope.parContent = $scope.element.find('.parContent');

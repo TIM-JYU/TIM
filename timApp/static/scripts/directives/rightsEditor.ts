@@ -20,7 +20,7 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
 
         },
 
-        controller: function ($scope, $element, $attrs) {
+        controller: ['$scope', '$element', '$attrs', function ($scope, $element, $attrs) {
             var sc = $scope;
             sc.internalControl = sc.control || {};
             sc.grouprights = [];
@@ -230,6 +230,6 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
             };
 
             sc.getPermissions();
-        }
+        }]
     };
 }]);

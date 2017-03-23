@@ -19,8 +19,13 @@
         <link href="{{ url_for('static', filename='images/favicon.ico') }}" rel="shortcut icon" type="image/x-icon"/>
         <meta name="google-site-verification" content="GHYGje2NiYlQM66xyggsnzQht1OHSgtv_9baHbFIklU"/>
         <script src="https://raw.githack.com/zloirock/core-js/v2.4.1/client/shim.min.js"></script>
-
-        <script data-main="/static/scripts/build/main.js" src="/static/scripts/node_modules/requirejs/require.js"></script>
+        {% if config.USE_OPTIMIZED_JS %}
+            <script data-main="/static/scripts/build-optimized/tim/main.js"
+                    src="/static/scripts/node_modules/requirejs/require.js"></script>
+        {% else %}
+            <script data-main="/static/scripts/build/main.js"
+                    src="/static/scripts/node_modules/requirejs/require.js"></script>
+        {% endif %}
         <script>
             define("tim/plugins", [{{ (["exports"] + jsModuleIds|list)|map('map_format', "'%s'")|join(', ')|safe }}],
                 function (exports) {
