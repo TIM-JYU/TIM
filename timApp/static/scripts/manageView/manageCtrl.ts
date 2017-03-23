@@ -1,7 +1,8 @@
-/* globals angular, $ */
-var PermApp = angular.module('timApp');
+import angular = require("angular");
+import {timApp} from "tim/app";
+import $ = require("jquery");
 
-PermApp.controller("PermCtrl", [
+timApp.controller("PermCtrl", [
     '$scope',
     '$http',
     'Upload',
@@ -232,7 +233,7 @@ PermApp.controller("PermCtrl", [
                     if (response.status > 0)
                         sc.fileUploadError = 'Error: ' + response.data.error;
                 }, function (evt) {
-                    sc.file.progress = Math.min(100, parseInt(100.0 *
+                    sc.file.progress = Math.min(100, Math.floor(100.0 *
                         evt.loaded / evt.total));
                 });
 

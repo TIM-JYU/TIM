@@ -1,7 +1,5 @@
-/* globals angular */
 
-var timApp = angular.module('timApp');
-
+import {timApp} from "tim/app";
 timApp.controller('UserListController', ['$scope', '$element', '$filter', '$timeout', '$window', '$uibModal', 'uiGridConstants',
     function ($scope, $element, $filter, $timeout, $window, $uibModal, uiGridConstants) {
         "use strict";

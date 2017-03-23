@@ -1,5 +1,10 @@
-var angular;
-var timApp = angular.module('timApp');
+
+import angular = require("angular");
+import * as focusMe from "tim/directives/focusMe";
+import {timApp} from "tim/app";
+import {markAsUsed} from "tim/angular-utils";
+
+markAsUsed(focusMe);
 
 timApp.directive("bookmarks", ['$window', '$log', '$http', '$uibModal', '$timeout', function ($window, $log, $http, $uibModal, $timeout) {
     "use strict";

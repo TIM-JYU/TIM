@@ -1,3 +1,9 @@
+import {timApp} from "tim/app";
+import * as answerSheet from "tim/directives/dynamicAnswerSheet";
+import {markAsUsed} from "tim/angular-utils";
+
+markAsUsed(answerSheet);
+
 /**
  * Created by hajoviin on 22.4.2015
  * FILL WITH SUITABLE TEXT
@@ -11,9 +17,6 @@
  * @copyright 2015 Timppa project authors
  */
 
-var angular;
-
-var timApp = angular.module('timApp');
 timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http', function ($scope, $rootScope, $http) {
     "use strict";
     $scope.questionHeaders = [];

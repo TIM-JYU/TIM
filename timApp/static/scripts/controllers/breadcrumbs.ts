@@ -1,6 +1,5 @@
-/* globals angular */
-var timApp = angular.module('timApp');
 
+import {timApp} from "tim/app";
 timApp.controller('Breadcrumbs', ['$scope', '$window', function (sc, $window) {
     "use strict";
     sc.crumbs = $window.breadcrumbs;

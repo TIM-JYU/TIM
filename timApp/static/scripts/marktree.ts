@@ -20,9 +20,7 @@
 
 function get_keycode(evt) {
     // IE
-    code = document.layers ? evt.which
-        : document.all ? event.keyCode // event.keyCode!=evt.keyCode!
-        : evt.keyCode;
+    let code = evt.keyCode;
 
     if (code == 0)
         code = evt.which; // for NS
@@ -94,9 +92,9 @@ function is_active(node) {
 
 function toggle_class(node) {
     if ((node == null) || (node.className == null)) return;
-    str = node.className;
-    result = "";
-    i = str.indexOf('_active');
+    let str = node.className;
+    let result = "";
+    let i = str.indexOf('_active');
     if (i > 0)
         result = str.substr(0, i);
     else
@@ -125,14 +123,14 @@ function is_list_node(n) {
 
 
 function get_href(n) {
-    alist = n.attributes;
+    let alist = n.attributes;
     if (alist != null) {
-        hr = alist.getNamedItem('href');
+        let hr = alist.getNamedItem('href');
         if (hr != null) return hr.nodeValue;
     }
     if (n.childNodes.length == 0) return '';
-    for (var i = 0; i < n.childNodes.length; i++) {
-        s = get_href(n.childNodes[i]);
+    for (let i = 0; i < n.childNodes.length; i++) {
+        let s = get_href(n.childNodes[i]);
         if (s != '') return s;
     }
     return '';
@@ -148,8 +146,8 @@ function get_link(n) {
 
     if (n.nodeName.toLowerCase() == 'a') return n;
     if (n.childNodes.length == 0) return null;
-    for (var i = 0; i < n.childNodes.length; i++) {
-        s = get_link(n.childNodes[i]);
+    for (let i = 0; i < n.childNodes.length; i++) {
+        let s = get_link(n.childNodes[i]);
         if (s != null) return s;
     }
     return null;
@@ -178,7 +176,7 @@ function set_lastnode(n) {
 }
 
 function next_list_node() {
-    tempIndex = list_index;
+    let tempIndex = list_index;
     while (tempIndex < listnodes.length - 1) {
         tempIndex++;
         var x = listnodes[tempIndex];
@@ -190,7 +188,7 @@ function next_list_node() {
 }
 
 function prev_list_node() {
-    tempIndex = list_index;
+    let tempIndex = list_index;
     while (tempIndex > 0) {
         tempIndex--;
         var x = listnodes[tempIndex];
@@ -212,7 +210,7 @@ function getsub(li) {
 function find_listnode_recursive(li) {
     if (is_list_node(li)) return li;
     if (li.childNodes.length == 0) return null;
-    result = null;
+    let result = null;
     for (var c = 0; c < li.childNodes.length; c++) {
         result = find_listnode_recursive(li.childNodes[c]);
         if (result != null) return result;
@@ -303,7 +301,7 @@ function prev_sibling_listnode(li) {
 function parent_listnode_rec(li, recursive) {
     // added 12.7.2004 to prevent IE error when readonly mode==true
     if (li == null) return null;
-    n = li;
+    let n = li;
     while (recursive > 0) {
         n = n.parentNode;
         if (n == null) return null;
@@ -340,12 +338,13 @@ function onClickHandler(evt) {
     // from: http://www.quirksmode.org/js/events_properties.html
     // this is actually needed only in Gecko-based browsers
     var e, rightclick;
-    if (!evt) var e = window.event; // IE
+    if (!evt) e = window.event; // IE
     else e = evt;
     if (e.which) rightclick = (e.which == 3);
     else if (e.button) rightclick = (e.button == 2);
     if (rightclick) return true;
 
+    let temp;
     if (lastnode == null) {
         listnodes = document.getElementsByTagName('li');
         lastnode = listnodes[1];
@@ -403,7 +402,7 @@ function collapse(node) {
 }
 
 function setSubClass(node, name) {
-    sub = getsub(node);
+    let sub = getsub(node);
     if (sub == null) return;
 
     //to prevent bug in ie when expanding empty list
@@ -455,7 +454,7 @@ function collapseAll(node) {
 function unFocus(node) {
     // unfocuses potential link that is to be hidden (if a==null there is no link so it should not be blurred).
     // tested with mozilla 1.7, 12.7.2004. /mn (
-    intemp = parent_listnode(node);
+    let intemp = parent_listnode(node);
     //      a = get_link(intemp);     // added 6.4. to get keyboard working with
     // moved before collapse to prevent an error message with IE when readonly==true
     //      if (a!=null) a.blur(); // netscape after collapsing a focused node
@@ -551,7 +550,7 @@ function initEvents(currentElement) {
     }
 }
 
-function addEvents() {
+export function addEvents() {
     initEvents(document);
     document.onclick = onClickHandler;
 }

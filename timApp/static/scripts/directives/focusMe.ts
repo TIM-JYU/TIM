@@ -1,7 +1,5 @@
-var angular;
-var timApp = angular.module('timApp');
-
 // from https://stackoverflow.com/a/14837021
+import {timApp} from "tim/app";
 timApp.directive('focusMe', ['$timeout', '$parse', function ($timeout, $parse) {
     "use strict";
     return {

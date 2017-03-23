@@ -1,6 +1,7 @@
-/* globals angular, $ */
-var timApp = angular.module('timApp');
 
+import {timApp} from "tim/app";
+import $ = require("jquery");
+import {watchEditMode} from "tim/editmode";
 /**
  * A popup menu directive that is used in the document view.
  * Requires a paragraph (element with class "par") or
@@ -105,7 +106,7 @@ timApp.directive('popupMenu', ['$http', '$window', '$filter', function ($http, $
             };
 
             $scope.model = {editState: $window.editMode};
-            $scope.$watch('model.editState', $window.watchEditMode);
+            $scope.$watch('model.editState', watchEditMode);
             $scope.$watch('model.editState', $scope.watchEditMode);
 
             $element.css('position', 'absolute'); // IE needs this

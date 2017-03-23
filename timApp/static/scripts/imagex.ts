@@ -1,5 +1,12 @@
-"use strict";
-var imagexApp = angular.module('imagexApp', ['ngSanitize']);
+import angular = require("angular");
+import ngSanitize = require("angular-sanitize");
+import * as timHelper from "tim/timHelper";
+import {editorChangeValue} from "tim/directives/pareditor";
+import {markAsUsed} from "tim/angular-utils";
+
+markAsUsed(ngSanitize);
+
+var imagexApp: any = angular.module('imagexApp', ['ngSanitize']);
 imagexApp.TESTWITHOUTPLUGINS = false; // if one wants to test without imagex plugins
 
 imagexApp.directive('imagexRunner',
@@ -7,7 +14,6 @@ imagexApp.directive('imagexRunner',
         function ($sanitize,$compile1) {
             "use strict";
             // Tata kutsutaan yhden kerran kun plugin otetaan kayttoon
-            timHelper.sanitize = $sanitize;
             imagexApp.sanitize = $sanitize;
             imagexApp.compile = $compile1;
             return imagexApp.directiveFunction(); }]
@@ -56,7 +62,7 @@ FreeHand.prototype.draw = function(ctx) {
 FreeHand.prototype.startSegment = function(pxy) {
     if ( !pxy ) return;
     var p = [Math.round(pxy.x), Math.round(pxy.y)];
-    var ns = {};
+    var ns: any = {};
     ns.color = this.params.color;
     ns.w = this.params.w;
     ns.lines = [p];
@@ -74,7 +80,7 @@ FreeHand.prototype.startSegmentDraw = function(redraw, pxy) {
     if ( !pxy ) return;
     var p = [Math.round(pxy.x), Math.round(pxy.y)];
     this.redraw = redraw;
-    var ns = {};
+    var ns: any = {};
     ns.color = this.params.color;
     ns.w = this.params.w;
     ns.lines = [p];
@@ -564,7 +570,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                 var p = 0;
                 for (p = 0; p < objects.length; p++) {
                     if (objects[p].id === rightdrags[j].id) {
-                        var values = { beg: objects[p], end: rightdrags[j] };
+                        var values: any = { beg: objects[p], end: rightdrags[j] };
                         rightdrags[j].x = rightdrags[j].position[0];
                         rightdrags[j].y = rightdrags[j].position[1];
                         // get positions for drawing.
@@ -705,7 +711,7 @@ imagexApp.initDrawing = function(scope, canvas) {
 
     }
     
-    function FixedObject(dt, values, defId) {
+    function FixedObject(dt, values, defId?) {
         this.did = defId;
         this.id = getValue(values.id, defId);
         values.id = this.id;
@@ -788,8 +794,7 @@ imagexApp.initDrawing = function(scope, canvas) {
      }
 
     // Find value for key from value, prevous or defaults.  If nowhere return defaultValue
-     function getValueDef(value, key, defaultValue, keepEmtpyAsNone) {
-        keepEmtpyAsNone = typeof keepEmtpyAsNone !== 'undefined' ? keepEmtpyAsNone : false;
+     function getValueDef(value, key, defaultValue, keepEmtpyAsNone = false) {
         var keys = key.split(".");
         var v = value;
         var p = scope.previousValue;
@@ -852,8 +857,9 @@ imagexApp.initDrawing = function(scope, canvas) {
     }
     
     var isTouch = isTouchDevice();
-    if (isTouch) var grabOffset = scope.extraGrabAreaHeight;
-    else var grabOffset = 0;
+    let grabOffset: number;
+    if (isTouch) grabOffset = scope.extraGrabAreaHeight;
+    else grabOffset = 0;
 
     var to_radians = Math.PI / 180;
     var doc_ctx = canvas;
@@ -1691,7 +1697,8 @@ ImagexScope.prototype.doSave = function(nosave) {
         'input': {
             'markup': {'taskId': $scope.taskId, 'user_id': $scope.user_id},
             'drags' : this.getDragObjectJson(),
-            'freeHandData': this.scope.freeHandDrawing.freeDrawing
+            'freeHandData': this.scope.freeHandDrawing.freeDrawing,
+            'nosave': false
         }
     };
     //    console.log(params);

@@ -1,3 +1,4 @@
+import {timApp} from "tim/app";
 /**
  * Created by Seppo Tarvainen on 25.11.2016.
  *
@@ -7,8 +8,8 @@
  */
 
 
-// var UNDEFINED = "undefined";
-var colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "cornflowerblue", "coral", "goldenrod", "blue"];
+let UNDEFINED = "undefined";
+export let colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "cornflowerblue", "coral", "goldenrod", "blue"];
 
 // TODO: add keyboard shortcuts to velps
 // TODO: add min and max values for points
@@ -264,7 +265,8 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
         var labelToAdd = {
             content: $scope.newLabel.content,
             language_id: "FI", // TODO: Change to user language
-            selected: false
+            selected: false,
+            id: null
         };
 
         $scope.$parent.makePostRequest("/add_velp_label", labelToAdd, function (json) {
@@ -410,6 +412,7 @@ timApp.controller('VelpWindowController', ['$scope', function ($scope) {
      */
     var addNewVelpToDatabase = function () {
         var velpToAdd = {
+            id: null,
             labels: $scope.velp.labels,
             used: 0,
             points: $scope.velp.points,

@@ -1,5 +1,12 @@
-var angular;
-var timApp = angular.module('timApp');
+
+import angular = require("angular");
+import {timApp} from "tim/app";
+import * as formErrorMessage from "tim/directives/formErrorMessage";
+import * as shortNameValidator from "tim/directives/shortNameValidator";
+import * as slugify from "tim/services/slugify";
+import {markAsUsed} from "tim/angular-utils";
+
+markAsUsed(formErrorMessage, shortNameValidator, slugify);
 
 timApp.directive("createItem", ['$window', '$log', '$http', 'Slugify', function ($window, $log, $http, Slugify) {
     "use strict";

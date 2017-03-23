@@ -1,8 +1,6 @@
-/* globals angular, $ */
 
-var timApp = angular.module('timApp');
-
-timApp.defineMath = function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users, ParCompiler) {
+import $ = require("jquery");
+export function defineMath(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users, ParCompiler) {
     "use strict";
 
     // for compatibility, we make the math processing functions available from scope too
@@ -10,4 +8,4 @@ timApp.defineMath = function (sc, http, q, $injector, $compile, $window, $docume
     sc.processAllMath = ParCompiler.processAllMath;
     sc.processMath = ParCompiler.processMath;
     sc.processAllMathDelayed($('body'), 1500);
-};
+}

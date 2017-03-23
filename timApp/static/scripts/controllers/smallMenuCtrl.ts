@@ -1,3 +1,7 @@
+import {timApp} from "tim/app";
+import angular = require("angular");
+import $ = require("jquery");
+
 /**
  * FILL WITH SUITABLE TEXT
  * @module smallMenuCtrl
@@ -9,8 +13,6 @@
  * @licence MIT
  * @copyright 2015 Timppa project authors
  */
-var angular;
-var timApp = angular.module('timApp');
 
 timApp.controller("SmallMenuCtrl", ['$scope', '$window', '$http',
     function ($scope, $window, $http) {

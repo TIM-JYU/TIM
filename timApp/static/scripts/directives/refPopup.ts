@@ -1,5 +1,5 @@
-var timApp = angular.module('timApp');
 
+import {timApp} from "tim/app";
 /**
  * A reference popup window directive that is used in the document view.
  */
@@ -40,7 +40,7 @@ timApp.directive('refPopup', ['$window', '$filter', '$http', function ($window, 
                 var known_attrs = ['doc_name', 'doc_author', 'par_name'];
 
                 for (var i in known_attrs) {
-                    attr = known_attrs[i];
+                    const attr = known_attrs[i];
                     if (attr in response.data) {
                         $scope[attr] = response.data[attr];
                     }

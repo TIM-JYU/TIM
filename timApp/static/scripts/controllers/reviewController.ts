@@ -1,4 +1,7 @@
-/* globals angular, $ */
+import {timApp} from "tim/app";
+import angular = require("angular");
+import $ = require("jquery");
+
 /**
  * The controller handles the logic related to adding and removing annotations. It also handles the way how
  * the selected area is defined in the view. Requires `velpSelection` directive.
@@ -11,7 +14,6 @@
  * @copyright 2016 Timber project members
  */
 
-var timApp = angular.module('timApp');
 
 var UNDEFINED = "undefined";
 
@@ -779,7 +781,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
         */
 
-        var newAnnotation = {
+        let newAnnotation: any = {
             id: -($scope.annotations.length + 1),
             velp: velp.id,
             points: velp.points,
@@ -1119,9 +1121,9 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         element.setAttribute("show", show);
         element.setAttribute("newannotation", annotation.newannotation);
         if (typeof annotation.reason !== "undefined")
-            element.setAttribute("ismargin", true);
+            element.setAttribute("ismargin", "true");
         else
-            element.setAttribute("ismargin", false);
+            element.setAttribute("ismargin", "false");
         element.setAttribute("comments", JSON.stringify(annotation.comments));
 
         return element;
@@ -1156,7 +1158,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             // query selector element -> toggle annotation
             if (e.name === "TypeError" && annotation.answer_id !== null) {
                 //var abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
-                var ab = parent.getElementsByTagName("ANSWERBROWSER")[0];
+                let ab: any = parent.getElementsByTagName("ANSWERBROWSER")[0];
 
                 if (typeof ab === UNDEFINED) {
                     var abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);

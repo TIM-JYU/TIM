@@ -12,8 +12,10 @@
  * @copyright 2016 Timber project members
  */
 
- var angular;
- var timApp = angular.module('timApp');
+import angular = require("angular");
+import {timApp} from "tim/app";
+
+var UNDEFINED = "undefined";
 
 /** Directive for a single annotation.
  * @lends module:reviewController
@@ -90,7 +92,8 @@ timApp.directive("annotation",['$window', function ($window) {
 
                 if ( elementName === "notes" &&  annotationElements.length > 1 ){
                     for (var i=0; i<annotationElements.length; i++){
-                        if (annotationElements[i].parentNode.offsetParent.className !== "notes"){
+                        let e = annotationElements[i].parentNode as HTMLElement;
+                        if (e.offsetParent.className !== "notes"){
                             angular.element(
                                 annotationElements[i]
                             ).isolateScope().toggleAnnotationShow();

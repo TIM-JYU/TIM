@@ -1,9 +1,5 @@
-/* globals angular, $, timLogTime */
 
-var timApp = angular.module('timApp');
-
-timApp.defineClipboard = function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
-    "use strict";
+export function defineClipboard(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
 
     sc.showPasteMenu = function (e, $par_or_area, coords) {
         sc.pasteFunctions = sc.getPasteFunctions();
@@ -276,4 +272,4 @@ timApp.defineClipboard = function (sc, http, q, $injector, $compile, $window, $d
     sc.allowPasteRef = true;
 
     sc.pasteFunctions = sc.getPasteFunctions();
-};
+}

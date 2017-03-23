@@ -1,3 +1,7 @@
+import angular = require("angular");
+import {timApp} from "tim/app";
+import $ = require("jquery");
+
 /**
  * Created by localadmin on 25.5.2015.
  * Directive for dynamic answer sheet. Sheet to answer lecture questions.
@@ -12,8 +16,6 @@
  * @licence MIT
  * @copyright 2015 Timppa project authors
  */
-
-var angular;
 
 function uncheckRadio(e) {
     // set this to click-method if you want a radio that can be uncheked.  for the radio there
@@ -32,7 +34,7 @@ function uncheckRadio(e) {
 }
 
 
-function getJsonAnswers(answer) {
+export function getJsonAnswers(answer) {
     // Converts answer string to JSON table
     if ( answer.length > 0 && answer[0] === "[" ) {
         return JSON.parse(answer);
@@ -56,7 +58,7 @@ function deletePar(s) {
 
 
 
-function getPointsTable(markupPoints) {
+export function getPointsTable(markupPoints) {
     // Format of markupPoints: 1:1.1;2:1.2;3:1.3||2:3.2
     var pointsTable = [];
     if (markupPoints && markupPoints !== '') {
@@ -77,9 +79,9 @@ function getPointsTable(markupPoints) {
 }
 
 
-function minimizeJson(json) {
+export function minimizeJson(json) {
     // remove not needed fields from json, call when saving the question
-    var result = {};
+    var result: any = {};
     if ( json.headers ) {
         result.headers = [];
         for (var i = 0; i < json.headers.length; i++) {
@@ -125,7 +127,7 @@ function fixLineBreaks(s) {
     //return s.replace("\n","<br />");
 }
 
-function fixQuestionJson(json) {
+export function fixQuestionJson(json) {
     // fill all missing fields from question json, call before use json
     var columnHeaders = [];
     if ( json.data ) {
@@ -201,12 +203,10 @@ function fixQuestionJson(json) {
     json.rows = rows;
 }
 
-var timApp = angular.module('timApp');
 timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '$http', function ($interval, $compile, $rootScope, $http) {
     "use strict";
     return {
         restrict: 'E',
-        replace: "true",
         scope: {
             control: '=',
             preview: '@'
@@ -344,7 +344,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                     name: group
                                 });
                                 textArea.text(text);
-                                if (disabled !== '') textArea.attr('disabled', true);
+                                if (disabled !== '') textArea.attr('disabled', "disabled");
                                 if (data.headers && data.headers.length === 1 && data.headers[0].text === "" && data.rows.length === 1) {
                                     textArea.attr('style', 'height:200px');
                                 }
@@ -366,7 +366,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                     input.prop("form", htmlSheet)
                                     input.click(uncheckRadio);  // TODO: Tähän muutoskäsittely ja jokaiseen tyyppiin tämä
                                 }
-                                if (disabled !== '') input.attr('disabled', true);
+                                if (disabled !== '') input.attr('disabled', "disabled");
 
                                 var td = $('<td>', {class: 'answer-button'});
                                 var ispan = $('<span>', {class:colPtsClass});
@@ -407,7 +407,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                 input.prop("form", htmlSheet)
                                 input.click(uncheckRadio);
                             }
-                            if (disabled !== '') input.attr('disabled', true);
+                            if (disabled !== '') input.attr('disabled', "disabled");
                             var label = $('<label>');
                             var ispan = $('<span>', {class:colPtsClass});
                             ispan.append(input);
@@ -562,7 +562,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                         answers.push([]);
                         var type = data.rows[0].type || "question";
                         groupName = $scope.cg() + type.replace(/[^a-zA-Z0-9]/g, '');
-                        var checkedInputs = $('input[name=' + groupName + ']:checked', $scope.htmlSheet);
+                        var checkedInputs = $('input[name=' + groupName + ']:checked', $scope.htmlSheet) as any as Array<HTMLInputElement>;
                         for (var j = 0; j < checkedInputs.length; j++) {
                             answers[0].push(checkedInputs[j].value);
                         }

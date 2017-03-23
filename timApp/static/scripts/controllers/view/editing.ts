@@ -1,8 +1,7 @@
-/* globals angular, $ */
+import angular = require("angular");
+import $ = require("jquery");
 
-var timApp = angular.module('timApp');
-
-timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
+export function defineEditing(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
     "use strict";
     sc.EDITOR_CLASS = "editorArea";
     sc.EDITOR_CLASS_DOT = "." + sc.EDITOR_CLASS;
@@ -89,7 +88,7 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
         sc.toggleEditor($par, options, attrs, caption, "pareditor");
     };
 
-    sc.toggleEditor = function ($par, options, attrs, caption, directive) {
+    sc.toggleEditor = function ($par, options, attrs: Object, caption, directive) {
         if (sc.isReference($par)) {
             angular.extend(attrs['extra-data'], sc.getRefAttrs($par));
         }
@@ -104,7 +103,7 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
         } else {
             $(sc.EDITOR_CLASS_DOT).remove();
 
-            var createEditor = function (attrs) {
+            var createEditor = function (attrs: Object) {
                 var $div = $("<" + directive + ">", {class: sc.EDITOR_CLASS}).attr(attrs);
                 $div.attr('tim-draggable-fixed', '');
                 if (caption) {
@@ -400,4 +399,4 @@ timApp.defineEditing = function (sc, http, q, $injector, $compile, $window, $doc
             sc.selection.pars.addClass('marked');
         }
     });
-};
+}

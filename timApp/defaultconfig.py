@@ -52,4 +52,3 @@ ERROR_EMAIL = 'timwuff.group@korppi.jyu.fi'
 WUFF_EMAIL = 'wuff@tim.jyu.fi'
 KORPPI_AUTHORIZE_URL = "https://korppi.jyu.fi/kotka/interface/allowRemoteLogin.jsp"
 GLOBAL_NOTIFICATION_FILE = '/tmp/global_notification.html'
-#TYPESCRIPT_CONFIG = '--typeRoots "scripts/bower_components/@types"]'

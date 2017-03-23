@@ -1,7 +1,6 @@
-if (!timHelper)
-var timHelper = {};
+import angular = require("angular");
 
-timHelper.initAttributes = function(clone, $scope) {
+export function initAttributes(clone, $scope) {
 "use strict";
     if (!clone[0]) return;
     var markJSON = "xxxJSONxxx";
@@ -13,15 +12,15 @@ timHelper.initAttributes = function(clone, $scope) {
         return;
     }
     if (cjson) s = s.substring(markJSON.length);
-    if (chex) s = timHelper.Hex2Str(s.substring(markHex.length));
+    if (chex) s = Hex2Str(s.substring(markHex.length));
     $scope.attrs = JSON.parse(s);
     $scope.scope = $scope;
-};
+}
 
 
-timHelper.getHeading = function($scope,attrs,key,defElem) {
+export function getHeading($scope,attrs,key,defElem) {
 "use strict";
-	var h = timHelper.set($scope,attrs,key,"");
+	var h = set($scope,attrs,key,"");
 	if ( !h ) return "";
 	var st = h.split("!!"); // h4 class="h3" width="23"!!Tehtava 1
 	var elem = defElem;
@@ -36,12 +35,12 @@ timHelper.getHeading = function($scope,attrs,key,defElem) {
 	  val = decodeURIComponent(encodeURI(val));
 	} catch(err) {}
     var html = "<" + elem + attributes + ">" + val + "</" + elem + ">";
-	html = timHelper.sanitize(html);
+	html = sanitize(html);
 	return html;
-};
+}
 
 
-timHelper.get = function(jso,keys) {
+export function get(jso,keys) {
 "use strict";
     if ( !jso ) return undefined;
     var val = jso;
@@ -55,36 +54,36 @@ timHelper.get = function(jso,keys) {
 }
 
 
-timHelper.setk = function(scope,sname,attrs,keys,def) {
+export function setk(scope,sname,attrs,keys,def) {
 "use strict";
     scope[sname] = def;
-    var val = timHelper.get(attrs,keys);
+    var val = get(attrs,keys);
     if ( val != undefined ) scope[sname] = val;
-    val = timHelper.get(scope.attrs,keys);
+    val = get(scope.attrs,keys);
     if ( val != undefined ) scope[sname] = val;
     if ( scope[sname] == "None" ) scope[sname] = "";
     return scope[sname];
-};
+}
 
 
-timHelper.setn = function(scope,sname,attrs,name,def) {
+export function setn(scope,sname,attrs,name,def?) {
 "use strict";
     if ( name.indexOf(".") < 0 ) name = "markup."+name;
     var keys = name.split(".");
-    return timHelper.setk(scope,sname,attrs,keys,def);
-};
+    return setk(scope,sname,attrs,keys,def);
+}
 
 
-timHelper.set = function(scope,attrs,name,def) {
+export function set(scope,attrs,name,def?) {
 "use strict";
     if ( name.indexOf(".") < 0 ) name = "markup."+name;
     var keys = name.split(".");
     var sname = keys[keys.length-1];
-    return timHelper.setk(scope,sname,attrs,keys,def);
-};
+    return setk(scope,sname,attrs,keys,def);
+}
 
 
-timHelper.Hex2Str = function(s) {
+export function Hex2Str(s) {
 "use strict";
   var result = '';
   for (var i=0; i<s.length; i+=2) {
@@ -92,7 +91,10 @@ timHelper.Hex2Str = function(s) {
     result += c;
   }
   return result;
-};
+}
 
+const sanitizeService: any = angular.element(document).injector().get('$sanitize');
 
-
+export function sanitize(s) {
+    return sanitizeService(s);
+}

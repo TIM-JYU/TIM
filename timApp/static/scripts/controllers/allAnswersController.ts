@@ -1,11 +1,11 @@
-var angular, moment;
-var timApp = angular.module('timApp');
 
+import {timApp} from "tim/app";
+import moment = require("moment");
 timApp.controller('AllAnswersCtrl', ['$uibModalInstance', '$window', '$httpParamSerializer', '$localStorage', '$http', '$log', 'options',
     function ($uibModalInstance, $window, $httpParamSerializer, $localStorage, $http, $log, options) {
         "use strict";
         moment.locale('en', {
-            week: {dow: 1} // set Monday as the first day of the week
+            week: {dow: 1, doy: 4} // set Monday as the first day of the week
         });
         var $ctrl = this;
 

@@ -1,6 +1,11 @@
-define(['require', 'exports', 'tim/app', 'moment', 'tim/directives/focusMe'], function (require, exports, app, moment) {
+import * as focusMe from "tim/directives/focusMe";
+import {markAsUsed} from "tim/angular-utils";
+import {timApp} from "tim/app";
+import moment = require("moment");
 
-app.timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window, $log, $http) {
+markAsUsed(focusMe);
+
+timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window, $log, $http) {
     "use strict";
     return {
         restrict: 'E',
@@ -210,7 +215,7 @@ app.timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($win
                     sc.timeOpt.type = 'duration';
                     for (var i = sc.durationTypes.length - 1; i >= 0; --i) {
                         var amount = d.as(sc.durationTypes[i]);
-                        if (parseInt(amount) === amount || i === 0) {
+                        if (Math.floor(amount) === amount || i === 0) {
                             // preserve last duration type choice if the amount is zero
                             if (amount !== 0) {
                                 sc.timeOpt.durationType = sc.durationTypes[i];
@@ -228,4 +233,3 @@ app.timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($win
         }
     };
 }]);
-});

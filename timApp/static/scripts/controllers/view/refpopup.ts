@@ -1,8 +1,10 @@
-/* globals angular, $ */
+import * as refPopup from "tim/directives/refPopup";
+import {markAsUsed} from "tim/angular-utils";
+import $ = require("jquery");
 
-var timApp = angular.module('timApp');
+markAsUsed(refPopup);
 
-timApp.defineRefPopup = function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
+export function defineRefPopup(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
     "use strict";
 
     sc.onMouseOver('.parlink', function ($this, e) {
@@ -60,4 +62,4 @@ timApp.defineRefPopup = function (sc, http, q, $injector, $compile, $window, $do
 
         $(".refPopup").remove();
     };
-};
+}

@@ -1,6 +1,5 @@
-/* globals angular */
-var timApp = angular.module('timApp');
 
+import {timApp} from "tim/app";
 /**
  * Displays an error message for the given form element when it is invalid.
  */

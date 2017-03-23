@@ -1,3 +1,4 @@
+import {timApp} from "tim/app";
 /**
  * FILL WITH SUITABLE TEXT
  * @module popUpDialog
@@ -9,8 +10,6 @@
  * @licence MIT
  * @copyright 2015 Timppa project authors
  */
-var angular;
-var timApp = angular.module('timApp');
 
 timApp.directive('popUpDialog', function () {
     var toDragOrNot = function () {
@@ -46,10 +45,10 @@ timApp.directive('popUpDialog', function () {
             $scope.checkDown = function (e) {
                 $scope.mouseDownX = e.clientX;
                 $scope.mouseDownY = e.clientY;
-                var window = $element.find("popUpBack");
-
-                window.context.style.position = "absolute";
-                window.context.style.bottom = 'auto';
+                let window = $element.find("popUpBack");
+                let ctx = window.context as HTMLElement;
+                ctx.style.position = "absolute";
+                ctx.style.bottom = 'auto';
 
             };
 
@@ -58,8 +57,9 @@ timApp.directive('popUpDialog', function () {
              * @memberof module:popUpDialog
              */
             $scope.checkUp = function () {
-                var window = $element.find("popUpBack");
-                window.context.style.position = "fixed";
+                let window = $element.find("popUpBack");
+                let ctx = window.context as HTMLElement;
+                ctx.style.position = "fixed";
             };
         }
 

@@ -16,6 +16,7 @@
             exports.is_owner = item.rights.manage;
             exports.background_url = {{ (slide_background_url or None)|tojson }};
             exports.background_color = {{ (slide_background_color or None)|tojson }};
+            exports.item = item;
         });
     </script>
 {% endblock %}

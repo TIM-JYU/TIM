@@ -1,16 +1,24 @@
 // TODO: save cursor postion when changing editor
 
-define(['require', 'exports', 'tim/app', 'angular', 'jquery', 'ace/ace', 'ace/snippets', 'tim/directives/draggable'], function (require, exports, app, angular, $, ace) {
+import {timApp} from "tim/app";
+import angular = require("angular");
+import rangyinputs = require("rangyinputs");
+import $ = require("jquery");
+import * as ace from "ace/ace";
+import * as snippets from "ace/snippets";
+import * as draggable from "tim/directives/draggable";
+import {markAsUsed} from "tim/angular-utils";
 
-var MENU_BUTTON_CLASS = 'menuButtons';
-var timApp = app.timApp;
+markAsUsed(snippets, draggable, rangyinputs);
 
-var currentEditorScope = null;
-var editorChangeValue = function(attributes, text) {
+const MENU_BUTTON_CLASS = 'menuButtons';
+
+let currentEditorScope = null;
+export function editorChangeValue(attributes, text) {
     "use strict";
     if ( !currentEditorScope ) return;
     currentEditorScope.changeValue(attributes, text);
-};
+}
 
 timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
     '$window', '$localStorage', '$timeout', '$ocLazyLoad', '$log', 'ParCompiler',
@@ -541,9 +549,10 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     
 
                 $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function (event) {
-                    var editor = $($element).find("#pareditor").get(0);
-                    if (!document.fullscreenElement &&    // alternative standard method
-                        !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                    let editor = $($element).find("#pareditor").get(0);
+                    let doc: any = document;
+                    if (!doc.fullscreenElement &&    // alternative standard method
+                        !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
                         editor.removeAttribute('style');
                     }
                 });
@@ -1154,11 +1163,11 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     };
 
                     $scope.insertClicked = function () {
-                        var input = document.getElementById('teksti');
-                        input.addEventListener('keypress', function (event) {
-                            var s = this.selectionStart;
-                            this.value = this.value.substr(0, s) + this.value.substr(s + 1);
-                            this.selectionEnd = s;
+                        let input = document.getElementById('teksti') as HTMLInputElement;
+                        input.addEventListener('keypress', () => {
+                            let s = input.selectionStart;
+                            input.value = input.value.substr(0, s) + input.value.substr(s + 1);
+                            input.selectionEnd = s;
                         }, false);
                     };
                     //Navigation
@@ -1721,7 +1730,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             if (response.status > 0)
                                 $scope.file.error = response.data.error;
                         }, function (evt) {
-                                $scope.file.progress = Math.min(100, parseInt(100.0 *
+                                $scope.file.progress = Math.min(100, Math.floor(100.0 *
                                 evt.loaded / evt.total));
                         });
 
@@ -1851,8 +1860,8 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                  * @returns {boolean} true if device supports fullscreen, otherwise false
                  */
                 $scope.fullscreenSupported = function () {
-                    var div = $($element).get(0);
-                    var requestMethod = div.requestFullScreen ||
+                    let div: any = $($element).get(0);
+                    let requestMethod = div.requestFullScreen ||
                         div.webkitRequestFullscreen ||
                         div.webkitRequestFullScreen ||
                         div.mozRequestFullScreen ||
@@ -1864,11 +1873,12 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                  * Makes editor div fullscreen
                  */
                 $scope.goFullScreen = function () {
-                    var div = $($element).find("#pareditor").get(0);
-                    if (!document.fullscreenElement &&    // alternative standard method
-                        !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                    let div: any = $($element).find("#pareditor").get(0);
+                    let doc: any = document;
+                    if (!doc.fullscreenElement &&    // alternative standard method
+                        !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
 
-                        var requestMethod = div.requestFullScreen ||
+                        let requestMethod = div.requestFullScreen ||
                             div.webkitRequestFullscreen ||
                             div.webkitRequestFullScreen ||
                             div.mozRequestFullScreen ||
@@ -1881,14 +1891,14 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                                 "-moz-box-sizing: border-box; box-sizing: border-box;");
                         }
                     } else {
-                        if (document.exitFullscreen) {
-                            document.exitFullscreen();
-                        } else if (document.msExitFullscreen) {
-                            document.msExitFullscreen();
-                        } else if (document.mozCancelFullScreen) {
-                            document.mozCancelFullScreen();
-                        } else if (document.webkitExitFullscreen) {
-                            document.webkitExitFullscreen();
+                        if (doc.exitFullscreen) {
+                            doc.exitFullscreen();
+                        } else if (doc.msExitFullscreen) {
+                            doc.msExitFullscreen();
+                        } else if (doc.mozCancelFullScreen) {
+                            doc.mozCancelFullScreen();
+                        } else if (doc.webkitExitFullscreen) {
+                            doc.webkitExitFullscreen();
                         }
                     }
                 };
@@ -1947,10 +1957,10 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     $scope.options.metaset = true;
                 }
 
-                var viewport = {};
+                var viewport: any = {};
                 viewport.top = $(window).scrollTop();
                 viewport.bottom = viewport.top + $(window).height();
-                var bounds = {};
+                var bounds: any = {};
                 bounds.top = $element.offset().top;
                 bounds.bottom = bounds.top + $element.outerHeight();
                 if (bounds.bottom > viewport.bottom || bounds.top < viewport.top) {
@@ -1959,4 +1969,3 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
             }
         };
     }]);
-});

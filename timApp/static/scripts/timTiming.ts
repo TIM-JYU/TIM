@@ -43,7 +43,7 @@ var timTiming = false;
 var timTimingSummary = false;
 var timTimingLevel = 0;
 
-function timLogInit(params) {
+export function timLogInit(params) {
     /*
     .../view/1?timing=div    - logittaa vain diviin (vain taso 0 tai ei tasoa)
     .../view/1?timing=log    - logittaa vain console.log
@@ -67,7 +67,7 @@ function timLogInit(params) {
            if ( val.indexOf("summary") >= 0 ) timTimingSummary = true;
         }   
         if ( key === "timingFilter" ) timTimingFilter = val;
-        if ( key === "timingLevel" ) timTimingLevel = val;
+        if ( key === "timingLevel" ) timTimingLevel = parseInt(val, 10);
     }
     timTiming = timTimingDiv || timTimingLog;
     timLogTime("Tim log initialized","main");
@@ -75,7 +75,7 @@ function timLogInit(params) {
 
 var timLogText = "";
 
-function timLogTime(msg,id,level) {
+export function timLogTime(msg,id,level?) {
     if ( !timTiming ) return;
     if ( timTimingFilter && !id.match(timTimingFilter) ) return;
     var tlevel = level | 0;
@@ -83,8 +83,8 @@ function timLogTime(msg,id,level) {
     var sid = "    ";
     if ( id ) sid = (id+"   ").substring(0, 4);
     var d = new Date();       
-    var diff = d - timJavaScriptStartTime;
-    var diffLast = d - timJavaScriptLastTime;
+    var diff = d.getTime() - timJavaScriptStartTime.getTime();
+    var diffLast = d.getTime() - timJavaScriptLastTime.getTime();
     var str;
     if ( timTimingSummary ) {
         timLogText = "";

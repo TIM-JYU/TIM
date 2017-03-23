@@ -1,8 +1,6 @@
-/* globals angular, $ */
 
-var timApp = angular.module('timApp');
-
-timApp.defineParMenu = function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
+import $ = require("jquery");
+export function defineParMenu(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
     "use strict";
 
     sc.selectionToStr = function (selection) {
@@ -27,17 +25,17 @@ timApp.defineParMenu = function (sc, http, q, $injector, $compile, $window, $doc
 
         // todo: cache this value if needed
         if ($('.area').length > 0) {
-            $popup.attr("areaeditbutton", true);
+            $popup.attr("areaeditbutton", "true");
         }
 
         $rootElement.prepend($popup); // need to prepend to DOM before compiling
         $compile($popup[0])(sc);
         // TODO: Set offset for the popup
         var element = $popup;
-        var viewport = {};
+        var viewport: any = {};
         viewport.top = $(window).scrollTop();
         viewport.bottom = viewport.top + $(window).height();
-        var bounds = {};
+        var bounds: any = {};
         bounds.top = element.offset().top;
         bounds.bottom = bounds.top + element.outerHeight();
         var y = $(window).scrollTop();
@@ -177,4 +175,4 @@ timApp.defineParMenu = function (sc, http, q, $injector, $compile, $window, $doc
     sc.popupMenuAttrs = {actions: 'editorFunctions', save: 'defaultAction', onclose: 'optionsWindowClosed'};
     sc.updatePopupMenu();
 
-};
+}

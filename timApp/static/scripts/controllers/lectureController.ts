@@ -11,11 +11,16 @@
  * @copyright 2015 Timppa project authors
  */
 
-define(['tim/app', 'angular', 'tim/utils', 'jquery'], function (app, angular, utils, $) {
+import {timApp} from "tim/app";
+import angular = require("angular");
+import * as utils from "tim/utils";
+import $ = require("jquery");
+import * as sessionsettings from "tim/session";
+import {setsetting} from "tim/utils";
 
 //TODO: Painike, josta voisi hakea kysymyksiä.
 //TODO: Button, to get questions and wall.
-app.timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScope', '$timeout',
+timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScope', '$timeout',
 
     function ($scope, http, $window, $rootScope, $timeout) {
         "use strict";
@@ -67,7 +72,7 @@ app.timApp.controller("LectureController", ['$scope', "$http", "$window", '$root
         $scope.clockOffset = 0;
         $scope.current_question_id = false;
         $scope.current_points_id = false;
-        $scope.settings = $window.sessionsettings;
+        $scope.settings = sessionsettings;
 
         //TODO: Move all lecture settings to lectureSettings object, so they will work as ng-model
         $scope.lectureSettings = {
@@ -767,7 +772,7 @@ app.timApp.controller("LectureController", ['$scope', "$http", "$window", '$root
         $scope.editLecture = function (lecture_code) {
             $('#currentList').hide();
             $('#futureList').hide();
-            var params = {'lecture_code': lecture_code, 'doc_id': $scope.docId};
+            let params: any = {'lecture_code': lecture_code, 'doc_id': $scope.docId};
             if ($scope.lectureId >= 0) params = {'lecture_id': $scope.lectureId};
             http({
                 url: '/showLectureInfoGivenName',
@@ -1223,7 +1228,6 @@ app.timApp.controller("LectureController", ['$scope', "$http", "$window", '$root
             if (!$scope.lectureSettings.inLecture) return;
             console.log('Got focus');
             if (typeof $scope.timeout !== 'undefined') $window.clearTimeout($scope.timeout);
-            if (typeof timeout !== 'undefined') $window.clearTimeout(timeout);
             $scope.polling = true;
             $scope.pollingStopped = false;
             $scope.$apply();
@@ -1303,4 +1307,3 @@ app.timApp.controller("LectureController", ['$scope', "$http", "$window", '$root
     }
 ])
 ;
-});

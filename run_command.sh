@@ -1,5 +1,7 @@
 #!/bin/bash
-. ./variables.sh
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+. ${DIR}/variables.sh
 
 docker run \
  --rm \
@@ -8,8 +10,8 @@ docker run \
  --env TIM_HOST=${TIM_HOST} \
  --env FLASK_APP=tim_app.py \
  --env PYTHONPATH=/service/timApp \
- -v ${PWD}:/service \
+ -v ${DIR}:/service \
  -t -i \
  -w /service/timApp \
- timimages/tim:$(./get_latest_date.sh) \
+ timimages/tim:$(${DIR}/get_latest_date.sh) \
  "$@"

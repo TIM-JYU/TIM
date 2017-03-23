@@ -1,14 +1,16 @@
 /**
  * Created by vesal on 28.12.2016.
  */
-"use strict";
-var qstApp = angular.module('qstApp', ['ngSanitize']);
+import * as timHelper from "timHelper";
+import angular = require("angular");
+
+let qstApp: any = angular.module('qstApp', ['ngSanitize']);
+
 qstApp.TESTWITHOUTPLUGINS = false; // if one wants to test without qst plugins
 
 qstApp.directive('qstRunner',['$sanitize','$compile',
                   function ($sanitize,$compile1) {"use strict";
                       // Tätä kutsutaan yhden kerran kun plugin otetaan käyttöön
-                      timHelper.sanitize = $sanitize;
                       qstApp.sanitize = $sanitize;
                       qstApp.compile = $compile1;
                       return qstApp.directiveFunction(qstApp.directiveTemplate); }]
@@ -17,7 +19,6 @@ qstApp.directive('qstRunner',['$sanitize','$compile',
 qstApp.directive('questionRunner',['$sanitize','$compile',
                   function ($sanitize,$compile1) {"use strict";
                       // Tätä kutsutaan yhden kerran kun plugin otetaan käyttöön
-                      timHelper.sanitize = $sanitize;
                       qstApp.sanitize = $sanitize;
                       qstApp.compile = $compile1;
                       return qstApp.directiveFunction(qstApp.directiveTemplateQuestion); }]
@@ -128,7 +129,7 @@ qstApp.initScope = function (scope, element, attrs) {
 
     // scope.stem = scope.attrs.markup.json.questionText;
     var markup = scope.attrs.markup;
-    var params = {};
+    let params: any = {};
     params.answerTable = scope.attrs.state;
     params.questionId = 1; //args.questionId;
     params.questionParId = 1; // args.questionParId;
@@ -175,7 +176,8 @@ QstScope.prototype.saveText = function() {
 QstScope.prototype.checkQstMode = function(nosave) {
 "use strict";
     var $scope = this.scope;
-    return window.in_lecture || window.lectureMode; //  $scope.$parent.$parent.wallName; // TODO: better check if in lecture page
+    let w: any = window;
+    return w.in_lecture || w.lectureMode; //  $scope.$parent.$parent.wallName; // TODO: better check if in lecture page
 }
 
 QstScope.prototype.doSaveText = function(nosave) {
@@ -188,7 +190,7 @@ QstScope.prototype.doSaveText = function(nosave) {
 
     var answers = $scope.dynamicAnswerSheetControl.getAnswers();
 
-    var params = {
+    var params: any = {
         'input': {
             'answers': answers,
             'markup': {'taskId': $scope.taskId, 'user_id': $scope.user_id},
@@ -210,7 +212,7 @@ QstScope.prototype.doSaveText = function(nosave) {
         $scope.error = data.web.error;
         $scope.result = data.web.result;
         if (data.web.markup && data.web.show_result) {
-            var params = {};
+            let params: any = {};
             params.answerTable =data.web.state;
             params.questionId = 1; //args.questionId;
             params.questionParId = 1; // args.questionParId;

@@ -86,6 +86,7 @@ run apt-get install --no-install-recommends -y npm
 run ln -s /usr/bin/nodejs /usr/bin/node
 run npm install -g uglify-js
 run npm install -g typescript
+run npm install -g tslint
 workdir /tim_node_modules
 run npm init -y
 run npm install --save angular@1.5
@@ -98,7 +99,7 @@ run npm install --save jquery-ui-dist@1.12
 run npm install --save katex@0.7
 run npm install --save https://github.com/jigargosar/rangyinputs.git
 run npm install --save ngstorage@0.3
-run npm install --save chart.js@1.0
+run npm install --save chart.js@2.5
 run npm install --save oclazyload@1.1
 run npm install --save bootstrap-sass@3.3
 run npm install --save angular-ui-bootstrap@2.5
@@ -123,7 +124,7 @@ run npm install --save @types/jqueryui
 run npm install --save @types/katex
 run npm install --save @types/rangyinputs
 run npm install --save @types/ngstorage@0.3
-run npm install --save @types/chartjs
+run npm install --save @types/chart.js
 run npm install --save @types/oclazyload
 run npm install --save @types/angular-ui-bootstrap
 run npm install --save @types/angular-animate@1.5

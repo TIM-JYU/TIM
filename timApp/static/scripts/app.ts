@@ -1,18 +1,18 @@
-import * as angular from 'angular';
-import * as moment from 'moment';
-import * as humanizeDuration from 'humanize-duration';
-import * as ngMessages from 'angular-messages';
-import * as timer from 'angular-timer';
-import * as aedatetimepicker from 'angular-eonasdan-datetimepicker';
-import * as ngSanitize from 'angular-sanitize';
-import * as uibootstrap from 'angular-ui-bootstrap';
-import * as ngFileUpload from 'ng-file-upload';
-import * as ngStorage from 'ngstorage';
-import {markAsAngular1Module} from 'tim/angular-utils';
-import * as plugins from 'tim/plugins';
-import * as uiGrid from 'ui-grid';
+import angular = require("angular");
+import moment = require("moment");
+import * as humanizeDuration from "humanize-duration";
+import * as ngMessages from "angular-messages";
+import * as timer from "angular-timer";
+import * as aedatetimepicker from "angular-eonasdan-datetimepicker";
+import ngSanitize = require("angular-sanitize");
+import * as uibootstrap from "angular-ui-bootstrap";
+import * as ngFileUpload from "ng-file-upload";
+import * as ngStorage from "ngstorage";
+import {markAsUsed} from "tim/angular-utils";
+import * as plugins from "tim/plugins";
+import uiGrid = require("ui-grid");
 
-markAsAngular1Module(ngMessages, timer, aedatetimepicker, ngSanitize, uibootstrap, ngFileUpload, ngStorage, uiGrid);
+markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize, uibootstrap, ngFileUpload, ngStorage, uiGrid);
 
 // hack: expose moment in global scope because otherwise angular-eonasdan-datetimepicker cannot find it
 declare let window: any;

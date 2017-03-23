@@ -1,6 +1,27 @@
-/* globals angular, timLogTime, $ */
 
-var timApp = angular.module('timApp');
+import angular = require("angular");
+import * as ngStorage from "ngstorage";
+import {timApp} from "tim/app";
+import {timLogTime} from "tim/timTiming";
+import {defineEventHandlers} from "tim/controllers/view/eventhandlers";
+import {defineAreas} from "tim/controllers/view/areas";
+import {defineClipboard} from "tim/controllers/view/clipboard";
+import {defineEditing} from "tim/controllers/view/editing";
+//noinspection TypeScriptPreferShortImport
+import {defineIndex} from "tim/controllers/view/index";
+import {defineMath} from "tim/controllers/view/math";
+import {defineNotes} from "tim/controllers/view/notes";
+import {defineParHelpers} from "tim/controllers/view/parhelpers";
+import {defineParMenu} from "tim/controllers/view/parmenu";
+import {defineQuestions} from "tim/controllers/view/questions";
+import {defineReadings} from "tim/controllers/view/readings";
+import {defineRefPopup} from "tim/controllers/view/refpopup";
+import * as parCompiler from "tim/services/parCompiler";
+import * as popupMenu from "tim/directives/popupMenu";
+import $ = require("jquery");
+import {markAsUsed} from "tim/angular-utils";
+
+markAsUsed(ngStorage, parCompiler, popupMenu);
 
 timApp.controller("ViewCtrl", [
     '$scope',
@@ -122,10 +143,10 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.scrollToElement = function (element) {
-            var viewport = {};
+            var viewport: any = {};
             viewport.top = $(window).scrollTop();
             viewport.bottom = viewport.top + $(window).height();
-            var bounds = {};
+            var bounds: any = {};
             bounds.top = element.offset().top;
             bounds.bottom = bounds.top + element.outerHeight();
             var y = $(window).scrollTop();
@@ -297,18 +318,18 @@ timApp.controller("ViewCtrl", [
         sc.nothing = function () {
         };
 
-        timApp.defineEventHandlers(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
-        timApp.defineAreas(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
-        timApp.defineClipboard(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
-        timApp.defineEditing(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
-        timApp.defineIndex(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
-        timApp.defineMath(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users, ParCompiler);
-        timApp.defineNotes(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
-        timApp.defineParHelpers(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
-        timApp.defineParMenu(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
-        timApp.defineQuestions(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
-        timApp.defineReadings(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
-        timApp.defineRefPopup(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
+        defineEventHandlers(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
+        defineAreas(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
+        defineClipboard(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
+        defineEditing(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
+        defineIndex(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
+        defineMath(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users, ParCompiler);
+        defineNotes(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
+        defineParHelpers(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
+        defineParMenu(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
+        defineQuestions(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
+        defineReadings(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
+        defineRefPopup(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
 
         // Call necessary initialization functions below this line. Define any scope functions above this line.
 

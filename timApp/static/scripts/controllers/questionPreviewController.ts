@@ -1,3 +1,9 @@
+import {timApp} from "tim/app";
+import * as answerSheet from "tim/directives/dynamicAnswerSheet";
+import {markAsUsed} from "tim/angular-utils";
+
+markAsUsed(answerSheet);
+
 /**
  * FILL WITH SUITABLE TEXT
  * @module questionPreviewController
@@ -10,11 +16,8 @@
  * @copyright 2015 Timppa project authors
  */
 
-var angular, item, lectureCode, lectureStartTime, lectureEndTime;
-
-var timApp = angular.module('timApp');
-timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$rootScope',
-    function ($scope, $window, http, $rootScope) {
+timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$rootScope', '$log',
+    function ($scope, $window, http, $rootScope, $log) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit questionPreview.html to repeat rows and columns
         "use strict";

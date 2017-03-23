@@ -1,13 +1,13 @@
-import * as angular from 'angular';
-import {timApp} from 'tim/app';
-import * as ocLazyLoad from 'oclazyload'
-import * as renderMathInElement from 'katex-auto-render';
-import * as katex from 'katex';
-import {markAsAngular1Module} from "tim/angular-utils";
+import angular = require("angular");
+import {timApp} from "tim/app";
+import * as ocLazyLoad from "oclazyload";
+import * as renderMathInElement from "katex-auto-render";
+import * as katex from "katex";
+import {markAsUsed} from "tim/angular-utils";
+import {timLogTime} from "tim/timTiming";
+import $ = require("jquery");
 
-markAsAngular1Module(ocLazyLoad);
-
-declare const timLogTime: (message: string, id: string, level?: number) => void;
+markAsUsed(ocLazyLoad);
 
 timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer', '$compile', '$ocLazyLoad', '$timeout', '$log',
     ($http, $window, $q, $httpParamSerializer, $compile, $ocLazyLoad, $timeout, $log) => {

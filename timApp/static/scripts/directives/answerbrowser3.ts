@@ -1,9 +1,11 @@
 /* globals timLogTime, $ */
 
+import {timLogTime} from "tim/timTiming";
+import {timApp} from "tim/app";
+import $ = require("jquery");
+
 timLogTime("answerbrowser3 load","answ");
 
-var angular;
-var timApp = angular.module('timApp');
 var LAZYWORD = "lazylazylazy";
 var LAZYSTART="<!--lazy ";
 var LAZYEND =" lazy-->";

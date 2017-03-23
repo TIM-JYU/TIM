@@ -18,6 +18,7 @@
 
         <link href="{{ url_for('static', filename='images/favicon.ico') }}" rel="shortcut icon" type="image/x-icon"/>
         <meta name="google-site-verification" content="GHYGje2NiYlQM66xyggsnzQht1OHSgtv_9baHbFIklU"/>
+        <script src="https://raw.githack.com/zloirock/core-js/v2.4.1/client/shim.min.js"></script>
 
         <script data-main="/static/scripts/build/main.js" src="/static/scripts/node_modules/requirejs/require.js"></script>
         <script>
@@ -27,7 +28,10 @@
                 });
             define("tim/extramodules", ["exports", {% block extramodules %}{% endblock %}], function () {
 
-            })
+            });
+            define("tim/session", ["exports"], function () {
+                return {{(session.settings or {})|tojson}};
+            });
         </script>
         {% block stylesheet %}
             {{ scss(config.SASS_GEN_PATH + '/' + prefs.css_combined) }}
@@ -48,19 +52,6 @@
             var other_users = {{ other_users|tojson }};
             var bookmarks = {{ bookmarks|tojson }};
             var sessionsettings = {{(session.settings or {})|tojson}};
-            window.setsetting = function (setting, value) {
-                $.ajax({
-                    type: 'POST',
-                    url: '/sessionsetting/' + setting + '/' + value,
-                    success: function (data) {
-                        console.log(data);
-                        sessionsettings[setting] = value;
-                    },
-                    error: function () {
-                        console.log("Could not set setting.");
-                    }
-                });
-            };
         </script>
         <script type="text/x-mathjax-config">
             MathJax.Hub.Config({

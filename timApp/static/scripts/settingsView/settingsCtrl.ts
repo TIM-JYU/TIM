@@ -1,7 +1,8 @@
-var settingsApp = angular.module('timApp');
+import {timApp} from "tim/app";
+import $ = require("jquery");
 
-settingsApp.controller('SettingsCtrl', ['$scope', '$http', function (sc, http) {
-    sc.settings = settings;
+timApp.controller('SettingsCtrl', ['$scope', '$http', '$window', function (sc, http, $window) {
+    sc.settings = $window.settings;
     sc.submit = function (saveUrl) {
         sc.saving = true;
         http.post(saveUrl, sc.settings).success(

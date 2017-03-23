@@ -1,3 +1,12 @@
+import angular = require("angular");
+import {timApp} from "tim/app";
+import {colorPalette} from "tim/directives/velpWindow";
+import * as velpSummary from "tim/directives/velpSummary";
+import $ = require("jquery");
+import {markAsUsed} from "tim/angular-utils";
+
+markAsUsed(velpSummary);
+
 /**
  * The directive retrieves all the data from the server including velps, labels, velp groups and annotations.
  * The directive also handles majority of the functionality that is relevant in handling velps, labels and velp groups.
@@ -10,11 +19,8 @@
  * @copyright 2016 Timber project members
  */
 
-var angular;
-var timApp = angular.module('timApp');
 
-
-var UNDEFINED = "undefined";
+let UNDEFINED = "undefined";
 
 // TODO: show velps with same name side by side. Make changes to the template.
 
@@ -61,7 +67,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
     // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
     var doc_id = $scope.docId;
-    var default_velp_group = {id: -1, name: "No access to default group", edit_access: false, show: true, default: true}; // TODO Use route to add this information
+    var default_velp_group = {
+        id: -1,
+        name: "No access to default group",
+        edit_access: false,
+        show: true,
+        default: true,
+        selected: false
+    }; // TODO Use route to add this information
     var default_personal_velp_group = {id: -2, name: "Personal-default"};
 
     var velpOrderingKey = "velpOrdering_" + doc_id;
@@ -343,7 +356,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
             return;
         }
 
-        var labelToAdd = {
+        let labelToAdd = {
+            id: null,
             content: $scope.newLabel.content,
             language_id: "FI", // TODO: Change to user language
             selected: false
@@ -402,6 +416,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      */
     var addNewVelpToDatabase = function () {
         var velpToAdd = {
+            id: null,
             labels: $scope.newVelp.labels,
             used: 0,
             points: $scope.newVelp.points,

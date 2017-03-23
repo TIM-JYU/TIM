@@ -1,3 +1,9 @@
+import {timApp} from "tim/app";
+import * as chart from "tim/directives/showChartDirective";
+import {markAsUsed} from "tim/angular-utils";
+
+markAsUsed(chart);
+
 /**
  * Created by hajoviin on 6.5.2015.
  * FILL WITH SUITABLE TEXT
@@ -11,9 +17,6 @@
  * @copyright 2015 Timppa project authors
  */
 
-var angular;
-
-var timApp = angular.module('timApp');
 timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$http', function ($scope) {
     "use strict";
     $scope.dynamicAnswerShowControl = {};

@@ -1,8 +1,9 @@
-/* globals angular, $, timLogTime */
 
-var timApp = angular.module('timApp');
+import {timLogTime} from "tim/timTiming";
+import $ = require("jquery");
+import {addEvents} from "tim/marktree";
 
-timApp.defineIndex = function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
+export function defineIndex(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
     "use strict";
 
     sc.showIndex = $window.showIndex;
@@ -84,7 +85,7 @@ timApp.defineIndex = function (sc, http, q, $injector, $compile, $window, $docum
     };
 
     // call marktree.js initialization function so that TOC clicking works
-    $window.addEvents();
+    addEvents();
     $timeout(function () {
         var indexHeadings = $('#menuTabs').find('.subexp .exp');
         var subHeadings = indexHeadings.find('ul.sub li.basic');
@@ -93,4 +94,4 @@ timApp.defineIndex = function (sc, http, q, $injector, $compile, $window, $docum
             indexHeadings.children('.sub').attr('class', 'subexp');
         }
     });
-};
+}

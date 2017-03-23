@@ -1,5 +1,4 @@
-/* globals angular */
-var timApp = angular.module('timApp');
+import {timApp} from "tim/app";
 
 // Controller used in document index and folders
 timApp.controller("IndexCtrl", [ '$scope', '$controller', '$http', '$q', 'Upload', '$window', '$timeout',
@@ -88,7 +87,7 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
                 if (response.status > 0)
                     sc.file.progress = 'Error occurred: ' + response.data.error;
             }, function (evt) {
-                sc.file.progress = Math.min(100, parseInt(100.0 *
+                sc.file.progress = Math.min(100, Math.floor(100.0 *
                     evt.loaded / evt.total));
             });
 

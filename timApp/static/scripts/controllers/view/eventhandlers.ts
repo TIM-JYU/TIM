@@ -1,8 +1,6 @@
-/* globals angular, $ */
 
-var timApp = angular.module('timApp');
-
-timApp.defineEventHandlers = function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
+import $ = require("jquery");
+export function defineEventHandlers(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
     "use strict";
 
     sc.onClick = function (className, func, overrideModalCheck) {

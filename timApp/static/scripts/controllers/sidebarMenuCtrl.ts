@@ -1,4 +1,10 @@
-/* globals angular, $ */
+import {timApp} from "tim/app";
+import $ = require("jquery");
+import * as userService from "tim/services/userService";
+import {markAsUsed} from "tim/angular-utils";
+
+markAsUsed(userService);
+
 /**
  * FILL WITH SUITABLE TEXT
  * @module sidebarMenuCtrl
@@ -10,7 +16,6 @@
  * @licence MIT
  * @copyright 2015 Timppa project authors
  */
-var timApp = angular.module('timApp');
 
 timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$log',
 

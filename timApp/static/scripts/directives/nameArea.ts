@@ -1,5 +1,6 @@
-var timApp = angular.module('timApp');
 
+import {timApp} from "tim/app";
+import $ = require("jquery");
 /**
  * A popup window directive that is used in the document view
  * when creating a new area.

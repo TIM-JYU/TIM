@@ -1,5 +1,4 @@
-var angular;
-var timApp = angular.module('timApp');
+import {timApp} from "tim/app";
 
 timApp.directive('loginMenu', ['Users', '$http', '$httpParamSerializer', function (Users, $http, $httpParamSerializer) {
     "use strict";
@@ -8,8 +7,8 @@ timApp.directive('loginMenu', ['Users', '$http', '$httpParamSerializer', functio
         scope: {},
         templateUrl: '/static/templates/loginMenu.html',
         controller: function ($scope, $element) {
-            $scope.getCurrentUser = Users.getCurrent;
-            $scope.getSessionUsers = Users.getSessionUsers;
+            $scope.getCurrentUser = () => Users.getCurrent();
+            $scope.getSessionUsers = () => Users.getSessionUsers();
             $scope.form = {};
             $scope.loggingout = false;
             $scope.form.email = "";
@@ -20,12 +19,12 @@ timApp.directive('loginMenu', ['Users', '$http', '$httpParamSerializer', functio
                 $scope.addingToSession = !$scope.addingToSession;
             };
             $scope.logout = Users.logout;
-            $scope.isLoggedIn = Users.isLoggedIn;
+            $scope.isLoggedIn = () => Users.isLoggedIn();
             $scope.korppiLogin = function (addingToSession) {
                 $scope.korppiLoading = true;
                 Users.korppiLogin(addingToSession);
             };
-            $scope.isKorppi = Users.isKorppi;
+            $scope.isKorppi = () => Users.isKorppi();
             $scope.stopClick = function ($event) {
                 $event.stopPropagation();
             };

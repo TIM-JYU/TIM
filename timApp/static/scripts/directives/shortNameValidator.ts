@@ -1,11 +1,10 @@
-/* globals angular */
-var app = angular.module('timApp');
+import {timApp} from "tim/app";
 
-app.directive('timShortName', ['Slugify', function (Slugify) {
+timApp.directive('timShortName', ['Slugify', function (Slugify) {
     "use strict";
     return {
         require: '?ngModel',
-        link: function (scope, elm, attrs, ctrl) {
+        link: function (scope, elm, attrs, ctrl: any) {
             if (ctrl) {
                 ctrl.$validators.timShortName = function (modelValue, viewValue) {
                     if (ctrl.$isEmpty(modelValue)) {
@@ -18,11 +17,11 @@ app.directive('timShortName', ['Slugify', function (Slugify) {
     };
 }]);
 
-app.directive('timLocation', ['Slugify', function (Slugify) {
+timApp.directive('timLocation', ['Slugify', function (Slugify) {
     "use strict";
     return {
         require: '?ngModel',
-        link: function (scope, elm, attrs, ctrl) {
+        link: function (scope, elm, attrs, ctrl: any) {
             if (ctrl) {
                 ctrl.$validators.timLocation = function (modelValue, viewValue) {
                     if (ctrl.$isEmpty(modelValue)) {

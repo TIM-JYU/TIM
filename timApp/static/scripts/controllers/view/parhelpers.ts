@@ -1,8 +1,7 @@
-/* globals angular, $ */
+import angular = require("angular");
+import $ = require("jquery");
 
-var timApp = angular.module('timApp');
-
-timApp.defineParHelpers = function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
+export function defineParHelpers(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
     "use strict";
 
     sc.getParId = function ($par) {
@@ -184,4 +183,4 @@ timApp.defineParHelpers = function (sc, http, q, $injector, $compile, $window, $
             return this.toArray();
         });
     };
-};
+}

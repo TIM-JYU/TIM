@@ -1,8 +1,6 @@
-/* globals angular, $ */
 
-var timApp = angular.module('timApp');
-
-timApp.defineReadings = function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
+import $ = require("jquery");
+export function defineReadings(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
     "use strict";
 
     sc.readingTypes = {
@@ -191,4 +189,4 @@ timApp.defineReadings = function (sc, http, q, $injector, $compile, $window, $do
             });
         }, 10000);
     }
-};
+}

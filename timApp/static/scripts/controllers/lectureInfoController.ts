@@ -1,4 +1,12 @@
-/* globals angular, item, lectureId, lectureCode, lectureStartTime, lectureEndTime, inLecture, $ */
+import {timApp} from "tim/app";
+import angular = require("angular");
+import * as showChart from "tim/directives/showChartDirective";
+import {fixQuestionJson} from "tim/directives/dynamicAnswerSheet";
+import $ = require("jquery");
+import {markAsUsed} from "tim/angular-utils";
+
+markAsUsed(showChart);
+
 /**
  * Created by hajoviin on 11.5.2015.
  * Handles the controls of lecture info page.
@@ -13,17 +21,17 @@
  * @copyright 2015 Timppa project authors
  */
 
-var timApp = angular.module('timApp');
 timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$window', '$log', function ($rootScope, $scope, $http, $window, $log) {
     "use strict";
-    $scope.docId = item.id;
-    $scope.docName = item.path;
-    $scope.inLecture = inLecture;
-    $scope.lectureId = lectureId;
-    $scope.code = lectureCode;
-    $scope.lectureCode = "Lecture info: " + lectureCode;
-    $scope.lectureStartTime = lectureStartTime;
-    $scope.lectureEndTime = lectureEndTime;
+    $scope.item = $window.item;
+    $scope.docId = $scope.item.id;
+    $scope.docName = $window.item.path;
+    $scope.inLecture = $window.inLecture;
+    $scope.lectureId = $window.lectureId;
+    $scope.code = $window.lectureCode;
+    $scope.lectureCode = "Lecture info: " + $window.lectureCode;
+    $scope.lectureStartTime = $window.lectureStartTime;
+    $scope.lectureEndTime = $window.lectureEndTime;
     $scope.msg = "";
     $scope.dynamicAnswerShowControls = [];
     $scope.dynamicAnswerShowControl = {};
@@ -108,21 +116,21 @@ timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$w
      */
     $scope.updateHeaderLinks = function () {
         if (document.getElementById("headerView")) {
-            document.getElementById("headerView").setAttribute("href", "/view/" + item.path);
+            document.getElementById("headerView").setAttribute("href", "/view/" + $scope.item.path);
         }
-        if (document.getElementById("headerManage")) { document.getElementById("headerManage").setAttribute("href",  "/manage/" + item.path);
+        if (document.getElementById("headerManage")) { document.getElementById("headerManage").setAttribute("href",  "/manage/" + $scope.item.path);
         }
         if (document.getElementById("headerTeacher")) {
-            document.getElementById("headerTeacher").setAttribute("href",  "/teacher/" + item.path);
+            document.getElementById("headerTeacher").setAttribute("href",  "/teacher/" + $scope.item.path);
         }
         if (document.getElementById("headerAnswers")) {
-            document.getElementById("headerAnswers").setAttribute("href",  "/answers/" + item.path);
+            document.getElementById("headerAnswers").setAttribute("href",  "/answers/" + $scope.item.path);
         }
         if (document.getElementById("headerLecture")) {
-            document.getElementById("headerLecture").setAttribute("href",  "/lecture/" + item.path);
+            document.getElementById("headerLecture").setAttribute("href",  "/lecture/" + $scope.item.path);
         }
         if (document.getElementById("headerSlide")) {
-            document.getElementById("headerSlide").setAttribute("href",  "/slide/" + item.path);
+            document.getElementById("headerSlide").setAttribute("href",  "/slide/" + $scope.item.path);
         }
     };
 
@@ -133,7 +141,7 @@ timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$w
     $scope.addReturnLinkToHeader = function () {
         var menu = document.getElementById("inLectureIconSection");
         var linkToLecture = document.createElement("a");
-        linkToLecture.setAttribute("href", /* "https://" + location.host + */ "/lecture/" + item.path + "?Lecture=" + lectureCode);
+        linkToLecture.setAttribute("href", /* "https://" + location.host + */ "/lecture/" + $scope.item.path + "?Lecture=" + $scope.lectureCode);
         linkToLecture.setAttribute("title", "Return to lecture");
         var returnImg = document.createElement("img");
         returnImg.setAttribute("src", "/static/images/join-icon3.png");

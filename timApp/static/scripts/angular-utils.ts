@@ -1,3 +1,3 @@
-export function markAsAngular1Module(...modules: any[]) {
+export function markAsUsed(...modules: any[]) {
 
 }

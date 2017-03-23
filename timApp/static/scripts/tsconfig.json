@@ -6,7 +6,7 @@
     "allowUnreachableCode": true,
     "removeComments": true,
     "preserveConstEnums": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "outDir": "build",
     "allowJs": true,
     "moduleResolution": "node",
@@ -14,8 +14,19 @@
     "paths": {
       "tim/*": [
         "./*"
+      ],
+      // RequireJS has a problem finding "chart.js" (because it ends with ".js"),
+      // so we remove the dot and tell TypeScript where to find it.
+      "chartjs": [
+        "node_modules/@types/chart.js/index.d.ts"
       ]
-    }
+    },
+    "target": "es3",
+    "lib": [
+      "dom",
+      "es7",
+      "scripthost"
+    ]
   },
   "exclude": [
     "node_modules",

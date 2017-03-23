@@ -1,6 +1,10 @@
-/* globals angular, timLogTime */
 
-var timApp = angular.module('timApp').config(['$httpProvider', function ($httpProvider) {
+import {timApp} from "tim/app";
+import {timLogTime} from "tim/timTiming";
+import angular = require("angular");
+
+
+timApp.config(['$httpProvider', function ($httpProvider) {
     "use strict";
     timLogTime("timApp config", "view");
     function escapeId(id) {

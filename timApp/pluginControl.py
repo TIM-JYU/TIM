@@ -2,7 +2,7 @@
 """Functions for dealing with plugin paragraphs."""
 import json
 from collections import OrderedDict
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 
 import yaml
 from flask import render_template
@@ -192,11 +192,13 @@ def pluginify(doc: Document,
             continue
         plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
         for src in plugin_js_files:
-            if src.startswith("http") or src.startswith("/"):
+            if src.startswith("http") or src.startswith("/"):  # absolute URL
                 js_paths.append(src)
-            else:
+            elif src.endswith('.js'):  # relative JS URL
                 path = get_plugin_tim_url(plugin_name) + "/" + src
                 js_paths.append(path)
+            else:  # module name
+                js_paths.append(src)
         for src in plugin_css_files:
             if src.startswith("http") or src.startswith("/"):
                 css_paths.append(src)
@@ -298,13 +300,11 @@ def get_all_reqs():
     return allreqs
 
 
-def plugin_deps(p):
+def plugin_deps(p: Dict) -> Tuple[List[str], List[str], List[str]]:
     """
 
     :param p: is json of plugin requirements of the form:
               {"js": ["js.js"], "css":["css.css"], "angularModule":["module"]}
-    :rtype : tuple[list,list,list]
-    :type p: dict
     """
     js_files = []
     modules = []

@@ -1,5 +1,7 @@
-function watchEditMode(newVal, oldVal, $scope) {
-    window.editMode = newVal;
+import $ = require("jquery");
+export function watchEditMode(newVal, oldVal, $scope) {
+    let w: any = window;
+    w.editMode = newVal;
     $('.editmode').removeClass('editmode');
 
     if (newVal === null) {

@@ -1,7 +1,7 @@
-import * as Reveal from 'reveal'
-import {GetURLParameter} from 'tim/utils'
-import {is_owner, background_url, background_color} from 'tim/show_slide_vars'
-import * as $ from 'jquery'
+import * as Reveal from "reveal";
+import {GetURLParameter} from "tim/utils";
+import {is_owner, background_url, background_color, item} from "tim/show_slide_vars";
+import $ = require("jquery");
 
 // Full list of configuration options available here:
 // https://github.com/hakimel/reveal.js#configuration

@@ -1,6 +1,5 @@
-var angular;
-var timApp = angular.module('timApp');
 
+import {timApp} from "tim/app";
 timApp.directive("bootstrapPanel", ['$window', '$log', '$http', function ($window, $log, $http) {
     "use strict";
     return {

@@ -1,3 +1,13 @@
+import {timApp} from "tim/app";
+import angular = require("angular");
+import {setsetting} from "tim/utils";
+import {fixQuestionJson, getPointsTable, minimizeJson} from "tim/directives/dynamicAnswerSheet";
+import $ = require("jquery");
+import * as jqueryui from "jqueryui";
+import {markAsUsed} from "tim/angular-utils";
+
+markAsUsed(jqueryui);
+
 /**
  * Controller for creating and editing questions
  * @module questionController
@@ -9,8 +19,6 @@
  * @licence MIT
  * @copyright 2015 Timppa project authors
  */
-var angular;
-var timApp = angular.module('timApp');
 
 function cleanParId(id) {
     var i = id.lastIndexOf(".");
@@ -755,7 +763,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         } else if (scope.question.type !== undefined) {
             scope.errorize("matrix", "You must have at least one row.");
         }
-        var timeLimit = "";
+        let timeLimit: any = "";
         if (scope.question.endTimeSelected) {
             if (scope.question.timeLimit.hours === "") {
                 scope.question.timeLimit.hours = 0;
@@ -1032,11 +1040,5 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     scope.titleIsChanged = function () {
         scope.titleChanged = true;
     };
-
-
-    scope.checkKeydown = function(e) {
-        var c = String.fromCharCode(event.keyCode);
-    }
-
 }])
 ;

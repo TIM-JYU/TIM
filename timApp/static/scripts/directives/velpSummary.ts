@@ -9,8 +9,13 @@
  * @copyright 2016 Timber project members
  */
 
-var angular;
-var timApp = angular.module('timApp');
+import angular = require("angular");
+import * as reviewController from "tim/controllers/reviewController";
+import {timApp} from "tim/app";
+import {markAsUsed} from "tim/angular-utils";
+
+markAsUsed(reviewController);
+
 /**
  * Angular directive for phrase selection
  * @lends module:velpSummary

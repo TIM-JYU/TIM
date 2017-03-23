@@ -1,13 +1,14 @@
-var angular;
-var timApp = angular.module('timApp');
 
+import {timApp} from "tim/app";
+import {timLogTime} from "tim/timTiming";
+import $ = require("jquery");
 function setStorage(key, value) {
     value = JSON.stringify(value);
     window.localStorage.setItem(key, value);
 }
 
 
-function getStorage(key) {
+function getStorage(key: string) {
     var s = window.localStorage.getItem(key);
     if  ( !s ) return s;
     s = JSON.parse(s);
@@ -15,7 +16,7 @@ function getStorage(key) {
 }
 
 function getPixels(s) {
-    s2 = s.replace(/px$/, '');
+    const s2 = s.replace(/px$/, '');
     return Number(s2) || 0;
 }
 
@@ -38,7 +39,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
         restrict: 'A',
         replace: false,
 
-        link: function (scope, element, attr) {
+        link: function (scope, element: JQuery, attr) {
             if ( attr.save ) {
                 scope.pageId = window.location.pathname.split('/')[1];  // /velp/???
                 scope.posKey = attr.save.replace('%%PAGEID%%', scope.pageId);
@@ -48,16 +49,23 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
             var areaMinimized = false;
             var areaHeight = 0;
 
-            var setLeft = 1;
-            var setRight = 0;
-            var setBottom = 0;
-            var setTop = 1;
+            var setLeft = true;
+            var setRight = false;
+            var setBottom = false;
+            var setTop = true;
             var prevTop;
             var prevLeft;
             var prevBottom;
             var prevRight;
-
-
+            var prevHeight;
+            var prevWidth;
+            var upResize;
+            var rightResize;
+            var downResize;
+            var leftResize;
+            var lastPos;
+            var pos;
+            var delta;
 
             if (attr.click) {
                 if ( attr.click === "true" )
@@ -100,7 +108,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
             function getSetDirs() {
                 var leftSet = element.css('left') != 'auto';
                 var rightSet = element.css('right') != 'auto';
-                setLeft = (!leftSet & !rightSet) | leftSet;
+                setLeft = (!leftSet && !rightSet) || leftSet;
                 setRight = rightSet;
                 // setLeft = true; // because for some reason in iPad it was right???
 
@@ -110,7 +118,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
 
                 var topSet = element.css('top') != 'auto';
                 var botSet = element.css('bottom') != 'auto';
-                setTop = (!topSet & !botSet) | topSet;
+                setTop = (!topSet && !botSet) || topSet;
                 setBottom = botSet;
                 prevHeight = element.height();
                 prevWidth = element.width();
@@ -230,8 +238,8 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
             function updateHandle(e, h) {
                 // TODO: find an efficient way to call this whenever
                 // position is changed between static and absolute
-                position = e.css("position");
-                movable = position != 'static';
+                const position = e.css("position");
+                const movable = position != 'static';
                 h.css("visibility", movable ? "visible" : "hidden");
             }
 
@@ -360,16 +368,17 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 }
             }
 
-            element.context.style.msTouchAction = 'none';
+            // TODO context is deprecated
+            (element.context as HTMLElement).style.msTouchAction = 'none';
 
             if ( attr.save ) {
                 getSetDirs();
-                var oldSize = getStorage(scope.posKey + "Size");
+                var oldSize: any = getStorage(scope.posKey + "Size");
                 if ( oldSize ) {
                     if (oldSize.width) element.css('width', oldSize.width);
                     if (oldSize.height) element.css('height', oldSize.height);
                 }
-                var oldPos = getStorage(scope.posKey);
+                var oldPos: any = getStorage(scope.posKey);
                 var w = window.innerWidth;
                 var h = window.innerHeight;
                 var ew = element.width();

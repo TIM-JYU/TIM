@@ -1,3 +1,9 @@
+import angular = require("angular");
+import {timApp} from "tim/app";
+import {getJsonAnswers} from "tim/directives/dynamicAnswerSheet";
+import $ = require("jquery");
+import {Chart} from "chartjs";
+
 /**
  * Created by hajoviin on 13.5.2015.
  * FILL WITH SUITABLE TEXT
@@ -11,13 +17,6 @@
  * @copyright 2015 Timppa project authors
  */
 
-
-
-/*global $:false */
-/*global Chart:false */
-var angular;
-
-var timApp = angular.module('timApp');
 timApp.directive('showChartDirective', ['$compile', function ($compile) {
     "use strict";
     return {
@@ -163,7 +162,8 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
              */
             $scope.internalControl.createChart = function(question) {
                 var data = question;
-                $scope.ctx = $($scope.canvasId).get(0).getContext("2d");
+                let canvas = $($scope.canvasId).get(0) as HTMLCanvasElement;
+                $scope.ctx = canvas.getContext("2d");
                 $scope.x = 10;
                 $scope.y = 20;
                 if (typeof question.answerFieldType !== "undefined" && question.answerFieldType === "text") {
@@ -228,8 +228,12 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     datasets: usedDataSets
                 };
 
-                $scope.answerChart = new Chart($scope.ctx).Bar(bardata, {animation: false} ,{
-                    multiTooltipTemplate: "<%= datasetLabel %> - <%= fvalue %>"
+                $scope.answerChart = new Chart($scope.ctx, {
+                    data: bardata,
+                    options: {
+                        animation: false,
+                    },
+                    type: "bar",
                 });
                 //$scope.answerChart.options.animation = false;
                 $compile($scope);
@@ -308,7 +312,8 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
              * @memberof module:showChartDirective
              */
             $scope.internalControl.close = function () {
-                $scope.ctx.clearRect(0, 0, $($scope.canvasId)[0].width, $($scope.canvasId)[0].height);
+                let canvas = $($scope.canvasId)[0] as HTMLCanvasElement;
+                $scope.ctx.clearRect(0, 0, canvas.width, canvas.height);
                 if (typeof $scope.answerChart !== "undefined") {
                     $scope.answerChart.destroy();
                 }

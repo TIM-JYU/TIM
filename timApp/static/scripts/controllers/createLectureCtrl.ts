@@ -1,3 +1,7 @@
+import {timApp} from "tim/app";
+import angular = require("angular");
+import $ = require("jquery");
+
 /**
  * Lecture creation controller which is used to handle and validate the form data.
  * @module createLectureCtrl
@@ -9,10 +13,6 @@
  * @licence MIT
  * @copyright 2015 Timppa project authors
  */
-
-var angular;
-
-var timApp = angular.module('timApp');
 
 timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
 

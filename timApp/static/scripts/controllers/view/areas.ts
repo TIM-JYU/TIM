@@ -1,9 +1,11 @@
-/* globals angular, $ */
 
-var timApp = angular.module('timApp');
+import $ = require("jquery");
+import * as nameArea from "tim/directives/nameArea";
+import {markAsUsed} from "tim/angular-utils";
 
-timApp.defineAreas = function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
-    "use strict";
+markAsUsed(nameArea);
+
+export function defineAreas(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
 
     sc.onMouseOverOut(".areaeditline1", function ($this, e, select) {
         var areaName = $this.attr('data-area');
@@ -151,4 +153,4 @@ timApp.defineAreas = function (sc, http, q, $injector, $compile, $window, $docum
             $window.alert(data.error);
         });
     };
-};
+}

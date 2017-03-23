@@ -1,8 +1,7 @@
-/* globals angular, $, timLogTime */
+import angular = require("angular");
+import $ = require("jquery");
 
-var timApp = angular.module('timApp');
-
-timApp.defineNotes = function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
+export function defineNotes(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
     "use strict";
 
     sc.toggleNoteEditor = function ($par_or_area, options) {
@@ -116,7 +115,7 @@ timApp.defineNotes = function (sc, http, q, $injector, $compile, $window, $docum
         var btn = document.createElement("input");
         btn.type = "button";
         btn.classList.add("note-badge");
-        if (window.velpMode)
+        if ($window.velpMode)
             btn.classList.add("note-badge-with-velp");
         btn.classList.add("timButton");
         btn.value = "C";
@@ -195,4 +194,4 @@ timApp.defineNotes = function (sc, http, q, $injector, $compile, $window, $docum
             par.appendChild(container);
         }
     };
-};
+}

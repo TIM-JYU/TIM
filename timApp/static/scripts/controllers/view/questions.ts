@@ -1,8 +1,6 @@
-/* globals angular, $, timLogTime */
 
-var timApp = angular.module('timApp');
-
-timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
+import $ = require("jquery");
+export function defineQuestions(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
     "use strict";
 
     if (sc.lectureMode) {
@@ -268,4 +266,4 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
         sc.showQuestionPreview = false;
     });
 
-};
+}

@@ -1,4 +1,4 @@
-define(['jquery'], function ($) {
+import $ = require("jquery");
 
 $(document).ready(function () {
     // Scale of the map
@@ -74,10 +74,9 @@ $(document).ready(function () {
     $.ajax({
         url: "/generateMap",
         type: "post",
-        datatype : "application/json",
+        dataType : "application/json",
         contentType: "application/json",
         data: $container.attr('data-mapdata'),
-        charset: 'utf-8',
         success: function (newJson) {
 
             json = JSON.parse(newJson);
@@ -815,5 +814,4 @@ $(document).ready(function () {
             console.log("Request Failed: " + textStatus + ', ' + error);
         }
     });
-});
 });
