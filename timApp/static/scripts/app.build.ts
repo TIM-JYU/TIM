@@ -21,4 +21,5 @@
         "tim/session": "empty:",
     },
     skipDirOptimize: true, // don't process unused JS files
+    writeBuildTxt: false,
 });
