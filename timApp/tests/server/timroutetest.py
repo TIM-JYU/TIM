@@ -527,6 +527,14 @@ class TimRouteTest(TimDbTest):
             self.assertIsInstance(f['id'], int)
         return f
 
+    def assert_elements_equal(self, e1, e2):
+        self.assertEqual(e1.tag, e2.tag)
+        self.assertEqual((e1.text or '').strip(), (e2.text or '').strip())
+        self.assertEqual((e1.tail or '').strip(), (e2.tail or '').strip())
+        self.assertEqual(e1.attrib, e2.attrib)
+        self.assertEqual(len(e1), len(e2))
+        for c1, c2 in zip(e1, e2):
+            self.assert_elements_equal(c1, c2)
 
 if __name__ == '__main__':
     unittest.main()
