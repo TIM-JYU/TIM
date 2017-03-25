@@ -263,7 +263,7 @@ def print_lines(file, lines, n1, n2):
         file.write((ln + line + "\n"))
 
 
-def write_json_error(file, err, result, points_rule):
+def write_json_error(file, err, result, points_rule=None):
     return_points(points_rule, result)
 
     result["web"] = {"error": err}
@@ -1393,10 +1393,31 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 fileext = "java"
                 testdll = javaclassname + "Test"
 
+
+
+
+
             if is_doc:
                 s = replace_code(query.cut_errors, s)
 
+            warnmessage = ""
+
             if not s.startswith("File not found"):
+                errorcondition = get_json_param(query.jso, "markup", "errorcondition", False)
+                if errorcondition:
+                    m = re.search(errorcondition, s, flags=re.S)
+                    if m:
+                        errormessage = get_json_param(query.jso, "markup", "errormessage",
+                                                      "Not allowed to use: " + errorcondition)
+                        return write_json_error(self.wfile, errormessage, result)
+
+                warncondition = get_json_param(query.jso, "markup", "warncondition", False)
+                if warncondition:
+                    m = re.search(warncondition, s, flags=re.S)
+                    if m:
+                        warnmessage = "\n" + get_json_param(query.jso, "markup", "warnmessage",
+                                                      "Not recomended to use: " + warncondition)
+
                 print(os.path.dirname(csfname))
                 mkdirs(os.path.dirname(csfname))
                 print("Write file: " + csfname)
@@ -2221,7 +2242,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         out = out[0:get_param(query, "maxConsole", 20000)]
         web["console"] = out
-        web["error"] = err
+        web["error"] = err + warnmessage
         web["pwd"] = pwd.strip()
 
         result["web"] = web
