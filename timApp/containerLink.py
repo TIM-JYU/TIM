@@ -62,7 +62,7 @@ else:
         "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
         "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
         "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
-        "qst": {"host": "http://" + "localhost" + ":5000/qst/"},
+        "qst": {"host": "http://" + "localhost" + ":{}/qst/".format(app.config['QST_PLUGIN_PORT'])},
         "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
     }
 
@@ -70,15 +70,19 @@ else:
 def call_plugin_generic(plugin, method, route, data=None, headers=None, params=None):
     plug = get_plugin(plugin)
     try:
+        # Alleviation for a testing problem: since qst plugin is in the same process, the live server during browser
+        # test cannot process the request properly because it tries to call itself during a request.
+        # By using a small timeout value, the test finishes more quickly.
+        read_timeout = 30 if plugin != 'qst' else 1
         request = requests.request(method, plug['host'] + route + "/", data=data,
-                                   timeout=(0.5, 30), headers=headers, params=params)
+                                   timeout=(0.5, read_timeout), headers=headers, params=params)
         request.encoding = 'utf-8'
         return request.text
     except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError) as e:
         log_warning('Connection failed to plugin {}: {}'.format(plugin, e))
         raise PluginException("Could not connect to {}.".format(plugin))
     except requests.exceptions.ReadTimeout as e:
-        log_warning('Read timeout occurred for plugin {}: {}'.format(plugin, e))
+        log_warning('Read timeout occurred for plugin {} in route {}: {}'.format(plugin, route, e))
         raise PluginException("Read timeout occurred when calling {}.".format(plugin))
 
 
