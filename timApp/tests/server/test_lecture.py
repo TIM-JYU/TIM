@@ -79,6 +79,8 @@ class LectureTest(TimRouteTest):
 
         self.assertDictEqual({"isLecture": -1}, resp)
 
+        self.post('/deleteLecture', query_string={'lecture_id': lecture_id})
+
     def check_time(self, current_time, resp, time_format):
         returned_time = datetime.datetime.strptime(resp['lecturers'][0]['active'], time_format).replace(
             tzinfo=timezone.utc)
