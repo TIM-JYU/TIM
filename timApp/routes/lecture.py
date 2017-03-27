@@ -16,7 +16,7 @@ from common import has_ownership, \
 from dbaccess import get_timdb
 from documentmodel.randutils import hashfunc
 from requesthelper import get_option
-from responsehelper import json_response
+from responsehelper import json_response, ok_response
 from routes.login import log_in_as_anonymous
 from routes.qst import get_question_data_from_document, delete_key, create_points_table, \
     calculate_points_from_json_answer, calculate_points
@@ -740,7 +740,7 @@ def extend_lecture():
     verify_ownership(doc_id)
     timdb = get_timdb()
     timdb.lectures.extend_lecture(lecture_id, new_end_time)
-    return json_response("")
+    return ok_response()
 
 
 @lecture_routes.route('/deleteLecture', methods=['POST'])
@@ -1016,7 +1016,7 @@ def update_question_points():
     for answer in question_answers:
         user_points = calculate_points(answer['answer'], points_table)
         timdb.lecture_answers.update_answer_points(answer['answer_id'], user_points)
-    return json_response("")
+    return ok_response()
 
 
 def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_time):
@@ -1107,7 +1107,7 @@ def stop_question():
         tempdb.runningquestions.delete_running_question(asked_id)
         tempdb.usersshown.delete_all_from_question(asked_id)
         tempdb.usersanswered.delete_all_from_question(asked_id)
-    return json_response("")
+    return ok_response()
 
 
 @lecture_routes.route("/deleteQuestion", methods=['POST'])
@@ -1123,7 +1123,7 @@ def delete_question():
     timdb.questions.delete_question(question_id)
     timdb.lecture_answers.delete_answers_from_question(question_id)
 
-    return json_response("")
+    return ok_response()
 
 
 @lecture_routes.route("/getLectureAnswers", methods=['GET'])
@@ -1220,7 +1220,7 @@ def close_points():
     if points:
         tempdb.pointsclosed.add_user_info(lecture_id, asked_id, current_user)
 
-    return json_response("")
+    return ok_response()
 
 
 def user_in_lecture():

@@ -568,7 +568,7 @@ def setslidestatus():
     status = request.args['status']
     tempdb = get_tempdb()
     tempdb.slidestatuses.update_or_add_status(doc_id, status)
-    return json_response("")
+    return ok_response()
 
 
 @app.before_request
