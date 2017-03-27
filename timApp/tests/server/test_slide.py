@@ -4,14 +4,6 @@ from tests.server.timroutetest import TimRouteTest
 
 
 class SlideTest(TimRouteTest):
-    def assert_elements_equal(self, e1, e2):
-        self.assertEqual(e1.tag, e2.tag)
-        self.assertEqual((e1.text or '').strip(), (e2.text or '').strip())
-        self.assertEqual((e1.tail or '').strip(), (e2.tail or '').strip())
-        self.assertEqual(e1.attrib, e2.attrib)
-        self.assertEqual(len(e1), len(e2))
-        for c1, c2 in zip(e1, e2):
-            self.assert_elements_equal(c1, c2)
 
     def test_slide_html(self):
         self.login_test1()

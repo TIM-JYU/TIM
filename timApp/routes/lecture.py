@@ -16,7 +16,7 @@ from common import has_ownership, \
 from dbaccess import get_timdb
 from documentmodel.randutils import hashfunc
 from requesthelper import get_option
-from responsehelper import json_response
+from responsehelper import json_response, ok_response
 from routes.login import log_in_as_anonymous
 from routes.qst import get_question_data_from_document, delete_key, create_points_table, \
     calculate_points_from_json_answer, calculate_points
@@ -740,7 +740,7 @@ def extend_lecture():
     verify_ownership(doc_id)
     timdb = get_timdb()
     timdb.lectures.extend_lecture(lecture_id, new_end_time)
-    return json_response("")
+    return ok_response()
 
 
 @lecture_routes.route('/deleteLecture', methods=['POST'])
@@ -974,7 +974,7 @@ def delete_question_temp_data(asked_id, lecture_id, tempdb):
 @lecture_routes.route('/showAnswerPoints', methods=['POST'])
 def show_points():
     if 'asked_id' not in request.args or 'lecture_id' not in request.args:
-        abort("400")
+        abort(400)
     asked_id = int(request.args.get('asked_id'))
     lecture_id = int(request.args.get('lecture_id'))
 
@@ -1001,7 +1001,7 @@ def show_points():
 def update_question_points():
     """Route to get add question to database."""
     if 'asked_id' not in request.args or 'points' not in request.args:
-        abort("400")
+        abort(400)
     asked_id = int(request.args.get('asked_id'))
     points = request.args.get('points')
     expl = request.args.get('expl')
@@ -1009,14 +1009,14 @@ def update_question_points():
     asked_question = timdb.questions.get_asked_question(asked_id)[0]
     lecture_id = int(asked_question['lecture_id'])
     if not check_if_is_lecturer(lecture_id):
-        abort("400")
+        abort(400)
     timdb.questions.update_asked_question_points(asked_id, points, expl)
     points_table = create_points_table(points)
     question_answers = timdb.lecture_answers.get_answers_to_question(asked_id)
     for answer in question_answers:
         user_points = calculate_points(answer['answer'], points_table)
         timdb.lecture_answers.update_answer_points(answer['answer_id'], user_points)
-    return json_response("")
+    return ok_response()
 
 
 def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_time):
@@ -1049,7 +1049,7 @@ def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_tim
 @lecture_routes.route("/getQuestionById", methods=['GET'])
 def get_question_by_id():
     if not request.args.get("question_id"):
-        abort("400")
+        abort(400)
     question_id = int(request.args.get('question_id'))
     timdb = get_timdb()
     question = timdb.questions.get_question(question_id)
@@ -1059,7 +1059,7 @@ def get_question_by_id():
 @lecture_routes.route("/getQuestionByParId", methods=['GET'])
 def get_question_by_par_id():
     if not request.args.get("par_id") or not request.args.get("doc_id"):
-        abort("400")
+        abort(400)
     doc_id = int(request.args.get('doc_id'))
     par_id = request.args.get('par_id')
     edit = request.args.get('edit', False)
@@ -1073,14 +1073,14 @@ def get_question_by_par_id():
 @lecture_routes.route("/getAskedQuestionById", methods=['GET'])
 def get_asked_question_by_id():
     if not request.args.get("asked_id"):
-        abort("400")
+        abort(400)
     # doc_id = int(request.args.get('doc_id'))
     asked_id = int(request.args.get('asked_id'))
     timdb = get_timdb()
     question = timdb.questions.get_asked_question(asked_id)[0]
     lecture_id = question['lecture_id']
     if not check_if_is_lecturer(lecture_id):
-        abort("400")
+        abort(400)
     return json_response(question)
 
 
@@ -1094,7 +1094,7 @@ def check_if_is_lecturer(lecture_id):
 def stop_question():
     """Route to stop question from running."""
     if not request.args.get("asked_id") or not request.args.get("lecture_id"):
-        abort("400")
+        abort(400)
     asked_id = int(request.args.get('asked_id'))
     lecture_id = int(request.args.get('lecture_id'))
     timdb = get_timdb()
@@ -1103,17 +1103,17 @@ def stop_question():
     lecture = timdb.lectures.get_lecture(lecture_id)
     if lecture:
         if lecture[0].get("lecturer") != current_user:
-            abort("400", "You cannot stop questions on someone elses lecture.")
+            abort(400, "You cannot stop questions on someone elses lecture.")
         tempdb.runningquestions.delete_running_question(asked_id)
         tempdb.usersshown.delete_all_from_question(asked_id)
         tempdb.usersanswered.delete_all_from_question(asked_id)
-    return json_response("")
+    return ok_response()
 
 
 @lecture_routes.route("/deleteQuestion", methods=['POST'])
 def delete_question():
     if not request.args.get("question_id") or not request.args.get('doc_id'):
-        abort("400")
+        abort(400)
 
     doc_id = int(request.args.get('doc_id'))
     question_id = int(request.args.get('question_id'))
@@ -1123,7 +1123,7 @@ def delete_question():
     timdb.questions.delete_question(question_id)
     timdb.lecture_answers.delete_answers_from_question(question_id)
 
-    return json_response("")
+    return ok_response()
 
 
 @lecture_routes.route("/getLectureAnswers", methods=['GET'])
@@ -1220,7 +1220,7 @@ def close_points():
     if points:
         tempdb.pointsclosed.add_user_info(lecture_id, asked_id, current_user)
 
-    return json_response("")
+    return ok_response()
 
 
 def user_in_lecture():

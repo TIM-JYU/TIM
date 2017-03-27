@@ -6,12 +6,14 @@ import re
 
 from flask import Blueprint
 from flask import Response
+from flask import abort
 from flask import request
 
 from containerLink import convert_md
 from responsehelper import json_response
 from documentmodel.document import Document
-from plugin import parse_plugin_values
+from plugin import parse_plugin_values, Plugin, PluginException
+from sessioninfo import get_current_user_object
 
 qst_plugin = Blueprint('qst_plugin',
                        __name__,
@@ -171,8 +173,11 @@ def get_question_data_from_document(doc_id, par_id, edit=False):
     if i >= 0:
         par_id = par_id[i + 1:]
     par = Document(doc_id).get_paragraph(par_id)
-    question = parse_plugin_values(par)
-    plugindata = {'markup': question.get('markup')}
+    try:
+        plugin_values = Plugin.from_paragraph(par, user=get_current_user_object()).values
+    except PluginException:
+        return abort(400, 'Paragraph is not a plugin: {}'.format(par_id))
+    plugindata = {'markup': plugin_values}
     if not edit:
         convert_md(plugindata)
     markup = plugindata.get('markup')

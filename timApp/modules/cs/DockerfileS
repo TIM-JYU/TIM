@@ -1,5 +1,5 @@
 # Aloitetaan cs3:n imagesta
-from cs3
+from timimages/cs3
 user root
 run apt-get update
 run apt-get install -y openssh-server
@@ -7,5 +7,11 @@ run mkdir /var/run/sshd
 run echo 'root:test' | chpasswd
 run sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 RUN echo agent:kissa | chpasswd
+
+ENV LANG en_US.UTF-8
+ENV CLASSPATH .:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar:/cs/java/fxgui.jar:/cs/java/gui.jar
+ENV MONO_PATH /cs/jypeli
+
 expose 22
+# CMD service  /opt/cs/startAllSudo.sh && /bin/bash -c "su agent"
 CMD service  ssh start && /bin/bash -c "su agent"
