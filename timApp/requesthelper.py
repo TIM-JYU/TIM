@@ -6,7 +6,7 @@ from flask import request, abort
 from timdb.invalidreferenceexception import InvalidReferenceException
 
 
-def verify_json_params(*args: List[str], require=True, default=None):
+def verify_json_params(*args: str, require=True, default=None):
     """Gets the specified JSON parameters from the request.
 
     :param default: The default value for the parameter if it is not found from the request.
