@@ -12,9 +12,9 @@
 var angular, $;
 var timApp = angular.module('timApp');
 
-timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$log',
+timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$log', '$uibModal',
 
-    function ($scope, $http, $window, Users, $log) {
+    function ($scope, $http, $window, Users, $log, $uibModal) {
         "use strict";
         $scope.currentLecturesList = [];
         $scope.futureLecturesList = [];
@@ -130,6 +130,30 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
                 .error(function () {
                     $log.error("Couldn't fetch the questions");
                 });
+        };
+
+        $scope.printDocument = function () {
+
+            var modalInstance = $uibModal.open({
+                animation: false,
+                ariaLabelledBy: 'modal-title',
+                ariaDescribedBy: 'modal-body',
+                templateUrl: '/static/templates/printDialog.html',
+                controller: 'PrintCtrl',
+                controllerAs: '$ctrl',
+                size: 'md',
+                resolve: {
+                    document: function () {
+                        return $window.item;
+                    }
+                }
+            });
+
+            modalInstance.result.then(function () {
+                console.log('test');
+            }, function () {
+                $log.info('Modal dismissed at: ' + new Date());
+            });
         };
     }
 ])
