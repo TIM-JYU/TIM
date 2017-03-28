@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Search{% endblock %}
+{% block content %}
+    Found{% if too_many %} at least{% endif %} {{ results|length }} result(s).
+    <ul>
+        {% for result in results %}
+            <li><a href="{{ result.url_relative }}">{{ result.title }}</a> ({{ result.path }})</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

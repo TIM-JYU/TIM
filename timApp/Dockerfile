@@ -120,7 +120,7 @@ run touch /bower_components/2017-03-02.stamp
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
 run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js
 
-# Force auto-render extension to throw exceptions instead of printing to console
+# Force auto-render extension to throw exceptions instead of printing to console.
 run sed -i 's/f instanceof katex\.ParseError/false/' /bower_components/katex/dist/contrib/auto-render.min.js
 
 run mkdir /var/run/sshd
@@ -130,10 +130,10 @@ run sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/s
 # Flask-Testing does not let us configure host, so we do it here.
 run sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python3.5/dist-packages/flask_testing/utils.py
 
-# Ensure that netcat is installed
+# Ensure that netcat is installed.
 run apt-get install --no-install-recommends -y netcat-openbsd
 
-# Default startup command
+# Default startup command.
 cmd cd /service/timApp && source /service/scripts/_initenv.sh && python3 launch.py
 
 expose 22

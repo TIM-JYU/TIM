@@ -154,7 +154,7 @@ class Forbidden(ex.HTTPException):
     description = "Sorry, you don't have permission to view this resource."
 
 
-abort.mapping[403] = Forbidden
+ex._aborter.mapping[403] = Forbidden
 
 
 @app.errorhandler(Forbidden)

@@ -161,6 +161,10 @@ class Lecture(db.Model):
     password = db.Column(db.Text)
     options = db.Column(db.Text)
 
+    @staticmethod
+    def find_by_id(lecture_id: int) -> 'Lecture':
+        return Lecture.query.get(lecture_id)
+
 
 class LectureAnswer(db.Model):
     __bind_key__ = 'tim_main'

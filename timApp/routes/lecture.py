@@ -24,7 +24,7 @@ from sessioninfo import get_current_user_id, logged_in
 from tim_app import app
 from timdb.models.docentry import DocEntry
 from timdb.tempdb_models import TempDb
-from timdb.tim_models import db
+from timdb.tim_models import db, Message, LectureUsers, AskedQuestion, LectureAnswer, Lecture
 
 lecture_routes = Blueprint('lecture',
                            __name__,
@@ -697,21 +697,16 @@ def create_lecture():
 
 @lecture_routes.route('/endLecture', methods=['POST'])
 def end_lecture():
-    if not request.args.get("doc_id") or not request.args.get("lecture_id"):
-        abort(400)
-
-    doc_id = int(request.args.get("doc_id"))
-    lecture_id = int(request.args.get("lecture_id"))
-    verify_ownership(doc_id)
+    lecture = get_lecture_from_request()
     timdb = get_timdb()
-    timdb.lectures.delete_users_from_lecture(lecture_id)
+    timdb.lectures.delete_users_from_lecture(lecture.lecture_id)
 
     now = datetime.now(timezone.utc)
-    timdb.lectures.set_end_for_lecture(lecture_id, now)
+    timdb.lectures.set_end_for_lecture(lecture.lecture_id, now)
 
-    clean_dictionaries_by_lecture(lecture_id)
+    clean_dictionaries_by_lecture(lecture.lecture_id)
 
-    return get_running_lectures(doc_id)
+    return get_running_lectures(lecture.doc_id)
 
 
 def clean_dictionaries_by_lecture(lecture_id):
@@ -732,33 +727,41 @@ def clean_dictionaries_by_lecture(lecture_id):
 
 @lecture_routes.route('/extendLecture', methods=['POST'])
 def extend_lecture():
-    if not request.args.get("doc_id") or not request.args.get("lecture_id") or not request.args.get("new_end_time"):
-        abort(400)
-    doc_id = int(request.args.get("doc_id"))
-    lecture_id = int(request.args.get("lecture_id"))
     new_end_time = request.args.get("new_end_time")
-    verify_ownership(doc_id)
+    if not new_end_time:
+        abort(400)
+    lecture = get_lecture_from_request()
     timdb = get_timdb()
-    timdb.lectures.extend_lecture(lecture_id, new_end_time)
+    timdb.lectures.extend_lecture(lecture.lecture_id, new_end_time)
     return ok_response()
 
 
 @lecture_routes.route('/deleteLecture', methods=['POST'])
 def delete_lecture():
-    if not request.args.get("doc_id") or not request.args.get("lecture_id"):
+    lecture = get_lecture_from_request()
+
+    Message.query.filter_by(lecture_id=lecture.lecture_id).delete()
+    LectureUsers.query.filter_by(lecture_id=lecture.lecture_id).delete()
+    LectureAnswer.query.filter_by(lecture_id=lecture.lecture_id).delete()
+    AskedQuestion.query.filter_by(lecture_id=lecture.lecture_id).delete()
+    db.session.delete(lecture)
+    db.session.commit()
+
+    clean_dictionaries_by_lecture(lecture.lecture_id)
+
+    return get_running_lectures(lecture.doc_id)
+
+
+def get_lecture_from_request(check_access=True) -> Lecture:
+    if not request.args.get("lecture_id"):
         abort(400)
-    doc_id = int(request.args.get("doc_id"))
-    verify_ownership(doc_id)
     lecture_id = int(request.args.get("lecture_id"))
-    timdb = get_timdb()
-    timdb.messages.delete_messages_from_lecture(lecture_id, True)
-    timdb.lectures.delete_users_from_lecture(lecture_id, True)
-
-    timdb.lectures.delete_lecture(lecture_id, True)
-
-    clean_dictionaries_by_lecture(lecture_id)
-
-    return get_running_lectures(doc_id)
+    lecture = Lecture.find_by_id(lecture_id)
+    if not lecture:
+        abort(404)
+    if check_access:
+        verify_ownership(lecture.doc_id)
+    return lecture
 
 
 @lecture_routes.route('/joinLecture', methods=['POST'])
@@ -863,7 +866,6 @@ def get_lecture_with_name(lecture_code, doc_id):
 
 @lecture_routes.route("/extendQuestion", methods=['POST'])
 def extend_question():
-    lecture_id = int(request.args.get('lecture_id'))
     asked_id = int(request.args.get('asked_id'))
     extend = int(request.args.get('extend'))
 
@@ -884,7 +886,6 @@ def ask_question():
     question_id = None
     asked_id = None
     par_id = None
-    question_json_str = None
     if 'question_id' in request.args:
         question_id = int(request.args.get('question_id'))
     elif 'asked_id' in request.args:

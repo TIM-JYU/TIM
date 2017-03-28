@@ -46,30 +46,25 @@ class Readings(TimDbBase):
         if commit:
             db.session.commit()
 
-    def copy_readings(self, src_par: DocParagraph, dest_par: DocParagraph, commit: bool = False):
+    def copy_readings(self, src_par: DocParagraph, dest_par: DocParagraph):
         if str(src_par.doc.doc_id) == str(dest_par.doc.doc_id) and str(src_par.get_id()) == str(dest_par.get_id()):
             return
 
-        cursor = self.db.cursor()
+        src_par_query = ReadParagraph.query.filter_by(doc_id=src_par.doc.doc_id, par_id=src_par.get_id())
+        ReadParagraph.query.filter(
+            (ReadParagraph.doc_id == dest_par.doc.doc_id) &
+            (ReadParagraph.par_id == dest_par.get_id()) &
+            ReadParagraph.usergroup_id.in_(src_par_query.with_entities(ReadParagraph.usergroup_id))).delete(
+            synchronize_session='fetch')
 
-        cursor.execute(
-            """
-DELETE FROM ReadParagraphs WHERE doc_id = %s AND par_id = %s AND UserGroup_id IN
-(SELECT UserGroup_id FROM ReadParagraphs WHERE doc_id = %s AND par_id = %s)
-            """, [dest_par.doc.doc_id, dest_par.get_id(), src_par.doc.doc_id, src_par.get_id()]
-        )
-
-        cursor.execute(
-            """
-INSERT INTO ReadParagraphs (UserGroup_id, doc_id, par_id, timestamp, par_hash, type)
-SELECT UserGroup_id, %s, %s, timestamp, par_hash, type
-FROM ReadParagraphs
-WHERE doc_id = %s AND par_id = %s
-            """, [dest_par.doc.doc_id, dest_par.get_id(), src_par.doc.doc_id, src_par.get_id()]
-        )
-
-        if commit:
-            self.db.commit()
+        for p in src_par_query.all():  # type: ReadParagraph
+            db.session.add(ReadParagraph(usergroup_id=p.usergroup_id,
+                                         doc_id=dest_par.doc.doc_id,
+                                         par_id=dest_par.get_id(),
+                                         timestamp=p.timestamp,
+                                         par_hash=p.par_hash,
+                                         type=p.type
+                                         ))
 
     def get_common_readings(self, usergroup_ids: List[int], doc: Document):
         users = []  # type: List[Dict[str, ReadParagraph]]
