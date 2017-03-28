@@ -742,8 +742,9 @@ def delete_lecture():
 
     Message.query.filter_by(lecture_id=lecture.lecture_id).delete()
     LectureUsers.query.filter_by(lecture_id=lecture.lecture_id).delete()
-    AskedQuestion.query.filter_by(lecture_id=lecture.lecture_id).delete()
     LectureAnswer.query.filter_by(lecture_id=lecture.lecture_id).delete()
+    AskedQuestion.query.filter_by(lecture_id=lecture.lecture_id).delete()
+    db.session.delete(lecture)
     db.session.commit()
 
     clean_dictionaries_by_lecture(lecture.lecture_id)
