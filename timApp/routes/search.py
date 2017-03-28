@@ -99,7 +99,7 @@ def search(query):
                                disable_read_markings=True,
                                no_browser=get_option(request, "noanswers", False))
     found_docs = list(found_docs)
-    sorted(found_docs, key=lambda found_doc: found_doc.path)
+    found_docs.sort(key=lambda found_doc: found_doc.path)
     return render_template('search.html',
                            results=found_docs,
                            too_many=len(found_docs) >= max_results)
