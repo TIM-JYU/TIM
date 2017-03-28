@@ -55,7 +55,7 @@ from routes.notes import notes
 from routes.notify import notify, send_email
 from routes.qst import qst_plugin
 from routes.readings import readings
-from routes.print import print
+from routes.print import print_blueprint
 from routes.search import search_routes
 from routes.settings import settings_page
 from routes.upload import upload
@@ -100,7 +100,7 @@ app.register_blueprint(clipboard)
 app.register_blueprint(notify)
 app.register_blueprint(bookmarks)
 app.register_blueprint(global_notification)
-app.register_blueprint(print)
+app.register_blueprint(print_blueprint)
 app.register_blueprint(Blueprint('bower',
                                  __name__,
                                  static_folder='static/scripts/bower_components',
@@ -156,7 +156,7 @@ class Forbidden(ex.HTTPException):
     description = "Sorry, you don't have permission to view this resource."
 
 
-abort.mapping[403] = Forbidden
+ex._aborter.mapping[403] = Forbidden
 
 
 @app.errorhandler(Forbidden)
