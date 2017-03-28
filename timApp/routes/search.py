@@ -56,23 +56,24 @@ def search(query):
             continue
         if len(found_docs) >= max_results:
             break
-        if show_full_pars:
-            DocParagraph.preload_htmls(pars, doc.get_settings())
-            pars, js_paths, css_paths, modules = post_process_pars(doc,
-                                                                   found_pars,
-                                                                   current_user if logged_in() else None,
-                                                                   sanitize=False,
-                                                                   do_lazy=get_option(request, "lazy", True),
-                                                                   load_plugin_states=False)
-            all_texts.extend(pars)
-            for j in js_paths:
-                all_js.append(j)
-            for c in css_paths:
-                all_css.append(c)
-            for m in modules:
-                all_modules.append(m)
-            if len(all_texts) > 500:
-                break
+        if not show_full_pars:
+            continue
+        DocParagraph.preload_htmls(pars, doc.get_settings())
+        pars, js_paths, css_paths, modules = post_process_pars(doc,
+                                                               found_pars,
+                                                               current_user if logged_in() else None,
+                                                               sanitize=False,
+                                                               do_lazy=get_option(request, "lazy", True),
+                                                               load_plugin_states=False)
+        all_texts.extend(pars)
+        for j in js_paths:
+            all_js.append(j)
+        for c in css_paths:
+            all_css.append(c)
+        for m in modules:
+            all_modules.append(m)
+        if len(all_texts) > 500:
+            break
     if show_full_pars:
         for t in all_texts:
             if not t.get('attrs'):
@@ -97,7 +98,6 @@ def search(query):
                                in_lecture=False,
                                disable_read_markings=True,
                                no_browser=get_option(request, "noanswers", False))
-    else:
-        return render_template('search.html',
-                               results=found_docs,
-                               too_many=len(found_docs) >= max_results)
+    return render_template('search.html',
+                           results=found_docs,
+                           too_many=len(found_docs) >= max_results)
