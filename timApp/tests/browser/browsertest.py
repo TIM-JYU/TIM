@@ -1,6 +1,5 @@
 import os
 
-from flask_testing import LiveServerTestCase
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver import DesiredCapabilities
@@ -10,6 +9,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 from tests.db.timdbtest import TEST_USER_1_NAME, TEST_USER_2_NAME, TEST_USER_3_NAME
 from tests.server.timroutetest import TimRouteTest
+from tests.timliveserver import TimLiveServer
 
 
 class RemoteControls:
@@ -18,16 +18,14 @@ class RemoteControls:
     FIREFOX = 'http://firefox:4444/wd/hub'  # Very slow - login test ~ 20 sec
 
 
-class BrowserTest(LiveServerTestCase, TimRouteTest):
+class BrowserTest(TimLiveServer, TimRouteTest):
     login_dropdown_path = '//login-menu/div/button'
 
     def setUp(self):
-        super(BrowserTest, self).setUp()
+        TimLiveServer.setUp(self)
         self.drv = webdriver.Remote(command_executor=self.app.config['SELENIUM_REMOTE_URL'] + ':4444/wd/hub',
                                     desired_capabilities=DesiredCapabilities.CHROME.copy())
         self.drv.implicitly_wait(10)
-        self.client = self.app.test_client()
-        self.client.__enter__()
         self.wait = WebDriverWait(self.drv, 10)
 
     def login_browser_as(self, email: str, password: str, name: str):
@@ -88,10 +86,6 @@ class BrowserTest(LiveServerTestCase, TimRouteTest):
         finally:
             self.drv.implicitly_wait(10)
 
-    def create_app(self):
-        from tim_app import app
-        return app
-
     def tearDown(self):
+        TimLiveServer.tearDown(self)
         self.drv.quit()
-        self.client.__exit__(None, None, None)

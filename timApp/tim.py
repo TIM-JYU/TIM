@@ -154,7 +154,7 @@ class Forbidden(ex.HTTPException):
     description = "Sorry, you don't have permission to view this resource."
 
 
-abort.mapping[403] = Forbidden
+ex._aborter.mapping[403] = Forbidden
 
 
 @app.errorhandler(Forbidden)
@@ -568,7 +568,7 @@ def setslidestatus():
     status = request.args['status']
     tempdb = get_tempdb()
     tempdb.slidestatuses.update_or_add_status(doc_id, status)
-    return json_response("")
+    return ok_response()
 
 
 @app.before_request

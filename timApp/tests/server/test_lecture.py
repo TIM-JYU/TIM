@@ -4,6 +4,7 @@ from datetime import timezone
 import dateutil.parser
 
 from tests.server.timroutetest import TimRouteTest
+from timdb.tim_models import AskedQuestion, AskedJson, db, LectureAnswer
 
 
 class LectureTest(TimRouteTest):
@@ -78,6 +79,29 @@ class LectureTest(TimRouteTest):
                                           lecture_id=lecture_id))
 
         self.assertDictEqual({"isLecture": -1}, resp)
+
+        # add some dummy data to test lecture deletion
+        aj = AskedJson(json='{}', hash='')
+        db.session.add(aj)
+        db.session.flush()
+        aq = AskedQuestion(lecture_id=lecture_id,
+                          doc_id=doc.id,
+                          par_id='test',
+                          asked_time=datetime.datetime.now(tz=timezone.utc),
+                          points='1',
+                          asked_json_id=aj.asked_json_id,
+                          expl='testing')
+        db.session.add(aq)
+        la = LectureAnswer(user_id=self.current_user.id,
+                           question_id=aq.asked_id,
+                           lecture_id=lecture_id,
+                           answer='test',
+                           answered_on=datetime.datetime.now(tz=timezone.utc),
+                           points=1)
+        db.session.add(la)
+        db.session.commit()
+        self.post('/deleteLecture', query_string={'lecture_id': lecture_id})
+        self.post('/deleteLecture', query_string={'lecture_id': lecture_id}, expect_status=404)
 
     def check_time(self, current_time, resp, time_format):
         returned_time = datetime.datetime.strptime(resp['lecturers'][0]['active'], time_format).replace(

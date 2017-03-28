@@ -5,6 +5,7 @@ from collections import OrderedDict
 from typing import List, Tuple, Optional, Dict
 
 import yaml
+import yaml.parser
 from flask import render_template
 
 from containerLink import call_plugin_html, call_plugin_multihtml, PLUGINS
@@ -110,7 +111,6 @@ def pluginify(doc: Document,
         is_gamified = block.get_attr('gamification')
 
         if is_gamified:
-            md = ""
             md = block.get_markdown()
             try:
                 gamified_data = gamificationdata.gamify(md)

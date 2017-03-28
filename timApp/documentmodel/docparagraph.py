@@ -308,18 +308,19 @@ class DocParagraph:
         except Exception as e:
             self.__htmldata['html'] = get_error_html(e)
 
-        self.__htmldata['cls'] = 'par ' + self.get_class_str() + (' questionPar' if self.is_question() else '')
+        self.__htmldata['cls'] = ' '.join(['par']
+                                          + self.get_classes()
+                                          + (['questionPar'] if self.is_question() else [])
+                                          + ([self.get_attr('plugin')] if self.is_plugin() and not self.is_question() else [])
+                                          )
         self.__htmldata['is_plugin'] = self.is_plugin()
         self.__htmldata['is_question'] = self.is_question()
         # self.is_plugin() and containerLink.get_plugin_needs_browser(self.get_attr('plugin'))
-        self.__htmldata['needs_browser'] = True
+        self.__htmldata['needs_browser'] = self.is_plugin() and not self.is_question()
 
     def _cache_props(self):
         """Caches some boolean properties about this paragraph in internal attributes."""
-        self.__is_plugin = self.get_attr('plugin') or ""  # self.get_attr('taskId')
-        self.__is_question = self.get_attr('question') or ""
-        if self.__is_question:
-            self.__is_plugin = ""
+
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
         self.__is_setting = 'settings' in self.get_attrs()
 
@@ -419,16 +420,18 @@ class DocParagraph:
         :return: html string
 
         """
-        question_title = self.is_question()
-        if question_title:
-            par_md = self.get_markdown()
-            yaml_str = par_md[par_md.index('\n') + 1:par_md.rindex('\n')]
-            values = parse_yaml(yaml_str)
-            if type(values) is str:
-                return {'error': "YAML is malformed: " + values}
-            title = values.get("json",{}).get("questionTitle","")
+        if self.is_question():
+            from plugin import Plugin
+            from plugin import PluginException
+            try:
+                values = Plugin.from_paragraph(self).values
+            except PluginException as e:
+                if not self.get_attr('plugin'):
+                    return get_error_html('This question is missing plugin="qst" attribute. Please add it.')
+                return get_error_html(e)
+            title = values.get("json", {}).get("questionTitle", "")
             if not title:  # compability for old
-                title = values.get("json",{}).get("title","question_title")
+                title = values.get("json", {}).get("title", "question_title")
             return self.__set_html(sanitize_html(
                 '<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="{0}"></span></a>'
                 '<p class="questionNumber">{0}</p>'.format(title)))
@@ -711,12 +714,7 @@ class DocParagraph:
         else:
             self.__data['attrs'][attr_name] = attr_val
 
-        if attr_name == 'taskId':
-            self.__is_plugin = bool(attr_val)
-        if attr_name == 'question':
-            self.__is_question = bool(attr_val)
-        elif attr_name == 'rp' or attr_name == 'ra':
-            self.__is_ref = self.is_par_reference() or self.is_area_reference()
+        self._cache_props()
 
     def is_task(self):
         """Returns whether the paragraph is a task."""
@@ -737,11 +735,14 @@ class DocParagraph:
 
     def get_attrs_str(self) -> str:
         """Returns the attributes as a JSON string."""
-        return json.dumps(self.__data['attrs'])
+        return json.dumps(self.__data['attrs'], sort_keys=True)
+
+    def get_classes(self) -> List[str]:
+        return self.get_attr('classes', [])
 
     def get_class_str(self) -> str:
         """Returns the classes as a space-separated string."""
-        return ' '.join(self.get_attr('classes', []))
+        return ' '.join(self.get_classes())
 
     def get_base_path(self) -> str:
         """Returns the filesystem path for the versions of this paragraph."""
@@ -960,18 +961,19 @@ class DocParagraph:
         * a setting.
 
         """
-        return self.__is_plugin \
+        return self.is_plugin() \
             or (self.__is_ref and not self.is_translation()) \
             or self.__is_setting
 
     def is_plugin(self) -> bool:
         """Returns whether this paragraph is a plugin."""
-        return self.__is_plugin
+
+        return bool(self.get_attr('plugin'))
 
     def is_question(self) -> bool:
         """Returns whether this paragraph is a question paragraph."""
         # preview = self.get("preview", False)
-        return self.__is_question
+        return bool(self.get_attr('question'))
 
     def is_setting(self) -> bool:
         """Returns whether this paragraph is a settings paragraph."""
