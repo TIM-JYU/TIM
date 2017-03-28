@@ -118,8 +118,8 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin
     except subprocess.TimeoutExpired:
         return -9, '', ''
     except IOError as e:
-        return -2, '', ('IO Error ' + str(e)).encode()
-    return p.returncode, stdout, stderr
+        return -2, '', ('IO Error ' + str(e))
+    return p.returncode, stdout.decode(), stderr.decode()
 
 
 def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8",
@@ -203,19 +203,24 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
         if (stderr):
             remove(cwd + "/" + stdoutf)
             remove(cwd + "/" + stderrf)
-            err = str(stderr)
+            err = stderr.decode()
             if "File size limit" in err:
                 err = "File size limit exceeded"
             if "Killed" in err:
                 err = "Timeout. Too long loop?"
-            return -3, '', ("Run error: " + err).encode(), pwd
+            return -3, '', ("Run error: " + err), pwd
         try:
-            stdout = codecs.open(cwd + "/" + stdoutf, 'r', code).read().encode("utf-8")  # luetaan stdin ja err
-            stderr = codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read().encode("utf-8")
+            stdout = codecs.open(cwd + "/" + stdoutf, 'r', code).read()  # luetaan stdin ja err
         except UnicodeDecodeError:
-            stdout = codecs.open(cwd + "/" + stdoutf, 'r', "iso-8859-15").read().encode(
-                "iso-8859-15")  # luetaan stdin ja err
-            stderr = codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read().encode("iso-8859-15")
+            stdout = codecs.open(cwd + "/" + stdoutf, 'r', "iso-8859-15").read() # luetaan stdin ja err
+
+        try:
+            stderr = codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read()
+        except UnicodeDecodeError:
+            try:
+                stderr = codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read()
+            except UnicodeDecodeError:
+                stderr = codecs.open(cwd + "/" + stderrf, 'r', "iso-8859-15").read()
 
         remove(cwd + "/" + stdoutf)
         remove(cwd + "/" + stderrf)
@@ -233,7 +238,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
         remove(cwd + "/" + stdoutf)
         remove(cwd + "/" + stderrf)
         remove(cwd + '/pwd.txt')
-        return -2, '', ("IO Error" + str(e)).encode()
+        return -2, '', ("IO Error" + str(e))
     return 0, stdout, stderr, pwd
 
 
@@ -258,7 +263,7 @@ def print_lines(file, lines, n1, n2):
         file.write((ln + line + "\n"))
 
 
-def write_json_error(file, err, result, points_rule):
+def write_json_error(file, err, result, points_rule=None):
     return_points(points_rule, result)
 
     result["web"] = {"error": err}
@@ -567,7 +572,7 @@ def replace_code(rules, s):
 
 
 def check_code(out, err, compiler_output, ttype):
-    err = err.decode("utf-8") + compiler_output
+    err = err + compiler_output
     if ttype == "fs":
         err = err.replace(
             "F# Compiler for F# 3.0 (Open Source Edition)\nFreely distributed under the Apache 2.0 Open Source License\n",
@@ -583,7 +588,9 @@ def check_code(out, err, compiler_output, ttype):
         elif type('') != type(out):
             out = out.decode('utf-8-sig')
     except:
-        out = out.decode('iso-8859-1')
+        # out = out.decode('iso-8859-1')
+        pass
+
     return out, err
 
 
@@ -1386,10 +1393,31 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 fileext = "java"
                 testdll = javaclassname + "Test"
 
+
+
+
+
             if is_doc:
                 s = replace_code(query.cut_errors, s)
 
+            warnmessage = ""
+
             if not s.startswith("File not found"):
+                errorcondition = get_json_param(query.jso, "markup", "errorcondition", False)
+                if errorcondition:
+                    m = re.search(errorcondition, s, flags=re.S)
+                    if m:
+                        errormessage = get_json_param(query.jso, "markup", "errormessage",
+                                                      "Not allowed to use: " + errorcondition)
+                        return write_json_error(self.wfile, errormessage, result)
+
+                warncondition = get_json_param(query.jso, "markup", "warncondition", False)
+                if warncondition:
+                    m = re.search(warncondition, s, flags=re.S)
+                    if m:
+                        warnmessage = "\n" + get_json_param(query.jso, "markup", "warnmessage",
+                                                      "Not recomended to use: " + warncondition)
+
                 print(os.path.dirname(csfname))
                 mkdirs(os.path.dirname(csfname))
                 print("Write file: " + csfname)
@@ -1604,6 +1632,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 '''
                 print("directory = " + os.curdir)
                 error_str = "!!! Error code " + str(e.returncode) + "\n"
+                # error_str += e.output.decode("utf-8") + "\n"
                 error_str += e.output.decode("utf-8") + "\n"
                 # errorStr = re.sub("^/tmp/.*cs\(\n", "tmp.cs(", errorStr, flags=re.M)
                 error_str = error_str.replace(prgpath, "")
@@ -1664,10 +1693,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif ttype == "jypeli":
                 code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                            uargs=userargs, ulimit="ulimit -f 80000", noX11=noX11)
-                if type('') != type(out):
-                    out = out.decode()
-                if type('') != type(err):
-                    err = err.decode()
                 err = re.sub("^ALSA.*\n", "", err, flags=re.M)
                 err = re.sub("^W: \[pulse.*\n", "", err, flags=re.M)
                 err = re.sub("^AL lib:.*\n", "", err, flags=re.M)
@@ -1713,10 +1738,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 code, out, err, pwd = run2(runcmd, cwd=prgpath, timeout=10, env=env,
                                            stdin=stdin, uargs=userargs, noX11=noX11)
                 print(err)
-                if type('') != type(out):
-                    out = out.decode()
-                if type('') != type(err):
-                    err = err.decode()
                 # err = ""
                 # run(["convert", "-flip", imgsource, pngname], cwd=prgpath, timeout=20)
                 image_ok, e = copy_file(imgsource, pngname)
@@ -1743,10 +1764,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                            env=env, stdin=stdin,
                                            uargs=userargs, ulimit="ulimit -f 80000", noX11=noX11)
                 debug_str("r ajo valmis")
-                if type('') != type(out):
-                    out = out.decode()
-                if type('') != type(err):
-                    err = err.decode()
                 print(err)
                 #  wait_file(imgsource)
                 debug_str("r kuvan kopiointi aloitetaan")
@@ -1770,10 +1787,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 code, out, err, pwd = run2(runcmd, cwd=prgpath, timeout=10, env=env,
                                            stdin=stdin, uargs=userargs, noX11=noX11)
                 print(err)
-                if type('') != type(out):
-                    out = out.decode()
-                if type('') != type(err):
-                    err = err.decode()
                 # imgsource = "run/capture.png"
                 if code == -9:
                     out = "Runtime exceeded, maybe loop forever\n" + out
@@ -1789,10 +1802,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 eri = -1
                 code, out, err, pwd = run2(["nunit-console", "-nologo", "-nodots", testdll], cwd=prgpath, timeout=10,
                                            env=env, noX11=noX11)
-                if type('') != type(out):
-                    out = out.decode()
-                if type('') != type(err):
-                    err = err.decode()
                 # print(code, out, err)
                 out = remove_before("Execution Runtime:", out)
                 if code == -9:
@@ -1839,10 +1848,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     code, out, err, pwd = run2(["java", "-jar", "/cs/java/comtestcpp.jar", "-nq", testcs], cwd=prgpath,
                                                timeout=10, env=env, noX11=noX11)
                     # linenr_end = ":"
-                if type('') != type(out):
-                    out = out.decode()
-                if type('') != type(err):
-                    err = err.decode()
                 print(code, out, err)
                 out = remove_before("Execution Runtime:", out)
                 if code == -9:
@@ -1912,7 +1917,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                                    extra=extra, noX11=noX11)
                     except Exception as e:
                         print(e)
-                        code, out, err = (-1, "", str(e).encode())
+                        code, out, err = (-1, "", str(e))
                     print("Run2: ", imgsource, pngname)
                     if code == -9:
                         out = "Runtime exceeded, maybe loop forever\n" + out
@@ -1920,7 +1925,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         if imgsource and pngname:
                             image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
                             if e:
-                                err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
+                                err = (str(err) + "\n" + str(e) + "\n" + str(out))
                             # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
                             print(is_optional_image, image_ok)
                             remove(imgsource)
@@ -1946,8 +1951,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     #                           env=env, stdin=stdin, ulimit="ulimit -f 10000",
                     #                           uargs=userargs, noX11=noX11)
                     out = check_output(["cd " + prgpath + " && " + cmdline], stderr=subprocess.STDOUT,
-                                                   shell=True)  # .decode("utf-8")
-                    code, err = (0, "".encode())
+                                                   shell=True).decode("utf-8")
+                    code, err = (0, "")
 
                 elif ttype == "shell":
                     print("shell: ", pure_exename)
@@ -1969,7 +1974,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         print(pwd)
                     except OSError as e:
                         print(e)
-                        code, out, err = (-1, "", str(e).encode())
+                        code, out, err = (-1, "", str(e))
                 elif ttype == "run":
                     uargs = userargs
                     cmd = shlex.split(get_param(query, "cmd", "ls -la") + " " + pure_exename)
@@ -1984,7 +1989,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                                    extra=extra, noX11=noX11)
                     except Exception as e:
                         print(e)
-                        code, out, err = (-1, "", str(e).encode())
+                        code, out, err = (-1, "", str(e))
                     print("Run2: ", imgsource, pngname)
                     if code == -9:
                         out = "Runtime exceeded, maybe loop forever\n" + out
@@ -1992,7 +1997,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         if imgsource and pngname:
                             image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
                             if e:
-                                err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
+                                err = (str(err) + "\n" + str(e) + "\n" + str(out))
                             # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
                             print(is_optional_image, image_ok)
                             remove(imgsource)
@@ -2031,7 +2036,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     if imgsource and pngname:
                         image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
                         if e:
-                            err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
+                            err = (str(err) + "\n" + str(e) + "\n" + str(out))
                         # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
                         print(is_optional_image, image_ok)
                         remove(imgsource)
@@ -2046,7 +2051,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     if imgsource and pngname:
                         image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
                         if e:
-                            err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
+                            err = (str(err) + "\n" + str(e) + "\n" + str(out))
                         # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
                         print(is_optional_image, image_ok)
                         remove(imgsource)
@@ -2060,7 +2065,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     if imgsource and pngname:
                         image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
                         if e:
-                            err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
+                            err = (str(err) + "\n" + str(e) + "\n" + str(out))
                         # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
                         print(is_optional_image, image_ok)
                         remove(imgsource)
@@ -2069,13 +2074,18 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
                 elif ttype == "octave":
                     print("octave: ", exename)
+                    extra = get_param(query, "extra", "").format(pure_exename, userargs)
+                    dockercontainer = get_json_param(query.jso, "markup", "dockercontainer", "timimages/octave")
                     code, out, err, pwd = run2(["octave", "--no-window-system", "--no-gui", "-qf", pure_exename],
                                                cwd=prgpath, timeout=20, env=env,
                                                stdin=stdin,
                                                uargs=userargs, ulimit="ulimit -f 80000", noX11=True,
-                                               dockercontainer=dockercontainer)
+                                               dockercontainer=dockercontainer,
+                                               extra=extra
+                                               )
                     if err:
-                        err = err.decode("utf-8")
+                        err = err[0:2000]
+
                         print("err1s: ", err)
                         lin = err.splitlines()
                         lout = []
@@ -2095,12 +2105,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                 lout.append(lin[i])
                                 i+=1
                         err = "\n".join(lout)
-                        err = err.strip().encode("utf-8")
+                        err = err.strip()
                         print("err2: ", err)
                     if imgsource and pngname:
                         image_ok, e = copy_file(filepath + "/" + imgsource, pngname, False, is_optional_image)
                         if e:
-                            err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
+                            err = (str(err) + "\n" + str(e) + "\n" + str(out))
                         # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
                         print(is_optional_image, image_ok)
                         # remove(imgsource)
@@ -2109,7 +2119,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     if wavsource and wavdest:
                         wav_ok, e = copy_file(filepath + "/" + wavsource, wavdest, True, is_optional_image)
                         if e:
-                            err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
+                            err = (str(err) + "\n" + str(e) + "\n" + str(out))
                         print("WAV: ", is_optional_image, wav_ok, wavname, wavsource, wavdest)
                         remove(wavsource)
                         if wav_ok:
@@ -2131,29 +2141,29 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     showname = filename
                     if showname == "prg":
                         showname = ""
-                    code, out, err, pwd = (0, "".encode("utf-8"), ("tallennettu " + showname).encode("utf-8"), "")
+                    code, out, err, pwd = (0, "", ("tallennettu " + showname), "")
                 elif ttype == "fs":
                     print("Exe: ", exename)
                     code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                                uargs=userargs, noX11=noX11)
                 elif ttype == "md":
-                    code, out, err = (0, "".encode(), "".encode())
+                    code, out, err = (0, "", "")
                 elif ttype == "js":
-                    code, out, err = (0, "".encode(), "".encode())
+                    code, out, err = (0, "", "")
                 elif ttype == "glowscript":
-                    code, out, err = (0, "".encode(), "".encode())
+                    code, out, err = (0, "", "")
                 elif ttype == "vpython":
-                    code, out, err = (0, "".encode(), "".encode())
+                    code, out, err = (0, "", "")
                 elif ttype == "simcir":
-                    code, out, err = (0, "".encode(), "".encode())
+                    code, out, err = (0, "", "")
                 elif ttype == "sage":
-                    code, out, err = (0, "".encode(), "".encode())
+                    code, out, err = (0, "", "")
                 elif ttype == "cs":
                     print("Exe: ", exename)
                     code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                                uargs=userargs, noX11=noX11)
                 elif ttype == "upload":
-                    code, out, err = (0, "".encode(), "".encode())
+                    code, out, err = (0, "", "")
                 else:
                     out = "Unknown run type: " + ttype + "\n"
 
@@ -2166,23 +2176,22 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
                 else:
                     print(err)
-                    err = err.decode("utf-8") + compiler_output
+                    err = err + compiler_output
                     if ttype == "fs":
                         err = err.replace(
                             "F# Compiler for F# 3.0 (Open Source Edition)\nFreely distributed under the Apache 2.0 Open Source License\n",
                             "")
 
-                    if type('') != type(err):
-                        err = err.decode()
                     # if type(out) != type(''): out = out.decode()
                     # noinspection PyBroadException
                     try:
                         if out and out[0] in [254, 255]:
                             out = out.decode('UTF16')
-                        elif type('') != type(out):
-                            out = out.decode('utf-8-sig')
+                        # elif type('') != type(out):
+                        #    out = out.decode('utf-8-sig')
                     except:
-                        out = out.decode('iso-8859-1')
+                        # out = out.decode('iso-8859-1')
+                        pass
 
         except Exception as e:
             print("run: ", e)
@@ -2233,7 +2242,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         out = out[0:get_param(query, "maxConsole", 20000)]
         web["console"] = out
-        web["error"] = err
+        web["error"] = err + warnmessage
         web["pwd"] = pwd.strip()
 
         result["web"] = web
