@@ -34,6 +34,7 @@ def search(query):
         abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
     timdb = get_timdb()
     show_full_pars = get_option(request, 'show_pars', False)
+    max_results = get_option(request, 'max', 100)
     viewable = get_viewable_blocks(get_current_user_id())
     docs = timdb.documents.get_documents(filter_ids=viewable)
     current_user = get_current_user_object()
@@ -42,16 +43,19 @@ def search(query):
     all_css = []
     all_modules = []
     found_docs = set()
+    query_lower = query.lower()
     for d in docs:
         doc = d.document
         pars = doc.get_paragraphs()
         found_pars = []
         for t in pars:
-            if query.lower() in t.get_markdown().lower():
+            if query_lower in t.get_markdown().lower():
                 found_pars.append(t)
                 found_docs.add(d)
         if not found_pars:
             continue
+        if len(found_docs) >= max_results:
+            break
         if show_full_pars:
             DocParagraph.preload_htmls(pars, doc.get_settings())
             pars, js_paths, css_paths, modules = post_process_pars(doc,
@@ -94,4 +98,6 @@ def search(query):
                                disable_read_markings=True,
                                no_browser=get_option(request, "noanswers", False))
     else:
-        return render_template('search.html', results=found_docs)
+        return render_template('search.html',
+                               results=found_docs,
+                               too_many=len(found_docs) >= max_results)
