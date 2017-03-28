@@ -133,6 +133,10 @@ run sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloa
 # Ensure that netcat is installed
 run apt-get install --no-install-recommends -y netcat-openbsd
 
+# Install pandoc document converter and pypandoc, a python interface for pandoc
+run apt-get install --no-install-recommends -y pandoc
+run pip3 install pypandoc
+
 # Default startup command
 cmd cd /service/timApp && source /service/scripts/_initenv.sh && python3 launch.py
 
