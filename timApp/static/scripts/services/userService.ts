@@ -82,7 +82,7 @@ timApp.factory('Users', ['$http', '$window', '$q', '$httpParamSerializer', ($htt
                     {
                         withCredentials: true,
                         method: 'POST',
-                        url: 'https://openid.korppi.jyu.fi/openid/manage/manage',
+                        url: 'https://korppi.jyu.fi/openid/manage/manage',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded'
                         },
