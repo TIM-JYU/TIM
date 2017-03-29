@@ -89,6 +89,53 @@ ConsolePWD.getPWD = function(scope) {
 }
 //==============================================================
 
+//==============================================================
+// For IE missing functions
+if (!String.prototype.startsWith) {
+    String.prototype.startsWith = function(searchString, position){
+      position = position || 0;
+      return this.substr(position, searchString.length) === searchString;
+  };
+}
+
+if (!String.prototype.endsWith) {
+  String.prototype.endsWith = function(searchString, position) {
+      var subjectString = this.toString();
+      if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+        position = subjectString.length;
+      }
+      position -= searchString.length;
+      var lastIndex = subjectString.lastIndexOf(searchString, position);
+      return lastIndex !== -1 && lastIndex === position;
+  };
+}
+
+var browserName = null;
+var getBrowserName = function() {
+    return browserName = browserName || function() {
+      var userAgent = navigator ? navigator.userAgent.toLowerCase() : "other";
+
+      if(userAgent.indexOf("chrome") > -1)        return "chrome";
+      else if(userAgent.indexOf("safari") > -1)   return "safari";
+      else if(userAgent.indexOf("msie") > -1)     return "ie";
+      else if(userAgent.indexOf("firefox") > -1)  return "firefox";
+      // if ( userAgent.match(/Trident.*rv\:11\./) ) return "ie";'
+      if ( userAgent.indexOf("trident/") >= 0 ) return "ie";
+      return userAgent;
+    }();
+};
+
+
+var isAcrobatInstalled = null;
+function hasAcrobatInstalled() {
+    if ( isAcrobatInstalled != null ) return isAcrobatInstalled;
+    function getActiveXObject(name) {
+      try { return new ActiveXObject(name); } catch(e) {}
+    };
+
+    isAcrobatInstalled = getActiveXObject('AcroPDF.PDF') || getActiveXObject('PDF.PdfCtrl');
+    return isAcrobatInstalled;
+}
 
 var csJSTypes = ["js", "glowscript", "vpython"];
 
@@ -105,7 +152,7 @@ uploadFileTypes.is = function(types, file) {
         var t = types[i];
         if (file.endsWith(t)) {
             if (t !== 'pdf') return true;
-            if (navigator.mimeTypes['application/pdf']) return true;
+            if (navigator.mimeTypes['application/pdf'] || hasAcrobatInstalled() || getBrowserName() == 'ie' ) return true;
             return false;
         }
     }
