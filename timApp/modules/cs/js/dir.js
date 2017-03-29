@@ -101,8 +101,14 @@ uploadFileTypes.show = ["pdf","xml"];
 uploadFileTypes.is = function(types, file) {
     if (!file) return false;
     file = file.toLowerCase();
-    for (var i=0; i< types.length; i++)
-       if ( file.endsWith(types[i])) return true;
+    for (var i=0; i< types.length; i++) {
+        var t = types[i];
+        if (file.endsWith(t)) {
+            if (t !== 'pdf') return true;
+            if (navigator.mimeTypes['application/pdf']) return true;
+            return false;
+        }
+    }
     return false;
 }
 
