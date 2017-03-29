@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Search - {{ query }}{% endblock %}
+{% block content %}
+    Found{% if too_many %} at least{% endif %} {{ results|length }} result(s).
+    <ul>
+        {% for result in results %}
+            <li><a href="{{ result.document.url_relative }}#{{ result.par.get_id() }}">{{ result.document.title }}</a> ({{ result.document.path }})</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

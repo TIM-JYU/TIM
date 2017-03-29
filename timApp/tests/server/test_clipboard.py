@@ -3,6 +3,7 @@ from typing import Optional
 from documentmodel.docparagraph import DocParagraph
 from tests.server.timroutetest import TimRouteTest
 from timdb.models.docentry import DocEntry
+from timdb.readparagraphtype import ReadParagraphType
 
 
 class ClipboardTest(TimRouteTest):
@@ -34,10 +35,27 @@ class ClipboardTest(TimRouteTest):
         test_pars = ['test1', 'test2', 'test3', 'test4']
         d = self.create_doc(initial_par=test_pars)
         pars = d.document.get_paragraphs()
+        timdb = self.get_db()
+        timdb.readings.mark_read(usergroup_id=self.current_group().id,
+                                 doc=d.document,
+                                 par=pars[0],
+                                 read_type=ReadParagraphType.click_red)
+        timdb.readings.mark_read(usergroup_id=self.current_group().id,
+                                 doc=d.document,
+                                 par=pars[0],
+                                 read_type=ReadParagraphType.hover_par)
+        timdb.readings.mark_read(usergroup_id=self.current_group().id,
+                                 doc=d.document,
+                                 par=pars[1],
+                                 read_type=ReadParagraphType.hover_par)
         self.copy(d, pars[0], pars[2])
         self.paste(d, par_after=pars[2])
         d.document.clear_mem_cache()
         pars_new = d.document.get_paragraphs()
+        new_readings = timdb.readings.get_readings(self.current_group().id, d.document)
+        self.assertEqual(6, len(new_readings))
+        self.assertEqual(2, len(list(filter(lambda r: r.type == ReadParagraphType.click_red, new_readings))))
+        self.assertEqual(4, len(list(filter(lambda r: r.type == ReadParagraphType.hover_par, new_readings))))
         self.assertListEqual(['test1', 'test2', 'test3', 'test1', 'test2', 'test3', 'test4'],
                              [p.get_markdown() for p in pars_new])
 
