@@ -119,8 +119,9 @@ function minimizeJson(json) {
 
 
 function fixLineBreaks(s) {
-    var result = s.replace("<","&lt;");
-    result = result.replace(">","&gt;");
+    // var result = s.replace(" < "," &lt; ");
+    //result = result.replace(" > "," &gt; ");
+    result = s;
     return result;
     //return s.replace("\n","<br />");
 }
