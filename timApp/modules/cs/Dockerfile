@@ -130,6 +130,7 @@ run wget -q https://get.docker.com/builds/Linux/x86_64/docker-1.10.2.tgz && \
 # sudo apt-get install python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas python-sympy python-nose
 run apt-get install -y python3-numpy python3-scipy python3-matplotlib python3-pandas 
 run pip3 install statsmodels
+run pip3 install control
 
 # Octave
 #run apt-add-repository ppa:octave/stable
@@ -144,16 +145,16 @@ run apt-get install -y epstool
 run apt-get install -y transfig
 
 
-run apt-get install -y octave-control
-run apt-get install -y octave-io
+# run apt-get install -y octave-control
+# run apt-get install -y octave-io
 
 #env LD_LIBRARY_PATH /usr/lib/jvm/java-8-oracle/jre/lib/amd64/server
 # run javareconf
 run ln -s /usr/lib/jvm/java-8-oracle /usr/lib/jvm/default-java
 
 
-run apt-get install -y octave-signal
-run apt-get install -y octave-statistics
+# run apt-get install -y octave-signal
+# run apt-get install -y octave-statistics
 run apt-get install -y octave-control octave-image octave-io octave-optim octave-signal octave-statistics
 
 
