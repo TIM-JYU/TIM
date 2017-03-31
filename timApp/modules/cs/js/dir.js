@@ -879,6 +879,7 @@ function lataaSage(scope,firstTime, readyFunction) {
     return sageLoading;
 }
 
+
 function runSage(scope) {
     if ( scope.sageButton ) scope.sageButton.click();
 }
@@ -2140,6 +2141,13 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         if ( $scope.type.indexOf("/c") >= 0 ) wantsConsole = true;
         if ( !$scope.attrs.runeverytime && !$scope.usercode && !$scope.userargs && !$scope.userinput ) return;
         if ( !$scope.canvas ) { // create a canvas on first time
+            var html = "";
+            var scripts = "";
+            if ( $scope.type.indexOf("/vis") >= 0 ) {
+                $scope.iframe = true;
+                html =  '<div id="myDiv" class="mydiv" width="800" height="400" ></div>';
+                scripts = "https://cdnjs.cloudflare.com/ajax/libs/vis/4.19.1/vis.min.js";
+            }
             if ( $scope.iframe ) {
                 var dw,dh;
                 var fsrc = "/cs/gethtml/canvas.html";
@@ -2151,10 +2159,16 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
                 }
                 var v = $scope.getVid(dw,dh);
                 $scope.irrotaKiinnita = "Irrota";
-                $scope.canvas = angular.element('<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px; z-index: 20" >'+
+                html = ($scope.attrs.html||html);
+                $scope.fullhtml = ($scope.attrs.fullhtml||"");
+                html = encodeURI(html);
+                var angularElement = '<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px; z-index: 20" >'+
                   '<span class="csRunMenu"><div><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a><a href ng-click="closeFrame()" style="float: right" >[X]</a></div></span>'+
-                  '<iframe id="'+v.vid+'" class="jsCanvas" src="' + fsrc + '?scripts='+($scope.attrs.scripts||"") + '" ' + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin"></iframe>'+
-                  '</div>');
+                    (!$scope.fullhtml ? '<iframe id="'+v.vid+'" class="jsCanvas" src="' + fsrc + '?scripts='+($scope.attrs.scripts||scripts)+'&html='+ html + '" ' + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin">':
+                    '<iframe id="'+v.vid+'" class="jsCanvas"'  + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin">')+
+                  '</iframe>'+
+                  '</div>';
+                $scope.canvas = angular.element(angularElement);
                 // $scope.canvas = angular.element('<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html" ' + v.w + v.h + ' style="border:0" seamless="seamless" ></iframe>');
                 $scope.iframeLoadTries = 10;
             } else {  
@@ -2181,7 +2195,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         if ( $scope.iframe ) { // in case of iframe, the text is send to iframe
             var f =  document.getElementById($scope.taunoId); // but on first time it might be not loaded yet
             // var s = $scope.taunoHtml.contentWindow().getUserCodeFromTauno();
-            if ( !f || !f.contentWindow || !f.contentWindow.runJavaScript ) {
+            if ( !f || !f.contentWindow  || (!f.contentWindow.runJavaScript && !$scope.fullhtml) ) {
                $scope.lastJS = ""; 
                $scope.lastUserargs = "";
                $scope.lastUserinput = "";
@@ -2193,11 +2207,21 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             }
             if ( $scope.iframeClientHeight < 0 ) $scope.iframeClientHeight = f.clientHeight;
             if ( $scope.gsDefaultLanguage ) f.contentWindow.setDefLanguage($scope.gsDefaultLanguage);
-            var s = f.contentWindow.runJavaScript(text,$scope.userargs,$scope.userinput, wantsConsole);
-            var ch = f.contentWindow.getConsoleHeight();
-            if ( ch < $scope.iframeClientHeight ) ch = $scope.iframeClientHeight;
-            f.height = "";
-            f.height = ""+ch+"px";
+            if ( $scope.fullhtml ) {
+                var fhtml = $scope.fullhtml.replace("BYCODEREPLACE", text);
+                f.contentWindow.document.open();
+                f.contentWindow.document.write(fhtml);
+                f.contentWindow.document.close();
+            }
+            else {
+                var s = f.contentWindow.runJavaScript(text, $scope.userargs, $scope.userinput, wantsConsole);
+            }
+            if ( f.contentWindow.getConsoleHeight ) {
+                var ch = f.contentWindow.getConsoleHeight();
+                if (ch < $scope.iframeClientHeight) ch = $scope.iframeClientHeight;
+                f.height = "";
+                f.height = "" + ch + "px";
+            }
 
             return;
         }

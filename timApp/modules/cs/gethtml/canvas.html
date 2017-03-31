@@ -84,7 +84,7 @@
           else if (exc.lineNumber) rivi = 'Row '+exc.lineNumber+': '; // Safari has lineNUmber
           if ( !error ) error = document.getElementById('error');
           if ( error ) error.innerHTML = rivi+sarake+exc.toString();
-          else console.log("Ei error ikkunaa " + exc.message);
+          else console.log("Ei error ikkunaa " + exc.message + rivi+sarake);
        }
       }
       
@@ -136,5 +136,6 @@
     <div id="error" class="error" ></div>
     <pre id="myConsole" class="jsconsole" ></pre>
     <canvas id="myCanvas" class="mycanvas" width="800" height="1" style="touch-action: none;"  ></canvas>
-  </body>
+    %INCLUDEHTML%
+</body>
 </html>     
