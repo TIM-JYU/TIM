@@ -129,8 +129,8 @@ def login_with_korppi():
         if user is not None:
             # An email user signs in using Korppi for the first time. We update the user's username and personal
             # usergroup.
-            user.update_info(name=user_name, real_name=real_name, email=email)
             personal_group = user.get_personal_group()
+            user.update_info(name=user_name, real_name=real_name, email=email)
             personal_group.name = user_name
             user.groups.append(UserGroup.get_korppi_group())
         else:
