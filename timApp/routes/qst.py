@@ -24,8 +24,7 @@ qst_plugin = Blueprint('qst_plugin',
 def qst_reqs():
     reqs = {
         "type": "embedded",
-        "js": ["/static/scripts/timHelper.js",
-               "/static/scripts/controllers/qstController.js",
+        "js": ["tim/controllers/qstController",
                # "/static/scripts/directives/dynamicAnswerSheet.js"
                ],
         # "css": [],dynami

@@ -8,17 +8,12 @@ import * as ace from "ace/ace";
 import * as snippets from "ace/snippets";
 import * as draggable from "tim/directives/draggable";
 import {markAsUsed} from "tim/angular-utils";
+import {setsetting} from "tim/utils";
+import {setEditorScope} from "tim/editorScope";
 
 markAsUsed(snippets, draggable, rangyinputs);
 
 const MENU_BUTTON_CLASS = 'menuButtons';
-
-let currentEditorScope = null;
-export function editorChangeValue(attributes, text) {
-    "use strict";
-    if ( !currentEditorScope ) return;
-    currentEditorScope.changeValue(attributes, text);
-}
 
 timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
     '$window', '$localStorage', '$timeout', '$ocLazyLoad', '$log', 'ParCompiler',
@@ -54,7 +49,9 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     return val === "true";
                 };
 
-                currentEditorScope = $scope;
+                setEditorScope($scope);
+
+                $scope.$on('$destroy', () => { setEditorScope(null); });
 
                 var proeditor = $scope.getLocalBool("proeditor",  tag==="par");
                 if ( proeditor === "true") proeditor = true;
@@ -1821,7 +1818,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                 $scope.tabClicked = function ($event, area) {
                     var active = $($event.target).parent();
-                    $window.setsetting('editortab', area);
+                    setsetting('editortab', area);
                     $scope.setActiveTab(active, area);
                     $scope.wrapFn();
                 };

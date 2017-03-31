@@ -374,7 +374,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
         if is_reqs:
             result_json = join_dict({"multihtml": True}, get_all_templates(tempdir))
             if is_video:
-                result_json.update({"js": ["/static/scripts/timHelper.js", "/svn/video/js/video.js"], "angularModule": ["videoApp"]})
+                result_json.update({"js": ["/svn/video/js/video.js"], "angularModule": ["videoApp"]})
             result_str = json.dumps(result_json)
             self.wout(result_str)
             return

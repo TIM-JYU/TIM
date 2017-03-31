@@ -123,7 +123,7 @@ export function minimizeJson(json) {
 function fixLineBreaks(s) {
     // var result = s.replace(" < "," &lt; ");
     //result = result.replace(" > "," &gt; ");
-    result = s;
+    let result = s;
     return result;
     //return s.replace("\n","<br />");
 }

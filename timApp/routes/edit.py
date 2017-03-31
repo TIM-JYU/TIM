@@ -18,6 +18,7 @@ from requesthelper import verify_json_params
 from responsehelper import json_response, ok_response
 from routes.notify import notify_doc_watchers
 from routes.qst import question_convert_js_to_yaml
+from routes.view import get_module_ids
 from sessioninfo import get_current_user_object, get_current_user_id, logged_in, get_current_user_group
 from timdb.bookmarks import Bookmarks
 from timdb.docinfo import DocInfo
@@ -346,6 +347,7 @@ def par_response(pars,
                                                    item={'rights': get_rights(doc.doc_id)},
                                                    preview=preview),
                           'js': js_paths,
+                          'jsModuleIds': list(get_module_ids(js_paths)),
                           'css': css_paths,
                           'angularModule': modules,  # not used in JS at all, maybe not needed at all
                           'changed_pars': {p['id']: render_template('partials/paragraphs.html',

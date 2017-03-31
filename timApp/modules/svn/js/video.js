@@ -1,4 +1,6 @@
-﻿// Workaround for lazy loading: the directive definition functions below are 
+﻿define("require", "exports", "angular", "tim/timHelper", function (require, exports, angular, timHelper) {
+
+// Workaround for lazy loading: the directive definition functions below are
 // not re-run when reloading the module
 // so xxApp.sanitize 
 if (angular.isDefined(window.videoApp)) {
@@ -7,10 +9,9 @@ if (angular.isDefined(window.videoApp)) {
 
 
 var videoApp = angular.module('videoApp', ['ngSanitize']);
-videoApp.directive('videoRunner',['$sanitize', function ($sanitize) {	timHelper.sanitize = $sanitize; videoApp.sanitize = $sanitize; return videoApp.directiveFunction('video'); }]);
-videoApp.directive('smallVideoRunner',['$sanitize', function ($sanitize) {	timHelper.sanitize = $sanitize; videoApp.sanitize = $sanitize; return videoApp.directiveFunction('smallvideo'); }]);
+videoApp.directive('videoRunner',['$sanitize', function ($sanitize) { videoApp.sanitize = $sanitize; return videoApp.directiveFunction('video'); }]);
+videoApp.directive('smallVideoRunner',['$sanitize', function ($sanitize) { videoApp.sanitize = $sanitize; return videoApp.directiveFunction('smallvideo'); }]);
 videoApp.directive('listVideoRunner',['$sanitize', function ($sanitize) {
-   timHelper.sanitize = $sanitize;
    videoApp.sanitize = $sanitize; return videoApp.directiveFunction('listvideo');
 }]);
 
@@ -291,3 +292,4 @@ videoApp.Controller = function($scope,$http,$transclude,$element) {
 		*/	
 	}
 };
+});

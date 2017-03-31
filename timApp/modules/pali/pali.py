@@ -96,7 +96,7 @@ class PaliServer(tim_server.TimServer):
         # Get templates for plugin
         templs = {}
         # templs = get_all_templates('/pali/templates') # uncoment this to test how templates works
-        ret = {"js": ["/static/scripts/timHelper.js", "js/pali.js"], "angularModule": ["paliApp"],
+        ret = {"js": ["tim/timHelper", "js/pali.js"], "angularModule": ["paliApp"],
                "css": ["css/pali.css"], "multihtml": True}
         ret.update(templs)
         return ret

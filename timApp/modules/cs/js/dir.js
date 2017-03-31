@@ -1,3 +1,5 @@
+define(['require', 'exports', 'angular'], function (require, exports, angular) {
+
 "use strict";
 var csPluginStartTime = new Date();
 /*
@@ -2563,4 +2565,5 @@ function truthTable(sentence,topbottomLines) {
   } catch (err) {
       return result + "\n" + err + "\n";
   }
-}  
+}
+});

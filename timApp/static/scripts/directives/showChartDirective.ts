@@ -2,7 +2,7 @@ import angular = require("angular");
 import {timApp} from "tim/app";
 import {getJsonAnswers} from "tim/directives/dynamicAnswerSheet";
 import $ = require("jquery");
-import {Chart} from "chartjs";
+import {Chart, ChartData} from "chartjs";
 
 /**
  * Created by hajoviin on 13.5.2015.
@@ -31,126 +31,78 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
             $scope.isText = false;
 
             //TODO: If more than 12 choices this will break. Refactor to better format.
-            var basicSets = [
+            let basicSets = [
                 {
                     label: "Answers",
-                    fillColor: "rgba(0,220,0,0.2)",
-                    strokeColor: "rgba(0,220,0,1)",
-                    pointColor: "rgba(0,220,0,1)",
-                    pointStrokeColor: "#fff",
-                    pointHighlightFill: "#fff",
-                    pointHighlightStroke: "rgba(0,220,0,1)",
+                    backgroundColor: "rgba(0,220,0,0.2)",
+                    borderColor: "rgba(0,220,0,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    fillColor: "rgba(220,0,0,0.2)",
-                    strokeColor: "rgba(220,0,0,1)",
-                    pointColor: "rgba(220,0,0,1)",
-                    pointStrokeColor: "#fff",
-                    pointHighlightFill: "#fff",
-                    pointHighlightStroke: "rgba(220,0,0,1)",
+                    backgroundColor: "rgba(220,0,0,0.2)",
+                    borderColor: "rgba(220,0,0,1)",
                     data: []
                 },
 
                 {
                     label: "Answers",
-                    fillColor: "rgba(0,0,220,0.2)",
-                    strokeColor: "rgba(0,0,220,1)",
-                    pointColor: "rgba(0,0,220,1)",
-                    pointStrokeColor: "#fff",
-                    pointHighlightFill: "#fff",
-                    pointHighlightStroke: "rgba(0,0,220,1)",
+                    backgroundColor: "rgba(0,0,220,0.2)",
+                    borderColor: "rgba(0,0,220,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    fillColor: "rgba(0,220,220,0.2)",
-                    strokeColor: "rgba(0,220,220,1)",
-                    pointColor: "rgba(0,220,220,1)",
-                    pointStrokeColor: "#fff",
-                    pointHighlightFill: "#fff",
-                    pointHighlightStroke: "rgba(0,220,220,1)",
+                    backgroundColor: "rgba(0,220,220,0.2)",
+                    borderColor: "rgba(0,220,220,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    fillColor: "rgba(220,0,220,0.2)",
-                    strokeColor: "rgba(220,0,220,1)",
-                    pointColor: "rgba(220,0,220,1)",
-                    pointStrokeColor: "#fff",
-                    pointHighlightFill: "#fff",
-                    pointHighlightStroke: "rgba(0,0,220,1)",
+                    backgroundColor: "rgba(220,0,220,0.2)",
+                    borderColor: "rgba(220,0,220,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    fillColor: "rgba(220,220,220,0.2)",
-                    strokeColor: "rgba(220,220,220,1)",
-                    pointColor: "rgba(220,220,220,1)",
-                    pointStrokeColor: "#fff",
-                    pointHighlightFill: "#fff",
-                    pointHighlightStroke: "rgba(220,220,220,1)",
+                    backgroundColor: "rgba(220,220,220,0.2)",
+                    borderColor: "rgba(220,220,220,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    fillColor: "rgba(165,220,0,0.2)",
-                    strokeColor: "rgba(165,220,0,1)",
-                    pointColor: "rgba(165,220,0,1)",
-                    pointStrokeColor: "#fff",
-                    pointHighlightFill: "#fff",
-                    pointHighlightStroke: "rgba(165,220,0,1)",
+                    backgroundColor: "rgba(165,220,0,0.2)",
+                    borderColor: "rgba(165,220,0,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    fillColor: "rgba(220,165,0,0.2)",
-                    strokeColor: "rgba(220,165,0,1)",
-                    pointColor: "rgba(220,165,0,1)",
-                    pointStrokeColor: "#fff",
-                    pointHighlightFill: "#fff",
-                    pointHighlightStroke: "rgba(220,165,0,1)",
+                    backgroundColor: "rgba(220,165,0,0.2)",
+                    borderColor: "rgba(220,165,0,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    fillColor: "rgba(0,165,220,0.2)",
-                    strokeColor: "rgba(220,165,0,1)",
-                    pointColor: "rgba(220,165,0,1)",
-                    pointStrokeColor: "#fff",
-                    pointHighlightFill: "#fff",
-                    pointHighlightStroke: "rgba(220,165,0,1)",
+                    backgroundColor: "rgba(0,165,220,0.2)",
+                    borderColor: "rgba(220,165,0,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    fillColor: "rgba(220,0,165,0.2)",
-                    strokeColor: "rgba(220,0,165,1)",
-                    pointColor: "rgba(220,0,165,1)",
-                    pointStrokeColor: "#fff",
-                    pointHighlightFill: "#fff",
-                    pointHighlightStroke: "rgba(220,0,165,1)",
+                    backgroundColor: "rgba(220,0,165,0.2)",
+                    borderColor: "rgba(220,0,165,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    fillColor: "rgba(30,0,75,0.2)",
-                    strokeColor: "rgba(30,0,75,1)",
-                    pointColor: "rgba(30,0,75,1)",
-                    pointStrokeColor: "#fff",
-                    pointHighlightFill: "#fff",
-                    pointHighlightStroke: "rgba(30,0,75,1)",
+                    backgroundColor: "rgba(30,0,75,0.2)",
+                    borderColor: "rgba(30,0,75,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    fillColor: "rgba(75,75,180,0.2)",
-                    strokeColor: "rgba(75,75,180,1)",
-                    pointColor: "rgba(75,75,180,1)",
-                    pointStrokeColor: "#fff",
-                    pointHighlightFill: "#fff",
-                    pointHighlightStroke: "rgba(75,75,180,1)",
+                    backgroundColor: "rgba(75,75,180,0.2)",
+                    borderColor: "rgba(75,75,180,1)",
                     data: []
                 }
             ];
@@ -162,7 +114,8 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
              */
             $scope.internalControl.createChart = function(question) {
                 var data = question;
-                let canvas = $($scope.canvasId).get(0) as HTMLCanvasElement;
+                console.log(question);
+                let canvas = $($scope.canvasId)[0] as HTMLCanvasElement;
                 $scope.ctx = canvas.getContext("2d");
                 $scope.x = 10;
                 $scope.y = 20;
@@ -199,7 +152,6 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
 
                 var usedDataSets = [];
 
-
                 if (question.questionType === "true-false" && !question.headers ) {
                     question.headers[0] = {"type": "header", "id": 0, "text": "True"};
                     question.headers[1] = {"type": "header", "id": 1, "text": "False"};
@@ -222,11 +174,11 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     usedDataSets[0].data = emptyData;
                 }
 
-
-                var bardata = {
-                    labels: labels,
-                    datasets: usedDataSets
+                let bardata: ChartData = {
+                    labels,
+                    datasets: usedDataSets,
                 };
+                console.log(usedDataSets);
 
                 $scope.answerChart = new Chart($scope.ctx, {
                     data: bardata,
@@ -235,7 +187,6 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     },
                     type: "bar",
                 });
-                //$scope.answerChart.options.animation = false;
                 $compile($scope);
             };
 
@@ -249,17 +200,15 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     return;
                 }
                 $scope.ctx.font = "20px Georgia";
-                try {
+                let datasets;
+                if (!$scope.isText) {
+                    datasets = $scope.answerChart.data.datasets;
+                }
 
                 for (var answerersIndex = 0; answerersIndex < answers.length; answerersIndex++) {
-                    var oldData = true;
                     var answ =  answers[answerersIndex].answer;
 
                     var onePersonAnswers = getJsonAnswers(answ);
-                    var datasets;
-                    if (!$scope.isText) {
-                        datasets = $scope.answerChart.datasets;
-                    }
                     for (var a = 0; a < onePersonAnswers.length; a++) {
                         var singleAnswers = onePersonAnswers[a];
                         for (var sa = 0; sa < singleAnswers.length; sa++) {
@@ -272,26 +221,26 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                             }
                             if (datasets.length === 1) {
                                 var answered = false;
-                                for (var b = 0; b < datasets[0].bars.length; b++) {
+                                for (var b = 0; b < datasets[0].data.length; b++) {
                                     if ((b + 1) === parseInt(singleAnswer)) {
-                                        datasets[0].bars[b].value += 1;
+                                        datasets[0].data[b] += 1;
                                         answered = true;
                                     }
                                 }
                                 if (!answered) {
-                                    datasets[0].bars[datasets[0].bars.length - 1].value += 1;
+                                    datasets[0].data[datasets[0].data.length - 1] += 1;
                                 }
                             } else {
                                 var answered = false;
                                 for (var d = 0; d < datasets.length; d++) {
                                     if ((d + 1) === parseInt(singleAnswer)) {
-                                        datasets[d].bars[a].value += 1;
+                                        datasets[d].data[a] += 1;
                                         answered = true;
                                         break;
                                     }
                                 }
                                 if (!answered) {
-                                    datasets[datasets.length - 1].bars[a].value += 1;
+                                    datasets[datasets.length - 1].data[a] += 1;
                                 }
                             }
                         }
@@ -301,10 +250,6 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 if (!$scope.isText) {
                     $scope.answerChart.update();
                 }
-                } catch (e) {
-                    return;
-                }
-
             };
 
             /**

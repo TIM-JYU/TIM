@@ -93,9 +93,13 @@ export function Hex2Str(s) {
   return result;
 }
 
-// sanitizeService will be injected after Angular bootstrap; see main.ts
-export let sanitizeService: any;
+// sanitizeService will be injected on configuration phase; see app.ts
+let sanitizeService: any;
 
 export function sanitize(s) {
     return sanitizeService(s);
+}
+
+export function injectSanitizeService(service) {
+    sanitizeService = service;
 }

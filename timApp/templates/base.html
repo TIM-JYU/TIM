@@ -27,7 +27,7 @@
                     src="/static/scripts/node_modules/requirejs/require.js"></script>
         {% endif %}
         <script>
-            define("tim/plugins", [{{ (["exports"] + jsModuleIds|list)|map('map_format', "'%s'")|join(', ')|safe }}],
+            define("tim/plugins", [{{ (["exports"] + (js or []))|map('map_format', "'%s'")|join(', ')|safe }}],
                 function (exports) {
                     exports.angularModules = {{ (jsMods or [])|tojson }};
                 });

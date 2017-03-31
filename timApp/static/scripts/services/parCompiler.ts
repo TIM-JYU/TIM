@@ -6,46 +6,40 @@ import * as katex from "katex";
 import {markAsUsed} from "tim/angular-utils";
 import {timLogTime} from "tim/timTiming";
 import $ = require("jquery");
+import {ILazyLoad} from "oclazyload";
+import {ILogService} from "angular";
 
 markAsUsed(ocLazyLoad);
 
-timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer', '$compile', '$ocLazyLoad', '$timeout', '$log',
-    ($http, $window, $q, $httpParamSerializer, $compile, $ocLazyLoad, $timeout, $log) => {
+timApp.factory('ParCompiler', ['$http', '$window', '$q', '$compile', '$ocLazyLoad', '$timeout', '$log',
+    ($http, $window, $q, $compile, $ocLazyLoad: ILazyLoad, $timeout, $log: ILogService) => {
         $window.katex = katex; // otherwise auto-render extension cannot find KaTeX
         class ParCompiler {
-            mathJaxLoaded: boolean = false;
-            mathJaxLoadDefer: JQueryXHR;
+            private mathJaxLoaded: boolean = false;
+            private mathJaxLoadDefer: JQueryXHR;
 
-            compile(data, scope, callback) {
-                const simpleDirectiveUrl = '/mmcq/SimpleDirective.js';
+            public compile(data, scope, callback): void {
                 const loadingFn = () => {
-                    $ocLazyLoad.load(data.js.concat(data.css)).then(() => {
-                        const compiled = $compile(data.texts)(scope);
-                        this.processAllMathDelayed(compiled);
-                        callback(compiled);
-                    });
+                    require(data.js, () => {
+                        $ocLazyLoad.inject(data.angularModule).then(() => {
+                            $ocLazyLoad.load(data.css).then(() => {
+                                const compiled = $compile(data.texts)(scope);
+                                this.processAllMathDelayed(compiled);
+                                callback(compiled);
+                            });
+                        }, (err) => $log.error(err));
+                    }, (err) => $log.error(err));
                 };
-                // Workaround: load SimpleDirective.js before other scripts; otherwise there
-                // will be a ReferenceError.
-                if (angular.isUndefined($window.standardDirective) &&
-                    data.js.indexOf(simpleDirectiveUrl) >= 0) {
-                    $.ajax({
-                        dataType: "script",
-                        cache: true,
-                        url: simpleDirectiveUrl
-                    }).done(loadingFn);
-                } else {
-                    loadingFn();
-                }
+                loadingFn();
             }
 
-            processAllMathDelayed($elem: JQuery, delay?: number) {
+            public processAllMathDelayed($elem: JQuery, delay?: number): void {
                 $timeout(() => {
                     this.processAllMath($elem);
                 }, delay || 300);
             }
 
-            processAllMath($elem: JQuery) {
+            public processAllMath($elem: JQuery) {
                 timLogTime("processAllMath start", "view");
                 let katexFailures = [];
                 $elem.find('.math').each((index, elem) => {
@@ -60,7 +54,7 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer',
                 timLogTime("processAllMath end", "view");
             }
 
-            processMathJax(elements: Array<Element> | Element) {
+            public processMathJax(elements: Element[] | Element): void {
                 if (this.mathJaxLoaded) {
                     MathJax.Hub.Queue(["Typeset", MathJax.Hub, elements]);
                 } else {
@@ -87,7 +81,7 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer',
              * @param tryMathJax true to attempt to process using MathJax if KaTeX fails.
              * @returns null if KaTeX processed the element successfully. Otherwise, the failed element.
              */
-            processMath(elem, tryMathJax: boolean) {
+            public processMath(elem: Element, tryMathJax: boolean): Element {
                 try {
                     renderMathInElement(elem);
                     return null;

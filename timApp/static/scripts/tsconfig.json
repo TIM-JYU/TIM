@@ -6,7 +6,7 @@
     "allowUnreachableCode": true,
     "removeComments": true,
     "preserveConstEnums": true,
-    "sourceMap": false,
+    "sourceMap": true,
     "outDir": "build",
     "allowJs": true,
     "moduleResolution": "node",

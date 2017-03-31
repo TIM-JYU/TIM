@@ -1,3 +1,5 @@
+define(["require", "exports", "angular", "tim/timHelper"], function (require, exports, angular, timHelper) {
+
 "use strict";
 var paliApp = angular.module('paliApp', ['ngSanitize']);
 paliApp.TESTWITHOUTPLUGINS = false; // if one wants to test without pali plugins
@@ -5,7 +7,6 @@ paliApp.TESTWITHOUTPLUGINS = false; // if one wants to test without pali plugins
 paliApp.directive('paliRunner',['$sanitize','$compile',
                   function ($sanitize,$compile1) {"use strict";
                       // Tätä kutsutaan yhden kerran kun plugin otetaan käyttöön
-                      timHelper.sanitize = $sanitize;
                       paliApp.sanitize = $sanitize;
                       paliApp.compile = $compile1;
                       return paliApp.directiveFunction(); }]
@@ -206,3 +207,4 @@ PaliScope.prototype.doSaveText = function(nosave) {
         // $scope.error = data;
     });
 };
+});
