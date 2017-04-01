@@ -137,7 +137,7 @@ function hasAcrobatInstalled() {
     return isAcrobatInstalled;
 }
 
-var csJSTypes = ["js", "glowscript", "vpython"];
+var csJSTypes = ["js", "glowscript", "vpython", "html"];
 
 // =================================================================================================================
 // Known upload files
@@ -172,8 +172,8 @@ function resizeIframe(obj) {
 
 var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","vpython","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","glowscript","sage","simcir","xml", "octave","lua", "swift","mathcheck","r"];
-languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","javascript","python","json","xml","octave","lua","swift","java","r"];
+languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","vpython","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","glowscript","sage","simcir","xml", "octave","lua", "swift","mathcheck","r", "html"];
+languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","javascript","python","json","xml","octave","lua","swift","java","r", "html"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
@@ -2143,10 +2143,17 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         if ( !$scope.canvas ) { // create a canvas on first time
             var html = "";
             var scripts = "";
+            $scope.fullhtml = ($scope.attrs.fullhtml||"");
+            if ( $scope.fullhtml ) $scope.iframe = true;  // fullhtml allways to iframe
+            if ( $scope.type.indexOf("html") >= 0 ) {
+                $scope.iframe = true; // html allways iframe
+                if ( !$scope.fullhtml ) $scope.fullhtml = "REPLACEBYCODE";
+
+            }  // html allways to iframe
             if ( $scope.type.indexOf("/vis") >= 0 ) {
-                $scope.iframe = true;
+                $scope.iframe = true;  // visjs allways to iframe
                 html =  '<div id="myDiv" class="mydiv" width="800" height="400" ></div>';
-                scripts = "https://cdnjs.cloudflare.com/ajax/libs/vis/4.19.1/vis.min.js";
+                scripts = "https://tim.jyu.fi/csimages/visjs/vis.min.js";
             }
             if ( $scope.iframe ) {
                 var dw,dh;
@@ -2160,7 +2167,6 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
                 var v = $scope.getVid(dw,dh);
                 $scope.irrotaKiinnita = "Irrota";
                 html = ($scope.attrs.html||html);
-                $scope.fullhtml = ($scope.attrs.fullhtml||"");
                 html = encodeURI(html);
                 var angularElement = '<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px; z-index: 20" >'+
                   '<span class="csRunMenu"><div><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a><a href ng-click="closeFrame()" style="float: right" >[X]</a></div></span>'+
@@ -2208,7 +2214,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             if ( $scope.iframeClientHeight < 0 ) $scope.iframeClientHeight = f.clientHeight;
             if ( $scope.gsDefaultLanguage ) f.contentWindow.setDefLanguage($scope.gsDefaultLanguage);
             if ( $scope.fullhtml ) {
-                var fhtml = $scope.fullhtml.replace("BYCODEREPLACE", text);
+                var fhtml = $scope.fullhtml.replace("REPLACEBYCODE", text);
                 f.contentWindow.document.open();
                 f.contentWindow.document.write(fhtml);
                 f.contentWindow.document.close();
