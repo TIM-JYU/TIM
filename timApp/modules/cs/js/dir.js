@@ -2051,6 +2051,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         $scope.edit = $scope.edit[0];
         if ( eindex == 1 ) {
             $scope.aceEditor.setFontSize(15);
+            $scope.aceEditor.getSession().setUseWorker(false); // syntax check away
             $scope.aceEditor.setOptions({
                 maxLines: $scope.maxRows
             });

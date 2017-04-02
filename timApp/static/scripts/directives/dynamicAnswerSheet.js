@@ -203,7 +203,7 @@ function fixQuestionJson(json) {
 }
 
 var timApp = angular.module('timApp');
-timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '$http', function ($interval, $compile, $rootScope, $http) {
+timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '$http', 'ParCompiler', function ($interval, $compile, $rootScope, $http, ParCompiler) {
     "use strict";
     return {
         restrict: 'E',
@@ -262,6 +262,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 // var htmlSheet = $('<div>', {class: answclass});
                 var htmlSheet = $('<form>', {class: answclass});
                 $scope.htmlSheet = htmlSheet;
+                params.htmlSheet = htmlSheet;
                 if ($scope.json.timeLimit !== "" && $scope.endTime  && !$scope.preview && !$scope.result) {
                     var progress = $('<progress>', {
                         max: ($scope.endTime - $scope.askedTime),
@@ -463,6 +464,8 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                         $scope.start();
                     }
                 }
+                GlobalParCompiler = ParCompiler;
+                ParCompiler.processAllMath($scope.htmlSheet);
             };
             // createAnswer ends
 
