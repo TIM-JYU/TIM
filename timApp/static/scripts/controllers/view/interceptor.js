@@ -64,7 +64,7 @@ var timApp = angular.module('timApp').config(['$httpProvider', function ($httpPr
                             error: response.data.error
                         });
                     }
-                    return $q.reject();
+                    return $q.reject(response);
                 }
             };
         }
