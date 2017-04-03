@@ -9,13 +9,19 @@
         {
             name: "tim/main",
         },
+        {
+            name: "ace/ace",
+        },
+        {
+            name: "ace/snippets",
+        },
+        {
+            name: "ui-grid",
+        },
     ],
     optimize: "uglify",
     paths: {
-        "cs": "empty:",
-        "mcq": "empty:",
-        "mmcq": "empty:",
-        "svn": "empty:",
+        "tim/angularmodules": "empty:",
         "tim/extramodules": "empty:",
         "tim/plugins": "empty:",
         "tim/session": "empty:",

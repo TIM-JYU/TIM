@@ -80,7 +80,6 @@ requirejs([
     "tim/directives/popUpDialog",
     "tim/directives/rightsEditor",
     "tim/directives/velpSelection",
-    "tim/extramodules",
     "tim/loadMap",
     "tim/manageView/manageCtrl",
     "tim/settingsView/settingsCtrl",

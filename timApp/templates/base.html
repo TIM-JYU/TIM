@@ -27,10 +27,17 @@
                     src="/static/scripts/node_modules/requirejs/require.js"></script>
         {% endif %}
         <script>
-            define("tim/plugins", [{{ (["exports"] + (js or []))|map('map_format', "'%s'")|join(', ')|safe }}],
-                function (exports) {
-                    exports.angularModules = {{ (jsMods or [])|tojson }};
+            define("tim/angularmodules", ["exports"], function () {
+                return [];
+            });
+            define("tim/plugins", [{{ (["tim/angularmodules"] + (js or []))|map('map_format', "'%s'")|join(', ')|safe }}],
+                function (angularmodules) {
+                    var mods = {{ (jsMods or [])|tojson }};
+                    angularmodules.push.apply(angularmodules, mods);
                 });
+            {% block extramoduledefinitions %}
+
+            {% endblock %}
             define("tim/extramodules", ["exports", {% block extramodules %}{% endblock %}], function () {
 
             });

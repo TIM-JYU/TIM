@@ -12,12 +12,17 @@ declare module 'ng-file-upload'
 declare module 'ui-grid'
 declare module 'katex-auto-render'
 declare module 'reveal'
-declare module 'ace/ace'
+declare module 'ace/ace' {
+    import Ace = AceAjax.Ace;
+    export let ace: Ace;
+}
 declare module 'ace/snippets'
 declare module 'jqueryui'
 declare module 'rangyinputs'
 
 // All inline module definitions that exist in HTML templates should be listed here:
 declare module 'tim/plugins'
+declare module 'tim/angularmodules'
+declare module 'tim/extramodules'
 declare module 'tim/session'
 declare module 'tim/show_slide_vars'

@@ -9,11 +9,12 @@ import * as uibootstrap from "angular-ui-bootstrap";
 import * as ngFileUpload from "ng-file-upload";
 import * as ngStorage from "ngstorage";
 import {markAsUsed} from "tim/angular-utils";
+import * as angularmodules from "tim/angularmodules";
+import * as extramodules from "tim/extramodules";
 import * as plugins from "tim/plugins";
-import uiGrid = require("ui-grid");
 import {injectSanitizeService} from "tim/timHelper";
 
-markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize, uibootstrap, ngFileUpload, ngStorage, uiGrid);
+markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize, uibootstrap, ngFileUpload, ngStorage, plugins, extramodules);
 
 // hack: expose moment in global scope because otherwise angular-eonasdan-datetimepicker cannot find it
 declare let window: any;
@@ -33,12 +34,7 @@ export const timApp = angular.module("timApp", [
     "ngFileUpload",
     "ngStorage",
     "oc.lazyLoad",
-    "ui.grid",
-    "ui.grid.cellNav",
-    "ui.grid.selection",
-    "ui.grid.exporter",
-    "ui.grid.autoResize",
-].concat(plugins.angularModules));
+].concat(angularmodules));
 // disable Angular URL manipulation when using ng-include; from http://stackoverflow.com/a/19825756
 timApp.config(["$provide", ($provide) => {
     $provide.decorator("$browser", ["$delegate", ($delegate) => {

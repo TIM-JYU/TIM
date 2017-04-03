@@ -4,20 +4,174 @@ import {timApp} from "tim/app";
 import angular = require("angular");
 import rangyinputs = require("rangyinputs");
 import $ = require("jquery");
-import * as ace from "ace/ace";
-import * as snippets from "ace/snippets";
 import * as draggable from "tim/directives/draggable";
 import {markAsUsed} from "tim/angular-utils";
 import {setsetting} from "tim/utils";
 import {setEditorScope} from "tim/editorScope";
+import Editor = AceAjax.Editor;
+import VirtualRenderer = AceAjax.VirtualRenderer;
+import Ace = AceAjax.Ace;
+import {IPromise, IQService} from "angular";
 
-markAsUsed(snippets, draggable, rangyinputs);
+markAsUsed(draggable, rangyinputs);
 
 const MENU_BUTTON_CLASS = 'menuButtons';
+const MENU_BUTTON_CLASS_DOT = '.' + MENU_BUTTON_CLASS;
+
+// Ace editor typings are slightly incomplete, so we extend them here.
+interface IAceVirtualRenderer extends VirtualRenderer {
+    setScrollMargin(top: number, bottom: number, left: number, right: number): void;
+    setVScrollBarAlwaysVisible(visible: boolean): void;
+}
+
+interface IAceEditor extends Editor {
+    renderer: IAceVirtualRenderer;
+}
+
+// don't extend from IScope because then type checking is too lousy
+interface IParEditorScope {
+    $parent: any;
+    $storage: Storage; // TODO what is the correct type here?
+    ace: Ace;
+    data: {original_par: any};
+    dataLoaded: boolean;
+    deleteUrl: string;
+    deleting: boolean;
+    duplicates: any[];
+    editor: any;
+    extraData: {attrs: {classes: string[]}, docId: number, par: string, access: string, tags: string[]};
+    file: any;
+    initialText: string;
+    initialTextUrl: string;
+    inputs: JQuery[];
+    isAce: boolean;
+    isIE: boolean;
+    lstag: string;
+    minSizeSet: boolean;
+    newAttr: string;
+    newPars: string[];
+    oldmeta: HTMLMetaElement;
+    options: {
+        localSaveTag: string,
+        showDelete: boolean,
+        destroyAfterSave: boolean,
+        touchDevice: boolean,
+        metaset: boolean,
+    };
+    originalPar: any;
+    outofdate: boolean;
+    parCount: number;
+    pluginButtonList: {[tabName: string]: JQuery[]};
+    pluginRenameForm: any;
+    previewReleased: boolean;
+    previewUrl: string;
+    proeditor: boolean;
+    renameFormShowing: boolean;
+    saveUrl: string;
+    saving: boolean;
+    scrollPos: number;
+    settings: {editorTab: string};
+    snippetManager: {insertSnippet: (editor: Editor, text: string) => void};
+    tables: any;
+    timer: number; // timer handle
+    unreadUrl: string;
+    uploadedFile: string;
+
+    $on(name: string, func: () => void): void;
+    aceChanged(): void;
+    aceLoaded(editor: Editor): void;
+    aceReady(): void;
+    addAttribute(): void;
+    addClass(): void;
+    adjustPreview(): void;
+    afterCancel(data: any): void;
+    afterDelete(data: any): void;
+    afterSave(data: any): void;
+    bottomClicked(): void;
+    cancelClicked(): void;
+    cancelPluginRenameClicked(): void;
+    changeEditor(mode: string): IPromise<{}>;
+    changeMeta(): void;
+    changeValue(attributes: string[], text: string): void;
+    charClicked(e: Event): void;
+    closeMenu(e: Event, force: boolean): void;
+    codeBlockClicked(): void;
+    commentClicked(): void;
+    createAce(editor: IAceEditor, text?: string);
+    createMenu(e: Event, buttons: JQuery[]): void;
+    createMenuButton(text: string, title: string, fn: string): JQuery;
+    createPluginRenameForm(data: any);
+    createTextArea(text: string): void;
+    deleteAttribute(key: string): void;
+    deleteClass(index: number): void;
+    deleteClicked(): void;
+    downClicked(): void;
+    editorStartsWith(text: string): boolean;
+    endClicked(): void;
+    endLineClicked(): void;
+    fullscreenSupported(): boolean;
+    getAce(): Ace;
+    getEditorText(): string;
+    getLocalBool(name: string, defaultValue: boolean): boolean;
+    getTemplate(plugin: string, template: string, index: number): void;
+    goFullScreen(): void;
+    gotoCursor(): void;
+    headerClicked(header: string): void;
+    homeClicked(): void;
+    indent(outdent?: boolean): void;
+    indentClicked(): void;
+    indexClicked(): void;
+    insertClicked(): void;
+    insertTemplate(text: string): void;
+    leftClicked(): void;
+    linkClicked(descDefault: string, linkDefault: string, isImage: boolean): void;
+    listClicked(): void;
+    onFileSelect(file: any): void;
+    outdentClicked(): void;
+    paragraphClicked(): void;
+    pluginClicked(e: Event, key: string): void;
+    powerClicked(): void;
+    redoClicked(): void;
+    releaseClicked(): void;
+    renameTaskNamesClicked(inputs: JQuery[], duplicates: string[][], renameDuplicates: boolean): void;
+    rightClicked(): void;
+    ruleClicked(): void;
+    saveClicked(): void;
+    saveOldMode(mode: string): void;
+    savePreviewData(savePreviewPosition: boolean): void;
+    scrollToCaret(): void;
+    selectLine(select: boolean): {start: number, end: number};
+    selectWord(): boolean;
+    setAceControllerFunctions(): void;
+    setAceFunctions(): void;
+    setActiveTab(active: JQuery, area: string): void;
+    setEditorMinSize(): void;
+    setEditorText(text: string): void;
+    setInitialText(): void;
+    setLocalValue(name: string, value: string): void;
+    setTextAreaControllerFunctions(): void;
+    setTextAreaFunctions(): void;
+    showUnread(): void;
+    slideClicked(e: Event): void;
+    squareClicked(): void;
+    styleClicked(descDefault: string, styleDefault: string): void;
+    surroundClicked(begin: string, end: string, func?: any);
+    surroundedBy(before: string, after: string): boolean;
+    surroundedByItalic(): boolean;
+    tabClicked(e: Event, area: string);
+    tableClicked(e: Event): void;
+    texBlockClicked(): void;
+    texClicked(): void;
+    topClicked(): void;
+    undoClicked(): void;
+    unreadClicked(): void;
+    upClicked(): void;
+    wrapFn(fn?: () => void): void;
+}
 
 timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
-    '$window', '$localStorage', '$timeout', '$ocLazyLoad', '$log', 'ParCompiler',
-    function (Upload, $http, $sce, $compile, $window, $localStorage, $timeout, $ocLazyLoad, $log, ParCompiler) {
+    '$window', '$localStorage', '$timeout', '$ocLazyLoad', '$log', 'ParCompiler', '$q',
+    function (Upload, $http, $sce, $compile, $window, $localStorage, $timeout, $ocLazyLoad, $log, ParCompiler, $q: IQService) {
         "use strict";
         return {
             templateUrl: "/static/templates/parEditor.html",
@@ -36,7 +190,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 isAce: '@',
                 initialTextUrl: '@'
             },
-            controller: ['$scope', function ($scope) {
+            controller: ['$scope', function ($scope: IParEditorScope) {
                 var tag = $scope.options.localSaveTag || "";
                 var storage = $window.localStorage;
                 $scope.lstag = tag;
@@ -54,7 +208,6 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 $scope.$on('$destroy', () => { setEditorScope(null); });
 
                 var proeditor = $scope.getLocalBool("proeditor",  tag==="par");
-                if ( proeditor === "true") proeditor = true;
                 $scope.proeditor = proeditor;
                 
 
@@ -194,7 +347,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                 };
 
-                $scope.createAce = function (editor, text) {
+                $scope.createAce = function (editor, text = null) {
                     if (!$scope.minSizeSet) {
                         $scope.setEditorMinSize();
                     }
@@ -205,7 +358,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     var max = Math.floor((height / 2) / line);
 
                     editor.$blockScrolling = Infinity;
-                    editor.renderer.setPadding(10, 10, 10, 30);
+                    editor.renderer.setPadding(10);
                     editor.renderer.setScrollMargin(2, 2, 2, 40);
                     editor.renderer.setVScrollBarAlwaysVisible(true);
                     editor.getSession().setMode("ace/mode/markdown");
@@ -443,7 +596,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                 $scope.aceLoaded = function (editor) {
                     $scope.editor = editor;
-                    $scope.createAce(editor);
+                    $scope.createAce(editor as IAceEditor);
                     $scope.setInitialText();
 
                     editor.focus();
@@ -487,7 +640,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 document.getElementById('helpCite').setAttribute('value', '#- {rd="' + $scope.extraData.docId + '" rl="no" rp="' + $scope.extraData.par +'"}');
 
             }],
-            link: function ($scope, $element, $attrs) {
+            link: function ($scope: IParEditorScope, $element, $attrs) {
 
                 $scope.$storage = $localStorage;
 
@@ -559,7 +712,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 $scope.parCount = 0;
                 var touchDevice = false;
 
-                $scope.wrapFn = function (func) {
+                $scope.wrapFn = function (func = null) {
                     if (!touchDevice) {
                         // For some reason, on Chrome, re-focusing the editor messes up scroll position
                         // when clicking a tab and moving mouse while clicking, so
@@ -568,7 +721,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.editor.focus();
                         $(window).scrollTop(s);
                     }
-                    if (typeof(func) !== 'undefined') (func());
+                    if (func !== null) (func());
                     if ($scope.isIE) $scope.aceChanged();
                 };
 
@@ -739,9 +892,9 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                  * @param duplicates - The duplicate tasks, contains duplicate taskIds and relevant parIds
                  * @param renameDuplicates - Whether user wants to rename task names or not
                  */
-                $scope.renameTaskNamesClicked = function (inputs, duplicates, renameDuplicates) {
+                $scope.renameTaskNamesClicked = function (inputs, duplicates, renameDuplicates = false) {
                     // If user wants to ignore duplicates proceed like normal after saving
-                    if (typeof renameDuplicates === 'undefined' || renameDuplicates === false) {
+                    if (!renameDuplicates) {
                         $scope.renameFormShowing = false;
                         if ($scope.options.destroyAfterSave) {
                             $scope.afterSave({
@@ -773,7 +926,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         for (var j = 0; j < duplicates.length; j++) {
                             duplicate = [];
                             duplicate.push(duplicates[j][0]);
-                            duplicate.push(inputs[j][0].value);
+                            duplicate.push((inputs[j][0] as HTMLInputElement).value);
                             duplicate.push(duplicates[j][1]);
                             duplicateData.push(duplicate);
                         }
@@ -1177,7 +1330,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.indent(true);
                     };
 
-                    $scope.surroundClicked = function (before, after, func) {
+                    $scope.surroundClicked = function (before, after, func = null) {
                         if ($scope.editor.getSelection().text === "") {
                             $scope.selectWord();
                         }
@@ -1270,7 +1423,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     };
 
                     $scope.insertTemplate = function (text) {  // for textArea
-                        $scope.closeMenu(null, close);
+                        $scope.closeMenu(null, true);
                         var pluginnamehere = "PLUGINNAMEHERE";
                         var searchEndIndex = $scope.editor.getSelection().start;
                         $scope.editor.replaceSelectedText(text);
@@ -1389,7 +1542,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 $scope.setAceFunctions = function () {
                     $scope.saveOldMode("ace");
 
-                    $scope.snippetManager = ace.require("ace/snippets").snippetManager;
+                    $scope.snippetManager = $scope.ace.require("ace/snippets").snippetManager;
 
                     //Navigation
                     $scope.undoClicked = function () {
@@ -1585,7 +1738,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     };
 
                     $scope.insertTemplate = function (text) { // for ACE-editor
-                        $scope.closeMenu(null, close);
+                        $scope.closeMenu(null, true);
                         var range = $scope.editor.getSelectionRange();
                         var start = range.start;
                         $scope.snippetManager.insertSnippet($scope.editor, text);
@@ -1737,8 +1890,8 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 };
 
                 $scope.closeMenu = function (e, force) {
-                    var container = $("." + MENU_BUTTON_CLASS);
-                    if (force || (!container.is(e.target) && container.has(e.target).length === 0)) {
+                    var container = $(MENU_BUTTON_CLASS_DOT);
+                    if (force || (!container.is(e.target) && container.has(e.target as Element).length === 0)) {
                         container.remove();
                         $(document).off("mouseup.closemenu");
                     }
@@ -1905,9 +2058,10 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 /**
                  * Switched editor between ace and textarea
                  */
-                $scope.changeEditor = function (newMode) {
-                    var text = $scope.getEditorText();
-                    var oldeditor;
+                $scope.changeEditor = (newMode) => {
+                    let text = $scope.getEditorText();
+                    let oldeditor = null;
+                    let defer = $q.defer();
                     if ($scope.isAce || newMode === "text") {
                         oldeditor = $('#ace_editor');
                         $scope.setTextAreaControllerFunctions();
@@ -1915,30 +2069,36 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.createTextArea(text);
                         $scope.setInitialText();
                         $scope.editor.focus();
+                        defer.resolve();
                     } else {
                         oldeditor = $('#teksti');
-                        $scope.setAceControllerFunctions();
-                        $scope.setAceFunctions();
-                        var neweditor = $("<div>", {
-                            class: 'editor',
-                            id: 'ace_editor'
+                        require(["ace/ace", "ace/snippets"], (ace: Ace) => {
+                            $scope.ace = ace;
+                            $scope.setAceFunctions();
+                            let neweditorElem = $("<div>", {
+                                class: 'editor',
+                                id: 'ace_editor'
+                            });
+                            $('.editorContainer').append(neweditorElem);
+                            let neweditor = ace.edit("ace_editor");
+                            $scope.aceLoaded(neweditor);
+                            $scope.editor = neweditor;
+                            $scope.editor.getSession().on('change', $scope.aceChanged);
+                            neweditor.setBehavioursEnabled($scope.getLocalBool("acebehaviours", false));
+                            neweditor.getSession().setUseWrapMode($scope.getLocalBool("acewrap", false));
+                            neweditor.setOptions({maxLines: 28});
+                            defer.resolve();
                         });
-                        $('.editorContainer').append(neweditor);
-                        neweditor = ace.edit("ace_editor");
-                        $scope.aceLoaded(neweditor);
-                        $scope.editor = neweditor;
-                        $scope.editor.getSession().on('change', $scope.aceChanged);
-                        neweditor.setBehavioursEnabled($scope.getLocalBool("acebehaviours"),false);
-                        neweditor.getSession().setUseWrapMode($scope.getLocalBool("acewrap"),false);
-                        neweditor.setOptions({maxLines: 28});
                     }
-                    if (oldeditor) oldeditor.remove();
-                    $scope.adjustPreview();
-                    if ( !$scope.proeditor && $scope.lstag === "note" ) {
-                        var editor = $('pareditor');
-                        editor.css("max-width","40em");
-                    }
-
+                    defer.promise.then(() => {
+                        if (oldeditor) oldeditor.remove();
+                        $scope.adjustPreview();
+                        if (!$scope.proeditor && $scope.lstag === "note") {
+                            var editor = $('pareditor');
+                            editor.css("max-width", "40em");
+                        }
+                    });
+                    return defer.promise;
                 };
 
                 var oldMode = $window.localStorage.getItem("oldMode"+$scope.options.localSaveTag) ||( $scope.options.touchDevice ? "text" : "ace");
@@ -1947,7 +2107,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 if ($scope.options.touchDevice) {
                     if (!$scope.options.metaset) {
                         var $meta = $("meta[name='viewport']");
-                        $scope.oldmeta = $meta[0];
+                        $scope.oldmeta = $meta[0] as HTMLMetaElement;
                         $meta.remove();
                         $('head').prepend('<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=0">');
                     }
