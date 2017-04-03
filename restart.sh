@@ -107,7 +107,7 @@ fi
 SSHD_FLAGS=''
 if param sshd ; then
   ./start_pg_test_containers.sh
-  SSHD_FLAGS='--tmpfs /tmp/doctest_files:rw,noexec,nosuid,size=2m -p 49999:22'
+  SSHD_FLAGS='--tmpfs /tmp/doctest_files:rw,noexec,nosuid,size=20m -p 49999:22'
   LAUNCH_COMMAND='/usr/sbin/sshd -D'
 fi
 
