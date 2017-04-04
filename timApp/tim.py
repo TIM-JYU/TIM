@@ -185,6 +185,9 @@ Exception happened on {} at {}
                group_subject='{}: Multiple errors at {} ({})'.format(app.config['TIM_HOST'],
                                                                      request.path,
                                                                      get_current_user_name()),
+               group_id='exception_{}'.format(hash((app.config['TIM_HOST'],
+                                                    request.path,
+                                                    get_current_user_name()))),
                mail_from=app.config['WUFF_EMAIL'],
                reply_to='{},{}'.format(app.config['ERROR_EMAIL'], get_current_user_object().email),
                msg=message)
