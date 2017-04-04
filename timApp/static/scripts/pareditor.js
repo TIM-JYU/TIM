@@ -1368,8 +1368,12 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                     //Insert
                     //Special characters
-                    $scope.charClicked = function ($event) {
+                    $scope.charClicked = function ($event, char) {
                         var character = $($event.target).text();
+                        console.log(char);
+                        if (typeof char !== 'undefined') {
+                            character = char;
+                        }
                         $scope.editor.replaceSelectedText(character);
                         $scope.wrapFn();
                     };
@@ -1661,8 +1665,12 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                     //Insert
                     //Special characters
-                    $scope.charClicked = function ($event) {
+                    $scope.charClicked = function ($event, char) {
                         var character = $($event.target).text();
+                        console.log(char);
+                        if (typeof char !== 'undefined') {
+                            character = char;
+                        }
                         $scope.editor.insert(character);
                         $scope.wrapFn();
                     };
