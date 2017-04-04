@@ -827,7 +827,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             var startoffset = getRealStartOffset($scope.selectedArea.startContainer, $scope.selectedArea.startOffset);
             var endOffset = $scope.selectedArea.endOffset;
             if (innerDiv.childElementCount === 0)
-                endOffset = startoffset + innerDiv.childNodes[innerDiv.childNodes.length - 1].length;
+                endOffset = startoffset + (innerDiv.childNodes[innerDiv.childNodes.length - 1] as any).length;
 
             newAnnotation.coord = {
                 start: {

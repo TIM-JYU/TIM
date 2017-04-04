@@ -365,7 +365,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                     checked: checked
                                 });
                                 if ( json.answerFieldType === "radio" ) {
-                                    input.prop("form", htmlSheet)
+                                    input.prop("form", htmlSheet as any)
                                     input.click(uncheckRadio);  // TODO: Tähän muutoskäsittely ja jokaiseen tyyppiin tämä
                                 }
                                 if (disabled !== '') input.attr('disabled', "disabled");
@@ -406,7 +406,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                 checked: checked
                             });
                             if ( json.answerFieldType === "radio" ) {
-                                input.prop("form", htmlSheet)
+                                input.prop("form", htmlSheet as any)
                                 input.click(uncheckRadio);
                             }
                             if (disabled !== '') input.attr('disabled', "disabled");
