@@ -1,4 +1,4 @@
-﻿define("require", "exports", "angular", "tim/timHelper", function (require, exports, angular, timHelper) {
+﻿define(["require", "exports", "angular", "tim/timHelper"], function (require, exports, angular, timHelper) {
 
 // Workaround for lazy loading: the directive definition functions below are
 // not re-run when reloading the module
