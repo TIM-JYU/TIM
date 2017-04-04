@@ -24,7 +24,7 @@ requirejs.config({
         "katex": "../node_modules/katex/dist/katex.min",
         "katex-auto-render": "../node_modules/katex/dist/contrib/auto-render.min",
         "ng-file-upload": "../node_modules/ng-file-upload/dist/ng-file-upload",
-        "ngstorage": "../node_modules/ngstorage/ngstorage",
+        "ngstorage": "../node_modules/ngstorage/ngStorage",
         "oclazyload": "../node_modules/oclazyload/dist/oclazyload",
         "rangyinputs": "../node_modules/rangyinputs/rangyinputs-jquery-src",
         "reveal": "reveal/js/reveal",
