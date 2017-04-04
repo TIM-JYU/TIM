@@ -9,15 +9,6 @@
         {
             name: "tim/main",
         },
-        {
-            name: "ace/ace",
-        },
-        {
-            name: "ace/snippets",
-        },
-        {
-            name: "ui-grid",
-        },
     ],
     optimize: "uglify",
     paths: {
