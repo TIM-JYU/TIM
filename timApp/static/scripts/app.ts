@@ -8,13 +8,14 @@ import ngSanitize = require("angular-sanitize");
 import * as uibootstrap from "angular-ui-bootstrap";
 import * as ngFileUpload from "ng-file-upload";
 import * as ngStorage from "ngstorage";
+import * as oclazyload from "oclazyload";
 import {markAsUsed} from "tim/utils";
 import * as angularmodules from "tim/angularmodules";
 import * as extramodules from "tim/extramodules";
 import * as plugins from "tim/plugins";
 import {injectSanitizeService} from "tim/timHelper";
 
-markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize, uibootstrap, ngFileUpload, ngStorage, plugins, extramodules);
+markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize, uibootstrap, ngFileUpload, ngStorage, plugins, extramodules, oclazyload);
 
 // hack: expose moment in global scope because otherwise angular-eonasdan-datetimepicker cannot find it
 declare let window: any;
