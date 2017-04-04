@@ -624,3 +624,21 @@ class PluginTest(TimRouteTest):
         p.save()
         err = self.post_answer(p.type, p.full_task_id, [], expect_status=400)
         self.assertDictEqual({'error': 'Invalid date format: asdasd'}, err)
+
+    def test_deadline_datetime(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {#t plugin="mmcq"}
+deadline: 2016-10-11 20:59:59
+stem: ""
+choices:
+  -
+    correct: true
+    reason: ""
+    text: ""
+```
+""")
+        p = Plugin.from_paragraph(d.document.get_paragraphs()[0])
+        resp = self.post_answer(p.type, p.full_task_id, [])
+        self.assertEqual(resp['error'], 'The deadline for submitting answers has passed.')
+        self.get(d.url_relative)
