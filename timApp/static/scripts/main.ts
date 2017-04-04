@@ -25,7 +25,7 @@ requirejs.config({
         "katex-auto-render": "../node_modules/katex/dist/contrib/auto-render.min",
         "ng-file-upload": "../node_modules/ng-file-upload/dist/ng-file-upload",
         "ngstorage": "../node_modules/ngstorage/ngStorage",
-        "oclazyload": "../node_modules/oclazyload/dist/oclazyload",
+        "oclazyload": "../node_modules/oclazyload/dist/ocLazyLoad",
         "rangyinputs": "../node_modules/rangyinputs/rangyinputs-jquery-src",
         "reveal": "reveal/js/reveal",
         "ui-grid": "../node_modules/angular-ui-grid/ui-grid",
