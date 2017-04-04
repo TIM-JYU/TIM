@@ -76,7 +76,7 @@ requirejs([
     "tim/directives/bootstrapPanel",
     "tim/directives/createItem",
     "tim/directives/loginMenu",
-    "tim/directives/parEditor",
+    "tim/directives/pareditor",
     "tim/directives/popUpDialog",
     "tim/directives/rightsEditor",
     "tim/directives/velpSelection",
