@@ -64,21 +64,6 @@ timApp.controller("ViewCtrl", [
         sc.hidePending = false;
         sc.pendingUpdates = {};
 
-        // from https://stackoverflow.com/a/7317311
-        $window.onload = function () {
-            sc.processQuestions();
-            $window.addEventListener("beforeunload", function (e) {
-                if (!sc.editing) {
-                    return undefined;
-                }
-
-                var msg = 'You are currently editing something. Are you sure you want to leave the page?';
-
-                (e || $window.event).returnValue = msg; //Gecko + IE
-                return msg; //Gecko + Webkit, Safari, Chrome etc.
-            });
-        };
-
         sc.reload = function () {
             sc.markPageNotDirty();
             $window.location.reload();
@@ -333,6 +318,21 @@ timApp.controller("ViewCtrl", [
         defineRefPopup(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users);
 
         // Call necessary initialization functions below this line. Define any scope functions above this line.
+
+        // from https://stackoverflow.com/a/7317311
+        $(document).ready(() => {
+            sc.processQuestions();
+            $window.addEventListener("beforeunload", function (e) {
+                if (!sc.editing) {
+                    return undefined;
+                }
+
+                var msg = 'You are currently editing something. Are you sure you want to leave the page?';
+
+                (e || $window.event).returnValue = msg; //Gecko + IE
+                return msg; //Gecko + Webkit, Safari, Chrome etc.
+            });
+        });
 
         sc.onClick("html.ng-scope", function ($this, e) {
             // Clicking anywhere
