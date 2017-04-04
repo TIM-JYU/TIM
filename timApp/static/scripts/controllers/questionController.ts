@@ -4,7 +4,7 @@ import {setsetting} from "tim/utils";
 import {fixQuestionJson, getPointsTable, minimizeJson} from "tim/directives/dynamicAnswerSheet";
 import $ = require("jquery");
 import * as jqueryui from "jqueryui";
-import {markAsUsed} from "tim/angular-utils";
+import {markAsUsed} from "tim/utils";
 
 markAsUsed(jqueryui);
 

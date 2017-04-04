@@ -1,7 +1,7 @@
 
 import $ = require("jquery");
 import * as nameArea from "tim/directives/nameArea";
-import {markAsUsed} from "tim/angular-utils";
+import {markAsUsed} from "tim/utils";
 
 markAsUsed(nameArea);
 

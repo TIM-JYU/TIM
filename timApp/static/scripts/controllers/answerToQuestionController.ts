@@ -1,6 +1,6 @@
 import {timApp} from "tim/app";
 import * as answerSheet from "tim/directives/dynamicAnswerSheet";
-import {markAsUsed} from "tim/angular-utils";
+import {markAsUsed} from "tim/utils";
 
 markAsUsed(answerSheet);
 

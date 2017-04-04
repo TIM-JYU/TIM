@@ -20,7 +20,7 @@ import * as interceptor from "tim/controllers/view/interceptor";
 import * as parCompiler from "tim/services/parCompiler";
 import * as popupMenu from "tim/directives/popupMenu";
 import $ = require("jquery");
-import {markAsUsed} from "tim/angular-utils";
+import {markAsUsed} from "tim/utils";
 
 markAsUsed(ngStorage, parCompiler, popupMenu, interceptor);
 

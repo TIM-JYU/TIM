@@ -3,7 +3,7 @@ import {timApp} from "tim/app";
 import * as ocLazyLoad from "oclazyload";
 import * as renderMathInElement from "katex-auto-render";
 import * as katex from "katex";
-import {markAsUsed} from "tim/angular-utils";
+import {markAsUsed} from "tim/utils";
 import {timLogTime} from "tim/timTiming";
 import $ = require("jquery");
 import {ILazyLoad} from "oclazyload";

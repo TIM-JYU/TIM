@@ -3,7 +3,7 @@ import {timApp} from "tim/app";
 import {colorPalette} from "tim/directives/velpWindow";
 import * as velpSummary from "tim/directives/velpSummary";
 import $ = require("jquery");
-import {markAsUsed} from "tim/angular-utils";
+import {markAsUsed} from "tim/utils";
 
 markAsUsed(velpSummary);
 

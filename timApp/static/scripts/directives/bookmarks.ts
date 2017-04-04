@@ -2,7 +2,7 @@
 import angular = require("angular");
 import * as focusMe from "tim/directives/focusMe";
 import {timApp} from "tim/app";
-import {markAsUsed} from "tim/angular-utils";
+import {markAsUsed} from "tim/utils";
 
 markAsUsed(focusMe);
 

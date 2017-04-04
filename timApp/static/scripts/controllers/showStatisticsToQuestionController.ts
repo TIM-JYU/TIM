@@ -1,6 +1,6 @@
 import {timApp} from "tim/app";
 import * as chart from "tim/directives/showChartDirective";
-import {markAsUsed} from "tim/angular-utils";
+import {markAsUsed} from "tim/utils";
 
 markAsUsed(chart);
 

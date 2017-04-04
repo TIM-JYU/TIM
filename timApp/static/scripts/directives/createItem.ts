@@ -4,7 +4,7 @@ import {timApp} from "tim/app";
 import * as formErrorMessage from "tim/directives/formErrorMessage";
 import * as shortNameValidator from "tim/directives/shortNameValidator";
 import * as slugify from "tim/services/slugify";
-import {markAsUsed} from "tim/angular-utils";
+import {markAsUsed} from "tim/utils";
 
 markAsUsed(formErrorMessage, shortNameValidator, slugify);
 

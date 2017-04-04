@@ -8,7 +8,7 @@ import ngSanitize = require("angular-sanitize");
 import * as uibootstrap from "angular-ui-bootstrap";
 import * as ngFileUpload from "ng-file-upload";
 import * as ngStorage from "ngstorage";
-import {markAsUsed} from "tim/angular-utils";
+import {markAsUsed} from "tim/utils";
 import * as angularmodules from "tim/angularmodules";
 import * as extramodules from "tim/extramodules";
 import * as plugins from "tim/plugins";

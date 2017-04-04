@@ -5,7 +5,7 @@ import angular = require("angular");
 import rangyinputs = require("rangyinputs");
 import $ = require("jquery");
 import * as draggable from "tim/directives/draggable";
-import {markAsUsed} from "tim/angular-utils";
+import {markAsUsed} from "tim/utils";
 import {setsetting} from "tim/utils";
 import {setEditorScope} from "tim/editorScope";
 import Editor = AceAjax.Editor;

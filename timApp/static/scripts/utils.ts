@@ -25,3 +25,7 @@ export function setsetting(setting, value) {
         }
     });
 }
+
+export function markAsUsed(...modules: any[]) {
+
+}

@@ -12,7 +12,7 @@
 import angular = require("angular");
 import * as reviewController from "tim/controllers/reviewController";
 import {timApp} from "tim/app";
-import {markAsUsed} from "tim/angular-utils";
+import {markAsUsed} from "tim/utils";
 
 markAsUsed(reviewController);
 

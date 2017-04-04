@@ -3,7 +3,7 @@ import angular = require("angular");
 import * as showChart from "tim/directives/showChartDirective";
 import {fixQuestionJson} from "tim/directives/dynamicAnswerSheet";
 import $ = require("jquery");
-import {markAsUsed} from "tim/angular-utils";
+import {markAsUsed} from "tim/utils";
 
 markAsUsed(showChart);
 
