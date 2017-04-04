@@ -26,6 +26,14 @@ export function setsetting(setting, value) {
     });
 }
 
+/**
+ * Marks seemingly unused imports as used so that TypeScript compiler won't optimize them out when compiling.
+ *
+ * For example, timApp module needs ngSanitize, but it is specified as a string reference in the angular.module(...)
+ * call, which is why TypeScript compiler cannot see the connection to the import statement. See app.ts.
+ *
+ * @param modules The modules to mark as used.
+ */
 export function markAsUsed(...modules: any[]) {
-
+    // no need to do anything here
 }
