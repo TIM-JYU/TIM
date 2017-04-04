@@ -139,7 +139,7 @@ function hasAcrobatInstalled() {
     return isAcrobatInstalled;
 }
 
-var csJSTypes = ["js", "glowscript", "vpython"];
+var csJSTypes = ["js", "glowscript", "vpython", "html"];
 
 // =================================================================================================================
 // Known upload files
@@ -174,8 +174,8 @@ function resizeIframe(obj) {
 
 var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","vpython","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","glowscript","sage","simcir","xml", "octave","lua", "swift","mathcheck","r"];
-languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","javascript","python","json","xml","octave","lua","swift","java","r"];
+languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","vpython","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","glowscript","sage","simcir","xml", "octave","lua", "swift","mathcheck","r", "html"];
+languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","javascript","python","json","xml","octave","lua","swift","java","r", "html"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
@@ -880,6 +880,7 @@ function lataaSage(scope,firstTime, readyFunction) {
     });
     return sageLoading;
 }
+
 
 function runSage(scope) {
     if ( scope.sageButton ) scope.sageButton.click();
@@ -2052,6 +2053,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         $scope.edit = $scope.edit[0];
         if ( eindex == 1 ) {
             $scope.aceEditor.setFontSize(15);
+            $scope.aceEditor.getSession().setUseWorker(false); // syntax check away
             $scope.aceEditor.setOptions({
                 maxLines: $scope.maxRows
             });
@@ -2142,6 +2144,20 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         if ( $scope.type.indexOf("/c") >= 0 ) wantsConsole = true;
         if ( !$scope.attrs.runeverytime && !$scope.usercode && !$scope.userargs && !$scope.userinput ) return;
         if ( !$scope.canvas ) { // create a canvas on first time
+            var html = "";
+            var scripts = "";
+            $scope.fullhtml = ($scope.attrs.fullhtml||"");
+            if ( $scope.fullhtml ) $scope.iframe = true;  // fullhtml allways to iframe
+            if ( $scope.type.indexOf("html") >= 0 ) {
+                $scope.iframe = true; // html allways iframe
+                if ( !$scope.fullhtml ) $scope.fullhtml = "REPLACEBYCODE";
+
+            }  // html allways to iframe
+            if ( $scope.type.indexOf("/vis") >= 0 ) {
+                $scope.iframe = true;  // visjs allways to iframe
+                html =  '<div id="myDiv" class="mydiv" width="800" height="400" ></div>';
+                scripts = "https://tim.jyu.fi/csimages/visjs/vis.min.js";
+            }
             if ( $scope.iframe ) {
                 var dw,dh;
                 var fsrc = "/cs/gethtml/canvas.html";
@@ -2153,10 +2169,15 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
                 }
                 var v = $scope.getVid(dw,dh);
                 $scope.irrotaKiinnita = "Irrota";
-                $scope.canvas = angular.element('<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px; z-index: 20" >'+
+                html = ($scope.attrs.html||html);
+                html = encodeURI(html);
+                var angularElement = '<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px; z-index: 20" >'+
                   '<span class="csRunMenu"><div><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a><a href ng-click="closeFrame()" style="float: right" >[X]</a></div></span>'+
-                  '<iframe id="'+v.vid+'" class="jsCanvas" src="' + fsrc + '?scripts='+($scope.attrs.scripts||"") + '" ' + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin"></iframe>'+
-                  '</div>');
+                    (!$scope.fullhtml ? '<iframe id="'+v.vid+'" class="jsCanvas" src="' + fsrc + '?scripts='+($scope.attrs.scripts||scripts)+'&html='+ html + '" ' + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin">':
+                    '<iframe id="'+v.vid+'" class="jsCanvas"'  + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin">')+
+                  '</iframe>'+
+                  '</div>';
+                $scope.canvas = angular.element(angularElement);
                 // $scope.canvas = angular.element('<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html" ' + v.w + v.h + ' style="border:0" seamless="seamless" ></iframe>');
                 $scope.iframeLoadTries = 10;
             } else {  
@@ -2183,7 +2204,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         if ( $scope.iframe ) { // in case of iframe, the text is send to iframe
             var f =  document.getElementById($scope.taunoId); // but on first time it might be not loaded yet
             // var s = $scope.taunoHtml.contentWindow().getUserCodeFromTauno();
-            if ( !f || !f.contentWindow || !f.contentWindow.runJavaScript ) {
+            if ( !f || !f.contentWindow  || (!f.contentWindow.runJavaScript && !$scope.fullhtml) ) {
                $scope.lastJS = ""; 
                $scope.lastUserargs = "";
                $scope.lastUserinput = "";
@@ -2195,11 +2216,21 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             }
             if ( $scope.iframeClientHeight < 0 ) $scope.iframeClientHeight = f.clientHeight;
             if ( $scope.gsDefaultLanguage ) f.contentWindow.setDefLanguage($scope.gsDefaultLanguage);
-            var s = f.contentWindow.runJavaScript(text,$scope.userargs,$scope.userinput, wantsConsole);
-            var ch = f.contentWindow.getConsoleHeight();
-            if ( ch < $scope.iframeClientHeight ) ch = $scope.iframeClientHeight;
-            f.height = "";
-            f.height = ""+ch+"px";
+            if ( $scope.fullhtml ) {
+                var fhtml = $scope.fullhtml.replace("REPLACEBYCODE", text);
+                f.contentWindow.document.open();
+                f.contentWindow.document.write(fhtml);
+                f.contentWindow.document.close();
+            }
+            else {
+                var s = f.contentWindow.runJavaScript(text, $scope.userargs, $scope.userinput, wantsConsole);
+            }
+            if ( f.contentWindow.getConsoleHeight ) {
+                var ch = f.contentWindow.getConsoleHeight();
+                if (ch < $scope.iframeClientHeight) ch = $scope.iframeClientHeight;
+                f.height = "";
+                f.height = "" + ch + "px";
+            }
 
             return;
         }

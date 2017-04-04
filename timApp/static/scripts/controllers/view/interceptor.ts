@@ -68,7 +68,7 @@ timApp.config(['$httpProvider', function ($httpProvider) {
                             error: response.data.error
                         });
                     }
-                    return $q.reject();
+                    return $q.reject(response);
                 }
             };
         }

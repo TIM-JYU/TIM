@@ -946,9 +946,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if is_gethtml:
             scripts = get_param(query, "scripts", "")
+            inchtml = get_param(query, "html", "")
             p = self.path.split("?")
             print(p, scripts)
-            self.wout(replace_scripts(file_to_string(p[0]), scripts, "%INCLUDESCRIPTS%"))
+            htmlstring = file_to_string(p[0])
+            htmlstring = replace_scripts(htmlstring, scripts, "%INCLUDESCRIPTS%")
+            htmlstring = htmlstring.replace("%INCLUDEHTML%", inchtml)
+            self.wout(htmlstring)
             return
 
         if is_ptauno:
@@ -979,6 +983,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             result_json = {"js": ["/cs/js/dir.js",
                                   "jqueryui-touch-punch",
                                   "/cs/cs-parsons/csparsons.js",
+
                                   # "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_HTMLorMML",  # will be loaded by JS lazily
                                   # "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
                                   # "https://sagecell.sagemath.org/static/embedded_sagecell.js", # will be loaded by JS lazily

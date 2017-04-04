@@ -46,3 +46,9 @@ class CommentTest(TimRouteTest):
         h = html.fromstring(resp['texts'])  # type: HtmlElement
         comments = comment_selector(h)
         return comments
+
+    def test_invalid_comment_delete_request(self):
+        self.json_post('/deleteNote', {}, expect_status=400)
+
+    def test_invalid_comment_post_request(self):
+        self.json_post('/postNote', {}, expect_status=400)

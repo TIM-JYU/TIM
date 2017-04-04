@@ -8,6 +8,8 @@ from typing import List, Union, Dict
 import requests
 import time
 
+from documentmodel.timjsonencoder import TimJsonEncoder
+
 DUMBO_URL = 'http://127.0.0.1:8000'
 DUMBO_PATH = os.path.join("..", "Ephemeral", "Dumbo", "dist", "build", "Dumbo")
 
@@ -40,7 +42,7 @@ def call_dumbo(data: Union[List[str], Dict, List[Dict]], path='') -> Union[List[
 
     """
     try:
-        r = requests.post(url=DUMBO_URL + path, data=json.dumps(data))
+        r = requests.post(url=DUMBO_URL + path, data=json.dumps(data, cls=TimJsonEncoder))
         r.encoding = 'utf-8'
     except requests.ConnectionError:
         raise Exception('Failed to connect to Dumbo')

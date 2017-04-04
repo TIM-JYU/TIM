@@ -92,8 +92,7 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
 
     sc.onClick(".note", function ($this, e) {
         if (!$this.hasClass('editable')) {
-            sc.showDialog('You cannot edit this note.');
-            return true;
+            return false;
         }
         sc.toggleNoteEditor($this.parents('.par'), {isNew: false, noteData: {id: $this.attr('note-id')}});
         return true;

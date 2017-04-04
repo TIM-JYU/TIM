@@ -38,6 +38,7 @@ class Plugin:
                 d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
             except ValueError:
                 raise PluginException('Invalid date format: {}'.format(d))
+        if d is not None:
             if d.tzinfo is None:
                 d = d.replace(tzinfo=timezone.utc)
         return d

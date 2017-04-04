@@ -9,8 +9,9 @@
                 <th ng-show="question.type == 'true-false'" class="true-false-title">False</th>-->
 
                 <!--<th ng-repeat="item in columnHeaders" ng-if="question.type == 'matrix' || question.type == 'true-false' " id="row-heading">-->
-                <th ng-repeat="item in columnHeaders"  id="row-heading">
-                    {{ asked_id !== false ? columnHeaders[$index].text : "" }}
+                <th ng-if="asked_id" ng-repeat="item in columnHeaders"  id="row-heading" ng-bind-html="columnHeaders[$index].text">
+                <th ng-if="!asked_id" ng-repeat="item in columnHeaders"  id="row-heading">
+                    <!-- {{ asked_id !== false ? columnHeaders[$index].text : "" }} -->
                     <div style="position: relative" ng-if="!asked_id">
                     <div class="cart">
                         <textarea class="rowHeading" form="question-form" rows="1"
@@ -31,8 +32,9 @@
             </thead>
             <tbody>
             <tr ng-repeat="row in rows">
-                <th id="left-question-row-heading">
-                    {{ asked_id !== false ? row.text : "" }}
+                <th ng-if="asked_id" id="left-question-row-heading" ng-bind-html="row.text">
+                <th ng-if="!asked_id" id="left-question-row-heading">
+                    <!--{{ asked_id !== false ? row.text : "" }} -->
                     <div style="position: relative" ng-if="asked_id === false">
                     <textarea class="rowHeading questiontext" ng-model="row.text" form="question-form" rows="1"  id = "{{ 'r'+row.id }}"></textarea>
                     <div class="matrixButtons">

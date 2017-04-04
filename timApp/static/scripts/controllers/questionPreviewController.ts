@@ -16,8 +16,8 @@ markAsUsed(answerSheet);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$rootScope', '$log',
-    function ($scope, $window, http, $rootScope, $log) {
+timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$rootScope', 'ParCompiler', '$log',
+    function ($scope, $window, http, $rootScope, ParCompiler, $log) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit questionPreview.html to repeat rows and columns
         "use strict";
@@ -36,6 +36,8 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
             $scope.markup = args.markup;
             $scope.questionTitle = args.markup.json.questionTitle;
             $scope.dynamicAnswerSheetControl.createAnswer($scope);
+            // Tähän Texittää scope
+            // ParCompiler.processAllMath($scope.htmlSheet);
 
         });
 
