@@ -464,7 +464,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   '</p>' +
                   '<div class="csRunMenuArea" ng-if="!forcedupload">'+
 				  '<p class="csRunMenu" >' +
-				  '<button ng-if="isRun"  ng-disabled="isRunning" title="(Ctrl-S)" ng-click="runCode();" ng-init="runCssPrint();" ng-bind-html="buttonText"></button>&nbsp&nbsp'+
+				  '<button ng-if="isRun"  ng-disabled="isRunning" title="(Ctrl-S)" ng-click="runCode();" ng-bind-html="buttonText"></button>&nbsp&nbsp'+
 				  '<button ng-if="isTest" ng-disabled="isRunning" ng-click="runTest();">Test</button>&nbsp&nbsp'+
 				  '<button ng-if="isUnitTest" ng-disabled="isRunning" ng-click="runUnitTest();">UTest</button>&nbsp&nbsp'+
 				  '<span ng-if="isDocument"><a href="" ng-disabled="isRunning" ng-click="runDocument();">{{docLink}}</a>&nbsp&nbsp</span>'+
@@ -612,8 +612,6 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"rows",1);
 			csApp.set(scope,attrs,"cols",10);
 			csApp.set(scope,attrs,"maxrows",100);
-			csApp.set(scope,attrs,"cssPrint",false);
-			csApp.set(scope,attrs,"cssRunPlugin", false);
 			csApp.set(scope,attrs,"attrs.bycode");
 			csApp.set(scope,attrs,"placeholder", scope.tiny ? "" : english ? "Write your code here": "Kirjoita koodi tähän:");
 			csApp.set(scope,attrs,"inputplaceholder",english ? "Write your input here": "Kirjoita syöte tähän");
@@ -760,7 +758,7 @@ csApp.directiveFunction = function(t,isInput) {
             //scope.out = element[0].getElementsByClassName('console');
             if ( scope.attrs.autorun ) scope.runCodeLink(true);
             scope.editorIndex = 0;
-            if ( scope.editorMode != 0 || scope.editorModes !== "01" || scope.cssPrint) scope.showOtherEditor(scope.editorMode);
+            if ( scope.editorMode != 0 || scope.editorModes !== "01" ) scope.showOtherEditor(scope.editorMode);
             scope.mode = languageTypes.getAceModeType(scope.type,"");
             
             var styleArgs = csApp.getParam(scope,"style-args","");
@@ -1266,11 +1264,6 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 	$scope.runCode = function() {
 		$scope.runCodeCommon(false);
 	};
-
-	$scope.runCssPrint = function() {
-	    if($scope.cssPrint && $scope.cssRunPlugin)
-		    $scope.runCodeCommon(false);
-	};
 	
 	$scope.runTest = function() {
 		var t = languageTypes.getTestType($scope.type,$scope.selectedLanguage,"comtest"); 
@@ -1334,7 +1327,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 		// $scope.viewCode = false;
         window.clearInterval($scope.runTimer);
         $scope.closeDocument();
-        //alert("moi");
+        // alert("moi");
         
         if ( $scope.isSage ) {
             alustaSage($scope, true, function() {runSage($scope);});
@@ -2024,14 +2017,13 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         if ( $scope.parson ) {
             $scope.usercode = $scope.getJsParsonsCode();
         }
-
         $scope.parson = null;
         $scope.csparson = null;
         
         var editorHtml = '<textarea class="csRunArea csrunEditorDiv" ng-hide="noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>';
 
         var aceHtml = '<div class="no-popup-menu"><div ng-show="mode" ui-ace="{onLoad:aceLoaded,  mode: \'{{mode}}\', require: [\'ace/ext/language_tools\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
-            // var aceHtml = '<div ng-show="mode" ui-ace="{  mode: \'{{mode}}\',    require: [\'/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
+        // var aceHtml = '<div ng-show="mode" ui-ace="{  mode: \'{{mode}}\',    require: [\'/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
                    // ' style="left:-6em; height:{{rows*1.17}}em;" class="csRunArea csEditArea" ng-hide="noeditor"  ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
                    //' style="left:-5px; width: 101% !important;'+
                    ' " class="csRunArea csEditArea csAceEditor" ng-hide="noeditor"  ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
@@ -2044,14 +2036,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
                    '</div>'+
                    */
                    '</div>';
-
-        var cssHtml = '<pre>{{usercode}}</pre>';
-
         var parsonsHtml = '<div class="no-popup-menu"></div>';
-
         var html = [editorHtml,aceHtml,parsonsHtml,parsonsHtml];                    
-        if ($scope.cssPrint) html = [cssHtml, cssHtml, cssHtml, cssHtml];
-
         $scope.mode = languageTypes.getAceModeType($scope.type,"");
         if (typeof editorMode !== 'undefined') $scope.editorMode = editorMode;
         else $scope.editorMode++; 
