@@ -1012,10 +1012,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                        "/cs/js-parsons/lib/prettify.css"], "multihtml": True}
             if is_simcir:
                 result_json = {"js": ["/cs/js/dir.js",
-                                      "/cs/simcir/simcir.js",
-                                      "/cs/simcir/simcir-basicset.js",
-                                      "/cs/simcir/simcir-library.js",
-                                      "https://yousource.it.jyu.fi/tiep114/tiep114/blobs/raw/master/simcir-oma-kirjasto.js"
+                                      "simcir",
+                                      "simcir/basicset",
+                                      "simcir/library",
+                                      "simcir/oma-kirjasto"
                                       ],
                                "angularModule": ["csApp"],
                                "css": ["/cs/css/cs.css", "/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"],

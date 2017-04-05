@@ -12,6 +12,10 @@
     ],
     optimize: "uglify",
     paths: {
+        "simcir": "empty:",
+        "simcir/basicset": "empty:",
+        "simcir/library": "empty:",
+        "simcir/oma-kirjasto": "empty:",
         "tim/angularmodules": "empty:",
         "tim/extramodules": "empty:",
         "tim/plugins": "empty:",

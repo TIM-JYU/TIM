@@ -28,6 +28,10 @@ requirejs.config({
         "oclazyload": "../node_modules/oclazyload/dist/ocLazyLoad",
         "rangyinputs": "../node_modules/rangyinputs/rangyinputs-jquery-src",
         "reveal": "reveal/js/reveal",
+        "simcir": "/cs/simcir/simcir",
+        "simcir/basicset": "/cs/simcir/simcir-basicset",
+        "simcir/library": "/cs/simcir/simcir-library",
+        "simcir/oma-kirjasto": "https://yousource.it.jyu.fi/tiep114/tiep114/blobs/raw/master/simcir-oma-kirjasto",
         "ui-grid": "../node_modules/angular-ui-grid/ui-grid",
     },
     packages: [{
@@ -49,6 +53,10 @@ requirejs.config({
         "katex-auto-render": {deps: ["katex"]},
         "ng-file-upload": {deps: ["angular"]},
         "oclazyload": {deps: ["angular"]},
+        "simcir": {deps: ["jquery"], exports: "simcir"},
+        "simcir/basicset": {deps: ["jquery", "simcir"]},
+        "simcir/library": {deps: ["simcir"]},
+        "simcir/oma-kirjasto": {deps: ["simcir"]},
         "ui-grid": {deps: ["angular"]},
     },
 });
