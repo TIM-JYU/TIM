@@ -4,6 +4,8 @@ import shelve
 from collections import defaultdict
 from copy import copy
 
+import filelock
+
 from documentmodel.documentparser import DocumentParser
 from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
@@ -14,6 +16,7 @@ from timdb.invalidreferenceexception import InvalidReferenceException
 from timdb.timdbexception import TimDbException
 from typing import Optional, Dict, List, Tuple, Any
 from utils import count_chars, get_error_html
+from utils import parse_yaml
 
 
 class DocParagraph:
@@ -95,7 +98,7 @@ class DocParagraph:
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return self.is_same_as(other)
+            return self.is_identical_to(other)
         return NotImplemented
 
     def __ne__(self, other):
@@ -305,18 +308,19 @@ class DocParagraph:
         except Exception as e:
             self.__htmldata['html'] = get_error_html(e)
 
-        self.__htmldata['cls'] = 'par ' + self.get_class_str() + (' questionPar' if self.is_question() else '')
+        self.__htmldata['cls'] = ' '.join(['par']
+                                          + self.get_classes()
+                                          + (['questionPar'] if self.is_question() else [])
+                                          + ([self.get_attr('plugin')] if self.is_plugin() and not self.is_question() else [])
+                                          )
         self.__htmldata['is_plugin'] = self.is_plugin()
         self.__htmldata['is_question'] = self.is_question()
         # self.is_plugin() and containerLink.get_plugin_needs_browser(self.get_attr('plugin'))
-        self.__htmldata['needs_browser'] = True
+        self.__htmldata['needs_browser'] = self.is_plugin() and not self.is_question()
 
     def _cache_props(self):
         """Caches some boolean properties about this paragraph in internal attributes."""
-        self.__is_plugin = self.get_attr('plugin') or ""  # self.get_attr('taskId')
-        self.__is_question = self.get_attr('question') or ""
-        if self.__is_question:
-            self.__is_plugin = ""
+
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
         self.__is_setting = 'settings' in self.get_attrs()
 
@@ -347,6 +351,9 @@ class DocParagraph:
             return default_rd
 
         return None
+
+    def is_identical_to(self, par: 'DocParagraph'):
+        return self.is_same_as(par) and self.get_id() == par.get_id()
 
     def is_different_from(self, par: 'DocParagraph') -> bool:
         """Determines whether the given paragraph is different from this paragraph content-wise."""
@@ -416,11 +423,21 @@ class DocParagraph:
         :return: html string
 
         """
-        question_title = self.is_question()
-        if question_title:
+        if self.is_question():
+            from plugin import Plugin
+            from plugin import PluginException
+            try:
+                values = Plugin.from_paragraph(self).values
+            except PluginException as e:
+                if not self.get_attr('plugin'):
+                    return get_error_html('This question is missing plugin="qst" attribute. Please add it.')
+                return get_error_html(e)
+            title = values.get("json", {}).get("questionTitle", "")
+            if not title:  # compability for old
+                title = values.get("json", {}).get("title", "question_title")
             return self.__set_html(sanitize_html(
                 '<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="{0}"></span></a>'
-                '<p class="questionNumber">{0}</p>'.format(question_title)))
+                '<p class="questionNumber">{0}</p>'.format(title)))
         if self.html is not None:
             return self.html
         if self.is_plugin():
@@ -478,20 +495,21 @@ class DocParagraph:
                         heading_cache[par.get_id()] = value
             unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
         else:
-            if clear_cache:
-                try:
-                    os.remove(macro_cache_file + '.db')
-                except FileNotFoundError:
-                    pass
-                try:
-                    os.remove(heading_cache_file + '.db')
-                except FileNotFoundError:
-                    pass
-            with shelve.open(macro_cache_file) as cache, \
-                    shelve.open(heading_cache_file) as heading_cache:
-                unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
-                for k, v in heading_cache.items():
-                    heading_cache[k] = v
+            with filelock.FileLock("/tmp/cache_lock_{}".format(doc_id_str)):
+                if clear_cache:
+                    try:
+                        os.remove(macro_cache_file + '.db')
+                    except FileNotFoundError:
+                        pass
+                    try:
+                        os.remove(heading_cache_file + '.db')
+                    except FileNotFoundError:
+                        pass
+                with shelve.open(macro_cache_file) as cache, \
+                        shelve.open(heading_cache_file) as heading_cache:
+                    unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
+                    for k, v in heading_cache.items():
+                        heading_cache[k] = v
 
         changed_pars = []
         if len(unloaded_pars) > 0:
@@ -699,12 +717,7 @@ class DocParagraph:
         else:
             self.__data['attrs'][attr_name] = attr_val
 
-        if attr_name == 'taskId':
-            self.__is_plugin = bool(attr_val)
-        if attr_name == 'question':
-            self.__is_question = bool(attr_val)
-        elif attr_name == 'rp' or attr_name == 'ra':
-            self.__is_ref = self.is_par_reference() or self.is_area_reference()
+        self._cache_props()
 
     def is_task(self):
         """Returns whether the paragraph is a task."""
@@ -725,11 +738,14 @@ class DocParagraph:
 
     def get_attrs_str(self) -> str:
         """Returns the attributes as a JSON string."""
-        return json.dumps(self.__data['attrs'])
+        return json.dumps(self.__data['attrs'], sort_keys=True)
+
+    def get_classes(self) -> List[str]:
+        return self.get_attr('classes', [])
 
     def get_class_str(self) -> str:
         """Returns the classes as a space-separated string."""
-        return ' '.join(self.get_attr('classes', []))
+        return ' '.join(self.get_classes())
 
     def get_base_path(self) -> str:
         """Returns the filesystem path for the versions of this paragraph."""
@@ -948,18 +964,19 @@ class DocParagraph:
         * a setting.
 
         """
-        return self.__is_plugin \
+        return self.is_plugin() \
             or (self.__is_ref and not self.is_translation()) \
             or self.__is_setting
 
     def is_plugin(self) -> bool:
         """Returns whether this paragraph is a plugin."""
-        return self.__is_plugin
+
+        return bool(self.get_attr('plugin'))
 
     def is_question(self) -> bool:
         """Returns whether this paragraph is a question paragraph."""
         # preview = self.get("preview", False)
-        return self.__is_question
+        return bool(self.get_attr('question'))
 
     def is_setting(self) -> bool:
         """Returns whether this paragraph is a settings paragraph."""
@@ -972,3 +989,13 @@ class DocParagraph:
 
         """
         self.__data['id'] = par_id
+
+
+def is_real_id(par_id: Optional[str]):
+    """Returns whether the given paragraph id corresponds to some real paragraph
+    instead of being None or a placeholder value ('HELP_PAR').
+    
+    :param par_id: The paragraph id.
+    :return: True if the given paragraph id corresponds to some real paragraph, False otherwise.
+    """
+    return par_id is not None and par_id != 'HELP_PAR'

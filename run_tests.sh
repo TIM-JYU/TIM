@@ -21,7 +21,7 @@ fi
 
 docker run \
  --net=timnet \
- --tmpfs /tmp/doctest_files:rw,noexec,nosuid,size=5m \
+ --tmpfs /tmp/doctest_files:rw,noexec,nosuid,size=20m \
  --rm \
  --name=${TIM_NAME}-test \
  --env TIM_NAME=${TIM_NAME} \

@@ -1,2 +1,2 @@
 #!/bin/bash
-docker build --tag="timimages/cs3sudo" DockerfileSudo
+docker build --tag="timimages/cs3sudo" DockerfileSudo  .

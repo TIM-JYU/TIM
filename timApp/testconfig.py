@@ -35,3 +35,4 @@ SELENIUM_REMOTE_URL = os.environ.get('SELENIUM_REMOTE_URL', 'http://' + TIM_NAME
 SELENIUM_BROWSER_URL = os.environ.get('SELENIUM_BROWSER_URL', 'http://' +
                                       (TIM_NAME.rstrip('-test') if pycharm_running() else TIM_NAME))
 LIVESERVER_PORT = 5001
+QST_PLUGIN_PORT = LIVESERVER_PORT

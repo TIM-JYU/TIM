@@ -165,10 +165,16 @@ RUN echo agent:kissa | chpasswd
 # run passwd -l root
 
 # Asetetaan container käynnistymään tunnuksella agent.
-user agent
+# user agent
 
 # Avataan portti 5000 ulos containerista.
 expose 5000
 
 #volume /tim_files/:/service/tim_files/
+
+run export LANG=en_US.UTF-8
+run Xvfb :1 -screen 0 1280x1024x24 &
+run export DISPLAY=:1
+run export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar:/cs/java/fxgui.jar:/cs/java/gui.jar
+run export MONO_PATH=/cs/jypeli
 

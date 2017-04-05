@@ -26,7 +26,7 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
                 sc.markup.json = JSON.parse(data.questionjson);
                 sc.markup.points = data.points;
                 sc.markup.expl = data.expl;
-                $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.title});
+                $rootScope.$broadcast('changeQuestionTitle', {'questionTitle': sc.json.questionTitle});
                 $rootScope.$broadcast("setPreviewJson", {
                     markup: sc.markup,
                     questionId: sc.qId,
@@ -68,7 +68,7 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
         })
             .success(function (data) {
                 sc.markup = data.markup;
-                $rootScope.$broadcast('changeQuestionTitle', {'title': sc.markup.json.title});
+                $rootScope.$broadcast('changeQuestionTitle', {'questionTitle': sc.markup.json.questionTitle});
                 $rootScope.$broadcast("setPreviewJson", {
                     markup: sc.markup,
                     questionParId: sc.questionParId,
@@ -124,7 +124,7 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
                 sc.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
                 sc.markup = data.markup;
                 // data.markup.qst = true;
-                $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.title});
+                $rootScope.$broadcast('changeQuestionTitle', {'questionTitle': sc.json.questionTitle});
                 $rootScope.$broadcast('editQuestion', {
                     'par_id': parId,
                     'par_id_next': parNextId,
@@ -199,20 +199,33 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
 
     sc.processQuestions = function () {
         var questions = $('.questionPar');
+        var n = 1;
+        var separator = ")";
         if (sc.showQuestions()) {
             for (var i = 0; i < questions.length; i++) {
                 var $par = questions.eq(i);
                 var questionChildren = $par.children();
                 var questionNumber = questionChildren.find('.questionNumber');
-                var questionTitle = sc.getParAttributes($par).question;
+                // var questionTitle = sc.getParAttributes($par).question;
+                var questionTitle = questionNumber[0].innerHTML;
                 if (questionTitle.length > 10) {
                     questionTitle = questionTitle.substr(0, 10) + "\r\n...";
+                }
+                var nt = parseInt(questionTitle);
+                var nr = "";
+                if ( isNaN(nt) ) nr = (n) + "" + separator + "\r\n";
+                else {
+                    n = nt;
+                    var nrt = ""+n;
+                    if ( questionTitle.length  > nrt.length )
+                        separator = questionTitle[nrt.length];
                 }
                 if (questionNumber[0] && questionNumber[0].innerHTML) {
                     if (sc.noQuestionAutoNumbering) {
                         questionNumber[0].innerHTML = questionTitle;
                     } else {
-                        questionNumber[0].innerHTML = (i + 1) + ")\r\n" + questionTitle;
+                        questionNumber[0].innerHTML = nr + questionTitle;
+                        n++;
                     }
                 }
             }

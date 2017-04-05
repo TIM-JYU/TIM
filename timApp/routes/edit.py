@@ -2,7 +2,6 @@
 import json
 from typing import List, Tuple
 
-import yaml
 from flask import Blueprint, render_template
 from flask import abort
 from flask import current_app
@@ -18,6 +17,7 @@ from markdownconverter import md_to_html
 from requesthelper import verify_json_params
 from responsehelper import json_response, ok_response
 from routes.notify import notify_doc_watchers
+from routes.qst import question_convert_js_to_yaml
 from sessioninfo import get_current_user_object, get_current_user_id, logged_in, get_current_user_group
 from timdb.bookmarks import Bookmarks
 from timdb.docinfo import DocInfo
@@ -177,36 +177,6 @@ def rename_task_ids():
         return manage_response(docentry, pars, timdb, ver_before)
 
 
-def delete_key(d, key):
-    if key in d:
-        del d[key]
-
-
-def question_convert_js_to_yaml(md):
-    # save question. How to pick up question see lecture.py, get_question_data_from_document
-    markup = json.loads(md)
-    question = markup["json"]["title"]
-    question = question.replace('"', '').replace("'", '')
-    taskid = question.replace(" ", "")  # TODO: make better conversion to ID
-    oldid = markup.get('taskId')
-    if not oldid:
-        markup['taskId'] = taskid
-    else:
-        taskid = oldid
-    qst = markup.get("qst", False)
-    delete_key(markup, "question")  # old attribute
-    delete_key(markup, "taskId")
-    delete_key(markup, "qst")
-    mdyaml = yaml.dump(markup)  # spoils ä and so on..
-    mdyaml = mdyaml.replace("\\xC4", "Ä").replace("\\xD6", "Ö").replace(
-        "\\xC5", "Å").replace("\\xE4", "ä").replace("\\xF6", "ö").replace("\\xE5", "å")
-    prefix = ' '
-    if qst:
-        prefix = ' d'  # like document question
-    result = '``` {#' + taskid + prefix + 'question="' + question + '" plugin="qst"}\n' + mdyaml + '```\n'
-    return result
-
-
 @edit_page.route("/postParagraphQ/", methods=['POST'])
 def modify_paragraph_q():
     """Route for modifying a question editor paragraph in a document.
@@ -323,9 +293,9 @@ def preview_paragraphs(doc_id):
             doc.insert_temporary_pars(blocks, context_par)
             for par in blocks:
                 if par.is_question():
-                    par.set_attr('questionTitle', par.is_question())
+                    par.set_attr('isQuestion', par.is_question())
                     par.set_attr('question', False)
-                    par.set_attr('plugin','qst')
+                    par.set_attr('plugin', 'qst')
             return par_response(blocks, doc, preview=True, context_par=context_par)
         except Exception as e:
             err_html = get_error_html(e)

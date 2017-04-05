@@ -41,7 +41,7 @@
                     <ul>
                         <li ng-repeat="question in questions">
                             {{"{{ question.nr }}."}} <span ng-bind="question.asked_time | timtim"></span>
-                            <a ng-click="editPoints(question.asked_id)">{{ "{{ question.json.title }}" }}</a>
+                            <a ng-click="editPoints(question.asked_id)">{{ "{{ question.json.questionTitle }}" }}</a>
                         </li>
                     </ul>
                 </div>
@@ -70,7 +70,7 @@
                 <div ng-if="showPoints || true"> <!-- for some reason this can not be hidden??? -->
                     <div ng-repeat="question in questions" style="margin-bottom: 2em">
                         <div ng-show="showPoints">
-                            <p>{{ "{{question.nr}}" }}. <span class="bold" ng-bind-html="question.json.title">{{ "{{question.json.title}}" }}</span> /
+                            <p>{{ "{{question.nr}}" }}. <span class="bold" ng-bind-html="question.json.questionTitle">{{ "{{question.json.questionTitle}}" }}</span> /
                                <span ng-bind="question.asked_time | timtim"></span>
                             </p>
                             <!-- <p ng-bind-html="question.json.questionText">{{ "{{question.json.questionText}}" }}</p> -->

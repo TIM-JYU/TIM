@@ -42,7 +42,7 @@
                                t.html.startswith("<h3")) and not prev_is_empty[0] %}
                             {{ sectionchange }}
                         {% endif %}
-                        <div class="{{ [t.cls|trim, t.is_plugin|trim]|join(' ')|trim }}"
+                        <div class="{{ t.cls }}"
                              id="{{ t.id }}"
                              t="{{ t.t }}"
                              attrs="{{ t.attrs_str }}">

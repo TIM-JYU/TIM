@@ -99,3 +99,5 @@ function timLogTime(msg,id,level) {
     }    
     timJavaScriptLastTime = d;
 }   
+
+var GlobalParCompiler = null;

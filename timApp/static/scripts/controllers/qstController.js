@@ -51,7 +51,7 @@ qstApp.directiveTemplate = function () {
 // Koska tätä kutsutaan directiveFunction-metodista, tätä kutsutaan yhden kerran
     if ( qstApp.TESTWITHOUTPLUGINS ) return '';
 	return  '<div class="csRunDiv qst no-popup-menu">' +
-				  '<p>Here comes header</p>' +
+				  '<p></p>' + // Here comes header
 				  // '<p ng-if="stem" class="stem" >{{stem}}</p>' +
                   '<p ng-if="stem" class="stem" ng-bind-html="stem" ></p>' +
                   '<dynamic-answer-sheet  control="dynamicAnswerSheetControl"></dynamic-answer-sheet>' +
@@ -59,7 +59,7 @@ qstApp.directiveTemplate = function () {
                   '<button class="timButton" ng-bind-html="button" ng-if="button"  ng-disabled="isRunning" ng-click="qstScope.saveText();"></button>&nbsp&nbsp' +
                   '<a class="questionAddedNew" ng-show="qstScope.checkQstMode()"><span class="glyphicon glyphicon-question-sign" title="Ask question"></span></a>' +
                   '<span ng-show="result">{{result}}</span>' +
-    		      '<p class="plgfooter">Here comes footer</p>' +
+    		      '<p class="plgfooter"></p>' + // Here comes footer
               '</div>';
 };
 
@@ -70,7 +70,7 @@ qstApp.directiveTemplateQuestion = function () {
     if ( qstApp.TESTWITHOUTPLUGINS ) return '';
 	return  '<div class="csRunDiv qst no-popup-menu">' +
 				  // '<p ng-if="stem" class="stem" >{{stem}}</p>' +
-                  '<h4 ng-if="title"  ng-bind-html="title" ></h4>' +
+                  '<h4 class="questionTitle" ng-if="questionTitle"  ng-bind-html="questionTitle" ></h4>' +
                   '<dynamic-answer-sheet  control="dynamicAnswerSheetControl"></dynamic-answer-sheet>' +
 				  // '<button class="timButton" ng-bind-html="button" ng-if="button"  ng-disabled="isRunning" ng-click="qstScope.saveText();">{{button}}</button>&nbsp&nbsp' +
                   '<button class="timButton" ng-bind-html="button" ng-if="button"  ng-disabled="isRunning" ng-click="qstScope.saveText();"></button>&nbsp&nbsp' +
@@ -113,17 +113,18 @@ qstApp.initScope = function (scope, element, attrs) {
     // Etsitään kullekin attribuutille arvo joko scope.attrs tai attrs-parametrista. Jos ei ole, käytetään oletusta.
     timHelper.set(scope, attrs, "stem");
     timHelper.set(scope, attrs, "questionTitle");
-    timHelper.set(scope, attrs, "markup.json.title");
+    timHelper.set(scope, attrs, "markup.json.questionTitle");
+    timHelper.set(scope, attrs, "markup.isQuestion");
     timHelper.set(scope, attrs, "user_id");
     timHelper.set(scope, attrs, "button", "Save");
     timHelper.set(scope, attrs, "resetText", "Reset");
     timHelper.setn(scope, "tid", attrs, ".taskID"); // vain kokeilu että "juuresta" ottaminen toimii
 
     // Otsikot.  Oletetaan että 1. elementti korvaatan header-otsikolla ja viimeinen footerilla
-    if ( !scope.questionTitle )
+    if ( !scope.isQuestion )
         element[0].childNodes[0].outerHTML = timHelper.getHeading(scope, attrs, "header", "h4");
     var n = element[0].childNodes.length;
-    if ( !scope.questionTitle ) if (n > 1) element[0].childNodes[n - 1].outerHTML = timHelper.getHeading(scope, attrs, "footer", 'p class="plgfooter"');
+    if ( !scope.isQuestion ) if (n > 1) element[0].childNodes[n - 1].outerHTML = timHelper.getHeading(scope, attrs, "footer", 'p class="plgfooter"');
 
     // scope.stem = scope.attrs.markup.json.questionText;
     var markup = scope.attrs.markup;
@@ -134,7 +135,7 @@ qstApp.initScope = function (scope, element, attrs) {
     params.questionParIdNext = 2; //args.questionParIdNext;
     params.isLecturer = false;
     params.markup = markup;
-    params.questionTitle = markup.json.title;
+    params.questionTitle = markup.json.questionTitle;
     params.points = markup.points;
     params.expl = markup.expl;
     // var preview = element.parents('.previewcontent').length > 0;
@@ -216,7 +217,7 @@ QstScope.prototype.doSaveText = function(nosave) {
             params.questionParIdNext = 2; //args.questionParIdNext;
             params.isLecturer = false;
             params.markup = data.web.markup;
-            params.questionTitle = data.web.markup.json.title;
+            params.questionTitle = data.web.markup.json.questionTitle;
             params.points = data.web.markup.points;
             params.expl = data.web.markup.expl;
             // var preview = element.parents('.previewcontent').length > 0;

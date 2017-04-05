@@ -5,6 +5,7 @@ from collections import OrderedDict
 from typing import List, Tuple, Optional
 
 import yaml
+import yaml.parser
 from flask import render_template
 
 from containerLink import call_plugin_html, call_plugin_multihtml, PLUGINS
@@ -110,7 +111,6 @@ def pluginify(doc: Document,
         is_gamified = block.get_attr('gamification')
 
         if is_gamified:
-            md = ""
             md = block.get_markdown()
             try:
                 gamified_data = gamificationdata.gamify(md)
@@ -125,7 +125,7 @@ def pluginify(doc: Document,
         if plugin_name and not block.is_question():  # show also question in preview
             try:
                 plugin = Plugin.from_paragraph(block, user)
-                plugin.values['questionTitle'] = block.get_attr('questionTitle','')
+                plugin.values['isQuestion'] = block.get_attr('isQuestion', '')
             except PluginException as e:
                 html_pars[idx]['html'] = get_error_html_plugin(plugin_name, str(e))
                 continue

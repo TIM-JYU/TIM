@@ -155,7 +155,18 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.aceChanged();
                         $scope.aceReady();
                     }).error(function (data, status, headers, config) {
-                        $window.alert('Failed to get text: ' + data.error);
+                        if (status === 404) {
+                            if ($scope.extraData.isComment) {
+                                $window.alert('This comment has been deleted.');
+                            } else {
+                                $window.alert('This paragraph has been deleted.');
+                            }
+                        } else {
+                            $window.alert('Error occurred: ' + data.error);
+                        }
+                        $timeout(function() {
+                            $scope.element.remove();
+                        }, 1000);
                     });
                     $scope.dataLoaded = true; // prevent data load in future
                 };
@@ -482,7 +493,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
             },
             link: function ($scope, $element, $attrs) {
-
+                $scope.element = $element;
                 $scope.$storage = $localStorage;
 
                 $scope.tables = {};
@@ -1357,8 +1368,12 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                     //Insert
                     //Special characters
-                    $scope.charClicked = function ($event) {
+                    $scope.charClicked = function ($event, char) {
                         var character = $($event.target).text();
+                        console.log(char);
+                        if (typeof char !== 'undefined') {
+                            character = char;
+                        }
                         $scope.editor.replaceSelectedText(character);
                         $scope.wrapFn();
                     };
@@ -1650,8 +1665,12 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                     //Insert
                     //Special characters
-                    $scope.charClicked = function ($event) {
+                    $scope.charClicked = function ($event, char) {
                         var character = $($event.target).text();
+                        console.log(char);
+                        if (typeof char !== 'undefined') {
+                            character = char;
+                        }
                         $scope.editor.insert(character);
                         $scope.wrapFn();
                     };

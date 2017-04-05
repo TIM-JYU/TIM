@@ -6,7 +6,7 @@ from accesshelper import verify_comment_right, verify_logged_in, has_ownership
 from accesshelper import verify_view_access
 from dbaccess import get_timdb
 from documentmodel.document import Document
-from requesthelper import get_referenced_pars_from_req
+from requesthelper import get_referenced_pars_from_req, verify_json_params
 from responsehelper import json_response
 from routes.edit import par_response
 from routes.notify import notify_doc_watchers
@@ -39,16 +39,12 @@ def get_note(note_id):
 
 @notes.route("/postNote", methods=['POST'])
 def post_note():
-    jsondata = request.get_json()
-    note_text = jsondata['text']
-    access = jsondata['access']
-    sent_tags = jsondata.get('tags', {})
+    note_text, access, doc_id, par_id = verify_json_params('text', 'access', 'docId', 'par')
+    sent_tags, = verify_json_params('tags', require=False, default={})
     tags = []
     for tag in KNOWN_TAGS:
         if sent_tags.get(tag):
             tags.append(tag)
-    doc_id = jsondata['docId']
-    par_id = jsondata['par']
     docentry = DocEntry.find_by_id(doc_id, try_translation=True)
     verify_comment_right(doc_id)
     doc = Document(doc_id)
@@ -107,11 +103,8 @@ def edit_note():
 
 @notes.route("/deleteNote", methods=['POST'])
 def delete_note():
-    jsondata = request.get_json()
     group_id = get_current_user_group()
-    doc_id = int(jsondata['docId'])
-    note_id = int(jsondata['id'])
-    paragraph_id = jsondata['par']
+    doc_id, note_id, paragraph_id = verify_json_params('docId', 'id', 'par')
     timdb = get_timdb()
     if not (timdb.notes.has_edit_access(group_id, note_id) or has_ownership(doc_id)):
         abort(403, "Sorry, you don't have permission to remove this note.")

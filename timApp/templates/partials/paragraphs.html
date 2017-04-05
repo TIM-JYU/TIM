@@ -96,13 +96,13 @@
             {% else %}
                 <i class="areatoggle glyphicon glyphicon-minus"></i>
             {% endif %}
-            <div class="areatitle">{{ t.html|safe }}</div>
+            <div class="areatitle">{{ (t.html|safe) or ('&nbsp;'|safe) }}</div>
             <div class="readline {{ t.status|join(' ')|trim }}" title="Click to mark this area as read"></div>
            {{ editline|safe }}
         </div>
 
     {%- else -%}
-        <div class="{{[t.cls|trim, t.is_plugin|trim]|join(' ')|trim}}"
+        <div class="{{ t.cls }}"
              id="{{ t.id }}"
              t="{{ t.t }}"
              attrs="{{ t.attrs_str }}"

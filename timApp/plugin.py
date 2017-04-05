@@ -38,6 +38,7 @@ class Plugin:
                 d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
             except ValueError:
                 raise PluginException('Invalid date format: {}'.format(d))
+        if d is not None:
             if d.tzinfo is None:
                 d = d.replace(tzinfo=timezone.utc)
         return d
@@ -64,7 +65,7 @@ class Plugin:
     def from_paragraph(par: DocParagraph, user: Optional[User]=None):
         doc = par.doc
         if not par.is_plugin():
-            raise TimDbException('The paragraph {} is not a plugin.'.format(par.get_id()))
+            raise PluginException('The paragraph {} is not a plugin.'.format(par.get_id()))
         task_id_name = par.get_attr('taskId')
         plugin_data = parse_plugin_values(par,
                                           global_attrs=doc.get_settings().global_plugin_attrs(),

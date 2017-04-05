@@ -13,8 +13,8 @@
 var angular, item, lectureCode, lectureStartTime, lectureEndTime;
 
 var timApp = angular.module('timApp');
-timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$rootScope',
-    function ($scope, $window, http, $rootScope) {
+timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$rootScope', 'ParCompiler',
+    function ($scope, $window, http, $rootScope, ParCompiler) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit questionPreview.html to repeat rows and columns
         "use strict";
@@ -31,8 +31,10 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
             $scope.questionParIdNext = args.questionParIdNext;
             $scope.isLecturer = args.isLecturer;
             $scope.markup = args.markup;
-            $scope.questionTitle = args.markup.json.title;
+            $scope.questionTitle = args.markup.json.questionTitle;
             $scope.dynamicAnswerSheetControl.createAnswer($scope);
+            // Tähän Texittää scope
+            // ParCompiler.processAllMath($scope.htmlSheet);
 
         });
 
@@ -68,7 +70,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
                 $scope.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
                 $scope.markup = data.markup;
                 // data.markup.qst = true;
-                $rootScope.$broadcast('changeQuestionTitle', {'title': $scope.json.title});
+                $rootScope.$broadcast('changeQuestionTitle', {'questionTitle': $scope.json.questionTitle});
                 $rootScope.$broadcast('editQuestion', {
                     'par_id': parId,
                     'par_id_next': parNextId,
