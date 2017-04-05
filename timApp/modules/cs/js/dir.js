@@ -2024,11 +2024,11 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         
         var editorHtml = '<textarea class="csRunArea csrunEditorDiv" ng-hide="noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>';
 
-        var aceHtml = '<div class="no-popup-menu"><div ng-show="mode" ui-ace="{onLoad:aceLoaded,  mode: \'{{mode}}\', require: [\'ace/ext/language_tools\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
+        var aceHtml = '<div class="no-popup-menu"><div ng-show="mode"' +
         // var aceHtml = '<div ng-show="mode" ui-ace="{  mode: \'{{mode}}\',    require: [\'/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
                    // ' style="left:-6em; height:{{rows*1.17}}em;" class="csRunArea csEditArea" ng-hide="noeditor"  ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
                    //' style="left:-5px; width: 101% !important;'+
-                   ' " class="csRunArea csEditArea csAceEditor" ng-hide="noeditor"  ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
+                   ' " class="csRunArea csEditArea csAceEditor" ng-hide="noeditor" ng-trim="false" placeholder="{{placeholder}}"></div>'+
                    /*
                    '<div style="right:0px;">'+
                    '<button ng-click="moveCursor(-1, 0);">&#x21d0;</button>'+
@@ -2049,18 +2049,40 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         var otherEditDiv = $scope.element0.getElementsByClassName('csrunEditorDiv')[0];                    
         var editorDiv = angular.element(otherEditDiv); 
         $scope.edit = csApp.compile(html[eindex])($scope);
-        editorDiv.html($scope.edit);
+        // don't set the html immediately in case of Ace to avoid ugly flash because of lazy load
         $scope.edit = $scope.edit[0];
         if ( eindex == 1 ) {
-            $scope.aceEditor.setFontSize(15);
-            $scope.aceEditor.getSession().setUseWorker(false); // syntax check away
-            $scope.aceEditor.setOptions({
-                maxLines: $scope.maxRows
+            require(["ace/ace", "ace/ext/language_tools"], function (ace) {
+                editorDiv.html($scope.edit);
+                var editor = ace.edit(editorDiv.find('.csAceEditor')[0]);
+                $scope.aceLoaded(ace, editor);
+                $scope.aceEditor.getSession().setMode('ace/mode/' + $scope.mode);
+                $scope.aceEditor.setOptions({
+                    enableBasicAutocompletion: true,
+                    enableLiveAutocompletion: true,
+                    enableSnippets: true,
+                    maxLines: $scope.maxRows
+                });
+                $scope.aceEditor.setFontSize(15);
+                $scope.aceEditor.getSession().setUseWorker(false); // syntax check away
+                $scope.aceEditor.renderer.setScrollMargin(12, 12, 0, 0);
+                $scope.aceEditor.getSession().setValue($scope.usercode);
+                $scope.aceEditor.getSession().on('change', function () {
+                    $scope.usercode = $scope.aceEditor.getSession().getValue();
+                });
+                $scope.$watch('usercode', function (newValue, oldValue) {
+                    if (newValue === oldValue || $scope.aceEditor.getSession().getValue() === newValue) {
+                        return;
+                    }
+                    $scope.aceEditor.getSession().setValue(newValue);
+                });
             });
-            $scope.aceEditor.renderer.setScrollMargin(12, 12, 0, 0);
         }
-        if ( eindex == 2 ) $scope.showCsParsons(otherEditDiv.children[0]);
-        if ( eindex == 3 ) $scope.showJsParsons(otherEditDiv.children[0]);
+        else {
+            editorDiv.html($scope.edit);
+            if (eindex == 2) $scope.showCsParsons(otherEditDiv.children[0]);
+            if (eindex == 3) $scope.showJsParsons(otherEditDiv.children[0]);
+        }
         $scope.initEditorKeyBindings();
         if ( typeof(localStorage) !== "undefined" && eindex <= 1) {
             localStorage.editorIndex = eindex;
@@ -2076,7 +2098,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
     }
     
      // Runs when editor loads
-    $scope.aceLoaded = function(editor){
+    $scope.aceLoaded = function(ace, editor){
       $scope.aceEditor = editor;
       console.log('Ace editor loaded successfully');
       var session = editor.getSession();
