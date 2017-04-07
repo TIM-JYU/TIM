@@ -7,7 +7,10 @@
     mainConfigFile: "main.js",
     modules: [
         {
-            name: "tim/main",
+            name: "main",
+        },
+        {
+            name: "views/frontpage",
         },
     ],
     optimize: "uglify",
@@ -20,6 +23,7 @@
         "tim/extramodules": "empty:",
         "tim/plugins": "empty:",
         "tim/session": "empty:",
+        "tim/startupview": "empty:",
     },
     skipDirOptimize: true, // don't process unused JS files
     writeBuildTxt: false,

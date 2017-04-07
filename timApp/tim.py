@@ -101,8 +101,8 @@ app.register_blueprint(bookmarks)
 app.register_blueprint(global_notification)
 app.register_blueprint(Blueprint('bower',
                                  __name__,
-                                 static_folder='static/scripts/node_modules',
-                                 static_url_path='/static/scripts/node_modules'))
+                                 static_folder='static/scripts/jspm_packages/npm',
+                                 static_url_path='/static/scripts/jspm_packages/npm'))
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 

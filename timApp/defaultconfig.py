@@ -21,9 +21,9 @@ PERMANENT_SESSION_LIFETIME = timedelta(days=14)
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 IMMEDIATE_PRELOAD = False
 LIBSASS_STYLE = "compressed"
-LIBSASS_INCLUDES = ["static/scripts/node_modules/bootstrap-sass/assets/stylesheets",
-                    "static/scripts/node_modules/jquery-ui/themes/base",
-                    "static/scripts/node_modules/eonasdan-bootstrap-datetimepicker/src/sass",
+LIBSASS_INCLUDES = ["static/scripts/jspm_packages/npm/bootstrap-sass@3.3.7/assets/stylesheets",
+                    "static/scripts/jspm_packages/npm/jquery-ui@1.12.1/themes/base",
+                    "static/scripts/jspm_packages/npm/eonasdan-bootstrap-datetimepicker@4.17.47/src/sass",
                     "static"]
 TIM_NAME = os.environ.get('TIM_NAME', 'timlocal')
 TIM_HOST = os.environ.get('TIM_HOST', 'http://localhost')

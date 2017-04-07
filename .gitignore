@@ -15,8 +15,9 @@ pg_backup/
 /timApp/static/gen/
 /timApp/static/testgen/
 /timApp/static/scripts/node_modules/
-/timApp/static/scripts/build/
-/timApp/static/scripts/build-optimized/
+/timApp/static/scripts/jspm_packages/
+/timApp/static/scripts/build.js
+/timApp/static/scripts/build.js.map
 /timApp/modules/cs/test/a.b
 /timApp/modules/cs/test/a.c
 /timApp/modules/cs/nohup.out

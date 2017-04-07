@@ -12,24 +12,18 @@
     "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
-      "tim/*": [
-        "./*"
-      ],
-      // RequireJS has a problem finding "chart.js" (because it ends with ".js"),
-      // so we remove the dot and tell TypeScript where to find it.
-      "chartjs": [
-        "node_modules/@types/chart.js/index.d.ts"
-      ]
     },
     "target": "es3",
     "lib": [
       "dom",
       "es7",
       "scripthost"
-    ]
+    ],
+    "noEmit": true
   },
   "exclude": [
     "node_modules",
+    "jspm_packages",
     "bower_components",
     "build-optimized",
     "build"

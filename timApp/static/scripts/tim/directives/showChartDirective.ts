@@ -2,7 +2,7 @@ import angular = require("angular");
 import {timApp} from "tim/app";
 import {getJsonAnswers} from "tim/directives/dynamicAnswerSheet";
 import $ = require("jquery");
-import {Chart, ChartData} from "chartjs";
+import {Chart, ChartData} from "chart.js";
 
 /**
  * Created by hajoviin on 13.5.2015.

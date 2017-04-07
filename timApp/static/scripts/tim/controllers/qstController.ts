@@ -1,7 +1,7 @@
 /**
  * Created by vesal on 28.12.2016.
  */
-import * as timHelper from "timHelper";
+import * as timHelper from "tim/timHelper";
 import angular = require("angular");
 
 let qstApp: any = angular.module('qstApp', ['ngSanitize']);

@@ -38,8 +38,9 @@ def copy_dir_if_needed(src, dst):
 
 
 def copy_dirs_if_needed():
+    pass
     # copy_dir_if_needed(bower_src, bower_path)
-    copy_dir_if_needed(node_modules_src, node_modules_path)
+    # copy_dir_if_needed(node_modules_src, node_modules_path)
 
 
 if __name__ == '__main__':
