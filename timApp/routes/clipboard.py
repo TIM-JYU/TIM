@@ -16,6 +16,7 @@ from responsehelper import json_response, ok_response
 from routes.edit import par_response
 from sessioninfo import get_current_user_id
 from timdb.models.docentry import DocEntry
+from timdb.timdbexception import TimDbException
 
 clipboard = Blueprint('clipboard',
                       __name__,
@@ -44,7 +45,10 @@ def cut_to_clipboard(doc_id, from_par, to_par):
     timdb = get_timdb()
     doc = g.docentry.document_as_current_user
     clip = Clipboard(timdb.files_root_path).get(get_current_user_id())
-    pars = clip.cut_pars(doc, from_par, to_par, area_name)
+    try:
+        pars = clip.cut_pars(doc, from_par, to_par, area_name)
+    except TimDbException as e:
+        return abort(400, str(e))
     timdb.documents.update_last_modified(doc)
 
     return json_response({'doc_ver': doc.get_version(), 'pars': [{'id': p.get_id()} for p in pars]})
@@ -61,7 +65,10 @@ def copy_to_clipboard(doc_id, from_par, to_par):
     timdb = get_timdb()
     doc = g.docentry.document_as_current_user
     clip = Clipboard(timdb.files_root_path).get(get_current_user_id())
-    clip.copy_pars(doc, from_par, to_par, area_name, ref_doc)
+    try:
+        clip.copy_pars(doc, from_par, to_par, area_name, ref_doc)
+    except TimDbException as e:
+        return abort(400, str(e))
 
     return ok_response()
 
@@ -84,12 +91,15 @@ def paste_from_clipboard(doc_id):
     if as_ref and meta.get('disable_ref'):
         abort(400, 'The contents of the clipboard cannot be pasted as a reference.')
 
-    if par_before and not par_after:
-        pars = clip.paste_before(doc, par_before, as_ref)
-    elif not par_before and par_after:
-        pars = clip.paste_after(doc, par_after, as_ref)
-    else:
-        return abort(400, 'Missing required parameter in request: par_before or par_after (not both)')
+    try:
+        if par_before and not par_after:
+            pars = clip.paste_before(doc, par_before, as_ref)
+        elif not par_before and par_after:
+            pars = clip.paste_after(doc, par_after, as_ref)
+        else:
+            return abort(400, 'Missing required parameter in request: par_before or par_after (not both)')
+    except TimDbException as e:
+        return abort(400, str(e))
 
     src_doc = None
     parrefs = clip.read(as_ref=True, force_parrefs=True)
@@ -104,7 +114,7 @@ def paste_from_clipboard(doc_id):
                 src_par = DocParagraph.get_latest(src_doc, src_parid)
                 timdb.readings.copy_readings(src_par, dest_par)
                 if was_cut:
-                    timdb.notes.move_notes(src_par, dest_par)
+                    timdb.notes.move_notes(src_par, dest_par, commit=False)
 
         except ValueError:
             pass

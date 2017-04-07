@@ -98,7 +98,7 @@ class DocParagraph:
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return self.is_same_as(other)
+            return self.is_identical_to(other)
         return NotImplemented
 
     def __ne__(self, other):
@@ -351,6 +351,9 @@ class DocParagraph:
             return default_rd
 
         return None
+
+    def is_identical_to(self, par: 'DocParagraph'):
+        return self.is_same_as(par) and self.get_id() == par.get_id()
 
     def is_different_from(self, par: 'DocParagraph') -> bool:
         """Determines whether the given paragraph is different from this paragraph content-wise."""
@@ -986,3 +989,13 @@ class DocParagraph:
 
         """
         self.__data['id'] = par_id
+
+
+def is_real_id(par_id: Optional[str]):
+    """Returns whether the given paragraph id corresponds to some real paragraph
+    instead of being None or a placeholder value ('HELP_PAR').
+    
+    :param par_id: The paragraph id.
+    :return: True if the given paragraph id corresponds to some real paragraph, False otherwise.
+    """
+    return par_id is not None and par_id != 'HELP_PAR'

@@ -18,7 +18,7 @@ function cleanParId(id) {
     return id.substring(i+1);
 }
 
-timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootScope', function (scope, http, $window, $rootScope) {
+timApp.controller("QuestionController", ['$scope', '$http', '$window', '$element', 'ParCompiler', '$rootScope', function (scope, http, $window, $element, ParCompiler, $rootScope) {
     "use strict";
 
     // Timeout is used to make sure that #calendarStart element is rendered before creating datepicker
@@ -209,6 +209,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             scope.addKeyListeners();
 
             scope.textAreas = $(".questiontext");
+            // ParCompiler.processAllMath($element.parent());
+            window.setTimeout(function () { // give time to html to change
+                ParCompiler.processAllMath($element.parent());
+            }, 1000);
+
    /*
             scope.questionForm.addEventListener( "keydown", function(event) {
             // $("#question-form").keypress(function(event) {
@@ -900,8 +905,40 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             scope.removeErrors();
             scope.addSavedParToDom(data, {docId: scope.docId, par: scope.par_id, par_next: scope.par_id_next});
             //TODO: This can be optimized to get only the new one.
-            // scope.$parent.getQuestions();
+            // scope.$parent.getQuestions(); // TODO hae tallennettu kysymys!
             if (ask) {
+
+                http({
+                    url: '/getQuestionByParId',
+                    method: 'GET',
+                    params: {'par_id': scope.par_id, 'doc_id': scope.docId}
+                })
+                    .success(function (data) {
+                        scope.markup = data.markup;
+                        $rootScope.$broadcast('changeQuestionTitle', {'questionTitle': scope.markup.json.questionTitle});
+                        $rootScope.$broadcast("setPreviewJson", {
+                            markup: scope.markup,
+                            questionParId: scope.questionParId,
+                            questionParIdNext: scope.questionParIdNext,
+                            isLecturer: scope.isLecturer
+                        });
+                        var pid = scope.par_id;
+                        // if ( data.new_par_ids.length > 0 ) pid = data.new_par_ids[0];
+                        scope.json = questionjson;
+                        scope.$emit('askQuestion', {
+                            "lecture_id": scope.lectureId,
+                            "question_id": scope.qId,
+                            "doc_id": scope.docId,
+                            "par_id": pid,
+                            "markup": scope.markup
+                        });
+                    })
+
+                    .error(function () {
+                        $log.error("Could not get question.");
+                    });
+
+/*
                 var pid = scope.par_id;
                 if ( data.new_par_ids.length > 0 ) pid = data.new_par_ids[0];
                 scope.json = questionjson;
@@ -912,6 +949,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                     "par_id": pid,
                     "markup": scope.markup
                 });
+*/
             }
             scope.close();
         }).error(function () {
