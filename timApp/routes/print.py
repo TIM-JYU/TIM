@@ -12,7 +12,7 @@ from flask import g
 from accesshelper import verify_logged_in
 from timdb.models.docentry import DocEntry
 from sessioninfo import get_current_user_object
-from pandocwriter import call_pandoc
+from documentprinter import DocumentPrinter
 from timdb.printsettings import PrintSettings
 
 print_blueprint = Blueprint('print',
@@ -27,8 +27,9 @@ def do_before_requests():
 
 @print_blueprint.route("/<path:doc_path>", methods=['GET'])
 def print_document(doc_path):
-
-    return Response(call_pandoc(get_markdown(doc_path), to_format='latex'), mimetype='text/plain')
+    printer = DocumentPrinter(DocEntry.find_by_path(doc_path).document, PrintSettings())
+    doc_path = printer.write_tex()
+    return Response(doc_path, mimetype='text/plain')
 
 
 @print_blueprint.route("/edit_settings", methods=['POST'])
