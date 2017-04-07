@@ -137,6 +137,12 @@ run apt-get install --no-install-recommends -y netcat-openbsd
 run apt-get install --no-install-recommends -y pandoc
 run pip3 install pypandoc
 
+# Install texlive
+run apt-get install --no-install-recommends -y texlive
+
+# Install pylatex, the python lib for using latex
+run pip3 install pylatex
+
 # Default startup command.
 cmd cd /service/timApp && source /service/scripts/_initenv.sh && python3 launch.py
 
