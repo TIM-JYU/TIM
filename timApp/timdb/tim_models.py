@@ -268,3 +268,18 @@ class UserNotes(db.Model):
     access = db.Column(db.Text, nullable=False)
     tags = db.Column(db.Text, nullable=False)
     html = db.Column(db.Text)
+
+
+class PrintedDocs(db.Model):
+    """
+    Model for printed_docs table
+    """
+
+    __bind_key__ = 'tim_main'
+    __tablename__ = 'printed_docs'
+    id = db.Column(db.Integer, primary_key=True)
+    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)  # NOTE Added foreign key
+    temp = db.Column(db.Boolean, nullable=False)
+    path = db.Column(db.Text, nullable=False) # path to the printed document in the filesystem
+    settings_hash = db.Column(db.Text, nullable=False) # stores hash calculated from used print settings
+    created = db.Column(db.Date, nullable=False)
