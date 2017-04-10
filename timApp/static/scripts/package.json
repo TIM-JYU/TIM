@@ -2,10 +2,11 @@
   "name": "tim",
   "version": "1.0.0",
   "description": "The Interactive Material",
-  "main": "index.js",
+  "main": "main.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "jspm bundle tim/main - tim/angularmodules - tim/plugins - tim/extramodules - tim/session --minify"
+    "build": "jspm bundle tim/main - tim/angularmodules - tim/plugins - tim/extramodules - tim/session --minify",
+    "buildDev": "jspm bundle tim/main - tim/angularmodules - tim/plugins - tim/extramodules - tim/session"
   },
   "repository": {
     "type": "git",
@@ -35,7 +36,7 @@
     "@types/ui-grid": "^0.0.35"
   },
   "devDependencies": {
-    "jspm": "^0.16.53",
+    "jspm": "^0.17.0-beta.41",
     "tslint": "^5.0.0",
     "typescript": "^2.2.2"
   },
@@ -58,7 +59,6 @@
       "@types/rangyinputs": "npm:@types/rangyinputs@^1.2.0",
       "@types/ui-grid": "npm:@types/ui-grid@^0.0.35",
       "ace/ace": "github:ajaxorg/ace@^1.2",
-      "angular": "npm:angular@1.5",
       "angular-animate": "npm:angular-animate@1.5",
       "angular-bootstrap-colorpicker": "npm:angular-bootstrap-colorpicker@^3.0.26",
       "angular-eonasdan-datetimepicker": "npm:angular-eonasdan-datetimepicker@^0.3.9",
@@ -68,16 +68,12 @@
       "angular-touch": "npm:angular-touch@1.5",
       "angular-ui-bootstrap": "npm:angular-ui-bootstrap@^2.5.0",
       "angular-ui-grid": "npm:angular-ui-grid@4.0.1",
-      "bootstrap": "npm:bootstrap@^3.3.7",
       "bootstrap-sass": "npm:bootstrap-sass@^3.3.7",
       "chart.js": "npm:chart.js@^2.5.0",
-      "eonasdan-bootstrap-datetimepicker": "npm:eonasdan-bootstrap-datetimepicker@^4.17.47",
       "humanize-duration": "npm:humanize-duration@^3.10.0",
-      "jquery": "npm:jquery@^2.2.3",
       "jquery-ui": "npm:jquery-ui@^1.12.1",
       "jqueryui-touch-punch": "npm:jquery-ui-touch-punch-c@^1.2.0",
       "katex": "npm:katex@^0.7.1",
-      "moment": "npm:moment@^2.18.1",
       "ng-file-upload": "npm:ng-file-upload@^12.2.13",
       "ngstorage": "npm:ngstorage@^0.3.11",
       "oclazyload": "npm:oclazyload@^1.1.0",
@@ -85,11 +81,88 @@
       "ts": "github:frankwallis/plugin-typescript@^7.0.6"
     },
     "devDependencies": {
-      "babel": "npm:babel-core@^5.8.24",
-      "babel-runtime": "npm:babel-runtime@^5.8.24",
       "core-js": "npm:core-js@^1.1.4",
-      "ts-runtime": "npm:babel-runtime@^5.8.24",
-      "typescript": "npm:typescript@^2.2.2"
+      "plugin-typescript": "github:frankwallis/plugin-typescript@^7.0.6",
+      "ts-runtime": "npm:babel-runtime@^5.8.24"
+    },
+    "peerDependencies": {
+      "angular": "npm:angular@1.5",
+      "assert": "npm:jspm-nodelibs-assert@^0.2.0",
+      "bootstrap": "npm:bootstrap@^3.3.7",
+      "buffer": "npm:jspm-nodelibs-buffer@^0.2.0",
+      "child_process": "npm:jspm-nodelibs-child_process@^0.2.0",
+      "constants": "npm:jspm-nodelibs-constants@^0.2.0",
+      "crypto": "npm:jspm-nodelibs-crypto@^0.2.0",
+      "eonasdan-bootstrap-datetimepicker": "npm:eonasdan-bootstrap-datetimepicker@^4.17.47",
+      "events": "npm:jspm-nodelibs-events@^0.2.0",
+      "fs": "npm:jspm-nodelibs-fs@^0.2.0",
+      "http": "npm:jspm-nodelibs-http@^0.2.0",
+      "jquery": "npm:jquery@^2.2.3",
+      "module": "npm:jspm-nodelibs-module@^0.2.0",
+      "moment": "npm:moment@^2.18.1",
+      "moment-timezone": "npm:moment-timezone@^0.4.0",
+      "net": "npm:jspm-nodelibs-net@^0.2.0",
+      "os": "npm:jspm-nodelibs-os@^0.2.0",
+      "path": "npm:jspm-nodelibs-path@^0.2.0",
+      "process": "npm:jspm-nodelibs-process@^0.2.0",
+      "stream": "npm:jspm-nodelibs-stream@^0.2.0",
+      "string_decoder": "npm:jspm-nodelibs-string_decoder@^0.2.0",
+      "typescript": "npm:typescript@^2.2.2",
+      "url": "npm:jspm-nodelibs-url@^0.2.0",
+      "util": "npm:jspm-nodelibs-util@^0.2.0",
+      "vm": "npm:jspm-nodelibs-vm@^0.2.0"
+    },
+    "overrides": {
+      "npm:angular@1.5.11": {
+        "format": "global",
+        "jspmNodeConversion": false,
+        "main": "angular",
+        "meta": {
+          "angular.js": {
+            "exports": "angular",
+            "format": "global"
+          }
+        }
+      },
+      "npm:babel-runtime@5.8.38": {
+        "main": false,
+        "dependencies": {},
+        "optionalDependencies": {
+          "core-js": "^1.2.0"
+        }
+      },
+      "npm:inherits@2.0.1": {
+        "ignore": [
+          "test.js"
+        ]
+      },
+      "npm:jquery@2.2.4": {
+        "format": "amd"
+      },
+      "npm:jquery@3.2.1": {
+        "format": "amd"
+      },
+      "npm:moment@2.18.1": {
+        "jspmNodeConversion": false
+      },
+      "npm:moment@2.6.0": {
+        "jspmNodeConversion": false
+      },
+      "npm:typescript@2.2.2": {
+        "browser": {},
+        "map": {
+          "buffer": "@empty",
+          "child_process": "@empty",
+          "fs": "@empty",
+          "path": "@empty",
+          "process": "@empty",
+          "readline": "@empty"
+        },
+        "dependencies": {
+          "source-map-support": "*"
+        }
+      }
     }
   }
 }
+
