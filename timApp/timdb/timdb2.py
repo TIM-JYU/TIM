@@ -14,7 +14,6 @@ from timdb.lectureanswers import LectureAnswers
 from timdb.lectures import Lectures
 from timdb.messages import Messages
 from timdb.notes import Notes
-from timdb.printed_docs import PrintedDocs
 from timdb.questions import Questions
 from timdb.readings import Readings
 from timdb.tim_models import db
@@ -28,7 +27,7 @@ num = 0
 # The following will be set (before request) by gunicorn; see gunicornconf.py. Always 0 if running without gunicorn.
 worker_pid = 0
 
-DB_PART_NAMES = {'notes', 'printed_docs', 'readings', 'users', 'images', 'uploads', 'files', 'documents', 'answers', 'questions',
+DB_PART_NAMES = {'notes', 'readings', 'users', 'images', 'uploads', 'files', 'documents', 'answers', 'questions',
                  'messages', 'lectures', 'folders', 'lecture_answers', 'velps', 'velp_groups', 'annotations', 'session'}
 
 
@@ -116,7 +115,6 @@ class TimDb(object):
         # num_connections = self.get_pg_connections()
         # log_info('TimDb instances/PG connections: {}/{} (constructor)'.format(TimDb.instances, num_connections))
         self.notes = Notes(self.db, self.files_root_path, 'notes', self.current_user_name, self.session)
-        self.printed_docs = PrintedDocs(self.db, self.files_root_path, 'printed_docs', self.current_user_name, self.session)
         self.readings = Readings(self.db, self.files_root_path, 'notes', self.current_user_name, self.session)
         self.users = Users(self.db, self.files_root_path, 'users', self.current_user_name, self.session)
         self.images = Images(self.db, self.files_root_path, 'images', self.current_user_name, self.session)
