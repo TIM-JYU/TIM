@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "jspm bundle tim/main - tim/angularmodules - tim/plugins - tim/extramodules - tim/session --minify",
-    "buildDev": "jspm bundle tim/main - tim/angularmodules - tim/plugins - tim/extramodules - tim/session"
+    "buildDev": "jspm bundle tim/main - tim/angularmodules - tim/plugins - tim/extramodules - tim/session -wd"
   },
   "repository": {
     "type": "git",
