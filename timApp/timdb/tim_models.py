@@ -279,8 +279,8 @@ class PrintedDoc(db.Model):
     __tablename__ = 'printed_docs'
     id = db.Column(db.Integer, primary_key=True)
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)  # NOTE Added foreign key
-    temp = db.Column(db.Boolean, nullable=False)
     content = db.Column(db.LargeBinary, nullable=False) # path to the printed document in the filesystem
     filetype = db.Column(db.String(10), nullable=False) # stores the filetype of the document
-    settings_hash = db.Column(db.Text, nullable=False) # stores hash calculated from used print settings
-    created = db.Column(db.Date, nullable=False)
+    settings_hash = db.Column(db.String(64), nullable=False) # stores hash calculated from used print settings
+    temp = db.Column(db.Boolean, default=True)
+    created = db.Column(db.Date, default=func.current_date())
