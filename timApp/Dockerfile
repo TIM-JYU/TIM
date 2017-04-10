@@ -138,7 +138,7 @@ run apt-get install --no-install-recommends -y pandoc
 run pip3 install pypandoc
 
 # Install texlive
-run apt-get install --no-install-recommends -y texlive
+run apt-get install --no-install-recommends -y texlive-full
 
 # Install pylatex, the python lib for using latex
 run pip3 install pylatex
