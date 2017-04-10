@@ -26,3 +26,4 @@ declare module 'tim/angularmodules'
 declare module 'tim/extramodules'
 declare module 'tim/session'
 declare module 'tim/show_slide_vars'
+declare let require: typeof SystemJS.amdRequire;

@@ -28,7 +28,7 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$compile', '$ocLazyLoa
                                 callback(compiled);
                             });
                         }, (err) => $log.error(err));
-                    }, (err) => $log.error(err));
+                    });
                 };
                 loadingFn();
             }
