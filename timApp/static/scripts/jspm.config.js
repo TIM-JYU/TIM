@@ -107,7 +107,7 @@ SystemJS.config({
     "fs": "npm:jspm-nodelibs-fs@0.2.1",
     "http": "npm:jspm-nodelibs-http@0.2.0",
     "humanize-duration": "npm:humanize-duration@3.10.0",
-    "jquery": "npm:jquery@3.2.1",
+    "jquery": "npm:jquery@2.2.4",
     "jquery-ui": "npm:jquery-ui@1.12.1",
     "jqueryui-touch-punch": "npm:jquery-ui-touch-punch-c@1.4.0",
     "katex": "npm:katex@0.7.1",
