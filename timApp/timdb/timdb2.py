@@ -27,7 +27,7 @@ num = 0
 # The following will be set (before request) by gunicorn; see gunicornconf.py. Always 0 if running without gunicorn.
 worker_pid = 0
 
-DB_PART_NAMES = {'notes', 'readings', 'users', 'images', 'uploads', 'files', 'documents', 'answers', 'questions',
+DB_PART_NAMES = {'notes', 'printed_docs', 'readings', 'users', 'images', 'uploads', 'files', 'documents', 'answers', 'questions',
                  'messages', 'lectures', 'folders', 'lecture_answers', 'velps', 'velp_groups', 'annotations', 'session'}
 
 
@@ -79,6 +79,7 @@ class TimDb(object):
         self.velps = None
         self.velp_groups = None
         self.annotations = None
+        self.printed_docs = None
 
     def __getattribute__(self, item):
         """Used to open TimDb connection lazily."""
