@@ -1,19 +1,16 @@
 """
 Functions for calling pandoc and constructing the calls
 """
-import datetime
-import os
+import tempfile
 
 import pypandoc
 
-from typing import List
-
-from documentmodel.document import Document
 from timdb.models.docentry import DocEntry
 from timdb.printsettings import PrintSettings
-from timdb.tim_models import db, PrintedDoc
-from dbaccess import get_timdb
 
+
+class PrintingError(Exception):
+    pass
 
 class DocumentPrinter():
 
@@ -21,7 +18,8 @@ class DocumentPrinter():
         self._doc_entry = doc_entry
         self._settings = print_settings
 
-    def _convert_from_md(self, to_format: str) -> str:
+    @property
+    def _content(self) -> str:
         """
         Calls for a new system subprocess to run pandoc.
 
@@ -31,19 +29,37 @@ class DocumentPrinter():
         """
 
         content = '\n\n'.join(par.get_markdown() for par in self._doc_entry.document.get_paragraphs())
+        # print(content)
+        return content
 
-        return pypandoc.convert_text(content, to_format, format='md')
 
-    def _as_latex(self):
-        return self._convert_from_md('latex')
-
-    def _as_pdf(self):
-        return self._convert_from_md('pdf')
-
-    def write_tex(self) -> bytearray:
+    def _write_tex(self) -> bytearray:
         """
-        Writes the document as pdf on disk and returns the file path
+        Converts the document to latex and returns the converted document as a bytearray
         :return: Converted document as bytearray
         """
 
-        return bytearray().extend(self._as_latex())
+        as_latex = pypandoc.convert_text(source=self._content, format='markdown', to='latex')
+
+        return bytearray(source=as_latex, encoding='utf-8')
+
+    def _write_pdf(self) -> bytearray:
+        """
+        Converts the document to pdf and returns the converted document as a bytearray
+        :return: Converted document as bytearray
+        """
+
+        tmp_file = tempfile.NamedTemporaryFile(suffix='.pdf', delete=True)
+        try:
+            pypandoc.convert_text(source=self._content, format='markdown', to='pdf', outputfile=tmp_file.name)
+            bytarr = bytearray(source=tmp_file.read())
+            return bytarr
+        # TODO: Except block to handle exceptions
+        finally:
+            tmp_file.close()
+
+    def write_to_format(self, file_type: str) -> bytearray:
+        if file_type == 'latex':
+            return self._write_tex()
+        elif file_type == 'pdf':
+            return self._write_pdf()
