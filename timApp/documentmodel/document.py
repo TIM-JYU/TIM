@@ -202,7 +202,16 @@ class Document:
             raise TimDbException('Either of par_id_start and par_id_end was None')
         all_pars = [par for par in self]
         all_par_ids = [par.get_id() for par in all_pars]
-        start_index, end_index = all_par_ids.index(par_id_start), all_par_ids.index(par_id_end)
+        try:
+            start_index = all_par_ids.index(par_id_start)
+        except ValueError:
+            raise TimDbException('Paragraph not found: {}'.format(par_id_start))
+        try:
+            end_index = all_par_ids.index(par_id_end)
+        except ValueError:
+            raise TimDbException('Paragraph not found: {}'.format(par_id_end))
+        if end_index < start_index:
+            start_index, end_index = end_index, start_index
         return all_pars[start_index:end_index + 1]
 
     def text_to_paragraphs(self, text: str, break_on_elements: bool):
@@ -610,7 +619,7 @@ class Document:
                 yield {'type': tag, 'start_id': old_ids[i1], 'end_id': old_ids[i2] if i2 < len(old_ids) else None}
             if tag == 'equal':
                 for old, new in zip(old_pars[i1:i2], new_pars[j1:j2]):
-                    if old != new:
+                    if not old.is_same_as(new):
                         yield {'type': 'change', 'id': old.get_id(), 'content': [new]}
                     elif check_html and not old.is_same_as_html(new):
                         yield {'type': 'change', 'id': old.get_id(), 'content': [new]}
@@ -776,11 +785,8 @@ class Document:
         return log[0]['time'] if log is not None and len(log) > 0 else None
 
     def delete_section(self, area_start, area_end):
-        all_par_ids = [par.get_id() for par in self]
-        start_index, end_index = all_par_ids.index(area_start), all_par_ids.index(area_end)
-        old_pars = all_par_ids[start_index:end_index + 1]
-        for par in old_pars:
-            self.delete_paragraph(par)
+        for par in self.get_section(area_start, area_end):
+            self.delete_paragraph(par.get_id())
 
     def get_named_section(self, section_name: str):
         start_found = False

@@ -3,10 +3,12 @@ import os
 import shutil
 
 from documentmodel.document import Document
-from documentmodel.docparagraph import DocParagraph
+from documentmodel.docparagraph import DocParagraph, is_real_id
 from documentmodel.documentwriter import DocumentParser, DocumentWriter
 from documentmodel.randutils import random_id
 from typing import Dict, Generic, List, Optional
+
+from timdb.timdbexception import TimDbException
 
 
 class Clipboard:
@@ -119,29 +121,8 @@ class Clipboard:
         def copy_pars(self, doc: Document, par_start: str, par_end: str, area_name: Optional[str] = None,
                       ref_doc: Optional[Document] = None, disable_ref: bool = False) -> List[DocParagraph]:
 
-            copying = False
-            par_objs = []
-            pars = []
-
-            if ref_doc is None:
-                ref_doc = doc
-
-            # todo: make the iterator accept ranges
-            i = doc.__iter__()
-            try:
-                while True:
-                    par = next(i)
-                    if not copying and par.get_id() == par_start:
-                        copying = True
-                    if copying:
-                        par_objs.append(par)
-                        pars.append(par.dict())
-                        if par.get_id() == par_end:
-                            raise StopIteration
-            except StopIteration:
-                pass
-            finally:
-                i.close()
+            par_objs = doc.get_section(par_start, par_end)
+            pars = [p.dict() for p in par_objs]
 
             self.write_metadata(area_name=area_name, disable_ref=disable_ref, last_action='copy')
             self.write(pars)
@@ -152,7 +133,7 @@ class Clipboard:
         def paste_before(self, doc: Document, par_id: str, as_ref: bool = False) -> List[DocParagraph]:
             pars = self.read(as_ref)
             if pars is None:
-                return
+                raise TimDbException('There is nothing to paste.')
 
             metadata = self.read_metadata()
             if not as_ref and metadata.get('area_name') is not None and doc.named_section_exists(metadata['area_name']):
@@ -162,6 +143,8 @@ class Clipboard:
 
             doc_pars = []
             par_before = par_id
+            if is_real_id(par_before) and not doc.has_paragraph(par_before):
+                raise TimDbException('Paragraph not found: {}'.format(par_before))
             for par in reversed(pars):
                 # We need to reverse the sequence because we're inserting before, not after
                 new_par_id = par['id'] if not doc.has_paragraph(par['id']) else random_id()
@@ -176,6 +159,8 @@ class Clipboard:
         def paste_after(self, doc: Document, par_id: str, as_ref: bool = False) -> List[DocParagraph]:
             par_before = None
 
+            if is_real_id(par_id) and not doc.has_paragraph(par_id):
+                raise TimDbException('Paragraph not found: {}'.format(par_id))
             # todo: make the iterator accept ranges
             i = doc.__iter__()
             try:
