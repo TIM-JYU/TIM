@@ -18,7 +18,8 @@ function cleanParId(id) {
     return id.substring(i+1);
 }
 
-timApp.controller("QuestionController", ['$scope', '$http', '$window', '$element', 'ParCompiler', '$rootScope', function (scope, http, $window, $element, ParCompiler, $rootScope) {
+//timApp.controller("QuestionController", ['$scope', '$http', '$window', '$element', 'ParCompiler', '$rootScope', function (scope, http, $window, $element, ParCompiler, $rootScope) {
+timApp.controller("QuestionController", ['$scope', '$http', '$window', '$element', '$rootScope', function (scope, http, $window, $element, $rootScope) {
     "use strict";
 
     // Timeout is used to make sure that #calendarStart element is rendered before creating datepicker
@@ -211,7 +212,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$element
             scope.textAreas = $(".questiontext");
             // ParCompiler.processAllMath($element.parent());
             window.setTimeout(function () { // give time to html to change
-                ParCompiler.processAllMath($element.parent());
+                if (GlobalParCompiler) GlobalParCompiler.processAllMath($element.parent());
             }, 1000);
 
    /*

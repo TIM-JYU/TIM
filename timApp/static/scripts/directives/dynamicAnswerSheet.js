@@ -121,7 +121,8 @@ function minimizeJson(json) {
 function fixLineBreaks(s) {
     // var result = s.replace(" < "," &lt; ");
     //result = result.replace(" > "," &gt; ");
-    result = s;
+    var parts = s.split("!!");
+    result = parts[0];
     return result;
     //return s.replace("\n","<br />");
 }
@@ -203,7 +204,8 @@ function fixQuestionJson(json) {
 }
 
 var timApp = angular.module('timApp');
-timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '$http', 'ParCompiler', function ($interval, $compile, $rootScope, $http, ParCompiler) {
+//timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '$http', 'ParCompiler', function ($interval, $compile, $rootScope, $http, ParCompiler) {
+timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '$http', function ($interval, $compile, $rootScope, $http) {
     "use strict";
     return {
         restrict: 'E',
@@ -296,7 +298,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     }
                     angular.forEach(data.headers, function (header) {
                         var th = $('<th>')
-                        th.append(header.text);
+                        th.append( fixLineBreaks(header.text) );
                         tr.append(th);
                         // tr.append($('<th>', {text: header.text || header}));
                     });
@@ -464,8 +466,8 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                         $scope.start();
                     }
                 }
-                GlobalParCompiler = ParCompiler;
-                ParCompiler.processAllMath($scope.htmlSheet);
+                //GlobalParCompiler = ParCompiler;
+                GlobalParCompiler.processAllMath($scope.htmlSheet);
             };
             // createAnswer ends
 

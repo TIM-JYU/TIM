@@ -1,15 +1,16 @@
 <!--RESIZABLE Didn't work with just adding resizable and 100% 100% -->
-<div class="popUpWindow" style="z-index: 10">
+<!--<div class="popUpWindow" style="z-index: 10"> -->
 	<div class="show-answer" ng-controller="ShowStatisticsToQuestionController">
 		<div class="statisticsWindow">
-			<h2 ng-bind-html="questionTitle"></h2>
-			<show-chart-directive canvas="answerChart" control="dynamicAnswerShowControl" ></show-chart-directive>
-			<div id="chartDiv" class="chart">
-				<canvas id="answerChart" width="400" height="300"></canvas>
+			<h2 ng-bind-html="questionTitle" ng-click="dynamicAnswerShowControl.toggle()"></h2>
+			<div id="chartDiv" class="chartDiv" >
+				<show-chart-directive  divresize="true" control="dynamicAnswerShowControl" ></show-chart-directive>
 			</div>
 		</div>
-		<div class="buttons">
-		<button class="timButton" ng-click="close()">Close</button>
+		<div class="buttons" style="margin-top: -35px;" >
+            <p class="chart-menu" style="display: inline;">
+               <span ng-click="dynamicAnswerShowControl.toggle()">Bar</span>&nbsp;&nbsp;
+            </p>
+		    <button class="timButton" ng-click="hide()">Close</button>
 		</div>
 	</div>
-</div>

@@ -1,11 +1,12 @@
 /* globals angular, $, timLogTime, MathJax */
 
-var timApp = angular.module('timApp');
+var timApp = angular.module('timApp'); // ,['ParCompiler']);
 
 timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer', '$compile', '$ocLazyLoad', '$timeout', '$log',
     function ($http, $window, $q, $httpParamSerializer, $compile, $ocLazyLoad, $timeout, $log) {
         "use strict";
         var parCompiler = {};
+        GlobalParCompiler = parCompiler;
 
         parCompiler.compile = function (data, scope, callback) {
             var simpleDirectiveUrl = '/mmcq/SimpleDirective.js';

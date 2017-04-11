@@ -172,10 +172,11 @@
             <ng-include src="'{{ url_for('static', filename='templates/question.html') }}'"></ng-include>
         </div>
     </pop-up-dialog>
-    <pop-up-dialog show="showStudentAnswers" caption="'Statistics'">
+    <div  save="chartAnswers" class="userFixed chartAnswers"   tim-draggable-fixed="" resize="true" ng-show="showStudentAnswers" caption="'Statistics'">
         <ng-include
                 src="'{{ url_for('static', filename='templates/showStatisticsToQuestion.html') }}'"></ng-include>
-    </pop-up-dialog>
+    </div>
+
     <pop-up-dialog show="pollingStopped" caption="'Polling paused'" elem-id="'pausedWindow'">
         <ng-include
                 src="'{{ url_for('static', filename='templates/paused.html') }}'"></ng-include>

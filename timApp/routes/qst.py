@@ -133,7 +133,8 @@ def question_convert_js_to_yaml(md):
     question_title = markup["json"]["questionTitle"]
     question_title = question_title.replace('"', '').replace("'", '')
     # taskid = questionTitle.replace(" ", "")  # TODO: make better conversion to ID
-    taskid = re.sub('[^A-Za-z0-9]', '', question_title)
+    taskid = question_title.replace("md:", "")
+    taskid = re.sub('[^A-Za-z0-9]', '', taskid)
     oldid = markup.get('taskId')
     if not oldid:
         markup['taskId'] = taskid

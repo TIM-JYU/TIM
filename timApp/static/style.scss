@@ -260,3 +260,43 @@ h4.questionTitle {
     padding-top: 0em !important;
     font-size: 10pt;
 }
+
+
+p.chart-menu {
+    font-size: 11px;
+    color: $basic-color;
+    margin-left: 20em;
+    background: inherit;
+}
+
+.chartAnswers {
+    z-index: 30;
+    width: 420px;
+    height: 370px;
+    top: 52px;
+    left: 200px;
+    background-color: white;
+    border-color: black;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 0px;
+}
+
+.show-answer {
+    position: absolute;
+    top: 18pt;
+    bottom: 7pt;
+    right: 7pt;
+    left: 7pt;
+    background-color: white;
+}
+
+
+.show-answer .chartDiv {
+    position: absolute;
+    background: inherit;
+    bottom: 50px;
+    top: 100px;
+    left: 10px;
+    right: 10px;
+}

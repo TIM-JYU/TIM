@@ -30,7 +30,7 @@ function wmax(value, min, max) {
     return value;
 }
 
-timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', function ($document, $window, $parse) {
+timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', '$rootScope', function ($document, $window, $parse, $rootScope) {
 
     var resizableConfig = {};
 
@@ -357,6 +357,8 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 if ( scope.posKey ) {
                     var size = element.css(["width", "height"]);
                     setStorage(scope.posKey + "Size", size );
+
+                    $rootScope.$broadcast("resizeElement", {size: size});
                 }
             }
 
