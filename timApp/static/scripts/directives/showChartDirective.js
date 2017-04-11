@@ -283,6 +283,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 $scope.y = 20;
                 if (typeof question.answerFieldType !== "undefined" && question.answerFieldType === "text") {
                     $scope.isText = true;
+                    $scope.internalControl.isText = true;
                     return;
                 }
                 $scope.isText = false;
@@ -423,6 +424,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
 
 
             $scope.changeType = function() {
+                if ( $scope.isText ) return;
                 var newType = $scope.charts[qstChartIndex ];
                 if ( $scope.answerChart ) $scope.answerChart.destroy();
                 if ( !$scope.ctx ) {
@@ -464,6 +466,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
             $scope.$on('resizeElement', function(event, data) {
                 // var w = $scope.div.width();  // data.size.width;
                 // var h = $scope.div.height(); //  data.size.height)
+                if ( $scope.isText ) return;
                 $scope.internalControl.resizeDiv();
             });
 
@@ -478,8 +481,9 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 }
                 // $scope.ctx.font = "20px Georgia";
                 try {
-                datasets = $scope.answerChart.data.datasets;
-
+                    if (!$scope.isText) {
+                        datasets = $scope.answerChart.data.datasets;
+                    }
                 for (var answerersIndex = 0; answerersIndex < answers.length; answerersIndex++) {
                     var oldData = true;
                     var answ =  answers[answerersIndex].answer;
@@ -495,8 +499,10 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                             var singleAnswer = singleAnswers[sa];
 
                             if ($scope.isText) {
-                                $scope.ctx.fillText(singleAnswer, $scope.x, $scope.y);
-                                $scope.y += 20;
+                               // $scope.ctx.fillText(singleAnswer, $scope.x, $scope.y);
+                               // $scope.y += 20;
+                                var t = $('<p>' + singleAnswer + '</p>')
+                                $scope.div.append(t);
                                 continue;
                             }
                             if (datasets.length === 1) {
@@ -529,7 +535,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
 
                 $scope.chartConfig.data.datasets = datasets;
 
-                if (!$scope.isText || true) {
+                if (!$scope.isText ) {
                     $scope.answerChart.update();
                 }
                 } catch (e) {

@@ -94,7 +94,7 @@
                                                   control='dynamicAnswerShowControls[$index]'
                                                   class="chart"></show-chart-directive>
                         </div>
-                            <p ng-show="showPoints" class="chart-menu">
+                            <p ng-show="showPoints && !dynamicAnswerShowControls[$index].isText" class="chart-menu">
                                 <span ng-click="dynamicAnswerShowControls[$index].toggle()">Bar</span>
                                 <span ng-click="dynamicAnswerShowControls[$index].zoom(-1,0)">w-</span>
                                 <span ng-click="dynamicAnswerShowControls[$index].zoom(1,0)">w+</span>
