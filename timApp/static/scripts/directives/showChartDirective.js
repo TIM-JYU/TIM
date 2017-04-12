@@ -372,6 +372,11 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 });
                 // experiment with: https://jsfiddle.net/4r26box7/85/
 */
+                $scope.intScale = function(value, axis) {
+                    if ( axis == $scope.chartIndex ) return value;
+                    if (value % 1 === 0) return value;
+                }
+
                 $scope.chartConfig = {
                     type: 'horizontalBar',
                     //type: 'bar',
@@ -394,7 +399,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                                 ticks: {
                                     min: 0,
                                     beginAtZero:true,
-                                    callback: function(value) {if (value % 1 === 0) {return value;}}
+                                    callback: function(value) { return $scope.intScale(value, 0);}
                                     // stepSize: 1
                                 }
                             }],
@@ -403,7 +408,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                                  ticks: {
                                      min: 0,
                                      beginAtZero:true,
-                                     callback: function(value) {if (value % 1 === 0) {return value;}}
+                                     callback: function(value) { return $scope.intScale(value, 1);}
                                      // stepSize: 1
                                  }
                             }]
