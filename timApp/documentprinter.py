@@ -1,6 +1,7 @@
 """
 Functions for calling pandoc and constructing the calls
 """
+import os
 import tempfile
 
 import pypandoc
@@ -13,6 +14,9 @@ class PrintingError(Exception):
     pass
 
 class DocumentPrinter():
+    default_files_root = 'tim_files'
+    default_printing_folder = 'printed_documents'
+    temporary_docs_folder = 'temp'
 
     def __init__(self, doc_entry: DocEntry, print_settings: PrintSettings):
         self._doc_entry = doc_entry
@@ -32,8 +36,7 @@ class DocumentPrinter():
         # print(content)
         return content
 
-
-    def _write_tex(self) -> bytearray:
+    def _write_latex(self) -> bytearray:
         """
         Converts the document to latex and returns the converted document as a bytearray
         :return: Converted document as bytearray
@@ -41,7 +44,7 @@ class DocumentPrinter():
 
         as_latex = pypandoc.convert_text(source=self._content, format='markdown', to='latex')
 
-        return bytearray(source=as_latex, encoding='utf-8')
+        return bytearray(as_latex, encoding='utf-8')
 
     def _write_pdf(self) -> bytearray:
         """
@@ -50,9 +53,21 @@ class DocumentPrinter():
         """
 
         tmp_file = tempfile.NamedTemporaryFile(suffix='.pdf', delete=True)
+
+        template_path = os.path.join(self.default_files_root,
+                                     self.default_printing_folder,
+                                     'basic_template.latex')
+            # TODO sensible handling of templates
+        images_root = os.path.join(self.default_files_root, 'blocks')
+            # TODO sensible locating of images root folder
+
         try:
-            pypandoc.convert_text(source=self._content, format='markdown', to='pdf', outputfile=tmp_file.name)
-            bytarr = bytearray(source=tmp_file.read())
+            pypandoc.convert_text(source=self._content,
+                                  format='markdown',
+                                  to='pdf',
+                                  outputfile=tmp_file.name,
+                                  extra_args=['--template=' + template_path, '-V', 'graphics-root:' + images_root])
+            bytarr = bytearray(tmp_file.read())
             return bytarr
         # TODO: Except block to handle exceptions
         finally:
@@ -60,6 +75,23 @@ class DocumentPrinter():
 
     def write_to_format(self, file_type: str) -> bytearray:
         if file_type == 'latex':
-            return self._write_tex()
+            return self._write_latex()
         elif file_type == 'pdf':
             return self._write_pdf()
+
+    def get_print_path(self, file_type: str, temp: bool = True) -> str:
+        """
+        Formulates the printing path for the given document
+        
+        :param doc_entry: The document that is being printed
+        :param file_type: Filetype for the output
+        :param temp: 
+        :return: 
+        """
+
+        path = os.path.join(self.default_files_root,
+                            self.default_printing_folder,
+                            self.temporary_docs_folder if temp else "",
+                            self._doc_entry.name + "." + file_type)
+
+        return path
