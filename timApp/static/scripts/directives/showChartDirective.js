@@ -142,7 +142,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
             //TODO: If more than 12 choices this will break. Refactor to better format.
             var basicSets = [
                 {
-                    label: "Answer",
+                    label: "", // "Answer",
                     fillColor: "rgba(0,220,0,0.2)",
                     strokeColor: "rgba(0,220,0,1)",
                     pointColor: "rgba(0,220,0,1)",
@@ -394,7 +394,8 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                                 ticks: {
                                     min: 0,
                                     beginAtZero:true,
-                                    stepSize: 1
+                                    callback: function(value) {if (value % 1 === 0) {return value;}}
+                                    // stepSize: 1
                                 }
                             }],
                             yAxes: [{
@@ -402,7 +403,8 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                                  ticks: {
                                      min: 0,
                                      beginAtZero:true,
-                                     stepSize: 1
+                                     callback: function(value) {if (value % 1 === 0) {return value;}}
+                                     // stepSize: 1
                                  }
                             }]
                         }
