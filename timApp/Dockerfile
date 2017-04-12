@@ -138,6 +138,11 @@ run apt-get install --no-install-recommends -y pandoc
 run pip3 install pypandoc
 
 # Install texlive
+#
+# Full install of texlive is needed for the latex-pdf printing functionality, as
+# texlive doesn't have an (MiKTeX/MacTeX-esque) auto-install functionality for missing latex packages
+# i.e. the whole package archive needs to be pre-installed or the set of usable packages needs to be
+# severely limited
 run apt-get install --no-install-recommends -y texlive-full
 
 # Install pylatex, the python lib for using latex
