@@ -12,9 +12,10 @@ declare module 'ng-file-upload'
 declare module 'ui-grid'
 declare module 'katex-auto-render'
 declare module 'reveal'
-declare module 'ace/ace' {
+declare module 'ace' {
     import Ace = AceAjax.Ace;
-    export let ace: Ace;
+    let ace: Ace;
+    export default ace;
 }
 declare module 'ace/snippets'
 declare module 'jqueryui'

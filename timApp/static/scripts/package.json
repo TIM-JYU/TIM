@@ -5,8 +5,8 @@
   "main": "main.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "jspm bundle tim/main - tim/angularmodules - tim/plugins - tim/extramodules - tim/session --minify",
-    "buildDev": "jspm bundle tim/main - tim/angularmodules - tim/plugins - tim/extramodules - tim/session -wd"
+    "build": "node build.js",
+    "buildDev": "jspm bundle tim/main + tim/slide - \"(tim/main + tim/slide - [tim/**/*])\" build/tim.js -wd"
   },
   "repository": {
     "type": "git",
@@ -38,7 +38,8 @@
   "devDependencies": {
     "jspm": "^0.17.0-beta.41",
     "tslint": "^5.0.0",
-    "typescript": "^2.2.2"
+    "typescript": "^2.2.2",
+    "systemjs-builder": "latest"
   },
   "jspm": {
     "dependencies": {
@@ -57,8 +58,9 @@
       "@types/ngstorage": "npm:@types/ngstorage@^0.3.34",
       "@types/oclazyload": "npm:@types/oclazyload@^0.0.31",
       "@types/rangyinputs": "npm:@types/rangyinputs@^1.2.0",
+      "@types/systemjs": "npm:@types/systemjs@^0.20.2",
       "@types/ui-grid": "npm:@types/ui-grid@^0.0.35",
-      "ace/ace": "github:ajaxorg/ace@^1.2",
+      "ace": "github:ajaxorg/ace-builds@^1.2.6",
       "angular-animate": "npm:angular-animate@1.5",
       "angular-bootstrap-colorpicker": "npm:angular-bootstrap-colorpicker@^3.0.26",
       "angular-eonasdan-datetimepicker": "npm:angular-eonasdan-datetimepicker@^0.3.9",
@@ -78,6 +80,7 @@
       "ngstorage": "npm:ngstorage@^0.3.11",
       "oclazyload": "npm:oclazyload@^1.1.0",
       "rangyinputs": "github:jigargosar/rangyinputs@^1.2.0",
+      "text": "github:systemjs/plugin-text@^0.0.9",
       "ts": "github:frankwallis/plugin-typescript@^7.0.6"
     },
     "devDependencies": {
@@ -113,6 +116,28 @@
       "vm": "npm:jspm-nodelibs-vm@^0.2.0"
     },
     "overrides": {
+      "github:ajaxorg/ace-builds@1.2.6": {
+        "main": "ace",
+        "format": "global",
+        "directories": {
+          "lib": "src-noconflict"
+        },
+        "map": {
+          "ace": "."
+        },
+        "meta": {
+          "ace.js": {
+            "exports": "ace",
+            "format": "global"
+          },
+          "*.js": {
+            "deps": [
+              "ace/ace"
+            ],
+            "format": "global"
+          }
+        }
+      },
       "npm:angular@1.5.11": {
         "format": "global",
         "jspmNodeConversion": false,

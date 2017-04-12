@@ -2092,7 +2092,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         defer.resolve();
                     } else {
                         oldeditor = $('#teksti');
-                        require(["ace/ace", "ace/snippets"], (ace: Ace) => {
+                        SystemJS.amdRequire(["tim/ace", "ace/ext-language_tools"], (ace: Ace) => {
                             $scope.ace = ace;
                             $scope.setAceFunctions();
                             let neweditorElem = $("<div>", {

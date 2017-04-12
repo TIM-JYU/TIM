@@ -2,7 +2,9 @@ SystemJS.config({
   paths: {
     "github:": "jspm_packages/github/",
     "npm:": "jspm_packages/npm/",
-    "tim/": "tim/"
+    "tim/": "tim/",
+    "reveal": "reveal/js/reveal.js",
+    "head": "reveal/lib/js/head.min.js"
   },
   browserConfig: {
     "baseURL": "/static/scripts"
@@ -50,6 +52,21 @@ SystemJS.config({
       "deps": [
         "angular"
       ]
+    },
+    "tim/show_slide_vars.ts": {
+        build: false
+    },
+    "tim/angularmodules.ts": {
+        build: false
+    },
+    "tim/plugins.ts": {
+        build: false
+    },
+    "tim/extramodules.ts": {
+        build: false
+    },
+    "tim/session.ts": {
+        build: false
     }
   },
   map: {
@@ -57,7 +74,11 @@ SystemJS.config({
     "babel-runtime": "npm:babel-runtime@5.8.38",
     "jqueryui": "npm:jquery-ui@1.12.1",
     "katex-auto-render": "npm:katex@0.7.1/dist/contrib/auto-render.min"
-  }
+  },
+    bundles: {
+      "build/ace.js": ["tim/ace.ts", "github:ajaxorg/ace-builds@1.2.6/ext-language_tools.js"],
+      "build/slide.js": ["tim/slide.ts"]
+    }
 });
 
 SystemJS.config({
@@ -67,6 +88,8 @@ SystemJS.config({
     "github:*/*.json"
   ],
   map: {
+    "@types/systemjs": "npm:@types/systemjs@0.20.2",
+    "ace": "github:ajaxorg/ace-builds@1.2.6",
     "constants": "npm:jspm-nodelibs-constants@0.2.1",
     "events": "npm:jspm-nodelibs-events@0.2.2",
     "@types/ace": "npm:@types/ace@0.0.32",
@@ -85,7 +108,6 @@ SystemJS.config({
     "@types/oclazyload": "npm:@types/oclazyload@0.0.31",
     "@types/rangyinputs": "npm:@types/rangyinputs@1.2.0",
     "@types/ui-grid": "npm:@types/ui-grid@0.0.35",
-    "ace/ace": "github:ajaxorg/ace@1.2.6",
     "angular": "npm:angular@1.5.11",
     "angular-animate": "npm:angular-animate@1.5.11",
     "angular-bootstrap-colorpicker": "npm:angular-bootstrap-colorpicker@3.0.26",
@@ -124,6 +146,7 @@ SystemJS.config({
     "rangyinputs": "github:jigargosar/rangyinputs@1.2.0",
     "stream": "npm:jspm-nodelibs-stream@0.2.1",
     "string_decoder": "npm:jspm-nodelibs-string_decoder@0.2.1",
+    "text": "github:systemjs/plugin-text@0.0.9",
     "ts": "github:frankwallis/plugin-typescript@7.0.6",
     "typescript": "npm:typescript@2.2.2",
     "url": "npm:jspm-nodelibs-url@0.2.1",

@@ -19,18 +19,21 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$compile', '$ocLazyLoa
             private mathJaxLoadDefer: JQueryXHR;
 
             public compile(data, scope, callback): void {
-                const loadingFn = () => {
-                    require(data.js, () => {
-                        $ocLazyLoad.inject(data.angularModule).then(() => {
-                            $ocLazyLoad.load(data.css).then(() => {
-                                const compiled = $compile(data.texts)(scope);
-                                this.processAllMathDelayed(compiled);
-                                callback(compiled);
-                            });
-                        }, (err) => $log.error(err));
-                    });
+                const requireComplete = () => {
+                    $ocLazyLoad.inject(data.angularModule).then(() => {
+                        $ocLazyLoad.load(data.css).then(() => {
+                            const compiled = $compile(data.texts)(scope);
+                            this.processAllMathDelayed(compiled);
+                            callback(compiled);
+                        });
+                    }, (err) => $log.error(err));
                 };
-                loadingFn();
+
+                if (data.js.length > 0) {
+                    SystemJS.amdRequire(data.js, requireComplete);
+                } else {
+                    requireComplete();
+                }
             }
 
             public processAllMathDelayed($elem: JQuery, delay?: number): void {

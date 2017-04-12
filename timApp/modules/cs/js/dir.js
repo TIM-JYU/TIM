@@ -2052,7 +2052,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         // don't set the html immediately in case of Ace to avoid ugly flash because of lazy load
         $scope.edit = $scope.edit[0];
         if ( eindex == 1 ) {
-            require(["ace/ace", "ace/ext/language_tools"], function (ace) {
+            require(["tim/ace", "ace/ext-language_tools"], function (ace) {
                 editorDiv.html($scope.edit);
                 var editor = ace.edit(editorDiv.find('.csAceEditor')[0]);
                 $scope.aceLoaded(ace, editor);

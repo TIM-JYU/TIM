@@ -21,16 +21,13 @@
         <script src="https://raw.githack.com/zloirock/core-js/v2.4.1/client/shim.min.js"></script>
         <script src="/static/scripts/jspm_packages/system.js"></script>
         <script src="/static/scripts/jspm.config.js"></script>
-        {% if config.USE_OPTIMIZED_JS %}
-            <script src="/static/scripts/build.js"></script>
-        {% endif %}
+        <script src="/static/scripts/build/deps.js"></script>
+        <script src="/static/scripts/build/tim.js"></script>
         <script>
-            window.define = SystemJS.amdDefine;
-            window.require = window.requirejs = SystemJS.amdRequire;
-            define("tim/angularmodules.ts", ["exports"], function () {
+            SystemJS.amdDefine("tim/angularmodules.ts", ["exports"], function () {
                 return [];
             });
-            define("tim/plugins.ts", [{{ (["tim/angularmodules"] + (js or []))|map('map_format', "'%s'")|join(', ')|safe }}],
+            SystemJS.amdDefine("tim/plugins.ts", [{{ (["tim/angularmodules"] + (js or []))|map('map_format', "'%s'")|join(', ')|safe }}],
                 function (angularmodules) {
                     var mods = {{ (jsMods or [])|tojson }};
                     angularmodules.push.apply(angularmodules, mods);
@@ -38,10 +35,10 @@
             {% block extramoduledefinitions %}
 
             {% endblock %}
-            define("tim/extramodules.ts", ["exports", {% block extramodules %}{% endblock %}], function () {
+            SystemJS.amdDefine("tim/extramodules.ts", ["exports", {% block extramodules %}{% endblock %}], function () {
 
             });
-            define("tim/session.ts", ["exports"], function () {
+            SystemJS.amdDefine("tim/session.ts", ["exports"], function () {
                 return {{(session.settings or {})|tojson}};
             });
             SystemJS.import("tim");
@@ -50,7 +47,7 @@
             {{ scss(config.SASS_GEN_PATH + '/' + prefs.css_combined) }}
         {% endblock %}
         <link rel="stylesheet" href="{{ url_for('bower.static', filename='angular-ui-grid@4.0.1/ui-grid.min.css') }}">
-        <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui-dist/TODO_FIX_PATH.css') }}">
+        <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui@1.12.1/themes/base/all.css') }}">
         <link rel="stylesheet"
               href="{{ url_for('bower.static', filename='eonasdan-bootstrap-datetimepicker@4.17.47/build/css/bootstrap-datetimepicker.min.css') }}">
         <link rel="stylesheet" href="{{ url_for('bower.static', filename='katex@0.7.1/dist/katex.min.css') }}">
