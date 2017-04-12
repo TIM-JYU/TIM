@@ -6,6 +6,7 @@ from flask import Blueprint
 from flask import Response
 from flask import g
 from flask import abort
+from flask import jsonify
 
 from accesshelper import verify_logged_in
 from dbaccess import get_timdb
@@ -52,6 +53,21 @@ def print_document_to_pdf(doc_path):
 @print_blueprint.route("/edit_settings", methods=['POST'])
 def edit_settings():
     return
+
+@print_blueprint.route("/get_settings/<path:doc_path>", methods=['GET'])
+def get_settings(doc_path):
+    """
+    :return: Print settings
+    :TODO: Get real settings
+    """
+
+    settings = {
+        "doc_settings" : {
+            "fontSize": 12,
+            "paperSize": "A4"
+        }
+    }
+    return jsonify(settings)
 
 
 def fetch_document_from_db(doc_entry: DocEntry, file_type: str, settings: PrintSettings) -> bytearray:
