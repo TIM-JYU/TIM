@@ -44,6 +44,8 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', '$rootS
                 scope.posKey = attr.save.replace('%%PAGEID%%', scope.pageId);
             }
 
+            var broadcastMsg = attr.broadcastmsg;
+
             var clickFn = null;
             var areaMinimized = false;
             var areaHeight = 0;
@@ -354,12 +356,13 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', '$rootS
                 e.preventDefault();
                 e.stopPropagation();
 
+                var size = element.css(["width", "height"]);
                 if ( scope.posKey ) {
-                    var size = element.css(["width", "height"]);
                     setStorage(scope.posKey + "Size", size );
-
-                    $rootScope.$broadcast("resizeElement", {size: size});
                 }
+                if ( broadcastMsg )
+                    scope.$broadcast(broadcastMsg, {size: size});
+                    // $rootScope.$broadcast(broadcastMsg, {size: size});
             }
 
             element.context.style.msTouchAction = 'none';

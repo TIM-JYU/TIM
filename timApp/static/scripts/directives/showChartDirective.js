@@ -284,8 +284,10 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 if (typeof question.answerFieldType !== "undefined" && question.answerFieldType === "text") {
                     $scope.isText = true;
                     $scope.internalControl.isText = true;
+                    $scope.div.attr("style",'overflow: auto');
                     return;
                 }
+                $scope.div.attr("style",'overflow: hidden');
                 $scope.isText = false;
                 var showLegend = false;
                 var labels = [];

@@ -339,6 +339,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                             row.columns[ic].id = ic;
 
                             if (json.answerFieldType === "text") {
+                                $scope.isText = true;
                                 var text = "";
                                 if (answerTable && ir < answerTable.length && ic < answerTable[ir].length) {
                                     text = answerTable[ir][ic];
@@ -451,7 +452,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                         if ( params.isAsking ) $input[0].focus();
                     }, 0);
                     //
-                    $table.on('keyup.send', $scope.answerWithEnter);
+                    if ( !$scope.isText ) $table.on('keyup.send', $scope.answerWithEnter);
                     var now = new Date().valueOf();
                     timeLeft = $scope.endTime - now;
                     barFilled = 0;

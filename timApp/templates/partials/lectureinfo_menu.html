@@ -172,7 +172,7 @@
             <ng-include src="'{{ url_for('static', filename='templates/question.html') }}'"></ng-include>
         </div>
     </pop-up-dialog>
-    <div  save="chartAnswers" class="userFixed chartAnswers"   tim-draggable-fixed="" resize="true" ng-show="showStudentAnswers" caption="'Statistics'">
+    <div  save="chartAnswers" class="userFixed chartAnswers"   tim-draggable-fixed="" resize="true" broadcastmsg="resizeElement"  ng-show="showStudentAnswers" caption="Statistics">
         <ng-include
                 src="'{{ url_for('static', filename='templates/showStatisticsToQuestion.html') }}'"></ng-include>
     </div>
