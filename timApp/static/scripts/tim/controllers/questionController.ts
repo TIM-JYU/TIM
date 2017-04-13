@@ -3,7 +3,7 @@ import angular = require("angular");
 import {setsetting} from "tim/utils";
 import {fixQuestionJson, getPointsTable, minimizeJson} from "tim/directives/dynamicAnswerSheet";
 import $ = require("jquery");
-import * as jqueryui from "jqueryui";
+import * as jqueryui from "jquery-ui";
 import {markAsUsed} from "tim/utils";
 
 markAsUsed(jqueryui);

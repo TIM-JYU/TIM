@@ -3,6 +3,8 @@ from ubuntu:16.04
 maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 
 # Configure timezone and locale
+run apt-get update
+run apt-get install -y locales tzdata
 run locale-gen en_US.UTF-8
 env LANG en_US.UTF-8
 env LANGUAGE en_US:en
@@ -11,7 +13,6 @@ run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive t
 
 # Install Python, pip and other necessary packages
 
-run apt-get update
 run apt-get install --no-install-recommends -y openssh-server
 run apt-get install --no-install-recommends -y python3 python3-setuptools python3-pip
 run apt-get install --no-install-recommends -y git-core
@@ -84,73 +85,7 @@ run chown -R agent /service
 # Due to https://github.com/angular-ui/ui-grid/issues/5926, we install version 4.0.1 of angular-ui-grid and not 4.0.2.
 run apt-get install --no-install-recommends -y npm
 run ln -s /usr/bin/nodejs /usr/bin/node
-run npm install -g uglify-js
-run npm install -g typescript
-run npm install -g tslint
-workdir /tim_node_modules
-run npm init -y
-run npm install --save angular@1.5
-run npm install --save ng-file-upload@12.2
-run npm install --save jquery@2.1
-run npm install --save moment@2.17
-run npm install --save angular-sanitize@1.5
-run npm install --save bootstrap@3.3
-run npm install --save jquery-ui-dist@1.12
-run npm install --save katex@0.7
-run npm install --save https://github.com/jigargosar/rangyinputs.git
-run npm install --save ngstorage@0.3
-run npm install --save chart.js@2.5
-run npm install --save oclazyload@1.1
-run npm install --save bootstrap-sass@3.3
-run npm install --save angular-ui-bootstrap@2.5
-run npm install --save angular-animate@1.5
-run npm install --save angular-touch@1.5
-run npm install --save angular-ui-grid@4.0.1
-run npm install --save angular-bootstrap-colorpicker@3.0
-run npm install --save eonasdan-bootstrap-datetimepicker
-run npm install --save angular-eonasdan-datetimepicker@0.3
-run npm install --save angular-messages@1.5
-run npm install --save humanize-duration@3.10
-run npm install --save angular-timer@1.3
-run npm install --save https://github.com/ajaxorg/ace.git#v1.2.6
-run npm install --save jquery-ui-touch-punch-c@1.1
-run npm install --save requirejs
-
-run npm install --save @types/angular@1.5
-run npm install --save @types/jquery
-run npm install --save @types/angular-sanitize
-run npm install --save @types/bootstrap@3.3
-run npm install --save @types/jqueryui
-run npm install --save @types/katex
-run npm install --save @types/rangyinputs
-run npm install --save @types/ngstorage@0.3
-run npm install --save @types/chart.js
-run npm install --save @types/oclazyload
-run npm install --save @types/angular-ui-bootstrap
-run npm install --save @types/angular-animate@1.5
-run npm install --save @types/ui-grid
-run npm install --save @types/eonasdan-bootstrap-datetimepicker
-run npm install --save @types/mathjax
-run npm install --save @types/ace
-run npm install --save @types/requirejs
-#run npm install --save @types/angular-bootstrap-colorpicker@3.0
-#run npm install --save @types/angular-touch
-#run npm install --save @types/bootstrapsass
-#run npm install --save @types/angular-eonasdan-datetimepicker@0.3
-#run npm install --save @types/angular-messages@1.5
-#run npm install --save @types/humanize-duration@3.10
-#run npm install --save @types/angular-timer@1.3
-
-# The below date is updated whenever node modules are upgraded, added or removed.
-# Otherwise TIM might not re-copy the libs because it only inspects the top-level directory file names
-# in node_modules.
-run touch node_modules/$(date -I).stamp
-
-# the type files need a couple of patches
-run sed -i '1s/^/import * as angular from "angular";\n/' node_modules/@types/ngstorage/index.d.ts
-
-# Force auto-render extension to throw exceptions instead of printing to console.
-run sed -i 's/f instanceof katex\.ParseError/false/' node_modules/katex/dist/contrib/auto-render.min.js
+run npm install -g typescript tslint jspm
 
 run mkdir /var/run/sshd
 run echo 'root:test' | chpasswd

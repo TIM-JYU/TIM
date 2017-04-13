@@ -21,6 +21,10 @@ var bundles = [
     {
         modules: 'tim/ace + ace/ext-language_tools', // preconfigured Ace editor
         file: 'build/ace.js'
+    },
+    {
+        modules: 'tim/imagex - tim/main', // ImageX plugin
+        file: 'build/imagex.js'
     }
 ];
 

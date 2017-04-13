@@ -2,9 +2,13 @@ SystemJS.config({
   paths: {
     "github:": "jspm_packages/github/",
     "npm:": "jspm_packages/npm/",
-    "tim/": "tim/",
     "reveal": "reveal/js/reveal.js",
-    "head": "reveal/lib/js/head.min.js"
+    "head": "reveal/lib/js/head.min.js",
+    "simcir": "/cs/simcir/simcir.js",
+    "simcir/basicset": "/cs/simcir/simcir-basicset.js",
+    "simcir/library": "/cs/simcir/simcir-library.js",
+    "simcir/oma-kirjasto": "/cs/simcir/simcir-oma-kirjasto.js",
+    "tim/": "tim/"
   },
   browserConfig: {
     "baseURL": "/static/scripts"
@@ -20,9 +24,7 @@ SystemJS.config({
         "map": {}
       },
       "npm:core-js@1.2.7": {
-        "map": {
-          "systemjs-json": "github:systemjs/plugin-json@0.1.2"
-        }
+        "map": {}
       }
     }
   },
@@ -48,37 +50,66 @@ SystemJS.config({
     }
   },
   meta: {
-    "oclazyload": {
+    "npm:angular-eonasdan-datetimepicker@0.3.9/dist/angular-eonasdan-datetimepicker.js": {
       "deps": [
-        "angular"
+        "angular",
+        "eonasdan-bootstrap-datetimepicker"
       ]
     },
+    "npm:angular@1.5.11/angular.js": {
+      "deps": [
+        "jquery"
+      ]
+    },
+    "/cs/simcir/simcir-basicset.js": {
+      "deps": [
+        "simcir"
+      ],
+      "format": "global"
+    },
+    "/cs/simcir/simcir-library.js": {
+      "deps": [
+        "simcir"
+      ],
+      "format": "global"
+    },
+    "/cs/simcir/simcir-oma-kirjasto.js": {
+      "deps": [
+        "simcir"
+      ],
+      "format": "global"
+    },
     "tim/show_slide_vars.ts": {
-        build: false
+      "build": false
     },
     "tim/angularmodules.ts": {
-        build: false
+      "build": false
     },
     "tim/plugins.ts": {
-        build: false
+      "build": false
     },
     "tim/extramodules.ts": {
-        build: false
+      "build": false
     },
     "tim/session.ts": {
-        build: false
+      "build": false
     }
   },
   map: {
-    "babel": "npm:babel-core@5.8.38",
-    "babel-runtime": "npm:babel-runtime@5.8.38",
-    "jqueryui": "npm:jquery-ui@1.12.1",
     "katex-auto-render": "npm:katex@0.7.1/dist/contrib/auto-render.min"
   },
-    bundles: {
-      "build/ace.js": ["tim/ace.ts", "github:ajaxorg/ace-builds@1.2.6/ext-language_tools.js"],
-      "build/slide.js": ["tim/slide.ts"]
-    }
+  bundles: {
+    "build/ace.js": [
+      "tim/ace.ts",
+      "github:ajaxorg/ace-builds@1.2.6/ext-language_tools.js"
+    ],
+    "build/slide.js": [
+      "tim/slide.ts"
+    ],
+    "build/imagex.js": [
+      "tim/imagex.ts"
+    ]
+  }
 });
 
 SystemJS.config({
@@ -213,13 +244,7 @@ SystemJS.config({
       }
     },
     "npm:angular-eonasdan-datetimepicker@0.3.9": {
-      "map": {
-        "angular": "npm:angular@1.5.11",
-        "bootstrap": "npm:bootstrap@3.3.7",
-        "eonasdan-bootstrap-datetimepicker": "npm:eonasdan-bootstrap-datetimepicker@4.17.47",
-        "jquery": "npm:jquery@2.2.4",
-        "moment": "npm:moment@2.18.1"
-      }
+      "map": {}
     },
     "npm:angular-timer@1.3.5": {
       "map": {}
@@ -251,8 +276,7 @@ SystemJS.config({
         "cipher-base": "npm:cipher-base@1.0.3",
         "create-hash": "npm:create-hash@1.1.2",
         "evp_bytestokey": "npm:evp_bytestokey@1.0.0",
-        "inherits": "npm:inherits@2.0.1",
-        "systemjs-json": "github:systemjs/plugin-json@0.1.2"
+        "inherits": "npm:inherits@2.0.1"
       }
     },
     "npm:browserify-cipher@1.0.0": {
@@ -283,20 +307,16 @@ SystemJS.config({
         "create-hmac": "npm:create-hmac@1.1.4",
         "elliptic": "npm:elliptic@6.4.0",
         "inherits": "npm:inherits@2.0.1",
-        "parse-asn1": "npm:parse-asn1@5.1.0",
-        "systemjs-json": "github:systemjs/plugin-json@0.1.2"
+        "parse-asn1": "npm:parse-asn1@5.1.0"
       }
     },
     "npm:buffer-xor@1.0.3": {
-      "map": {
-        "systemjs-json": "github:systemjs/plugin-json@0.1.2"
-      }
+      "map": {}
     },
     "npm:chart.js@2.5.0": {
       "map": {
         "chartjs-color": "npm:chartjs-color@2.1.0",
-        "moment": "npm:moment@2.18.1",
-        "systemjs-json": "github:systemjs/plugin-json@0.1.2"
+        "moment": "npm:moment@2.18.1"
       }
     },
     "npm:chartjs-color-string@0.4.0": {
@@ -362,8 +382,7 @@ SystemJS.config({
       "map": {
         "bn.js": "npm:bn.js@4.11.6",
         "miller-rabin": "npm:miller-rabin@4.0.0",
-        "randombytes": "npm:randombytes@2.0.3",
-        "systemjs-json": "github:systemjs/plugin-json@0.1.2"
+        "randombytes": "npm:randombytes@2.0.3"
       }
     },
     "npm:elliptic@6.4.0": {
@@ -374,17 +393,11 @@ SystemJS.config({
         "hmac-drbg": "npm:hmac-drbg@1.0.0",
         "inherits": "npm:inherits@2.0.1",
         "minimalistic-assert": "npm:minimalistic-assert@1.0.0",
-        "minimalistic-crypto-utils": "npm:minimalistic-crypto-utils@1.0.1",
-        "systemjs-json": "github:systemjs/plugin-json@0.1.2"
+        "minimalistic-crypto-utils": "npm:minimalistic-crypto-utils@1.0.1"
       }
     },
     "npm:eonasdan-bootstrap-datetimepicker@4.17.47": {
-      "map": {
-        "bootstrap": "npm:bootstrap@3.3.7",
-        "jquery": "npm:jquery@3.2.1",
-        "moment": "npm:moment@2.18.1",
-        "moment-timezone": "npm:moment-timezone@0.4.1"
-      }
+      "map": {}
     },
     "npm:evp_bytestokey@1.0.0": {
       "map": {
@@ -400,17 +413,14 @@ SystemJS.config({
       "map": {
         "hash.js": "npm:hash.js@1.0.3",
         "minimalistic-assert": "npm:minimalistic-assert@1.0.0",
-        "minimalistic-crypto-utils": "npm:minimalistic-crypto-utils@1.0.1",
-        "systemjs-json": "github:systemjs/plugin-json@0.1.2"
+        "minimalistic-crypto-utils": "npm:minimalistic-crypto-utils@1.0.1"
       }
     },
     "npm:inherits@2.0.1": {
       "map": {}
     },
     "npm:jquery-ui@1.12.1": {
-      "map": {
-        "systemjs-json": "github:systemjs/plugin-json@0.1.2"
-      }
+      "map": {}
     },
     "npm:katex@0.7.1": {
       "map": {
@@ -425,8 +435,7 @@ SystemJS.config({
     },
     "npm:moment-timezone@0.4.1": {
       "map": {
-        "moment": "npm:moment@2.6.0",
-        "systemjs-json": "github:systemjs/plugin-json@0.1.2"
+        "moment": "npm:moment@2.6.0"
       }
     },
     "npm:ng-file-upload@12.2.13": {
@@ -441,8 +450,7 @@ SystemJS.config({
         "browserify-aes": "npm:browserify-aes@1.0.6",
         "create-hash": "npm:create-hash@1.1.2",
         "evp_bytestokey": "npm:evp_bytestokey@1.0.0",
-        "pbkdf2": "npm:pbkdf2@3.0.9",
-        "systemjs-json": "github:systemjs/plugin-json@0.1.2"
+        "pbkdf2": "npm:pbkdf2@3.0.9"
       }
     },
     "npm:pbkdf2@3.0.9": {

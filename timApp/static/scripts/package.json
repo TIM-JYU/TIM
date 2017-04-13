@@ -164,9 +164,6 @@
       "npm:jquery@2.2.4": {
         "format": "amd"
       },
-      "npm:jquery@3.2.1": {
-        "format": "amd"
-      },
       "npm:moment@2.18.1": {
         "jspmNodeConversion": false
       },
@@ -189,5 +186,4 @@
       }
     }
   }
-}
-
+}
