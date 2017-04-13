@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Compiles TypeScript files and minifies and packs them.
-# Required when USE_OPTIMIZED_JS is set to True in Flask app config.
+# Builds the NPM package at timApp/static/scripts.
 
-(cd timApp/static/scripts && ./compile_typescript.sh)
-(cd timApp/static/scripts && ./optimize_js.sh)
+./run_command_workdir.sh timApp/static/scripts npm run build
