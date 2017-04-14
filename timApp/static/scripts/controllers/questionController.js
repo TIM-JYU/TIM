@@ -234,13 +234,13 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$element
         var id = activeObj.id;
         if ( !id || id[0] !== "r" ) return 0;
         var edits = $("#question-form").find(".questiontext");
-        var ind = parseInt(id.substr(1)) + dir;
+        var ind = parseInt(id.substr(1)) + dir - 1;
         if ( ind < 0 ) return 0;
         if ( ind >= edits.length ) {
             scope.addRow(-1);
             edits[ind-2].focus();
             edits[ind-1].focus();
-            $("#question-form").find("#r"+ind).focus();
+            $("#question-form").find("#r"+(ind+1)).focus();
             return 0;
         }
         edits[ind].focus();
@@ -732,7 +732,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$element
      * @returns {{questionText: string, title: string, questionType: *, answerFieldType: string, matrixType: string,
      * timeLimit: string, data: {headers: Array, rows: Array}}}
      */
-    scope.createJson = function () {
+    scope.createJson = function (showPreview) {
+        var showingPreview = false;
+        if ( showPreview ) showingPreview = true;
         if (scope.asked_id) {
             return scope.updatePoints();
         }
@@ -860,9 +862,58 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$element
         };
 
         scope.markup.json = questionjson;
-        scope.dynamicAnswerSheetControl.createAnswer(scope);
+        if ( showingPreview ) {
+            scope.showPreviewJson();
+        }
+        else
+            scope.dynamicAnswerSheetControl.createAnswer(scope);
         return minimizeJson(questionjson);
     };
+
+
+    scope.showPreviewJson = function () {
+        var questionjson = scope.createJson();
+        if (!questionjson) return;
+
+        var doc_id = scope.docId;
+        var md = scope.markup;
+        var points = scope.createPoints();
+        if ( points ) md.points = points; else delete md.points;
+        var expl = scope.createExplanation();
+        if ( expl ) md.expl = expl; else delete md.expl;
+        md.json = questionjson;
+        md = JSON.stringify(md, null, 4);
+
+        var route = '/qst/qetQuestionMD/';
+        http.post(route, angular.extend({
+            docId: doc_id,
+            text: md
+        })).success(function (data) {
+            var markup = data.md;
+            var params = {};
+            params.answerTable = [];
+            params.questionId = 1; //args.questionId;
+            params.questionParId = 1; // args.questionParId;
+            params.questionParIdNext = 2; //args.questionParIdNext;
+            params.isLecturer = false;
+            params.markup = markup;
+            params.questionTitle = markup.json.questionTitle;
+            params.points = markup.points;
+            params.expl = markup.expl;
+            // var preview = element.parents('.previewcontent').length > 0;
+                params.preview =  false; // scope.$parent.previewUrl; // Released;
+            params.result = true;
+            params.answclass = "qstAnswerSheet";
+            params.noDisable = true;
+
+            scope.dynamicAnswerSheetControl.createAnswer(params);
+
+        });
+
+
+
+    }
+
 
     /**
      * Validates and saves the question into the database.
@@ -903,8 +954,14 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$element
             par_next: scope.par_id_next
         })).success(function (data) {
             $window.console.log("The question was successfully added to database");
+            var oldid = scope.par_id;
+            if ( scope.par_id === "NEW_PAR" ) scope.par_id = data.new_par_ids[0];
             scope.removeErrors();
-            scope.addSavedParToDom(data, {docId: scope.docId, par: scope.par_id, par_next: scope.par_id_next});
+            var parToReplace = "NEW_PAR";
+           // if ( scope.new_question )
+           //     scope.addSavedParToDom(data, {par: parToReplace});
+           // else
+                scope.addSavedParToDom(data, {docId: scope.docId, par: oldid, par_next: scope.par_id_next});
             //TODO: This can be optimized to get only the new one.
             // scope.$parent.getQuestions(); // TODO hae tallennettu kysymys!
             if (ask) {
@@ -1049,9 +1106,12 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$element
      */
     scope.setShowPreview = function (show) {
         if (show) {
-            scope.createJson();
+            scope.createJson(true);
             $(".createQuestion").on('change.createjson', ':input', function () {
-                scope.createJson();
+                scope.createJson(true);
+
+                var $previewDiv = angular.element(".previewcontent");
+                $previewDiv.html("<h2>kissa</h2>");
             });
         } else {
             $(".createQuestion").off('change.createjson');
