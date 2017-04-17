@@ -1561,7 +1561,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "cc":
                     cmdline = "gcc -Wall %s %s -o %s -lm" % (opt, csfname, exename)
                 elif ttype == "c++":
-                    cmdline = "g++ -std=c++11 -Wall %s %s -o %s -lm" % (opt, csfname, exename)
+                    cmdline = "g++ -std=c++14 -Wall %s %s -o %s -lm" % (opt, csfname, exename)
                 elif ttype == "py":
                     cmdline = ""
                 elif ttype == "swift":
