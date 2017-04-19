@@ -1,9 +1,13 @@
 <div class="modal-header">
     <h3 class="modal-title" id="modal-title">Printing document {{ $ctrl.document.title }}</h3>
-    <h4>font size test: {{ $ctrl.get_settings.doc_settings.fontSize }}</h4>
+    <!--<h4>font size test: {{ $ctrl.get_settings.doc_settings.fontSize }}</h4>-->
 </div>
 <div class="modal-body" id="modal-body">
-    <div class="row div_row">
+  <form name="outerForm" class="tab-form-demo">
+    <uib-tabset active="activeForm">
+      <uib-tab index="0" heading="Settings">
+        <ng-form name="nestedForm">
+         <div class="row div_row">
         <div class="col-sm-5 col-sm-offset-1 div-height"><span>Font size</span></div>
         <div class="col-sm-5"><select class="form-control">
             <option>12</option>
@@ -28,12 +32,12 @@
         <div class="col-sm-5"><input class="form-control" type="number"></div>
     </div>
 
-    <div class="row div_row">
+    <!--<div class="row div_row">
         <div class="col-sm-5 col-sm-offset-3"><span>Add cover</span></div>
     </div>
     <div class="row div_row">
         <div class="col-sm-5 col-sm-offset-1"><input type="file" id="input"></div>
-    </div>
+    </div>-->
     <div class="row div_row">
         <div class="col-sm-5 col-sm-offset-1"><label class="checkbox-inline">
             <input type="checkbox" id="inlineCheckbox1" value="option1"> Print PDF
@@ -47,6 +51,23 @@
             <input type="checkbox" id="checkbox_save_pdf" value="option2"> Save PDF
         </label></div>
     </div>
+        </ng-form>
+      </uib-tab>
+      <uib-tab index="1" heading="Cover">
+        <input type="checkbox" id="inlineCheckbox2" value="option2"> Add cover
+          <div class="row div_row">
+        <div class="col-sm-5 col-sm-offset-3"><span>Add cover</span></div>
+    </div>
+    <div class="row div_row">
+        <div class="col-sm-5 col-sm-offset-1"><input type="file" id="input"></div>
+    </div>
+      </uib-tab>
+      <uib-tab index="2" heading="more">
+        More Tab Content
+      </uib-tab>
+    </uib-tabset>
+  </form>
+
 </div>
 <div class="modal-footer">
     <div>
