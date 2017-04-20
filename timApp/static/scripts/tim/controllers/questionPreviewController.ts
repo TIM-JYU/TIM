@@ -16,8 +16,8 @@ markAsUsed(answerSheet);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$rootScope', 'ParCompiler', '$log',
-    function ($scope, $window, http, $rootScope, ParCompiler, $log) {
+timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$rootScope',
+    function ($scope, $window, http, $rootScope) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit questionPreview.html to repeat rows and columns
         "use strict";
@@ -83,7 +83,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
             })
 
             .error(function () {
-                $log.error("Could not get question.");
+                console.error("Could not get question.");
             });
 
         // $scope.par = $par;

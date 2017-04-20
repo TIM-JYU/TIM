@@ -14,6 +14,7 @@ from responsehelper import json_response
 from documentmodel.document import Document
 from plugin import parse_plugin_values, Plugin, PluginException
 from sessioninfo import get_current_user_object
+from requesthelper import verify_json_params;
 
 qst_plugin = Blueprint('qst_plugin',
                        __name__,
@@ -45,6 +46,7 @@ def qst_answer():
         points_table = create_points_table(spoints)
         points = calculate_points_from_json_answer(answers, points_table)
         tim_info["points"] = points
+    convert_md(jsondata)
     info = jsondata['info']
     markup = jsondata['markup']
     result = False
@@ -58,20 +60,38 @@ def qst_answer():
     return json_response({'save': save, 'web': web, "tim_info": tim_info})
 
 
+def is_review(request):
+    # print(query)
+    result = request.full_path.find("review=") >= 0
+    return result
+
+
 @qst_plugin.route("/qst/multihtml/", methods=["POST"])
 def qst_multihtml():
     jsondata = request.get_json()
     multi = []
     for jso in jsondata:
-        multi.append(qst_get_html(jso))
+        multi.append(qst_get_html(jso, is_review(request)))
     return json_response(multi)
+
+
+@qst_plugin.route("/qst/qetQuestionMD/", methods=['POST'])
+def get_question_md():
+    doc_id, md = verify_json_params('docId', 'text')
+    # md = verify_json_params('text')
+    markup = json.loads(md)
+    plugin_data = {}
+    plugin_data['markup'] = markup;
+    convert_md(plugin_data)
+
+    return json_response({'md': plugin_data['markup']})
 
 
 @qst_plugin.route("/qst/html/", methods=["POST"])
 def qst_html():
     jsondata = request.get_json()
 
-    html = qst_get_html(jsondata)
+    html = qst_get_html(jsondata, is_review(request))
     return Response(html, mimetype="text/html")
 
 
@@ -97,8 +117,20 @@ def set_explanation(markup):
         except ValueError:
             pass
 
+NOLAZY = "<!--nolazy-->"
 
-def qst_get_html(jso):
+
+def qst_str(state):
+    s = str(state)
+    s = s.replace("], ", "\n")
+    s = s.replace("]", "")
+    s = s.replace("[", "")
+    s = s.replace("''", "-")
+    s = s.replace("'", "")
+    return s
+
+
+def qst_get_html(jso, review):
     result = False
     info = jso['info']
     markup = jso['markup']
@@ -114,6 +146,14 @@ def qst_get_html(jso):
     else:
         set_explanation(markup)
     jso['show_result'] = result
+
+    if review:
+        usercode = qst_str(jso.get("state","-"))
+        s = ""
+        result = NOLAZY + '<div class="review" ng-non-bindable><pre>' + usercode + '</pre>' + s + '</div>'
+        return result
+
+
 
     attrs = json.dumps(jso)
 
@@ -132,7 +172,8 @@ def question_convert_js_to_yaml(md):
     question_title = markup["json"]["questionTitle"]
     question_title = question_title.replace('"', '').replace("'", '')
     # taskid = questionTitle.replace(" ", "")  # TODO: make better conversion to ID
-    taskid = re.sub('[^A-Za-z0-9]', '', question_title)
+    taskid = question_title.replace("md:", "")
+    taskid = re.sub('[^A-Za-z0-9]', '', taskid)
     oldid = markup.get('taskId')
     if not oldid:
         markup['taskId'] = taskid

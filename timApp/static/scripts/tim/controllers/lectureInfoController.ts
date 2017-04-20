@@ -21,7 +21,7 @@ markAsUsed(showChart);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$window', '$log', function ($rootScope, $scope, $http, $window, $log) {
+timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$window', '$log', '$element', 'ParCompiler', function ($rootScope, $scope, $http, $window, $log, $element, ParCompiler) {
     "use strict";
     $scope.item = $window.item;
     $scope.docId = $scope.item.id;
@@ -41,6 +41,7 @@ timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$w
     $scope.showPoints = false;
     $scope.points = [];
     $scope.showLectureForm = false;
+    $scope.element = $element;
     /**
      * Sends http request to get info about the specific lecture.
      * @memberof module:lectureInfoController
@@ -218,6 +219,12 @@ timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$w
         $scope.showLectureForm = false;
     });
 
+    $scope.toggle = function() {
+        $scope.dynamicAnswerShowControls[0].toggle();
+        
+    }
+    
+    
     /**
      * Draws charts from the answer of the current lecture.
      * @param userToShow Which users answers to shows. If undefined shows from every user.
@@ -253,5 +260,8 @@ timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$w
             elem.empty();
             elem.append("No answers from this lecture");
         }
+        $window.setTimeout(function () { // give time to html to change
+            if ( GlobalParCompiler ) GlobalParCompiler.processAllMath($element.parent());
+        }, 200);
     };
 }]);

@@ -1120,6 +1120,19 @@ body > .footer {
     border: none;
 }
 
+.table .table-borderless  {
+    border: none;
+}
+
+.total-borderless  {
+    border: none !important;
+}
+
+.total-borderless tbody tr td, .total-borderless tbody tr th, .total-borderless thead tr th {
+    border: none !important;
+}
+
+
 #doctext {
     font-family: $font-family-monospace;
 }

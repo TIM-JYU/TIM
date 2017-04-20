@@ -449,7 +449,8 @@ def get_html(ttype, query):
             print("Ei ollut string: ", code, jso)
             code = '' + str(code)
             # ebycode = html.escape(code)
-        ebycode = code.replace("</pre>", "< /pre>")  # prevent pre ending too early
+        # ebycode = code.replace("</pre>", "</pre>")  # prevent pre ending too early
+        ebycode = code.replace("<", "&lt;").replace(">", "&gt;")
         if tiny:
             lazy_visible = '<div class="lazyVisible csRunDiv csTinyDiv no-popup-menu" >' + get_tiny_surrounding_headers(
                 query,
@@ -1560,7 +1561,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "cc":
                     cmdline = "gcc -Wall %s %s -o %s -lm" % (opt, csfname, exename)
                 elif ttype == "c++":
-                    cmdline = "g++ -std=c++11 -Wall %s %s -o %s -lm" % (opt, csfname, exename)
+                    cmdline = "g++ -std=c++14 -Wall %s %s -o %s -lm" % (opt, csfname, exename)
                 elif ttype == "py":
                     cmdline = ""
                 elif ttype == "swift":
