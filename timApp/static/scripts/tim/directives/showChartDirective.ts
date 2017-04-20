@@ -139,78 +139,126 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
             var canvash = 300;
 
             //TODO: If more than 12 choices this will break. Refactor to better format.
-            let basicSets = [
+            var basicSets = [
                 {
                     label: "", // "Answer",
-                    backgroundColor: "rgba(0,220,0,0.2)",
-                    borderColor: "rgba(0,220,0,1)",
+                    fillColor: "rgba(0,220,0,0.2)",
+                    strokeColor: "rgba(0,220,0,1)",
+                    pointColor: "rgba(0,220,0,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(0,220,0,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    backgroundColor: "rgba(220,0,0,0.2)",
-                    borderColor: "rgba(220,0,0,1)",
+                    fillColor: "rgba(220,0,0,0.2)",
+                    strokeColor: "rgba(220,0,0,1)",
+                    pointColor: "rgba(220,0,0,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(220,0,0,1)",
                     data: []
                 },
 
                 {
                     label: "Answers",
-                    backgroundColor: "rgba(0,0,220,0.2)",
-                    borderColor: "rgba(0,0,220,1)",
+                    fillColor: "rgba(0,0,220,0.2)",
+                    strokeColor: "rgba(0,0,220,1)",
+                    pointColor: "rgba(0,0,220,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(0,0,220,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    backgroundColor: "rgba(0,220,220,0.2)",
-                    borderColor: "rgba(0,220,220,1)",
+                    fillColor: "rgba(0,220,220,0.2)",
+                    strokeColor: "rgba(0,220,220,1)",
+                    pointColor: "rgba(0,220,220,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(0,220,220,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    backgroundColor: "rgba(220,0,220,0.2)",
-                    borderColor: "rgba(220,0,220,1)",
+                    fillColor: "rgba(220,0,220,0.2)",
+                    strokeColor: "rgba(220,0,220,1)",
+                    pointColor: "rgba(220,0,220,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(0,0,220,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    backgroundColor: "rgba(220,220,220,0.2)",
-                    borderColor: "rgba(220,220,220,1)",
+                    fillColor: "rgba(220,220,220,0.2)",
+                    strokeColor: "rgba(220,220,220,1)",
+                    pointColor: "rgba(220,220,220,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(220,220,220,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    backgroundColor: "rgba(165,220,0,0.2)",
-                    borderColor: "rgba(165,220,0,1)",
+                    fillColor: "rgba(165,220,0,0.2)",
+                    strokeColor: "rgba(165,220,0,1)",
+                    pointColor: "rgba(165,220,0,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(165,220,0,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    backgroundColor: "rgba(220,165,0,0.2)",
-                    borderColor: "rgba(220,165,0,1)",
+                    fillColor: "rgba(220,165,0,0.2)",
+                    strokeColor: "rgba(220,165,0,1)",
+                    pointColor: "rgba(220,165,0,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(220,165,0,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    backgroundColor: "rgba(0,165,220,0.2)",
-                    borderColor: "rgba(220,165,0,1)",
+                    fillColor: "rgba(0,165,220,0.2)",
+                    strokeColor: "rgba(220,165,0,1)",
+                    pointColor: "rgba(220,165,0,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(220,165,0,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    backgroundColor: "rgba(220,0,165,0.2)",
-                    borderColor: "rgba(220,0,165,1)",
+                    fillColor: "rgba(220,0,165,0.2)",
+                    strokeColor: "rgba(220,0,165,1)",
+                    pointColor: "rgba(220,0,165,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(220,0,165,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    backgroundColor: "rgba(30,0,75,0.2)",
-                    borderColor: "rgba(30,0,75,1)",
+                    fillColor: "rgba(30,0,75,0.2)",
+                    strokeColor: "rgba(30,0,75,1)",
+                    pointColor: "rgba(30,0,75,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(30,0,75,1)",
                     data: []
                 },
                 {
                     label: "Answers",
-                    backgroundColor: "rgba(75,75,180,0.2)",
-                    borderColor: "rgba(75,75,180,1)",
+                    fillColor: "rgba(75,75,180,0.2)",
+                    strokeColor: "rgba(75,75,180,1)",
+                    pointColor: "rgba(75,75,180,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(75,75,180,1)",
                     data: []
                 }
             ];
@@ -378,7 +426,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 if ( qstChartIndex != $scope.chartIndex ) qstChartIndex = $scope.chartIndex;
                 qstChartIndex  = (qstChartIndex  + 1) % $scope.charts.length;
                 $scope.chartIndex = qstChartIndex;
-                window.localStorage.setItem("qstChartIndex", qstChartIndex);
+                window.localStorage.setItem("qstChartIndex", qstChartIndex.toString());
                 $scope.changeType();
             };
 
