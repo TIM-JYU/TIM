@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node build.js",
-    "buildDev": "jspm bundle tim/main + tim/slide - \"(tim/main + tim/slide - [tim/**/*])\" build/tim.js -wd"
+    "buildDev": "jspm bundle tim/main + tim/slide - \"(tim/main + tim/slide - [tim/**/*])\" build/tim.js -wd",
+    "fixKatex": "node fix-katex-auto-render.js"
   },
   "repository": {
     "type": "git",
@@ -37,9 +38,10 @@
   },
   "devDependencies": {
     "jspm": "^0.17.0-beta.41",
+    "replace-in-file": "^2.5.0",
+    "systemjs-builder": "latest",
     "tslint": "^5.0.0",
-    "typescript": "^2.2.2",
-    "systemjs-builder": "latest"
+    "typescript": "^2.2.2"
   },
   "jspm": {
     "dependencies": {
@@ -207,4 +209,4 @@
       }
     }
   }
-}
+}

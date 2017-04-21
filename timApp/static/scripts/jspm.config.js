@@ -8,6 +8,7 @@ SystemJS.config({
     "simcir/basicset": "/cs/simcir/simcir-basicset.js",
     "simcir/library": "/cs/simcir/simcir-library.js",
     "simcir/oma-kirjasto": "/cs/simcir/simcir-oma-kirjasto.js",
+    "mathjax": "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_SVG",
     "tim/": "tim/"
   },
   browserConfig: {
@@ -99,6 +100,10 @@ SystemJS.config({
     },
     "tim/session.ts": {
       "build": false
+    },
+    "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_SVG": {
+      "format": "global",
+      "exports": "MathJax"
     }
   },
   map: {

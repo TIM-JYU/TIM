@@ -5,9 +5,6 @@ import $ = require("jquery");
 import {services} from "tim/ngimport";
 
 class ParagraphCompiler {
-    private mathJaxLoaded: boolean = false;
-    private mathJaxLoadDefer: JQueryXHR;
-
     public compile(data, scope, callback): void {
         const requireComplete = () => {
             services.$ocLazyLoad.inject(data.angularModule).then(() => {
@@ -48,23 +45,9 @@ class ParagraphCompiler {
     }
 
     public processMathJax(elements: Element[] | Element): void {
-        if (this.mathJaxLoaded) {
+        System.amdRequire(["mathjax"], (MathJax) => {
             MathJax.Hub.Queue(["Typeset", MathJax.Hub, elements]);
-        } else {
-            if (this.mathJaxLoadDefer === null) {
-                // HTML-CSS output does not work for MathJax in some mobile devices (e.g. Android Chrome, iPad),
-                // so we use SVG. Other output formats have not been tested so far.
-                this.mathJaxLoadDefer = $.ajax({
-                    dataType: "script",
-                    cache: true,
-                    url: "//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_SVG",
-                });
-            }
-            this.mathJaxLoadDefer.done(() => {
-                this.mathJaxLoaded = true;
-                MathJax.Hub.Queue(["Typeset", MathJax.Hub, elements]);
-            });
-        }
+        });
     }
 
     /**
