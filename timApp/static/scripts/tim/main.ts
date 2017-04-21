@@ -29,9 +29,12 @@ import * as ab from "tim/manageView/manageCtrl";
 import * as ac from "tim/settingsView/settingsCtrl";
 import {markAsUsed} from "tim/utils";
 import $ = require("jquery");
+import {ParCompiler} from "./services/parCompiler";
+import "bootstrap";
 
 markAsUsed(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, ab, ac);
 
 $(document).ready(() => {
     angular.bootstrap(document, ["timApp"], {strictDi: false});
+    ParCompiler.processAllMathDelayed($("body"), 1500);
 });

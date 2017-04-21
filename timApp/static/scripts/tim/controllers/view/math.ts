@@ -1,5 +1,4 @@
 
-import $ = require("jquery");
 export function defineMath(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users, ParCompiler) {
     "use strict";
 
@@ -7,5 +6,4 @@ export function defineMath(sc, http, q, $injector, $compile, $window, $document,
     sc.processAllMathDelayed = ParCompiler.processAllMathDelayed;
     sc.processAllMath = ParCompiler.processAllMath;
     sc.processMath = ParCompiler.processMath;
-    sc.processAllMathDelayed($('body'), 1500);
 }

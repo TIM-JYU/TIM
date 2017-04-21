@@ -12,6 +12,7 @@ import Editor = AceAjax.Editor;
 import VirtualRenderer = AceAjax.VirtualRenderer;
 import Ace = AceAjax.Ace;
 import {IPromise, IQService} from "angular";
+import {ParCompiler} from "../services/parCompiler";
 
 markAsUsed(draggable, rangyinputs);
 
@@ -171,8 +172,8 @@ interface IParEditorScope {
 }
 
 timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
-    '$window', '$localStorage', '$timeout', '$ocLazyLoad', '$log', 'ParCompiler', '$q',
-    function (Upload, $http, $sce, $compile, $window, $localStorage, $timeout, $ocLazyLoad, $log, ParCompiler, $q: IQService) {
+    '$window', '$localStorage', '$timeout', '$ocLazyLoad', '$log', '$q',
+    function (Upload, $http, $sce, $compile, $window, $localStorage, $timeout, $ocLazyLoad, $log, $q: IQService) {
         "use strict";
         return {
             templateUrl: "/static/templates/parEditor.html",

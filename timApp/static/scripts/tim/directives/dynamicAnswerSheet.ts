@@ -1,6 +1,7 @@
 import angular = require("angular");
 import {timApp} from "tim/app";
 import $ = require("jquery");
+import {ParCompiler} from "../services/parCompiler";
 
 /**
  * Created by localadmin on 25.5.2015.
@@ -473,7 +474,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     }
                 }
                 //GlobalParCompiler = ParCompiler;
-                GlobalParCompiler.processAllMath($scope.htmlSheet);
+                ParCompiler.processAllMath($scope.htmlSheet);
             };
             // createAnswer ends
 

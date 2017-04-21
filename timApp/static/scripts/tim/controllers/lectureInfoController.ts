@@ -4,6 +4,7 @@ import * as showChart from "tim/directives/showChartDirective";
 import {fixQuestionJson} from "tim/directives/dynamicAnswerSheet";
 import $ = require("jquery");
 import {markAsUsed} from "tim/utils";
+import {ParCompiler} from "../services/parCompiler";
 
 markAsUsed(showChart);
 
@@ -21,7 +22,7 @@ markAsUsed(showChart);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$window', '$log', '$element', 'ParCompiler', function ($rootScope, $scope, $http, $window, $log, $element, ParCompiler) {
+timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$window', '$log', '$element', function ($rootScope, $scope, $http, $window, $log, $element) {
     "use strict";
     $scope.item = $window.item;
     $scope.docId = $scope.item.id;
@@ -261,7 +262,7 @@ timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$w
             elem.append("No answers from this lecture");
         }
         $window.setTimeout(function () { // give time to html to change
-            if ( GlobalParCompiler ) GlobalParCompiler.processAllMath($element.parent());
+            ParCompiler.processAllMath($element.parent());
         }, 200);
     };
 }]);

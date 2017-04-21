@@ -5,6 +5,7 @@ import {fixQuestionJson, getPointsTable, minimizeJson} from "tim/directives/dyna
 import $ = require("jquery");
 import * as jqueryui from "jquery-ui";
 import {markAsUsed} from "tim/utils";
+import {ParCompiler} from "../services/parCompiler";
 
 markAsUsed(jqueryui);
 
@@ -219,7 +220,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$element
             scope.textAreas = $(".questiontext");
             // ParCompiler.processAllMath($element.parent());
             window.setTimeout(function () { // give time to html to change
-                if (GlobalParCompiler) GlobalParCompiler.processAllMath($element.parent());
+                ParCompiler.processAllMath($element.parent());
             }, 1000);
 
    /*

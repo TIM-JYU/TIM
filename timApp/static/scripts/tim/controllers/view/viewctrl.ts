@@ -17,12 +17,12 @@ import {defineQuestions} from "tim/controllers/view/questions";
 import {defineReadings} from "tim/controllers/view/readings";
 import {defineRefPopup} from "tim/controllers/view/refpopup";
 import * as interceptor from "tim/controllers/view/interceptor";
-import * as parCompiler from "tim/services/parCompiler";
 import * as popupMenu from "tim/directives/popupMenu";
 import $ = require("jquery");
 import {markAsUsed} from "tim/utils";
+import {ParCompiler} from "../../services/parCompiler";
 
-markAsUsed(ngStorage, parCompiler, popupMenu, interceptor);
+markAsUsed(ngStorage, popupMenu, interceptor);
 
 timApp.controller("ViewCtrl", [
     '$scope',
@@ -39,8 +39,7 @@ timApp.controller("ViewCtrl", [
     '$log',
     '$interval',
     'Users',
-    'ParCompiler',
-    function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, $interval, Users, ParCompiler) {
+    function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, $interval, Users) {
         "use strict";
         timLogTime("ViewCtrl start", "view");
         sc.noBrowser = $window.noBrowser;

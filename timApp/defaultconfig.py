@@ -21,7 +21,7 @@ PERMANENT_SESSION_LIFETIME = timedelta(days=14)
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 IMMEDIATE_PRELOAD = False
 LIBSASS_STYLE = "compressed"
-LIBSASS_INCLUDES = ["static/scripts/jspm_packages/npm/bootstrap-sass@3.3.7/assets/stylesheets",
+LIBSASS_INCLUDES = ["static/scripts/jspm_packages/github/twbs/bootstrap-sass@3.3.7/assets/stylesheets",
                     "static/scripts/jspm_packages/npm/jquery-ui@1.12.1/themes/base",
                     "static/scripts/jspm_packages/npm/eonasdan-bootstrap-datetimepicker@4.17.47/src/sass",
                     "static"]

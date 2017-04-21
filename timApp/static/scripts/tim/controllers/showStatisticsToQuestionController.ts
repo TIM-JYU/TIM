@@ -1,6 +1,7 @@
 import {timApp} from "tim/app";
 import * as chart from "tim/directives/showChartDirective";
 import {markAsUsed} from "tim/utils";
+import {ParCompiler} from "../services/parCompiler";
 
 markAsUsed(chart);
 
@@ -68,7 +69,7 @@ timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$element',  
         // ParCompiler.processAllMath($element.parent());
 
         window.setTimeout(function () { // give time to html to change
-            GlobalParCompiler.processAllMath($element.parent());
+            ParCompiler.processAllMath($element.parent());
         }, 200);
 
     });

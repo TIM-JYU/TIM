@@ -54,7 +54,8 @@ SystemJS.config({
       "deps": [
         "angular",
         "eonasdan-bootstrap-datetimepicker"
-      ]
+      ],
+      "format": "global"
     },
     "npm:angular@1.5.11/angular.js": {
       "deps": [
@@ -150,8 +151,8 @@ SystemJS.config({
     "angular-ui-bootstrap": "npm:angular-ui-bootstrap@2.5.0",
     "angular-ui-grid": "npm:angular-ui-grid@4.0.1",
     "assert": "npm:jspm-nodelibs-assert@0.2.1",
-    "bootstrap": "npm:bootstrap@3.3.7",
-    "bootstrap-sass": "npm:bootstrap-sass@3.3.7",
+    "bootstrap": "github:twbs/bootstrap@3.3.7",
+    "bootstrap-sass": "github:twbs/bootstrap-sass@3.3.7",
     "buffer": "npm:jspm-nodelibs-buffer@0.2.2",
     "chart.js": "npm:chart.js@2.5.0",
     "child_process": "npm:jspm-nodelibs-child_process@0.2.1",
@@ -262,12 +263,6 @@ SystemJS.config({
       }
     },
     "npm:bn.js@4.11.6": {
-      "map": {}
-    },
-    "npm:bootstrap-sass@3.3.7": {
-      "map": {}
-    },
-    "npm:bootstrap@3.3.7": {
       "map": {}
     },
     "npm:browserify-aes@1.0.6": {
@@ -574,6 +569,11 @@ SystemJS.config({
       "map": {
         "inherits": "npm:inherits@2.0.1",
         "readable-stream": "npm:readable-stream@2.2.9"
+      }
+    },
+    "github:twbs/bootstrap@3.3.7": {
+      "map": {
+        "jquery": "npm:jquery@2.2.4"
       }
     }
   }
