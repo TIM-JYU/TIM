@@ -205,18 +205,18 @@
                     <velp-selection id="velpMenu"></velp-selection>
                 {% endif %}
             </div>
-            {% if not text %}
-                <bootstrap-panel title="Review document permissions" show-close="true">
-                    <p>These are the current permissions for this document; please modify if needed.
-                        You can always modify these permissions from the manage page.</p>
-                    <rights-editor
-                        item-id="docId"
-                        url-root="permissions">
-                    </rights-editor>
-                </bootstrap-panel>
-            {% endif %}
         {% endif %}
     </div>
+    {% if not text %}
+        <bootstrap-panel title="Review document permissions" show-close="true">
+            <p>These are the current permissions for this document; please modify if needed.
+                You can always modify these permissions from the manage page.</p>
+            <rights-editor
+                    item-id="docId"
+                    url-root="permissions">
+            </rights-editor>
+        </bootstrap-panel>
+    {% endif %}
     <p id="test"></p>
 
 {% endblock %}
