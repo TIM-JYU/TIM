@@ -62,6 +62,11 @@ SystemJS.config({
         "jquery"
       ]
     },
+    "npm:katex@0.7.1/dist/contrib/auto-render.min.js": {
+      "globals": {
+        "katex": "npm:katex@0.7.1/katex.js"
+      }
+    },
     "/cs/simcir/simcir-basicset.js": {
       "deps": [
         "simcir"
