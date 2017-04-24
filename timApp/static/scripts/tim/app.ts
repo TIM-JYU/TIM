@@ -9,17 +9,12 @@ import * as uibootstrap from "angular-ui-bootstrap";
 import * as ngFileUpload from "ng-file-upload";
 import * as ngStorage from "ngstorage";
 import * as oclazyload from "oclazyload";
-import {markAsUsed} from "tim/utils";
 import * as angularmodules from "tim/angularmodules";
 import * as extramodules from "tim/extramodules";
 import * as plugins from "tim/plugins";
-import {injectSanitizeService} from "tim/timHelper";
+import {markAsUsed} from "tim/utils";
 
 markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize, uibootstrap, ngFileUpload, ngStorage, plugins, extramodules, oclazyload);
-
-// hack: expose moment in global scope because otherwise angular-eonasdan-datetimepicker cannot find it
-declare let window: any;
-window.moment = moment;
 
 // timApp's Angular modules:
 // base: 'ngMessages', 'timer', 'ae-datetimepicker', 'ngSanitize', 'ui.bootstrap'
@@ -58,10 +53,6 @@ timApp.config(["$httpProvider", ($httpProvider) => {
     $httpProvider.defaults.headers.get["If-Modified-Since"] = "Mon, 26 Jul 1997 05:00:00 GMT";
     $httpProvider.defaults.headers.get["Cache-Control"] = "no-cache";
     $httpProvider.defaults.headers.get["Pragma"] = "no-cache";
-}]);
-
-timApp.config(["$sanitizeProvider", "$$sanitizeUriProvider", ($sanitizeProvider, $$sanitizeUriProvider) => {
-    injectSanitizeService($sanitizeProvider.$get[1]($$sanitizeUriProvider.$get()));
 }]);
 
 // Filter to make string URL friendly

@@ -17,6 +17,8 @@ import * as utils from "tim/utils";
 import $ = require("jquery");
 import * as sessionsettings from "tim/session";
 import {setsetting} from "tim/utils";
+import moment = require("moment");
+import {showDialog} from "../dialog";
 
 //TODO: Painike, josta voisi hakea kysymyksiä.
 //TODO: Button, to get questions and wall.
@@ -25,8 +27,8 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
     function ($scope, http, $window, $rootScope, $timeout) {
         "use strict";
         $scope.docNamePath = "";
-        $scope.lectureStartTime = "";
-        $scope.lectureEndTime = "";
+        $scope.lectureStartTime = moment();
+        $scope.lectureEndTime = moment();
         $scope.lectureName = "";
         $scope.msg = "";
         $scope.newMsg = "";
@@ -145,7 +147,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                             lectureCode = "";
                         }
                         if (lectureCode === autoJoin && answer.lectures.length <= 0) {
-                            $scope.showDialog("There are no ongoing lectures for this document.");
+                            showDialog("There are no ongoing lectures for this document.");
                             return showRightView(answer);
                         }
                     }
@@ -164,9 +166,9 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                                 showRightView(answer);
                         }).error(function () {
                             if (lectureCode === autoJoin) {
-                                $scope.showDialog("Could not find a lecture for this document.");
+                                showDialog("Could not find a lecture for this document.");
                             } else {
-                                $scope.showDialog("Lecture " + lectureCode + " not found.");
+                                showDialog("Lecture " + lectureCode + " not found.");
                             }
                             showRightView(answer);
                         });
@@ -227,13 +229,13 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                     $scope.passwordQuess = "";
                     var input = $("#passwordInput");
                     if (answer.lecture_ended) {
-                        $scope.showDialog("Lecture '" + name + "' has ended");
+                        showDialog("Lecture '" + name + "' has ended");
                         return false;
                     } else if (answer.lecture_full) {
-                        $scope.showDialog("Lecture '" + name + "' is full");
+                        showDialog("Lecture '" + name + "' is full");
                         return false;
                     } else if (!answer.correctPassword) {
-                        $scope.showDialog("Wrong access code!");
+                        showDialog("Wrong access code!");
                         return false;
                     } else if (answer.anonLogin) {
                         // if the user was logged in as a temporary user, we must refresh
@@ -436,7 +438,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             })
                 .success(function (answer) {
                     if (angular.isDefined(answer.questionLate)) {
-                        $scope.showDialog(answer.questionLate);
+                        showDialog(answer.questionLate);
                     }
                 })
                 .error(function () {
@@ -561,29 +563,6 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             $('#futureList').hide();
             $scope.showLectureForm = true;
             $rootScope.$broadcast("initLectureFormVals");
-        };
-
-        /**
-         * Show jQuery UI:s modal dialog
-         * Use this instead of window.alert, it will stop executing all javascript
-         * @param message dialog text
-         */
-        $scope.showDialog = function (message) {
-            $('<div id="dialog"><p>' + message + '</div>').dialog({
-                dialogClass: "no-close", modal: true,
-                close: function (event, ui) {
-                    $(this).dialog("close");
-                    $(this).remove();
-                },
-                buttons: [
-                    {
-                        text: "OK",
-                        click: function () {
-                            $(this).dialog("close");
-                        }
-                    }
-                ]
-            });
         };
 
         /**
@@ -718,6 +697,8 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             }
         };
 
+        $scope.extend.choices = [5, 10, 15, 30, 45, 60];
+
         /**
          * Extends the lecture based on the time selected in pop-up to extend lecture.
          * Currently extends to the old lecture ending time. Other option is to extend
@@ -725,29 +706,19 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
          * @memberof module:lectureController
          */
         $scope.extendLecture = function () {
-
-            var dateTime2 = Date.parse($scope.lectureEndTime);
-
-            dateTime2 += $scope.extend.extendTime * 60 * 1000;
-
-            var dateTime3 = new Date(dateTime2);
-
-            var endTimeDate = dateTime3.getFullYear() + '-' + $scope.leftPadder((dateTime3.getMonth() + 1), 2) + '-' +
-                $scope.leftPadder(dateTime3.getDate(), 2) + ' ' +
-                $scope.leftPadder(dateTime3.getHours(), 2) + ':' + $scope.leftPadder(dateTime3.getMinutes(), 2);
-
-            console.log(endTimeDate);
-            $scope.lectureEndTime = "Ends: " + endTimeDate;
-            $scope.showLectureEnding = false;
-            $scope.lectureEnded = false;
+            var endTimeDate = moment($scope.lectureEndTime).add($scope.extend.extendTime, 'minutes');
+            console.log('extending lecture');
             $scope.answeredToLectureEnding = true;
-
+            console.log(endTimeDate);
             http({
                 url: '/extendLecture',
                 method: 'POST',
-                params: {'doc_id': $scope.docId, lecture_id: $scope.lectureId, new_end_time: endTimeDate}
+                params: {'doc_id': $scope.docId,lecture_id: $scope.lectureId, new_end_time: endTimeDate}
             })
                 .success(function () {
+                    $scope.lectureEndTime = endTimeDate;
+                    $scope.showLectureEnding = false;
+                    $scope.lectureEnded = false;
                     $scope.answeredToLectureEnding = false;
                     $window.console.log("Lecture extended");
                 })
@@ -783,8 +754,8 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                     $rootScope.$broadcast("editLecture", {
                         "lecture_id": lecture.lectureId,
                         "lecture_name": lecture.lectureCode,
-                        "start_date": lecture.lectureStartTime,
-                        "end_date": lecture.lectureEndTime,
+                        "start_date": moment(lecture.lectureStartTime),
+                        "end_date": moment(lecture.lectureEndTime),
                         "password": lecture.password || "",
                         "editMode": true
                     });
@@ -882,7 +853,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
          */
         $scope.sendMessageEvent = function (message) {
             if (message.trim() === "") {
-                $scope.showDialog("Can't send empty messages");
+                showDialog("Can't send empty messages");
                 return false;
             }
 
@@ -1171,10 +1142,10 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             })
                 .success(function (answer) {
                     if (!answer) {
-                        $scope.showDialog('No running questions.')
+                        showDialog('No running questions.')
                     }
                     else if (answer.already_answered) {
-                        $scope.showDialog('You have already answered to the current question.')
+                        showDialog('You have already answered to the current question.')
                     } else {
                         $scope.showQuestion(answer);
                     }
@@ -1204,24 +1175,6 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             if (event.which === 13) {
                 $scope.joinLecture();
             }
-        };
-
-        /**
-         * Left padder that adds 0 to left side of number.
-         * @param number Given number to add 0s
-         * @param size how many characters the padded value should be.
-         * @returns {string} The string of the length specified padded with zeroes.
-         * @memberof module:lectureController
-         */
-        $scope.leftPadder = function (number, size) {
-            var paddedNumber = "" + number;
-            var len = paddedNumber.length;
-            while (len < size) {
-                paddedNumber = "0" + paddedNumber;
-                len++;
-            }
-            return paddedNumber;
-
         };
 
         $scope.gotFocus = function () {

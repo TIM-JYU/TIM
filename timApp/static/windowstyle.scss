@@ -109,7 +109,7 @@ fieldset, form {
     width: 100%;
 }
 
-#startDate, #endDate, #calendarStart {
+#startDate, #endDate {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
@@ -423,7 +423,7 @@ th:hover .matrixButtons, .matrixButtons:hover, th:hover .buttonsTop, .buttonsTop
     opacity: 1;
 }
 
-#questionStartTime, #questionTimer, #questionStart {
+#questionTimer, #questionStart {
     margin-left: 10px;
     margin-top: 10px;
 }
@@ -432,7 +432,7 @@ th:hover .matrixButtons, .matrixButtons:hover, th:hover .buttonsTop, .buttonsTop
     display: inline;
 }
 
-.questionTimer, .questionStartTime {
+.questionTimer {
     display: inline;
 }
 

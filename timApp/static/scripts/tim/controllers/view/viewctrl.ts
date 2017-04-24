@@ -87,28 +87,6 @@ timApp.controller("ViewCtrl", [
             return e.val() === '1';
         };
 
-        sc.showDialog = function (message) {
-            $('<div id="dialog"><p>' + message + '</div>').dialog({
-                dialogClass: "no-close", modal: true,
-                close: function (event, ui) {
-                    $(this).dialog("close");
-                    $(this).remove();
-                },
-                buttons: [
-                    {
-                        text: "OK",
-                        click: function () {
-                            $(this).dialog("close");
-                        }
-                    }
-                ]
-            });
-        };
-
-        sc.$on('showDialog', function (event, message) {
-            sc.showDialog(message);
-        });
-
         sc.changeUser = function (user, updateAll) {
             sc.selectedUser = user;
             sc.$broadcast('userChanged', {user: user, updateAll: updateAll});

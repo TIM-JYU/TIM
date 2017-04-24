@@ -5,6 +5,7 @@ import {fixQuestionJson} from "tim/directives/dynamicAnswerSheet";
 import $ = require("jquery");
 import {markAsUsed} from "tim/utils";
 import {ParCompiler} from "../services/parCompiler";
+import moment = require("moment");
 
 markAsUsed(showChart);
 
@@ -31,8 +32,8 @@ timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$w
     $scope.lectureId = $window.lectureId;
     $scope.code = $window.lectureCode;
     $scope.lectureCode = "Lecture info: " + $window.lectureCode;
-    $scope.lectureStartTime = $window.lectureStartTime;
-    $scope.lectureEndTime = $window.lectureEndTime;
+    $scope.lectureStartTime = moment($window.lectureStartTime);
+    $scope.lectureEndTime = moment($window.lectureEndTime);
     $scope.msg = "";
     $scope.dynamicAnswerShowControls = [];
     $scope.dynamicAnswerShowControl = {};
@@ -186,8 +187,8 @@ timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$w
                 $scope.$broadcast("editLecture", {
                     "lecture_id": lecture.lectureId,
                     "lecture_name": lecture.lectureCode,
-                    "start_date": lecture.lectureStartTime,
-                    "end_date": lecture.lectureEndTime,
+                    "start_date": moment(lecture.lectureStartTime),
+                    "end_date": moment(lecture.lectureEndTime),
                     "password": lecture.password || "",
                     "editMode": true
                 });
@@ -205,10 +206,10 @@ timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$w
             params: {'lecture_id': $scope.lectureId}
         })
             .success(function (lecture) {
-                $scope.code = lecture['lectureCode'];
-                $scope.lectureCode = "Lecture info: " + lecture['lectureCode'];
-                $scope.lectureEndTime = lecture['lectureEndTime'];
-                $scope.lectureStartTime = lecture['lectureStartTime'];
+                $scope.code = lecture.lectureCode;
+                $scope.lectureCode = "Lecture info: " + lecture.lectureCode;
+                $scope.lectureEndTime = moment(lecture.lectureEndTime);
+                $scope.lectureStartTime = moment(lecture.lectureStartTime);
             })
             .error(function () {
                 $window.console.log("Failed to fetch lecture.");

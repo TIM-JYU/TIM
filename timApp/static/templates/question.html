@@ -42,18 +42,14 @@
                 <div id="questionStart">
                     <label>Starting time:</label>
                     <input type="checkbox" ng-model="question.startTimeSelected"/>
-
-                    <div class="questionStartTime">
-                        <label>Date:<input type="text" id="calendarStart"
-                                           ng-disabled="!question.startTimeSelected"></label>
-                        Time:
-                        <input type="text" id="startHour" name="hour" maxlength="2" size="2" placeholder="hh"
-                               is-valid-change="" ng-model="question.startHour"
-                               ng-disabled="!question.startTimeSelected">
-                        :
-                        <input type="text" id="startMin" name="min" maxlength="2" size="2" placeholder="mm"
-                               is-valid-change="" ng-model="question.startMin"
-                               ng-disabled="!question.startTimeSelected">
+                    <div class="input-group date" datetimepicker ng-model="question.startTime"
+                         data-options="dateTimeOptions">
+                        <input type="text"
+                               class="form-control"
+                               ng-disabled="!question.startTimeSelected"/>
+                        <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
                     </div>
                 </div>
                 <div id="questionTimer">

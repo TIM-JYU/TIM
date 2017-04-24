@@ -1,6 +1,7 @@
 import {timApp} from "tim/app";
 import angular = require("angular");
 import $ = require("jquery");
+import moment = require("moment");
 
 /**
  * Lecture creation controller which is used to handle and validate the form data.
@@ -32,16 +33,14 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         $scope.lectureCode = "";
         $scope.lectureEncoded = "";
         $scope.password = "";
-        $scope.startDate = "";
-        $scope.startHour = "";
         $scope.maxStudents = "";
-        $scope.startMin = "";
         $scope.earlyJoining = true;
-        var date = new Date();
         $scope.editMode = false;
-        $scope.startDate = date.getDate() + "." + (date.getMonth() + 1) + "." + date.getFullYear();
-        angular.element('#startDate').datepicker({dateFormat: 'dd.m.yy'}); //calendar for start date initalized
-        angular.element('#endDate').datepicker({dateFormat: 'dd.m.yy'}); //calendar for start date initalized
+
+        $scope.dateTimeOptions = {
+            format: 'D.M.YYYY HH:mm:ss',
+            showTodayButton: true
+        };
 
         /**
          * Function called when new lecture form button is pressed.
@@ -51,33 +50,15 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.initLectureForm();
         });
 
-        $scope.splitDate = function(d) {
-            var p = new Date(Date.parse(d));
-               //       0              1             2           3           4
-            return [p.getFullYear(),p.getMonth()+1,p.getDate(),p.getHours(),p.getMinutes()];
-        }
-
         $scope.$on('editLecture', function (event, data) {
             $scope.lectureCode = data.lecture_name;
             $scope.lectureCodeEncoded = encodeURIComponent($scope.lectureCode);
 
             $scope.hostName = encodeURIComponent(location.host);
             $scope.lectureId = data.lecture_id;
-            // start_date is of the form: 2016-07-13T12:33:00+00:00
-            //var splittedStart = data.start_date.split("T");
-            // var splittedStartTime = splittedStart[1].split('+')[0].split(":");
-            var splittedStartDate = $scope.splitDate(data.start_date);
-            var splittedEndDate = $scope.splitDate(data.end_date);
-            $scope.startMin = splittedStartDate[4];
-            $scope.startHour = splittedStartDate[3];
-            $scope.startDate = splittedStartDate[2] + "." + splittedStartDate[1] + "." + splittedStartDate[0];
-            // var splittedEnd = data.end_date.split("T");
-            // var splittedEndTime = splittedEnd[1].split('+')[0].split(":");
-            // var splittedEndDate = splittedEnd[0].split("-");
+            $scope.startTime = data.start_date;
+            $scope.endTime = data.end_date;
             $scope.enableDate2();
-            $scope.endMin = splittedEndDate[4];
-            $scope.endHour = splittedEndDate[3];
-            $scope.endDate = splittedEndDate[2] + "." + splittedEndDate[1] + "." + splittedEndDate[0];
             if (data.password !== undefined) {
                 $scope.password = data.password;
             }
@@ -109,10 +90,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          */
         $scope.initLectureForm = function () {
             $window.console.log("Lecture initialized.");
-            var date = new Date();
-            $scope.startDate = date.getDate() + "." + (date.getMonth() + 1) + "." + date.getFullYear();
-            $scope.startHour = $scope.leftPadder(date.getHours(), 2);
-            $scope.startMin = $scope.leftPadder(date.getMinutes(), 2);
+            $scope.startTime = moment();
             $scope.dueCheck = true;
             $scope.earlyJoining = true;
             $scope.enableDue2();
@@ -132,9 +110,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         $scope.enableDate2 = function () {
             $scope.dateCheck = true;
             $scope.dueCheck = false;
-            $scope.endDate = $scope.startDate;
-            $scope.endHour = $scope.leftPadder(parseInt($scope.startHour) + 2, 2);
-            $scope.endMin = $scope.leftPadder($scope.startMin, 2);
+            $scope.endTime = moment($scope.startTime).add(2, 'hours');
 
             $scope.useDate = true;
             $scope.useDuration = false;
@@ -152,11 +128,6 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.dueCheck = true;
             $scope.useDuration = true;
             $scope.useDate = false;
-            $scope.endDay = "";
-            $scope.endMonth = "";
-            $scope.endYear = "";
-            $scope.endHour = "";
-            $scope.endMin = "";
             $scope.durationHour = "02";
             $scope.durationMin = "00";
         };
@@ -216,65 +187,6 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         };
 
         /**
-         * Function for validating that the date is of the format dd.mm.yyyy.
-         * @param element The value of the element to be validated.
-         * @param val The ID of the input field so user can be notified of the error.
-         * @memberof module:createLectureCtrl
-         */
-        $scope.isDateValid = function (element, val) {
-            var reg = new RegExp("^(0?[1-9]|[12][0-9]|3[01])[.]((0?[1-9]|1[012])[.](19|20)?[0-9]{2})*$");
-            if (!reg.test(element)) {
-                $scope.errorize(val, "Date is not of format dd.mm.yyyy or date is invalid.");
-            }
-        };
-
-        /**
-         * Translates date object to string in the form yyyy-mm-dd hh:mm
-         * @param input JavaScript date object
-         * @param include_time Boolean value whether to include the time or not
-         * @returns {string} yyyy-mm-dd( hh:mm)
-         * @memberof module:createLectureCtrl
-         */
-        $scope.dateObjectToString = function (input, include_time) {
-            var output = $scope.leftPadder(input.getFullYear(), 4) + "-" +
-                $scope.leftPadder(input.getMonth() + 1, 2) + "-" +
-                $scope.leftPadder(input.getDate(), 2);
-            if (include_time) {
-                output += " " + $scope.leftPadder(input.getHours(), 2) + ":" +
-                    $scope.leftPadder(input.getMinutes(), 2);
-            }
-            return output;
-        };
-        /**
-         * Creates a new date object with the specified date and time
-         * @param date_to_be_validated Date as a string in either seperated by dots or dashes.
-         * @param time_hours
-         * @param time_mins
-         * @param splitter Date seperator.
-         * @returns {Date} Returns a JavaScript date object.
-         * @memberof module:createLectureCtrl
-         */
-        $scope.translateToDateObject = function (date_to_be_validated, time_hours, time_mins, splitter) {
-            var parms = date_to_be_validated.split(splitter);
-            var dd;
-            var mm;
-            var yyyy;
-
-            if (splitter === ".") {
-                dd = parseInt(parms[0], 10);
-                mm = parseInt(parms[1], 10);
-                yyyy = parseInt(parms[2], 10);
-            } else {
-                dd = parseInt(parms[2], 10);
-                mm = parseInt(parms[1], 10);
-                yyyy = parseInt(parms[0], 10);
-            }
-            var hours = parseInt(time_hours, 10);
-            var mins = parseInt(time_mins, 10);
-            return new Date(yyyy, mm - 1, dd, hours, mins, 0);
-        };
-
-        /**
          * Function for creating a new lecture and validation.
          * @memberof module:createLectureCtrl
          */
@@ -283,15 +195,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                 $scope.editMode = false;
             }
             $scope.removeErrors();
-            $scope.isDateValid($scope.startDate, "startDate");
-            if ($scope.error_message <= 0) {
-                $scope.start_date = $scope.translateToDateObject($scope.startDate, $scope.startHour, $scope.startMin, ".");
-                if ($scope.endDate !== undefined, $scope.useDate) {
-                    $scope.isDateValid($scope.endDate, "endDate");
-                    $scope.end_date = $scope.translateToDateObject($scope.endDate, $scope.endHour, $scope.endMin, ".");
-                } else {
-                    $scope.end_date = "";
-                }
+            if (!$scope.startTime) {
+                $scope.errorize("startTime", "Start time must be entered!");
             }
 
             /*This checks that "lecture code"-field is not empty.*/
@@ -303,27 +208,16 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             if ($scope.dateCheck === false && $scope.dueCheck === false) {
                 $scope.errorize("endInfo", "A date or duration must be chosen.");
             }
-            /*Checks that hours in starting and ending time are between 0 and 23.
-             Checks that minutes in starting and ending time are between 0 and 59*/
-            $scope.isHour($scope.startHour, "startHour");
-            $scope.isMinute($scope.startMin, "startMin");
             $scope.isNumber($scope.maxStudents, "maxStudents");
 
-            if ($scope.start_date !== undefined) {
-                var now_hours = date.getHours();
-                var now_minutes = date.getMinutes();
-                var now_date_object = $scope.translateToDateObject($scope.dateObjectToString(date, false), now_hours, now_minutes, "-");
-                var lecture_starting_in_past = $scope.start_date - now_date_object < 0;
-                var lecture_ending_in_past;
+            if ($scope.startTime !== null) {
+                var lecture_starting_in_past = moment().diff($scope.startTime) >= 0;
 
                 /* Checks that are run if end date is used*/
-                if ($scope.useDate && $scope.end_date !== undefined) {
-                    $scope.isHour($scope.endHour, "endHour");
-                    $scope.isMinute($scope.endMin, "endMin");
-                    if ($scope.end_date - $scope.start_date < 120000) {
+                if ($scope.useDate && $scope.endTime !== null) {
+                    if ($scope.endTime.diff($scope.startTime) < 120000) {
                         $scope.errorize("endDateDiv", "Lecture has to last at least two minutes.");
                     }
-                    $scope.endDateForDB = $scope.dateObjectToString($scope.end_date, true);
                 }
 
                 /* Check that are run if duration is used. */
@@ -339,16 +233,15 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                     if ($scope.durationHour.length <= 0 && $scope.durationMin.length <= 0) {
                         $scope.errorize("durationDiv", "Please give a duration.");
                     }
-                    $scope.end_date = new Date($scope.start_date.getTime());
-                    $scope.end_date.setHours($scope.start_date.getHours() + parseInt($scope.durationHour));
-                    $scope.end_date.setMinutes($scope.start_date.getMinutes() + parseInt($scope.durationMin));
-                    if ($scope.end_date - $scope.start_date < 120000) {
+                    $scope.endTime = moment($scope.startTime)
+                        .add(parseInt($scope.durationHour), 'hours')
+                        .add(parseInt($scope.durationMin));
+                    if ($scope.endTime.diff($scope.startTime) < 120000) {
                         $scope.errorize("durationDiv", "Lecture has to last at least two minutes.");
                     }
-                    $scope.endDateForDB = $scope.dateObjectToString($scope.end_date, true);
                 }
                 var alert_message = "";
-                lecture_ending_in_past = $scope.end_date - now_date_object <= 0;
+                var lecture_ending_in_past = moment().diff($scope.endTime) >= 0;
                 /* Confirmations if lecture starts and/or ends before the current date */
                 if (lecture_starting_in_past && !$scope.editMode) {
                     alert_message += "Are you sure you want the lecture to start before now? ";
@@ -371,9 +264,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             /* If no errors save the lecture to the database */
             if ($scope.error_message <= 0) {
                 if ($scope.earlyJoining) {
-                    $scope.start_date = new Date($scope.start_date - 900000); // adds 15 minutes
+                    $scope.startTime.subtract(15, 'minutes');
                 }
-                $scope.startDateForDB = $scope.dateObjectToString($scope.start_date, true);
                 $http({
                     url: '/createLecture',
                     method: 'POST',
@@ -382,10 +274,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                         'doc_id': $scope.docId,
                         'lecture_code': $scope.lectureCode,
                         'password': $scope.password,
-                        'start_date': $scope.start_date,
-                        // 'start_date': $scope.startDateForDB,
-                        // 'end_date': $scope.endDateForDB,
-                        'end_date': $scope.end_date,
+                        'start_date': $scope.startTime,
+                        'end_date': $scope.endTime,
                         'max_students': $scope.maxStudents || ''
                     }
                 })
@@ -459,8 +349,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         $scope.clearForm = function () {
             $scope.lectureCode = "";
             $scope.password = "";
-            $scope.startDate = "";
-            $scope.endDate = "";
+            $scope.startDate = moment();
+            $scope.endDate = null;
             $scope.startHour = "";
             $scope.startMin = "";
             $scope.durationMin = "";
@@ -475,23 +365,6 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.durationChosen = false;
             $scope.dateCheck = false;
             $scope.lectureId = null;
-        };
-
-        /**
-         * Function for adding preceding zeroes to a number to make it of desired length.
-         * @param number Number to be padded.
-         * @param size How long should the number be.
-         * @returns {string} Returns the number in the padded length.
-         * @memberof module:createLectureCtrl
-         */
-        $scope.leftPadder = function (number, size) {
-            var paddedNumber = "" + number;
-            var len = paddedNumber.length;
-            while (len < size) {
-                paddedNumber = "0" + paddedNumber;
-                len++;
-            }
-            return paddedNumber;
         };
 
         /**

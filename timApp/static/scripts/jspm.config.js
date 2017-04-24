@@ -56,7 +56,9 @@ SystemJS.config({
         "angular",
         "eonasdan-bootstrap-datetimepicker"
       ],
-      "format": "global"
+      "globals": {
+         "moment": "npm:moment@2.18.1/moment.js"
+      }
     },
     "npm:angular@1.5.11/angular.js": {
       "deps": [
@@ -143,7 +145,6 @@ SystemJS.config({
     "@types/chart.js": "npm:@types/chart.js@2.4.2",
     "@types/eonasdan-bootstrap-datetimepicker": "npm:@types/eonasdan-bootstrap-datetimepicker@4.17.22",
     "@types/jquery": "npm:@types/jquery@2.0.41",
-    "@types/jqueryui": "npm:@types/jqueryui@1.11.32",
     "@types/katex": "npm:@types/katex@0.5.0",
     "@types/mathjax": "npm:@types/mathjax@0.0.31",
     "@types/ngstorage": "npm:@types/ngstorage@0.3.34",
@@ -172,8 +173,6 @@ SystemJS.config({
     "http": "npm:jspm-nodelibs-http@0.2.0",
     "humanize-duration": "npm:humanize-duration@3.10.0",
     "jquery": "npm:jquery@2.2.4",
-    "jquery-ui": "npm:jquery-ui@1.12.1",
-    "jqueryui-touch-punch": "npm:jquery-ui-touch-punch-c@1.4.0",
     "katex": "npm:katex@0.7.1",
     "module": "npm:jspm-nodelibs-module@0.2.1",
     "moment": "npm:moment@2.18.1",
@@ -231,11 +230,6 @@ SystemJS.config({
       "map": {
         "@types/jquery": "npm:@types/jquery@2.0.41",
         "moment": "npm:moment@2.18.1"
-      }
-    },
-    "npm:@types/jqueryui@1.11.32": {
-      "map": {
-        "@types/jquery": "npm:@types/jquery@2.0.41"
       }
     },
     "npm:@types/oclazyload@0.0.31": {
@@ -426,9 +420,6 @@ SystemJS.config({
       }
     },
     "npm:inherits@2.0.1": {
-      "map": {}
-    },
-    "npm:jquery-ui@1.12.1": {
       "map": {}
     },
     "npm:katex@0.7.1": {

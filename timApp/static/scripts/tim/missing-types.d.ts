@@ -18,14 +18,7 @@ declare module 'ace' {
     export default ace;
 }
 declare module 'ace/snippets'
-declare module 'jqueryui'
 declare module 'rangyinputs'
-
-// jQuery UI types package and library have slightly different names, so we redirect jquery-ui to jqueryui.
-declare module 'jquery-ui' {
-    import * as jqueryui from 'jqueryui';
-    export = jqueryui;
-}
 
 // All inline module definitions that exist in HTML templates should be listed here:
 declare module 'tim/plugins'

@@ -41,11 +41,13 @@ class Services {
     private q: angular.IQService = null;
     private rootElement: angular.IRootElementService = null;
     private rootScope: angular.IRootScopeService = null;
+    private sanitize: angular.sanitize.ISanitizeService = null;
     private sce: angular.ISCEService = null;
     private sceDelegate: angular.ISCEDelegateService = null;
     private templateCache: angular.ITemplateCacheService = null;
     private templateRequest: angular.ITemplateRequestService = null;
     private timeout: angular.ITimeoutService = null;
+    private uibModal: angular.ui.bootstrap.IModalService = null;
     private window: angular.IWindowService = null;
     private xhrFactory: angular.IXhrFactory<any> = null;
 
@@ -299,6 +301,16 @@ class Services {
         this.rootScope = service;
     }
 
+    get $sanitize() {
+        Services.checkServiceAccess(this.sanitize);
+        return this.sanitize;
+    }
+
+    set $sanitize(service) {
+        Services.checkServiceSet(this.sanitize);
+        this.sanitize = service;
+    }
+
     get $sce() {
         Services.checkServiceAccess(this.sce);
         return this.sce;
@@ -347,6 +359,16 @@ class Services {
     set $timeout(service: angular.ITimeoutService) {
         Services.checkServiceSet(this.timeout);
         this.timeout = service;
+    }
+
+    get $uibModal() {
+        Services.checkServiceAccess(this.uibModal);
+        return this.uibModal;
+    }
+
+    set $uibModal(service) {
+        Services.checkServiceSet(this.uibModal);
+        this.uibModal = service;
     }
 
     get $window() {
@@ -403,6 +425,7 @@ timApp.run(["$injector", ($i: angular.auto.IInjectorService) => {
     services.$q = $i.get("$q") as angular.IQService;
     services.$rootElement = $i.get("$rootElement") as angular.IRootElementService;
     services.$rootScope = $i.get("$rootScope") as angular.IRootScopeService;
+    services.$sanitize = $i.get("$sanitize") as angular.sanitize.ISanitizeService;
     services.$sce = $i.get("$sce") as angular.ISCEService;
     services.$sceDelegate = $i.get("$sceDelegate") as angular.ISCEDelegateService;
     services.$templateCache = $i.get("$templateCache") as angular.ITemplateCacheService;
@@ -413,4 +436,5 @@ timApp.run(["$injector", ($i: angular.auto.IInjectorService) => {
 
     // 3rd party services
     services.$ocLazyLoad = $i.get("$ocLazyLoad") as ILazyLoad;
+    services.$uibModal = $i.get("$uibModal") as angular.ui.bootstrap.IModalService;
 }]);

@@ -1,4 +1,5 @@
 import angular = require("angular");
+import {services} from "./ngimport";
 
 export function initAttributes(clone, $scope) {
 "use strict";
@@ -93,13 +94,7 @@ export function Hex2Str(s) {
   return result;
 }
 
-// sanitizeService will be injected on configuration phase; see app.ts
-let sanitizeService: any;
 
 export function sanitize(s) {
-    return sanitizeService(s);
-}
-
-export function injectSanitizeService(service) {
-    sanitizeService = service;
+    return services.$sanitize(s);
 }

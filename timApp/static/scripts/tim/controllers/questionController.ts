@@ -3,11 +3,8 @@ import angular = require("angular");
 import {setsetting} from "tim/utils";
 import {fixQuestionJson, getPointsTable, minimizeJson} from "tim/directives/dynamicAnswerSheet";
 import $ = require("jquery");
-import * as jqueryui from "jquery-ui";
-import {markAsUsed} from "tim/utils";
 import {ParCompiler} from "../services/parCompiler";
-
-markAsUsed(jqueryui);
+import {showDialog} from "../dialog";
 
 /**
  * Controller for creating and editing questions
@@ -29,15 +26,13 @@ function cleanParId(id) {
 
 timApp.controller("QuestionController", ['$scope', '$http', '$window', '$element', '$rootScope', function (scope, http, $window, $element, $rootScope) {
     "use strict";
-
-    // Timeout is used to make sure that #calendarStart element is rendered before creating datepicker
-    $window.setTimeout(function () {
-        angular.element('#calendarStart').datepicker({dateFormat: 'dd.m.yy'});
-    }, 0);
-
-
     scope.dynamicAnswerSheetControl = {};
     scope.asked_id = false;
+
+    scope.dateTimeOptions = {
+        format: 'D.M.YYYY HH:mm:ss',
+        showTodayButton: true
+    };
 
     scope.putBackQuotations = function (x) {
         var ox =  x.replace(/<br>/g, '\n');
@@ -1019,7 +1014,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$element
             }
             scope.close();
         }).error(function () {
-            scope.showDialog("Could not create question");
+            showDialog("Could not create question");
             $window.console.log("There was some error creating question to database.");
         });
 /*
