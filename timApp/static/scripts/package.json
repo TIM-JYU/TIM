@@ -102,7 +102,7 @@
       "events": "npm:jspm-nodelibs-events@^0.2.0",
       "fs": "npm:jspm-nodelibs-fs@^0.2.0",
       "http": "npm:jspm-nodelibs-http@^0.2.0",
-      "jquery": "npm:jquery@2.2",
+      "jquery": "npm:jquery@^2.2",
       "module": "npm:jspm-nodelibs-module@^0.2.0",
       "moment": "npm:moment@^2.18.1",
       "moment-timezone": "npm:moment-timezone@^0.4.0",
