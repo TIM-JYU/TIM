@@ -255,7 +255,9 @@ SystemJS.config({
       }
     },
     "npm:angular-eonasdan-datetimepicker@0.3.9": {
-      "map": {}
+      "map": {
+        "angular": "npm:angular@1.5.11"
+      }
     },
     "npm:angular-timer@1.3.5": {
       "map": {}
@@ -402,7 +404,9 @@ SystemJS.config({
       }
     },
     "npm:eonasdan-bootstrap-datetimepicker@4.17.47": {
-      "map": {}
+      "map": {
+        "jquery": "npm:jquery@2.2.4"
+      }
     },
     "npm:evp_bytestokey@1.0.0": {
       "map": {
