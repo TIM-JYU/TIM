@@ -2106,14 +2106,14 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
     $scope.toggleFixed = function() {
         if ( $scope.canvas.style["position"] == "fixed" ) {
             $scope.canvas.style["position"] = ""
-            $scope.irrotaKiinnita = "Irrota";
+            $scope.irrotaKiinnita = $scope.english ? "Release" : "Irrota";
         } else {
             $scope.canvas.style["position"] = "fixed"        
             $scope.canvas.style["width"] = 900;
-            $scope.irrotaKiinnita = "Kiinnitä";
+            $scope.irrotaKiinnita = $scope.english ? "Fix" : "Kiinnitä";
         }
     }
-    
+
     $scope.getCode = function() {
         if ( $scope.attrs.program && !$scope.codeInitialized ) {
             $scope.localcode = $scope.attrs.program;
@@ -2166,7 +2166,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
                     if ( $scope.type == "glowscript" ) $scope.gsDefaultLanguage = "GlowScript 2.1 JavaScript";
                 }
                 var v = $scope.getVid(dw,dh);
-                $scope.irrotaKiinnita = "Irrota";
+                $scope.irrotaKiinnita = $scope.english ? "Release" : "Irrota";
                 html = ($scope.attrs.html||html);
                 html = encodeURI(html);
                 var angularElement = '<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px; z-index: 20" >'+
