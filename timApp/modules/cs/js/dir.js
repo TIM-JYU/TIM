@@ -396,6 +396,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 			  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>&nbsp&nbsp' +
 			  '<pre  class="console ng-hide" ng-show="result" ng-cloak>{{result}}</pre>'+
 			  '<span class="csRunError"  ng-if="runError" ng-style="tinyErrorStyle">{{error}}</span>'+
+			  '<div  class="htmlresult" ng-if="htmlresult" ><span ng-bind-html="svgImageSnippet()"></span></div>'+
 			  '</div>';
     }
     
