@@ -7,7 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node build.js",
     "buildDev": "jspm bundle tim/main + tim/slide - \"(tim/main + tim/slide - [tim/**/*])\" build/tim.js -wd",
-    "fixKatex": "node fix-katex-auto-render.js"
+    "fixKatex": "node fix-katex-auto-render.js",
+    "fixSourceMaps": "node fix-sourcemaps.js",
+    "fixAll": "npm run fixKatex && npm run fixSourceMaps"
   },
   "repository": {
     "type": "git",
