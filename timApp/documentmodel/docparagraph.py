@@ -9,6 +9,7 @@ import filelock
 from documentmodel.documentparser import DocumentParser
 from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
+from documentmodel.macroinfo import MacroInfo
 from documentmodel.randutils import random_id, hashfunc
 from htmlSanitize import sanitize_html
 from markdownconverter import par_list_to_html_list, expand_macros
@@ -374,6 +375,19 @@ class DocParagraph:
         """Returns the markdown of this paragraph."""
         return self.__data['md']
 
+    def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None) -> str:
+        """Returns the macro-processed markdown for this paragraph.
+
+        :param macroinfo: The MacroInfo to use. If None, the MacroInfo is taken from the document that has the
+        paragraph.
+        :return: The expanded markdown.
+
+        """
+        if macroinfo is None:
+            macroinfo = self.doc.get_settings().get_macroinfo()
+        return expand_macros(self.get_markdown(), macroinfo.get_macros(),
+                             macroinfo.get_macro_delimiter())
+
     def get_title(self) -> Optional[str]:
         """Attempts heuristically to return a title for this paragraph.
 
@@ -547,8 +561,9 @@ class DocParagraph:
         unloaded_pars = []
         dyn = 0
         l = 0
-        macros = settings.get_macros() if settings else None
-        macro_delim = settings.get_macro_delimiter() if settings else None
+        macroinfo = settings.get_macroinfo()
+        macros = macroinfo.get_macros() if settings else None
+        macro_delim = macroinfo.get_macro_delimiter() if settings else None
         m = str(macros) + macro_delim + str(settings.auto_number_headings()) + str(settings.heading_format())
         for par in pars:
             if par.is_dynamic():
