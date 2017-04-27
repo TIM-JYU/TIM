@@ -110,8 +110,9 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         $scope.enableDate2 = function () {
             $scope.dateCheck = true;
             $scope.dueCheck = false;
-            $scope.endTime = moment($scope.startTime).add(2, 'hours');
-
+            if ($scope.endTime == null) {
+                $scope.endTime = moment($scope.startTime).add(2, 'hours');
+            }
             $scope.useDate = true;
             $scope.useDuration = false;
             $scope.durationHour = "";
