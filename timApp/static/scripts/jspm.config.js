@@ -62,7 +62,8 @@ SystemJS.config({
     },
     "npm:angular@1.5.11/angular.js": {
       "deps": [
-        "jquery"
+        "jquery",
+        "eonasdan-bootstrap-datetimepicker"
       ]
     },
     "npm:katex@0.7.1/dist/contrib/auto-render.min.js": {
