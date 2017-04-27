@@ -42,14 +42,16 @@
                 <div id="questionStart">
                     <label>Starting time:</label>
                     <input type="checkbox" ng-model="question.startTimeSelected"/>
-                    <div class="input-group date" datetimepicker ng-model="question.startTime"
-                         data-options="dateTimeOptions">
-                        <input type="text"
-                               class="form-control"
-                               ng-disabled="!question.startTimeSelected"/>
-                        <span class="input-group-addon">
+                    <div class="form-inline">
+                        <div class="input-group date" datetimepicker ng-model="question.startTime"
+                             data-options="dateTimeOptions">
+                            <input type="text"
+                                   class="form-control"
+                                   ng-disabled="!question.startTimeSelected"/>
+                            <span class="input-group-addon">
                         <span class="glyphicon glyphicon-calendar"></span>
                         </span>
+                        </div>
                     </div>
                 </div>
                 <div id="questionTimer">

@@ -17,13 +17,15 @@
         <div class="startingTime">
             Starting time:
             <div id="startInfo">
-                <div class="input-group date" datetimepicker ng-model="startTime"
-                     data-options="dateTimeOptions">
-                    <input type="text"
-                           class="form-control"/>
-                    <span class="input-group-addon">
+                <div class="form-inline">
+                    <div class="input-group date" datetimepicker ng-model="startTime"
+                         data-options="dateTimeOptions">
+                        <input type="text"
+                               class="form-control"/>
+                        <span class="input-group-addon">
                         <span class="glyphicon glyphicon-calendar"></span>
                         </span>
+                    </div>
                 </div>
                 <div id="studentsJoinEarly"><label><input type="checkbox" ng-model="earlyJoining">Allow students to join
                     15 minutes prior to the start of the lecture.</label></div>
@@ -35,14 +37,16 @@
                 <input type="radio" id="dateChosen2" name="dateStop" ng-click="enableDate2()"
                        ng-model="dateChosen" ng-checked="dateCheck"/>
                 Use date:
-                <div class="input-group date" datetimepicker ng-model="endTime"
-                     data-options="dateTimeOptions">
-                    <input type="text"
-                           class="form-control"
-                           ng-disabled="!dateCheck"/>
-                    <span class="input-group-addon">
+                <div class="form-inline">
+                    <div class="input-group date" datetimepicker ng-model="endTime"
+                         data-options="dateTimeOptions">
+                        <input type="text"
+                               class="form-control"
+                               ng-disabled="!dateCheck"/>
+                        <span class="input-group-addon">
                         <span class="glyphicon glyphicon-calendar"></span>
                         </span>
+                    </div>
                 </div>
 
                 <input type="radio" id="durationChosen" name="dueStop" ng-click="enableDue2()" ng-model="durationChosen"
