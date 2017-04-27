@@ -64,7 +64,7 @@
 {% block extramoduledefinitions %}
     {{ super() }}
     {% if teacher_mode %}
-        define("tim/teachermode", ["tim/angularmodules", "ui-grid"], function (angularmodules) {
+        SystemJS.amdDefine("tim/teachermode.ts", ["tim/angularmodules", "angular-ui-grid"], function (angularmodules) {
         angularmodules.push.apply(angularmodules, ["ui.grid",
         "ui.grid.cellNav",
         "ui.grid.selection",
