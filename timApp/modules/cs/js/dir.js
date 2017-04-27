@@ -853,7 +853,7 @@ function lataaMathcheck(scope, readyFunction) {
     var mathcheckLoading = $.ajax({
         dataType: "script",
         cache: true,
-        url: "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_HTMLorMML"
+        url: "//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=AM_HTMLorMML"
     });
     mathcheckLoading.done(function() {
         mathcheckLoaded = true;
