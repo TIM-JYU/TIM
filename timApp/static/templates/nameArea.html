@@ -1,116 +1,95 @@
 <div class="actionButtons">
-    <span class="error" ng-show="notification" ng-bind="notification"></span>
-
-    <div class="row">
-        <div class="col-xs-4">
-            <label for="areaname">Area name:</label>
-        </div>
-        <div class="col-xs-8">
-            <input id="areaname" type="text" ng-model="areaName" title="No spaces allowed" autofocus />
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-xs-1"></div>
-        <div class="col-xs-8">
-            <input id="collapsible" type="checkbox" ng-model="options.collapsible" ng-click="toggleCollapsible()" />
-            <label for="collapsible">Collapsible</label>
-        </div>
-        <div class="col-xs-3"></div>
-    </div>
-
-    <div id="collapsible-options" class="hidden">
-        <div class="row">
-            <div class="col-xs-2"></div>
-            <div class="col-xs-7">
-                <label for="areatitle">Area title:</label>
-                <input id="areatitle" type="text" ng-model="options.title" placeholder="Optional" />
-            </div>
-            <div class="col-xs-3"></div>
-        </div>
-
-        <div class="row">
-            <div class="col-xs-2"></div>
-            <div class="col-xs-10">
-                <label for="hlevel">Heading level:</label>
-                <input id="hlevel" type="number" min="0" max="5" ng-model="options.hlevel" style="width: 50px" />
+    <form class="form-horizontal">
+        <div class="form-group">
+            <label for="areaname" class="col-sm-3 control-label">Area name:</label>
+            <div class="col-sm-9">
+                <input id="areaname" class="form-control" type="text" ng-model="areaName" title="No spaces allowed"
+                       autofocus/>
             </div>
         </div>
-
-        <div class="row">
-            <div class="col-xs-2"></div>
-            <div class="col-xs-10">
-                <input id="collapse" type="checkbox" ng-model="options.collapse" />
-                <label for="collapse">Collapsed by default</label>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-xs-1"></div>
-        <div class="col-xs-8">
-            <input id="restriction" type="checkbox" ng-model="options.timed" ng-click="toggleTimed()" />
-            <label for="restriction">Time restriction</label>
-        </div>
-        <div class="col-xs-3"></div>
-    </div>
-
-    <div id="timed-options" class="hidden">
-        <div class="row">
-            <div class="col-xs-2"></div>
-            <div class="col-xs-3">
-                <label for="starttime">Available from:</label>
-            </div>
-            <div class="col-xs-5">
-                <div class="form-group">
-                <div class='input-group date' id='starttimepicker'>
-                    <input type='text' id="starttime" class="form-control" />
-                    <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-calendar"></span>
-                    </span>
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-9">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="options.collapsible"> Collapsible
+                    </label>
                 </div>
             </div>
-            </div>
-            <div class="col-xs-2"></div>
         </div>
-        <div class="row">
-            <div class="col-xs-2"></div>
-            <div class="col-xs-3">
-                <label for="endtime">Available until:</label>
+        <div ng-show="options.collapsible" class="form-group">
+            <label for="areatitle" class="col-sm-3 control-label">Area title:</label>
+            <div class="col-sm-9">
+                <input id="areatitle" type="text" class="form-control" ng-model="options.title" placeholder="Optional"/>
             </div>
-            <div class="col-xs-5">
-                <div class="form-group">
-                <div class='input-group date' id='endtimepicker'>
-                    <input type='text' id="endtime" class="form-control" />
-                    <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-calendar"></span>
-                    </span>
+        </div>
+        <div ng-show="options.collapsible" class="form-group">
+            <label for="hlevel" class="col-sm-3 control-label">Heading level:</label>
+            <div class="col-sm-9">
+                <input id="hlevel" type="number" min="0" max="5" class="form-control" ng-model="options.hlevel"
+                       placeholder="Optional"/>
+            </div>
+        </div>
+        <div ng-show="options.collapsible" class="form-group">
+            <div class="col-sm-offset-2 col-sm-9">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="options.collapse"> Collapsed by default
+                    </label>
                 </div>
             </div>
-            </div>
-            <div class="col-xs-2"></div>
         </div>
-        <div class="row">
-            <div class="col-xs-2"></div>
-            <div class="col-xs-7">
-                <label for="alttext">Text when inaccessible:</label>
-            </div>
-            <div class="col-xs-3"></div>
-        </div>
-        <div class="row">
-            <div class="col-xs-3"></div>
-            <div class="col-xs-9">
-                <textarea id="alttext" rows="3" width="100%" ng-model="options.alttext"></textarea>
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-9">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="options.timed"> Time restriction
+                    </label>
+                </div>
             </div>
         </div>
-    </div>
+        <div ng-show="options.timed" class="form-group">
+            <label for="starttime" class="col-sm-3 control-label">Available from:</label>
+            <div class="col-sm-9">
+                <div class="input-group date" datetimepicker ng-model="options.starttime"
+                     data-options="datePickerOptions">
+                    <input type="text"
+                           class="form-control"
+                           id="starttime"/>
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                </div>
+            </div>
+        </div>
+        <div ng-show="options.timed" class="form-group">
+            <label for="endtime" class="col-sm-3 control-label">Available until:</label>
+            <div class="col-sm-9">
+                <div class="input-group date" datetimepicker ng-model="options.endtime"
+                     data-options="datePickerOptions">
+                    <input type="text"
+                           class="form-control"
+                           id="endtime"/>
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                </div>
+            </div>
+        </div>
+        <div ng-show="options.timed" class="form-group">
+            <label for="alttext" class="col-sm-3 control-label">Text when inaccessible:</label>
+            <div class="col-sm-9">
+                <textarea id="alttext" rows="3" class="form-control" ng-model="options.alttext">
+                </textarea>
+            </div>
+        </div>
 
-    <div class="row" style="margin-top: 2em">
-        <div class="col-xs-6">
-            <button id="add" class="wideButton" ng-click="addArea()" ng-disabled="!areaName">Add</button>
+        <div class="form-group">
+            <div class="col-sm-6">
+                <button type="submit" class="wideButton" ng-click="addArea()" ng-disabled="!areaName">Add</button>
+            </div>
+            <div class="col-sm-6">
+                <button type="submit" class="wideButton" ng-click="cancelAdd()">Cancel</button>
+            </div>
         </div>
-        <div class="col-xs-6">
-            <button id="cancel" class="wideButton" ng-click="cancelAdd()">Cancel</button>
-        </div>
-    </div>
+    </form>
 </div>

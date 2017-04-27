@@ -25,10 +25,6 @@ timApp.directive('nameArea', ['$http', '$window', '$filter', function ($http, $w
                 if (e.which == 13)
                     $scope.addArea();
             });
-
-            $(function() {
-                $('.date').datetimepicker({format: "DD.MM.YYYY HH:mm", locale: "en-GB"});
-            });
         },
 
         controller: ['$scope', '$element', function ($scope, $element) {
@@ -39,16 +35,8 @@ timApp.directive('nameArea', ['$http', '$window', '$filter', function ($http, $w
                 if ($scope.onClose)
                     $scope.onClose($scope.$area);
             };
-            
+
             $scope.addArea = function () {
-                var startDate = $('#starttimepicker').data("DateTimePicker").date();
-                var endDate = $('#endtimepicker').data("DateTimePicker").date();
-
-                if (startDate != null)
-                    $scope.options.starttime = startDate.toISOString();
-                if (endDate != null)
-                    $scope.options.endtime = endDate.toISOString();
-
                 $scope.closePopup();
 
                 if ($scope.onOk)
@@ -62,25 +50,13 @@ timApp.directive('nameArea', ['$http', '$window', '$filter', function ($http, $w
                     $scope.onCancel($scope.$area);
             };
 
-            $scope.toggleCollapsible = function () {
-                if ($scope.options.collapsible) {
-                    $('#collapsible-options').removeClass('hidden');
-                } else {
-                    $('#collapsible-options').addClass('hidden');
-                }
-            };
-
-            $scope.toggleTimed = function () {
-                if ($scope.options.timed) {
-                    $('#timed-options').removeClass('hidden');
-                } else {
-                    $('#timed-options').addClass('hidden');
-                }
-            };
-
             $scope.areaName = "";
             $scope.options = {collapse: true, hlevel: 0};
             $element.css('position', 'absolute'); // IE needs this
+            $scope.datePickerOptions = {
+                format: 'D.M.YYYY HH:mm:ss',
+                showTodayButton: true,
+            };
 
             $('#areaname').focus();
         }]
