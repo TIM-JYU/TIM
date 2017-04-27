@@ -6,6 +6,7 @@ import * as timer from "angular-timer";
 import * as humanizeDuration from "humanize-duration";
 import ngSanitize = require("angular-sanitize");
 import * as uibootstrap from "angular-ui-bootstrap";
+import {Moment} from "moment";
 import * as ngFileUpload from "ng-file-upload";
 import * as ngStorage from "ngstorage";
 import * as oclazyload from "oclazyload";
@@ -64,9 +65,12 @@ timApp.filter("escape", () => {
 });
 
 timApp.filter("timdate", ["$filter", ($filter) => {
-    let dateFilter = $filter("date");
-    return (date) => {
-        return dateFilter(date, "dd.MM.yyyy HH:mm:ss");
+    return (date: string | Moment) => {
+        if (typeof date === "string") {
+            const dateFilter = $filter("date");
+            return dateFilter(date, "dd.MM.yyyy HH:mm:ss");
+        }
+        return date.format("DD.MM.YYYY HH:mm:ss");
     };
 }]);
 
