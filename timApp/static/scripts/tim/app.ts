@@ -70,6 +70,9 @@ timApp.filter("timdate", ["$filter", ($filter) => {
             const dateFilter = $filter("date");
             return dateFilter(date, "dd.MM.yyyy HH:mm:ss");
         }
+        if (!date) {
+            return "(undefined or null)";
+        }
         return date.format("DD.MM.YYYY HH:mm:ss");
     };
 }]);
