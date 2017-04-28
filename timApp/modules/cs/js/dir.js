@@ -1,4 +1,4 @@
-define(['require', 'exports', 'angular'], function (require, exports, angular) {
+define(['require', 'exports', 'angular', 'jquery'], function (require, exports, angular, $) {
 
 "use strict";
 var csPluginStartTime = new Date();

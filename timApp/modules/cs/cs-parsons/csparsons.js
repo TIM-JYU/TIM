@@ -1,3 +1,4 @@
+define(["jquery", "./jquery-ui-sortable.min.js", "./jquery.ui.touch-punch.min.js"], function ($) {
 (function($) { // wrap in anonymous function to not show some helper variables
     var CsParsonsWidget = function(options) {
         var defaults = {
@@ -170,3 +171,4 @@
 // allows _ and $ to be modified with noconflict without changing the globals
 // that parsons uses
 )($);
+});

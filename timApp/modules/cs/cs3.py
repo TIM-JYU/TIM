@@ -982,7 +982,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if not (is_tauno or is_rikki or is_parsons or is_simcir):
                 templs = get_all_templates('templates')
             result_json = {"js": ["/cs/js/dir.js",
-                                  "jqueryui-touch-punch",
                                   "/cs/cs-parsons/csparsons.js",
 
                                   # "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_HTMLorMML",  # will be loaded by JS lazily
