@@ -14,7 +14,7 @@ docker run \
  --env FLASK_APP=tim_app.py \
  --env PYTHONPATH=/service/timApp \
  -v ${DIR}:/service \
- -t -i \
+ ${DOCKERFLAGS:=-t -i} \
  -w "/service/$1" \
  timimages/tim:$(${DIR}/get_latest_date.sh) \
  "${@:2}"
