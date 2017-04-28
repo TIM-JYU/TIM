@@ -21,15 +21,6 @@ run apt-get install --no-install-recommends -y zlib1g-dev libxml2-dev libxslt-de
 run apt-get install --no-install-recommends -y libyaml-dev # C-parser for PyYAML
 run apt-get install --no-install-recommends -y libmagic1 # python-magic dependency
 run apt-get install --no-install-recommends -y gcc g++
-run apt-get install --no-install-recommends -y automake autoconf make
-
-# Install Watchman; used by JSPM.
-run git clone https://github.com/facebook/watchman.git
-workdir /watchman
-run git checkout v4.7.0
-run ./autogen.sh
-run ./configure
-run make && make install
 
 run apt-get install --no-install-recommends -y python3-psycopg2
 
