@@ -65,7 +65,7 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer',
                     parCompiler.mathJaxLoadDefer = $.ajax({
                         dataType: "script",
                         cache: true,
-                        url: "//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_SVG"
+                        url: "//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_SVG"
                     });
                 }
                 parCompiler.mathJaxLoadDefer.done(function () {
