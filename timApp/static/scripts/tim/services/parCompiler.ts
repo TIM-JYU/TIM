@@ -3,7 +3,7 @@ import * as renderMathInElement from "katex-auto-render";
 import {timLogTime} from "tim/timTiming";
 import $ = require("jquery");
 import {services} from "tim/ngimport";
-import {lazyLoadMany} from "../lazyLoad";
+import {lazyLoad, lazyLoadMany} from "../lazyLoad";
 
 class ParagraphCompiler {
     public async compile(data, scope, callback) {
@@ -36,10 +36,9 @@ class ParagraphCompiler {
         timLogTime("processAllMath end", "view");
     }
 
-    public processMathJax(elements: Element[] | Element): void {
-        System.amdRequire(["mathjax"], (MathJax) => {
-            MathJax.Hub.Queue(["Typeset", MathJax.Hub, elements]);
-        });
+    public async processMathJax(elements: Element[] | Element) {
+        const MathJax = await lazyLoad<jax.IMathJax>("mathjax");
+        MathJax.Hub.Queue(["Typeset", MathJax.Hub, elements]);
     }
 
     /**
