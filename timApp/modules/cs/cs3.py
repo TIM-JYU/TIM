@@ -449,7 +449,8 @@ def get_html(ttype, query):
             print("Ei ollut string: ", code, jso)
             code = '' + str(code)
             # ebycode = html.escape(code)
-        ebycode = code.replace("</pre>", "< /pre>")  # prevent pre ending too early
+        # ebycode = code.replace("</pre>", "</pre>")  # prevent pre ending too early
+        ebycode = code.replace("<", "&lt;").replace(">", "&gt;")
         if tiny:
             lazy_visible = '<div class="lazyVisible csRunDiv csTinyDiv no-popup-menu" >' + get_tiny_surrounding_headers(
                 query,
@@ -1560,7 +1561,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "cc":
                     cmdline = "gcc -Wall %s %s -o %s -lm" % (opt, csfname, exename)
                 elif ttype == "c++":
-                    cmdline = "g++ -std=c++11 -Wall %s %s -o %s -lm" % (opt, csfname, exename)
+                    cmdline = "g++ -std=c++14 -Wall %s %s -o %s -lm" % (opt, csfname, exename)
                 elif ttype == "py":
                     cmdline = ""
                 elif ttype == "swift":
@@ -1691,7 +1692,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 showname = csfname.replace(basename, "").replace("/tmp//", "")
                 if showname == "prg":
                     showname = ""
-                code, out, err, pwd = (0, "", ("tallennettu " + showname), "")
+                code, out, err, pwd = (0, "", ("Saved " + showname), "")
             elif get_param(query, "justCompile", False) and ttype.find("comtest") < 0:
                 # code, out, err, pwd = (0, "".encode("utf-8"), ("Compiled " + filename).encode("utf-8"), "")
                 code, out, err, pwd = (0, "", ("Compiled " + filename), "")
@@ -2146,7 +2147,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     showname = filename
                     if showname == "prg":
                         showname = ""
-                    code, out, err, pwd = (0, "", ("tallennettu " + showname), "")
+                    code, out, err, pwd = (0, "", ("Saved " + showname), "")
                 elif ttype == "fs":
                     print("Exe: ", exename)
                     code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,

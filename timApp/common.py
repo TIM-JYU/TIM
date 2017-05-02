@@ -39,9 +39,9 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                                                                       do_lazy=do_lazy,
                                                                       edit_window=edit_window,
                                                                       load_states=load_plugin_states)
-    settings = doc.get_settings()
-    user_macros = settings.get_user_specific_macros(user)
-    delimiter = settings.get_macro_delimiter()
+    macroinfo = doc.get_settings().get_macroinfo()
+    user_macros = macroinfo.get_user_specific_macros(user)
+    delimiter = macroinfo.get_macro_delimiter()
     # Process user-specific macros.
     # We define the environment here because it stays the same for each paragraph. This improves performance.
     env = create_environment(delimiter)

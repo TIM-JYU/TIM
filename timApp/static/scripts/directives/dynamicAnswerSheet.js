@@ -121,7 +121,8 @@ function minimizeJson(json) {
 function fixLineBreaks(s) {
     // var result = s.replace(" < "," &lt; ");
     //result = result.replace(" > "," &gt; ");
-    result = s;
+    var parts = s.split("!!");
+    result = parts[0];
     return result;
     //return s.replace("\n","<br />");
 }
@@ -203,7 +204,8 @@ function fixQuestionJson(json) {
 }
 
 var timApp = angular.module('timApp');
-timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '$http', 'ParCompiler', function ($interval, $compile, $rootScope, $http, ParCompiler) {
+//timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '$http', 'ParCompiler', function ($interval, $compile, $rootScope, $http, ParCompiler) {
+timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '$http', function ($interval, $compile, $rootScope, $http) {
     "use strict";
     return {
         restrict: 'E',
@@ -255,7 +257,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 var answerTable = $scope.answerTable;
                 var pointsTable = getPointsTable(params.points || params.markup.points);
 
-                $scope.expl = params.expl || params.markup.expl;
+                $scope.expl = params.expl || params.markup.expl || params.markup.xpl;
                 $scope.askedTime = params.askedTime - params.clockOffset;
                 $scope.endTime = params.askedTime + $scope.json.timeLimit * 1000 - params.clockOffset;
 
@@ -287,6 +289,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
 
                 var table = $('<table>', {id: 'answer-sheet-table', class: 'table table-borderless'});
 
+                var totalBorderless = true;
 
                 if (data.headers &&
                     data.headers.length > 0 && !(data.headers[0].text === "" && data.headers.length === 1)) {
@@ -296,7 +299,8 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     }
                     angular.forEach(data.headers, function (header) {
                         var th = $('<th>')
-                        th.append(header.text);
+                        th.append( fixLineBreaks(header.text) );
+                        totalBorderless = false;
                         tr.append(th);
                         // tr.append($('<th>', {text: header.text || header}));
                     });
@@ -315,6 +319,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     if (json.questionType === "matrix" || json.questionType === "true-false") {
                         var td = $('<td>');
                         td.append(rtext);
+                        if ( rtext && ir > 0 ) totalBorderless = false;
                         tr.append(td);
                         //tr.append($('<td>', {text: row.text}));
                     }
@@ -337,6 +342,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                             row.columns[ic].id = ic;
 
                             if (json.answerFieldType === "text") {
+                                $scope.isText = true;
                                 var text = "";
                                 if (answerTable && ir < answerTable.length && ic < answerTable[ir].length) {
                                     text = answerTable[ir][ic];
@@ -348,7 +354,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                 textArea.text(text);
                                 if (disabled !== '') textArea.attr('disabled', true);
                                 if (data.headers && data.headers.length === 1 && data.headers[0].text === "" && data.rows.length === 1) {
-                                    textArea.attr('style', 'height:200px');
+                                    // textArea.attr('style', 'height:200px');
                                 }
                                 tr.append($('<td>', {class: 'answer-button'}).append($('<label>').append(textArea)));
                                 header++;
@@ -434,6 +440,9 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 });
 
                 htmlSheet.append($('<div>').append(table));
+
+                if ( totalBorderless ) table.addClass("total-borderless");
+
                 $element.append(htmlSheet);
                 $compile($scope);
 
@@ -449,7 +458,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                         if ( params.isAsking ) $input[0].focus();
                     }, 0);
                     //
-                    $table.on('keyup.send', $scope.answerWithEnter);
+                    if ( !$scope.isText ) $table.on('keyup.send', $scope.answerWithEnter);
                     var now = new Date().valueOf();
                     timeLeft = $scope.endTime - now;
                     barFilled = 0;
@@ -464,8 +473,8 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                         $scope.start();
                     }
                 }
-                GlobalParCompiler = ParCompiler;
-                ParCompiler.processAllMath($scope.htmlSheet);
+                //GlobalParCompiler = ParCompiler;
+                GlobalParCompiler.processAllMath($scope.htmlSheet);
             };
             // createAnswer ends
 

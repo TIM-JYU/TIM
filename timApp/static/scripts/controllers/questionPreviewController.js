@@ -13,8 +13,8 @@
 var angular, item, lectureCode, lectureStartTime, lectureEndTime;
 
 var timApp = angular.module('timApp');
-timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$rootScope', 'ParCompiler',
-    function ($scope, $window, http, $rootScope, ParCompiler) {
+timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$rootScope',
+    function ($scope, $window, http, $rootScope) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit questionPreview.html to repeat rows and columns
         "use strict";

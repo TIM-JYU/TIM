@@ -3,6 +3,8 @@ from ubuntu:16.04
 maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 
 # Configure timezone and locale
+run apt-get update
+run apt-get install -y locales tzdata
 run locale-gen en_US.UTF-8
 env LANG en_US.UTF-8
 env LANGUAGE en_US:en
@@ -11,7 +13,6 @@ run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive t
 
 # Install Python, pip and other necessary packages
 
-run apt-get update
 run apt-get install --no-install-recommends -y openssh-server
 run apt-get install --no-install-recommends -y python3 python3-setuptools python3-pip
 run apt-get install --no-install-recommends -y git-core

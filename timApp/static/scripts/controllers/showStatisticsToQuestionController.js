@@ -14,7 +14,8 @@
 var angular;
 
 var timApp = angular.module('timApp');
-timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$element', 'ParCompiler', '$http', function ($scope, $element, ParCompiler ) {
+// timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$element', 'ParCompiler', '$http', function ($scope, $element, ParCompiler ) {
+timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$element',  '$http', function ($scope, $element) {
     "use strict";
     $scope.dynamicAnswerShowControl = {};
     $scope.canvas = "";
@@ -34,6 +35,10 @@ timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$element', '
         if ($scope.lecturerAnswered) {
             $scope.dynamicAnswerShowControl.close();
         }
+    };
+
+    $scope.hide = function () {
+        $scope.$emit('closeAnswerShow');
     };
 
     $scope.$on("lecturerAnswered", function () {
@@ -59,9 +64,11 @@ timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$element', '
         $scope.questionTitle = question.questionText;
         // GlobalParCompiler.processAllMath($element);
         // ParCompiler.processAllMath($element.parent());
+
         window.setTimeout(function () { // give time to html to change
-            ParCompiler.processAllMath($element.parent());
+            GlobalParCompiler.processAllMath($element.parent());
         }, 200);
+
     });
 
 }]);
