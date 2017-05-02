@@ -6,7 +6,7 @@ import {services} from "tim/ngimport";
 import {lazyLoadMany} from "../lazyLoad";
 
 class ParagraphCompiler {
-    public async compile(data, scope: angular.IScope, callback) {
+    public async compile(data, scope, callback) {
         await lazyLoadMany(data.js);
         await services.$ocLazyLoad.inject(data.angularModule);
         await services.$ocLazyLoad.load(data.css);
