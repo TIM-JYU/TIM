@@ -3,24 +3,16 @@ import * as renderMathInElement from "katex-auto-render";
 import {timLogTime} from "tim/timTiming";
 import $ = require("jquery");
 import {services} from "tim/ngimport";
+import {lazyLoadMany} from "../lazyLoad";
 
 class ParagraphCompiler {
-    public compile(data, scope, callback): void {
-        const requireComplete = () => {
-            services.$ocLazyLoad.inject(data.angularModule).then(() => {
-                services.$ocLazyLoad.load(data.css).then(() => {
-                    const compiled = services.$compile(data.texts)(scope);
-                    this.processAllMathDelayed(compiled);
-                    callback(compiled);
-                });
-            }, (err) => services.$log.error(err));
-        };
-
-        if (data.js.length > 0) {
-            SystemJS.amdRequire(data.js, requireComplete);
-        } else {
-            requireComplete();
-        }
+    public async compile(data, scope: angular.IScope, callback) {
+        await lazyLoadMany(data.js);
+        await services.$ocLazyLoad.inject(data.angularModule);
+        await services.$ocLazyLoad.load(data.css);
+        const compiled = services.$compile(data.texts)(scope);
+        this.processAllMathDelayed(compiled);
+        callback(compiled);
     }
 
     public processAllMathDelayed($elem: JQuery, delay?: number): void {
