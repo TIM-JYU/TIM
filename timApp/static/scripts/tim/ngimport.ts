@@ -48,6 +48,7 @@ class Services {
     private templateRequest: angular.ITemplateRequestService = null;
     private timeout: angular.ITimeoutService = null;
     private uibModal: angular.ui.bootstrap.IModalService = null;
+    private upload: angular.angularFileUpload.IUploadService = null;
     private window: angular.IWindowService = null;
     private xhrFactory: angular.IXhrFactory<any> = null;
 
@@ -371,6 +372,16 @@ class Services {
         this.uibModal = service;
     }
 
+    get $upload() {
+        Services.checkServiceAccess(this.upload);
+        return this.upload;
+    }
+
+    set $upload(service) {
+        Services.checkServiceSet(this.upload);
+        this.upload = service;
+    }
+
     get $window() {
         Services.checkServiceAccess(this.window);
         return this.window;
@@ -437,4 +448,5 @@ timApp.run(["$injector", ($i: angular.auto.IInjectorService) => {
     // 3rd party services
     services.$ocLazyLoad = $i.get("$ocLazyLoad") as ILazyLoad;
     services.$uibModal = $i.get("$uibModal") as angular.ui.bootstrap.IModalService;
+    services.$upload = $i.get("Upload") as angular.angularFileUpload.IUploadService;
 }]);

@@ -1,0 +1,43 @@
+{
+  "compilerOptions": {
+    "module": "amd",
+    "noImplicitAny": false,
+    "noImplicitThis": false,
+    "allowUnreachableCode": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "outDir": "build",
+    "allowJs": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "target": "es5",
+    "lib": [
+      "dom",
+      "es7",
+      "scripthost"
+    ],
+    "noEmit": true,
+    "paths": {
+      "angular": [
+        "../../../static/scripts/node_modules/@types/angular"
+      ],
+      "tim/*": [
+        "../../../static/scripts/tim/*"
+      ]
+    },
+    "typeRoots": [
+      "../../../static/scripts/node_modules/@types"
+    ]
+  },
+  "exclude": [
+    "node_modules",
+    "jspm_packages",
+    "bower_components",
+    "build"
+  ],
+  "files": [
+    "csPlugin.ts",
+    "../../../static/scripts/tim/missing-types.d.ts"
+  ]
+}

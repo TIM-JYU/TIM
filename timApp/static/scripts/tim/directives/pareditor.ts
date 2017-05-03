@@ -13,21 +13,12 @@ import VirtualRenderer = AceAjax.VirtualRenderer;
 import Ace = AceAjax.Ace;
 import {IPromise, IQService} from "angular";
 import {ParCompiler} from "../services/parCompiler";
+import {IAceEditor} from "../ace-types";
 
 markAsUsed(draggable, rangyinputs);
 
 const MENU_BUTTON_CLASS = 'menuButtons';
 const MENU_BUTTON_CLASS_DOT = '.' + MENU_BUTTON_CLASS;
-
-// Ace editor typings are slightly incomplete, so we extend them here.
-interface IAceVirtualRenderer extends VirtualRenderer {
-    setScrollMargin(top: number, bottom: number, left: number, right: number): void;
-    setVScrollBarAlwaysVisible(visible: boolean): void;
-}
-
-interface IAceEditor extends Editor {
-    renderer: IAceVirtualRenderer;
-}
 
 // don't extend from IScope because then type checking is too lousy
 interface IParEditorScope {

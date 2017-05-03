@@ -1,4 +1,5 @@
 import * as ace from "ace";
+import "ace/ext-language_tools";
 
 let base = SystemJS.normalizeSync("ace");
 base = base.substr(0, base.length - "ace.js".length);

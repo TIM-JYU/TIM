@@ -1,46 +1,353 @@
-define(['require', 'exports', 'angular', 'jquery'], function (require, exports, angular, $) {
+import * as angular from "angular";
+import $ = require("jquery");
+import {IHttpService, IModule, INgModelController, ISCEService, ITimeoutService, ITranscludeFunction} from "angular";
+import {services} from "tim/ngimport";
+import {ParCompiler} from "tim/services/parCompiler"
+import {lazyLoad} from "tim/lazyLoad";
+import {IAce, IAceEditor} from "tim/ace-types";
 
-"use strict";
+interface GlowScriptWindow extends Window {
+    runJavaScript?(text: string, args: string, input: string, wantsConsole: boolean): string;
+    setDefLanguage?(language: string);
+    getConsoleHeight?(): number;
+}
+
+interface GlowScriptFrame extends HTMLIFrameElement {
+    contentWindow: GlowScriptWindow;
+}
+
+declare class CsParsonsWidget {
+    constructor(data: {});
+
+    init(a: string, b: string);
+    show();
+}
+
+// js-parsons is unused; just declare a stub to make TS happy
+declare class ParsonsWidget {
+    static _graders: any;
+    constructor(data: {});
+
+    init(a: string, b: string);
+    show();
+}
+
+interface ICSConsoleApp extends IModule {
+    directiveFunction(type: string, isInput: boolean);
+    Controller(scope: ICSConsoleAppScope,
+               http: IHttpService,
+               transclude: ITranscludeFunction,
+               element: any,
+               timeout: ITimeoutService);
+    directiveTemplateCS(t: string, isInput: boolean);
+}
+
+type AttrType = {
+    by: string,
+    byCode: string,
+    examples: string,
+    type: string,
+    user_id: string,
+    path: string,
+};
+
+interface ICSConsoleAppScope extends IConsolePWDScope {
+    handleKey(ev: KeyboardEvent);
+    down();
+    up();
+    load();
+    isShell: boolean;
+    toggleSize();
+    cursor: number;
+    currentSize: string;
+    isHtml: boolean;
+    oldpwd: string;
+    handler();
+    currentInput: string;
+    loadExample(i: number);
+    pwd: string;
+    attrs: AttrType;
+    byCode: string;
+    taskId: string;
+    plugin: string;
+    ident: string;
+    content: AttrType;
+    examples: {expr: string, title: string}[],
+    history: {istem: string, ostem: string, input: string, response: string}[]
+    focusOnInput(): void;
+    submit(s: string): void;
+}
+
+interface ICSApp extends IModule {
+    taunoPHIndex: number;
+    directiveFunction(type: string, x: boolean);
+    taunoNr: number;
+    commentTrim(s: string): string;
+    getHeading(a, key, $scope, defElem);
+    set(scope: ICSAppScope, attrs: {}, key: string, def?: string | boolean | number): string;
+    getParam(scope: ICSAppScope, name: string, def: string | boolean | number): string | boolean | number;
+    directiveTemplateCS(t: string, isInput: boolean);
+    getInt(s: string): number;
+    countChars(str: string, char: string): number;
+    Controller(scope: ICSAppScope,
+               http: IHttpService,
+               transclude: ITranscludeFunction,
+               sce: ISCEService,
+               upload: angular.angularFileUpload.IUploadService,
+               timeout: ITimeoutService);
+    updateEditSize(scope: ICSAppScope);
+    ifIs(value: string, name: string, def: string | number);
+    doVariables(v: string, name: string): string;
+    Hex2Str(s: string): string;
+}
+
+// TODO better name?
+type Vid = { vid: string; w: any; h: any };
+
+interface ICSAppScope extends IConsolePWDScope {
+    safeApply(fn?: () => any);
+    out: {write: Function, writeln: Function, canvas: Element};
+    canvasHeight: number;
+    canvasWidth: number;
+    previewIFrame: JQuery;
+    lastUserinput: string;
+    lastUserargs: string;
+    iframeLoadTries: number;
+    gsDefaultLanguage: string;
+    glowscript: boolean;
+    fullhtml: string;
+    iframeClientHeight: number;
+    lastJS: string;
+    closeFrame();
+    codeInitialized: boolean;
+    getCode(): string;
+    irrotaKiinnita: string;
+    english: boolean;
+    canvas: HTMLCanvasElement;
+    toggleFixed();
+    canvasConsole: Console;
+    writeln(s: string);
+    write(s: string);
+    moveCursor(dx: number, dy: number);
+    element0: HTMLElement;
+    mode: string;
+    checkEditorModeLocalStorage();
+    editorModes: string;
+    initEditorKeyBindings();
+    showCsParsons(sortable: Element);
+    words: boolean;
+    parsonsId: Vid;
+    showJsParsons(parsonsEditDiv: Element);
+    preview: HTMLElement;
+    previewUrl: string;
+    lastMD: string;
+    file: {};
+    postcode: string;
+    precode: string;
+    showCodeLocal();
+    getReplacedCode(): string;
+    replace: string;
+    code: string;
+    carretPos: number;
+    indent: number;
+    showCode();
+    localcode: string;
+    changeCodeLink();
+    showCodeLink: string;
+    showCodeOn: string;
+    showCodeOff: string;
+    stop: angular.IPromise<{}>;
+    stopShow();
+    editorModeIndecies: number[];
+    initUserCode: boolean;
+    editorMode: number;
+    initCode();
+    height: string;
+    width: string;
+    getVid(dw: number | string, dh: number | string): Vid;
+    insertAtCursor(myField: HTMLTextAreaElement, myValue: string);
+    addTextHtml(s: string): string;
+    addText(s: string);
+    taunoId: string;
+    hideTauno();
+    isHtml: boolean;
+    comtestError: string;
+    plugin: string;
+    isAll: boolean;
+    validityCheckMessage: string;
+    validityCheck: string;
+    userargs: string;
+    userinput: string;
+    cursor: string;
+    tinyErrorStyle: {};
+    runTestRed: boolean;
+    runTestGreen: boolean;
+    isRunning: boolean;
+    error: string;
+    csparson: any;
+    parson: any;
+    iframe: boolean;
+    indices: string;
+    variables: string;
+    table: string;
+    lang: string;
+    taunotype: string;
+    isSimcir: boolean;
+    showTauno();
+    showSimcir();
+    copyFromSimcir();
+    copyToSimcir();
+    simcir2: JQuery;
+    taunoHtml: HTMLElement;
+    simcir: JQuery;
+    isSage: boolean;
+    noeditor: boolean;
+    hideShowEditor();
+    docLink: string;
+    runDocument();
+    type: string;
+    runUnitTest();
+    runTest();
+    runCodeLink(nosave: boolean): void;
+    jstype: string;
+    nosave: boolean;
+    selectedLanguage: string;
+    runCodeCommon(nosave: boolean, extraMarkUp?: string): void;
+    runError: string | boolean;
+    runCodeIfCR(event: KeyboardEvent): void;
+    logTime(msg: string): boolean;
+    runCodeAuto(): void;
+    muokattu: boolean;
+    autoupdate: boolean;
+    runned: boolean;
+    runTimer: number;
+    aceEditor: IAceEditor;
+    edit: HTMLTextAreaElement;
+    editorIndex: number;
+    wrap: {n: number};
+    checkWrap();
+    element: JQuery;
+    isMathCheck: boolean;
+    processPluginMath: () => any;
+    uploadedType: string;
+    user_id: string;
+    taskId: string;
+    docURL: string;
+    uploadresult: string;
+    uploadedFile: string;
+    ufile: {progress: number, error: string};
+    onFileSelect: (file) => any;
+    copyingFromTauno: boolean;
+    runSuccess: boolean;
+    viewCode: boolean;
+    imgURL: string;
+    resImage: string;
+    result: string;
+    taunoOn: boolean;
+    errors: string[];
+    htmlresult: string;
+    svgImageSnippet: () => any;
+    byCode: string;
+    attrs: {
+        path: string,
+        by: string,
+        byCode: string,
+        uploadbycode: boolean,
+        treplace: string,
+        program: string,
+        fullhtml: string,
+        html: string,
+        runeverytime: boolean,
+        scripts: string,
+    };
+    usercode: string;
+    minRows: number;
+    maxRows: number;
+    rows: number;
+    wavURL: string;
+    showUploaded(file: string, type: string): void;
+    doRunCode(s: string, b: boolean, extraMarkup?: {}): void;
+    $watch(s: string, param2: (newValue, oldValue) => any, b?: boolean): void;
+    pushShowCodeNow(): void;
+    runCode(): void;
+    showMD(): void;
+    showJS(): void;
+    closeDocument(): void;
+    setCircuitData(): void;
+    getCircuitData(): string;
+    getJsParsonsCode(): string;
+    checkIndent(): void;
+    copyTauno(): void;
+    showOtherEditor(editorMode: number): void;
+    showCodeNow(): void;
+    aceLoaded(ace: IAce, editor: IAceEditor): void;
+}
+
+interface IConsolePWDScope {
+    path: string;
+    attrs: {path: string};
+    setPWD?(pwd: string);
+    savestate: string;
+}
+
+interface IConsolePWD {
+    pwdHolders: IConsolePWDScope[];
+    currentPWD: {};
+    register(scope: IConsolePWDScope);
+    isUser(scope: IConsolePWDScope);
+    setPWD(pwd: string, scope: IConsolePWDScope);
+    getPWD(scope: IConsolePWDScope): string;
+}
+
+interface IUploadFileTypes {
+    show: string[];
+    is(types: string[], file: string): boolean;
+    name(file: string): string;
+}
+
+interface ILanguageTypes {
+    runTypes: string[];
+    aceModes: string[];
+    testTypes: string[];
+    unitTestTypes: string[];
+    impTestTypes: {};
+    impUnitTestTypes: {};
+    whatIsIn(types: string[], type: string, def: string): string;
+    whatIsInAce(types: string[], type: string, def: string): string;
+    isAllType(type: string): boolean;
+    getRunType(type: string, def: string | boolean): string | boolean;
+    getAceModeType(type: string, def: string): string;
+    getTestType(type: string, language: string, def: string | boolean): string | boolean;
+    getUnitTestType(type: string, language: string, def: string | boolean): string | boolean;
+    isInArray<T>(word: T, array: T[]): boolean;
+}
+
 var csPluginStartTime = new Date();
 /*
 Sagea varten ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst#id3
 */
 
-// Workaround for lazy loading: the directive definition functions below are not re-run when reloading the module
-// so csApp.sanitize and csApp.compile will be undefined without this trick
-if (angular.isDefined(window.csApp)) {
-    var csAppSanitize = csApp.sanitize;
-    var csAppCompile = csApp.compile;
-}
-
-var csApp = angular.module('csApp', ['ngSanitize','ngFileUpload']);
+var csApp = angular.module('csApp', ['ngSanitize','ngFileUpload']) as ICSApp;
 csApp.taunoPHIndex = 3;
-csApp.directive('csRunner',['Upload','$sanitize','$compile',
-  function (Upload, $sanitize,$compile1) {	
-       "use strict"; csApp.Upload = Upload; csApp.sanitize = $sanitize; csApp.compile = $compile1; 
+csApp.directive('csRunner',[
+  function () {	
        return csApp.directiveFunction('console',false); }]);
-csApp.directive('csJypeliRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('jypeli',false); }]);
-csApp.directive('csComtestRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('comtest',false); }]);
-csApp.directive('csRunnerInput',['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict";	csApp.sanitize = $sanitize; csApp.compile = $compile1; return csApp.directiveFunction('console',true); }]);
-csApp.directive('csJypeliRunnerInput', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('jypeli',true); }]);
-csApp.directive('csComtestRunnerInput', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('comtest',true); }]);
-csApp.directive('csTaunoRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',false); }]);
-csApp.directive('csTaunoRunnerInput', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',true); }]);
-csApp.directive('csParsonsRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('parsons',false); }]);
-csApp.directive('csSageRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('sage',true); }]);
-csApp.directive('csSimcirRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('simcir',false); }]);
-csApp.directive('csTextRunner', ['Upload','$sanitize','$compile', function (Upload, $sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('text',false); }]);
+csApp.directive('csJypeliRunner', [function () { return csApp.directiveFunction('jypeli',false); }]);
+csApp.directive('csComtestRunner', [function () { return csApp.directiveFunction('comtest',false); }]);
+csApp.directive('csRunnerInput',[function () { return csApp.directiveFunction('console',true); }]);
+csApp.directive('csJypeliRunnerInput', [function () { return csApp.directiveFunction('jypeli',true); }]);
+csApp.directive('csComtestRunnerInput', [function () { return csApp.directiveFunction('comtest',true); }]);
+csApp.directive('csTaunoRunner', [function () { return csApp.directiveFunction('tauno',false); }]);
+csApp.directive('csTaunoRunnerInput', [function () { return csApp.directiveFunction('tauno',true); }]);
+csApp.directive('csParsonsRunner', [function () { return csApp.directiveFunction('parsons',false); }]);
+csApp.directive('csSageRunner', [function () { return csApp.directiveFunction('sage',true); }]);
+csApp.directive('csSimcirRunner', [function () { return csApp.directiveFunction('simcir',false); }]);
+csApp.directive('csTextRunner', [function () { return csApp.directiveFunction('text',false); }]);
 // csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
-
-// redefine csApp.sanitize and csApp.compile if needed
-if (angular.isDefined(window.csAppSanitize) && angular.isDefined(window.csAppCompile)) {
-    csApp.sanitize = csAppSanitize;
-    csApp.compile = csAppCompile;
-}
 
 function csLogTime(msg) {
    var d = new Date();       
-   var diff = d - csPluginStartTime;
+   var diff = d.getTime() - csPluginStartTime.getTime();
    console.log("cs: " + d.toLocaleTimeString()+ " " + diff.valueOf() + " - " + msg);          
 }   
 
@@ -55,7 +362,7 @@ csApp.taunoNr = 0;
 // know when pwd changes.  plugin must implement (or scope)
 // setPWD method.  Also it should have property path = "user"
 // to be able to register.
-var ConsolePWD = {};
+var ConsolePWD = {} as IConsolePWD;
 
 ConsolePWD.pwdHolders = [];
 
@@ -144,7 +451,7 @@ var csJSTypes = ["js", "glowscript", "vpython", "html"];
 // =================================================================================================================
 // Known upload files
 
-var uploadFileTypes = {};
+var uploadFileTypes = {} as IUploadFileTypes;
 uploadFileTypes.show = ["pdf","xml"];
 
 uploadFileTypes.is = function(types, file) {
@@ -172,7 +479,7 @@ function resizeIframe(obj) {
 // =================================================================================================================
 // Things for known languages
 
-var languageTypes = {};
+var languageTypes = {} as ILanguageTypes;
 // What are known language types (be carefull not to include partial word):
 languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","vpython","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","glowscript","sage","simcir","xml", "octave","lua", "swift","mathcheck","r", "html"];
 languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","javascript","python","json","xml","octave","lua","swift","java","r", "html"];
@@ -191,7 +498,7 @@ languageTypes.impUnitTestTypes = {cs:"nunit", console:"nunit", cc:"cunit", java:
 languageTypes.impUnitTestTypes["c++"] = "cunit";
 
 languageTypes.whatIsIn = function (types, type, def) {
-"use strict";
+
     if (!type) return def;
     type = type.toLowerCase();
     for (var i=0; i< types.length; i++)
@@ -200,7 +507,7 @@ languageTypes.whatIsIn = function (types, type, def) {
 };
 
 languageTypes.whatIsInAce = function (types, type, def) {
-"use strict";
+
     if (!type) return def;
     type = type.toLowerCase();
     for (var i=0; i< types.length; i++)
@@ -210,7 +517,7 @@ languageTypes.whatIsInAce = function (types, type, def) {
 
 
 languageTypes.isAllType = function(type) {
-"use strict";
+
     if (!type) return false;
     type = type.toLowerCase();
     return type.indexOf("all") >= 0;
@@ -218,17 +525,17 @@ languageTypes.isAllType = function(type) {
 
 
 languageTypes.getRunType = function(type,def) {
-"use strict";
+
     return this.whatIsIn(this.runTypes,type,def);
 };
 
 languageTypes.getAceModeType = function(type,def) {
-"use strict";
+
     return this.whatIsInAce(this.runTypes,type,def);
 };
 
 languageTypes.getTestType = function(type,language,def) {
-"use strict";
+
     var t = this.whatIsIn(this.testTypes,type,def);
     if ( t !== "comtest" ) return t;
     var lt = this.whatIsIn(this.runTypes,language,"console");
@@ -238,7 +545,7 @@ languageTypes.getTestType = function(type,language,def) {
 };
 
 languageTypes.getUnitTestType = function(type,language,def) {
-"use strict";
+
     var t = this.whatIsIn(this.unitTestTypes,type,def);
     if ( t !== "unit" ) return t;
     var lt = this.whatIsIn(this.runTypes,language,"console");
@@ -295,7 +602,7 @@ function wrapText(s, n)
 // =================================================================================================================
 
 var removeXML = function(s) {
-"use strict";
+
     s = s.replace(/^<\?xml [^>]*\?>/,"");
     s = s.replace(/(<svg [^>]*height="[0-9]+)pt/,"$1");
     s = s.replace(/(<svg [^>]*width="[0-9]+)pt/,"$1");
@@ -311,11 +618,11 @@ var iotaPermutation = function(n) {
 
 
 csApp.directive('contenteditable', ['$sce', function($sce) {
-"use strict";
+
     return {
       restrict: 'A', // only activate on element attribute
       require: '?ngModel', // get a hold of NgModelController
-      link: function(scope, element, attrs, ngModel) {
+      link: function(scope, element, attrs, ngModel: INgModelController) {
         if(!ngModel) return; // do nothing if no ng-model
 
         // Specify how UI should be updated
@@ -349,7 +656,7 @@ csApp.directive('contenteditable', ['$sce', function($sce) {
 
 
 csApp.commentTrim = function(s) {
-"use strict";
+
 	if ( !s ) return "";
 	var n = s.indexOf("//\n");
     if (n !== 0) return s;
@@ -357,7 +664,7 @@ csApp.commentTrim = function(s) {
 };
 
 csApp.getHeading = function(a,key,$scope,defElem) {
-"use strict";
+
 	var h = csApp.set($scope,a,key,"");
 	if ( !h ) return "";
 	// if ( h.toLowerCase().indexOf("script") >= 0 ) return "";
@@ -378,13 +685,13 @@ csApp.getHeading = function(a,key,$scope,defElem) {
 	  val = decodeURIComponent(encodeURI(val));
 	} catch(err) {}
     var html = "<" + elem + attributes + ">" + val + "</" + elem + ">";
-	html = csApp.sanitize(html);
+	html = services.$sanitize(html);
 	return html;
 };
 
 
 csApp.directiveTemplateCS = function(t,isInput) {
-"use strict";
+
 	csApp.taunoPHIndex = 3;
     csLogTime("dir templ " + t);
     if ( TESTWITHOUTPLUGINS ) return '';
@@ -515,7 +822,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 
 
 csApp.set = function(scope,attrs,name,def) {
-"use strict";
+
     scope[name] = def;
     if ( attrs && attrs[name] ) scope[name] = attrs[name];
     if ( scope.attrs && scope.attrs[name] ) scope[name] = scope.attrs[name];
@@ -526,7 +833,7 @@ csApp.set = function(scope,attrs,name,def) {
 
 
 csApp.getParam = function(scope,name,def) {
-"use strict";
+
     var result = def;
     if ( scope.attrs && scope.attrs[name] ) result = scope.attrs[name];
     if ( scope[name] ) result = scope[name];
@@ -536,7 +843,7 @@ csApp.getParam = function(scope,name,def) {
 }
 
 csApp.directiveFunction = function(t,isInput) {
-"use strict";
+
 	return {
 		link: function (scope, element, attrs) {
             if ( TESTWITHOUTPLUGINS ) return;
@@ -816,13 +1123,14 @@ csApp.directiveFunction = function(t,isInput) {
 };
 
 function insertAtCaret(txtarea,text) {
+    const doc = document as any;
     var scrollPos = txtarea.scrollTop;
     var strPos = 0;
     var br = ((txtarea.selectionStart || txtarea.selectionStart == '0') ? 
-        "ff" : (document.selection ? "ie" : false ) );
+        "ff" : (doc.selection ? "ie" : false ) );
     if (br == "ie") { 
         txtarea.focus();
-        var range = document.selection.createRange();
+        var range = doc.selection.createRange();
         range.moveStart ('character', -txtarea.value.length);
         strPos = range.text.length;
     }
@@ -834,7 +1142,7 @@ function insertAtCaret(txtarea,text) {
     strPos = strPos + text.length;
     if (br == "ie") { 
         txtarea.focus();
-        var range = document.selection.createRange();
+        var range = doc.selection.createRange();
         range.moveStart ('character', -txtarea.value.length);
         range.moveStart ('character', strPos);
         range.moveEnd ('character', 0);
@@ -957,7 +1265,7 @@ function alustaSage(scope,firstTime, readyFunction) {
 }    
 
 csApp.getInt = function(s) {
-"use strict";
+
    var n = parseInt(s);
    if ( isNaN(n) ) return 0;
    return n;
@@ -965,7 +1273,7 @@ csApp.getInt = function(s) {
 
 
 csApp.countChars = function (s,c) {
-"use strict";
+
 	var n = 0;
 	for (var i=0; i<s.length; n += +(c===s[i++]));
 	return n;
@@ -973,7 +1281,7 @@ csApp.countChars = function (s,c) {
 
 
 csApp.updateEditSize = function(scope) {
-"use strict";
+
 //return;
     if ( !scope ) return;
 	if ( !scope.usercode ) return;
@@ -985,14 +1293,14 @@ csApp.updateEditSize = function(scope) {
 };
 
 csApp.ifIs = function(value,name,def) {
-"use strict";
+
 	if ( !value && !def ) return "";
 	if ( !value  ) return name+'="'+def+'" ';
 	return name+'="'+value+'" ';
 };
 		
 csApp.doVariables = function(v,name) {
-"use strict";
+
 	if ( !v ) return "";
 	var r = "";
 	var va = v.split(";");  
@@ -1009,7 +1317,7 @@ csApp.doVariables = function(v,name) {
 
 
 csApp.Hex2Str = function (s) {
-"use strict";
+
   var result = '';
   for (var i=0; i<s.length; i+=2) {
     var c = String.fromCharCode(parseInt(s[i]+s[i+1],16));
@@ -1020,12 +1328,11 @@ csApp.Hex2Str = function (s) {
 
 
 csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
-"use strict";
+
     csLogTime("controller");
 	$scope.wavURL = "";
 	$scope.byCode ="";
-	$scope.attrs = {};
-	$scope.timeout = $timeout;
+	$scope.attrs = {} as any;
     $scope.svgImageSnippet = function() {
         var s = $sce.trustAsHtml($scope.htmlresult); 
         return s;
@@ -1076,10 +1383,10 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             if ( $scope.attrs.uploadbycode ) {
                 console.log("bycode");
                 var reader = new FileReader();
-                reader.onload = (function(theFile) {
+                reader.onload = (function(e) {
                     // showTrack(theFile.target.result,type);  
                     // console.log(theFile.target.result);
-                    $scope.usercode = theFile.target.result;
+                    $scope.usercode = reader.result;
                   });
                 reader.readAsText(file);  
 
@@ -1099,7 +1406,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
                 url: '/pluginUpload/' + ti[0] + '/' + ti[1] + '/' + $scope.user_id + '/',
                 data: {
                     file: file
-                }
+                },
+                method: 'POST'
             });
 
             file.upload.then(function (response) {
@@ -1111,7 +1419,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
                 if (response.status > 0) 
                     $scope.ufile.error = response.data.error;
             }, function (evt) {
-                    $scope.ufile.progress = Math.min(100, parseInt(100.0 *
+                    $scope.ufile.progress = Math.min(100, Math.floor(100.0 *
                     evt.loaded / evt.total));
             });
 
@@ -1124,7 +1432,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
     $scope.processPluginMath = function() {
         if ( !$scope.isMathCheck ) return;
         lataaMathcheck($scope, function(sc) {
-            $scope.timeout(function () {
+            services.$timeout(function () {
                 MathJax.Hub.Queue(["Typeset", MathJax.Hub, $scope.element[0]]);
             },  0);
         });
@@ -1193,10 +1501,10 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
                 var editor = $scope.aceEditor;
                 // var start = $scope.aceEditor.selectionStart;
                 var cursor = editor.selection.getCursor();
-                var index = editor.session.doc.positionToIndex(cursor);
+                var index = editor.session.doc.positionToIndex(cursor, 0);
                 //$scope.usercode = lines.join("\n");
                 editor.setValue(r.s);
-                cursor = editor.session.doc.indexToPosition(index);
+                cursor = editor.session.doc.indexToPosition(index, 0);
                 editor.selection.moveCursorToPosition(cursor);
                 editor.selection.clearSelection();
             }
@@ -1249,7 +1557,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
     $scope.runCodeCommon = function(nosave, extraMarkUp)
     {
         $scope.runned = true;
-		var t = languageTypes.getRunType($scope.selectedLanguage,"cs");  
+		var t = languageTypes.getRunType($scope.selectedLanguage,"cs") as string;
         if ( t == "md" ) { $scope.showMD(); if (nosave || $scope.nosave) return; }
         if ( languageTypes.isInArray(t, csJSTypes ) ) { $scope.jstype = t; $scope.showJS(); if (nosave || $scope.nosave) return; } 
 		$scope.doRunCode(t,nosave || $scope.nosave);
@@ -1269,12 +1577,12 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 	};
 	
 	$scope.runTest = function() {
-		var t = languageTypes.getTestType($scope.type,$scope.selectedLanguage,"comtest"); 
+		var t = languageTypes.getTestType($scope.type,$scope.selectedLanguage,"comtest") as string;
 		$scope.doRunCode(t,false);
 	};
 	
 	$scope.runUnitTest = function() {
-		var t = languageTypes.getUnitTestType($scope.type,$scope.selectedLanguage,"junit"); 
+		var t = languageTypes.getUnitTestType($scope.type,$scope.selectedLanguage,"junit") as string;
 		$scope.doRunCode(t,false);
 	};
 	
@@ -1287,7 +1595,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 	        return;
 	    }
         $scope.docLink ="Hide document";
-		var t = languageTypes.getRunType($scope.selectedLanguage,"cs");
+		var t = languageTypes.getRunType($scope.selectedLanguage,"cs") as string;
 		$scope.doRunCode(t, false, {"document": true});
 	};
 
@@ -1409,6 +1717,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 			    'userargs': uargs,
                 'uploadedFile' : $scope.uploadedFile,
                 'uploadedType' : $scope.uploadedType,
+                'nosave': false,
                 // 'markup': {'type':t, 'file': $scope.file, 'replace': $scope.replace, 'lang': $scope.lang, 'taskId': $scope.taskId, 'user_id': $scope.user_id},
 				'markup': { 'type': t, 'taskId': $scope.taskId, 'user_id': $scope.user_id }
 			}
@@ -1426,8 +1735,21 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             if ( i > 0 ) url = url.substring(i);
             url += "/" + $scope.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
         }
-		$http({method: 'PUT', url: url, data:params, headers: {'Content-Type': 'application/json'}, timeout: 20000 }
-		).success(function(data, status, headers, config) {
+		$http<{
+            web: {
+                error?: string,
+                pwd?: string,
+                image?: string,
+                wav?: string,
+                testGreen?: boolean,
+                testRed?: boolean,
+                comtestError?: string,
+                docurl?: string,
+                console?: string,
+            }
+        }>({method: 'PUT', url: url, data:params, headers: {'Content-Type': 'application/json'}, timeout: 20000 }
+		).then(function(response) {
+		    let data = response.data;
 			if ( data.web.error && false ) {
 				$scope.error = data.web.error;
 				//return;
@@ -1479,7 +1801,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 			}
 			$scope.processPluginMath();
 
-		}).error(function(data, status) {
+		}, function(response) {
+		    let data = response.data;
             $scope.isRunning = false;
 			$scope.errors.push(status);
             $scope.error = "Ikuinen silmukka tai jokin muu vika?";
@@ -1499,7 +1822,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 
 	
 	$scope.copyTauno = function() {
-		var f = document.getElementById($scope.taunoId);
+		var f = document.getElementById($scope.taunoId) as any;
 		// var s = $scope.taunoHtml.contentWindow().getUserCodeFromTauno();
 		var s = f.contentWindow.getUserCodeFromTauno();
 		$scope.copyingFromTauno = true;
@@ -1543,9 +1866,10 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 
 	$scope.insertAtCursor = function(myField, myValue) {
 	    //IE support
-	    if (document.selection) {
+        const doc = document as any;
+	    if (doc.selection) {
 	        myField.focus();
-	        var sel = document.selection.createRange();
+	        var sel = doc.selection.createRange();
 	        sel.text = myValue;
 	    }
 	        //MOZILLA and others
@@ -1573,8 +1897,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
     }
 
     
-    $scope.setCircuitData = function(data) {
-        var data = {};
+    $scope.setCircuitData = function() {
+        var data: {width: any, height: any};
         $scope.runError = false;
         try {
             if ( $scope.usercode ) data = JSON.parse($scope.usercode);
@@ -1583,7 +1907,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             $scope.runError = true;
         }
         try {
-            var initstr = csApp.getParam($scope,"initSimcir","");
+            var initstr = csApp.getParam($scope,"initSimcir","") as string;
             if ( initstr ) {
                 var initdata = JSON.parse(initstr);
                 $.extend(data,initdata);
@@ -1711,7 +2035,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 	
 	$scope.stopShow = function() {
 		if (angular.isDefined($scope.stop)) {
-			$interval.cancel($scope.stop);
+			services.$interval.cancel($scope.stop);
 			$scope.stop = undefined;
 		}
 	};
@@ -1841,19 +2165,21 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 		// params = 'print=1&type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&keplace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
 		var params = $scope.attrs;
 		// $http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
-		$http({method: 'POST', url: '/cs/?print=1&replace=', data:params, headers: {'Content-Type': 'application/json'}}
+		$http<{msg: string, error: string}>({method: 'POST', url: '/cs/?print=1&replace=', data:params, headers: {'Content-Type': 'application/json'}}
 		// $http({method: 'POST', url:"/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
-		).success(function(data, status, headers, config) {
+		).then(function(response) {
+		    let data = response.data;
 			if (data.msg !== '')
 			{
-				$scope.localcode = data;
+				$scope.localcode = data.msg;
 				$scope.showCodeLocal();
 			}
 			else
 			{
 				$scope.errors.push(data.error);
 			}
-		}).error(function(data, status) {
+		}, function(response) {
+		    let status = response.status;
 			$scope.errors.push(status);
 		});
 	};
@@ -1866,9 +2192,10 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         if ( text == $scope.lastMD ) return;
         $scope.lastMD = text;
         $scope.previewUrl="/preview/" + $scope.taskId.split(".")[0]; // 12971"
-        $http.post($scope.previewUrl, {
+        $http.post<{texts: string | {html: string}[]}>($scope.previewUrl, {
             "text": text
-        }).success(function (data, status, headers, config) {
+        }).then(function (response) {
+            let data = response.data;
             var s  = "";
             var $previewDiv = angular.element($scope.preview); 
             
@@ -1882,20 +2209,18 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             s = s.replace(/parContent/,""); // Tämä piti ottaa pois ettei scope pilaannu seuraavaa kertaa varten???
             s = s.replace(/<div class="editline".*<.div>/,"");            
             s = s.replace(/<div class="readline"[\s\S]*?<.div>/,"");            
-            var html = csApp.compile(s)($scope)
-            $previewDiv.html(html);
+            var html = services.$compile(s)($scope as any)
+            $previewDiv.empty().append(html);
 
             //MathJax.Hub.Queue(["Typeset", MathJax.Hub, $previewDiv[0]]);
             // $scope.$parent.processAllMath($previewDiv[0]);
-            if  ( $scope.$parent.processAllMath )            
-                $scope.$parent.processAllMath($previewDiv); 
-            else if  ( $scope.$parent.$parent.processAllMath )            
-                $scope.$parent.$parent.processAllMath($previewDiv); 
+            ParCompiler.processAllMath($previewDiv);
             //$scope.outofdate = false;
             //$scope.parCount = len;
 
-        }).error(function (data, status, headers, config) {
-            $window.alert("Failed to show preview: " + data.error);
+        }, function (response) {
+            let data = response.data;
+            services.$window.alert("Failed to show preview: " + data.error);
         });
     };
     
@@ -2016,7 +2341,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         }
     }
     
-    $scope.showOtherEditor = function(editorMode) {
+    $scope.showOtherEditor = async function(editorMode) {
         if ( $scope.parson ) {
             $scope.usercode = $scope.getJsParsonsCode();
         }
@@ -2048,39 +2373,37 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         var eindex = $scope.editorModeIndecies[$scope.editorMode];
         $scope.editorIndex = eindex;
         var otherEditDiv = $scope.element0.getElementsByClassName('csrunEditorDiv')[0];                    
-        var editorDiv = angular.element(otherEditDiv); 
-        $scope.edit = csApp.compile(html[eindex])($scope);
+        var editorDiv: JQuery = angular.element(otherEditDiv);
+        $scope.edit = services.$compile(html[eindex])($scope as any)[0] as HTMLTextAreaElement; // TODO unsafe cast
         // don't set the html immediately in case of Ace to avoid ugly flash because of lazy load
-        $scope.edit = $scope.edit[0];
         if ( eindex == 1 ) {
-            require(["tim/ace", "ace/ext-language_tools"], function (ace) {
-                editorDiv.html($scope.edit);
-                var editor = ace.edit(editorDiv.find('.csAceEditor')[0]);
-                $scope.aceLoaded(ace, editor);
-                $scope.aceEditor.getSession().setMode('ace/mode/' + $scope.mode);
-                $scope.aceEditor.setOptions({
-                    enableBasicAutocompletion: true,
-                    enableLiveAutocompletion: true,
-                    enableSnippets: true,
-                    maxLines: $scope.maxRows
-                });
-                $scope.aceEditor.setFontSize(15);
-                $scope.aceEditor.getSession().setUseWorker(false); // syntax check away
-                $scope.aceEditor.renderer.setScrollMargin(12, 12, 0, 0);
-                $scope.aceEditor.getSession().setValue($scope.usercode);
-                $scope.aceEditor.getSession().on('change', function () {
-                    $scope.usercode = $scope.aceEditor.getSession().getValue();
-                });
-                $scope.$watch('usercode', function (newValue, oldValue) {
-                    if (newValue === oldValue || $scope.aceEditor.getSession().getValue() === newValue) {
-                        return;
-                    }
-                    $scope.aceEditor.getSession().setValue(newValue);
-                });
+            const ace = await lazyLoad<IAce>("tim/ace");
+            editorDiv.empty().append($scope.edit);
+            var editor = ace.edit(editorDiv.find('.csAceEditor')[0]);
+            $scope.aceLoaded(ace, editor as IAceEditor);
+            $scope.aceEditor.getSession().setMode('ace/mode/' + $scope.mode);
+            $scope.aceEditor.setOptions({
+                enableBasicAutocompletion: true,
+                enableLiveAutocompletion: true,
+                enableSnippets: true,
+                maxLines: $scope.maxRows
+            });
+            $scope.aceEditor.setFontSize(15);
+            $scope.aceEditor.getSession().setUseWorker(false); // syntax check away
+            $scope.aceEditor.renderer.setScrollMargin(12, 12, 0, 0);
+            $scope.aceEditor.getSession().setValue($scope.usercode);
+            $scope.aceEditor.getSession().on('change', function () {
+                $scope.usercode = $scope.aceEditor.getSession().getValue();
+            });
+            $scope.$watch('usercode', function (newValue, oldValue) {
+                if (newValue === oldValue || $scope.aceEditor.getSession().getValue() === newValue) {
+                    return;
+                }
+                $scope.aceEditor.getSession().setValue(newValue);
             });
         }
         else {
-            editorDiv.html($scope.edit);
+            editorDiv.empty().append($scope.edit);
             if (eindex == 2) $scope.showCsParsons(otherEditDiv.children[0]);
             if (eindex == 3) $scope.showJsParsons(otherEditDiv.children[0]);
         }
@@ -2119,7 +2442,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
        $scope.write(s+"\n");
     }    
     
-    $scope.canvasConsole = {};
+    $scope.canvasConsole = {log: null} as Console;
     $scope.canvasConsole.log = function(s) {
         var res = "", sep = "";
         for (var i=0; i<arguments.length; i++) { res += sep + arguments[i]; sep = " "; }    
@@ -2134,7 +2457,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             $scope.irrotaKiinnita = $scope.english ? "Release" : "Irrota";
         } else {
             $scope.canvas.style["position"] = "fixed"        
-            $scope.canvas.style["width"] = 900;
+            $scope.canvas.style["width"] = "900px";
             $scope.irrotaKiinnita = $scope.english ? "Fix" : "Kiinnitä";
         }
     }
@@ -2200,20 +2523,19 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
                     '<iframe id="'+v.vid+'" class="jsCanvas"'  + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin">')+
                   '</iframe>'+
                   '</div>';
-                $scope.canvas = angular.element(angularElement);
+                $scope.canvas = angular.element(angularElement)[0] as HTMLCanvasElement; // TODO this seems wrong
                 // $scope.canvas = angular.element('<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html" ' + v.w + v.h + ' style="border:0" seamless="seamless" ></iframe>');
                 $scope.iframeLoadTries = 10;
             } else {  
                     $scope.canvas = angular.element(//'<div class="userlist" tim-draggable-fixed="" style="top: 91px; right: -375px;">'+
               '<canvas id="csCanvas" width="'+$scope.canvasWidth+'" height="'+$scope.canvasHeight+'" class="jsCanvas"></canvas>' +
               // '<canvas id="csCanvas" width="'+$scope.canvasWidth+'" height="'+$scope.canvasHeight+'" class="jsCanvas userlist" tim-draggable-fixed="" style="top: 91px; right: -375px;"></canvas>' +
-              ''); // '</div>'); 
+              '')[0] as HTMLCanvasElement; // '</div>');
             }
             var $previewDiv = angular.element($scope.preview);
             //$previewDiv.html($scope.canvas);
-            $previewDiv.html($scope.previewIFrame = csApp.compile($scope.canvas)($scope));
+            $previewDiv.empty().append($scope.previewIFrame = services.$compile($scope.canvas)($scope as any));
             //$scope.canvas = $scope.preview.find(".csCanvas")[0];
-            $scope.canvas = $scope.canvas[0];
         }
         var text = $scope.usercode.replace($scope.cursor,"");
         // if ( text == $scope.lastJS && $scope.userargs == $scope.lastUserargs && $scope.userinput == $scope.lastUserinput ) return;
@@ -2225,7 +2547,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         text = $scope.getCode();
         
         if ( $scope.iframe ) { // in case of iframe, the text is send to iframe
-            var f =  document.getElementById($scope.taunoId); // but on first time it might be not loaded yet
+            var f =  document.getElementById($scope.taunoId) as GlowScriptFrame; // but on first time it might be not loaded yet
             // var s = $scope.taunoHtml.contentWindow().getUserCodeFromTauno();
             if ( !f || !f.contentWindow  || (!f.contentWindow.runJavaScript && !$scope.fullhtml) ) {
                $scope.lastJS = ""; 
@@ -2263,7 +2585,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             var ctx = $scope.canvas.getContext("2d");
             ctx.save();
             $scope.result = "";
-            var beforeCode = 'function paint(ctx,out, userargs, userinput, console) {"use strict"; ';
+            var beforeCode = 'function paint(ctx,out, userargs, userinput, console) { ';
             var afterCode = '\n}\n';
             var a = "";
             var b = "";
@@ -2276,7 +2598,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 
             var paint = new Function("return ("+b+text+a+")")(); 
             if ( !$scope.out ) {
-               $scope.out = $scope.element0.getElementsByClassName('console')[0]; 
+               $scope.out = $scope.element0.getElementsByClassName('console')[0] as any;
                $scope.out.write = $scope.write;
                $scope.out.writeln = $scope.writeln;
                $scope.out.canvas = $scope.canvas;
@@ -2318,12 +2640,12 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
          this.stroke();
        };
 
-var csConsoleApp = angular.module('csConsoleApp', ['ngSanitize']);
+var csConsoleApp = angular.module('csConsoleApp', ['ngSanitize']) as ICSConsoleApp;
 // csApp.directive('csRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('console', false); }]);
-csConsoleApp.directive('csConsole', ['$sanitize', '$timeout', function ($sanitize, $timeout) { csConsoleApp.sanitize = $sanitize; return csConsoleApp.directiveFunction('shell', true, $timeout); }]);
+csConsoleApp.directive('csConsole', ['$sanitize', '$timeout', function ($sanitize, $timeout) { return csConsoleApp.directiveFunction('shell', true); }]);
 
-csConsoleApp.directiveFunction = function (t, isInput, $timeout) {
-"use strict";
+csConsoleApp.directiveFunction = function (t, isInput) {
+
 
 // csConsoleApp.directive('csConsole', function ($timeout) {
      return {
@@ -2354,8 +2676,8 @@ csConsoleApp.directiveFunction = function (t, isInput, $timeout) {
 
 // controller: function($scope,$http,$transclude,$element, $sce ) {
 csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeout) {
-"use strict";
-    $scope.attrs = {};
+
+    $scope.attrs = {} as any;
 
     $transclude(function(clone, scope) {
         if ( TESTWITHOUTPLUGINS ) return;
@@ -2383,7 +2705,7 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
     $scope.content = $scope.attrs;
     // End of generally re-usable TIM stuff
 
-    $scope.examples = "";
+    $scope.examples = [];
 
     if ( $scope.content.examples) {
         var s = $scope.content.examples.replace(/'/g, '"');
@@ -2407,7 +2729,7 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
         el.focus();
 
     };
-    $scope.handler = function (e) {
+    $scope.handler = function () {
         var url = "/cs/answer";
         if ($scope.plugin) {
             // url = "/csPlugin" + /*$scope.plugin + */ "/" + $scope.taskId + "/answer/"; // Häck to get same origin
@@ -2422,7 +2744,7 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
         var uargs = "";
         var uinput = "";
 
-        $http({
+        $http<{web: {pwd?: string, error?: string, console?: string}}>({
                 method: 'PUT',
                 url: url,
                 data: {
@@ -2433,7 +2755,8 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
                   }
               }
         })
-         .success(function (data) {
+         .then(function (response) {
+             let data = response.data;
              var s = "";
              $scope.oldpwd = $scope.pwd;
              if ( data.web.pwd ) ConsolePWD.setPWD(data.web.pwd,$scope);
@@ -2446,9 +2769,8 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
              }
              $scope.submit(s);
              // console.log(["data", data.web]);
-         })
-         .error(function (data, status, hdrs, cfg) {
-             console.log(["protocol error", data, status, hdrs, cfg]);
+         }, function (response) {
+             console.log(["protocol error", response]);
              $scope.submit("Endless loop?");
          });
 
@@ -2505,7 +2827,7 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
  
 
 csConsoleApp.directiveTemplateCS = function (t, isInput) {
-"use strict";
+
     if (TESTWITHOUTPLUGINS) return '';
     return '<div class="web-console no-popup-menu {{currentSize}} "'+
      '    ng-keydown="handleKey($event)" >'+
@@ -2556,7 +2878,7 @@ csConsoleApp.directiveTemplateCS = function (t, isInput) {
  
  
 function truthTable(sentence,topbottomLines) {
-"use strict";  
+  
   var result = "";
   try {
       if ( !sentence ) return "";
@@ -2571,8 +2893,8 @@ function truthTable(sentence,topbottomLines) {
       var input = sentence.toLowerCase();
 
       var repls = replace.split(";");
-      for (i in repls) {
-          var r = repls[i].split(" ");
+      for (let i of repls) {
+          var r = i.split(" ");
           input = input.split(r[0]).join(r[1]);
       }
 
@@ -2620,4 +2942,3 @@ function truthTable(sentence,topbottomLines) {
       return result + "\n" + err + "\n";
   }
 }
-});

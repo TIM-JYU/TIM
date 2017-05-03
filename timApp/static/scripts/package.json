@@ -31,6 +31,7 @@
     "@types/jquery": "^2.0.41",
     "@types/katex": "^0.5.0",
     "@types/mathjax": "^0.0.31",
+    "@types/ng-file-upload": "^12.2.0",
     "@types/ngstorage": "^0.3.34",
     "@types/oclazyload": "^0.0.31",
     "@types/rangyinputs": "^1.2.0",
