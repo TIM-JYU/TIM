@@ -7,7 +7,7 @@
     "removeComments": true,
     "preserveConstEnums": true,
     "sourceMap": true,
-    "outDir": "build",
+    "outDir": "build-ide",
     "allowJs": true,
     "moduleResolution": "node",
     "baseUrl": ".",
@@ -19,12 +19,16 @@
       "es7",
       "scripthost"
     ],
-    "noEmit": true
+    "noEmit": false,
+    "declarationDir": "decls",
+    "declaration": true
   },
   "exclude": [
     "node_modules",
     "jspm_packages",
     "bower_components",
-    "build"
+    "build",
+    "build-ide",
+    "decls"
   ]
 }

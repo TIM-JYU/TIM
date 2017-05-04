@@ -1,16 +1,34 @@
-define(["jquery", "./jquery-ui-sortable.min.js", "./jquery.ui.touch-punch.min.js"], function ($) {
-(function($) { // wrap in anonymous function to not show some helper variables
-    var CsParsonsWidget = function(options) {
+import $ from "jquery";
+import "./jquery.ui.touch-punch.min.js";
+import "./jquery-ui-sortable.min.js";
+
+type CsParsonsOptions = {
+    shuffle: boolean,
+    sortable: Element,
+    notordermatters: boolean,
+    words: boolean,
+    maxcheck: number,
+    separator?: string,
+    minWidth: string,
+    styleWords: string,
+    onChange?(widget: CsParsonsWidget);
+};
+
+export class CsParsonsWidget {
+    options: CsParsonsOptions;
+    text: string;
+    lines: string[];
+
+    constructor(options: CsParsonsOptions) {
         var defaults = {
             separator : "\n",
             styleWords: ""
         };
-     
-        this.options = jQuery.extend({}, defaults, options);
+
+        this.options = $.extend({}, defaults, options);
     };
 
-    
-    CsParsonsWidget.prototype.shuffle = function(lines) {
+    shuffle(lines) {
         var result = lines.slice();
         var n = lines.length;
         for (var i = n-1; i >= 0; i--) {
@@ -21,19 +39,18 @@ define(["jquery", "./jquery-ui-sortable.min.js", "./jquery.ui.touch-punch.min.js
         }
         return result;
     };
-    
-    
-    CsParsonsWidget.prototype.init = function(text,userText) {
+
+    init(text,userText) {
         this.text = text;
         if ( this.options.shuffle ) {
             this.lines =  text.split("\n");
             this.lines = this.shuffle(this.lines);
         }
-        else 
+        else
             this.lines =  userText.split("\n");
     };
 
-    CsParsonsWidget.prototype.show = function() {
+    show() {
         var classes = "sortable-code sortable-output";
         var parsonsEditDiv = this.options.sortable;
         var type = "div";
@@ -41,7 +58,7 @@ define(["jquery", "./jquery-ui-sortable.min.js", "./jquery.ui.touch-punch.min.js
             classes += " sortable-words ";
             this.options.separator = " ";
             type = "span";
-        }    
+        }
         var words = this.lines
         parsonsEditDiv.innerHTML = "";
         for (var i = 0; i < words.length; i++) {
@@ -52,15 +69,15 @@ define(["jquery", "./jquery-ui-sortable.min.js", "./jquery.ui.touch-punch.min.js
                 div = document.createElement("div");
                 typ = div;
                 w = "\\n";
-            } else  {  
+            } else  {
                 div = document.createElement(type);
                 if ( this.options.words && this.options.minWidth && w.length < 3 )
                     div.setAttribute('style',"width: " + this.options.minWidth );
-            }     
+            }
             div.setAttribute('class',"sortitem");
-            
-            var t = document.createTextNode(w);
-            t.title = w;
+
+            var t = document.createTextNode(w) as any;
+            t.title = w; // TODO this may be wrong; TS complains without "any"
             div.appendChild(t);
             //var div2 = document.createElement(typ);
             //div2.appendChild(div);
@@ -71,10 +88,10 @@ define(["jquery", "./jquery-ui-sortable.min.js", "./jquery.ui.touch-punch.min.js
                 parsonsEditDiv.appendChild(div);
             }
 
-        }    
+        }
         parsonsEditDiv.setAttribute('class',classes);
         parsonsEditDiv.setAttribute('style',"float: left; width: 100%" + ";" + this.options.styleWords);
-        a = $(parsonsEditDiv);
+        let a = $(parsonsEditDiv);
         if ( this.options.maxcheck )
             a.sortable( {
                 items: ':not(.parsonsstatic)',
@@ -85,9 +102,9 @@ define(["jquery", "./jquery-ui-sortable.min.js", "./jquery.ui.touch-punch.min.js
                     });
                 },
                 change: function(){
-                    $sortable = $(this);
-                    $statics = $('.parsonsstatic', this).detach();
-                    $helper = $('<'+type+'></'+type+'>').prependTo(this);
+                    let $sortable = $(this);
+                    let $statics = $('.parsonsstatic', this).detach();
+                    let $helper = $('<'+type+'></'+type+'>').prependTo(this);
                     $statics.each(function(){
                         var $this = $(this);
                         var target = $this.data('pos');
@@ -100,13 +117,13 @@ define(["jquery", "./jquery-ui-sortable.min.js", "./jquery.ui.touch-punch.min.js
         else a.sortable();
         var parson = this;
         // a.sortable( "option", "axis", "x" );
-        a.on( "sortstop", function( event, ui ) { 
+        a.on( "sortstop", function( event, ui ) {
              if ( parson.options.onChange ) parson.options.onChange(parson);
              parson.clear();
           } );
-    };    
+    };
 
-    CsParsonsWidget.prototype.join = function(separator) {
+    join(separator) {
         var result = "";
         var sep = "";
         var div = this.options.sortable;
@@ -122,11 +139,11 @@ define(["jquery", "./jquery-ui-sortable.min.js", "./jquery.ui.touch-punch.min.js
             if ( nosep ) sep = "";
             nosep = false;
         }
-        
+
         return result;
     }
 
-    CsParsonsWidget.prototype.check = function(userText) {
+    check(userText) {
         var result = "";
         var div = this.options.sortable;
         var lines = this.text.split("\n");
@@ -135,7 +152,7 @@ define(["jquery", "./jquery-ui-sortable.min.js", "./jquery.ui.touch-punch.min.js
         var maxn = div.childElementCount;
         if ( this.options.maxcheck && this.options.maxcheck < div.childElementCount) maxn = this.options.maxcheck
         for (var i = 0; i < maxn; i++) {
-            var node = div.childNodes[i];
+            var node = div.children[i];
             var nodeok = true;
             if ( this.options.notordermatters ) {
                 nodeok = false;
@@ -150,25 +167,16 @@ define(["jquery", "./jquery-ui-sortable.min.js", "./jquery.ui.touch-punch.min.js
             if ( !nodeok ) node.setAttribute('style',"background-color: RED;");
             else if ( this.options.maxcheck )  node.setAttribute('style',"background-color: LIGHTGREEN;");
         }
-        
+
         return result;
     }
 
-    CsParsonsWidget.prototype.clear = function() {
+    clear() {
         var div = this.options.sortable;
         if ( !div ) return "";
-        for (i = 0; i < div.childElementCount; i++) {
-            var node = div.childNodes[i];
+        for (let i = 0; i < div.childElementCount; i++) {
+            var node = div.children[i];
             node.removeAttribute('style');
         }
     }
-
-   
-   
-   
-    window['CsParsonsWidget'] = CsParsonsWidget;
- }
-// allows _ and $ to be modified with noconflict without changing the globals
-// that parsons uses
-)($);
-});
+}

@@ -1,9 +1,8 @@
 // idea from https://github.com/bcherny/ngimport
 import * as angular from "angular";
 import {ILazyLoad} from "oclazyload";
-import {timApp} from "tim/app";
 
-class Services {
+export class Services {
     private static checkServiceAccess(service) {
         if (service == null) {
             throw new Error("You cannot access Angular services before angular.bootstrap has been called");
@@ -405,16 +404,17 @@ class Services {
 
 export const services = new Services();
 
-timApp.config(["$provide", "$httpProvider", "$logProvider",
-    ($a: angular.auto.IProvideService,
-     $b: angular.IHttpProvider,
-     $c: angular.ILogProvider) => {
-        services.$provide = $a;
-        services.$httpProvider = $b;
-        services.$logProvider = $c;
-    }]);
+export function injectProviders($a: angular.auto.IProvideService,
+                                $b: angular.IHttpProvider,
+                                $c: angular.ILogProvider) {
+    services.$provide = $a;
+    services.$httpProvider = $b;
+    services.$logProvider = $c;
+}
 
-timApp.run(["$injector", ($i: angular.auto.IInjectorService) => {
+injectProviders.$inject = ["$provide", "$httpProvider", "$logProvider"];
+
+export function injectServices($i: angular.auto.IInjectorService) {
     services.$anchorScroll = $i.get("$anchorScroll") as angular.IAnchorScrollService;
     services.$cacheFactory = $i.get("$cacheFactory") as angular.ICacheFactoryService;
     services.$compile = $i.get("$compile") as angular.ICompileService;
@@ -449,4 +449,6 @@ timApp.run(["$injector", ($i: angular.auto.IInjectorService) => {
     services.$ocLazyLoad = $i.get("$ocLazyLoad") as ILazyLoad;
     services.$uibModal = $i.get("$uibModal") as angular.ui.bootstrap.IModalService;
     services.$upload = $i.get("Upload") as angular.angularFileUpload.IUploadService;
-}]);
+}
+
+injectServices.$inject = ["$injector"];

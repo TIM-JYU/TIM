@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "amd",
+    "module": "system",
     "noImplicitAny": false,
     "noImplicitThis": false,
     "allowUnreachableCode": true,
@@ -17,13 +17,16 @@
       "es7",
       "scripthost"
     ],
-    "noEmit": true,
+    "noEmit": false,
     "paths": {
       "angular": [
         "../../../static/scripts/node_modules/@types/angular"
       ],
+      "jquery": [
+        "../../../static/scripts/node_modules/@types/jquery"
+      ],
       "tim/*": [
-        "../../../static/scripts/tim/*"
+        "../../../static/scripts/decls/tim/*"
       ]
     },
     "typeRoots": [
@@ -36,8 +39,5 @@
     "bower_components",
     "build"
   ],
-  "files": [
-    "csPlugin.ts",
-    "../../../static/scripts/tim/missing-types.d.ts"
-  ]
+  "include": ["./**/*.ts"]
 }

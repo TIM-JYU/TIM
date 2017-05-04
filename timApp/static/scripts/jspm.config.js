@@ -8,7 +8,8 @@ SystemJS.config({
     "simcir/basicset": "/cs/simcir/simcir-basicset.js",
     "simcir/library": "/cs/simcir/simcir-library.js",
     "simcir/oma-kirjasto": "/cs/simcir/simcir-oma-kirjasto.js",
-    "mathjax": "https://raw.githubusercontent.com/pkra/MathJax-single-file/master/dist/TeXSVG/MathJax.js",
+    "mathjax": "https://cdn.rawgit.com/pkra/MathJax-single-file/master/dist/TeXSVG/MathJax.js",
+    "sagecell": "https://sagecell.sagemath.org/static/embedded_sagecell.js",
     "tim/": "tim/"
   },
   browserConfig: {
@@ -37,7 +38,22 @@ SystemJS.config({
     ]
   },
   typescriptOptions: {
-    "tsconfig": true
+    "module": "amd",
+    "noImplicitAny": false,
+    "noImplicitThis": false,
+    "allowUnreachableCode": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "allowJs": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "target": "es5",
+    "lib": [
+      "dom",
+      "es7",
+      "scripthost"
+    ]
   },
   packages: {
     "tim": {
@@ -104,9 +120,15 @@ SystemJS.config({
     "tim/session.ts": {
       "build": false
     },
-    "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_SVG": {
+    "https://cdn.rawgit.com/pkra/MathJax-single-file/master/dist/TeXSVG/MathJax.js": {
       "format": "global",
       "exports": "MathJax"
+    },
+    "https://sagecell.sagemath.org/static/embedded_sagecell.js": {
+      "globals": {
+        "MathJax": "https://cdn.rawgit.com/pkra/MathJax-single-file/master/dist/TeXSVG/MathJax.js"
+      },
+      "exports": "sagecell"
     }
   },
   map: {

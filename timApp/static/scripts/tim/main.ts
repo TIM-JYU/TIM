@@ -6,6 +6,7 @@ import * as c from "tim/controllers/createLectureCtrl";
 import * as d from "tim/controllers/indexCtrl";
 import * as e from "tim/controllers/lectureController";
 import * as f from "tim/controllers/lectureInfoController";
+import * as ae from "tim/controllers/qstController";
 import * as g from "tim/controllers/questionController";
 import * as h from "tim/controllers/questionPreviewController";
 import * as i from "tim/controllers/reviewController";
@@ -32,7 +33,7 @@ import {markAsUsed} from "tim/utils";
 import $ = require("jquery");
 import {ParCompiler} from "./services/parCompiler";
 
-markAsUsed(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, ab, ac, ad);
+markAsUsed(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, ab, ac, ad, ae);
 
 $(document).ready(() => {
     angular.bootstrap(document, ["timApp"], {strictDi: false});

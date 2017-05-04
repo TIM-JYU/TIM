@@ -981,8 +981,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             templs = {}
             if not (is_tauno or is_rikki or is_parsons or is_simcir):
                 templs = get_all_templates('templates')
-            result_json = {"js": ["/cs/js/dir.js",
-                                  "/cs/cs-parsons/csparsons.js",
+            result_json = {"js": ["/cs/js/build/csPlugin.js",
 
                                   # "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_HTMLorMML",  # will be loaded by JS lazily
                                   # "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
@@ -994,12 +993,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                    "/cs/css/mathcheck.css"
                                    ], "multihtml": True}
             if is_parsons:
-                result_json = {"js": ["/cs/js/dir.js",
+                result_json = {"js": ["/cs/js/build/csPlugin.js",
                                       # "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
                                       # "https://sagecell.sagemath.org/static/embedded_sagecell.js", # will be loaded by JS lazily
                                       # "/cs/js/embedded_sagecell.js",
                                       "jqueryui-touch-punch",
-                                      "/cs/cs-parsons/csparsons.js",
                                       "/cs/js-parsons/lib/underscore-min.js",
                                       "/cs/js-parsons/lib/lis.js",
                                       "/cs/js-parsons/parsons.js",
@@ -1011,12 +1009,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                "css": ["/cs/css/cs.css", "/cs/js-parsons/parsons.css",
                                        "/cs/js-parsons/lib/prettify.css"], "multihtml": True}
             if is_simcir:
-                result_json = {"js": ["/cs/js/dir.js",
-                                      "simcir",
-                                      "simcir/basicset",
-                                      "simcir/library",
-                                      "simcir/oma-kirjasto"
-                                      ],
+                result_json = {"js": ["/cs/js/build/csPlugin.js"],
                                "angularModule": ["csApp"],
                                "css": ["/cs/css/cs.css", "/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"],
                                "multihtml": True}

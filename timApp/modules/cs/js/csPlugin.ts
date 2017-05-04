@@ -1,10 +1,42 @@
-import * as angular from "angular";
-import $ = require("jquery");
+import angular from "angular";
+import $ from "jquery";
 import {IHttpService, IModule, INgModelController, ISCEService, ITimeoutService, ITranscludeFunction} from "angular";
 import {services} from "tim/ngimport";
-import {ParCompiler} from "tim/services/parCompiler"
-import {lazyLoad} from "tim/lazyLoad";
+import {ParCompiler} from "tim/services/parCompiler";
+import {lazyLoad, lazyLoadMany, lazyLoadTS} from "tim/lazyLoad";
 import {IAce, IAceEditor} from "tim/ace-types";
+import * as csparsons from "./cs-parsons/csparsons";
+
+interface Simcir {
+    setupSimcir(element: JQuery, data: {});
+    controller(element: JQuery);
+}
+
+interface CellInfo {
+    array: CellInfo[];
+    hide: string[];
+    defaultLanguage: string;
+    linked: boolean;
+    outputLocation: string;
+    inputLocation: string;
+    mode: string;
+    submit(event);
+    code: string;
+    evalButtonText: string;
+    editor: any;
+    collapse: any;
+    session: any;
+    interacts: any[];
+}
+
+interface Sagecell {
+    allLanguages: string[];
+    templates: { [name: string]: { editor: string, hide: string[] } };
+    makeSagecell(args): CellInfo;
+    deleteSagecell(cellInfo: CellInfo);
+    moveInputForm(cellInfo: CellInfo);
+    restoreInputForm(cellInfo: CellInfo);
+}
 
 interface GlowScriptWindow extends Window {
     runJavaScript?(text: string, args: string, input: string, wantsConsole: boolean): string;
@@ -14,13 +46,6 @@ interface GlowScriptWindow extends Window {
 
 interface GlowScriptFrame extends HTMLIFrameElement {
     contentWindow: GlowScriptWindow;
-}
-
-declare class CsParsonsWidget {
-    constructor(data: {});
-
-    init(a: string, b: string);
-    show();
 }
 
 // js-parsons is unused; just declare a stub to make TS happy
@@ -274,7 +299,7 @@ interface ICSAppScope extends IConsolePWDScope {
     showJS(): void;
     closeDocument(): void;
     setCircuitData(): void;
-    getCircuitData(): string;
+    getCircuitData(): Promise<string>;
     getJsParsonsCode(): string;
     checkIndent(): void;
     copyTauno(): void;
@@ -474,6 +499,11 @@ uploadFileTypes.name = function(file) {
 
 function resizeIframe(obj) {
   obj.style.height = obj.contentWindow.document.body.scrollHeight + 'px';
+}
+
+async function loadSimcir() {
+    const modules = await lazyLoadMany(["simcir", "simcir/basicset", "simcir/library", "simcir/oma-kirjasto"]);
+    return modules[0] as Simcir;
 }
 
 // =================================================================================================================
@@ -1172,36 +1202,16 @@ function lataaMathcheck(scope, readyFunction) {
     return mathcheckLoading;
 }
 
-
-var sageLoaded = false;
-
-function lataaSage(scope,firstTime, readyFunction) {
-    if ( sageLoaded ) return;
-    var sageLoading = $.ajax({
-        dataType: "script",
-        cache: true,
-        url: "//sagecell.sagemath.org/static/embedded_sagecell.js"
-        // url: "https://cosmos.mat.uam.es:8888/static/embedded_sagecell.js"
-    });
-    sageLoading.done(function() {
-        sageLoaded = true;
-        alustaSage(scope, firstTime, readyFunction);
-    });
-    return sageLoading;
-}
-
-
 function runSage(scope) {
     if ( scope.sageButton ) scope.sageButton.click();
 }
 
-function alustaSage(scope,firstTime, readyFunction) {
+async function alustaSage(scope,firstTime) {
 // TODO: lisää kentätkin vasta kun 1. kerran alustetaan.
 // TODO: kielien valinnan tallentaminen
 // TODO: kielien valinta kunnolla float.  
 // ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst  
-    if ( !sageLoaded ) return lataaSage(scope, firstTime, readyFunction);
-    
+    let sagecell = await lazyLoad<Sagecell>("sagecell");
     if ( scope.sagecellInfo ) {
         scope.sagecellInfo.editor = "textarea";
         //scope.sagecellInfo.inputLocation = null;
@@ -1222,7 +1232,6 @@ function alustaSage(scope,firstTime, readyFunction) {
         // scope.sagecellInfo.inputLocation.innerText = scope.sagecellInfo.code;
         //scope.sagecellInfo.inputLocation.children[0].children[0].children[0].value = scope.sagecellInfo.code;
         scope.sageInput.value = scope.getReplacedCode();
-        if ( readyFunction ) readyFunction();
         return;
     }    
     scope.sageArea = scope.element0.getElementsByClassName('computeSage')[0];                    
@@ -1260,7 +1269,6 @@ function alustaSage(scope,firstTime, readyFunction) {
         },
         languages: languages // sagecell.allLanguages
     });
-    if ( readyFunction ) readyFunction();
 
 }    
 
@@ -1634,14 +1642,15 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
     
 
     
-	$scope.doRunCode = function(runType, nosave, extraMarkUp) {
+	$scope.doRunCode = async function(runType, nosave, extraMarkUp) {
 		// $scope.viewCode = false;
         window.clearInterval($scope.runTimer);
         $scope.closeDocument();
         // alert("moi");
         
         if ( $scope.isSage ) {
-            alustaSage($scope, true, function() {runSage($scope);});
+            await alustaSage($scope, true);
+            runSage($scope);
             /*
             var sageLoading = alustaSage($scope,true);
             if ( $scope.sageButton ) {
@@ -1652,7 +1661,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         // if ( $scope.isSage && !$scope.sagecellInfo ) alustaSage($scope,true);
         
         if ( $scope.simcir ) {
-            $scope.usercode = $scope.getCircuitData();
+            $scope.usercode = await $scope.getCircuitData();
         }
 		else if ( $scope.taunoOn && ( !$scope.muokattu || !$scope.usercode ) ) $scope.copyTauno();
         
@@ -1897,7 +1906,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
     }
 
     
-    $scope.setCircuitData = function() {
+    $scope.setCircuitData = async function() {
         var data: {width: any, height: any};
         $scope.runError = false;
         try {
@@ -1921,11 +1930,13 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         data.width = csApp.getParam($scope,"width",800);
         data.height = csApp.getParam($scope,"height",400);
         $scope.simcir.children().remove();
+        let simcir = await loadSimcir();
         simcir.setupSimcir($scope.simcir, data );
     }
     
     
-    $scope.getCircuitData = function() {
+    $scope.getCircuitData = async function() {
+        let simcir = await loadSimcir();
         var data = simcir.controller($scope.simcir.find('.simcir-workspace'));
         data = data.data();
         
@@ -1961,8 +1972,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
     }
     
     
-    $scope.copyFromSimcir = function() {
-        $scope.usercode = $scope.getCircuitData();
+    $scope.copyFromSimcir = async function() {
+        $scope.usercode = await $scope.getCircuitData();
     }
     
     
@@ -2028,7 +2039,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             $scope.initUserCode = true;
             $scope.showOtherEditor($scope.editorMode);
         }
-        if ( $scope.isSage ) alustaSage($scope,false,null);
+        if ( $scope.isSage ) alustaSage($scope,false);
         if ( $scope.simcir ) $scope.setCircuitData();
 	};
 
@@ -2289,16 +2300,16 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         $scope.parson.shuffleLines();
     }
     
-    $scope.showCsParsons = function(sortable) {
-        var parson = new CsParsonsWidget({
+    $scope.showCsParsons = async function(sortable) {
+        const csp = await lazyLoadTS<typeof csparsons>("./cs-parsons/csparsons.js", __moduleName);
+        let parson = new csp.CsParsonsWidget({
             'sortable': sortable,
-            'trashId': 'sortableTrash',
             'words': $scope.words,
             'minWidth': "40px",
             'shuffle' : $scope.initUserCode,
-            'styleWords' : csApp.getParam($scope,"style-words",""),
-            'maxcheck' : csApp.getParam($scope,"parsonsmaxcheck",""),
-            'notordermatters' : csApp.getParam($scope,"parsonsnotordermatters",false),
+            'styleWords' : csApp.getParam($scope,"style-words","") as string,
+            'maxcheck' : csApp.getParam($scope,"parsonsmaxcheck","") as number,
+            'notordermatters' : csApp.getParam($scope,"parsonsnotordermatters",false) as boolean,
             'onChange': function(p) {
                 var s = p.join("\n");
                 $scope.usercode = s; 

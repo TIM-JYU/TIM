@@ -5,7 +5,7 @@ import $ = require("jquery");
 import {services} from "tim/ngimport";
 import {lazyLoad, lazyLoadMany} from "../lazyLoad";
 
-class ParagraphCompiler {
+export class ParagraphCompiler {
     public async compile(data, scope, callback) {
         await lazyLoadMany(data.js);
         await services.$ocLazyLoad.inject(data.angularModule);

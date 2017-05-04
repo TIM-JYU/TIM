@@ -14,6 +14,7 @@ import * as angularmodules from "tim/angularmodules";
 import * as extramodules from "tim/extramodules";
 import * as plugins from "tim/plugins";
 import {markAsUsed} from "tim/utils";
+import {injectProviders, injectServices} from "./ngimport";
 
 markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize, uibootstrap, ngFileUpload, ngStorage, plugins, extramodules, oclazyload);
 
@@ -101,3 +102,6 @@ timApp.filter("timtim", ["$filter", ($filter) => {
         return dateFilter(date, "HH:mm:ss");
     };
 }]);
+
+timApp.config(injectProviders);
+timApp.run(injectServices);
