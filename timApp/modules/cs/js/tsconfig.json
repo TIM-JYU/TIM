@@ -26,7 +26,7 @@
         "../../../static/scripts/node_modules/@types/jquery"
       ],
       "tim/*": [
-        "../../../static/scripts/decls/tim/*"
+        "../../../static/scripts/decls/*"
       ]
     },
     "typeRoots": [
