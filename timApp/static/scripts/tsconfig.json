@@ -8,7 +8,6 @@
     "preserveConstEnums": true,
     "sourceMap": true,
     "outDir": "build-ide",
-    "allowJs": true,
     "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {

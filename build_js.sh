@@ -10,4 +10,7 @@
 ./run_command_workdir.sh timApp/static/scripts npm run fixAll
 ./run_command_workdir.sh timApp/static/scripts npm run build
 
+# This is only needed to get the type declarations for plugins.
+./run_command_workdir.sh timApp/static/scripts tsc
+
 ./watch_ts_files.sh
