@@ -1,4 +1,4 @@
-import renderMathInElement from "katex-auto-render";
+import katex from "katex-auto-render";
 import {timLogTime} from "tim/timTiming";
 import {services} from "tim/ngimport";
 import {lazyLoad, lazyLoadMany} from "../lazyLoad";
@@ -19,11 +19,16 @@ export class ParagraphCompiler {
         }, delay || 300);
     }
 
-    public processAllMath($elem: JQuery) {
+    public async processAllMath($elem: JQuery) {
         timLogTime("processAllMath start", "view");
         const katexFailures = [];
-        $elem.find(".math").each((index, elem) => {
-            const result = this.processMath(elem, false);
+        const mathelems = $elem.find(".math");
+        if (mathelems.length === 0) {
+            return;
+        }
+        const renderMathInElement = await lazyLoad<typeof katex>("katex-auto-render");
+        mathelems.each((index, elem) => {
+            const result = this.processMath(renderMathInElement, elem, false);
             if (result !== null) {
                 katexFailures.push(result);
             }
@@ -42,13 +47,16 @@ export class ParagraphCompiler {
     /**
      * Processes the math for a single element.
      *
+     * @param katexFunction The KaTeX function that processes the elements.
      * @param elem The HTML element to process.
      * @param tryMathJax true to attempt to process using MathJax if KaTeX fails.
      * @returns null if KaTeX processed the element successfully. Otherwise, the failed element.
      */
-    public processMath(elem: Element, tryMathJax: boolean): Element {
+    public processMath(katexFunction: (e: Element) => void,
+                       elem: Element,
+                       tryMathJax: boolean): Element {
         try {
-            renderMathInElement(elem);
+            katexFunction(elem);
             return null;
         } catch (e) {
             services.$log.warn(e.message);

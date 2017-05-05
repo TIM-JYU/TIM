@@ -10,7 +10,10 @@ declare module 'angular-bootstrap-colorpicker'
 declare module 'ng-file-upload'
 // For some reason, importing ui-grid does not work ("cannot find name 'uiGrid'"), so we declare it manually.
 declare module 'ui-grid'
-declare module 'katex-auto-render'
+declare module 'katex-auto-render' {
+    const renderMathInElement: (e: Element) => void;
+    export = renderMathInElement;
+}
 declare module 'reveal'
 declare module 'ace' {
     import Ace = AceAjax.Ace;

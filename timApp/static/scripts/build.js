@@ -3,7 +3,7 @@ var builder = new Builder('.', 'jspm.config.js');
 
 var bundles = [
     {
-        modules: 'tim/main + tim/slide - [tim/**/*]', // all external dependencies
+        modules: 'tim/main + tim/slide - [tim/**/*] - reveal', // all external dependencies
         file: 'build/deps.js'
     },
     // TIM bundle is built separately and will be watched for changes, so no need to build it here.
@@ -12,7 +12,7 @@ var bundles = [
     //     file: 'build/tim.js'
     // },
     {
-        modules: 'tim/ace + ace/ext-language_tools', // preconfigured Ace editor
+        modules: 'tim/ace', // preconfigured Ace editor
         file: 'build/ace.js'
     },
     {
@@ -22,13 +22,35 @@ var bundles = [
 ];
 
 //noinspection JSAnnotator
-for (var bundle of bundles) {
+for (let bundle of bundles) {
     builder
         .bundle(bundle.modules,
             bundle.file,
             {minify: true, sourceMaps: true})
         .then(function (result) {
-            console.log('Built ' + result.bundleName);
+            bundle.sources = [];
+            //noinspection JSAnnotator
+            for (let key of Object.keys(result.tree)) {
+                var obj = result.tree[key];
+                var info;
+                if (obj === false) {
+                    info = "excluded; will be fetched at runtime";
+                    bundle.sources.push({file: key, size: 0});
+                } else {
+                    var source = obj.source;
+                    info = source ? source.length + " bytes" : "no source field; skipping";
+                    bundle.sources.push({file: key, size: source ? source.length : -1});
+                }
+            }
+            bundle.sources.sort(function (a, b) {
+                return b.size - a.size;
+            });
+            //noinspection JSAnnotator
+            for (let s of bundle.sources) {
+                console.log(s.file + " (" + s.size + ")");
+            }
+            console.log('Bundled the above files to: ' + result.bundleName);
+            console.log();
         })
         .catch(function (err) {
             console.error('Build error');
