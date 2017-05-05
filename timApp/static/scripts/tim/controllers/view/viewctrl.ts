@@ -1,6 +1,6 @@
 
 import angular from "angular";
-import * as ngStorage from "ngstorage";
+import ngStorage from "ngstorage";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
 import {defineEventHandlers} from "tim/controllers/view/eventhandlers";

@@ -1,18 +1,18 @@
 import angular from "angular";
 import moment = require("moment");
-import * as aedatetimepicker from "angular-eonasdan-datetimepicker";
-import * as ngMessages from "angular-messages";
-import * as timer from "angular-timer";
-import * as humanizeDuration from "humanize-duration";
+import aedatetimepicker from "angular-eonasdan-datetimepicker";
+import ngMessages from "angular-messages";
+import timer from "angular-timer";
+import humanizeDuration from "humanize-duration";
 import ngSanitize = require("angular-sanitize");
-import * as uibootstrap from "angular-ui-bootstrap";
+import uibootstrap from "angular-ui-bootstrap";
 import {Moment} from "moment";
-import * as ngFileUpload from "ng-file-upload";
-import * as ngStorage from "ngstorage";
-import * as oclazyload from "oclazyload";
+import ngFileUpload from "ng-file-upload";
+import ngStorage from "ngstorage";
+import oclazyload from "oclazyload";
 import angularmodules from "tim/angularmodules";
-import * as extramodules from "tim/extramodules";
-import * as plugins from "tim/plugins";
+import extramodules from "tim/extramodules";
+import plugins from "tim/plugins";
 import {markAsUsed} from "tim/utils";
 import {injectProviders, injectServices} from "./ngimport";
 
