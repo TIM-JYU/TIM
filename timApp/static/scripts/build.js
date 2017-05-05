@@ -1,13 +1,5 @@
 var Builder = require('systemjs-builder');
 var builder = new Builder('.', 'jspm.config.js');
-var realConsoleWarn = console.warn;
-
-console.warn = function () {
-    // hide TypeScript loader warning about using AMD module
-    if (arguments.length < 3 || arguments[2].indexOf('consider setting module') < 0) {
-        realConsoleWarn.apply(this, arguments);
-    }
-};
 
 var bundles = [
     {

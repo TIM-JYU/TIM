@@ -1,5 +1,5 @@
 
-import angular = require("angular");
+import angular from "angular";
 import * as ngStorage from "ngstorage";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
@@ -18,7 +18,7 @@ import {defineReadings} from "tim/controllers/view/readings";
 import {defineRefPopup} from "tim/controllers/view/refpopup";
 import * as interceptor from "tim/controllers/view/interceptor";
 import * as popupMenu from "tim/directives/popupMenu";
-import $ = require("jquery");
+import $ from "jquery";
 import {markAsUsed} from "tim/utils";
 import {ParCompiler} from "../../services/parCompiler";
 

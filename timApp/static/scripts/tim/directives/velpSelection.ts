@@ -1,8 +1,8 @@
-import angular = require("angular");
+import angular from "angular";
 import {timApp} from "tim/app";
 import {colorPalette} from "tim/directives/velpWindow";
 import * as velpSummary from "tim/directives/velpSummary";
-import $ = require("jquery");
+import $ from "jquery";
 import {markAsUsed} from "tim/utils";
 
 markAsUsed(velpSummary);

@@ -1,7 +1,7 @@
 
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
-import angular = require("angular");
+import angular from "angular";
 
 
 timApp.config(['$httpProvider', function ($httpProvider) {

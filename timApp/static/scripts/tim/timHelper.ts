@@ -1,4 +1,4 @@
-import angular = require("angular");
+import angular from "angular";
 import {services} from "./ngimport";
 
 export function initAttributes(clone, $scope) {

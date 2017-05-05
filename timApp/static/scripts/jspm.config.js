@@ -38,7 +38,7 @@ SystemJS.config({
     ]
   },
   typescriptOptions: {
-    "module": "amd",
+    "module": "system",
     "noImplicitAny": false,
     "noImplicitThis": false,
     "allowUnreachableCode": true,

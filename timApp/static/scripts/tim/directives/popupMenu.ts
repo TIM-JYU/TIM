@@ -1,6 +1,6 @@
 
 import {timApp} from "tim/app";
-import $ = require("jquery");
+import $ from "jquery";
 import {watchEditMode} from "tim/editmode";
 /**
  * A popup menu directive that is used in the document view.

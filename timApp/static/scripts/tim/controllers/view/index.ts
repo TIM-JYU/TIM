@@ -1,6 +1,6 @@
 
 import {timLogTime} from "tim/timTiming";
-import $ = require("jquery");
+import $ from "jquery";
 import {addEvents} from "tim/marktree";
 
 export function defineIndex(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {

@@ -1,6 +1,6 @@
 import {timApp} from "tim/app";
-import angular = require("angular");
-import $ = require("jquery");
+import angular from "angular";
+import $ from "jquery";
 
 /**
  * The controller handles the logic related to adding and removing annotations. It also handles the way how

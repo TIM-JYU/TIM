@@ -1,8 +1,8 @@
 import {timApp} from "tim/app";
-import angular = require("angular");
+import angular from "angular";
 import {setsetting} from "tim/utils";
 import {fixQuestionJson, getPointsTable, minimizeJson} from "tim/directives/dynamicAnswerSheet";
-import $ = require("jquery");
+import $ from "jquery";
 import {ParCompiler} from "../services/parCompiler";
 import {showDialog} from "../dialog";
 

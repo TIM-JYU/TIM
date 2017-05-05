@@ -1,5 +1,5 @@
-import * as sessionsettings from "tim/session";
-import $ = require("jquery");
+import sessionsettings from "tim/session";
+import $ from "jquery";
 
 export function GetURLParameter(sParam: string) {
     const sPageURL = window.location.search.substring(1);

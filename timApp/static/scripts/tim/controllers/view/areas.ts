@@ -1,5 +1,5 @@
 
-import $ = require("jquery");
+import $ from "jquery";
 import * as nameArea from "tim/directives/nameArea";
 import {markAsUsed} from "tim/utils";
 

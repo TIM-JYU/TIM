@@ -1,8 +1,8 @@
 import {timApp} from "tim/app";
-import angular = require("angular");
+import angular from "angular";
 import * as showChart from "tim/directives/showChartDirective";
 import {fixQuestionJson} from "tim/directives/dynamicAnswerSheet";
-import $ = require("jquery");
+import $ from "jquery";
 import {markAsUsed} from "tim/utils";
 import {ParCompiler} from "../services/parCompiler";
 import moment = require("moment");

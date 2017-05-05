@@ -1,6 +1,6 @@
 
 import {timApp} from "tim/app";
-import $ = require("jquery");
+import $ from "jquery";
 /**
  * A popup window directive that is used in the document view
  * when creating a new area.

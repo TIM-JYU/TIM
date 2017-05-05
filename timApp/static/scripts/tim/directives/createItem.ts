@@ -1,5 +1,5 @@
 
-import angular = require("angular");
+import angular from "angular";
 import {timApp} from "tim/app";
 import * as formErrorMessage from "tim/directives/formErrorMessage";
 import * as shortNameValidator from "tim/directives/shortNameValidator";

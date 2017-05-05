@@ -1,6 +1,6 @@
 import * as refPopup from "tim/directives/refPopup";
 import {markAsUsed} from "tim/utils";
-import $ = require("jquery");
+import $ from "jquery";
 
 markAsUsed(refPopup);
 

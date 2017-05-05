@@ -1,6 +1,6 @@
-import angular = require("angular");
+import angular from "angular";
 import {timApp} from "tim/app";
-import $ = require("jquery");
+import $ from "jquery";
 import {ParCompiler} from "../services/parCompiler";
 
 /**

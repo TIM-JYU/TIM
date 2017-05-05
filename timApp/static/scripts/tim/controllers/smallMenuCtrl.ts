@@ -1,6 +1,6 @@
 import {timApp} from "tim/app";
-import angular = require("angular");
-import $ = require("jquery");
+import angular from "angular";
+import $ from "jquery";
 
 /**
  * FILL WITH SUITABLE TEXT

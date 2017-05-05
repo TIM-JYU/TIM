@@ -1,4 +1,4 @@
-import angular = require("angular");
+import angular from "angular";
 import ngSanitize = require("angular-sanitize");
 import * as timHelper from "tim/timHelper";
 import {editorChangeValue} from "tim/editorScope";

@@ -12,7 +12,7 @@
  * @copyright 2016 Timber project members
  */
 
-import angular = require("angular");
+import angular from "angular";
 import {timApp} from "tim/app";
 
 var UNDEFINED = "undefined";

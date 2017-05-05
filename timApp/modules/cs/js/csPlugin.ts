@@ -6,6 +6,7 @@ import {ParCompiler} from "tim/services/parCompiler";
 import {lazyLoad, lazyLoadMany, lazyLoadTS} from "tim/lazyLoad";
 import {IAce, IAceEditor} from "tim/ace-types";
 import * as csparsons from "./cs-parsons/csparsons";
+import * as acemodule from "tim/ace";
 
 interface Simcir {
     setupSimcir(element: JQuery, data: {});
@@ -2388,7 +2389,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         $scope.edit = services.$compile(html[eindex])($scope as any)[0] as HTMLTextAreaElement; // TODO unsafe cast
         // don't set the html immediately in case of Ace to avoid ugly flash because of lazy load
         if ( eindex == 1 ) {
-            const ace = await lazyLoad<IAce>("tim/ace");
+            const ace = (await lazyLoad<typeof acemodule>("tim/ace")).ace;
             editorDiv.empty().append($scope.edit);
             var editor = ace.edit(editorDiv.find('.csAceEditor')[0]);
             $scope.aceLoaded(ace, editor as IAceEditor);

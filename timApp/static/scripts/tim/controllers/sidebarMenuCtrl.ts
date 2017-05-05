@@ -1,5 +1,5 @@
 import {timApp} from "tim/app";
-import $ = require("jquery");
+import $ from "jquery";
 import * as userService from "tim/services/userService";
 import {markAsUsed} from "tim/utils";
 

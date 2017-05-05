@@ -1,5 +1,5 @@
 
-import $ = require("jquery");
+import $ from "jquery";
 export function defineReadings(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
     "use strict";
 

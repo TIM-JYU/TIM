@@ -1,4 +1,4 @@
-import $ = require("jquery");
+import $ from "jquery";
 
 $(document).ready(function () {
     // Scale of the map

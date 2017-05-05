@@ -1,4 +1,4 @@
-import angular = require("angular");
+import angular from "angular";
 import moment = require("moment");
 import * as aedatetimepicker from "angular-eonasdan-datetimepicker";
 import * as ngMessages from "angular-messages";
@@ -10,7 +10,7 @@ import {Moment} from "moment";
 import * as ngFileUpload from "ng-file-upload";
 import * as ngStorage from "ngstorage";
 import * as oclazyload from "oclazyload";
-import * as angularmodules from "tim/angularmodules";
+import angularmodules from "tim/angularmodules";
 import * as extramodules from "tim/extramodules";
 import * as plugins from "tim/plugins";
 import {markAsUsed} from "tim/utils";

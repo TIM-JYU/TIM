@@ -2,7 +2,7 @@
 
 import {timLogTime} from "tim/timTiming";
 import {timApp} from "tim/app";
-import $ = require("jquery");
+import $ from "jquery";
 
 timLogTime("answerbrowser3 load","answ");
 

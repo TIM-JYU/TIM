@@ -1,5 +1,5 @@
 import {timApp} from "tim/app";
-import $ = require("jquery");
+import $ from "jquery";
 
 timApp.controller('SettingsCtrl', ['$scope', '$http', '$window', function (sc, http, $window) {
     sc.settings = $window.settings;

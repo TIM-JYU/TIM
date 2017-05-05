@@ -1,4 +1,4 @@
-import $ = require("jquery");
+import $ from "jquery";
 export function watchEditMode(newVal, oldVal, $scope) {
     let w: any = window;
     w.editMode = newVal;

@@ -1,4 +1,4 @@
-import * as angular from "angular";
+import angular from "angular";
 import * as ad from "bootstrap";
 import * as a from "tim/controllers/answerToQuestionController";
 import * as b from "tim/controllers/breadcrumbs";
@@ -30,7 +30,7 @@ import * as z from "tim/loadMap";
 import * as ab from "tim/manageView/manageCtrl";
 import * as ac from "tim/settingsView/settingsCtrl";
 import {markAsUsed} from "tim/utils";
-import $ = require("jquery");
+import $ from "jquery";
 import {ParCompiler} from "./services/parCompiler";
 
 markAsUsed(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, ab, ac, ad, ae);

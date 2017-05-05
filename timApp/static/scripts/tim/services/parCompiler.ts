@@ -1,7 +1,5 @@
-import angular = require("angular");
-import * as renderMathInElement from "katex-auto-render";
+import renderMathInElement from "katex-auto-render";
 import {timLogTime} from "tim/timTiming";
-import $ = require("jquery");
 import {services} from "tim/ngimport";
 import {lazyLoad, lazyLoadMany} from "../lazyLoad";
 

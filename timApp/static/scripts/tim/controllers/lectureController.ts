@@ -12,10 +12,10 @@
  */
 
 import {timApp} from "tim/app";
-import angular = require("angular");
+import angular from "angular";
 import * as utils from "tim/utils";
-import $ = require("jquery");
-import * as sessionsettings from "tim/session";
+import $ from "jquery";
+import sessionsettings from "tim/session";
 import {setsetting} from "tim/utils";
 import moment = require("moment");
 import {showDialog} from "../dialog";

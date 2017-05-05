@@ -1,9 +1,9 @@
 // TODO: save cursor postion when changing editor
 
 import {timApp} from "tim/app";
-import angular = require("angular");
+import angular from "angular";
 import rangyinputs = require("rangyinputs");
-import $ = require("jquery");
+import $ from "jquery";
 import * as draggable from "tim/directives/draggable";
 import {markAsUsed} from "tim/utils";
 import {setsetting} from "tim/utils";
@@ -14,6 +14,8 @@ import Ace = AceAjax.Ace;
 import {IPromise, IQService} from "angular";
 import {ParCompiler} from "../services/parCompiler";
 import {IAceEditor} from "../ace-types";
+import {lazyLoadTS} from "../lazyLoad";
+import * as acemodule from "tim/ace";
 
 markAsUsed(draggable, rangyinputs);
 
@@ -83,7 +85,7 @@ interface IParEditorScope {
     bottomClicked(): void;
     cancelClicked(): void;
     cancelPluginRenameClicked(): void;
-    changeEditor(mode: string): IPromise<{}>;
+    changeEditor(mode: string);
     changeMeta(): void;
     changeValue(attributes: string[], text: string): void;
     charClicked(e: Event, char?: string): void;
@@ -2070,10 +2072,9 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 /**
                  * Switched editor between ace and textarea
                  */
-                $scope.changeEditor = (newMode) => {
+                $scope.changeEditor = async (newMode) => {
                     let text = $scope.getEditorText();
                     let oldeditor = null;
-                    let defer = $q.defer();
                     if ($scope.isAce || newMode === "text") {
                         oldeditor = $('#ace_editor');
                         $scope.setTextAreaControllerFunctions();
@@ -2081,36 +2082,30 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.createTextArea(text);
                         $scope.setInitialText();
                         $scope.editor.focus();
-                        defer.resolve();
                     } else {
                         oldeditor = $('#teksti');
-                        SystemJS.amdRequire(["tim/ace", "ace/ext-language_tools"], (ace: Ace) => {
-                            $scope.ace = ace;
-                            $scope.setAceFunctions();
-                            let neweditorElem = $("<div>", {
-                                class: 'editor',
-                                id: 'ace_editor'
-                            });
-                            $('.editorContainer').append(neweditorElem);
-                            let neweditor = ace.edit("ace_editor");
-                            $scope.aceLoaded(neweditor);
-                            $scope.editor = neweditor;
-                            $scope.editor.getSession().on('change', $scope.aceChanged);
-                            neweditor.setBehavioursEnabled($scope.getLocalBool("acebehaviours", false));
-                            neweditor.getSession().setUseWrapMode($scope.getLocalBool("acewrap", false));
-                            neweditor.setOptions({maxLines: 28});
-                            defer.resolve();
+                        let ace = (await lazyLoadTS<typeof acemodule>("tim/ace", __moduleName)).ace;
+                        $scope.ace = ace;
+                        $scope.setAceFunctions();
+                        let neweditorElem = $("<div>", {
+                            class: 'editor',
+                            id: 'ace_editor'
                         });
+                        $('.editorContainer').append(neweditorElem);
+                        let neweditor = ace.edit("ace_editor");
+                        $scope.aceLoaded(neweditor);
+                        $scope.editor = neweditor;
+                        $scope.editor.getSession().on('change', $scope.aceChanged);
+                        neweditor.setBehavioursEnabled($scope.getLocalBool("acebehaviours", false));
+                        neweditor.getSession().setUseWrapMode($scope.getLocalBool("acewrap", false));
+                        neweditor.setOptions({maxLines: 28});
                     }
-                    defer.promise.then(() => {
-                        if (oldeditor) oldeditor.remove();
-                        $scope.adjustPreview();
-                        if (!$scope.proeditor && $scope.lstag === "note") {
-                            var editor = $('pareditor');
-                            editor.css("max-width", "40em");
-                        }
-                    });
-                    return defer.promise;
+                    if (oldeditor) oldeditor.remove();
+                    $scope.adjustPreview();
+                    if (!$scope.proeditor && $scope.lstag === "note") {
+                        var editor = $('pareditor');
+                        editor.css("max-width", "40em");
+                    }
                 };
 
                 var oldMode = $window.localStorage.getItem("oldMode"+$scope.options.localSaveTag) ||( $scope.options.touchDevice ? "text" : "ace");

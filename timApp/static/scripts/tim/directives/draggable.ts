@@ -1,7 +1,7 @@
 
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
-import $ = require("jquery");
+import $ from "jquery";
 function setStorage(key, value) {
     value = JSON.stringify(value);
     window.localStorage.setItem(key, value);

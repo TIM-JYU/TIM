@@ -1,5 +1,5 @@
-import angular = require("angular");
-import $ = require("jquery");
+import angular from "angular";
+import $ from "jquery";
 
 export function defineNotes(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
     "use strict";

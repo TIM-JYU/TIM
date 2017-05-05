@@ -1,7 +1,7 @@
-import angular = require("angular");
+import angular from "angular";
 import {timApp} from "tim/app";
 import {getJsonAnswers} from "tim/directives/dynamicAnswerSheet";
-import $ = require("jquery");
+import $ from "jquery";
 import {Chart, ChartData} from "chart.js";
 
 /**
