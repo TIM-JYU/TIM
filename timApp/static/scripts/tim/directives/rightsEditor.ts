@@ -1,7 +1,7 @@
 import * as focusMe from "tim/directives/focusMe";
 import {markAsUsed} from "tim/utils";
 import {timApp} from "tim/app";
-import moment = require("moment");
+import moment from "moment";
 
 markAsUsed(focusMe);
 

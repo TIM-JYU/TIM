@@ -1,7 +1,7 @@
 import {timApp} from "tim/app";
 import angular from "angular";
 import $ from "jquery";
-import moment = require("moment");
+import moment from "moment";
 
 /**
  * Lecture creation controller which is used to handle and validate the form data.

@@ -1,6 +1,6 @@
 
 import {timApp} from "tim/app";
-import moment = require("moment");
+import moment from "moment";
 timApp.controller('AllAnswersCtrl', ['$uibModalInstance', '$window', '$httpParamSerializer', '$localStorage', '$http', '$log', 'options',
     function ($uibModalInstance, $window, $httpParamSerializer, $localStorage, $http, $log, options) {
         "use strict";

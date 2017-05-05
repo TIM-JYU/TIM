@@ -5,7 +5,7 @@ import {fixQuestionJson} from "tim/directives/dynamicAnswerSheet";
 import $ from "jquery";
 import {markAsUsed} from "tim/utils";
 import {ParCompiler} from "../services/parCompiler";
-import moment = require("moment");
+import moment from "moment";
 
 markAsUsed(showChart);
 

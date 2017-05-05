@@ -1,5 +1,5 @@
 import angular from "angular";
-import moment = require("moment");
+import moment from "moment";
 import aedatetimepicker from "angular-eonasdan-datetimepicker";
 import ngMessages from "angular-messages";
 import timer from "angular-timer";

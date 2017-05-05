@@ -17,7 +17,7 @@ import * as utils from "tim/utils";
 import $ from "jquery";
 import sessionsettings from "tim/session";
 import {setsetting} from "tim/utils";
-import moment = require("moment");
+import moment from "moment";
 import {showDialog} from "../dialog";
 
 //TODO: Painike, josta voisi hakea kysymyksiä.
