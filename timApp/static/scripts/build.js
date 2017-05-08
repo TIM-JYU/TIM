@@ -1,3 +1,4 @@
+"use strict";
 var Builder = require('systemjs-builder');
 var builder = new Builder('.', 'jspm.config.js');
 
