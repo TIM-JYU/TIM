@@ -26,6 +26,7 @@ class DocSettings:
     max_points_key = 'max_points'
     live_updates_key = 'live_updates'
     plugin_md_key = 'plugin_md'
+    print_settings_key = 'print_settings'
 
     @classmethod
     def is_valid_paragraph(cls, par):
@@ -139,6 +140,11 @@ class DocSettings:
         if default is None:
             default = []
         return self.__dict.get(self.bookmark_key, default)
+
+    def get_print_settings(self, default=None):
+        if default is None:
+            default = []
+        return self.__dict.get(self.print_settings_key, default)
 
     def lazy(self, default=False):
         return self.__dict.get(self.lazy_key, default)
