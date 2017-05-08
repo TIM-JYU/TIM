@@ -1,5 +1,5 @@
 import "angular-ui-bootstrap";
-import {services} from "./ngimport";
+import {$uibModal} from "./ngimport";
 
 export function showDialog(message: string) {
     class DialogController {
@@ -16,7 +16,7 @@ export function showDialog(message: string) {
 
     DialogController.$inject = ["$uibModalInstance"];
 
-    services.$uibModal.open({
+    $uibModal.open({
         ariaDescribedBy: "modal-body",
         ariaLabelledBy: "modal-title",
         controller: DialogController,

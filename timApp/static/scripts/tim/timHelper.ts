@@ -1,5 +1,4 @@
-import angular from "angular";
-import {services} from "./ngimport";
+import {$sanitize} from "./ngimport";
 
 export function initAttributes(clone, $scope) {
 "use strict";
@@ -36,7 +35,7 @@ export function getHeading($scope,attrs,key,defElem) {
 	  val = decodeURIComponent(encodeURI(val));
 	} catch(err) {}
     var html = "<" + elem + attributes + ">" + val + "</" + elem + ">";
-	html = sanitize(html);
+	html = $sanitize(html);
 	return html;
 }
 
@@ -92,9 +91,4 @@ export function Hex2Str(s) {
     result += c;
   }
   return result;
-}
-
-
-export function sanitize(s) {
-    return services.$sanitize(s);
 }

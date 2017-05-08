@@ -1,20 +1,20 @@
 import katex from "katex-auto-render";
+import {$compile, $log, $ocLazyLoad, $timeout} from "tim/ngimport";
 import {timLogTime} from "tim/timTiming";
-import {services} from "tim/ngimport";
 import {lazyLoad, lazyLoadMany} from "../lazyLoad";
 
 export class ParagraphCompiler {
     public async compile(data, scope, callback) {
         await lazyLoadMany(data.js);
-        await services.$ocLazyLoad.inject(data.angularModule);
-        await services.$ocLazyLoad.load(data.css);
-        const compiled = services.$compile(data.texts)(scope);
+        await $ocLazyLoad.inject(data.angularModule);
+        await $ocLazyLoad.load(data.css);
+        const compiled = $compile(data.texts)(scope);
         this.processAllMathDelayed(compiled);
         callback(compiled);
     }
 
     public processAllMathDelayed($elem: JQuery, delay?: number): void {
-        services.$timeout(() => {
+        $timeout(() => {
             this.processAllMath($elem);
         }, delay || 300);
     }
@@ -59,7 +59,7 @@ export class ParagraphCompiler {
             katexFunction(elem);
             return null;
         } catch (e) {
-            services.$log.warn(e.message);
+            $log.warn(e.message);
             if (tryMathJax) {
                 this.processMathJax(elem);
             }

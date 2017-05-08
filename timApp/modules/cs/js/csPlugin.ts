@@ -1,7 +1,7 @@
 import angular from "angular";
 import $ from "jquery";
-import {IHttpService, IModule, INgModelController, ISCEService, ITimeoutService, ITranscludeFunction} from "angular";
-import {services} from "tim/ngimport";
+import {IHttpService, IModule, INgModelController, ITimeoutService, ITranscludeFunction} from "angular";
+import {$http, $sanitize, $timeout, $interval, $compile, $window, $sce, $upload} from "tim/ngimport";
 import {ParCompiler} from "tim/services/parCompiler";
 import {lazyLoad, lazyLoadMany, lazyLoadTS} from "tim/lazyLoad";
 import {IAce, IAceEditor} from "tim/ace-types";
@@ -116,11 +116,7 @@ interface ICSApp extends IModule {
     getInt(s: string): number;
     countChars(str: string, char: string): number;
     Controller(scope: ICSAppScope,
-               http: IHttpService,
-               transclude: ITranscludeFunction,
-               sce: ISCEService,
-               upload: angular.angularFileUpload.IUploadService,
-               timeout: ITimeoutService);
+               transclude: ITranscludeFunction);
     updateEditSize(scope: ICSAppScope);
     ifIs(value: string, name: string, def: string | number);
     doVariables(v: string, name: string): string;
@@ -716,7 +712,7 @@ csApp.getHeading = function(a,key,$scope,defElem) {
 	  val = decodeURIComponent(encodeURI(val));
 	} catch(err) {}
     var html = "<" + elem + attributes + ">" + val + "</" + elem + ">";
-	html = services.$sanitize(html);
+	html = $sanitize(html);
 	return html;
 };
 
@@ -1336,7 +1332,7 @@ csApp.Hex2Str = function (s) {
 };
 
 
-csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
+csApp.Controller = function($scope,$transclude) {
 
     csLogTime("controller");
 	$scope.wavURL = "";
@@ -1411,7 +1407,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             $scope.docURL = null;
             var ti = $scope.taskId.split(".");
             if ( ti.length < 2 ) return;
-            file.upload = Upload.upload({
+            file.upload = $upload.upload({
                 url: '/pluginUpload/' + ti[0] + '/' + ti[1] + '/' + $scope.user_id + '/',
                 data: {
                     file: file
@@ -1441,7 +1437,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
     $scope.processPluginMath = function() {
         if ( !$scope.isMathCheck ) return;
         lataaMathcheck($scope, function(sc) {
-            services.$timeout(function () {
+            $timeout(function () {
                 MathJax.Hub.Queue(["Typeset", MathJax.Hub, $scope.element[0]]);
             },  0);
         });
@@ -2047,7 +2043,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 	
 	$scope.stopShow = function() {
 		if (angular.isDefined($scope.stop)) {
-			services.$interval.cancel($scope.stop);
+			$interval.cancel($scope.stop);
 			$scope.stop = undefined;
 		}
 	};
@@ -2221,7 +2217,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             s = s.replace(/parContent/,""); // Tämä piti ottaa pois ettei scope pilaannu seuraavaa kertaa varten???
             s = s.replace(/<div class="editline".*<.div>/,"");            
             s = s.replace(/<div class="readline"[\s\S]*?<.div>/,"");            
-            var html = services.$compile(s)($scope as any)
+            var html = $compile(s)($scope as any)
             $previewDiv.empty().append(html);
 
             //MathJax.Hub.Queue(["Typeset", MathJax.Hub, $previewDiv[0]]);
@@ -2232,7 +2228,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 
         }, function (response) {
             let data = response.data;
-            services.$window.alert("Failed to show preview: " + data.error);
+            $window.alert("Failed to show preview: " + data.error);
         });
     };
     
@@ -2386,7 +2382,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
         $scope.editorIndex = eindex;
         var otherEditDiv = $scope.element0.getElementsByClassName('csrunEditorDiv')[0];                    
         var editorDiv: JQuery = angular.element(otherEditDiv);
-        $scope.edit = services.$compile(html[eindex])($scope as any)[0] as HTMLTextAreaElement; // TODO unsafe cast
+        $scope.edit = $compile(html[eindex])($scope as any)[0] as HTMLTextAreaElement; // TODO unsafe cast
         // don't set the html immediately in case of Ace to avoid ugly flash because of lazy load
         if ( eindex == 1 ) {
             const ace = (await lazyLoad<typeof acemodule>("tim/ace")).ace;
@@ -2546,7 +2542,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             }
             var $previewDiv = angular.element($scope.preview);
             //$previewDiv.html($scope.canvas);
-            $previewDiv.empty().append($scope.previewIFrame = services.$compile($scope.canvas)($scope as any));
+            $previewDiv.empty().append($scope.previewIFrame = $compile($scope.canvas)($scope as any));
             //$scope.canvas = $scope.preview.find(".csCanvas")[0];
         }
         var text = $scope.usercode.replace($scope.cursor,"");
