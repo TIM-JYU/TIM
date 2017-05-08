@@ -2,7 +2,9 @@ import angular from "angular";
 import {timApp} from "tim/app";
 import {getJsonAnswers} from "tim/directives/dynamicAnswerSheet";
 import $ from "jquery";
-import {Chart, ChartData} from "chart.js";
+import {ChartData} from "chart.js";
+import * as chartmodule from "chart.js";
+import {lazyLoad} from "../lazyLoad";
 
 /**
  * Created by hajoviin on 13.5.2015.
@@ -268,7 +270,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
              * @memberof module:showChartDirective
              * @param question FILL WITH SUITABLE TEXT
              */
-            $scope.internalControl.createChart = function(question) {
+            $scope.internalControl.createChart = async function(question) {
 
                 if ( $scope.divresize ) {
                     canvasw = $scope.div.width();
@@ -416,7 +418,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                        }
                 };
 
-                $scope.changeType();
+                await $scope.changeType();
                 //$scope.answerChart.options.animation = false;
                 $compile($scope);
             };
@@ -431,7 +433,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
             };
 
 
-            $scope.changeType = function() {
+            $scope.changeType = async function() {
                 if ( $scope.isText ) return;
                 var newType = $scope.charts[qstChartIndex ];
                 if ( $scope.answerChart ) $scope.answerChart.destroy();
@@ -443,6 +445,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 }
                 var config = jQuery.extend(true, {}, $scope.chartConfig );
                 config.type = newType;
+                const Chart = (await lazyLoad<typeof chartmodule>("chart.js")).Chart;
                 $scope.answerChart = new Chart($scope.ctx, config);
                 /*
                 var legend = $scope.answerChart.generateLegend();

@@ -232,7 +232,7 @@ timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$w
      * @param userToShow Which users answers to shows. If undefined shows from every user.
      * @memberof module:lectureInfoController
      */
-    $scope.drawCharts = function (userToShow) {
+    $scope.drawCharts = async function (userToShow) {
         for (var p = 0; p < $scope.points.length; p++) {
             $scope.points[p] = 0;
         }
@@ -245,7 +245,7 @@ timApp.controller('LectureInfoController', ['$rootScope', '$scope', '$http', '$w
         }
         var questionIndexes = [];
         for (var i = 0; i < $scope.dynamicAnswerShowControls.length; i++) {
-            $scope.dynamicAnswerShowControls[i].createChart($scope.questions[i].json);
+            await $scope.dynamicAnswerShowControls[i].createChart($scope.questions[i].json);
             questionIndexes.push($scope.questions[i].asked_id);
         }
 

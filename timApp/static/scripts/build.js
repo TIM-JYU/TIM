@@ -3,8 +3,16 @@ var builder = new Builder('.', 'jspm.config.js');
 
 var bundles = [
     {
-        modules: 'tim/main + tim/slide - [tim/**/*] - reveal', // all external dependencies
+        modules: 'tim/main + tim/slide - [tim/**/*] - reveal + jquery', // all non-lazy external dependencies
         file: 'build/deps.js'
+    },
+    {
+        modules: 'chart.js - moment', // Chart.js, lazily loaded
+        file: 'build/chart.js'
+    },
+    {
+        modules: 'katex + katex-auto-render', // KaTeX, lazily loaded
+        file: 'build/katex.js'
     },
     // TIM bundle is built separately and will be watched for changes, so no need to build it here.
     // {
@@ -35,11 +43,11 @@ for (let bundle of bundles) {
                 var info;
                 if (obj === false) {
                     info = "excluded; will be fetched at runtime";
-                    bundle.sources.push({file: key, size: 0});
+                    bundle.sources.push({file: key, size: 0, info: info});
                 } else {
                     var source = obj.source;
                     info = source ? source.length + " bytes" : "no source field; skipping";
-                    bundle.sources.push({file: key, size: source ? source.length : -1});
+                    bundle.sources.push({file: key, size: source ? source.length : -1, info: info});
                 }
             }
             bundle.sources.sort(function (a, b) {
@@ -47,7 +55,7 @@ for (let bundle of bundles) {
             });
             //noinspection JSAnnotator
             for (let s of bundle.sources) {
-                console.log(s.file + " (" + s.size + ")");
+                console.log(s.file + " (" + s.info + ")");
             }
             console.log('Bundled the above files to: ' + result.bundleName);
             console.log();

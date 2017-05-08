@@ -144,6 +144,13 @@ SystemJS.config({
     ],
     "build/imagex.js": [
       "tim/imagex.ts"
+    ],
+    "build/chart.js": [
+      "npm:chart.js@2.5.0/src/chart.js"
+    ],
+    "build/katex.js": [
+      "npm:katex@0.7.1/katex.js",
+      "npm:katex@0.7.1/dist/contrib/auto-render.min.js"
     ]
   }
 });

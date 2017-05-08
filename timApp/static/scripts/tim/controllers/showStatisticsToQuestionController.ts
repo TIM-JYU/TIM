@@ -61,9 +61,9 @@ timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$element',  
      * Creates chart based on question json.
      * @memberof module:showStatisticsToQuestionController
      */
-    $scope.$on("createChart", function (event, question) {
+    $scope.$on("createChart", async function (event, question) {
         $scope.lecturerAnswered = false;
-        $scope.dynamicAnswerShowControl.createChart(question);
+        await $scope.dynamicAnswerShowControl.createChart(question);
         $scope.questionTitle = question.questionText;
         // GlobalParCompiler.processAllMath($element);
         // ParCompiler.processAllMath($element.parent());
